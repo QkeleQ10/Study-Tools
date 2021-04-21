@@ -1,6 +1,6 @@
 go()
 function go() {
-    if (document.location.hash === "#/vandaag") vandaag()
+    if (document.location.hash.startsWith("#/vandaag")) vandaag()
     else if (document.location.href.includes("/studiewijzer/")) login()
     else if (document.location.href.includes("/opdrachten")) opdrachten()
 }
