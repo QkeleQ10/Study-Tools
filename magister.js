@@ -29,7 +29,7 @@ async function opdrachten() {
     await awaitElement("tr.ng-scope")
     document.querySelectorAll(".overdue").forEach(e => { e.style.background = "lavenderBlush" })
     document.querySelectorAll('td[data-ng-bind*="InleverenVoor"]').forEach(e => {
-        let d = new Date("20" + e.innerHTML.split("-")[2], e.innerHTML.split("-")[1], e.innerHTML.split("-")[0])
+        let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
         let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
         if (d.toLocaleDateString("nl-NL", opt) != "Invalid Date") e.innerHTML = d.toLocaleDateString("nl-NL", opt)
     })
