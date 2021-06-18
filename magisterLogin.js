@@ -16,8 +16,8 @@ async function login() {
     document.querySelector(".bottom").outerHTML = `
     <div class="bottom" style="justify-content: space-between; align-items: center">
         Klik of laat los om te annuleren.
-        <input type='text' placeholder='Autologin gebruikersnaam' onkeyup='document.cookie = "qstaUsername=" + this.value + ";expires=Fri, 31 Dec 9999 23:59:59 GMT;"; console.log(this.value)' value=${qstaUsername}>
-        <input type='password' placeholder='Autologin wachtwoord' onkeyup='document.cookie = "qstaPassword=" + this.value";expires=Fri, 31 Dec 9999 23:59:59 GMT;"; console.log(this.value)' value=${qstaPassword}>
+        <input type='text' placeholder='Autologin gebruikersnaam' onkeyup='document.cookie = "qstaUsername=" + this.value + ";expires=Fri, 31 Dec 9999 23:59:59 GMT;"; console.log(this.value)' value=${qstaUsername | ""}>
+        <input type='password' placeholder='Autologin wachtwoord' onkeyup='document.cookie = "qstaPassword=" + this.value";expires=Fri, 31 Dec 9999 23:59:59 GMT;"; console.log(this.value)' value=${qstaPassword | ""}>
     </div>`
 
     await awaitElement("#username")
