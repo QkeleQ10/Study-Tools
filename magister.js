@@ -1,19 +1,32 @@
 go()
+window.addEventListener('popstate', function (event) { go() })
+
 function go() {
+    //stylise()
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
-    else if (document.location.href.includes("/studiewijzer/")) login()
+    else if (document.location.hash.startsWith("#/agenda")) agenda()
+    else if (document.location.href.includes("/studiewijzer/")) studiewijzer()
     else if (document.location.href.includes("/opdrachten")) opdrachten()
 }
-window.addEventListener('popstate', function (event) { go() })
 
 async function vandaag() {
     await awaitElement("ul.agenda-list>li.alert")
     document.querySelectorAll("li.alert").forEach(e => { e.classList.remove("alert") })
     const e = document.querySelector('h4[data-ng-bind-template*="Wijzigingen voor"]')
     e.innerHTML = e.innerHTML.replace("Wijzigingen voor", "Rooster voor")
+    document.querySelectorAll(".block").forEach(e => {
+        e.style.borderRadius = "6px"
+    })
 }
 
-async function login() {
+async function agenda() {
+    await awaitElement("tr.ng-scope")
+    document.querySelectorAll("tr.ng-scope").forEach(e => {
+        e.style.height = "40px"
+    })
+}
+
+async function studiewijzer() {
     await awaitElement("li.studiewijzer-onderdeel")
     document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding").forEach(e => {
         if (e.innerHTML.includes(getWeekNumber(new Date()))) {
@@ -48,4 +61,8 @@ function getWeekNumber(d) {
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
     var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+}
+
+async function stylise() {
+    document.body.style.backgroundColor = "#f1f1f1"
 }
