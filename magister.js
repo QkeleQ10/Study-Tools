@@ -1,12 +1,15 @@
 go()
 window.addEventListener('popstate', function (event) { go() })
 
-function go() {
+async function go() {
     //stylise()
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
     else if (document.location.hash.startsWith("#/agenda")) agenda()
     else if (document.location.href.includes("/studiewijzer/")) studiewijzer()
     else if (document.location.href.includes("/opdrachten")) opdrachten()
+
+    await awaitElement("#user-menu img")
+    document.querySelector("#user-menu img").style.display = "none"
 }
 
 async function vandaag() {
