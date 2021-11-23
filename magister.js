@@ -20,9 +20,6 @@ async function vandaag() {
     document.querySelectorAll(".block").forEach(e => {
         e.style.borderRadius = "6px"
     })
-    document.querySelectorAll(".alertRed").forEach(e => {
-        e.remove()
-    })
 }
 
 async function agenda() {
