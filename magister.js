@@ -53,7 +53,7 @@ async function opdrachten() {
 }
 
 async function error() {
-    window.location.href = window.location.origin + '?n=' + new Date().getTime()
+    window.open(window.location.origin, "_blank")
 }
 
 async function awaitElement(s) {
