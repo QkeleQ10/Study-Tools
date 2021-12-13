@@ -6,7 +6,6 @@ async function go() {
     else if (document.location.hash.startsWith("#/agenda")) agenda()
     else if (document.location.href.includes("/studiewijzer/")) studiewijzer()
     else if (document.location.href.includes("/opdrachten")) opdrachten()
-    else if (document.location.href.includes("/error")) error()
 
     await awaitElement("#user-menu img")
     document.querySelector("#user-menu img").style.display = "none"
@@ -50,10 +49,6 @@ async function opdrachten() {
         let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
         if (d.toLocaleDateString("nl-NL", opt) != "Invalid Date") e.innerHTML = d.toLocaleDateString("nl-NL", opt)
     })
-}
-
-async function error() {
-    window.open(window.location.origin, "_blank")
 }
 
 async function awaitElement(s) {
