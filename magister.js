@@ -31,7 +31,7 @@ async function agenda() {
 async function studiewijzer() {
     await awaitElement("li.studiewijzer-onderdeel")
     document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding").forEach(title => {
-        if (title.innerHTML.includes(getWeekNumber(new Date()))) {
+        if (title.innerHTML.includes(` ${getWeekNumber(new Date())}`)) {
             title.parentElement.style.background = "aliceBlue"
             title.click()
             const endlink = title.parentElement.nextElementSibling.lastElementChild
