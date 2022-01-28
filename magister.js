@@ -30,13 +30,20 @@ async function agenda() {
 
 async function studiewijzer() {
     await awaitElement("li.studiewijzer-onderdeel")
-    document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding").forEach(title => {
-        if (title.innerHTML.includes(` ${getWeekNumber(new Date())}`)) {
+    const regex = new RegExp(`(?<![0-9])(${getWeekNumber(new Date())}){1}(?![0-9])`, "g"),
+        titles = document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding")
+    let matched = false
+
+    titles.forEach(title => {
+        if (regex.test(title.innerHTML)) {
             title.parentElement.style.background = "aliceBlue"
             title.click()
             const endlink = title.parentElement.nextElementSibling.lastElementChild
             endlink.style.background = "aliceBlue"
-            setTimeout(() => endlink.scrollIntoView({ behavior: "smooth", block: "center" }), 250)
+            if (!matched) setTimeout(() => {
+                endlink.scrollIntoView({ behavior: "smooth", block: "center" })
+            }, 250)
+            matched = true
         }
     })
 }

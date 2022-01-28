@@ -1,7 +1,7 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "Study Tools",
-    "version": "0.1.2.7",
+    "version": "0.1.2.8",
     "icons": {
         "100": "icon.png"
     },
@@ -26,7 +26,7 @@
             "run_at": "document_end"
         }
     ],
-    "browser_action": {
+    "action": {
         "default_icon": "icon.png"
     },
     "permissions": [
