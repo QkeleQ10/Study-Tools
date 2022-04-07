@@ -1,9 +1,16 @@
+let weekNumber,
+    periodNumber
+
 go()
 window.addEventListener('popstate', function (event) { go() })
 
 async function go() {
+    weekNumber = getWeekNumber(new Date())
+    periodNumber = getPeriodNumber(weekNumber)
+    console.log(periodNumber)
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
     else if (document.location.hash.startsWith("#/agenda")) agenda()
+    else if (document.location.href.endsWith("/studiewijzer")) studiewijzers()
     else if (document.location.href.includes("/studiewijzer/")) studiewijzer()
     else if (document.location.href.includes("/opdrachten")) opdrachten()
 
@@ -19,6 +26,9 @@ async function vandaag() {
     document.querySelectorAll(".block").forEach(e => {
         e.style.borderRadius = "6px"
     })
+    // let dateText = document.querySelector("div.title"),
+    //     year = new Date().getFullYear()
+    // dateText.innerHTML = dateText.innerHTML.split(year) + `(week ${getWeekNumber(new Date())})`
 }
 
 async function agenda() {
@@ -28,9 +38,24 @@ async function agenda() {
     })
 }
 
+async function studiewijzers() {
+    await awaitElement(`li[data-ng-repeat="studiewijzer in items"]`)
+    const regex = new RegExp(`.*(period([A-z]*)(\s*)(.*)${periodNumber}).*|.*((p|t)(\s*)(.*)${periodNumber}).*`, "gi"),
+        titles = document.querySelectorAll(`ul>[data-ng-repeat="studiewijzer in items"]`)
+
+    titles.forEach(title => {
+        const label = title.firstElementChild.firstElementChild.innerHTML
+        if (regex.test(label.toLowerCase())) {
+            console.log(label, label.match(regex), regex.test(label))
+            title.style.background = "aliceBlue"
+            title.parentElement.prepend(title)
+        }
+    })
+}
+
 async function studiewijzer() {
     await awaitElement("li.studiewijzer-onderdeel")
-    const regex = new RegExp(`(?<![0-9])(${getWeekNumber(new Date())}){1}(?![0-9])`, "g"),
+    const regex = new RegExp(`(?<![0-9])(${weekNumber}){1}(?![0-9])`, "g"),
         titles = document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding")
     let matched = false
 
@@ -71,4 +96,20 @@ function getWeekNumber(d) {
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
     var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+}
+
+function getPeriodNumber(w) {
+    if (w >= 35 && w < 45)
+        return 1
+
+    if (w >= 45 || w < 4)
+        return 2
+
+    if (w >= 4 && w < 14)
+        return 3
+
+    if (w >= 14 && w < 25)
+        return 4
+
+    return 0
 }
