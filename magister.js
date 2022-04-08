@@ -5,14 +5,14 @@ go()
 window.addEventListener('popstate', function (event) { go() })
 
 async function go() {
+    const href = href.split("?")[0]
     weekNumber = getWeekNumber(new Date())
     periodNumber = getPeriodNumber(weekNumber)
-    console.log(periodNumber)
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
     else if (document.location.hash.startsWith("#/agenda")) agenda()
-    else if (document.location.href.endsWith("/studiewijzer")) studiewijzers()
-    else if (document.location.href.includes("/studiewijzer/")) studiewijzer()
-    else if (document.location.href.includes("/opdrachten")) opdrachten()
+    else if (href.endsWith("/studiewijzer")) studiewijzers()
+    else if (href.includes("/studiewijzer/")) studiewijzer()
+    else if (href.includes("/opdrachten")) opdrachten()
 
     await awaitElement("#user-menu img")
     document.querySelector("#user-menu img").style.display = "none"
@@ -47,7 +47,6 @@ async function studiewijzers() {
         titles.forEach(title => {
             const label = title.firstElementChild.firstElementChild.innerHTML
             if (regex.test(label.toLowerCase())) {
-                console.log(label, label.match(regex), regex.test(label))
                 title.style.background = "aliceBlue"
                 title.parentElement.prepend(title)
             }
