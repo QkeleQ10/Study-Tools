@@ -5,7 +5,7 @@ go()
 window.addEventListener('popstate', function (event) { go() })
 
 async function go() {
-    const href = href.split("?")[0]
+    const href = document.location.href.split("?")[0]
     weekNumber = getWeekNumber(new Date())
     periodNumber = getPeriodNumber(weekNumber)
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
