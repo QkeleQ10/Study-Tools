@@ -2,7 +2,9 @@ let weekNumber,
     periodNumber
 
 go()
-window.addEventListener('popstate', function (event) { go() })
+window.addEventListener('popstate', go)
+window.addEventListener('hashchange', go)
+window.addEventListener('locationchange', go)
 
 async function go() {
     const href = document.location.href.split("?")[0]
