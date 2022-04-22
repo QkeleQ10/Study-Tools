@@ -43,17 +43,31 @@ async function agenda() {
 async function studiewijzers() {
     await awaitElement(`li[data-ng-repeat="studiewijzer in items"]`)
     setTimeout(() => {
-        const regex = new RegExp(`.*(period([A-z]*)(\s*)(.*)${periodNumber}).*|.*((p|t)(\s*)(.*)${periodNumber}).*`, "gi"),
+        const regexCurrent = new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${periodNumber}).*`, "gi"),
+            oldPeriods = ([1, 2, 3, 4].slice(0, periodNumber - 1) || []),
+            oldRegexes = [],
             titles = document.querySelectorAll(`ul>[data-ng-repeat="studiewijzer in items"]`)
+
+        oldPeriods.forEach(p => {
+            oldRegexes.push(new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${p}).*`, "gi"))
+        })
 
         titles.forEach(title => {
             const label = title.firstElementChild.firstElementChild.innerHTML
-            if (regex.test(label.toLowerCase())) {
+            if (regexCurrent.test(label.toLowerCase())) {
+            console.log(label)
                 title.style.background = "aliceBlue"
                 title.parentElement.prepend(title)
             }
+
+            oldRegexes.forEach(oldRegex => {
+                if (oldRegex.test(label.toLowerCase())) {
+                    title.style.background = "lavenderblush"
+                    title.parentElement.append(title)
+                }
+            })
         })
-    }, 200)
+    }, 1000)
 }
 
 async function studiewijzer() {
