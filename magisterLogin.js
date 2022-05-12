@@ -47,11 +47,3 @@ async function awaitElement(s) {
         }, 10)
     })
 }
-
-async function checkUpdates() {
-    fetch("https://raw.githubusercontent.com/QkeleQ10/Study-Tools/main/manifest.json")
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.version > chrome.runtime.getManifest().version) window.open("https://QkeleQ10.github.io/extensions/studytools/update", '_blank')
-        })
-}
