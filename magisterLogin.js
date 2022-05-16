@@ -1,8 +1,6 @@
-checkUpdates()
 login()
 
 async function login() {
-
     let keysChanged = false
     document.body.onkeydown = function () { keysChanged = true }
     document.body.onkeyup = function () { keysChanged = true }
