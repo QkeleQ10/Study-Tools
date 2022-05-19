@@ -1,0 +1,7 @@
+.studytools-period {
+    height: auto !important;
+}
+
+details[open]>summary {
+    font-weight: bold !important;
+}

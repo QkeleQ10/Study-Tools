@@ -1,5 +1,5 @@
-let weekNumber,
-    periodNumber
+let currentWeek,
+    currentPeriod
 
 go()
 checkUpdates()
@@ -9,8 +9,8 @@ window.addEventListener('locationchange', go)
 
 async function go() {
     const href = document.location.href.split("?")[0]
-    weekNumber = getWeekNumber(new Date())
-    periodNumber = getPeriodNumber(weekNumber)
+    currentWeek = getWeekNumber(new Date())
+    currentPeriod = getPeriodNumber(currentWeek)
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
     else if (document.location.hash.startsWith("#/agenda")) agenda()
     else if (href.endsWith("/studiewijzer")) studiewijzers()
@@ -43,37 +43,68 @@ async function agenda() {
 
 async function studiewijzers() {
     await awaitElement(`li[data-ng-repeat="studiewijzer in items"]`)
+
+    const list = document.querySelector(`div.studiewijzer-list > ul`),
+        periods = [1, 2, 3, 4]
+
+
     setTimeout(() => {
-        const regexCurrent = new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${periodNumber}).*`, "gi"),
-            oldPeriods = ([1, 2, 3, 4].slice(0, periodNumber - 1) || []),
-            oldRegexes = [],
-            titles = document.querySelectorAll(`ul>[data-ng-repeat="studiewijzer in items"]`)
 
-        oldPeriods.forEach(p => {
-            oldRegexes.push(new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${p}).*`, "gi"))
-        })
+        periods.forEach(iteratedPeriod => {
+            let periodItem = document.createElement('li'),
+                isCurrent = iteratedPeriod == currentPeriod
+            periodItem.innerHTML =
+                `<details ${isCurrent ? 'open' : ''}>
+                    <summary>Periode ${iteratedPeriod}</summary>
+                    <div class="studiewijzer-list normaal">
+                        <ul id="studytools-period-${iteratedPeriod}-list"></ul>
+                    </div>
+                </details>`
+            periodItem.classList.add('studytools-period')
+            periodItem.id = `studytools-period-${iteratedPeriod}`
+            periodItem.style.height = 'auto'
+            isCurrent ? list.prepend(periodItem) : list.append(periodItem)
 
-        titles.forEach(title => {
-            const label = title.firstElementChild.firstElementChild.innerHTML
-            if (regexCurrent.test(label.toLowerCase())) {
-            console.log(label)
-                title.style.background = "aliceBlue"
-                title.parentElement.prepend(title)
+            const periodItemList = document.getElementById(`studytools-period-${iteratedPeriod}-list`),
+                periodRegex = new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${iteratedPeriod}).*`, "gi")
+
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const titles = document.querySelectorAll(`ul>[data-ng-repeat="studiewijzer in items"]`)
+                    titles.forEach(title => {
+                        const label = title.firstElementChild.firstElementChild.innerHTML
+                        if (periodRegex.test(label.toLowerCase())) {
+                            periodItemList.append(title)
+                        }
+                    })
+                }, 500)
             }
-
-            oldRegexes.forEach(oldRegex => {
-                if (oldRegex.test(label.toLowerCase())) {
-                    title.style.background = "lavenderblush"
-                    title.parentElement.append(title)
-                }
-            })
         })
-    }, 1000)
+
+        let periodItem = document.createElement('li')
+        periodItem.innerHTML =
+            `<details open>
+            <summary>Geen periode</summary>
+            <div class="studiewijzer-list normaal">
+                <ul id="studytools-period-0-list"></ul>
+            </div>
+        </details>`
+        periodItem.id = `studytools-period-0`
+        periodItem.style.height = 'auto'
+        list.prepend(periodItem)
+
+        const periodItemList = document.getElementById(`studytools-period-0-list`),
+            titles = document.querySelectorAll(`ul>[data-ng-repeat="studiewijzer in items"]`)
+        titles.forEach(title => {
+            periodItemList.append(title)
+        })
+    }, 200)
 }
 
 async function studiewijzer() {
     await awaitElement("li.studiewijzer-onderdeel")
-    const regex = new RegExp(`(?<![0-9])(${weekNumber}){1}(?![0-9])`, "g"),
+
+    const regex = new RegExp(`(?<![0-9])(${currentWeek}){1}(?![0-9])`, "g"),
         titles = document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding")
     let matched = false
 
@@ -132,7 +163,7 @@ function getPeriodNumber(w) {
     return 0
 }
 
-async function checkUpdates() {
+function checkUpdates() {
     fetch("https://raw.githubusercontent.com/QkeleQ10/Study-Tools/main/manifest.json")
         .then((response) => response.json())
         .then((data) => {

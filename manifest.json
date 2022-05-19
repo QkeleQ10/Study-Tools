@@ -23,6 +23,9 @@
             "js": [
                 "magister.js"
             ],
+            "css": [
+                "magister.css"
+            ],
             "run_at": "document_end"
         }
     ],
