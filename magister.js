@@ -137,7 +137,7 @@ function getWeekNumber(d) {
 }
 
 function getPeriodNumber(w) {
-    if (w >= 35 && w < 45)
+    if (w >= 30 && w < 45)
         return 1
 
     if (w >= 45 || w < 4)
@@ -146,7 +146,7 @@ function getPeriodNumber(w) {
     if (w >= 4 && w < 14)
         return 3
 
-    if (w >= 14 && w < 25)
+    if (w >= 14 && w < 30)
         return 4
 
     return 0
