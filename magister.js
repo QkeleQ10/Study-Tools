@@ -1,24 +1,46 @@
 let weekNumber,
     periodNumber
 
-go()
-checkUpdates()
-window.addEventListener('popstate', go)
-window.addEventListener('hashchange', go)
-window.addEventListener('locationchange', go)
+firstload()
 
-async function go() {
-    const href = document.location.href.split("?")[0]
+async function firstload() {
+    checkUpdates()
+
+    window.addEventListener('popstate', popstate)
+    window.addEventListener('hashchange', popstate)
+    window.addEventListener('locationchange', popstate)
+
     weekNumber = getWeekNumber(new Date())
     periodNumber = getPeriodNumber(weekNumber)
+
+    await awaitElement(".appbar")
+    let appbarZermelo = document.createElement("div")
+    document.querySelector(".appbar").firstElementChild.after(appbarZermelo)
+    appbarZermelo.outerHTML = `
+    <div class="menu-button">
+        <a id="help-menu" href="https://amadeuslyceum.zportal.nl/app">
+            <img src="https://i.imgur.com/TutMkuq.jpeg" width="36" style="border-radius: 100%">
+            <span>Zermelo</span>
+        </a>
+    </div>`
+
+    let appbarWeek = document.createElement("span")
+    appbarWeek.innerText = `week ${weekNumber}\n${new Date().toLocaleString('nl-nl', { weekday: 'long' })}`
+    appbarWeek.style.color = "white"
+    document.querySelector(".appbar").prepend(appbarWeek)
+
+    await awaitElement("#user-menu img")
+    document.querySelector("#user-menu img").style.display = "none"
+}
+
+async function popstate() {
+    const href = document.location.href.split("?")[0]
+
     if (document.location.hash.startsWith("#/vandaag")) vandaag()
     else if (document.location.hash.startsWith("#/agenda")) agenda()
     else if (href.endsWith("/studiewijzer")) studiewijzers()
     else if (href.includes("/studiewijzer/")) studiewijzer()
     else if (href.includes("/opdrachten")) opdrachten()
-
-    await awaitElement("#user-menu img")
-    document.querySelector("#user-menu img").style.display = "none"
 }
 
 async function vandaag() {
@@ -29,9 +51,6 @@ async function vandaag() {
     document.querySelectorAll(".block").forEach(e => {
         e.style.borderRadius = "6px"
     })
-    // let dateText = document.querySelector("div.title"),
-    //     year = new Date().getFullYear()
-    // dateText.innerHTML = dateText.innerHTML.split(year) + `(week ${getWeekNumber(new Date())})`
 }
 
 async function agenda() {
@@ -56,7 +75,7 @@ async function studiewijzers() {
         titles.forEach(title => {
             const label = title.firstElementChild.firstElementChild.innerHTML
             if (regexCurrent.test(label.toLowerCase())) {
-            console.log(label)
+                console.log(label)
                 title.style.background = "aliceBlue"
                 title.parentElement.prepend(title)
             }
