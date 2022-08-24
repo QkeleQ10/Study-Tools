@@ -2,7 +2,6 @@
     "manifest_version": 3,
     "name": "Study Tools",
     "version": "0.1.4",
-    "description": "Nieuw: Weeknummer en -dag zichtbaar in appbar",
     "icons": {
         "100": "icon.png"
     },

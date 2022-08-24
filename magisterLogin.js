@@ -1,9 +1,16 @@
+let keysChanged = false,
+    cancelPrompt = document.createElement("div")
+
 login()
 
 async function login() {
-    let keysChanged = false
-    document.body.onkeydown = function () { keysChanged = true }
-    document.body.onkeyup = function () { keysChanged = true }
+
+    document.body.appendChild(cancelPrompt)
+    cancelPrompt.setAttribute("style", "position: fixed; top: 0; left: 0; opacity: 0.25; background: black; color: white; width: 100%; height: 100%; font-size: 36px; display: flex; align-items: center; justify-content: center;")
+    cancelPrompt.innerHTML = "<b>Automatisch inloggen annuleren</b>"
+    window.addEventListener('keydown', cancelLogin)
+    window.addEventListener('keyup', cancelLogin)
+    cancelPrompt.addEventListener('click', cancelLogin)
 
     let qstaUsername = document.cookie.split("qstaUsername=")[1]
     if (qstaUsername) qstaUsername = qstaUsername.split(";")[0]
@@ -11,31 +18,40 @@ async function login() {
     let qstaPassword = document.cookie.split("qstaPassword=")[1]
     if (qstaPassword) qstaPassword = qstaPassword.split(";")[0]
 
+    document.querySelector(".podium_container").style.minHeight = "calc(100vh - 200px)"
+
     document.querySelector(".bottom").outerHTML = `
     <div class="bottom" style="justify-content: space-between; align-items: center">
-        Druk op een toets om te annuleren.
-        <input type='text' placeholder='Autologin gebruikersnaam' oninput='document.cookie = "qstaUsername=" + this.value + ";expires=Fri, 31 Dec 9999 23:59:59 GMT;"; console.log(this.value)' ${qstaUsername ? "value=" + qstaUsername : ""}>
-        <input type='password' placeholder='Autologin wachtwoord' oninput='document.cookie = "qstaPassword=" + this.value + ";expires=Fri, 31 Dec 9999 23:59:59 GMT;"; console.log(this.value)' ${qstaPassword ? "value=" + qstaPassword : ""}>
+        <div>Sla inloggegevens op in de volgende velden.<br>Deze worden opgeslagen in een cookiebestand.<br>Je bent zelf verantwoordelijk voor de beveiliging ervan.</div>
+        <div>
+            <input type='text' placeholder='Autologin gebruikersnaam' oninput='document.cookie = "qstaUsername=" + this.value + ";max-age=220752000;"' ${qstaUsername ? "value=" + qstaUsername : ""}>
+            <br>
+            <input type='password' placeholder='Autologin wachtwoord' oninput='document.cookie = "qstaPassword=" + this.value + ";max-age=220752000;"' ${qstaPassword ? "value=" + qstaPassword : ""}>
+        </div>
     </div>`
 
     await awaitElement("#username")
-    if (keysChanged) return
     document.getElementById("username").value = qstaUsername || ""
     document.getElementById("username").dispatchEvent(new Event("input"))
 
     await awaitElement("#username_submit")
-    if (keysChanged) return
     document.getElementById("username_submit").click()
 
     await awaitElement("#rswp_password")
-    if (keysChanged) return
     document.getElementById("rswp_password").value = qstaPassword || ""
     document.getElementById("rswp_password").dispatchEvent(new Event("input"))
 
-    await awaitElement("[id*=_submit]")
+    await awaitElement("#rswp_submit")
     if (keysChanged) return
-    document.getElementById("rswp_submit").click()
+    setTimeout(() => {
+        cancelPrompt.style.display = "none"
+        document.getElementById("rswp_submit").click()
+    }, 250)
+}
 
+async function cancelLogin() {
+    keysChanged = true
+    cancelPrompt.style.display = "none"
 }
 
 async function awaitElement(s) {

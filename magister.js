@@ -5,6 +5,7 @@ firstload()
 
 async function firstload() {
     checkUpdates()
+    popstate()
 
     window.addEventListener('popstate', popstate)
     window.addEventListener('hashchange', popstate)
@@ -18,13 +19,13 @@ async function firstload() {
     document.querySelector(".appbar").firstElementChild.after(appbarZermelo)
     appbarZermelo.outerHTML = `
     <div class="menu-button">
-        <a id="help-menu" href="https://amadeuslyceum.zportal.nl/app">
+        <a id="help-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
             <img src="https://i.imgur.com/TutMkuq.jpeg" width="36" style="border-radius: 100%">
             <span>Zermelo</span>
         </a>
     </div>`
 
-    let appbarWeek = document.createElement("span")
+    let appbarWeek = document.createElement("h1")
     appbarWeek.innerText = `week ${weekNumber}\n${new Date().toLocaleString('nl-nl', { weekday: 'long' })}`
     appbarWeek.style.color = "white"
     document.querySelector(".appbar").prepend(appbarWeek)
