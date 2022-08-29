@@ -20,7 +20,7 @@ async function firstload() {
     appbarZermelo.outerHTML = `
     <div class="menu-button">
         <a id="help-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
-            <img src="https://i.imgur.com/TutMkuq.jpeg" width="36" style="border-radius: 100%">
+            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/198142ac-f410-423a-bf0b-34c9cb5d9609/dbui0mf-66a0ee01-15c3-471d-8293-1132a03262a7.png/v1/fit/w_300,h_512,q_70,strp/zermelo_metro_icon_by_destuert_dbui0mf-300w.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTEyIiwicGF0aCI6IlwvZlwvMTk4MTQyYWMtZjQxMC00MjNhLWJmMGItMzRjOWNiNWQ5NjA5XC9kYnVpMG1mLTY2YTBlZTAxLTE1YzMtNDcxZC04MjkzLTExMzJhMDMyNjJhNy5wbmciLCJ3aWR0aCI6Ijw9NTEyIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.flBhmh9awuq9EdWnMoB_hV3acnwrG0B1IO57u5WD78U" width="36" style="border-radius: 100%">
             <span>Zermelo</span>
         </a>
     </div>`
