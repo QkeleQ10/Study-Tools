@@ -19,8 +19,8 @@ async function firstload() {
     document.querySelector(".appbar").firstElementChild.after(appbarZermelo)
     appbarZermelo.outerHTML = `
     <div class="menu-button">
-        <a id="help-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
-            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/198142ac-f410-423a-bf0b-34c9cb5d9609/dbui0mf-66a0ee01-15c3-471d-8293-1132a03262a7.png/v1/fit/w_300,h_512,q_70,strp/zermelo_metro_icon_by_destuert_dbui0mf-300w.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTEyIiwicGF0aCI6IlwvZlwvMTk4MTQyYWMtZjQxMC00MjNhLWJmMGItMzRjOWNiNWQ5NjA5XC9kYnVpMG1mLTY2YTBlZTAxLTE1YzMtNDcxZC04MjkzLTExMzJhMDMyNjJhNy5wbmciLCJ3aWR0aCI6Ijw9NTEyIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.flBhmh9awuq9EdWnMoB_hV3acnwrG0B1IO57u5WD78U" width="36" style="border-radius: 100%">
+        <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
+            <img src="https://i.imgur.com/Uzs441M.png" width="36" style="border-radius: 100%">
             <span>Zermelo</span>
         </a>
     </div>`
@@ -76,7 +76,6 @@ async function studiewijzers() {
         titles.forEach(title => {
             const label = title.firstElementChild.firstElementChild.innerHTML
             if (regexCurrent.test(label.toLowerCase())) {
-                console.log(label)
                 title.style.background = "aliceBlue"
                 title.parentElement.prepend(title)
             }
@@ -100,9 +99,9 @@ async function studiewijzer() {
     titles.forEach(title => {
         if (regex.test(title.innerHTML)) {
             title.parentElement.style.background = "aliceBlue"
-            title.click()
             const endlink = title.parentElement.nextElementSibling.lastElementChild
             endlink.style.background = "aliceBlue"
+            title.click()
             if (!matched) setTimeout(() => {
                 endlink.scrollIntoView({ behavior: "smooth", block: "center" })
             }, 250)
@@ -136,18 +135,26 @@ function getWeekNumber(d) {
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
 }
 
+function periodMatches(period) {
+    switch (period) {
+        case 1:
+
+            break;
+
+        default:
+            break;
+    }
+}
+
 function getPeriodNumber(w) {
-    if (w >= 30 && w < 45)
+    if (w >= 30 && w < 48)
         return 1
 
-    if (w >= 45 || w < 4)
+    if (w >= 48 || w < 4)
         return 2
 
     if (w >= 4 && w < 14)
         return 3
-
-    if (w >= 14 && w < 30)
-        return 4
 
     return 0
 }
