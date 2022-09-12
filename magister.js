@@ -162,7 +162,22 @@ function getPeriodNumber(w) {
 async function checkUpdates() {
     fetch("https://raw.githubusercontent.com/QkeleQ10/Study-Tools/main/manifest.json")
         .then((response) => response.json())
-        .then((data) => {
-            if (data.version > chrome.runtime.getManifest().version) window.open("https://QkeleQ10.github.io/extensions/studytools/update", '_blank')
+        .then(async (data) => {
+            if (data.version != chrome.runtime.getManifest().version) {
+                await awaitElement('div.toasts')
+                let toastUpdate = document.createElement('div')
+                let toastOverlay = document.createElement('div')
+                document.querySelector('div.toasts').append(toastUpdate)
+                document.querySelector('div.toasts').after(toastOverlay)
+                toastUpdate.outerHTML = `
+                <div id="toast-0" class="toast ng-scope alert-toast alert-msg" style="z-index: 999999;">
+                    <span class="glyph"><a href="https://QkeleQ10.github.io/extensions/studytools/update"></a></span>
+                    <span>Update beschikbaar voor StudyTools</span>
+                    <em><a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om te installeren</a> of klik buiten deze melding om over te slaan.</em>
+                    <i></i>
+                </div>`
+                toastOverlay.outerHTML = `
+                <div style="position: fixed; top: 0; left: 0; opacity: 0.25; background: black; color: white; width: 100%; height: 100%; z-index: 999998;" onclick="this.setAttribute('style', '')"></div>`
+            }
         })
 }
