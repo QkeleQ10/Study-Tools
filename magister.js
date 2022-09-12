@@ -20,7 +20,7 @@ async function firstload() {
     appbarZermelo.outerHTML = `
     <div class="menu-button">
         <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
-            <img src="https://i.imgur.com/Uzs441M.png" width="36" style="border-radius: 100%">
+            <img src="https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png" width="36" style="border-radius: 100%">
             <span>Zermelo</span>
         </a>
     </div>`
