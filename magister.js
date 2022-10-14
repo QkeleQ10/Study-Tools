@@ -1,9 +1,10 @@
 let weekNumber,
     periodNumber
 
-firstload()
+onload()
 
-async function firstload() {
+async function onload() {
+    console.log('call onload')
     checkUpdates()
     popstate()
 
@@ -14,9 +15,9 @@ async function firstload() {
     weekNumber = getWeekNumber(new Date())
     periodNumber = getPeriodNumber(weekNumber)
 
-    await awaitElement(".appbar")
-    let appbarZermelo = document.createElement("div")
-    document.querySelector(".appbar").firstElementChild.after(appbarZermelo)
+    let appbar = await element(".appbar"),
+        appbarZermelo = document.createElement("div")
+    appbar.firstElementChild.after(appbarZermelo)
     appbarZermelo.outerHTML = `
     <div class="menu-button">
         <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
@@ -28,10 +29,10 @@ async function firstload() {
     let appbarWeek = document.createElement("h1")
     appbarWeek.innerText = `week ${weekNumber}\n${new Date().toLocaleString('nl-nl', { weekday: 'long' })}`
     appbarWeek.style.color = "white"
-    document.querySelector(".appbar").prepend(appbarWeek)
+    appbar.prepend(appbarWeek)
 
-    await awaitElement("#user-menu img")
-    document.querySelector("#user-menu img").style.display = "none"
+    let userImg = await element("#user-menu img")
+    userImg.style.display = "none"
 }
 
 async function popstate() {
@@ -45,7 +46,7 @@ async function popstate() {
 }
 
 async function vandaag() {
-    await awaitElement("ul.agenda-list>li.alert")
+    await element("ul.agenda-list>li.alert")
     document.querySelectorAll("li.alert").forEach(e => { e.classList.remove("alert") })
     const e = document.querySelector('h4[data-ng-bind-template*="Wijzigingen voor"]')
     e.innerHTML = e.innerHTML.replace("Wijzigingen voor", "Rooster voor")
@@ -55,14 +56,14 @@ async function vandaag() {
 }
 
 async function agenda() {
-    await awaitElement("tr.ng-scope")
+    await element("tr.ng-scope")
     document.querySelectorAll("tr.ng-scope").forEach(e => {
         e.style.height = "40px"
     })
 }
 
 async function studiewijzers() {
-    await awaitElement(`li[data-ng-repeat="studiewijzer in items"]`)
+    await element(`li[data-ng-repeat="studiewijzer in items"]`)
     setTimeout(() => {
         const regexCurrent = new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${periodNumber}).*`, "gi"),
             oldPeriods = ([1, 2, 3, 4].slice(0, periodNumber - 1) || []),
@@ -91,7 +92,7 @@ async function studiewijzers() {
 }
 
 async function studiewijzer() {
-    await awaitElement("li.studiewijzer-onderdeel")
+    await element("li.studiewijzer-onderdeel")
     const regex = new RegExp(`(?<![0-9])(${weekNumber}){1}(?![0-9])`, "g"),
         titles = document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding")
     let matched = false
@@ -111,7 +112,7 @@ async function studiewijzer() {
 }
 
 async function opdrachten() {
-    await awaitElement("tr.ng-scope")
+    await element("tr.ng-scope")
     document.querySelectorAll(".overdue").forEach(e => { e.style.background = "lavenderBlush" })
     document.querySelectorAll('td[data-ng-bind*="InleverenVoor"]').forEach(e => {
         let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
@@ -125,17 +126,6 @@ function getWeekNumber(d) {
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
     var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
-}
-
-function periodMatches(period) {
-    switch (period) {
-        case 1:
-
-            break;
-
-        default:
-            break;
-    }
 }
 
 function getPeriodNumber(w) {
@@ -156,7 +146,7 @@ async function checkUpdates() {
         .then((response) => response.json())
         .then(async (data) => {
             if (data.version != chrome.runtime.getManifest().version) {
-                await awaitElement('div.toasts')
+                await element('div.toasts')
                 let toastUpdate = document.createElement('div')
                 let toastOverlay = document.createElement('div')
                 document.querySelector('div.toasts').append(toastUpdate)
@@ -174,15 +164,28 @@ async function checkUpdates() {
         })
 }
 
-async function awaitElement(s) {
+function element(querySelector) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
-            if (document.querySelector(s)) { return resolve() }
-        }, 10)
+            if (document.querySelector(querySelector)) {
+                clearInterval(interval)
+                clearTimeout(timeout)
+                return resolve(document.querySelector(querySelector))
+            }
+        }, 50)
 
-        setTimeout(() => {
+        let timeout = setTimeout(() => {
             clearInterval(interval)
-            reject(`Element "${s}" not found`)
-        }, 2000)
+            return reject(Error(`Element "${querySelector}" not found`))
+        }, 1500)
+    })
+}
+
+function setting(key) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get([key], (result) => {
+            let value = Object.values(result)[0]
+            value ? resolve(value) : resolve('')
+        })
     })
 }

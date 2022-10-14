@@ -3,24 +3,60 @@
 <head>
     <title>Study Tools configureren</title>
     <script src="popup.js" defer></script>
+    <link rel="stylesheet" href="popup.css">
 </head>
 
-<body style="width: 25em; padding: 1em;">
-    <div style="display: flex; height: 3em; align-items: center; gap: 1em;">
-        <img src="icon.png" alt="Study Tools" style="height: 3em;">
-        <h1>Configuratie</h1>
+<body>
+    <div>
+        <h1>Study Tools</h1>
+        <p>Configuratiepaneel</p>
     </div>
     <section>
         <h2>Magister</h2>
         <div>
             <h3>Inlogpagina</h3>
-            <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind">
-            <label for="magisterLogin-enabled">Automatisch inloggen</label>
-            <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind">
-            <label for="magisterLogin-password">Wachtwoord</label>
-            <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind">
-            <label for="magisterLogin-username">Gebruikersnaam</label>
+            <label for="magisterLogin-enabled">
+                Automatisch inloggen
+                <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind">
+            </label>
+            <label for="magisterLogin-username">
+                Gebruikersnaam
+                <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind">
+            </label>
+            <label for="magisterLogin-password">
+                Wachtwoord
+                <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind">
+            </label>
         </div>
+        <div>
+            <h3>Studiewijzers</h3>
+            <label for="magisterLogin-enabled">
+                Studiewijzerlijst sorteren
+                <input type="checkbox" name="Automatisch inloggen" id="magister-sw-sort" class="bind">
+            </label>
+            <label for="magisterLogin-enabled">
+                Naar deze week scrollen
+                <input type="checkbox" name="Automatisch inloggen" id="magister-sw-thisWeek" class="bind">
+            </label>
+        </div>
+        <div>
+            <h3>Zijbalk</h3>
+            <label for="magisterLogin-enabled">
+                Weeknummer en -dag tonen
+                <input type="checkbox" name="Automatisch inloggen" id="magister-appbar-week" class="bind">
+            </label>
+            <label for="magisterLogin-enabled">
+                Link naar Zermelo tonen
+                <input type="checkbox" name="Automatisch inloggen" id="magister-appbar-zermelo" class="bind">
+            </label>
+            <label for="magisterLogin-enabled">
+                Profielfoto verbergen
+                <input type="checkbox" name="Automatisch inloggen" id="magister-appbar-hidePicture" class="bind">
+            </label>
+        </div>
+    </section>
+    <section>
+        <h2>Sectie twee</h2>
     </section>
 </body>
 

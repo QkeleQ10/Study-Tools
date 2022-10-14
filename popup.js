@@ -1,14 +1,16 @@
-document.querySelectorAll('.bind').forEach(element => {
+document.querySelectorAll('.bind').forEach(async element => {
+    let value = await setting(element.id)
+    console.log(element.id, setting(element.id), value)
     switch (element.getAttribute('type')) {
         case 'checkbox':
-            element.checked = get(element.id)
+            element.checked = value
             element.addEventListener('change', event => {
                 set(event.target.id, event.target.checked)
             })
             break
 
         default:
-            element.value = get(element.id)
+            element.value = value
             element.addEventListener('change', event => {
                 set(event.target.id, event.target.value)
             })
@@ -16,17 +18,17 @@ document.querySelectorAll('.bind').forEach(element => {
     }
 })
 
-function get(key) {
-    chrome.storage.local.get(['key'], (result) => {
-        console.log(key, result.key)
-        return result.key
+function setting(key) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get([key], (result) => {
+            let value = Object.values(result)[0]
+            value ? resolve(value) : resolve('')
+        })
     })
 }
 
 function set(key, value) {
-    console.log(`assigned to SET ${key} to ${value}`)
-    chrome.storage.local.set({ key: value }, () => {
-        console.log(key, value)
-        return value || undefined
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.set({ [key]: value }, resolve())
     })
 }
