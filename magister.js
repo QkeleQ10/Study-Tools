@@ -120,14 +120,6 @@ async function opdrachten() {
     })
 }
 
-async function awaitElement(s) {
-    return new Promise(p => {
-        setInterval(() => {
-            if (document.querySelector(s)) { p() }
-        }, 10)
-    })
-}
-
 function getWeekNumber(d) {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
@@ -180,4 +172,17 @@ async function checkUpdates() {
                 <div style="position: fixed; top: 0; left: 0; opacity: 0.25; background: black; color: white; width: 100%; height: 100%; z-index: 999998;" onclick="this.setAttribute('style', '')"></div>`
             }
         })
+}
+
+async function awaitElement(s) {
+    return new Promise((resolve, reject) => {
+        let interval = setInterval(() => {
+            if (document.querySelector(s)) { return resolve() }
+        }, 10)
+
+        setTimeout(() => {
+            clearInterval(interval)
+            reject(`Element "${s}" not found`)
+        }, 2000)
+    })
 }
