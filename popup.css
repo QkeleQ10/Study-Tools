@@ -36,6 +36,11 @@ h1:after {
     color: #ff8205;
 }
 
+h2 {
+    display: flex;
+    justify-content: space-between;
+}
+
 h3 {
     display: flex;
     width: 100%;
@@ -97,6 +102,26 @@ input[type=checkbox]:hover {
 label:focus>input,
 label:active>input,
 input:focus,
-input:active {
+input:active,
+.allbutton:focus,
+.allbutton:active {
     box-shadow: 0 0 0 .3em #1f97f980;
+}
+
+.allbutton {
+    background: #1f97f9;
+    color: #ffffff;
+    border: none;
+    border-radius: .15em;
+}
+
+.allbutton:not(:disabled):hover,
+.allbutton:focus,
+.allbutton:hover {
+    background: #1a7ecf;
+    outline: none;
+}
+
+.allbutton:disabled {
+    opacity: 0.5;
 }

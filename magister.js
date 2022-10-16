@@ -4,6 +4,7 @@ let weekNumber,
 onload()
 
 async function onload() {
+    checkSettings()
     checkUpdates()
     popstate()
 
@@ -16,7 +17,7 @@ async function onload() {
 
     let appbar = await element(".appbar")
 
-    if (await setting('magister-appbar-zermelo')) {
+    if (await get('magister-appbar-zermelo')) {
         let appbarZermelo = document.createElement("div")
         appbar.firstElementChild.after(appbarZermelo)
         appbarZermelo.outerHTML = `
@@ -27,14 +28,14 @@ async function onload() {
         </a>
     </div>`}
 
-    if (await setting('magister-appbar-week')) {
+    if (await get('magister-appbar-week')) {
         let appbarWeek = document.createElement("h1")
         appbarWeek.innerText = `week ${weekNumber}\n${new Date().toLocaleString('nl-nl', { weekday: 'long' })}`
         appbarWeek.style.color = "white"
         appbar.prepend(appbarWeek)
     }
 
-    if (await setting('magister-appbar-hidePicture')) {
+    if (await get('magister-appbar-hidePicture')) {
         let userImg = await element("#user-menu img")
         userImg.style.display = "none"
     }
@@ -51,7 +52,7 @@ async function popstate() {
 }
 
 async function vandaag() {
-    if (await setting('magister-vd-deblue')) {
+    if (await get('magister-vd-deblue')) {
         await element("ul.agenda-list>li.alert")
         document.querySelectorAll("li.alert").forEach(e => e.classList.remove("alert"))
         const e = document.querySelector('h4[data-ng-bind-template*="Wijzigingen voor"]')
@@ -60,17 +61,15 @@ async function vandaag() {
 }
 
 async function agenda() {
-    if (await setting('magister-ag-spacious')) {
+    if (await get('magister-ag-spacious')) {
         await element("tr.ng-scope")
         document.querySelectorAll("tr.ng-scope").forEach(e => e.style.height = "40px")
     }
 }
 
-// --------------------------------------------------------------------------------------------------------------------------------------
-
 async function studiewijzers() {
-    await element(`li[data-ng-repeat="studiewijzer in items"]`)
-    setTimeout(() => {
+    if (await get('magister-sw-sort')) {
+        await element(`li[data-ng-repeat="studiewijzer in items"]`)
         const regexCurrent = new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${periodNumber}).*`, "gi"),
             oldPeriods = ([1, 2, 3, 4].slice(0, periodNumber - 1) || []),
             oldRegexes = [],
@@ -94,37 +93,39 @@ async function studiewijzers() {
                 }
             })
         })
-    }, 1000)
+    }
 }
 
 async function studiewijzer() {
-    await element("li.studiewijzer-onderdeel")
-    const regex = new RegExp(`(?<![0-9])(${weekNumber}){1}(?![0-9])`, "g"),
-        titles = document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding")
-    let matched = false
+    if (await get('magister-sw-thisWeek')) {
+        await element("li.studiewijzer-onderdeel")
+        const regex = new RegExp(`(?<![0-9])(${weekNumber}){1}(?![0-9])`, "g"),
+            titles = document.querySelectorAll("li.studiewijzer-onderdeel>div.block>h3>b.ng-binding")
+        let matched = false
 
-    titles.forEach(title => {
-        if (regex.test(title.innerHTML)) {
-            title.parentElement.style.background = "aliceBlue"
-            const endlink = title.parentElement.nextElementSibling.lastElementChild
-            endlink.style.background = "aliceBlue"
-            title.click()
-            if (!matched) setTimeout(() => {
+        titles.forEach(title => {
+            if (regex.test(title.innerHTML)) {
+                title.parentElement.style.background = "aliceBlue"
+                const endlink = title.parentElement.nextElementSibling.lastElementChild
+                endlink.style.background = "aliceBlue"
                 endlink.scrollIntoView({ behavior: "smooth", block: "center" })
-            }, 250)
-            matched = true
-        }
-    })
+                title.click(), 2000
+                matched = true
+            }
+        })
+    }
 }
 
 async function opdrachten() {
-    await element("tr.ng-scope")
-    document.querySelectorAll(".overdue").forEach(e => { e.style.background = "lavenderBlush" })
-    document.querySelectorAll('td[data-ng-bind*="InleverenVoor"]').forEach(e => {
-        let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
-        let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
-        if (d.toLocaleDateString("nl-NL", opt) != "Invalid Date") e.innerHTML = d.toLocaleDateString("nl-NL", opt)
-    })
+    if (await get('magister-op-oldred')) {
+        await element("tr.ng-scope")
+        document.querySelectorAll(".overdue").forEach(e => { e.style.background = "lavenderBlush" })
+        document.querySelectorAll('td[data-ng-bind*="InleverenVoor"]').forEach(e => {
+            let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
+            let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
+            if (d.toLocaleDateString("nl-NL", opt) != "Invalid Date") e.innerHTML = d.toLocaleDateString("nl-NL", opt)
+        })
+    }
 }
 
 function getWeekNumber(d) {
@@ -147,27 +148,37 @@ function getPeriodNumber(w) {
     return 0
 }
 
+// CHANGE THE UPDATE POPUP
 async function checkUpdates() {
+    if (!await get('update')) return
     fetch("https://raw.githubusercontent.com/QkeleQ10/Study-Tools/main/manifest.json")
         .then((response) => response.json())
-        .then(async (data) => {
-            if (data.version != chrome.runtime.getManifest().version) {
-                await element('div.toasts')
-                let toastUpdate = document.createElement('div')
-                let toastOverlay = document.createElement('div')
-                document.querySelector('div.toasts').append(toastUpdate)
-                document.querySelector('div.toasts').after(toastOverlay)
-                toastUpdate.outerHTML = `
-                <div id="toast-0" class="toast ng-scope alert-toast alert-msg" style="z-index: 999999;">
-                    <span class="glyph"><a href="https://QkeleQ10.github.io/extensions/studytools/update"></a></span>
-                    <span>Update beschikbaar voor StudyTools</span>
-                    <em><a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om te installeren</a> of klik buiten deze melding om over te slaan.</em>
-                    <i></i>
-                </div>`
-                toastOverlay.outerHTML = `
-                <div style="position: fixed; top: 0; left: 0; opacity: 0.25; background: black; color: white; width: 100%; height: 100%; z-index: 999998;" onclick="this.setAttribute('style', '')"></div>`
-            }
+        .then(async data => {
+            if (data.version >= chrome.runtime.getManifest().version) return
+            let notification = document.createElement('div')
+            notification.innerHTML =
+                `<style>#stnotifh,#stnotifp{font-family:system-ui,sans-serif;user-select:none;color:#fff}#stnotifh{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifp{font-size:12px}#stnotifp>a{color:#fff}</style>
+                <h1 id="stnotifh">Study Tools</h1>
+                <p id="stnotifp">Er is een update beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a></p>`
+            notification.setAttribute('style',
+                `width:276px;position:fixed;top:0;right:20em;padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
+            document.body.prepend(notification)
+
         })
+
+}
+
+async function checkSettings() {
+    if (await get('openedPopup')) return
+    let notification = document.createElement('div')
+    notification.innerHTML =
+        `<style>#stnotifh,#stnotifp{font-family:system-ui,sans-serif;user-select:none;color:#fff}#stnotifh{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifp{font-size:12px}#stnotifp>a{color:#fff}</style>
+        <h1 id="stnotifh">Study Tools</h1>
+        <p id="stnotifp">Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.</p>`
+    notification.setAttribute('style',
+        `width:276px;position:fixed;top:0;right:20em;padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
+    document.body.prepend(notification)
+
 }
 
 function element(querySelector) {
@@ -187,7 +198,7 @@ function element(querySelector) {
     })
 }
 
-function setting(key) {
+function get(key) {
     return new Promise((resolve, reject) => {
         chrome.storage.sync.get([key], (result) => {
             let value = Object.values(result)[0]

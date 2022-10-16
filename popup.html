@@ -12,7 +12,16 @@
         <p>Configuratiepaneel</p>
     </div>
     <section>
-        <h2>Magister</h2>
+        <h2>Algemeen <button class="allbutton">Alles aan</button></h2>
+        <div>
+            <label for="updates">
+                Updates aanbieden
+                <input type="checkbox" name="Updates aanbieden" id="updates" class="bind">
+            </label>
+        </div>
+    </section>
+    <section>
+        <h2>Magister <button class="allbutton">Alles aan</button></h2>
         <div>
             <h3>Inlogpagina</h3>
             <label for="magisterLogin-enabled">
@@ -47,8 +56,7 @@
             <h3>Vandaag</h3>
             <label for="magister-vd-deblue">
                 Roosteritems normaliseren
-                <input type="checkbox" name="Roosteritems normaliseren" id="magister-vd-deblue"
-                    class="bind">
+                <input type="checkbox" name="Roosteritems normaliseren" id="magister-vd-deblue" class="bind">
             </label>
         </div>
         <div>
@@ -69,11 +77,17 @@
                 <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek" class="bind">
             </label>
         </div>
+        <div>
+            <h3>Opdrachten</h3>
+            <label for="magister-op-oldred">
+                Oude opdrachten rood kleuren
+                <input type="checkbox" name="Oude opdrachten rood kleuren" id="magister-op-oldred" class="bind">
+            </label>
+        </div>
     </section>
-    <section>
-        <h2>Sectie twee</h2>
-    </section>
-    <p>Ontwikkeld door <a href="https://QkeleQ10.GitHub.io">Quinten Althues</a></p>
+    <div>
+        <p>Ontwikkeld door <a href="https://QkeleQ10.GitHub.io" target="_blank">Quinten Althues</a></p>
+    </div>
 </body>
 
 </html>

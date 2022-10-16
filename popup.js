@@ -1,5 +1,8 @@
+set('openedPopup', true)
+
+// Bind inputs
 document.querySelectorAll('.bind').forEach(async element => {
-    let value = await setting(element.id)
+    let value = await get(element.id)
     switch (element.getAttribute('type')) {
         case 'checkbox':
             element.checked = value
@@ -13,7 +16,26 @@ document.querySelectorAll('.bind').forEach(async element => {
     }
 })
 
-function setting(key) {
+// Allbuttons
+document.querySelectorAll('.allbutton').forEach(async element => {
+    element.addEventListener('click', event => {
+        event.target.disabled = true
+        setTimeout(() => { event.target.disabled = false }, 5000)
+        switch (event.target.innerText) {
+            case 'Alles uit':
+                event.target.parentElement.parentElement.querySelectorAll('input[type=checkbox]').forEach(e => { if (e.checked) e.click() })
+                event.target.innerText = 'Alles aan'
+                break
+
+            default:
+                event.target.parentElement.parentElement.querySelectorAll('input[type=checkbox]').forEach(e => { if (!e.checked) e.click() })
+                event.target.innerText = 'Alles uit'
+                break
+        }
+    })
+})
+
+function get(key) {
     return new Promise((resolve, reject) => {
         chrome.storage.sync.get([key], (result) => {
             let value = Object.values(result)[0]
