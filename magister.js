@@ -4,7 +4,6 @@ let weekNumber,
 onload()
 
 async function onload() {
-    console.log('call onload')
     checkUpdates()
     popstate()
 
@@ -15,24 +14,30 @@ async function onload() {
     weekNumber = getWeekNumber(new Date())
     periodNumber = getPeriodNumber(weekNumber)
 
-    let appbar = await element(".appbar"),
-        appbarZermelo = document.createElement("div")
-    appbar.firstElementChild.after(appbarZermelo)
-    appbarZermelo.outerHTML = `
+    let appbar = await element(".appbar")
+
+    if (await setting('magister-appbar-zermelo')) {
+        let appbarZermelo = document.createElement("div")
+        appbar.firstElementChild.after(appbarZermelo)
+        appbarZermelo.outerHTML = `
     <div class="menu-button">
         <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app">
             <img src="https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png" width="36" style="border-radius: 100%">
             <span>Zermelo</span>
         </a>
-    </div>`
+    </div>`}
 
-    let appbarWeek = document.createElement("h1")
-    appbarWeek.innerText = `week ${weekNumber}\n${new Date().toLocaleString('nl-nl', { weekday: 'long' })}`
-    appbarWeek.style.color = "white"
-    appbar.prepend(appbarWeek)
+    if (await setting('magister-appbar-week')) {
+        let appbarWeek = document.createElement("h1")
+        appbarWeek.innerText = `week ${weekNumber}\n${new Date().toLocaleString('nl-nl', { weekday: 'long' })}`
+        appbarWeek.style.color = "white"
+        appbar.prepend(appbarWeek)
+    }
 
-    let userImg = await element("#user-menu img")
-    userImg.style.display = "none"
+    if (await setting('magister-appbar-hidePicture')) {
+        let userImg = await element("#user-menu img")
+        userImg.style.display = "none"
+    }
 }
 
 async function popstate() {
@@ -46,21 +51,22 @@ async function popstate() {
 }
 
 async function vandaag() {
-    await element("ul.agenda-list>li.alert")
-    document.querySelectorAll("li.alert").forEach(e => { e.classList.remove("alert") })
-    const e = document.querySelector('h4[data-ng-bind-template*="Wijzigingen voor"]')
-    e.innerHTML = e.innerHTML.replace("Wijzigingen voor", "Rooster voor")
-    document.querySelectorAll(".block").forEach(e => {
-        e.style.borderRadius = "6px"
-    })
+    if (await setting('magister-vd-deblue')) {
+        await element("ul.agenda-list>li.alert")
+        document.querySelectorAll("li.alert").forEach(e => e.classList.remove("alert"))
+        const e = document.querySelector('h4[data-ng-bind-template*="Wijzigingen voor"]')
+        e.innerHTML = e.innerHTML.replace("Wijzigingen voor", "Rooster voor")
+    }
 }
 
 async function agenda() {
-    await element("tr.ng-scope")
-    document.querySelectorAll("tr.ng-scope").forEach(e => {
-        e.style.height = "40px"
-    })
+    if (await setting('magister-ag-spacious')) {
+        await element("tr.ng-scope")
+        document.querySelectorAll("tr.ng-scope").forEach(e => e.style.height = "40px")
+    }
 }
+
+// --------------------------------------------------------------------------------------------------------------------------------------
 
 async function studiewijzers() {
     await element(`li[data-ng-repeat="studiewijzer in items"]`)
@@ -183,7 +189,7 @@ function element(querySelector) {
 
 function setting(key) {
     return new Promise((resolve, reject) => {
-        chrome.storage.local.get([key], (result) => {
+        chrome.storage.sync.get([key], (result) => {
             let value = Object.values(result)[0]
             value ? resolve(value) : resolve('')
         })

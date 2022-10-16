@@ -8,7 +8,6 @@ async function login() {
 
         let usernameField = await element('#username'),
             username = await setting('magisterLogin-username')
-        console.log(usernameField)
         usernameField.value = username
         usernameField.dispatchEvent(new Event('input'))
 
