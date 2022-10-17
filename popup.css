@@ -1,0 +1,127 @@
+body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 25em;
+    margin: 0;
+    background-color: #d8d8d8;
+    user-select: none;
+}
+
+body>div,
+body>section {
+    padding: .5em 1em;
+}
+
+body>div:nth-child(1) {
+    background-color: #1f97f9;
+    color: white;
+}
+
+body>section {
+    background-color: white;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: .5em 0;
+}
+
+h1:after {
+    content: '.';
+    color: #ff8205;
+}
+
+h2 {
+    display: flex;
+    justify-content: space-between;
+}
+
+h3 {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+h3:after {
+    content: '';
+    border-top: 1px solid #d8d8d8;
+    margin-left: .5em;
+    flex: 1 0 .5em;
+}
+
+label {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5em;
+    min-height: 2em;
+}
+
+input {
+    display: grid;
+    place-content: center;
+    margin: 0;
+    margin-bottom: .5em;
+    background-color: #ffffff;
+    color: currentColor;
+    font: inherit;
+    outline: .15em solid currentColor;
+    border: none;
+    border-radius: .15em;
+}
+
+input[type=checkbox] {
+    appearance: none;
+    height: 1.15em;
+    width: 1.15em;
+    border: .2em solid white;
+}
+
+input[type=checkbox]:checked {
+    background: #1f97f9;
+}
+
+label:hover {
+    color: #808080
+}
+
+label:hover>input,
+input:hover {
+    color: #1f97f9;
+}
+
+label:hover>input[type=checkbox],
+input[type=checkbox]:hover {
+    border: .3em solid white;
+}
+
+label:focus>input,
+label:active>input,
+input:focus,
+input:active,
+.allbutton:focus,
+.allbutton:active {
+    box-shadow: 0 0 0 .3em #1f97f980;
+}
+
+.allbutton {
+    background: #1f97f9;
+    color: #ffffff;
+    border: none;
+    border-radius: .15em;
+}
+
+.allbutton:not(:disabled):hover,
+.allbutton:focus,
+.allbutton:hover {
+    background: #1a7ecf;
+    outline: none;
+}
+
+.allbutton:disabled {
+    opacity: 0.5;
+}
