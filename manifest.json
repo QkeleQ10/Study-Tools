@@ -1,9 +1,10 @@
 {
     "manifest_version": 3,
     "name": "Study Tools",
-    "version": "0.1.5",
+    "version": "1.0.0",
+    "description": "Een extensie die verschillende aspecten van Magister verbetert en problemen ermee oplost.",
     "icons": {
-        "100": "icon.png"
+        "300": "icon.png"
     },
     "content_scripts": [
         {
