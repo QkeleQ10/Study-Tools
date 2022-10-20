@@ -203,7 +203,7 @@ function element(querySelector) {
         let timeout = setTimeout(() => {
             clearInterval(interval)
             return reject(Error(`Element "${querySelector}" not found`))
-        }, 1500)
+        }, 4000)
     })
 }
 
