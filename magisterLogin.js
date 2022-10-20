@@ -2,19 +2,19 @@ login()
 
 async function login() {
     try {
-        await get('magisterLogin-enabled')
+        await getSetting('magisterLogin-enabled')
 
         document.querySelector('.bottom').innerHTML = "<p><b>Automatisch inloggen is ingeschakeld.</b> Je kunt de instellingen aanpassen via de extensie van Study Tools.</p>"
 
         let usernameField = await element('#username'),
-            username = await get('magisterLogin-username')
+            username = await getSetting('magisterLogin-username')
         usernameField.value = username
         usernameField.dispatchEvent(new Event('input'))
 
         let usernameSubmit = await element('#username_submit')
         usernameSubmit.click()
 
-        let password = await get('magisterLogin-password'),
+        let password = await getSetting('magisterLogin-password'),
             passwordField = await element('#rswp_password')
         passwordField.value = password
         passwordField.dispatchEvent(new Event('input'))
@@ -39,11 +39,11 @@ function element(querySelector) {
         let timeout = setTimeout(() => {
             clearInterval(interval)
             return reject(Error(`Element "${querySelector}" not found`))
-        }, 1500)
+        }, 4000)
     })
 }
 
-function get(key) {
+function getSetting(key) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.get([key], (result) => {
             let value = Object.values(result)[0]

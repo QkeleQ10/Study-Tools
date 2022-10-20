@@ -2,7 +2,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 3px;
-    width: 25em;
+    min-width: 25em;
     margin: 0;
     background-color: #d8d8d8;
     user-select: none;
