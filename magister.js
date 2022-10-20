@@ -1,5 +1,5 @@
 let weekNumber,
-    periodNumber
+    currentPeriod
 
 onload()
 
@@ -13,7 +13,7 @@ async function onload() {
     window.addEventListener('locationchange', popstate)
 
     weekNumber = getWeekNumber(new Date())
-    periodNumber = getPeriodNumber(weekNumber)
+    currentPeriod = getPeriodNumber(weekNumber)
 
     let appbar = await element(".appbar")
 
@@ -39,6 +39,10 @@ async function onload() {
         let userImg = await element("#user-menu img")
         userImg.style.display = "none"
     }
+
+    let styleElem = document.createElement('style')
+    styleElem.innerHTML = `.st-current:not(:hover){background-color:#f0f8ff!important}.st-current{font-weight:700}.st-obsolete:not(:hover){background-color:#fff0f5!important}.st-obsolete{font-style:italic}`
+    document.head.append(styleElem)
 }
 
 async function popstate() {
@@ -71,29 +75,34 @@ async function agenda() {
 async function studiewijzers() {
     if (await getSetting('magister-sw-sort')) {
         await element(`li[data-ng-repeat="studiewijzer in items"]`)
-        const regexCurrent = new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${periodNumber}).*`, "gi"),
-            oldPeriods = ([1, 2, 3, 4].slice(0, periodNumber - 1) || []),
-            oldRegexes = [],
-            titles = document.querySelectorAll(`ul>[data-ng-repeat="studiewijzer in items"]`)
 
-        oldPeriods.forEach(p => {
-            oldRegexes.push(new RegExp(`.*((t|(p(eriod)?))([A-z]*)\s*.*${p}).*`, "gi"))
-        })
-
-        titles.forEach(title => {
-            const label = title.firstElementChild.firstElementChild.innerHTML
-            if (regexCurrent.test(label.toLowerCase())) {
-                title.style.background = "aliceBlue"
-                title.parentElement.prepend(title)
-            }
-
-            oldRegexes.forEach(oldRegex => {
-                if (oldRegex.test(label.toLowerCase())) {
-                    title.style.background = "lavenderblush"
-                    title.parentElement.append(title)
+        const swElems = [...document.querySelectorAll('li[data-ng-repeat="studiewijzer in items"]')],
+            swParsed = swElems.map(elem => {
+                let swTitle = elem.firstElementChild.firstElementChild,
+                    swSubject = elem.firstElementChild.lastElementChild,
+                    period,
+                    periodTextIndex = swTitle.innerText.search(/(t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
+                if (periodTextIndex > 0) {
+                    let periodNumberSearchString = swTitle.innerText.slice(periodTextIndex),
+                        periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
+                    if (periodNumberIndex > 0) {
+                        period = Number(periodNumberSearchString.charAt(periodNumberIndex))
+                    }
                 }
+
+                if (period == currentPeriod) {
+                    elem.classList.add('st-current')
+                    elem.setAttribute('title', "Deze studiewijzer is actueel.")
+                    elem.parentElement.prepend(elem)
+                } else if (period > 0) {
+                    elem.classList.add('st-obsolete')
+                    elem.setAttribute('title', `Deze studiewijzer is van periode ${period}.`)
+                    elem.parentElement.appendChild(elem)
+                } else {
+                    elem.setAttribute('title', "Er kon geen periodenummer worden gedetecteerd.")
+                }
+                return { element: elem, period: period }
             })
-        })
     }
 }
 
@@ -107,6 +116,7 @@ async function studiewijzer() {
         titles.forEach(title => {
             if (regex.test(title.innerHTML)) {
                 title.parentElement.style.background = "aliceBlue"
+                title.parentElement.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")
                 const endlink = title.parentElement.nextElementSibling.lastElementChild
                 endlink.style.background = "aliceBlue"
                 endlink.scrollIntoView({ behavior: "smooth", block: "center" })
@@ -120,7 +130,11 @@ async function studiewijzer() {
 async function opdrachten() {
     if (await getSetting('magister-op-oldred')) {
         await element("tr.ng-scope")
-        document.querySelectorAll(".overdue").forEach(e => { e.style.background = "lavenderBlush" })
+        document.querySelectorAll(".overdue").forEach(e => {
+            e.classList.add('st-obsolete')
+            e.setAttribute('title', "Deze inlevertermijn van deze opdracht is verstreken.")
+            e.parentElement.appendChild(e)
+        })
         document.querySelectorAll('td[data-ng-bind*="InleverenVoor"]').forEach(e => {
             let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
             let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
