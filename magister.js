@@ -178,30 +178,13 @@ async function checkUpdates() {
         .then((response) => response.json())
         .then(async data => {
             if (data.version <= chrome.runtime.getManifest().version) return
-            let notification = document.createElement('div')
-            notification.innerHTML =
-                `<style>#stnotifh,#stnotifp{font-family:system-ui,sans-serif;user-select:none;color:#fff}#stnotifh{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifp{font-size:12px}#stnotifp>a{color:#fff}</style>
-                <h1 id="stnotifh">Study Tools</h1>
-                <p id="stnotifp">Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a></p>`
-            notification.setAttribute('style',
-                `width:276px;position:fixed;top:0;right:20em;padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
-            document.body.prepend(notification)
-
+            notify(`Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a>`)
         })
-
 }
 
 async function checkSettings() {
     if (await getSetting('openedPopup')) return
-    let notification = document.createElement('div')
-    notification.innerHTML =
-        `<style>#stnotifh,#stnotifp{font-family:system-ui,sans-serif;user-select:none;color:#fff}#stnotifh{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifp{font-size:12px}#stnotifp>a{color:#fff}</style>
-        <h1 id="stnotifh">Study Tools</h1>
-        <p id="stnotifp">Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.</p>`
-    notification.setAttribute('style',
-        `width:276px;position:fixed;top:0;right:20em;padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
-    document.body.prepend(notification)
-
+    notify(`Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.`)
 }
 
 function element(querySelector) {
@@ -228,4 +211,17 @@ function getSetting(key) {
             value ? resolve(value) : resolve('')
         })
     })
+}
+
+function notify(body, timeout) {
+    let notification = document.createElement('div')
+    notification.innerHTML =
+        `<style>#stnotifh,#stnotifp{font-family:system-ui,sans-serif;user-select:none;color:#fff}#stnotifh{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifp{font-size:12px}#stnotifp>a{color:#fff}</style>
+        <h1 id="stnotifh">Study Tools</h1>
+        <p id="stnotifp">${body}</p>`
+    notification.setAttribute('style',
+        `width:276px;position:fixed;top:0;right:20em;padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
+    document.body.prepend(notification)
+
+    if (timeout) setTimeout(() => notification.remove(), timeout)
 }
