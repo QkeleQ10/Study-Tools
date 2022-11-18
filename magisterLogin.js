@@ -2,52 +2,34 @@ login()
 
 async function login() {
     try {
-        await getSetting('magisterLogin-enabled')
+        const autoLoginEnabled = await getSetting('magisterLogin-enabled'),
+            forceLogoutTimestamp = await getSetting('force-logout', 'local'),
+            footer = document.querySelector('.bottom')
 
-        document.querySelector('.bottom').innerHTML = "<p><b>Automatisch inloggen is ingeschakeld.</b> Je kunt de instellingen aanpassen via de extensie van Study Tools.</p>"
+        if (!autoLoginEnabled) return
 
-        let usernameField = await element('#username'),
+        footer.style.translate = '0 -2rem'
+        if (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 10000)
+            return footer.innerHTML = "<p><b>Automatisch inloggen is tijdelijk gepauzeerd.</b> De volgende keer zal er weer automatisch worden ingelogd.</p>"
+
+        footer.innerHTML = "<p><b>Automatisch inloggen is ingeschakeld.</b> Je kunt de instellingen aanpassen via de extensie van Study Tools.</p>"
+
+        let usernameField = await getElement('#username'),
             username = await getSetting('magisterLogin-username')
         usernameField.value = username
         usernameField.dispatchEvent(new Event('input'))
 
-        let usernameSubmit = await element('#username_submit')
+        let usernameSubmit = await getElement('#username_submit')
         usernameSubmit.click()
 
         let password = await getSetting('magisterLogin-password'),
-            passwordField = await element('#rswp_password')
+            passwordField = await getElement('#rswp_password')
         passwordField.value = password
         passwordField.dispatchEvent(new Event('input'))
 
-        let passwordSubmit = await element('#rswp_submit')
+        let passwordSubmit = await getElement('#rswp_submit')
         passwordSubmit.click()
     } catch (error) {
         throw error
     }
-}
-
-function element(querySelector) {
-    return new Promise((resolve, reject) => {
-        let interval = setInterval(() => {
-            if (document.querySelector(querySelector)) {
-                clearInterval(interval)
-                clearTimeout(timeout)
-                return resolve(document.querySelector(querySelector))
-            }
-        }, 50)
-
-        let timeout = setTimeout(() => {
-            clearInterval(interval)
-            return reject(Error(`Element "${querySelector}" not found`))
-        }, 4000)
-    })
-}
-
-function getSetting(key) {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.get([key], (result) => {
-            let value = Object.values(result)[0]
-            value ? resolve(value) : resolve('')
-        })
-    })
 }
