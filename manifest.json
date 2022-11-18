@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -20,16 +20,17 @@
                 "*://accounts.magister.net/account/login*"
             ],
             "js": [
-                "jquery-3.5.1.min.js",
+                "util.js",
                 "magisterLogin.js"
             ],
             "run_at": "document_end"
         },
         {
             "matches": [
-                "*://*.magister.net/*"
+                "*://*.magister.net/magister/*"
             ],
             "js": [
+                "util.js",
                 "magister.js"
             ],
             "run_at": "document_end"

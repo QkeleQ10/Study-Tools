@@ -1,17 +1,17 @@
-set('openedPopup', true)
+setSetting('openedPopup', true)
 
 // Bind inputs
 document.querySelectorAll('.bind').forEach(async element => {
-    let value = await get(element.id)
+    let value = await getSetting(element.id)
     switch (element.getAttribute('type')) {
         case 'checkbox':
             element.checked = value
-            element.addEventListener('input', event => set(event.target.id, event.target.checked))
+            element.addEventListener('input', event => setSetting(event.target.id, event.target.checked))
             break
 
         default:
             element.value = value
-            element.addEventListener('input', event => set(event.target.id, event.target.value))
+            element.addEventListener('input', event => setSetting(event.target.id, event.target.value))
             break
     }
 })
@@ -35,17 +35,17 @@ document.querySelectorAll('.allbutton').forEach(async element => {
     })
 })
 
-function get(key) {
+function getSetting(key, type) {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get([key], (result) => {
+        chrome.storage[type ? type : 'sync'].get([key], (result) => {
             let value = Object.values(result)[0]
             value ? resolve(value) : resolve('')
         })
     })
 }
 
-function set(key, value) {
+function setSetting(key, value, type) {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.set({ [key]: value }, resolve())
+        chrome.storage[type ? type : 'sync'].set({ [key]: value }, resolve())
     })
 }
