@@ -34,6 +34,17 @@
                 "magister.js"
             ],
             "run_at": "document_end"
+        },
+        {
+            "matches": [
+                "*://apps.noordhoff.nl/se*",
+                "*://identity.noordhoff.nl/*"
+            ],
+            "js": [
+                "util.js",
+                "noordhoff.js"
+            ],
+            "run_at": "document_end"
         }
     ],
     "action": {

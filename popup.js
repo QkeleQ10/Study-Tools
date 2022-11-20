@@ -35,17 +35,31 @@ document.querySelectorAll('.allbutton').forEach(async element => {
     })
 })
 
-function getSetting(key, type) {
+function getSetting(key, location) {
     return new Promise((resolve, reject) => {
-        chrome.storage[type ? type : 'sync'].get([key], (result) => {
+        chrome.storage[location ? location : 'sync'].get([key], (result) => {
             let value = Object.values(result)[0]
             value ? resolve(value) : resolve('')
         })
     })
 }
 
-function setSetting(key, value, type) {
+function getSettings(array, location, all) {
     return new Promise((resolve, reject) => {
-        chrome.storage[type ? type : 'sync'].set({ [key]: value }, resolve())
+        chrome.storage[location ? location : 'sync'].get(all ? null : array.map(e => [e]), (result) => {
+            result ? resolve(result) : reject(Error('None found'))
+        })
+    })
+}
+
+function setSetting(key, value, location) {
+    return new Promise((resolve, reject) => {
+        chrome.storage[location ? location : 'sync'].set({ [key]: value }, resolve())
+    })
+}
+
+function setSettings(object, location) {
+    return new Promise((resolve, reject) => {
+        chrome.storage[location ? location : 'sync'].set(object, resolve())
     })
 }

@@ -1,48 +1,5 @@
 init()
 
-async function init() {
-    checkSettings()
-    checkUpdates()
-    popstate()
-    applyStyles()
-
-    window.addEventListener('popstate', popstate)
-    window.addEventListener('locationchange', popstate)
-
-    let appbar = await getElement(".appbar")
-
-    if (await getSetting('magister-appbar-zermelo')) {
-        let appbarZermelo = document.createElement("div")
-        appbar.firstElementChild.after(appbarZermelo)
-        appbarZermelo.outerHTML = `
-    <div class="menu-button">
-        <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app" target="_blank">
-            <img src="https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png" width="36" style="border-radius: 100%">
-            <span>Zermelo</span>
-        </a>
-    </div>`}
-
-    if (await getSetting('magister-appbar-week')) {
-        let appbarWeek = document.createElement("h1")
-        appbarWeek.innerText = `wk ${await getWeekNumber()}`
-        appbarWeek.setAttribute('style', `color:#fff;font-family:arboria,sans-serif;font-weight:700;font-size:16px;text-align:center`)
-        appbar.prepend(appbarWeek)
-    }
-
-    if (await getSetting('magister-appbar-hidePicture')) {
-        let userImg = await getElement("#user-menu img")
-        userImg.style.display = "none"
-    }
-
-    let userMenuLink = await getElement('#user-menu')
-    userMenuLink.addEventListener('click', async () => {
-        let logoutLink = await getElement('.user-menu ul li:nth-child(3) a')
-        logoutLink.addEventListener('click', async () => {
-            await setSetting('force-logout', new Date().getTime(), 'local')
-        })
-    })
-}
-
 async function vandaag() {
     if (await getSetting('magister-vd-deblue')) {
         let blueItems = await getElement('ul.agenda-list>li.alert', true)
@@ -127,6 +84,48 @@ async function opdrachten() {
             e.parentElement.appendChild(e)
         })
     }
+}
+
+// Run when the extension and page are loaded
+async function init() {
+    popstate()
+    applyStyles()
+
+    window.addEventListener('popstate', popstate)
+    window.addEventListener('locationchange', popstate)
+
+    let appbar = await getElement(".appbar")
+
+    if (await getSetting('magister-appbar-zermelo')) {
+        let appbarZermelo = document.createElement("div")
+        appbar.firstElementChild.after(appbarZermelo)
+        appbarZermelo.outerHTML = `
+    <div class="menu-button">
+        <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app" target="_blank">
+            <img src="https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png" width="36" style="border-radius: 100%">
+            <span>Zermelo</span>
+        </a>
+    </div>`}
+
+    if (await getSetting('magister-appbar-week')) {
+        let appbarWeek = document.createElement("h1")
+        appbarWeek.innerText = `wk ${await getWeekNumber()}`
+        appbarWeek.setAttribute('style', `color:#fff;font-family:arboria,sans-serif;font-weight:700;font-size:16px;text-align:center`)
+        appbar.prepend(appbarWeek)
+    }
+
+    if (await getSetting('magister-appbar-hidePicture')) {
+        let userImg = await getElement("#user-menu img")
+        userImg.style.display = "none"
+    }
+
+    let userMenuLink = await getElement('#user-menu')
+    userMenuLink.addEventListener('click', async () => {
+        let logoutLink = await getElement('.user-menu ul li:nth-child(3) a')
+        logoutLink.addEventListener('click', async () => {
+            await setSetting('force-logout', new Date().getTime(), 'local')
+        })
+    })
 }
 
 // Run when the URL changes
