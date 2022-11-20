@@ -70,8 +70,17 @@
         <div>
             <h3>Studiewijzers</h3>
             <label for="magister-sw-sort">
-                Studiewijzers indelen op periode
-                <input type="checkbox" name="Studiewijzers indelen op periode" id="magister-sw-sort" class="bind">
+                Studiewijzers ordenen
+                <input type="checkbox" name="Studiewijzers ordenen" id="magister-sw-sort" class="bind">
+            </label>
+            <label for="magister-sw-subjects">
+                Vaknamen
+                <i>Gebruik voor elk vak een nieuwe regel. Scheid namen voor een vak met komma's en zorg ervoor dat de weergavenaam vooraan staat.</i>
+                <textarea name="Vaknamen" id="magister-sw-subjects" class="bind bind-array-2d"></textarea>
+            </label>
+            <label for="magister-sw-grid">
+                Studiewijzers in raster plaatsen
+                <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid" class="bind">
             </label>
             <label for="magister-sw-thisWeek">
                 Naar huidige week scrollen
