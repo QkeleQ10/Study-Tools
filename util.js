@@ -1,3 +1,11 @@
+checkSettings()
+checkUpdates()
+
+async function checkSettings() {
+    if (await getSetting('openedPopup')) return
+    showNotification(`Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.`)
+}
+
 async function checkUpdates() {
     if (!await getSetting('updates')) return
     fetch("https://raw.githubusercontent.com/QkeleQ10/Study-Tools/main/manifest.json")
@@ -6,11 +14,6 @@ async function checkUpdates() {
             if (data.version <= chrome.runtime.getManifest().version) return
             showNotification(`Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a>`)
         })
-}
-
-async function checkSettings() {
-    if (await getSetting('openedPopup')) return
-    showNotification(`Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.`)
 }
 
 function getElement(querySelector, all) {
@@ -30,18 +33,32 @@ function getElement(querySelector, all) {
     })
 }
 
-function getSetting(key, type) {
+function getSetting(key, location) {
     return new Promise((resolve, reject) => {
-        chrome.storage[type ? type : 'sync'].get([key], (result) => {
+        chrome.storage[location ? location : 'sync'].get([key], (result) => {
             let value = Object.values(result)[0]
             value ? resolve(value) : resolve('')
         })
     })
 }
 
-function setSetting(key, value, type) {
+function getSettings(array, location, all) {
     return new Promise((resolve, reject) => {
-        chrome.storage[type ? type : 'sync'].set({ [key]: value }, resolve())
+        chrome.storage[location ? location : 'sync'].get(all ? null : array.map(e => [e]), (result) => {
+            result ? resolve(result) : reject(Error('None found'))
+        })
+    })
+}
+
+function setSetting(key, value, location) {
+    return new Promise((resolve, reject) => {
+        chrome.storage[location ? location : 'sync'].set({ [key]: value }, resolve())
+    })
+}
+
+function setSettings(object, location) {
+    return new Promise((resolve, reject) => {
+        chrome.storage[location ? location : 'sync'].set(object, resolve())
     })
 }
 

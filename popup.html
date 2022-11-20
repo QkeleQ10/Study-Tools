@@ -70,8 +70,17 @@
         <div>
             <h3>Studiewijzers</h3>
             <label for="magister-sw-sort">
-                Studiewijzers indelen op periode
-                <input type="checkbox" name="Studiewijzers indelen op periode" id="magister-sw-sort" class="bind">
+                Studiewijzers ordenen
+                <input type="checkbox" name="Studiewijzers ordenen" id="magister-sw-sort" class="bind">
+            </label>
+            <label for="magister-sw-subjects">
+                Vaknamen
+                <i>Gebruik voor elk vak een nieuwe regel. Scheid namen voor een vak met komma's en zorg ervoor dat de weergavenaam vooraan staat.</i>
+                <textarea name="Vaknamen" id="magister-sw-subjects" class="bind bind-array-2d"></textarea>
+            </label>
+            <label for="magister-sw-grid">
+                Studiewijzers in raster plaatsen
+                <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid" class="bind">
             </label>
             <label for="magister-sw-thisWeek">
                 Naar huidige week scrollen
@@ -90,6 +99,20 @@
             <label for="magister-cf-failred">
                 Onvoldoendes rood kleuren
                 <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred" class="bind">
+            </label>
+        </div>
+    </section>
+    <section>
+        <h2>Noordhoff <button class="allbutton">Alles aan</button></h2>
+        <div>
+            <h3>Inlogpagina</h3>
+            <label for="noordhoff-login-enabled">
+                Automatisch doorgaan
+                <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled" class="bind">
+            </label>
+            <label for="noordhoff-login-entree">
+                Inloggen met Entree
+                <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind">
             </label>
         </div>
     </section>

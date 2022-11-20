@@ -54,11 +54,22 @@ h3:after {
     flex: 1 0 .5em;
 }
 
+i {
+    color: #808080;
+    font-size: 11px;
+    margin-top: -4px;
+}
+
 label {
     display: flex;
     justify-content: space-between;
     gap: 0.5em;
     min-height: 2em;
+}
+
+label:has(textarea) {
+    flex-direction: column;
+    padding-bottom: 1em;
 }
 
 input {
@@ -73,6 +84,20 @@ input {
     border: none;
     border-radius: .15em;
 }
+
+textarea {
+    font-family: system-ui, sans-serif;
+    font-size: 1em;
+    background-color: #ffffff;
+    color: currentColor;
+    font: inherit;
+    outline: .15em solid currentColor;
+    border: none;
+    border-radius: .15em;
+    min-height: 5em;
+    resize: vertical;
+}
+
 
 input[type=checkbox] {
     appearance: none;
@@ -90,12 +115,11 @@ label:hover {
 }
 
 label:hover>input,
-input:hover {
+label:hover>textarea {
     color: #1f97f9;
 }
 
-label:hover>input[type=checkbox],
-input[type=checkbox]:hover {
+label:hover>input[type=checkbox] {
     border: .3em solid white;
 }
 
@@ -103,6 +127,8 @@ label:focus>input,
 label:active>input,
 input:focus,
 input:active,
+textarea:focus,
+textarea:active,
 .allbutton:focus,
 .allbutton:active {
     box-shadow: 0 0 0 .3em #1f97f980;
