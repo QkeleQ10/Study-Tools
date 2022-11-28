@@ -12,7 +12,9 @@ Franse taal, fatl, fa
 Geschiedenis, gs
 Kunst, ku, kua
 Levensbeschouwing, lv
+Loopbaan&shy;oriëntatie en &#8209;begeleiding, lob
 Maatschappijleer, ma, malv
+Maatschappij&shy;wetenschappen, maw
 Mentor, mentoruur, mentoraat
 Muziek, mu, kumu
 Natuurkunde, na
