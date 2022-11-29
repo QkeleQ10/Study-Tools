@@ -2,10 +2,15 @@ body {
     display: flex;
     flex-direction: column;
     gap: 3px;
-    min-width: 25em;
+    min-width: 27.5em;
     margin: 0;
     background-color: #d8d8d8;
     user-select: none;
+    transition: min-width 200ms;
+}
+
+body.wide {
+    min-width: 35em;
 }
 
 body>div,
@@ -67,22 +72,32 @@ label {
     min-height: 2em;
 }
 
-label:has(textarea) {
+label:has(textarea),
+label.large {
     flex-direction: column;
     padding-bottom: 1em;
 }
 
 input {
-    display: grid;
-    place-content: center;
     margin: 0;
     margin-bottom: .5em;
     background-color: #ffffff;
-    color: currentColor;
     font: inherit;
-    outline: .15em solid currentColor;
+    outline-width: .15em;
+    outline-style: solid;
+    outline-color: #000;
     border: none;
     border-radius: .15em;
+}
+
+label:not(.large) input {
+    color: currentColor;
+    outline-color: currentColor;
+}
+
+input:hover {
+    color: currentColor;
+    outline-color: currentColor;
 }
 
 textarea {
@@ -150,4 +165,57 @@ textarea:active,
 
 .allbutton:disabled {
     opacity: 0.5;
+}
+
+.grid-subjects {
+    display: grid;
+    grid-template-columns: calc(calc(24.5em - 50px) / 2) calc(calc(24.5em - 50px) / 2) 50px;
+    gap: 0 0.5em;
+    max-width: 100%;
+}
+
+.grid-subjects input {
+    height: 18px;
+}
+
+.input-color-container {
+    position: relative;
+    overflow: hidden;
+    height: 18px;
+    outline-width: .15em;
+    outline-style: solid;
+    outline-color: #000;
+    border: none;
+    border-radius: .15em;
+}
+
+input[type=color] {
+    position: absolute;
+    left: -1em;
+    top: -8px;
+    width: 70px;
+    height: 38px;
+    border: none;
+}
+
+#magister-subjects .grid-subjects:last-child {
+    opacity: .5;
+}
+
+details {
+    cursor: pointer;
+}
+
+details>summary {
+    list-style: none;
+    text-decoration: underline;
+    text-decoration-color: #1a7ecf;
+}
+
+details[open]>summary {
+    margin-bottom: 0.5em;
+}
+
+details[open] .details-show-when-collapsed {
+    display: none;
 }

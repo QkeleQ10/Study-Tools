@@ -3,6 +3,7 @@
 <head>
     <title>Study Tools configureren</title>
     <script src="popup.js" defer></script>
+    <script src="popupDefaults.js"></script>
     <script src="util.js" defer></script>
     <link rel="stylesheet" href="popup.css">
 </head>
@@ -17,7 +18,7 @@
         <div>
             <label for="updates">
                 Updates aanbieden
-                <input type="checkbox" name="Updates aanbieden" id="updates" class="bind">
+                <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
             </label>
         </div>
     </section>
@@ -27,78 +28,93 @@
             <h3>Inlogpagina</h3>
             <label for="magisterLogin-enabled">
                 Automatisch inloggen
-                <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind">
+                <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
             </label>
             <label for="magisterLogin-username">
                 Gebruikersnaam
-                <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind">
+                <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind-string">
             </label>
             <label for="magisterLogin-password">
                 Wachtwoord
-                <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind">
+                <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind-string">
             </label>
         </div>
         <div>
             <h3>Zijbalk</h3>
             <label for="magister-appbar-week">
                 Weeknummer tonen
-                <input type="checkbox" name="Weeknummer tonen" id="magister-appbar-week" class="bind">
+                <input type="checkbox" name="Weeknummer tonen" id="magister-appbar-week" class="bind-boolean">
             </label>
             <label for="magister-appbar-zermelo">
                 Link naar Zermelo tonen
-                <input type="checkbox" name="Link naar Zermelo tonen" id="magister-appbar-zermelo" class="bind">
+                <input type="checkbox" name="Link naar Zermelo tonen" id="magister-appbar-zermelo" class="bind-boolean">
             </label>
             <label for="magister-appbar-hidePicture">
                 Profielfoto verbergen
-                <input type="checkbox" name="Profielfoto verbergen" id="magister-appbar-hidePicture" class="bind">
+                <input type="checkbox" name="Profielfoto verbergen" id="magister-appbar-hidePicture"
+                    class="bind-boolean">
             </label>
         </div>
         <div>
             <h3>Vandaag</h3>
             <label for="magister-vd-deblue">
                 Rooster niet blauw kleuren
-                <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue" class="bind">
+                <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue" class="bind-boolean">
             </label>
         </div>
         <div>
             <h3>Agenda</h3>
-            <label for="magister-ag-spacious">
+            <label for="magister-ag-large">
                 Afsprakenlijst ruimer maken
-                <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-spacious" class="bind">
+                <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-large" class="bind-boolean">
             </label>
         </div>
         <div>
             <h3>Studiewijzers</h3>
             <label for="magister-sw-sort">
                 Studiewijzers ordenen
-                <input type="checkbox" name="Studiewijzers ordenen" id="magister-sw-sort" class="bind">
-            </label>
-            <label for="magister-sw-subjects">
-                Vaknamen
-                <i>Gebruik voor elk vak een nieuwe regel. Scheid namen voor een vak met komma's en zorg ervoor dat de weergavenaam vooraan staat.</i>
-                <textarea name="Vaknamen" id="magister-sw-subjects" class="bind bind-array-2d"></textarea>
+                <input type="checkbox" name="Studiewijzers ordenen" id="magister-sw-sort" class="bind-boolean">
             </label>
             <label for="magister-sw-grid">
                 Studiewijzers in raster plaatsen
-                <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid" class="bind">
+                <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
+                    class="bind-boolean">
             </label>
             <label for="magister-sw-thisWeek">
                 Naar huidige week scrollen
-                <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek" class="bind">
+                <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek" class="bind-boolean">
             </label>
         </div>
         <div>
             <h3>Opdrachten</h3>
             <label for="magister-op-oldred">
                 Opdrachten indelen op inleverdatum
-                <input type="checkbox" name="Opdrachten indelen op inleverdatum" id="magister-op-oldred" class="bind">
+                <input type="checkbox" name="Opdrachten indelen op inleverdatum" id="magister-op-oldred"
+                    class="bind-boolean">
             </label>
         </div>
         <div>
             <h3>Cijfers</h3>
             <label for="magister-cf-failred">
                 Onvoldoendes rood kleuren
-                <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred" class="bind">
+                <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred" class="bind-boolean">
+            </label>
+        </div>
+        <div>
+            <h3>Algemeen</h3>
+            <label for="magister-subjects" class="large">
+                <details>
+                    <summary>
+                        Vakken
+                        <i class="details-show-when-collapsed">Klik om vaknamen en -kleuren te bewerken</i>
+                    </summary>
+                    <div class="grid-subjects">
+                        <i>Weergavenaam</i>
+                        <i>Aliassen</i>
+                        <i>Kleur</i>
+                    </div>
+                    <div id="magister-subjects" class="bind-subjects"></div>
+                </details>
             </label>
         </div>
     </section>
@@ -108,11 +124,11 @@
             <h3>Inlogpagina</h3>
             <label for="noordhoff-login-enabled">
                 Automatisch doorgaan
-                <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled" class="bind">
+                <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled" class="bind-boolean">
             </label>
             <label for="noordhoff-login-entree">
                 Inloggen met Entree
-                <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind">
+                <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind-boolean">
             </label>
         </div>
     </section>
