@@ -18,7 +18,7 @@ async function init() {
 
     document.querySelectorAll('.bind-string').forEach(element => {
         let value = start[element.id]
-        if (element.tagName === 'INPUT' && element.getAttribute('type') === 'text') {
+        if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password')) {
             if (value) element.value = value
             element.addEventListener('input', event => pushSetting(event.target.id, event.target.value))
         }

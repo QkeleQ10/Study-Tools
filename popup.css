@@ -149,6 +149,15 @@ textarea:active,
     box-shadow: 0 0 0 .3em #1f97f980;
 }
 
+label:first-of-type:has(input[type=checkbox]:not(:checked))~label.link-first {
+    opacity: .5;
+    pointer-events: none;
+}
+
+label:first-of-type:has(input[type=checkbox]:not(:checked))~label.link-first>input[type=checkbox] {
+    background: none;
+}
+
 .allbutton {
     background: #1f97f9;
     color: #ffffff;
