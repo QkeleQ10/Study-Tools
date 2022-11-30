@@ -31,6 +31,7 @@ async function init() {
             element.innerHTML += `<div class="grid-subjects"><input type="text" value="${value.name}"><input type="text" value="${value.aliases}"><div class="input-color-container"><input type="color" value="${value.color}"></div></div>`
         }
         element.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
+        if (!start[element.id]) element.querySelector('input').dispatchEvent('input')
     })
 
     document.querySelectorAll('.allbutton').forEach(async element => {

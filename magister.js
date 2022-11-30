@@ -20,6 +20,7 @@ async function studiewijzers() {
     if (!await getSetting('magister-sw-sort')) return
     let elementMain = await getElement('section.main'),
         elementOldContainer = await getElement('.content-container'),
+        elementNewContainer = document.createElement('div'),
         elementGrid = document.createElement('div'),
         elementUl = await getElement('.studiewijzer-list>ul'),
         settingGrid = await getSetting('magister-sw-grid'),
@@ -43,9 +44,7 @@ async function studiewijzers() {
             if (periodTextIndex > 0) {
                 let periodNumberSearchString = title.slice(periodTextIndex),
                     periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
-                if (periodNumberIndex > 0) {
-                    period = Number(periodNumberSearchString.charAt(periodNumberIndex))
-                }
+                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
             }
 
             if (period === getPeriodNumber()) priority = 2
@@ -53,15 +52,18 @@ async function studiewijzers() {
             else priority = 1
 
             return { elem, title, period, subject, priority }
-        }).sort((a, b) => (a.subject.localeCompare(b.subject) || a.period - b.period))
+        }).sort((a, b) => settingGrid ? (a.subject.localeCompare(b.subject) || a.period - b.period) : (b.priority - a.priority || a.subject.localeCompare(b.subject)))
 
     if (settingGrid) {
         elementOldContainer.style.display = 'none'
-        elementMain.appendChild(elementGrid)
+        elementMain.appendChild(elementNewContainer)
+        elementNewContainer.classList.add('st-sw-container')
+        elementNewContainer.appendChild(elementGrid)
         elementGrid.classList.add('st-sw-grid')
     }
 
     mappedArray.forEach(async ({ elem, title, period, subject, priority }) => {
+        elem.dataset.title = title
         elementUl.appendChild(elem)
         elem.firstElementChild.lastElementChild.innerText = subject
         switch (priority) {
@@ -80,37 +82,25 @@ async function studiewijzers() {
                 break
         }
         if (settingGrid) {
-            let itemButton = document.createElement('button')
-            if (document.querySelector(`button[data-subject='${subject}']`)) {
-                let subjectButton = document.querySelector(`button[data-subject='${subject}']`)
-                subjectButton.appendChild(itemButton)
-                itemButton.addEventListener('click', () => { elem.firstElementChild.click() })
-                itemButton.innerHTML = period ? `periode ${period}` : "geen periode"
-                itemButton.dataset.title = title
+            let itemButton = document.createElement('button'),
+                subjectWrapper
+            if (document.querySelector(`div[data-subject='${subject}']`)) {
+                subjectWrapper = document.querySelector(`div[data-subject='${subject}']`)
             } else {
-                let subjectButton = document.createElement('button')
-                elementGrid.appendChild(subjectButton)
-                subjectButton.classList.add('st-sw-subject')
-                subjectButton.dataset.subject = subject
-                subjectButton.innerHTML = `<button>${subject}</button>`
-                subjectButton.appendChild(itemButton)
-                itemButton.addEventListener('click', () => { elem.firstElementChild.click() })
-                itemButton.innerHTML = period ? `periode ${period}` : "geen periode"
-                itemButton.dataset.title = title
+                subjectWrapper = document.createElement('div')
+                elementGrid.appendChild(subjectWrapper)
+                subjectWrapper.classList.add('st-sw-subject')
+                subjectWrapper.dataset.subject = subject
+                let defaultItemButton = document.createElement('button')
+                defaultItemButton.innerText = subject
+                subjectWrapper.appendChild(defaultItemButton)
+                defaultItemButton.setAttribute('onclick', 'this.parentElement.lastElementChild.click()')
             }
-
-            // switch (priority) {
-            //     case 2:
-            //         itemButton.classList.add('st-current')
-            //         break
-
-            //     case 1:
-            //         break
-
-            //     default:
-            //         itemButton.classList.add('st-obsolete')
-            //         break
-            // }
+            itemButton.innerText = period ? `periode ${period}` : "geen periode"
+            itemButton.dataset.title = title
+            itemButton.classList.add(`st-sw-${priority}`)
+            itemButton.setAttribute('onclick', `document.querySelector('li[data-title="${title}"]>a').click()`)
+            subjectWrapper.appendChild(itemButton)
         }
     })
 }
@@ -130,23 +120,6 @@ async function studiewijzer() {
                 bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 title.click()
             }
-        })
-    }
-}
-
-async function opdrachten() {
-    if (await getSetting('magister-op-oldred')) {
-        let handInBefore = await getElement('td[data-ng-bind-boolean*="InleverenVoor"]', true),
-            overdueAssignments = await getElement('.overdue', true)
-        handInBefore.forEach(e => {
-            let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
-            let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
-            if (d.toLocaleDateString("nl-NL", opt) != "Invalid Date") e.innerHTML = d.toLocaleDateString("nl-NL", opt)
-        })
-        overdueAssignments.forEach(e => {
-            e.classList.add('st-obsolete')
-            e.setAttribute('title', "De inlevertermijn van deze opdracht is verstreken.")
-            e.parentElement.appendChild(e)
         })
     }
 }
@@ -205,70 +178,14 @@ async function popstate() {
 }
 
 async function applyStyles() {
-    createStyle(`.st-current {
-    font-weight: 700
-}
-
-.st-obsolete, .st-obsolete span {
-    color: #808080 !important;
-}
-
-.st-current-sw>div>h3,
-.st-current-sw>div>h3>b,
-.st-current-sw>div>div>footer.endlink {
-    background: aliceBlue;
-    font-weight: 700
-}
-
-.st-sw-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
-    gap: 1em;
-    height: 100%;
-    align-content: start;
-    overflow: hidden;
-    padding: 3px
-}
-
-.st-sw-grid:hover {
-    overflow: overlay
-}
-
-.st-sw-subject {
-    background-color: #fafafa;
-    cursor: pointer;
-    display: grid;
-    align-items: start;
-    gap: .3em;
-    padding: 1em .5em .3em;
-    border-radius: 5px;
-    border: none;
-    outline: 1px solid #ccc;
-    transition: filter 100ms, outline 100ms
-}
-
-.st-sw-subject>button:nth-child(1) {
-    display: block;
-    height: 3em;
-    font-size: 18px;
-    text-align: center;
-}
-
-.st-current:hover,
-.st-obsolete:hover,
-.st-sw-subject:hover {
-    filter: brightness(.9);
-    outline-width: 3px;
-}
-
-@media (min-width: 1400px) {
-    .st-sw-grid {
-        grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
-    }
-}`, 'study-tools')
+    createStyle(`.st-sw-container{height:100%;overflow-y:auto}.st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4rem;align-items:stretch;background-color:#fbfbfb;border-radius:5px;border:none;outline:#ccc solid 1px;overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:#fbfbfb;cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4rem;font-size:18px;font-family:"droid_sansregular",arial,helvetica,sans-serif;border-bottom:1px solid #ccc}.st-sw-subject>button:not(:first-child){min-height:1.5rem;font-size:12px;font-family:tahoma,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:#fbfbfb;font-size:11px;content:attr(data-title)}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:grey!important}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover{filter:brightness(.9)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:#f0f8ff;font-weight:700}@media (min-width:1400px){.st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools')
 
     if (await getSetting('magister-cf-failred')) {
         createStyle(`.grade[title="5,0"],.grade[title="5,1"],.grade[title="5,2"],.grade[title="5,3"],.grade[title="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:lavenderBlush !important;color:red !important;font-weight:700}`, 'study-tools-cf-failred')
+    }
+
+    if (await getSetting('magister-op-oldred')) {
+        createStyle(`.overdue,.overdue *{color:grey!important}`, 'study-tools-op-oldred')
     }
 }
 
