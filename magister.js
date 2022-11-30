@@ -4,104 +4,112 @@ async function vandaag() {
     if (await getSetting('magister-vd-deblue')) {
         let blueItems = await getElement('ul.agenda-list>li.alert', true)
         blueItems.forEach(e => e.classList.remove("alert"))
-        let changedHeader = await getElement('h4[data-ng-bind-template*="Wijzigingen voor"]')
+        let changedHeader = await getElement('h4[data-ng-bind-boolean-template*="Wijzigingen voor"]')
         changedHeader.innerHTML = changedHeader.innerHTML.replace("Wijzigingen voor", "Rooster voor")
     }
 }
 
 async function agenda() {
-    if (await getSetting('magister-ag-spacious')) {
+    if (await getSetting('magister-ag-large')) {
         let agendaItems = await getElement('tr.ng-scope', true)
         agendaItems.forEach(e => e.style.height = "40px")
     }
 }
 
 async function studiewijzers() {
-    if (await getSetting('magister-sw-sort')) {
-        let elementMain = await getElement('section.main'),
-            elementOldContainer = await getElement('.content-container'),
-            elementGrid = document.createElement('div'),
-            elementUl = await getElement('.studiewijzer-list>ul'),
-            settingGrid = await getSetting('magister-sw-grid'),
-            settingSubjects = await getSetting('magister-sw-subjects'),
-            nodeList = await getElement('li[data-ng-repeat="studiewijzer in items"]', true),
-            nodeArray = [...nodeList],
-            mappedArray = nodeArray.map(elem => {
-                let swTitle = elem.firstElementChild.firstElementChild,
-                    swSubject = elem.firstElementChild.lastElementChild,
-                    subject,
-                    period,
-                    priority,
-                    periodTextIndex = swTitle.innerText.search(/(t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
+    if (!await getSetting('magister-sw-sort')) return
+    let elementMain = await getElement('section.main'),
+        elementOldContainer = await getElement('.content-container'),
+        elementNewContainer = document.createElement('div'),
+        elementGrid = document.createElement('div'),
+        elementUl = await getElement('.studiewijzer-list>ul'),
+        settingGrid = await getSetting('magister-sw-grid'),
+        settingShowPeriod = await getSetting('magister-sw-period'),
+        settingSubjects = await getSetting('magister-subjects'),
+        nodeList = await getElement('li[data-ng-repeat="studiewijzer in items"]', true),
+        nodeArray = [...nodeList],
+        mappedArray = nodeArray.map(elem => {
+            let title = elem.firstElementChild.firstElementChild.innerText,
+                subject = "Geen vak",
+                period = 0,
+                priority,
+                periodTextIndex = title.search(/(t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
-                Object.values(settingSubjects)[0].forEach(names => {
-                    names.forEach(name => {
-                        if ((new RegExp(`^(${name.trim()})$|^(${name.trim()})[^a-z]|[^a-z](${name.trim()})$|[^a-z](${name.trim()})[^a-z]`, 'i')).test(swTitle.innerText)) subject = names[0]
-                    })
+            settingSubjects.forEach(subjectEntry => {
+                testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
+                testArray.forEach(testString => {
+                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name
                 })
+            })
 
-                if (periodTextIndex > 0) {
-                    let periodNumberSearchString = swTitle.innerText.slice(periodTextIndex),
-                        periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
-                    if (periodNumberIndex > 0) {
-                        period = Number(periodNumberSearchString.charAt(periodNumberIndex))
-                    }
-                }
-
-                if (period === getPeriodNumber()) priority = 2
-                else if (period > 0) priority = 0
-                else priority = 1
-
-                return { elem: elem, title: swTitle.innerText, period: period, subject: subject || "Geen vak", priority: priority }
-            }).sort((a, b) => (b.priority - a.priority || a.subject.localeCompare(b.subject)))
-
-        if (settingGrid) {
-            elementOldContainer.style.display = 'none'
-            elementMain.appendChild(elementGrid)
-            elementGrid.classList.add('st-sw-grid')
-        }
-
-        mappedArray.forEach(({ elem, title, period, subject, priority }) => {
-            elementUl.appendChild(elem)
-            elem.firstElementChild.lastElementChild.innerText = subject
-            switch (priority) {
-                case 2:
-                    if (settingGrid) {
-                        let button = document.createElement('button')
-                        elementGrid.appendChild(button)
-                        button.classList.add('st-sw-item', 'st-current')
-                        button.innerHTML = `<h3>${subject}</h3><p style="font-weight:bold">periode ${period}</p><p style="font-weight:normal;font-size:10px;color:#808080">${title}</p>`
-                        button.addEventListener('click', () => { elem.firstElementChild.click() })
-                    }
-                    elem.classList.add('st-current')
-                    elem.setAttribute('title', "Deze studiewijzer is actueel.")
-                    break
-
-                case 1:
-                    if (settingGrid) {
-                        let button = document.createElement('button')
-                        elementGrid.appendChild(button)
-                        button.classList.add('st-sw-item')
-                        button.innerHTML = `<h3>${subject}</h3><p style="font-weight:bold">geen periode</p><p style="font-weight:normal;font-size:10px;color:#808080">${title}</p>`
-                        button.addEventListener('click', () => { elem.firstElementChild.click() })
-                    }
-                    elem.setAttribute('title', "Er kon geen periodenummer worden gedetecteerd.")
-                    break
-
-                default:
-                    if (settingGrid) {
-                        let button = document.createElement('button')
-                        elementGrid.appendChild(button)
-                        button.classList.add('st-sw-item', 'st-obsolete')
-                        button.innerHTML = `<h3>${subject}</h3><p style="font-weight:bold">periode ${period}</p><p style="font-weight:normal;font-size:10px;color:#808080">${title}</p>`
-                        button.addEventListener('click', () => { elem.firstElementChild.click() })
-                    }
-                    elem.classList.add('st-obsolete')
-                    elem.setAttribute('title', `Deze studiewijzer is van periode ${period}.`)
-                    break
+            if (periodTextIndex > 0) {
+                let periodNumberSearchString = title.slice(periodTextIndex),
+                    periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
+                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
             }
-        })
+
+            if (period === getPeriodNumber()) priority = 2
+            else if (period > 0) priority = 0
+            else priority = 1
+
+            return { elem, title, period, subject, priority }
+        }).sort((a, b) => settingGrid ? (a.subject.localeCompare(b.subject) || a.period - b.period) : (b.priority - a.priority || a.subject.localeCompare(b.subject)))
+
+    if (settingGrid) {
+        elementOldContainer.style.display = 'none'
+        elementMain.appendChild(elementNewContainer)
+        elementNewContainer.classList.add('st-sw-container')
+        elementNewContainer.appendChild(elementGrid)
+        elementGrid.classList.add('st-sw-grid')
     }
+
+    mappedArray.forEach(async ({ elem, title, period, subject, priority }) => {
+        elementUl.appendChild(elem)
+        elem.firstElementChild.lastElementChild.innerText = subject
+        switch (priority) {
+            case 2:
+                elem.classList.add('st-current')
+                elem.setAttribute('title', "Deze studiewijzer is actueel.")
+                break
+
+            case 1:
+                elem.setAttribute('title', "Er kon geen periodenummer worden gedetecteerd.")
+                break
+
+            default:
+                elem.classList.add('st-obsolete')
+                elem.setAttribute('title', `Deze studiewijzer is van periode ${period}.`)
+                break
+        }
+        if (settingGrid) {
+            let itemButton = document.createElement('button'),
+                subjectWrapper
+            if (document.querySelector(`div[data-subject='${subject}']`)) {
+                subjectWrapper = document.querySelector(`div[data-subject='${subject}']`)
+            } else {
+                subjectWrapper = document.createElement('div')
+                elementGrid.appendChild(subjectWrapper)
+                subjectWrapper.classList.add('st-sw-subject')
+                subjectWrapper.dataset.subject = subject
+                let defaultItemButton = document.createElement('button')
+                defaultItemButton.innerText = subject
+                subjectWrapper.appendChild(defaultItemButton)
+                defaultItemButton.setAttribute('onclick', 'this.parentElement.lastElementChild.click()')
+            }
+            if (settingShowPeriod) {
+                itemButton.innerText = period ? `periode ${period}` : "geen periode"
+                itemButton.dataset.title = title
+            } else {
+                itemButton.innerText = title
+                itemButton.style.fontSize = '11px'
+                itemButton.style.minHeight = '2rem'
+            }
+            itemButton.classList.add(`st-sw-${priority}`)
+            itemButton.setAttribute('onclick', `document.querySelector('li[data-title="${title}"]>a').click()`)
+            subjectWrapper.appendChild(itemButton)
+            elem.dataset.title = title
+        }
+    })
 }
 
 async function studiewijzer() {
@@ -119,23 +127,6 @@ async function studiewijzer() {
                 bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 title.click()
             }
-        })
-    }
-}
-
-async function opdrachten() {
-    if (await getSetting('magister-op-oldred')) {
-        let handInBefore = await getElement('td[data-ng-bind*="InleverenVoor"]', true),
-            overdueAssignments = await getElement('.overdue', true)
-        handInBefore.forEach(e => {
-            let d = new Date("20" + e.innerHTML.split("-")[2], Number(Number(e.innerHTML.split("-")[1]) - 1), e.innerHTML.split("-")[0])
-            let opt = { weekday: "short", year: "2-digit", month: "short", day: "numeric" }
-            if (d.toLocaleDateString("nl-NL", opt) != "Invalid Date") e.innerHTML = d.toLocaleDateString("nl-NL", opt)
-        })
-        overdueAssignments.forEach(e => {
-            e.classList.add('st-obsolete')
-            e.setAttribute('title', "De inlevertermijn van deze opdracht is verstreken.")
-            e.parentElement.appendChild(e)
         })
     }
 }
@@ -194,10 +185,14 @@ async function popstate() {
 }
 
 async function applyStyles() {
-    createStyle(`.st-current{background-color:#f0f8ff!important;font-weight:700}.st-obsolete{background-color:#fff0f5!important;font-style:italic}.st-current-sw>div>h3,.st-current-sw>div>h3>b,.st-current-sw>div>div>footer.endlink{background:aliceBlue;font-weight:700}.st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14em,1fr));gap:1em;overflow:auto;height:100%;align-content:start;overflow:hidden}.st-sw-grid:hover{overflow:overlay}.st-sw-item{background-color:#fafafa;cursor:pointer;display:grid;grid-auto-rows:1fr 1.5em 24px;align-items:center;gap:.3em;padding:1em .5em .3em;aspect-ratio:1/0.75;border-radius:5px;border:1px solid #ccc}.st-current:hover,.st-obsolete:hover,.st-sw-item:hover{filter:brightness(.9)}.st-sw-item:focus{border:2px solid #1f97f9}.st-sw-item h3{overflow:hidden}`, 'study-tools')
+    createStyle(`.st-sw-container{height:100%;overflow-y:auto}.st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4.5rem;align-items:stretch;background-color:#fdfdfd;border-radius:5px;border:none;outline:#ccc solid 1px;overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:#fdfdfd;cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4.5rem;font-size:18px;font-family:"droid_sansregular",arial,helvetica,sans-serif;border-bottom:1px solid #ccc}.st-sw-subject>button:not(:first-child){min-height:1.75rem;font-size:12px;font-family:tahoma,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:#fdfdfd;font-size:11px;content:attr(data-title)}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:grey!important}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover{filter:brightness(.9)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:#f0f8ff;font-weight:700}@media (min-width:1400px){.st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools')
 
     if (await getSetting('magister-cf-failred')) {
         createStyle(`.grade[title="5,0"],.grade[title="5,1"],.grade[title="5,2"],.grade[title="5,3"],.grade[title="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:lavenderBlush !important;color:red !important;font-weight:700}`, 'study-tools-cf-failred')
+    }
+
+    if (await getSetting('magister-op-oldred')) {
+        createStyle(`.overdue,.overdue *{color:grey!important}`, 'study-tools-op-oldred')
     }
 }
 
