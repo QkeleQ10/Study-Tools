@@ -28,7 +28,7 @@ function getElement(querySelector, all) {
 
         let timeout = setTimeout(() => {
             clearInterval(interval)
-            return reject(Error(`Element "${querySelector}" not found`))
+            return resolve(undefined)
         }, 4000)
     })
 }

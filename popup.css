@@ -169,7 +169,7 @@ textarea:active,
 
 .grid-subjects {
     display: grid;
-    grid-template-columns: calc(calc(24.5em - 50px) / 2) calc(calc(24.5em - 50px) / 2) 50px;
+    grid-template-columns: calc(24.5em / 2) calc(24.5em / 2) 0;
     gap: 0 0.5em;
     max-width: 100%;
 }
@@ -179,6 +179,7 @@ textarea:active,
 }
 
 .input-color-container {
+    display: none;
     position: relative;
     overflow: hidden;
     height: 18px;

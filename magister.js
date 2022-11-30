@@ -29,18 +29,14 @@ async function studiewijzers() {
         mappedArray = nodeArray.map(elem => {
             let title = elem.firstElementChild.firstElementChild.innerText,
                 subject = "Geen vak",
-                color,
-                period,
+                period = 0,
                 priority,
                 periodTextIndex = title.search(/(t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
             settingSubjects.forEach(subjectEntry => {
                 testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
                 testArray.forEach(testString => {
-                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) {
-                        subject = subjectEntry.name
-                        color = subjectEntry.color
-                    }
+                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name
                 })
             })
 
@@ -56,8 +52,8 @@ async function studiewijzers() {
             else if (period > 0) priority = 0
             else priority = 1
 
-            return { elem, title, period, subject, color, priority }
-        }).sort((a, b) => (b.priority - a.priority || a.subject.localeCompare(b.subject)))
+            return { elem, title, period, subject, priority }
+        }).sort((a, b) => (a.subject.localeCompare(b.subject) || a.period - b.period))
 
     if (settingGrid) {
         elementOldContainer.style.display = 'none'
@@ -65,7 +61,7 @@ async function studiewijzers() {
         elementGrid.classList.add('st-sw-grid')
     }
 
-    mappedArray.forEach(({ elem, title, period, subject, color, priority }) => {
+    mappedArray.forEach(async ({ elem, title, period, subject, priority }) => {
         elementUl.appendChild(elem)
         elem.firstElementChild.lastElementChild.innerText = subject
         switch (priority) {
@@ -84,25 +80,37 @@ async function studiewijzers() {
                 break
         }
         if (settingGrid) {
-            let button = document.createElement('button')
-            elementGrid.appendChild(button)
-            button.classList.add('st-sw-item')
-            button.innerHTML = `<p style="font-size:18px">${subject}</p><p style="font-weight:bold">periode ${period}</p><p style="font-weight:normal;font-size:10px;opacity:.5">${title}</p>`
-            button.addEventListener('click', () => { elem.firstElementChild.click() })
-            switch (priority) {
-                case 2:
-                    button.setAttribute('style', `outline-color: ${color}`)
-                    button.classList.add('st-sw-item', 'st-current')
-                    break
-
-                case 1:
-                    button.innerHTML = `<p style="font-size:18px">${subject}</p><p style="font-weight:bold">geen periode</p><p style="font-weight:normal;font-size:10px;opacity:.5">${title}</p>`
-                    break
-
-                default:
-                    button.classList.add('st-obsolete')
-                    break
+            let itemButton = document.createElement('button')
+            if (document.querySelector(`button[data-subject='${subject}']`)) {
+                let subjectButton = document.querySelector(`button[data-subject='${subject}']`)
+                subjectButton.appendChild(itemButton)
+                itemButton.addEventListener('click', () => { elem.firstElementChild.click() })
+                itemButton.innerHTML = period ? `periode ${period}` : "geen periode"
+                itemButton.dataset.title = title
+            } else {
+                let subjectButton = document.createElement('button')
+                elementGrid.appendChild(subjectButton)
+                subjectButton.classList.add('st-sw-subject')
+                subjectButton.dataset.subject = subject
+                subjectButton.innerHTML = `<button>${subject}</button>`
+                subjectButton.appendChild(itemButton)
+                itemButton.addEventListener('click', () => { elem.firstElementChild.click() })
+                itemButton.innerHTML = period ? `periode ${period}` : "geen periode"
+                itemButton.dataset.title = title
             }
+
+            // switch (priority) {
+            //     case 2:
+            //         itemButton.classList.add('st-current')
+            //         break
+
+            //     case 1:
+            //         break
+
+            //     default:
+            //         itemButton.classList.add('st-obsolete')
+            //         break
+            // }
         }
     })
 }
@@ -197,7 +205,67 @@ async function popstate() {
 }
 
 async function applyStyles() {
-    createStyle(`.st-current{background-color:#f0f8ff;font-weight:700}.st-obsolete{background-color:#fff0f5;font-style:italic}.st-current-sw>div>h3,.st-current-sw>div>h3>b,.st-current-sw>div>div>footer.endlink{background:aliceBlue;font-weight:700}.st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14em,1fr));gap:1em;height:100%;align-content:start;overflow:hidden;padding:3px}.st-sw-grid:hover{overflow:overlay}.st-sw-item{background-color:#fafafa;cursor:pointer;display:grid;grid-auto-rows:1fr 1.5em 24px;align-items:center;gap:.3em;padding:1em .5em .3em;aspect-ratio:1/0.75;border-radius:5px;border:none;outline:1px solid #ccc;transition:filter 100ms,outline 100ms}.st-current:hover,.st-obsolete:hover,.st-sw-item:hover{filter:brightness(.9);outline-width:3px}.st-sw-item h3{overflow:hidden}@media (min-width: 1350px) {.st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools')
+    createStyle(`.st-current {
+    font-weight: 700
+}
+
+.st-obsolete, .st-obsolete span {
+    color: #808080 !important;
+}
+
+.st-current-sw>div>h3,
+.st-current-sw>div>h3>b,
+.st-current-sw>div>div>footer.endlink {
+    background: aliceBlue;
+    font-weight: 700
+}
+
+.st-sw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
+    gap: 1em;
+    height: 100%;
+    align-content: start;
+    overflow: hidden;
+    padding: 3px
+}
+
+.st-sw-grid:hover {
+    overflow: overlay
+}
+
+.st-sw-subject {
+    background-color: #fafafa;
+    cursor: pointer;
+    display: grid;
+    align-items: start;
+    gap: .3em;
+    padding: 1em .5em .3em;
+    border-radius: 5px;
+    border: none;
+    outline: 1px solid #ccc;
+    transition: filter 100ms, outline 100ms
+}
+
+.st-sw-subject>button:nth-child(1) {
+    display: block;
+    height: 3em;
+    font-size: 18px;
+    text-align: center;
+}
+
+.st-current:hover,
+.st-obsolete:hover,
+.st-sw-subject:hover {
+    filter: brightness(.9);
+    outline-width: 3px;
+}
+
+@media (min-width: 1400px) {
+    .st-sw-grid {
+        grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
+    }
+}`, 'study-tools')
 
     if (await getSetting('magister-cf-failred')) {
         createStyle(`.grade[title="5,0"],.grade[title="5,1"],.grade[title="5,2"],.grade[title="5,3"],.grade[title="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:lavenderBlush !important;color:red !important;font-weight:700}`, 'study-tools-cf-failred')
