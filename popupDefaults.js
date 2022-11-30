@@ -12,7 +12,7 @@ const defaults = {
         },
         {
             "name": "Beeldende vorming",
-            "aliases": "be, bv, kube, kubv",
+            "aliases": "be, bv, kubv",
             "color": "#000000"
         },
         {
