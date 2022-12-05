@@ -197,11 +197,12 @@ async function applyStyles() {
 }
 
 function getWeekNumber() {
-    let currentDate = new Date(),
-        startDate = new Date(currentDate.getFullYear(), 0, 1),
-        days = Math.floor((currentDate - startDate) / 86400000),
-        weekNumber = Math.ceil(days / 7)
-    return weekNumber
+    let d = new Date()
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)),
+        weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+    return weekNo
 }
 
 function getPeriodNumber(w) {
