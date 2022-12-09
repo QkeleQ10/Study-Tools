@@ -52,6 +52,10 @@ async function init() {
             }
         })
     })
+
+    if (!chrome.runtime.getManifest().update_url) {
+        document.querySelector('.if-no-update-url').removeAttribute('style')
+    }
 }
 
 function updateSubjects() {
