@@ -17,11 +17,12 @@ async function init() {
     })
 
     document.querySelectorAll('.bind-string').forEach(element => {
-        let value = start[element.id]
+        let value = start[element.id] || defaults[element.id]
         if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password')) {
             if (value) element.value = value
             element.addEventListener('input', event => pushSetting(event.target.id, event.target.value))
         }
+        if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id])
     })
 
     document.querySelectorAll('.bind-subjects').forEach(element => {
@@ -31,7 +32,7 @@ async function init() {
             element.innerHTML += `<div class="grid-subjects"><input type="text" value="${value.name}"><input type="text" value="${value.aliases}"><div class="input-color-container"><input type="color" value="${value.color}"></div></div>`
         }
         element.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
-        if (!start[element.id]) element.querySelector('input').dispatchEvent('input')
+        if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
     document.querySelectorAll('.allbutton').forEach(async element => {
@@ -40,12 +41,12 @@ async function init() {
             setTimeout(() => { event.target.disabled = false }, 5000)
             switch (event.target.innerText) {
                 case 'Alles uit':
-                    event.target.parentElement.parentElement.querySelectorAll('input[type=checkbox]').forEach(e => { if (e.checked) e.click() })
+                    event.target.parentElement.parentElement.querySelectorAll('.bind-boolean').forEach(e => { if (e.checked) e.click() })
                     event.target.innerText = 'Alles aan'
                     break
 
                 default:
-                    event.target.parentElement.parentElement.querySelectorAll('input[type=checkbox]').forEach(e => { if (!e.checked) e.click() })
+                    event.target.parentElement.parentElement.querySelectorAll('.bind-boolean').forEach(e => { if (!e.checked) e.click() })
                     event.target.innerText = 'Alles uit'
                     break
             }
@@ -53,7 +54,7 @@ async function init() {
     })
 }
 
-function updateSubjects(event) {
+function updateSubjects() {
     let subjectValues = []
     const parent = document.getElementById('magister-subjects'),
         subjectWrappers = [...parent.children]
@@ -85,6 +86,9 @@ function updateSubjects(event) {
 function pushSetting(key, value) {
     diff[key] = value
     setSetting(key, value)
+    if (value.toLowerCase().includes('lgbt')) document.querySelector('body>div:first-child').classList.add('lgbt')
+    if (value.toLowerCase().includes('hhh')) document.querySelector('body>div:first-child').classList.add('hhh')
+    if (value === '69') document.querySelector('body>div:first-child').classList.add('nice')
 }
 
 function getSetting(key, location) {

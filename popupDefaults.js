@@ -110,5 +110,6 @@ const defaults = {
             "aliases": "wi, wa, wb, wc, wd",
             "color": "#000000"
         }
-    ]
+    ],
+    "magister-periods": "30, 47, 9"
 }

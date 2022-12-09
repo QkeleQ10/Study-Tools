@@ -18,13 +18,13 @@ body>section {
     padding: .5em 1em;
 }
 
-body>div:nth-child(1) {
-    background-color: #1f97f9;
+body>div:first-child {
+    background: #1f97f9;
     color: white;
 }
 
 body>section {
-    background-color: white;
+    background: white;
 }
 
 h1,
@@ -228,4 +228,16 @@ details[open]>summary {
 
 details[open] .details-show-when-collapsed {
     display: none;
+}
+
+.lgbt {
+    background: linear-gradient(180deg, #FE0000 16.66%, #FD8C00 16.66%, 33.32%, #FFE500 33.32%, 49.98%, #119F0B 49.98%, 66.64%, #0644B3 66.64%, 83.3%, #C22EDC 83.3%) !important;
+}
+
+.hhh {
+    background: #ffa500 !important;
+}
+
+*:has(.nice) {
+    font-family: "Comic Sans MS", "Comic Sans", cursive !important;
 }
