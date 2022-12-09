@@ -187,7 +187,6 @@ async function popstate() {
     else if (href.endsWith('/agenda')) agenda()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
-    else if (href.includes('/opdrachten')) opdrachten()
 }
 
 async function applyStyles() {
