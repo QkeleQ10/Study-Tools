@@ -62,26 +62,12 @@ async function studiewijzers() {
         elementNewContainer.classList.add('st-sw-container')
         elementNewContainer.appendChild(elementGrid)
         elementGrid.classList.add('st-sw-grid')
+        const hideLink = document.createElement('a')
+        document.querySelector('div#idWeergave div').appendChild(hideLink)
+        hideLink.outerHTML = `<a onclick="document.querySelector('.st-sw-container').style.display = 'none'; document.querySelector('.content-container').style.display = 'unset'; this.remove()" style="opacity:.5;text-decoration:underline">Weergave herstellen</a>`
     }
 
     mappedArray.forEach(async ({ elem, title, period, subject, priority }) => {
-        elementUl.appendChild(elem)
-        elem.firstElementChild.lastElementChild.innerText = subject
-        switch (priority) {
-            case 2:
-                elem.classList.add('st-current')
-                elem.setAttribute('title', "Deze studiewijzer is actueel.")
-                break
-
-            case 1:
-                elem.setAttribute('title', "Er kon geen periodenummer worden gedetecteerd.")
-                break
-
-            default:
-                elem.classList.add('st-obsolete')
-                elem.setAttribute('title', `Deze studiewijzer is van periode ${period}.`)
-                break
-        }
         if (settingGrid) {
             let itemButton = document.createElement('button'),
                 subjectWrapper
@@ -109,7 +95,26 @@ async function studiewijzers() {
             itemButton.setAttribute('onclick', `document.querySelector('li[data-title="${title}"]>a').click()`)
             subjectWrapper.appendChild(itemButton)
             elem.dataset.title = title
+        } else {
+            elementUl.appendChild(elem)
+            elem.firstElementChild.lastElementChild.innerText = subject
+            switch (priority) {
+                case 2:
+                    elem.classList.add('st-current')
+                    elem.setAttribute('title', "Deze studiewijzer is actueel.")
+                    break
+
+                case 1:
+                    elem.setAttribute('title', "Er kon geen periodenummer worden gedetecteerd.")
+                    break
+
+                default:
+                    elem.classList.add('st-obsolete')
+                    elem.setAttribute('title', `Deze studiewijzer is van periode ${period}.`)
+                    break
+            }
         }
+
     })
 }
 
@@ -186,18 +191,18 @@ async function popstate() {
 }
 
 async function applyStyles() {
-    createStyle(`.st-sw-container{height:100%;overflow-y:auto}.st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4.5rem;align-items:stretch;background-color:#fff;border-radius:5px;border:none;outline:#ccc solid 1px;overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:#fff;cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4.5rem;font-size:18px;font-family:open-sans,sans-serif;border-bottom:1px solid #ccc;background:#f8f8ff}.st-sw-subject>button:not(:first-child){min-height:1.75rem;font-size:12px;font-family:open-sans,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:#fff;font-size:11px;content:attr(data-title)}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:grey!important}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover{filter:brightness(.9)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:#f0f8ff;font-weight:700}@media (min-width:1400px){.st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools')
+    createStyle(`.st-sw-container{height:100%;overflow-y:auto}.st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4.5rem;align-items:stretch;background-color:#fff;border-radius:5px;border:none;outline:#ccc solid 1px;overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:#fff;cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4.5rem;font-size:18px;font-family:open-sans,sans-serif;border-bottom:1px solid #ccc;background:#f8f8ff}.st-sw-subject>button:not(:first-child){min-height:1.75rem;font-size:12px;font-family:open-sans,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:#fff;font-size:11px;content:attr(data-title)}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:#888!important}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover{filter:brightness(.9)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:#f0f8ff;font-weight:700}@media (min-width:1400px){.st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools')
 
     if (await getSetting('magister-cf-failred')) {
         createStyle(`.grade[title="5,0"],.grade[title="5,1"],.grade[title="5,2"],.grade[title="5,3"],.grade[title="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:lavenderBlush !important;color:red !important;font-weight:700}`, 'study-tools-cf-failred')
     }
 
-    if (await getSetting('magister-op-oldred')) {
+    if (await getSetting('magister-op-oldgrey')) {
         createStyle(`.overdue,.overdue *{color:grey!important}`, 'study-tools-op-oldred')
     }
 
     if (await getSetting('magister-vd-gradewidget')) {
-        createStyle(`#cijfers-leerling .last-grade,.block.grade-widget footer,.block.grade-widget h3{background:linear-gradient(to right,var(--primary-background),var(--secondary-background))}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;position:relative;width:100%;height:100%;margin:0;border-radius:0;padding:8px}#cijfers-leerling .last-grade span.cijfer{font-family:arboria,sans-serif;max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none;color:#fff}.block.grade-widget h3{border-bottom:none}.block.grade-widget footer{border-top:none}#cijfers-leerling .last-grade span.omschrijving{font:bold 14px arboria,sans-serif}.block.grade-widget footer a{color:#fff;background:#fff;color:var(--primary-background);margin:8px;height:auto;padding:3px 8px;line-height:normal;text-decoration:none;text-transform:capitalize;font-family:open-sans,sans-serif;border-radius:5px}.block.grade-widget footer a:hover{filter:brightness(.9)}`, 'study-tools-vd-gradewidget')
+        createStyle(`.block.grade-widget:not(.st-grade-widget-no){background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;position:relative;width:100%;height:50%;translate: 0 50%;margin:0;border-radius:0;padding:8px}#cijfers-leerling .last-grade span.cijfer{font-family:arboria,sans-serif;max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}.block.grade-widget:not(.st-grade-widget-no) *{background:0 0!important;border:none!important;color:#fff!important}#cijfers-leerling .last-grade span.omschrijving{font:bold 14px arboria,sans-serif}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:.75rem;position:relative;bottom:.2rem}.block.grade-widget footer a:hover{filter:brightness(.9)}`, 'study-tools-vd-gradewidget')
     }
 }
 
