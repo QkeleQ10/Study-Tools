@@ -29,7 +29,7 @@ function getElement(querySelector, all) {
         let timeout = setTimeout(() => {
             clearInterval(interval)
             return resolve(undefined)
-        }, 4000)
+        }, 10000)
     })
 }
 

@@ -13,7 +13,7 @@
         <h1>Study Tools</h1>
         <p>Configuratiepaneel</p>
     </div>
-    <section>
+    <section class="if-no-update-url" style="display:none">
         <h2>Algemeen <button class="allbutton">Alles aan</button></h2>
         <div>
             <label for="updates">
@@ -61,6 +61,11 @@
                 Rooster niet blauw kleuren
                 <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue" class="bind-boolean">
             </label>
+            <label for="magister-vd-gradewidget">
+                Alternatieve cijferwidget
+                <i>Experimenteel</i>
+                <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget" class="bind-boolean">
+            </label>
         </div>
         <div>
             <h3>Agenda</h3>
@@ -107,6 +112,10 @@
         </div>
         <div>
             <h3>Algemeen</h3>
+            <label for="magister-periods">
+                Beginweken perioden
+                <input type="text" name="Beginweken perioden" id="magister-periods" class="bind-string">
+            </label>
             <label for="magister-subjects" class="large">
                 <details>
                     <summary>
