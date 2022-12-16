@@ -54,7 +54,7 @@ async function init() {
     })
 
     if (!chrome.runtime.getManifest().update_url) {
-        document.querySelector('.if-no-update-url').removeAttribute('style')
+        document.querySelectorAll('.if-no-update-url').forEach(e => e.removeAttribute('style'))
     }
 }
 

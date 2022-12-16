@@ -17,10 +17,19 @@
     "content_scripts": [
         {
             "matches": [
+                "*://*.magister.net/*",
+                "*://*.noordhoff.nl/*"
+            ],
+            "js": [
+                "util.js"
+            ],
+            "run_at": "document_start"
+        },
+        {
+            "matches": [
                 "*://accounts.magister.net/account/login*"
             ],
             "js": [
-                "util.js",
                 "magisterLogin.js"
             ],
             "run_at": "document_end"
@@ -30,7 +39,6 @@
                 "*://*.magister.net/magister/*"
             ],
             "js": [
-                "util.js",
                 "magister.js"
             ],
             "run_at": "document_end"
@@ -41,7 +49,6 @@
                 "*://identity.noordhoff.nl/*"
             ],
             "js": [
-                "util.js",
                 "noordhoff.js"
             ],
             "run_at": "document_end"
