@@ -6,13 +6,18 @@ async function vandaag() {
         changedHeader = await getElement('h4[data-ng-bind-template*="Wijzigingen voor"]')
     if (blueItems) blueItems.forEach(e => e.classList.remove("alert"))
     if (changedHeader) changedHeader.innerHTML = changedHeader.innerHTML.replace("Wijzigingen voor", "Rooster voor")
+    let lastGrade = await getElement('.block.grade-widget span.cijfer')
+    if (lastGrade && !lastGrade.innerText.includes('-')) lastGrade.parentElement.parentElement.parentElement.classList.add('st-grade-widget-yes')
+    setTimeout(() => {
+        if (lastGrade && !lastGrade.innerText.includes('-')) lastGrade.parentElement.parentElement.parentElement.classList.add('st-grade-widget-yes')
+    }, 300)
 }
 
 
 async function agenda() {
     if (await getSetting('magister-ag-large')) {
         let agendaItems = await getElement('tr.ng-scope', true)
-        agendaItems.forEach(e => e.style.height = "40px")
+        if (agendaItems) agendaItems.forEach(e => e.style.height = "40px")
     }
 }
 
@@ -187,7 +192,6 @@ async function popstate() {
     else if (href.endsWith('/agenda')) agenda()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
-    else if (href.includes('/opdrachten')) opdrachten()
 }
 
 async function applyStyles() {
@@ -202,7 +206,7 @@ async function applyStyles() {
     }
 
     if (await getSetting('magister-vd-gradewidget')) {
-        createStyle(`.block.grade-widget:not(.st-grade-widget-no){background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;position:relative;width:100%;height:50%;translate: 0 50%;margin:0;border-radius:0;padding:8px}#cijfers-leerling .last-grade span.cijfer{font-family:arboria,sans-serif;max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}.block.grade-widget:not(.st-grade-widget-no) *{background:0 0!important;border:none!important;color:#fff!important}#cijfers-leerling .last-grade span.omschrijving{font:bold 14px arboria,sans-serif}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:.75rem;position:relative;bottom:.2rem}.block.grade-widget footer a:hover{filter:brightness(.9)}`, 'study-tools-vd-gradewidget')
+        createStyle(`.block.grade-widget{background:0 0}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:#000}.block.grade-widget span.cijfer{font-family:arboria,sans-serif;max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:bold 14px arboria,sans-serif}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:.75rem;position:relative;bottom:.2rem}.block.grade-widget a:hover{filter:brightness(.9)}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
     }
 }
 
