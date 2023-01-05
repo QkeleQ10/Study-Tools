@@ -1,4 +1,4 @@
-<html>
+<html data-saved="neutral">
 
 <head>
     <title>Study Tools configureren</title>
@@ -9,154 +9,163 @@
 </head>
 
 <body>
-    <div>
-        <h1>Study Tools</h1>
-        <p>Configuratiepaneel<span class="if-no-update-url" style="display:none"> (ontwikkelaar)</span></p>
-    </div>
-    <section class="if-no-update-url" style="display:none">
-        <h2>Algemeen <button class="allbutton">Alles aan</button></h2>
-        <div>
-            <label for="updates">
-                Updates aanbieden
-                <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
-            </label>
-        </div>
-    </section>
-    <section>
-        <h2>Magister <button class="allbutton">Alles aan</button></h2>
-        <div>
-            <h3>Inlogpagina</h3>
-            <label for="magisterLogin-enabled">
-                Automatisch inloggen
-                <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
-            </label>
-            <label for="magisterLogin-username">
-                Gebruikersnaam
-                <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind-string">
-            </label>
-            <label for="magisterLogin-password">
-                Wachtwoord
-                <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind-string">
-            </label>
-        </div>
-        <div>
-            <h3>Zijbalk</h3>
-            <label for="magister-appbar-week">
-                Weeknummer tonen
-                <input type="checkbox" name="Weeknummer tonen" id="magister-appbar-week" class="bind-boolean">
-            </label>
-            <label for="magister-appbar-zermelo">
-                Link naar Zermelo tonen
-                <input type="checkbox" name="Link naar Zermelo tonen" id="magister-appbar-zermelo" class="bind-boolean">
-            </label>
-            <label for="magister-appbar-hidePicture">
-                Profielfoto verbergen
-                <input type="checkbox" name="Profielfoto verbergen" id="magister-appbar-hidePicture"
-                    class="bind-boolean">
-            </label>
-        </div>
-        <div>
-            <h3>Vandaag</h3>
-            <label for="magister-vd-deblue">
-                Rooster niet blauw kleuren
-                <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue" class="bind-boolean">
-            </label>
-            <label for="magister-vd-gradewidget">
-                Alternatieve cijferwidget
-                <i>Experimenteel</i>
-                <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget"
-                    class="bind-boolean">
-            </label>
-        </div>
-        <div>
-            <h3>Agenda</h3>
-            <label for="magister-ag-large">
-                Afsprakenlijst ruimer maken
-                <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-large" class="bind-boolean">
-            </label>
-        </div>
-        <div>
-            <h3>Studiewijzers</h3>
-            <label for="magister-sw-sort">
-                Studiewijzers sorteren op periodenummer en vak
-                <input type="checkbox" name="Studiewijzers sorteren op periodenummer en vak" id="magister-sw-sort"
-                    class="bind-boolean">
-            </label>
-            <label for="magister-sw-grid" class="link-first">
-                Studiewijzers in raster plaatsen
-                <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
-                    class="bind-boolean">
-            </label>
-            <label for="magister-sw-period" class="link-first">
-                Periodenummers tonen
-                <input type="checkbox" name="Periodenummers tonen" id="magister-sw-period" class="bind-boolean">
-            </label>
-            <label for="magister-sw-thisWeek">
-                Naar huidige week scrollen
-                <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek" class="bind-boolean">
-            </label>
-        </div>
-        <div>
-            <h3>Opdrachten</h3>
-            <label for="magister-op-oldgrey">
-                Verstreken opdrachten grijs maken
-                <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
-                    class="bind-boolean">
-            </label>
-        </div>
-        <div>
-            <h3>Cijfers</h3>
-            <label for="magister-cf-failred">
-                Onvoldoendes rood kleuren
-                <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred" class="bind-boolean">
-            </label>
-        </div>
-        <div>
-            <h3>Algemeen</h3>
-            <label for="magister-periods">
-                Beginweken perioden
-                <input type="text" name="Beginweken perioden" id="magister-periods" class="bind-string">
-            </label>
-            <label for="magister-subjects" class="large">
-                <details>
-                    <summary>
-                        Vakken
-                        <i class="details-show-when-collapsed">Klik om vaknamen en -kleuren te bewerken</i>
-                    </summary>
-                    <div class="grid-subjects">
-                        <i>Weergavenaam</i>
-                        <i>Aliassen</i>
-                    </div>
-                    <div id="magister-subjects" class="bind-subjects"></div>
-                </details>
-            </label>
-        </div>
-    </section>
-    <section>
-        <h2>Noordhoff <button class="allbutton">Alles aan</button></h2>
-        <div>
-            <h3>Inlogpagina</h3>
-            <label for="noordhoff-login-enabled">
-                Automatisch doorgaan
-                <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled" class="bind-boolean">
-            </label>
-            <label for="noordhoff-login-entree">
-                Inloggen met Entree
-                <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind-boolean">
-            </label>
-        </div>
-    </section>
-    <section>
-        <p>Ontwikkeld door <a href="https://QkeleQ10.GitHub.io" target="_blank">Quinten Althues</a></p>
-        <a href="mailto:quinten@althues.nl?subject=Feedback m.b.t. Study Tools">Feedback geven of een probleem
-            melden</a>
-        <br><br>
-        <small>Gegevens over je identiteit, je accounts en je instellingen worden niet extern opgeslagen, verzonden of
-            geanalyseerd.
+    <header>
+        <h1>Study Tools<span class="if-no-update-url" style="display:none"> (dev)</span></h1>
+        <p>Configuratiepaneel</p>
+    </header>
+    <main>
+        <section class="if-no-update-url" style="display:none">
+            <h2>Algemeen <button class="allbutton">Alles aan</button></h2>
+            <div>
+                <label for="updates">
+                    Updates aanbieden
+                    <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
+                </label>
+            </div>
+        </section>
+        <section>
+            <h2>Magister <button class="allbutton">Alles aan</button></h2>
+            <div>
+                <h3>Inlogpagina</h3>
+                <label for="magisterLogin-enabled">
+                    Automatisch inloggen
+                    <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
+                </label>
+                <label for="magisterLogin-username">
+                    Gebruikersnaam
+                    <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind-string">
+                </label>
+                <label for="magisterLogin-password">
+                    Wachtwoord
+                    <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind-string">
+                </label>
+            </div>
+            <div>
+                <h3>Zijbalk</h3>
+                <label for="magister-appbar-week">
+                    Weeknummer tonen
+                    <input type="checkbox" name="Weeknummer tonen" id="magister-appbar-week" class="bind-boolean">
+                </label>
+                <label for="magister-appbar-zermelo">
+                    Link naar Zermelo tonen
+                    <input type="checkbox" name="Link naar Zermelo tonen" id="magister-appbar-zermelo"
+                        class="bind-boolean">
+                </label>
+                <label for="magister-appbar-hidePicture">
+                    Profielfoto verbergen
+                    <input type="checkbox" name="Profielfoto verbergen" id="magister-appbar-hidePicture"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div>
+                <h3>Vandaag</h3>
+                <label for="magister-vd-deblue">
+                    Rooster niet blauw kleuren
+                    <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue"
+                        class="bind-boolean">
+                </label>
+                <label for="magister-vd-gradewidget">
+                    Alternatieve cijferwidget
+                    <i>Experimenteel</i>
+                    <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div>
+                <h3>Agenda</h3>
+                <label for="magister-ag-large">
+                    Afsprakenlijst ruimer maken
+                    <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-large"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div>
+                <h3>Studiewijzers</h3>
+                <label for="magister-sw-sort">
+                    Studiewijzers sorteren op periodenummer en vak
+                    <input type="checkbox" name="Studiewijzers sorteren op periodenummer en vak" id="magister-sw-sort"
+                        class="bind-boolean">
+                </label>
+                <label for="magister-sw-grid" class="link-first">
+                    Studiewijzers in raster plaatsen
+                    <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
+                        class="bind-boolean">
+                </label>
+                <label for="magister-sw-period" class="link-first">
+                    Periodenummers tonen
+                    <input type="checkbox" name="Periodenummers tonen" id="magister-sw-period" class="bind-boolean">
+                </label>
+                <label for="magister-sw-thisWeek">
+                    Naar huidige week scrollen
+                    <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div>
+                <h3>Opdrachten</h3>
+                <label for="magister-op-oldgrey">
+                    Verstreken opdrachten grijs maken
+                    <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div>
+                <h3>Cijfers</h3>
+                <label for="magister-cf-failred">
+                    Onvoldoendes rood kleuren
+                    <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div>
+                <h3>Algemeen</h3>
+                <label for="magister-periods">
+                    Beginweken perioden
+                    <input type="text" name="Beginweken perioden" id="magister-periods" class="bind-string">
+                </label>
+                <label for="magister-subjects" class="large">
+                    <details>
+                        <summary>
+                            Vakken
+                            <i class="details-show-when-collapsed">Klik om vaknamen en -kleuren te bewerken</i>
+                        </summary>
+                        <div class="grid-subjects">
+                            <i>Weergavenaam</i>
+                            <i>Aliassen</i>
+                        </div>
+                        <div id="magister-subjects" class="bind-subjects"></div>
+                    </details>
+                </label>
+            </div>
+        </section>
+        <section>
+            <h2>Noordhoff <button class="allbutton">Alles aan</button></h2>
+            <div>
+                <h3>Inlogpagina</h3>
+                <label for="noordhoff-login-enabled">
+                    Automatisch doorgaan
+                    <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled"
+                        class="bind-boolean">
+                </label>
+                <label for="noordhoff-login-entree">
+                    Inloggen met Entree
+                    <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind-boolean">
+                </label>
+            </div>
+        </section>
+        <section>
+            <p>Ontwikkeld door <a href="https://QkeleQ10.GitHub.io" target="_blank">Quinten Althues</a></p>
+            <a href="mailto:quinten@althues.nl?subject=Feedback m.b.t. Study Tools">Feedback geven of een probleem
+                melden</a>
             <br><br>
-            Inloggegevens en andere instellingen worden door je browser opgeslagen op je apparaat of in de cloud.
-            Aansprakelijkheid voor schade door beveiligingsgebreken wordt niet erkend door de ontwikkelaar.</small>
-    </section>
+            <small>Gegevens over je identiteit, je accounts en je instellingen worden niet extern opgeslagen, verzonden
+                of
+                geanalyseerd.
+                <br><br>
+                Inloggegevens en andere instellingen worden door je browser opgeslagen op je apparaat of in de cloud.
+                Aansprakelijkheid voor schade door beveiligingsgebreken wordt niet erkend door de ontwikkelaar.</small>
+        </section>
+    </main>
 </body>
 
 </html>

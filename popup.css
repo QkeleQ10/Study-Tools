@@ -1,10 +1,14 @@
+:root {
+    --color-main: #1f97f9;
+}
+
+* {
+    transition: background 200ms, opacity 200ms;
+}
+
 body {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
     min-width: 27.5em;
     margin: 0;
-    background-color: #d8d8d8;
     user-select: none;
     transition: min-width 200ms;
 }
@@ -13,18 +17,34 @@ body.wide {
     min-width: 35em;
 }
 
-body>div,
-body>section {
-    padding: .5em 1em;
-}
 
-body>div:first-child {
-    background: #1f97f9;
+header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    position: fixed;
+    width: 100%;
+    height: 5em;
+    background: var(--color-main);
     color: white;
+    padding: 1em;
 }
 
-body>section {
+header:after {
+    content: 'Wijzigingen opgeslagen!';
+    position: absolute;
+    top: 4.5em;
+    font-weight: bold;
+    opacity: 0;
+}
+
+main {
+    padding-top: 7em;
+}
+
+section {
     background: white;
+    margin: 1em;
 }
 
 h1,
@@ -34,6 +54,11 @@ h4,
 h5,
 h6 {
     margin: .5em 0;
+}
+
+header>h1,
+header>p {
+    margin: 0;
 }
 
 h1:after {
@@ -122,7 +147,7 @@ input[type=checkbox] {
 }
 
 input[type=checkbox]:checked {
-    background: #1f97f9;
+    background: var(--color-main);
 }
 
 label:hover {
@@ -131,7 +156,7 @@ label:hover {
 
 label:hover>input,
 label:hover>textarea {
-    color: #1f97f9;
+    color: var(--color-main);
 }
 
 label:hover>input[type=checkbox] {
@@ -146,7 +171,7 @@ textarea:focus,
 textarea:active,
 .allbutton:focus,
 .allbutton:active {
-    box-shadow: 0 0 0 .3em #1f97f980;
+    box-shadow: 0 0 0 .3em var(--color-main)80;
 }
 
 label:first-of-type:has(input[type=checkbox]:not(:checked))~label.link-first {
@@ -159,7 +184,7 @@ label:first-of-type:has(input[type=checkbox]:not(:checked))~label.link-first>inp
 }
 
 .allbutton {
-    background: #1f97f9;
+    background: var(--color-main);
     color: #ffffff;
     border: none;
     border-radius: .15em;
@@ -230,12 +255,30 @@ details[open] .details-show-when-collapsed {
     display: none;
 }
 
-.lgbt {
-    background: linear-gradient(180deg, #FE0000 16.66%, #FD8C00 16.66%, 33.32%, #FFE500 33.32%, 49.98%, #119F0B 49.98%, 66.64%, #0644B3 66.64%, 83.3%, #C22EDC 83.3%) !important;
+:root:not([data-saved='neutral']) header>p {
+    opacity: 0;
 }
 
-.hhh {
-    background: #ffa500 !important;
+:root[data-saved='saved'] {
+    --color-main: #2b9e3e;
+}
+
+:root[data-saved='saved'] header:after {
+    content: 'Wijzigingen opgeslagen!';
+    opacity: 1 !important;
+}
+
+:root[data-saved='not-saved'] {
+    --color-main: #a03c3c;
+}
+
+:root[data-saved='not-saved'] header:after {
+    content: 'Er zijn niet-opgeslagen wijzigingen!';
+    opacity: 1 !important;
+}
+
+.lgbt {
+    background: linear-gradient(180deg, #FE0000 16.66%, #FD8C00 16.66%, 33.32%, #FFE500 33.32%, 49.98%, #119F0B 49.98%, 66.64%, #0644B3 66.64%, 83.3%, #C22EDC 83.3%) !important;
 }
 
 *:has(.nice) {

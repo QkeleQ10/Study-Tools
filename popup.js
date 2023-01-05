@@ -1,5 +1,6 @@
 let start = {},
-    diff = {}
+    diff = {},
+    diffTimestamp = 0
 
 setSetting('openedPopup', true)
 
@@ -56,6 +57,16 @@ async function init() {
     if (!chrome.runtime.getManifest().update_url) {
         document.querySelectorAll('.if-no-update-url').forEach(e => e.removeAttribute('style'))
     }
+
+    setInterval(async () => {
+        if (new Date().getTime() - diffTimestamp < 500) return
+        document.documentElement.dataset.saved = 'neutral'
+        if (Object.keys(diff).length === 0) return
+        await setSettings(diff, 'sync')
+        diff = {}
+        diffTimestamp = 0
+        document.documentElement.dataset.saved = 'saved'
+    }, 1000)
 }
 
 function updateSubjects() {
@@ -88,11 +99,11 @@ function updateSubjects() {
 }
 
 function pushSetting(key, value) {
+    document.documentElement.dataset.saved = 'not-saved'
     diff[key] = value
-    setSetting(key, value)
-    if (value.toLowerCase().includes('lgbt')) document.querySelector('body>div:first-child').classList.add('lgbt')
-    if (value.toLowerCase().includes('hhh')) document.querySelector('body>div:first-child').classList.add('hhh')
-    if (value === '69') document.querySelector('body>div:first-child').classList.add('nice')
+    diffTimestamp = new Date().getTime()
+    if (value.toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
+    if (value === '69') document.querySelector('header').classList.add('nice')
 }
 
 function getSetting(key, location) {
