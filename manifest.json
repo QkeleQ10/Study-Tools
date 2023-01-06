@@ -18,7 +18,8 @@
         {
             "matches": [
                 "*://*.magister.net/*",
-                "*://*.noordhoff.nl/*"
+                "*://*.noordhoff.nl/*",
+                "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
                 "util.js"
@@ -50,6 +51,15 @@
             ],
             "js": [
                 "noordhoff.js"
+            ],
+            "run_at": "document_end"
+        },
+        {
+            "matches": [
+                "*://login.microsoftonline.com/*/oauth2/authorize*"
+            ],
+            "js": [
+                "microsoftLogin.js"
             ],
             "run_at": "document_end"
         }

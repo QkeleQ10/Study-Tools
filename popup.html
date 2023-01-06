@@ -15,7 +15,7 @@
     </header>
     <main>
         <section class="if-no-update-url" style="display:none">
-            <h2>Algemeen <button class="allbutton">Alles aan</button></h2>
+            <h2>Algemeen</h2>
             <div>
                 <label for="updates">
                     Updates aanbieden
@@ -24,20 +24,30 @@
             </div>
         </section>
         <section>
-            <h2>Magister <button class="allbutton">Alles aan</button></h2>
+            <h2>Magister</h2>
             <div>
                 <h3>Inlogpagina</h3>
                 <label for="magisterLogin-enabled">
                     Automatisch inloggen
                     <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
                 </label>
-                <label for="magisterLogin-username">
+                <label for="magisterLogin-microsoft" data-appear-if="magisterLogin-enabled">
+                    Inloggen met Microsoft
+                    <input type="checkbox" name="Inloggen met Microsoft" id="magisterLogin-microsoft"
+                        class="bind-boolean">
+                </label>
+                <label for="magisterLogin-username" data-appear-if="magisterLogin-enabled">
                     Gebruikersnaam
                     <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind-string">
                 </label>
-                <label for="magisterLogin-password">
+                <label for="magisterLogin-password" data-appear-if="magisterLogin-enabled"
+                    data-disappear-if="magisterLogin-microsoft">
                     Wachtwoord
                     <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind-string">
+                </label>
+                <label for="magisterLogin-email" data-appear-if="magisterLogin-microsoft">
+                    E-mailadres
+                    <input type="email" name="Microsoft-e-mailadres" id="magisterLogin-email" class="bind-string">
                 </label>
             </div>
             <div>
@@ -86,12 +96,12 @@
                     <input type="checkbox" name="Studiewijzers sorteren op periodenummer en vak" id="magister-sw-sort"
                         class="bind-boolean">
                 </label>
-                <label for="magister-sw-grid" class="link-first">
+                <label for="magister-sw-grid" data-appear-if="magister-sw-sort">
                     Studiewijzers in raster plaatsen
                     <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
                         class="bind-boolean">
                 </label>
-                <label for="magister-sw-period" class="link-first">
+                <label for="magister-sw-period" data-appear-if="magister-sw-sort">
                     Periodenummers tonen
                     <input type="checkbox" name="Periodenummers tonen" id="magister-sw-period" class="bind-boolean">
                 </label>
@@ -139,7 +149,7 @@
             </div>
         </section>
         <section>
-            <h2>Noordhoff <button class="allbutton">Alles aan</button></h2>
+            <h2>Noordhoff</h2>
             <div>
                 <h3>Inlogpagina</h3>
                 <label for="noordhoff-login-enabled">

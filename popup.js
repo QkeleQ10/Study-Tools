@@ -19,7 +19,7 @@ async function init() {
 
     document.querySelectorAll('.bind-string').forEach(element => {
         let value = start[element.id] || defaults[element.id]
-        if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password')) {
+        if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password' || element.getAttribute('type') === 'email')) {
             if (value) element.value = value
             element.addEventListener('input', event => pushSetting(event.target.id, event.target.value))
         }
@@ -36,27 +36,11 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
-    document.querySelectorAll('.allbutton').forEach(async element => {
-        element.addEventListener('click', event => {
-            event.target.disabled = true
-            setTimeout(() => { event.target.disabled = false }, 5000)
-            switch (event.target.innerText) {
-                case 'Alles uit':
-                    event.target.parentElement.parentElement.querySelectorAll('.bind-boolean').forEach(e => { if (e.checked) e.click() })
-                    event.target.innerText = 'Alles aan'
-                    break
-
-                default:
-                    event.target.parentElement.parentElement.querySelectorAll('.bind-boolean').forEach(e => { if (!e.checked) e.click() })
-                    event.target.innerText = 'Alles uit'
-                    break
-            }
-        })
-    })
-
     if (!chrome.runtime.getManifest().update_url) {
         document.querySelectorAll('.if-no-update-url').forEach(e => e.removeAttribute('style'))
     }
+
+    refreshConditionals()
 
     setInterval(async () => {
         if (new Date().getTime() - diffTimestamp < 500) return
@@ -99,11 +83,35 @@ function updateSubjects() {
 }
 
 function pushSetting(key, value) {
+    refreshConditionals()
     document.documentElement.dataset.saved = 'not-saved'
     diff[key] = value
     diffTimestamp = new Date().getTime()
-    if (value.toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
+    if (String(value).toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
     if (value === '69') document.querySelector('header').classList.add('nice')
+}
+
+function refreshConditionals() {
+    document.querySelectorAll('[data-appear-if], [data-disappear-if]').forEach(e => {
+        let appear = false, posDependency, negDependency
+        if (e.dataset.appearIf) {
+            posDependency = document.getElementById(e.dataset.appearIf)
+            if (posDependency?.checked && !appear) appear = true
+        }
+        if (e.dataset.disappearIf) {
+            negDependency = document.getElementById(e.dataset.disappearIf)
+            if (!negDependency?.checked && appear !== false) appear = true
+            if (negDependency?.checked && appear) appear = false
+        }
+        if (appear) e.classList.remove('hide')
+        else {
+            e.classList.add('hide')
+            if (e.firstElementChild.checked) {
+                e.firstElementChild.checked = false
+                refreshConditionals()
+            }
+        }
+    })
 }
 
 function getSetting(key, location) {
