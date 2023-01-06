@@ -1,28 +1,29 @@
+@font-face {
+    font-family: material-icons;
+    src: url(icons.otf);
+}
+
 :root {
     --color-main: #1f97f9;
 }
 
 * {
-    transition: background 200ms, opacity 200ms;
+    font-family: 'Montserrat', sans-serif;
+    transition: background-color 200ms, opacity 200ms, translate 200ms cubic-bezier(1, 0, 0, 1), scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1), rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms;
+    overflow-x: hidden;
 }
 
 body {
-    min-width: 27.5em;
+    background: #fafafa;
+    width: 360px;
+    min-height: 600px;
     margin: 0;
     user-select: none;
-    transition: min-width 200ms;
 }
-
-body.wide {
-    min-width: 35em;
-}
-
 
 header {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
     position: fixed;
+    z-index: 100;
     width: 100%;
     height: 5em;
     background: var(--color-main);
@@ -38,13 +39,33 @@ header:after {
     opacity: 0;
 }
 
+
+html[data-section] header {
+    cursor: pointer;
+}
+
 main {
     padding-top: 7em;
 }
 
 section {
-    background: white;
-    margin: 1em;
+    position: absolute;
+    translate: 360px;
+    width: 100%;
+    overflow-x: hidden;
+    pointer-events: none;
+}
+
+section.open {
+    translate: 0;
+    pointer-events: unset;
+}
+
+p,
+label,
+#sectionPicker>div {
+    font-size: 14px;
+    font-weight: 500;
 }
 
 h1,
@@ -56,9 +77,9 @@ h6 {
     margin: .5em 0;
 }
 
-header>h1,
-header>p {
+header>h1 {
     margin: 0;
+    translate: 0 6px;
 }
 
 h1:after {
@@ -72,169 +93,222 @@ h2 {
 }
 
 h3 {
+    margin-top: 1em;
+    margin-left: .75em;
     display: flex;
     width: 100%;
     align-items: center;
-}
-
-h3:after {
-    content: '';
-    border-top: 1px solid #d8d8d8;
-    margin-left: .5em;
-    flex: 1 0 .5em;
 }
 
 i {
     color: #808080;
     font-size: 11px;
     margin-top: -4px;
+    font-style: normal;
+}
+
+label,
+#sectionPicker>div[data-section] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .75em;
+    background: #fff;
+    border-top: solid 1px rgba(0, 0, 0, 0.1);
+}
+
+label:last-child {
+    border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+}
+
+label>div:first-child,
+#sectionPicker>div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+label:has(input[type="checkbox"]) {
+    cursor: pointer;
+}
+
+label:has(input[type="text"]),
+label:has(input[type="email"]),
+label:has(input[type="password"]) {
+    flex-direction: column;
+    align-items: stretch;
 }
 
 label {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5em;
-    min-height: 2em;
+    position: relative;
 }
 
-label:has(textarea),
-label.large {
-    flex-direction: column;
-    padding-bottom: 1em;
+label[data-saved="not-saved"] {
+    background: #fff6f6;
 }
 
-input {
-    margin: 0;
-    margin-bottom: .5em;
-    background-color: #ffffff;
-    font: inherit;
-    outline-width: .15em;
-    outline-style: solid;
-    outline-color: #000;
-    border: none;
-    border-radius: .15em;
+label:after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    translate: 100px;
+    content: 'sync';
+    font-family: 'material-icons';
+    animation: rotation 2s infinite linear;
+    transition: translate 200ms;
 }
 
-label:not(.large) input {
-    color: currentColor;
-    outline-color: currentColor;
+label:before {
+    position: absolute;
+    top: 0;
+    right: 16px;
+    translate: 100px;
+    font-size: 10px;
+    content: 'Opgeslagen';
+    transition: translate 200ms;
 }
 
-input:hover {
-    color: currentColor;
-    outline-color: currentColor;
+label[data-saved="not-saved"]:after {
+    translate: 0;
 }
 
-textarea {
-    font-family: system-ui, sans-serif;
-    font-size: 1em;
-    background-color: #ffffff;
-    color: currentColor;
-    font: inherit;
-    outline: .15em solid currentColor;
-    border: none;
-    border-radius: .15em;
-    min-height: 5em;
-    resize: vertical;
+label[data-saved="not-saved"]:before {
+    content: 'Niet opgeslagen';
+    translate: 0;
 }
 
+label[data-saved="saved"]:before {
+    translate: 14px;
+}
 
-input[type=checkbox] {
+#sectionPicker {
+    position: absolute;
+    width: 100%;
+}
+
+#sectionPicker>div[data-section] {
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+html[data-section] #sectionPicker {
+    translate: -360px;
+}
+
+#sectionReturn {
+    position: absolute;
+    font-family: 'material-icons';
+    font-size: 24px;
+    translate: 0 -3px;
+}
+
+header:active #sectionReturn {
+    translate: 4px -3px;
+}
+
+html:not([data-section]) #sectionReturn {
+    rotate: 45deg;
+    translate: -40px -3px;
+}
+
+html[data-section] #sectionName {
+    translate: 30px;
+}
+
+input[type="checkbox"] {
     appearance: none;
-    height: 1.15em;
-    width: 1.15em;
-    border: .2em solid white;
+    width: 40px;
+    height: 24px;
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+    outline: solid 1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 6px 16px -8px rgba(0, 0, 0, 0.75);
 }
 
-input[type=checkbox]:checked {
+input[type="checkbox"]:after {
+    display: block;
+    content: 'close';
+    font-family: 'material-icons';
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: #ddd;
+    scale: .75;
+    translate: 0;
+    transition: translate 400ms cubic-bezier(0.34, 1.56, 0.64, 1), scale 200ms;
+}
+
+input[type="checkbox"]:checked:after {
     background: var(--color-main);
+    color: #fff;
+    content: 'done';
+    translate: 16px;
 }
 
-label:hover {
-    color: #808080
+label:hover input[type="checkbox"] {
+    scale: 1.1;
+    box-shadow: 0px 8px 20px -8px rgba(0, 0, 0, 0.75);
 }
 
-label:hover>input,
-label:hover>textarea {
-    color: var(--color-main);
+label:active input[type="checkbox"] {
+    scale: .9;
+    box-shadow: 0px 3px 8px -4px rgba(0, 0, 0, 1);
 }
 
-label:hover>input[type=checkbox] {
-    border: .3em solid white;
+label:active input[type="checkbox"]:after {
+    scale: .65;
 }
 
-label:focus>input,
-label:active>input,
-input:focus,
-input:active,
-textarea:focus,
-textarea:active,
-.allbutton:focus,
-.allbutton:active {
-    box-shadow: 0 0 0 .3em var(--color-main)80;
-}
-
-label:first-of-type:has(input[type=checkbox]:not(:checked))~label.link-first {
-    opacity: .5;
-    pointer-events: none;
-}
-
-label:first-of-type:has(input[type=checkbox]:not(:checked))~label.link-first>input[type=checkbox] {
-    background: none;
-}
-
-.allbutton {
-    background: var(--color-main);
-    color: #ffffff;
+input[type=text],
+input[type=email],
+input[type=password] {
+    min-height: 24px;
+    padding: 1px 0;
+    margin: 0 2px;
     border: none;
-    border-radius: .15em;
+    border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 6px -8px rgba(0, 0, 0, 0.75);
 }
 
-.allbutton:not(:disabled):hover,
-.allbutton:focus,
-.allbutton:hover {
-    background: #1a7ecf;
+label:hover>input[type=text],
+label:hover>input[type=email],
+label:hover>input[type=password],
+input[type=text]:hover,
+input[type=email]:hover,
+input[type=password]:hover {
+    border-bottom: solid 1px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 4px 10px -8px rgba(0, 0, 0, 0.75);
+}
+
+input[type=text]:focus,
+input[type=email]:focus,
+input[type=password]:focus {
+    border-color: var(--color-main) !important;
     outline: none;
+    box-shadow: 0px 8px 16px -8px rgba(31, 151, 249, 0.75) !important;
 }
 
-.allbutton:disabled {
-    opacity: 0.5;
+input[type=text]:active,
+input[type=email]:active,
+input[type=password]:active {
+    scale: 0.97;
 }
 
 .grid-subjects {
     display: grid;
     grid-template-columns: calc(24.5em / 2) calc(24.5em / 2) 0;
-    gap: 0 0.5em;
+    gap: 0;
     max-width: 100%;
-}
-
-.grid-subjects input {
-    height: 18px;
-}
-
-.input-color-container {
-    display: none;
-    position: relative;
-    overflow: hidden;
-    height: 18px;
-    outline-width: .15em;
-    outline-style: solid;
-    outline-color: #000;
-    border: none;
-    border-radius: .15em;
-}
-
-input[type=color] {
-    position: absolute;
-    left: -1em;
-    top: -8px;
-    width: 70px;
-    height: 38px;
-    border: none;
 }
 
 #magister-subjects .grid-subjects:last-child {
     opacity: .5;
+}
+
+label>.grid-subjects {
+    margin-top: 1em;
 }
 
 details {
@@ -255,28 +329,6 @@ details[open] .details-show-when-collapsed {
     display: none;
 }
 
-:root:not([data-saved='neutral']) header>p {
-    opacity: 0;
-}
-
-:root[data-saved='saved'] {
-    --color-main: #2b9e3e;
-}
-
-:root[data-saved='saved'] header:after {
-    content: 'Wijzigingen opgeslagen!';
-    opacity: 1 !important;
-}
-
-:root[data-saved='not-saved'] {
-    --color-main: #a03c3c;
-}
-
-:root[data-saved='not-saved'] header:after {
-    content: 'Er zijn niet-opgeslagen wijzigingen!';
-    opacity: 1 !important;
-}
-
 .hide {
     display: none;
 }
@@ -287,4 +339,14 @@ details[open] .details-show-when-collapsed {
 
 *:has(.nice) {
     font-family: "Comic Sans MS", "Comic Sans", cursive !important;
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(-359deg);
+    }
 }
