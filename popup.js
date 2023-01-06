@@ -109,9 +109,9 @@ function refreshConditionals() {
             if (!negDependency?.checked && appear !== false) appear = true
             if (negDependency?.checked && appear) appear = false
         }
-        if (appear) e.classList.remove('hide')
+        if (appear) e.classList.remove('collapse')
         else {
-            e.classList.add('hide')
+            e.classList.add('collapse')
             if (e.firstElementChild.checked) {
                 e.firstElementChild.checked = false
                 refreshConditionals()
