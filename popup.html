@@ -14,17 +14,21 @@
 
 <body>
     <header>
-        <h1>Study Tools<span class="if-no-update-url" style="display:none"> (dev)</span></h1>
+        <h1>Study Tools</h1>
         <span>
             <a id="sectionReturn">arrow_back</a>
             <p id="sectionName">Configuratiepaneel</p>
+            <span class="if-no-update-url icon hide"
+                style="position: absolute; top: 0; right: 10px; font-size: 80px; color: #000; opacity: 0.1;">data_object</span>
+            <span class="if-update-url icon hide"
+                style="position: absolute; top: 0; right: 10px; font-size: 80px; color: #000; opacity: 0.1;">school</span>
         </span>
     </header>
     <main>
         <div id="sectionPicker">
-            <div data-section="Algemeen">
-                Algemeen
-                <i>Algemene instellingen wijzigen</i>
+            <div data-section="Ontwikkelaar" class="if-no-update-url hide">
+                Ontwikkelaar
+                <i>Deze instellingen zijn alleen beschikbaar in de ontwikkelaarsmodus</i>
             </div>
             <div data-section="Magister">
                 Magister
@@ -35,8 +39,9 @@
                 <i>Instellingen voor Noordhoff wijzigen</i>
             </div>
             <h3>Over</h3>
-            <div style="padding: .75em; gap: 0;">
-                <p style="margin-top: 0;">Ontwikkeld door <a href="https://QkeleQ10.GitHub.io" target="_blank">Quinten Althues</a></p>
+            <div style="padding: .75em; gap: 0; font-size: 12px;">
+                <p style="margin-top: 0; font-size: 12px;">Ontwikkeld door <a href="https://QkeleQ10.GitHub.io"
+                        target="_blank">Quinten Althues</a></p>
                 <a href="mailto:quinten@althues.nl?subject=Feedback m.b.t. Study Tools">Feedback geven of een probleem
                     melden</a>
                 <br>
@@ -51,7 +56,7 @@
                     ontwikkelaar.</small>
             </div>
         </div>
-        <section data-title="Algemeen">
+        <section data-title="Ontwikkelaar">
             <div>
                 <label for="updates">
                     Updates aanbieden
@@ -141,7 +146,8 @@
                 <label for="magister-sw-grid" data-appear-if="magister-sw-sort">
                     <div>
                         Studiewijzers in raster plaatsen
-                        <i>Elk vak krijgt een tegel met daarin de bijbehorende studiewijzers. Definieer vakken onderaan deze pagina.</i>
+                        <i>Elk vak krijgt een tegel met daarin de bijbehorende studiewijzers. Definieer vakken onderaan
+                            deze pagina.</i>
                     </div>
                     <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
                         class="bind-boolean">

@@ -112,6 +112,10 @@ i {
     font-style: normal;
 }
 
+.icon {
+    font-family: 'material-icons';
+}
+
 label,
 #sectionPicker>div[data-section] {
     display: flex;

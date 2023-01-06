@@ -7,7 +7,7 @@ if (chrome?.storage) setSetting('openedPopup', true)
 init()
 
 async function init() {
-    if(chrome?.storage) start = await getSettings(null, null, true)
+    if (chrome?.storage) start = await getSettings(null, null, true)
 
     document.querySelectorAll('.bind-boolean').forEach(element => {
         let value = start[element.id]
@@ -36,13 +36,10 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
-    if (!chrome?.runtime?.getManifest().update_url) {
-        document.querySelectorAll('.if-no-update-url').forEach(e => e.removeAttribute('style'))
-    }
+    if (!chrome?.runtime?.getManifest().update_url) document.querySelectorAll('.if-no-update-url').forEach(e => e.classList.remove('hide'))
+    else document.querySelectorAll('.if-update-url').forEach(e => e.classList.remove('hide'))
 
-    document.querySelectorAll('#sectionPicker>div[data-section]').forEach(element => {
-        element.addEventListener('click', openSection)
-    })
+    document.querySelectorAll('#sectionPicker>div[data-section]').forEach(element => element.addEventListener('click', openSection))
 
     document.querySelector('header').addEventListener('click', closeSection)
 
