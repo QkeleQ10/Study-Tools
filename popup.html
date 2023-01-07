@@ -1,6 +1,9 @@
-<html>
+<html lang="nl">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Study Tools configureren</title>
     <script src="popup.js" defer></script>
     <script src="popupDefaults.js"></script>
@@ -19,7 +22,7 @@
             <a id="sectionReturn">arrow_back</a>
             <p id="sectionName">Configuratiepaneel</p>
             <span class="if-no-update-url icon hide"
-                style="position: absolute; top: 0; right: 10px; font-size: 80px; color: #000; opacity: 0.1;">data_object</span>
+                style="position: absolute; top: 0; right: 10px; font-size: 80px; color: #000; opacity: 0.1;">science</span>
             <span class="if-update-url icon hide"
                 style="position: absolute; top: 0; right: 10px; font-size: 80px; color: #000; opacity: 0.1;">school</span>
         </span>
@@ -61,6 +64,10 @@
                 <label for="updates">
                     Updates aanbieden
                     <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
+                </label>
+                <label for="beta" data-appear-if="updates">
+                    Bètaversies aanbieden
+                    <input type="checkbox" name="Bètaversies aanbieden" id="beta" class="bind-boolean">
                 </label>
             </div>
         </section>

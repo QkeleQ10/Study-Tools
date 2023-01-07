@@ -47,7 +47,7 @@ async function init() {
 
     setInterval(async () => {
         document.querySelectorAll('[data-saved="saved"]').forEach(e => e.removeAttribute('data-saved'))
-        if (new Date().getTime() - diffTimestamp < 750) return
+        if (new Date().getTime() - diffTimestamp < 500) return
         if (Object.keys(diff).length === 0) return
         await setSettings(diff, 'sync')
         diff = {}
@@ -74,6 +74,7 @@ function updateSubjects() {
             newSubjectWrapper.innerHTML = `<input type="text"><input type="text">`
             newSubjectWrapper.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
             parent.appendChild(newSubjectWrapper)
+            document.querySelector('section.open').scrollBy({ top: newSubjectWrapper.clientHeight, behavior: 'smooth' })
         }
         if (empty && !lastChild) {
             subjectWrapper.remove()
@@ -106,13 +107,17 @@ function refreshConditionals() {
             if (!negDependency?.checked && appear !== false) appear = true
             if (negDependency?.checked && appear) appear = false
         }
-        if (appear) e.classList.remove('collapse')
+        if (appear) {
+            e.classList.remove('collapse')
+            e.querySelector('input').removeAttribute('tabindex')
+        }
         else {
             e.classList.add('collapse')
             if (e.firstElementChild.checked) {
                 e.firstElementChild.checked = false
                 refreshConditionals()
             }
+            e.querySelector('input').setAttribute('tabindex', '-1')
         }
     })
 }
