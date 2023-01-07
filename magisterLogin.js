@@ -7,7 +7,7 @@ async function login() {
         footer = document.querySelector('.bottom')
 
     footer.style.translate = '0 -2rem'
-    if (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 10000)
+    if (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000)
         return footer.innerHTML = "<p><b>Automatisch inloggen is tijdelijk gepauzeerd.</b> De volgende keer zal er weer automatisch worden ingelogd.</p>"
 
     footer.innerHTML = "<p><b>Automatisch inloggen is ingeschakeld.</b> Je kunt de instellingen aanpassen via de extensie van Study Tools.</p>"

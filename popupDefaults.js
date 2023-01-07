@@ -66,7 +66,7 @@ const defaults = {
             "color": "#000000"
         },
         {
-            "name": "Loopbaan&shy;ori&#235;ntatie en &#8209begeleiding",
+            "name": "Loopbaan&shy;oriëntatie en -begeleiding",
             "aliases": "lob",
             "color": "#000000"
         },
