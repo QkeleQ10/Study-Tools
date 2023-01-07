@@ -39,7 +39,7 @@ async function init() {
 
     if (chrome?.runtime?.getManifest()?.version && start.openedPopup) {
         document.querySelectorAll('label[data-version]').forEach(element => {
-            if (element.dataset.version != start.openedPopup) element.classList.add('new')
+            if (element.dataset.version.localeCompare(start.openedPopup, undefined, { numeric: true, sensitivity: 'base' }) === 1) element.classList.add('new')
         })
         pushSetting('openedPopup', chrome.runtime.getManifest().version)
     }
@@ -93,7 +93,10 @@ function updateSubjects() {
 function pushSetting(key, value, element) {
     if (!chrome?.storage) return
     refreshConditionals()
-    if (element) element.parentElement.setAttribute('data-saved', 'not-saved')
+    if (element) {
+        element.parentElement.setAttribute('data-saved', 'not-saved')
+        element.parentElement.classList.remove('new')
+    }
     diff[key] = value
     diffTimestamp = new Date().getTime()
     if (String(value).toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
