@@ -239,10 +239,12 @@ html[data-section] #sectionPicker {
 
 header:active #sectionReturn {
     translate: 4px -3px;
+    scale: .8 1;
 }
 
 html:not([data-section]) #sectionReturn {
     translate: -40px -3px;
+    scale: 1.2 1;
 }
 
 html[data-section] #sectionName {
