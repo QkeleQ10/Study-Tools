@@ -7,12 +7,13 @@ async function checkSettings() {
 }
 
 async function checkUpdates(override) {
+    let beta = await getSetting('beta')
+    if (override) beta = false
     if (!await getSetting('updates')) return
-    fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${await getSetting('beta') || override ? 'dev' : 'main'}/manifest.json`)
+    fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/manifest.json`)
         .then((response) => response.json())
         .then(async data => {
-            if (data.version <= chrome.runtime.getManifest().version) return
-            showNotification(`Nieuwe ${await getSetting('beta') ? 'bèta' : ''}versie (${data.version})`, `Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a>`)
+            if (data.version > chrome.runtime.getManifest().version) showNotification(`Nieuwe ${beta ? 'bèta' : ''}versie (${data.version})`, `Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a>`)
         })
         .catch(error => {
             if (!override) checkUpdates(true)

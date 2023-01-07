@@ -157,10 +157,9 @@ label:after {
     position: absolute;
     top: 0;
     right: 0;
-    translate: 100px;
     content: 'sync';
+    translate: 100px;
     font-family: 'material-icons';
-    animation: rotation 2s infinite linear;
     transition: translate 200ms;
 }
 
@@ -168,10 +167,24 @@ label:before {
     position: absolute;
     top: 0;
     right: 16px;
+    content: 'Opgeslagen';
     translate: 100px;
     font-size: 10px;
-    content: 'Opgeslagen';
     transition: translate 200ms;
+}
+
+label.new {
+    background: #f6fcff;
+}
+
+label.new:after {
+    content: 'star';
+    translate: 0;
+}
+
+label.new:before {
+    content: 'Nieuw!';
+    translate: 0;
 }
 
 label[data-saved="not-saved"] {
@@ -179,7 +192,9 @@ label[data-saved="not-saved"] {
 }
 
 label[data-saved="not-saved"]:after {
+    content: 'sync';
     translate: 0;
+    animation: rotation 2s infinite linear;
 }
 
 label[data-saved="not-saved"]:before {
@@ -191,7 +206,13 @@ label[data-saved="saved"] {
     background: #f6fcff;
 }
 
+label[data-saved="saved"]:after {
+    content: 'sync';
+    translate: 100px;
+}
+
 label[data-saved="saved"]:before {
+    content: 'Opgeslagen';
     translate: 14px;
 }
 
@@ -338,7 +359,8 @@ input[type=password]:active {
     left: 0;
     content: 'Toevoegen...';
     translate: 20px 4px;
-    font-size: 12px;pointer-events: none;
+    font-size: 12px;
+    pointer-events: none;
 }
 
 label>.grid-subjects {

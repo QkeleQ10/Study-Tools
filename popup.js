@@ -2,8 +2,6 @@ let start = {},
     diff = {},
     diffTimestamp = 0
 
-if (chrome?.storage) setSetting('openedPopup', true)
-
 init()
 
 async function init() {
@@ -36,8 +34,15 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
-    if (!chrome?.runtime?.getManifest().update_url) document.querySelectorAll('.if-no-update-url').forEach(e => e.classList.remove('hide'))
+    if (!chrome?.runtime?.getManifest()?.update_url) document.querySelectorAll('.if-no-update-url').forEach(e => e.classList.remove('hide'))
     else document.querySelectorAll('.if-update-url').forEach(e => e.classList.remove('hide'))
+
+    if (chrome?.runtime?.getManifest()?.version && start.openedPopup) {
+        document.querySelectorAll('label[data-version]').forEach(element => {
+            if (element.dataset.version != start.openedPopup) element.classList.add('new')
+        })
+        pushSetting('openedPopup', chrome.runtime.getManifest().version)
+    }
 
     document.querySelectorAll('#sectionPicker>div[data-section]').forEach(element => element.addEventListener('click', openSection))
 
