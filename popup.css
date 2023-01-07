@@ -242,6 +242,10 @@ header:active #sectionReturn {
     scale: .8 1;
 }
 
+html[data-section]:has(header:active) section.open {
+    translate: 10px;
+}
+
 html:not([data-section]) #sectionReturn {
     translate: -40px -3px;
     scale: 1.2 1;
