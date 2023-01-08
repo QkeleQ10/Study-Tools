@@ -68,7 +68,7 @@ section.open {
 
 p,
 label,
-#sectionPicker>div {
+#sectionPicker div {
     font-size: 14px;
     font-weight: 500;
 }
@@ -113,7 +113,7 @@ i {
 }
 
 label,
-#sectionPicker>div[data-section] {
+#sectionPicker div[role=listitem] {
     display: flex;
     gap: 3px;
     flex-direction: column;
@@ -126,16 +126,18 @@ label,
     transition: scale 200ms, max-height 200ms, padding 200ms, background-color 200ms;
 }
 
-label:has(#magister-subjects) {
-    max-height: 200vh;
-}
-
-label:last-child {
+label:last-child,
+#sectionPicker div[role=listitem]:last-child {
     border-bottom: solid 1px rgba(0, 0, 0, 0.1);
 }
 
+label:has(#magister-subjects),
+[role=listitem].long {
+    max-height: 200vh !important;
+}
+
 label>div:first-child,
-#sectionPicker>div {
+#sectionPicker>div>div {
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -221,9 +223,13 @@ label[data-saved="saved"]:before {
     width: 100%;
 }
 
-#sectionPicker>div[data-section] {
+#sectionPicker div[role=listitem] {
     align-items: flex-start;
     cursor: pointer;
+}
+
+#sectionPicker div[disabled] {
+    cursor: auto;
 }
 
 html[data-section] #sectionPicker {

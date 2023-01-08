@@ -44,7 +44,7 @@ async function init() {
         pushSetting('openedPopup', chrome.runtime.getManifest().version)
     }
 
-    document.querySelectorAll('#sectionPicker>div[data-section]').forEach(element => element.addEventListener('click', openSection))
+    document.querySelectorAll('#sectionPicker div[data-section]').forEach(element => element.addEventListener('click', openSection))
 
     document.querySelector('header').addEventListener('click', closeSection)
 
