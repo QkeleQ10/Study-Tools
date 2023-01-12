@@ -20,7 +20,7 @@ async function checkUpdates(override) {
         })
 }
 
-function getElement(querySelector, all) {
+function getElement(querySelector, all, immediate) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             if (document.querySelector(querySelector)) {
@@ -32,6 +32,7 @@ function getElement(querySelector, all) {
 
         let timeout = setTimeout(() => {
             clearInterval(interval)
+            console.error("Could not find element: ", querySelector)
             return resolve(undefined)
         }, 10000)
     })
