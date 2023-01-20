@@ -14,6 +14,11 @@
         "300": "icons/300.png",
         "512": "icons/512.png"
     },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "studytools@qkeleq10.dev"
+        }
+    },
     "content_scripts": [
         {
             "matches": [
