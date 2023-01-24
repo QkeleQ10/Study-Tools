@@ -32,7 +32,7 @@ async function studiewijzer() {
         let list = await getElement('ul:has(li.studiewijzer-onderdeel)'),
             titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(`(?<![0-9])(${await getWeekNumber()}){1}(?![0-9])`, "g")
-        
+
         titles.forEach(title => {
             if (regex.test(title.innerHTML) || list.childElementCount === 1) {
                 let top = title.parentElement,
@@ -208,18 +208,42 @@ async function applyStyles() {
 
     createStyle(`
 :root {
-    --st-primary-font: 600 16px/44px 'arboria', sans-serif;
+    --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
     --st-secondary-font-family: 'open-sans', sans-serif;
-    --st-widget-background: #fff;
-    --st-widget-color: #333;
+    --st-body-background: #fff;
+    --st-primary-background: #fff;
+    --st-primary-color: #333;
     --st-widget-border: 1px solid #e7e7e7;
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
+    --st-a-color: #005c86;
+}
+
+@media (prefers-color-scheme: dark) {
+:root {
+    --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
+    --st-secondary-font-family: 'open-sans', sans-serif;
+    --st-body-background: #121212;
+    --st-primary-background: #181818;
+    --st-primary-color: #fff;
+    --st-widget-border: 1px solid #333;
+    --st-widget-border-radius: 8px;
+    --st-widget-edges-box-shadow: none;
+    --st-a-color: #50a3c9;
+}
+}
+
+html, body {
+    height: calc(100vh + 1px);
+}
+
+body {
+    background: var(--st-body-background);
 }
 
 .block h3 b {
-    font: var(--st-primary-font);
-    color: var(--st-widget-color);
+    font: var(--st-widget-heading-font);
+    color: var(--st-primary-color);
 }
 
 .block {
@@ -237,6 +261,7 @@ async function applyStyles() {
     box-shadow: var(--st-widget-edges-box-shadow);
     border-top: var(--st-widget-border);
     border-bottom: var(--st-widget-border);
+    background: var(--st-primary-background);
 }
 
 footer.endlink {
@@ -244,12 +269,38 @@ footer.endlink {
     border-top: var(--st-widget-border);
 }
 
-.block, .block .content, footer.endlink, .widget li {
-    background: var(--st-widget-background);
+.endlink a {
+    color: var(--st-a-color);
 }
 
-p, span, a, strong, h4, label, th, td, dt, dd, .k-dropdown-wrap .k-input, dna-breadcrumb {
-    font-family: var(--st-secondary-font-family)
+.block, .block .content, footer.endlink, .widget li, .widget .list li:hover, .widget .list li.active, .widget .list li.no-data:hover, .widget .list li.no-data a:hover {
+    background: var(--st-primary-background);
+}
+
+.widget .list li:hover, .widget .list li.active, .widget .list li.no-data:hover, .widget .list li.no-data a:hover {
+    filter: brightness(0.8);
+}
+
+.widget .list li.no-data:hover, .widget .list li.no-data a:hover {
+    cursor: default;
+}
+
+.widget .list {
+    border-bottom: var(--st-widget-border);
+}
+
+.widget .list li {
+    border-top: var(--st-widget-border);
+}
+
+p, span:not(.caption, ), a, a.ng-binding, .widget .list li a, strong, .block h4, h4, label, th, td, dt, dd, .k-dropdown-wrap .k-input, dna-breadcrumb {
+    font-family: var(--st-secondary-font-family);
+    color: var(--st-primary-color);
+}
+
+span.nrblock {
+    background: var(--st-primary-color);
+    color: var(--st-primary-background);
 }
 
 .endlink a:first-letter {
@@ -274,7 +325,7 @@ p, span, a, strong, h4, label, th, td, dt, dd, .k-dropdown-wrap .k-input, dna-br
     }
 
     if (await getSetting('magister-vd-gradewidget')) {
-        createStyle(`.block.grade-widget{background:var(--st-widget-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-widget-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-primary-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-primary-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative;bottom:.2rem}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
+        createStyle(`.block.grade-widget{background:var(--st-primary-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-primary-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-widget-heading-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-widget-heading-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative;bottom:.2rem}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
     }
 }
 
