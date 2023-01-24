@@ -209,6 +209,7 @@ async function applyStyles() {
     createStyle(`
 :root {
     --st-primary-font: 600 16px/44px 'arboria', sans-serif;
+    --st-secondary-font-family: 'open-sans', sans-serif;
     --st-widget-background: #fff;
     --st-widget-color: #333;
     --st-widget-border: 1px solid #e7e7e7;
@@ -246,6 +247,22 @@ footer.endlink {
 .block, .block .content, footer.endlink, .widget li {
     background: var(--st-widget-background);
 }
+
+p, span, a, strong, h4, label, th, td, dt, dd, .k-dropdown-wrap .k-input, dna-breadcrumb {
+    font-family: var(--st-secondary-font-family)
+}
+
+.endlink a:first-letter {
+    text-transform: uppercase;
+}
+
+.endlink a {
+    text-decoration: none;
+}
+
+.endlink a:hover {
+    filter: brightness(.8);
+}
 `, 'study-tools-vars')
 
     if (await getSetting('magister-cf-failred')) {
@@ -257,7 +274,7 @@ footer.endlink {
     }
 
     if (await getSetting('magister-vd-gradewidget')) {
-        createStyle(`.block.grade-widget{background:var(--st-widget-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-widget-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-primary-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-primary-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:.75rem;position:relative;bottom:.2rem}.block.grade-widget a:hover{filter:brightness(.9)}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
+        createStyle(`.block.grade-widget{background:var(--st-widget-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--primary-background),var(--secondary-background))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-widget-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-primary-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-primary-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:after{content:'⏵';font-size:1.25rem}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative;bottom:.2rem}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
     }
 }
 
