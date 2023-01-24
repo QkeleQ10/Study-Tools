@@ -293,7 +293,7 @@ footer.endlink {
     border-top: var(--st-widget-border);
 }
 
-p, span:not(.caption, ), a, a.ng-binding, .widget .list li a, strong, .block h4, h4, label, th, td, dt, dd, .k-dropdown-wrap .k-input, dna-breadcrumb {
+p, span:not(.caption), a, a.ng-binding, .widget .list li a, strong, .block h4, h4, label, th, td, dt, dd, .k-dropdown-wrap .k-input, dna-breadcrumb {
     font-family: var(--st-secondary-font-family);
     color: var(--st-primary-color);
 }
