@@ -80,13 +80,45 @@
                 <label role="listitem" for="beta" data-appear-if="updates" data-version=1.2.5>
                     <div>
                         Bètaversies aanbieden
-                        <i>Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.</i>
+                        <i>Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten.
+                            Je hebt altijd de keuze om de versie niet te installeren.</i>
                     </div>
                     <input type="checkbox" name="Bètaversies aanbieden" id="beta" class="bind-boolean">
                 </label role="listitem">
             </div>
         </section>
         <section data-title="Magister">
+            <div role="list">
+                <h3>Algemeen</h3>
+                <label role="listitem" for="magister-css-experimental" data-version=2.0.1>
+                    <div>
+                        Verbeteringen aan uiterlijk
+                    </div>
+                    <input type="checkbox" name="Verbeteringen aan uiterlijk" id="magister-css-experimental"
+                        class="bind-boolean">
+                </label role="listitem">
+                <label role="listitem" for="magister-css-dark" data-appear-if="magister-css-experimental" data-version=2.0.1>
+                    <div>
+                        Donker thema
+                        <i>Experimenteel</i>
+                    </div>
+                    <input type="checkbox" name="Donker thema" id="magister-css-dark" class="bind-boolean">
+                </label role="listitem">
+                <label role="listitem" for="magister-css-dark-auto" data-appear-if="magister-css-dark" data-version=2.0.1>
+                    Thema synchroniseren met systeem
+                    <input type="checkbox" name="Thema synchroniseren met systeem" id="magister-css-dark-auto"
+                        class="bind-boolean">
+                </label role="listitem">
+                <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-dark" data-version=2.0.1>
+                    <div>
+                        Aangepaste inhoud donker maken
+                        <i>Studiewijzers en opdrachten donker maken indien het donkere thema actief is</i>
+                        <i>Experimenteel</i>
+                    </div>
+                    <input type="checkbox" name="Aangepaste inhoud donker maken" id="magister-css-dark-invert"
+                        class="bind-boolean">
+                </label role="listitem">
+            </div>
             <div role="list">
                 <h3>Inlogpagina</h3>
                 <label role="listitem" for="magisterLogin-enabled">
@@ -141,14 +173,14 @@
                     <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue"
                         class="bind-boolean">
                 </label role="listitem">
-                <label role="listitem" for="magister-vd-gradewidget">
+                <!-- <label role="listitem" for="magister-vd-gradewidget">
                     <div>
                         Alternatieve cijferwidget
                         <i>Experimenteel</i>
                     </div>
                     <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget"
                         class="bind-boolean">
-                </label role="listitem">
+                </label role="listitem"> -->
             </div>
             <div role="list">
                 <h3>Agenda</h3>
@@ -206,7 +238,7 @@
                 </label role="listitem">
             </div>
             <div role="list">
-                <h3>Algemeen</h3>
+                <h3>Geavanceerd</h3>
                 <label role="listitem" for="magister-periods">
                     <div>
                         Beginweken perioden
