@@ -82,8 +82,11 @@ function showNotification(title, body, timeout) {
 }
 
 function createStyle(content, id) {
-    let styleElem = document.createElement('style')
-    if (id) styleElem.id = id
-    styleElem.innerHTML = content
-    document.head.append(styleElem)
+    return new Promise((resolve, reject) => {
+        let styleElem = document.createElement('style')
+        if (id) styleElem.id = id
+        styleElem.innerHTML = content
+        document.head.append(styleElem)
+        resolve(styleElem)
+    })
 }

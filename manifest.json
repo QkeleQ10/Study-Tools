@@ -33,6 +33,15 @@
         },
         {
             "matches": [
+                "*://*.magister.net/*"
+            ],
+            "js": [
+                "src/magisterStyle.js"
+            ],
+            "run_at": "document_start"
+        },
+        {
+            "matches": [
                 "*://accounts.magister.net/account/login*"
             ],
             "js": [
