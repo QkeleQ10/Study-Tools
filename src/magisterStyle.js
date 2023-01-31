@@ -15,6 +15,8 @@ async function applyStyles() {
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
     --st-a-color: #188cc1;
+    --st-accent-primary: #1f97f9;
+    --st-accent-secondary: #0683ea;
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
