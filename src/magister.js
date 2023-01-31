@@ -10,6 +10,7 @@ async function vandaag() {
 
 
 async function agenda() {
+    // TODO: CSS
     if (await getSetting('magister-ag-large')) {
         let agendaItems = await getElement('tr.ng-scope', true)
         if (agendaItems) agendaItems.forEach(e => e.style.height = "40px")

@@ -111,5 +111,8 @@ const defaults = {
             "color": "#000000"
         }
     ],
-    "magister-periods": "30, 47, 9"
+    "magister-periods": "30, 47, 9",
+    "magister-css-hue-rotate": 0,
+    "magister-css-saturate": 0,
+    "magister-css-brightness": 0
 }

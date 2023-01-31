@@ -34,9 +34,13 @@
                     Ontwikkelaar
                     <i>Deze instellingen zijn alleen beschikbaar in de ontwikkelaarsmodus</i>
                 </div>
-                <div role="listitem" data-section="Magister">
-                    Magister
-                    <i>Instellingen voor Magister wijzigen</i>
+                <div role="listitem" data-section="Magister - Vormgeving">
+                    Magister - Vormgeving
+                    <i>De opmaak van Magister aanpassen</i>
+                </div>
+                <div role="listitem" data-section="Magister - Overig">
+                    Magister - Overig
+                    <i>Overige instellingen voor Magister wijzigen</i>
                 </div>
                 <div role="listitem" data-section="Noordhoff">
                     Noordhoff
@@ -87,7 +91,7 @@
                 </label role="listitem">
             </div>
         </section>
-        <section data-title="Magister">
+        <section data-title="Magister - Vormgeving">
             <div role="list">
                 <h3>Algemeen</h3>
                 <label role="listitem" for="magister-css-experimental" data-version=2.0.1>
@@ -97,19 +101,49 @@
                     <input type="checkbox" name="Verbeteringen aan uiterlijk" id="magister-css-experimental"
                         class="bind-boolean">
                 </label role="listitem">
-                <label role="listitem" for="magister-css-dark" data-appear-if="magister-css-experimental" data-version=2.0.1>
+                <label role="listitem" for="magister-css-hue-rotate" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
+                    <div>
+                        Tintverschuiving
+                        <i>Huidige waarde: <span class="current-value">0</span>° (standaard: 0°)</i>
+                    </div>
+                    <input type="range" name="Tintverschuiving" id="magister-css-hue-rotate" class="bind-color-shift"
+                        data-filter="hue-rotate" min="0" max="359" step="10">
+                </label role="listitem">
+                <label role="listitem" for="magister-css-saturate" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
+                    <div>
+                        Verzadiging
+                        <i>Huidige waarde: <span class="current-value">100</span>% (standaard: 100%)</i>
+                    </div>
+                    <input type="range" name="Verzadiging" id="magister-css-saturate" class="bind-color-shift"
+                        data-filter="saturate" min="0" max="400" step="10">
+                </label role="listitem">
+                <label role="listitem" for="magister-css-brightness" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
+                    <div>
+                        Helderheid
+                        <i>Huidige waarde: <span class="current-value">100</span>% (standaard: 100%)</i>
+                    </div>
+                    <input type="range" name="Helderheid" id="magister-css-brightness" class="bind-color-shift"
+                        data-filter="brightness" min="0" max="400" step="10">
+                </label role="listitem">
+                <label role="listitem" for="magister-css-dark" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
                     <div>
                         Donker thema
                         <i>Experimenteel</i>
                     </div>
                     <input type="checkbox" name="Donker thema" id="magister-css-dark" class="bind-boolean">
                 </label role="listitem">
-                <label role="listitem" for="magister-css-dark-auto" data-appear-if="magister-css-dark" data-version=2.0.1>
+                <label role="listitem" for="magister-css-dark-auto" data-appear-if="magister-css-dark"
+                    data-version=2.0.1>
                     Thema synchroniseren met systeem
                     <input type="checkbox" name="Thema synchroniseren met systeem" id="magister-css-dark-auto"
                         class="bind-boolean">
                 </label role="listitem">
-                <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-dark" data-version=2.0.1>
+                <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-dark"
+                    data-version=2.0.1>
                     <div>
                         Aangepaste inhoud donker maken
                         <i>Studiewijzers en opdrachten donker maken indien het donkere thema actief is</i>
@@ -119,6 +153,47 @@
                         class="bind-boolean">
                 </label role="listitem">
             </div>
+            <div role="list">
+                <h3>Vandaag</h3>
+                <label role="listitem" for="magister-vd-deblue">
+                    Rooster niet blauw kleuren
+                    <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue"
+                        class="bind-boolean">
+                </label role="listitem">
+                <!-- <label role="listitem" for="magister-vd-gradewidget">
+                                <div>
+                                    Alternatieve cijferwidget
+                                    <i>Experimenteel</i>
+                                </div>
+                                <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget"
+                                    class="bind-boolean">
+                            </label role="listitem"> -->
+            </div>
+            <!-- <div role="list">
+                <h3>Agenda</h3>
+                <label role="listitem" for="magister-ag-large">
+                    Afsprakenlijst ruimer maken
+                    <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-large" class="bind-boolean">
+                </label role="listitem">
+            </div> -->
+            <div role="list">
+                <h3>Opdrachten</h3>
+                <label role="listitem" for="magister-op-oldgrey">
+                    Verstreken opdrachten grijs maken
+                    <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
+                        class="bind-boolean">
+                </label role="listitem">
+            </div>
+            <div role="list">
+                <h3>Cijfers</h3>
+                <label role="listitem" for="magister-cf-failred">
+                    Onvoldoendes rood kleuren
+                    <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred"
+                        class="bind-boolean">
+                </label role="listitem">
+            </div>
+        </section>
+        <section data-title="Magister - Overig">
             <div role="list">
                 <h3>Inlogpagina</h3>
                 <label role="listitem" for="magisterLogin-enabled">
@@ -167,30 +242,6 @@
                 </label role="listitem">
             </div>
             <div role="list">
-                <h3>Vandaag</h3>
-                <label role="listitem" for="magister-vd-deblue">
-                    Rooster niet blauw kleuren
-                    <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue"
-                        class="bind-boolean">
-                </label role="listitem">
-                <!-- <label role="listitem" for="magister-vd-gradewidget">
-                    <div>
-                        Alternatieve cijferwidget
-                        <i>Experimenteel</i>
-                    </div>
-                    <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget"
-                        class="bind-boolean">
-                </label role="listitem"> -->
-            </div>
-            <div role="list">
-                <h3>Agenda</h3>
-                <label role="listitem" for="magister-ag-large">
-                    Afsprakenlijst ruimer maken
-                    <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-large"
-                        class="bind-boolean">
-                </label role="listitem">
-            </div>
-            <div role="list">
                 <h3>Studiewijzers</h3>
                 <label role="listitem" for="magister-sw-sort">
                     <div>
@@ -218,22 +269,6 @@
                 <label role="listitem" for="magister-sw-thisWeek">
                     Naar huidige week scrollen
                     <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek"
-                        class="bind-boolean">
-                </label role="listitem">
-            </div>
-            <div role="list">
-                <h3>Opdrachten</h3>
-                <label role="listitem" for="magister-op-oldgrey">
-                    Verstreken opdrachten grijs maken
-                    <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
-                        class="bind-boolean">
-                </label role="listitem">
-            </div>
-            <div role="list">
-                <h3>Cijfers</h3>
-                <label role="listitem" for="magister-cf-failred">
-                    Onvoldoendes rood kleuren
-                    <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred"
                         class="bind-boolean">
                 </label role="listitem">
             </div>

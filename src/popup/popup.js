@@ -24,6 +24,23 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
     })
 
+    document.querySelectorAll('.bind-color-shift').forEach(element => {
+        let value = start[element.id] || defaults[element.id]
+        if (element.tagName === 'INPUT' && element.getAttribute('type') === 'range') {
+            if (value) element.value = value
+            element.parentElement.querySelector('.current-value').innerText = value
+            element.addEventListener('input', event => {
+                pushSetting(event.target.id, event.target.value, event.target)
+                const hueRotate = document.querySelector('[data-filter=hue-rotate]').value,
+                    saturate = document.querySelector('[data-filter=saturate]').value,
+                    brightness = document.querySelector('[data-filter=brightness]').value
+                document.body.firstElementChild.setAttribute('style', `filter: hue-rotate(${hueRotate}deg) saturate(${saturate}%) brightness(${brightness}%)`)
+                event.target.parentElement.querySelector('.current-value').innerText = event.target.value
+            })
+        }
+        if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
+    })
+
     document.querySelectorAll('.bind-subjects').forEach(element => {
         let values = start[element.id] || defaults[element.id]
         for (let i = 0; i < values.length + 1; i++) {
