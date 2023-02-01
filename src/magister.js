@@ -154,18 +154,26 @@ async function init() {
     window.addEventListener('popstate', popstate)
     window.addEventListener('locationchange', popstate)
 
-    let appbar = await getElement(".appbar")
+    let appbar = await getElement('.appbar')
 
     if (await getSetting('magister-appbar-zermelo')) {
-        let appbarZermelo = document.createElement("div")
+        const appbarZermelo = document.createElement('div'),
+            zermeloA = document.createElement('a'),
+            zermeloImg = document.createElement('img'),
+            zermeloSpan = document.createElement('span')
         appbar.firstElementChild.after(appbarZermelo)
-        appbarZermelo.outerHTML = `
-    <div class="menu-button">
-        <a id="zermelo-menu" href="https://${window.location.hostname.split('.')[0]}.zportal.nl/app" target="_blank">
-            <img src="https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png" width="36" style="border-radius: 100%">
-            <span>Zermelo</span>
-        </a>
-    </div>`}
+        appbarZermelo.classList.add('menu-button')
+        appbarZermelo.append(zermeloA)
+        zermeloA.classList.add('zermelo-menu')
+        zermeloA.setAttribute('href', `https://${window.location.hostname.split('.')[0]}.zportal.nl/app`)
+        zermeloA.setAttribute('target', '_blank')
+        zermeloA.append(zermeloImg)
+        zermeloImg.setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png')
+        zermeloImg.setAttribute('width', '36')
+        zermeloImg.style.borderRadius = '100%'
+        zermeloA.append(zermeloSpan)
+        zermeloSpan.innerText = "Zermelo"
+    }
 
     if (await getSetting('magister-appbar-week')) {
         let appbarWeek = document.createElement("h1")
