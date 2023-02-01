@@ -112,7 +112,7 @@ const defaults = {
         }
     ],
     "magister-periods": "30, 47, 9",
-    "magister-css-hue-rotate": 0,
-    "magister-css-saturate": 0,
-    "magister-css-brightness": 0
+    "magister-css-hue": 207,
+    "magister-css-saturate": 95,
+    "magister-css-brightness": 55
 }

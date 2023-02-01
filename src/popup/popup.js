@@ -24,20 +24,18 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
     })
 
-    document.querySelectorAll('.bind-color-shift').forEach(element => {
+    document.querySelectorAll('.bind-color').forEach(element => {
         let value = start[element.id] || defaults[element.id]
         if (element.tagName === 'INPUT' && element.getAttribute('type') === 'range') {
             if (value) element.value = value
             element.parentElement.querySelector('.current-value').innerText = value
             element.addEventListener('input', event => {
                 pushSetting(event.target.id, event.target.value, event.target)
-                const hueRotate = document.querySelector('[data-filter=hue-rotate]').value,
-                    saturate = document.querySelector('[data-filter=saturate]').value,
-                    brightness = document.querySelector('[data-filter=brightness]').value
-                document.body.firstElementChild.setAttribute('style', `filter: hue-rotate(${hueRotate}deg) saturate(${saturate}%) brightness(${brightness}%)`)
+                document.querySelector(':root').style.setProperty(`--${event.target.dataset.colorComponent}`, event.target.dataset.colorComponent === 'hue' ? event.target.value : event.target.value + '%')
                 event.target.parentElement.querySelector('.current-value').innerText = event.target.value
             })
         }
+        document.querySelector(':root').style.setProperty(`--${element.dataset.colorComponent}`, element.dataset.colorComponent === 'hue' ? element.value : element.value + '%')
         if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
     })
 
@@ -117,7 +115,7 @@ function pushSetting(key, value, element) {
     diff[key] = value
     diffTimestamp = new Date().getTime()
     if (String(value).toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
-    if (value == 69) document.querySelector('header').classList.add('nice')
+    if (value === '69420') document.querySelector('header').classList.add('nice')
 }
 
 function refreshConditionals() {

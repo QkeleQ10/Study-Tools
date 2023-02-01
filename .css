@@ -1,0 +1,42 @@
+:root {
+    --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
+    --st-secondary-font-family: 'open-sans', sans-serif;
+    --st-body-background: #ffffff;
+    --st-primary-background: #ffffff;
+    --st-highlight-background: hsl(207, 78%, 96%);
+    --st-highlight-warn: #fff0f5;
+    --st-total-background: #cdf4cd;
+    --st-primary-color: #333333;
+    --st-primary-border-color: #e7e7e7;
+    --st-widget-border: 1px solid var(--st-primary-border-color);
+    --st-widget-border-radius: 8px;
+    --st-widget-edges-box-shadow: none;
+    --st-a-color: hsl(199, 78%, 43%);
+    --st-accent-primary: hsl(207, 95%, 55%);
+    --st-accent-secondary: hsl(207, 95%, 47%);
+    --st-accent-ok: #00965a;
+    --st-accent-warn: #e94f4f;
+    --st-accent-info: #016695;
+}
+
+:root {
+    --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
+    --st-secondary-font-family: 'open-sans', sans-serif;
+    --st-body-background: #121212;
+    --st-primary-background: #161616;
+    --st-highlight-background: hsl(207, 33%, 15%);
+    --st-highlight-warn: #511f1f;
+    --st-total-background: #2f462f;
+    --st-primary-color: #fff;
+    --st-primary-border-color: #333;
+    --st-widget-border: 1px solid var(--st-primary-border-color);
+    --st-widget-border-radius: 8px;
+    --st-widget-edges-box-shadow: none;
+    --st-a-color: hsl(199, 53%, 55%);
+    --st-accent-primary: hsl(207, 63%, 25%);
+    --st-accent-secondary: hsl(207, 63%, 17%);
+    --st-accent-ok: #00965a;
+    --st-accent-warn: #e94f4f;
+    --st-accent-info: #016695;
+    color-scheme: dark;
+}

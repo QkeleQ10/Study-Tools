@@ -101,32 +101,35 @@
                     <input type="checkbox" name="Verbeteringen aan uiterlijk" id="magister-css-experimental"
                         class="bind-boolean">
                 </label>
-                <label role="listitem" for="magister-css-hue-rotate" data-appear-if="magister-css-experimental"
+                <label role="listitem" for="magister-css-hue" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
+                    Tint accentkleur
                     <div>
-                        Tintverschuiving
-                        <i>Huidige waarde: <span class="current-value">0</span>° (standaard: 0°)</i>
+                        <span class="default-value">207°</span>
+                        <span><span class="current-value">207</span>°</span>
                     </div>
-                    <input type="range" name="Tintverschuiving" id="magister-css-hue-rotate" class="bind-color-shift"
-                        data-filter="hue-rotate" min="0" max="359" step="10">
+                    <input type="range" name="Tint accentkleur" id="magister-css-hue" class="bind-color"
+                        data-color-component="hue" min="0" max="360" step="1">
                 </label>
-                <label role="listitem" for="magister-css-saturate" data-appear-if="magister-css-experimental"
+                <label role="listitem" for="magister-css-saturation" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
+                    Verzadiging accentkleur
                     <div>
-                        Verzadiging
-                        <i>Huidige waarde: <span class="current-value">100</span>% (standaard: 100%)</i>
+                        <span class="default-value">95%</span>
+                        <span><span class="current-value">95</span>%</span>
                     </div>
-                    <input type="range" name="Verzadiging" id="magister-css-saturate" class="bind-color-shift"
-                        data-filter="saturate" min="0" max="400" step="10">
+                    <input type="range" name="Verzadiging accentkleur" id="magister-css-saturation" class="bind-color"
+                        data-color-component="saturation" min="0" max="100" step="1">
                 </label>
-                <label role="listitem" for="magister-css-brightness" data-appear-if="magister-css-experimental"
+                <label role="listitem" for="magister-css-luminance" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
+                    Helderheid accentkleur
                     <div>
-                        Helderheid
-                        <i>Huidige waarde: <span class="current-value">100</span>% (standaard: 100%)</i>
+                        <span class="default-value">55%</span>
+                        <span><span class="current-value">55</span>%</span>
                     </div>
-                    <input type="range" name="Helderheid" id="magister-css-brightness" class="bind-color-shift"
-                        data-filter="brightness" min="0" max="400" step="10">
+                    <input type="range" name="Helderheid accentkleur" id="magister-css-luminance" class="bind-color"
+                        data-color-component="luminance" min="0" max="100" step="1">
                 </label>
                 <label role="listitem" for="magister-css-dark" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
@@ -136,14 +139,14 @@
                     </div>
                     <input type="checkbox" name="Donker thema" id="magister-css-dark" class="bind-boolean">
                 </label>
-                <label role="listitem" for="magister-css-dark-auto" data-appear-if="magister-css-experimental magister-css-dark"
-                    data-version=2.0.1>
+                <label role="listitem" for="magister-css-dark-auto"
+                    data-appear-if="magister-css-experimental magister-css-dark" data-version=2.0.1>
                     Thema synchroniseren met systeem
-                    <input type="checkbox" name="Thema synchroniseren met systeem" id="magister-css-experimental magister-css-dark-auto"
-                        class="bind-boolean">
+                    <input type="checkbox" name="Thema synchroniseren met systeem"
+                        id="magister-css-experimental magister-css-dark-auto" class="bind-boolean">
                 </label>
-                <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-experimental magister-css-dark"
-                    data-version=2.0.1>
+                <label role="listitem" for="magister-css-dark-invert"
+                    data-appear-if="magister-css-experimental magister-css-dark" data-version=2.0.1>
                     <div>
                         Aangepaste inhoud donker maken
                         <i>Studiewijzers en opdrachten donker maken indien het donkere thema actief is</i>
