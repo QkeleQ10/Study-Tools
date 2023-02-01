@@ -117,15 +117,21 @@ function pushSetting(key, value, element) {
     diff[key] = value
     diffTimestamp = new Date().getTime()
     if (String(value).toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
-    if (value === '69') document.querySelector('header').classList.add('nice')
+    if (value == 69) document.querySelector('header').classList.add('nice')
 }
 
 function refreshConditionals() {
     document.querySelectorAll('[data-appear-if], [data-disappear-if]').forEach(e => {
-        let appear = false, posDependency, negDependency
+        let appear = false,
+            negDependency
         if (e.dataset.appearIf) {
-            posDependency = document.getElementById(e.dataset.appearIf)
-            if (posDependency?.checked && !appear) appear = true
+            let appearIfs = e.dataset.appearIf.split(' '),
+                numberSuccess = 0
+            appearIfs.forEach((e, i, a) => {
+                let posDependency = document.getElementById(e)
+                if (posDependency?.checked && !appear) numberSuccess++
+                if (numberSuccess === a.length) appear = true
+            })
         }
         if (e.dataset.disappearIf) {
             negDependency = document.getElementById(e.dataset.disappearIf)
@@ -138,10 +144,6 @@ function refreshConditionals() {
         }
         else {
             e.classList.add('collapse')
-            if (e.firstElementChild.checked) {
-                e.firstElementChild.checked = false
-                refreshConditionals()
-            }
             e.querySelector('input').setAttribute('tabindex', '-1')
         }
     })

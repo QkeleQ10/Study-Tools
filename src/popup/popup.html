@@ -80,7 +80,7 @@
                         <i>Melding bij nieuwe versie</i>
                     </div>
                     <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="beta" data-appear-if="updates" data-version=1.2.5>
                     <div>
                         Bètaversies aanbieden
@@ -88,7 +88,7 @@
                             Je hebt altijd de keuze om de versie niet te installeren.</i>
                     </div>
                     <input type="checkbox" name="Bètaversies aanbieden" id="beta" class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
         </section>
         <section data-title="Magister - Vormgeving">
@@ -100,7 +100,7 @@
                     </div>
                     <input type="checkbox" name="Verbeteringen aan uiterlijk" id="magister-css-experimental"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-css-hue-rotate" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     <div>
@@ -109,7 +109,7 @@
                     </div>
                     <input type="range" name="Tintverschuiving" id="magister-css-hue-rotate" class="bind-color-shift"
                         data-filter="hue-rotate" min="0" max="359" step="10">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-css-saturate" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     <div>
@@ -118,7 +118,7 @@
                     </div>
                     <input type="range" name="Verzadiging" id="magister-css-saturate" class="bind-color-shift"
                         data-filter="saturate" min="0" max="400" step="10">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-css-brightness" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     <div>
@@ -127,7 +127,7 @@
                     </div>
                     <input type="range" name="Helderheid" id="magister-css-brightness" class="bind-color-shift"
                         data-filter="brightness" min="0" max="400" step="10">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-css-dark" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     <div>
@@ -135,14 +135,14 @@
                         <i>Experimenteel</i>
                     </div>
                     <input type="checkbox" name="Donker thema" id="magister-css-dark" class="bind-boolean">
-                </label role="listitem">
-                <label role="listitem" for="magister-css-dark-auto" data-appear-if="magister-css-dark"
+                </label>
+                <label role="listitem" for="magister-css-dark-auto" data-appear-if="magister-css-experimental magister-css-dark"
                     data-version=2.0.1>
                     Thema synchroniseren met systeem
-                    <input type="checkbox" name="Thema synchroniseren met systeem" id="magister-css-dark-auto"
+                    <input type="checkbox" name="Thema synchroniseren met systeem" id="magister-css-experimental magister-css-dark-auto"
                         class="bind-boolean">
-                </label role="listitem">
-                <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-dark"
+                </label>
+                <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-experimental magister-css-dark"
                     data-version=2.0.1>
                     <div>
                         Aangepaste inhoud donker maken
@@ -151,7 +151,7 @@
                     </div>
                     <input type="checkbox" name="Aangepaste inhoud donker maken" id="magister-css-dark-invert"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
             <div role="list">
                 <h3>Vandaag</h3>
@@ -159,7 +159,7 @@
                     Rooster niet blauw kleuren
                     <input type="checkbox" name="Rooster niet blauw kleuren" id="magister-vd-deblue"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <!-- <label role="listitem" for="magister-vd-gradewidget">
                                 <div>
                                     Alternatieve cijferwidget
@@ -167,14 +167,14 @@
                                 </div>
                                 <input type="checkbox" name="Alternatieve cijferwidget" id="magister-vd-gradewidget"
                                     class="bind-boolean">
-                            </label role="listitem"> -->
+                            </label> -->
             </div>
             <!-- <div role="list">
                 <h3>Agenda</h3>
                 <label role="listitem" for="magister-ag-large">
                     Afsprakenlijst ruimer maken
                     <input type="checkbox" name="Afsprakenlijst ruimer maken" id="magister-ag-large" class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div> -->
             <div role="list">
                 <h3>Opdrachten</h3>
@@ -182,7 +182,7 @@
                     Verstreken opdrachten grijs maken
                     <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
             <div role="list">
                 <h3>Cijfers</h3>
@@ -190,7 +190,7 @@
                     Onvoldoendes rood kleuren
                     <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
         </section>
         <section data-title="Magister - Overig">
@@ -199,22 +199,22 @@
                 <label role="listitem" for="magisterLogin-enabled">
                     Automatisch inloggen
                     <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magisterLogin-microsoft" data-appear-if="magisterLogin-enabled"
                     data-version=1.2.5>
                     Inloggen met Microsoft
                     <input type="checkbox" name="Inloggen met Microsoft" id="magisterLogin-microsoft"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magisterLogin-username" data-appear-if="magisterLogin-enabled">
                     Gebruikersnaam
                     <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind-string">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magisterLogin-password" data-appear-if="magisterLogin-enabled"
                     data-disappear-if="magisterLogin-microsoft">
                     Wachtwoord
                     <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind-string">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magisterLogin-email" data-appear-if="magisterLogin-microsoft"
                     data-version=1.2.5>
                     <div>
@@ -222,24 +222,24 @@
                         <i>Van het Microsoft-account dat moet worden gekozen</i>
                     </div>
                     <input type="email" name="Microsoft-e-mailadres" id="magisterLogin-email" class="bind-string">
-                </label role="listitem">
+                </label>
             </div>
             <div role="list">
                 <h3>Zijbalk</h3>
                 <label role="listitem" for="magister-appbar-week">
                     Weeknummer tonen
                     <input type="checkbox" name="Weeknummer tonen" id="magister-appbar-week" class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-appbar-zermelo">
                     Link naar Zermelo tonen
                     <input type="checkbox" name="Link naar Zermelo tonen" id="magister-appbar-zermelo"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-appbar-hidePicture">
                     Profielfoto verbergen
                     <input type="checkbox" name="Profielfoto verbergen" id="magister-appbar-hidePicture"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
             <div role="list">
                 <h3>Studiewijzers</h3>
@@ -249,7 +249,7 @@
                         <i>Op periodenummer en vak</i>
                     </div>
                     <input type="checkbox" name="Studiewijzers sorteren" id="magister-sw-sort" class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-sw-grid" data-appear-if="magister-sw-sort">
                     <div>
                         Studiewijzers in raster plaatsen
@@ -258,19 +258,19 @@
                     </div>
                     <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-sw-period" data-appear-if="magister-sw-sort">
                     <div>
                         Periodenummers tonen
                         <i>In plaats van de naam van de studiewijzer</i>
                     </div>
                     <input type="checkbox" name="Periodenummers tonen" id="magister-sw-period" class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-sw-thisWeek">
                     Naar huidige week scrollen
                     <input type="checkbox" name="Naar huidige week scrollen" id="magister-sw-thisWeek"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
             <div role="list">
                 <h3>Geavanceerd</h3>
@@ -280,7 +280,7 @@
                         <i>Het eerste weeknummer van elke periode, gescheiden door komma's</i>
                     </div>
                     <input type="text" name="Beginweken perioden" id="magister-periods" class="bind-string">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="magister-subjects" class="large">
                     <div>
                         Vakken
@@ -291,7 +291,7 @@
                         <i>Aliassen</i>
                     </div>
                     <div id="magister-subjects" class="bind-subjects"></div>
-                </label role="listitem">
+                </label>
             </div>
         </section>
         <section data-title="Noordhoff">
@@ -301,11 +301,11 @@
                     Automatisch doorgaan
                     <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled"
                         class="bind-boolean">
-                </label role="listitem">
+                </label>
                 <label role="listitem" for="noordhoff-login-entree">
                     Inloggen met Entree
                     <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind-boolean">
-                </label role="listitem">
+                </label>
             </div>
         </section>
     </main>
