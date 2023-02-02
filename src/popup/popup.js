@@ -43,7 +43,16 @@ async function init() {
         let values = start[element.id] || defaults[element.id]
         for (let i = 0; i < values.length + 1; i++) {
             const value = values[i] || { name: '', aliases: '' }
-            element.innerHTML += `<div class="grid-subjects"><input type="text" value="${value.name}"><input type="text" value="${value.aliases}"></div>`
+            let gridSubjects = document.createElement('div'),
+                input1 = document.createElement('input'),
+                input2 = document.createElement('input')
+            element.append(gridSubjects)
+            gridSubjects.classList.add('grid-subjects')
+            gridSubjects.append(input1, input2)
+            input1.setAttribute('type', 'text')
+            input1.value = value.name
+            input2.setAttribute('type', 'text')
+            input2.value = value.aliases
         }
         element.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
         if (!start[element.id] && defaults[element.id]) updateSubjects()
@@ -89,9 +98,13 @@ function updateSubjects() {
             lastChild = !subjectWrapper.nextSibling
         if (subjectValue.name) subjectValues.push(subjectValue)
         if (!empty && lastChild) {
-            const newSubjectWrapper = document.createElement('div')
+            const newSubjectWrapper = document.createElement('div'),
+                input1 = document.createElement('input'),
+                input2 = document.createElement('input')
+            newSubjectWrapper.append(input1, input2)
             newSubjectWrapper.classList.add('grid-subjects')
-            newSubjectWrapper.innerHTML = `<input type="text"><input type="text">`
+            input1.setAttribute('type', 'text')
+            input2.setAttribute('type', 'text')
             newSubjectWrapper.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
             parent.appendChild(newSubjectWrapper)
             document.querySelector('section.open').scrollBy({ top: newSubjectWrapper.clientHeight, behavior: 'smooth' })

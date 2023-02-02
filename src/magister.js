@@ -30,7 +30,7 @@ async function studiewijzer() {
             regex = new RegExp(`(?<![0-9])(${await getWeekNumber()}){1}(?![0-9])`, "g")
 
         titles.forEach(title => {
-            if (regex.test(title.innerHTML) || list.childElementCount === 1) {
+            if (regex.test(title.innerText) || list.childElementCount === 1) {
                 let top = title.parentElement,
                     bottom = top.nextElementSibling.lastElementChild,
                     li = top.parentElement.parentElement
@@ -177,7 +177,7 @@ async function init() {
 
     if (await getSetting('magister-appbar-week')) {
         let appbarWeek = document.createElement("h1")
-        appbarWeek.innerHTML = `week<br>${await getWeekNumber()}`
+        appbarWeek.innerText = `week\r\n${await getWeekNumber()}`
         appbarWeek.id = 'st-appbar-week'
         appbar.prepend(appbarWeek)
     }

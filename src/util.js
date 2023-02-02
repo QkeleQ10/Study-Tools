@@ -68,12 +68,20 @@ function setSettings(object, location) {
 }
 
 function showNotification(title, body, timeout) {
-    let notification = document.createElement('div')
-    notification.innerHTML =
-        `<style>@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');#stnotifh,#stnotifh2,#stnotifp{font-family:'montserrat',system-ui,sans-serif;user-select:none;color:#fff}#stnotifh, #stnotifh2{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifh2{font-size:18px}#stnotifp{font-size:12px}#stnotifp>a{color:#fff}</style>
-        <h1 id="stnotifh">Study Tools</h1>
-        <h1 id="stnotifh2">${title}</h1>
-        <p id="stnotifp">${body}</p>`
+    const notification = document.createElement('div'),
+        notificationStyle = document.createElement('style'),
+        notificationH = document.createElement('h1'),
+        notificationH2 = document.createElement('h1'),
+        notificationP = document.createElement('p'),
+        notificationA = document.createElement('a')
+    notification.append(notificationStyle, notificationH, notificationH2, notificationP)
+    notificationStyle.textContent = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');#stnotifh,#stnotifh2,#stnotifp{font-family:'montserrat',system-ui,sans-serif;user-select:none;color:#fff}#stnotifh, #stnotifh2{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifh2{font-size:18px}#stnotifp{font-size:12px}#stnotifp>a{color:#fff!important;text-decoration:underline!important}`
+    notificationH.innerText = "Study Tools"
+    notificationH.id = 'stnotifh'
+    notificationH2.innerText = title
+    notificationH2.id = 'stnotifh2'
+    notificationP.innerHTML = body
+    notificationP.id = 'stnotifp'
     notification.setAttribute('style',
         `width:276px;position:fixed;top:0;right:${document.body.clientWidth > 500 ? '20em' : '0'};padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
     document.body.prepend(notification)
@@ -85,7 +93,7 @@ function createStyle(content, id) {
     return new Promise((resolve, reject) => {
         let styleElem = document.createElement('style')
         if (id) styleElem.id = id
-        styleElem.innerHTML = content
+        styleElem.textContent = content
         document.head.append(styleElem)
         resolve(styleElem)
     })
