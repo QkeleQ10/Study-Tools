@@ -1,20 +1,27 @@
 document.addEventListener('DOMContentLoaded', applyStyles)
 
-async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0) {
+async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
     return new Promise((resolve, reject) => {
         let hue, saturation, luminance
 
-        if (hueWish <= 207) hue = (hueOriginal / 207) * hueWish
-        else if (hueWish > 207) hue = (((360 - hueOriginal) / (360 - 207)) * hueWish)
+        if (hueForce) hue = hueForce
+        else if (hueWish <= 207) hue = (hueOriginal / 207) * hueWish
+        else if (hueWish > 207) {
+            let a = (((360 - hueOriginal) / (360 - 207))),
+                b = hueOriginal - a * 207
+            hue = a * hueWish + b
+        }
 
-        if (saturationWish <= 95) saturation = (saturationOriginal / 95) * saturationWish
+        if (saturationForce) saturation = saturationForce
+        else if (saturationWish <= 95) saturation = (saturationOriginal / 95) * saturationWish
         else if (saturationWish > 95) {
             let a = (((100 - saturationOriginal) / (100 - 95))),
                 b = saturationOriginal - a * 95
             saturation = a * saturationWish + b
         }
 
-        if (luminanceWish <= 55) luminance = (luminanceOriginal / 55) * luminanceWish
+        if (luminanceForce) luminance = luminanceForce
+        else if (luminanceWish <= 55) luminance = (luminanceOriginal / 55) * luminanceWish
         else if (luminanceWish > 55) {
             let a = (((100 - luminanceOriginal) / (100 - 55))),
                 b = luminanceOriginal - a * 55
@@ -35,7 +42,7 @@ async function applyStyles() {
     --st-secondary-font-family: 'open-sans', sans-serif;
     --st-body-background: #ffffff;
     --st-primary-background: #ffffff;
-    --st-highlight-background: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish)};
+    --st-highlight-background: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
     --st-highlight-warn: #fff0f5;
     --st-total-background: #cdf4cd;
     --st-primary-color: #333333;
@@ -43,7 +50,7 @@ async function applyStyles() {
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
-    --st-a-color: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish)};
+    --st-a-color: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
     --st-accent-ok: #00965a;
@@ -55,7 +62,7 @@ async function applyStyles() {
     --st-secondary-font-family: 'open-sans', sans-serif;
     --st-body-background: #121212;
     --st-primary-background: #161616;
-    --st-highlight-background: ${await shiftedHslColor(207, 33, 15, hueWish, saturationWish, luminanceWish)};
+    --st-highlight-background: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-warn: #511f1f;
     --st-total-background: #2f462f;
     --st-primary-color: #fff;
@@ -63,7 +70,7 @@ async function applyStyles() {
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
-    --st-a-color: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish)};
+    --st-a-color: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
     --st-accent-ok: #00965a;
@@ -78,7 +85,7 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 
     // INVERSION!!
 
-    createStyle(rootVars + `#st-appbar-week{color:#fff;font-family:arboria,sans-serif;font-weight:700;font-size:16px;text-align:center;opacity:.5}#st-sw-container{display:none;height:100%;overflow-y:auto}#st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4.5rem;align-items:stretch;background-color:var(--st-primary-background);border-radius:var(--st-widget-border-radius);border:var(--st-widget-border);overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:var(--st-primary-background);color:var(--st-primary-color);cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4.5rem;font-size:19px;font-family:open-sans,sans-serif;border-bottom:var(--st-widget-border);background:var(--st-highlight-background)}.st-sw-subject>button:not(:first-child){min-height:1.75rem;font-size:1.1em;font-family:open-sans,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:var(--st-primary-background);font-size:10px;content:attr(data-title);padding:3px}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:#888!important}.st-sw-compact{grid-template-rows:auto!important;font-size:10px}.st-sw-compact>button:first-child{height:auto!important;font-size:1.5em;padding:5px 0}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover,.st-sw-selected,.st-sw-subject:has(.st-sw-selected)>button:first-child{filter:luminance(.8)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:var(--st-highlight-background);font-weight:700}@media (min-width:1400px){#st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools-essential')
+    createStyle(rootVars + `#st-appbar-week{color:#fff;font-family:arboria,sans-serif;font-weight:700;font-size:16px;text-align:center;opacity:.5}#st-sw-container{display:none;height:100%;overflow-y:auto}#st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4.5rem;align-items:stretch;background-color:var(--st-primary-background);border-radius:var(--st-widget-border-radius);border:var(--st-widget-border);overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:var(--st-primary-background);color:var(--st-primary-color);cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4.5rem;font-size:19px;font-family:open-sans,sans-serif;border-bottom:var(--st-widget-border);background:var(--st-highlight-background)}.st-sw-subject>button:not(:first-child){min-height:1.75rem;font-size:1.1em;font-family:open-sans,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:var(--st-primary-background);font-size:10px;content:attr(data-title);padding:3px}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:#888!important}.st-sw-compact{grid-template-rows:auto!important;font-size:10px}.st-sw-compact>button:first-child{height:auto!important;font-size:1.5em;padding:5px 0}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover,.st-sw-selected,.st-sw-subject:has(.st-sw-selected)>button:first-child{filter:brightness(.8)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:var(--st-highlight-background);font-weight:700}@media (min-width:1400px){#st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools-essential')
 
     if (await getSetting('magister-css-experimental')) {
         createStyle(`.block h3,
@@ -247,7 +254,7 @@ table * {
 .widget .list li.no-data:hover,
 .widget .list li:hover,
 table.table-grid-layout tr:hover {
-    filter: luminance(.8);
+    filter: brightness(.8);
     transition: filter .2s
 }
 
@@ -327,7 +334,7 @@ span.nrblock {
 }
 
 .endlink a:hover {
-    filter: luminance(.8)
+    filter: brightness(.8)
 }
 
 .widget .endlink a:after {
