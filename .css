@@ -1,42 +1,137 @@
-:root {
-    --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
-    --st-secondary-font-family: 'open-sans', sans-serif;
-    --st-body-background: #ffffff;
-    --st-primary-background: #ffffff;
-    --st-highlight-background: hsl(207, 78%, 96%);
-    --st-highlight-warn: #fff0f5;
-    --st-total-background: #cdf4cd;
-    --st-primary-color: #333333;
-    --st-primary-border-color: #e7e7e7;
-    --st-widget-border: 1px solid var(--st-primary-border-color);
-    --st-widget-border-radius: 8px;
-    --st-widget-edges-box-shadow: none;
-    --st-a-color: hsl(199, 78%, 43%);
-    --st-accent-primary: hsl(207, 95%, 55%);
-    --st-accent-secondary: hsl(207, 95%, 47%);
-    --st-accent-ok: #00965a;
-    --st-accent-warn: #e94f4f;
-    --st-accent-info: #016695;
+.st-sw-subject,
+.st-sw-subject>button {
+    background-color: var(--st-primary-background)
 }
 
-:root {
-    --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
-    --st-secondary-font-family: 'open-sans', sans-serif;
-    --st-body-background: #121212;
-    --st-primary-background: #161616;
-    --st-highlight-background: hsl(207, 33%, 15%);
-    --st-highlight-warn: #511f1f;
-    --st-total-background: #2f462f;
-    --st-primary-color: #fff;
-    --st-primary-border-color: #333;
-    --st-widget-border: 1px solid var(--st-primary-border-color);
-    --st-widget-border-radius: 8px;
-    --st-widget-edges-box-shadow: none;
-    --st-a-color: hsl(199, 53%, 55%);
-    --st-accent-primary: hsl(207, 63%, 25%);
-    --st-accent-secondary: hsl(207, 63%, 17%);
-    --st-accent-ok: #00965a;
-    --st-accent-warn: #e94f4f;
-    --st-accent-info: #016695;
-    color-scheme: dark;
+#st-appbar-week,
+.st-current,
+.st-sw-2 {
+    font-weight: 700
+}
+
+#st-vd-schedule>li[data-current],
+.st-sw-subject>button:first-child {
+    background: var(--st-highlight-background)
+}
+
+#st-appbar-week {
+    color: #fff;
+    font-family: arboria, sans-serif;
+    font-size: 16px;
+    text-align: center;
+    opacity: .5
+}
+
+#st-sw-container {
+    display: none;
+    height: 100%;
+    overflow-y: auto
+}
+
+#st-sw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16em, 1fr));
+    gap: 1em;
+    align-content: start;
+    padding: 1px
+}
+
+.st-sw-subject {
+    display: grid;
+    grid-template-rows: 4.5rem;
+    align-items: stretch;
+    border-radius: var(--st-widget-border-radius);
+    border: var(--st-widget-border);
+    overflow: hidden
+}
+
+.st-sw-subject>button {
+    position: relative;
+    outline: 0;
+    border: none;
+    color: var(--st-primary-color);
+    cursor: pointer;
+    transition: filter .1s
+}
+
+.st-sw-subject>button:first-child {
+    height: 4.5rem;
+    font-size: 19px;
+    font-family: open-sans, sans-serif;
+    border-bottom: var(--st-widget-border)
+}
+
+.st-sw-subject>button:not(:first-child) {
+    min-height: 1.75rem;
+    font-size: 1.1em;
+    font-family: open-sans, sans-serif
+}
+
+.st-sw-subject>button:not(:first-child):hover:after {
+    position: absolute;
+    max-height: 100%;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--st-primary-background);
+    font-size: 10px;
+    content: attr(data-title);
+    padding: 3px
+}
+
+.st-obsolete,
+.st-obsolete span,
+.st-sw-0 {
+    color: #888 !important
+}
+
+.st-sw-compact {
+    grid-template-rows: auto !important;
+    font-size: 10px
+}
+
+.st-sw-compact>button:first-child {
+    height: auto !important;
+    font-size: 1.5em;
+    padding: 5px 0
+}
+
+.st-current:hover,
+.st-obsolete:hover,
+.st-sw-selected,
+.st-sw-subject:has(.st-sw-selected)>button:first-child,
+.st-sw-subject>button:hover {
+    filter: brightness(.8)
+}
+
+.st-current-sw>div>div>footer.endlink,
+.st-current-sw>div>h3,
+.st-current-sw>div>h3>b {
+    background: var(--st-highlight-background);
+    font-weight: 700
+}
+
+@media (min-width:1400px) {
+    #st-sw-grid {
+        grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
+    }
+}
+
+#st-vd {
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    background: var(--st-body-background)
+}
+
+#st-vd-schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 6px
+}
+
+#st-vd-schedule>li {
+    background: var(--st-primary-background);
+    border-radius: var(--st-widget-border-radius)
 }

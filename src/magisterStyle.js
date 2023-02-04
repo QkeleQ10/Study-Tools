@@ -85,7 +85,126 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 
     // INVERSION!!
 
-    createStyle(rootVars + `#st-appbar-week{color:#fff;font-family:arboria,sans-serif;font-weight:700;font-size:16px;text-align:center;opacity:.5}#st-sw-container{display:none;height:100%;overflow-y:auto}#st-sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:1em;align-content:start;padding:1px}.st-sw-subject{display:grid;grid-template-rows:4.5rem;align-items:stretch;background-color:var(--st-primary-background);border-radius:var(--st-widget-border-radius);border:var(--st-widget-border);overflow:hidden}.st-sw-subject>button{position:relative;outline:0;border:none;background-color:var(--st-primary-background);color:var(--st-primary-color);cursor:pointer;transition:filter .1s}.st-sw-subject>button:first-child{height:4.5rem;font-size:19px;font-family:open-sans,sans-serif;border-bottom:var(--st-widget-border);background:var(--st-highlight-background)}.st-sw-subject>button:not(:first-child){min-height:1.75rem;font-size:1.1em;font-family:open-sans,sans-serif}.st-sw-subject>button:not(:first-child):hover:after{position:absolute;max-height:100%;width:100%;top:50%;left:50%;transform:translate(-50%,-50%);background-color:var(--st-primary-background);font-size:10px;content:attr(data-title);padding:3px}.st-current,.st-sw-2{font-weight:700}.st-obsolete,.st-obsolete span,.st-sw-0{color:#888!important}.st-sw-compact{grid-template-rows:auto!important;font-size:10px}.st-sw-compact>button:first-child{height:auto!important;font-size:1.5em;padding:5px 0}.st-current:hover,.st-obsolete:hover,.st-sw-subject>button:hover,.st-sw-selected,.st-sw-subject:has(.st-sw-selected)>button:first-child{filter:brightness(.8)}.st-current-sw>div>div>footer.endlink,.st-current-sw>div>h3,.st-current-sw>div>h3>b{background:var(--st-highlight-background);font-weight:700}@media (min-width:1400px){#st-sw-grid{grid-template-columns:repeat(auto-fit,minmax(20em,1fr))}}`, 'study-tools-essential')
+    createStyle(rootVars + `
+.st-sw-subject,
+.st-sw-subject>button {
+    background-color: var(--st-primary-background)
+}
+
+#st-appbar-week,
+.st-current,
+.st-sw-2 {
+    font-weight: 700
+}
+
+#st-vd-schedule>ul>li[data-current],
+.st-sw-subject>button:first-child {
+    background: var(--st-highlight-background)
+}
+
+#st-appbar-week {
+    color: #fff;
+    font-family: arboria, sans-serif;
+    font-size: 16px;
+    text-align: center;
+    opacity: .5
+}
+
+#st-sw-container {
+    display: none;
+    height: 100%;
+    overflow-y: auto
+}
+
+#st-sw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16em, 1fr));
+    gap: 1em;
+    align-content: start;
+    padding: 1px
+}
+
+.st-sw-subject {
+    display: grid;
+    grid-template-rows: 4.5rem;
+    align-items: stretch;
+    border-radius: var(--st-widget-border-radius);
+    border: var(--st-widget-border);
+    overflow: hidden
+}
+
+.st-sw-subject>button {
+    position: relative;
+    outline: 0;
+    border: none;
+    color: var(--st-primary-color);
+    cursor: pointer;
+    transition: filter .1s
+}
+
+.st-sw-subject>button:first-child {
+    height: 4.5rem;
+    font-size: 19px;
+    font-family: open-sans, sans-serif;
+    border-bottom: var(--st-widget-border)
+}
+
+.st-sw-subject>button:not(:first-child) {
+    min-height: 1.75rem;
+    font-size: 1.1em;
+    font-family: open-sans, sans-serif
+}
+
+.st-sw-subject>button:not(:first-child):hover:after {
+    position: absolute;
+    max-height: 100%;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--st-primary-background);
+    font-size: 10px;
+    content: attr(data-title);
+    padding: 3px
+}
+
+.st-obsolete,
+.st-obsolete span,
+.st-sw-0 {
+    color: #888 !important
+}
+
+.st-sw-compact {
+    grid-template-rows: auto !important;
+    font-size: 10px
+}
+
+.st-sw-compact>button:first-child {
+    height: auto !important;
+    font-size: 1.5em;
+    padding: 5px 0
+}
+
+.st-current:hover,
+.st-obsolete:hover,
+.st-sw-selected,
+.st-sw-subject:has(.st-sw-selected)>button:first-child,
+.st-sw-subject>button:hover {
+    filter: brightness(.85)
+}
+
+.st-current-sw>div>div>footer.endlink,
+.st-current-sw>div>h3,
+.st-current-sw>div>h3>b {
+    background: var(--st-highlight-background);
+    font-weight: 700
+}
+
+@media (min-width:1400px) {
+    #st-sw-grid {
+        grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
+    }
+}`, 'study-tools-essential')
 
     if (await getSetting('magister-css-experimental')) {
         createStyle(`.block h3,
@@ -253,8 +372,8 @@ table * {
 .widget .list li.no-data a:hover,
 .widget .list li.no-data:hover,
 .widget .list li:hover,
-table.table-grid-layout tr:hover {
-    filter: brightness(.8);
+table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover {
+    filter: brightness(.85);
     transition: filter .2s
 }
 
@@ -270,6 +389,10 @@ table.table-grid-layout tr:hover {
 
 .widget .list li {
     border-top: var(--st-widget-border)
+}
+
+.sm-grid.k-grid .k-grid-content tr {
+    height: 40px !important
 }
 
 .block .content .title,
@@ -334,7 +457,7 @@ span.nrblock {
 }
 
 .endlink a:hover {
-    filter: brightness(.8)
+    filter: brightness(.85)
 }
 
 .widget .endlink a:after {
@@ -360,6 +483,247 @@ a.appbar-button,
 `, 'study-tools-experimental')
 
         createStyle(`.block.grade-widget{background:var(--st-primary-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-primary-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-widget-heading-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-widget-heading-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
+    }
+
+    if (await getSetting('magister-vd-overhaul')) {
+        createStyle(`
+section.main .content-container:has(#vandaagschermtop) {
+    display: none !important
+}
+        
+#st-vd {
+    position: relative;
+    height: 100%;
+}
+
+#st-vd *[onclick] {
+    cursor: pointer;
+    transition: filter 200ms;
+}
+
+#st-vd *[onclick]:hover {
+    filter: brightness(.85);
+}
+
+#st-vd-notifications:not(:empty):before {
+    content: 'Meldingen';
+    padding: 0 25px;
+    font: var(--st-widget-heading-font);
+}
+
+#st-vd-notifications {
+    position: absolute;
+    bottom: 0;
+    min-height: 60px;
+    width: 100%;
+    color: var(--st-primary-color);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    font-family: var(--st-secondary-font-family);
+    overflow: hidden;
+}
+
+#st-vd-notifications:empty:after {
+    content: 'Geen meldingen';
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    width: 100%;
+    font: var(--st-widget-heading-font);
+    padding: 0 25px;
+    opacity: .6;
+}
+
+#st-vd-notifications>*,#st-vd-unread-notification>li:not(:first-child) {
+    border-top: var(--st-widget-border);
+}
+
+#st-vd-grade-notification {
+    font: var(--st-widget-heading-font);
+    font-size: 32px;
+    line-height: 80px;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary));
+}
+
+#st-vd-grade-notification:before {
+    display: inline-block;
+    translate: -10px -4px;
+    content: attr(data-grade-prefix);
+    font-size: 16px;
+}
+
+#st-vd-unread-notification {
+    font: var(--st-widget-heading-font);
+    font-size: 16px;
+    line-height: 60px;
+    text-align: start;
+}
+
+#st-vd-unread-notification>li {
+    padding: 0 25px;
+    color: var(--st-primar-color);
+    background: linear-gradient(45deg,var(--st-highlight-background),var(--st-primary-background));
+}
+
+#st-vd-unread-assignment-notification:before {
+    content: attr(data-assignments) ' opdrachten: ';
+}
+
+#st-vd-unread-assignment-notification>span {
+    font: var(--st-widget-heading-font);
+    font-size: 16px;
+    font-weight: normal;
+    line-height: normal;
+}
+
+#st-vd-unread-assignment-notification>span:not(:last-child):after {
+    content: ' • ';
+    opacity: .6;
+}
+
+#st-vd-schedule {
+    position: relative;
+}
+
+#st-vd-schedule>a {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 25px;
+    padding-left: 15px;
+    user-select: none;
+}
+
+#st-vd-schedule>ul {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: scale 200ms, translate 200ms;
+}
+
+#st-vd-schedule>ul:empty:after, #st-vd-schedule>ul:has(li[data-filler]:first-child:last-child):after {
+    content: 'Geen afspraken';
+    position: absolute;
+    top: 35px;
+    font: var(--st-widget-heading-font);
+    opacity: .6;
+}
+
+#st-vd-schedule>ul[data-hidden] {
+    scale: 0 1;
+    translate: -50%;
+    pointer-events: none;
+}
+
+#st-vd-schedule>ul[data-tomorrow][data-hidden] {
+    scale: 0 1;
+    translate: 50%;
+    pointer-events: none;
+}
+
+#st-vd-schedule>ul:before {
+    content: 'Rooster van vandaag';
+    font: var(--st-widget-heading-font);
+}
+
+#st-vd-schedule>ul[data-tomorrow]:before {
+    content: attr(data-tomorrow);
+    font: var(--st-widget-heading-font);
+}
+
+#st-vd-schedule>ul>li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 45px;
+    padding: 6px 10px 6px 40px;
+    overflow: hidden;
+    background: var(--st-primary-background);
+    color: var(--st-primary-color);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    font-family: var(--st-secondary-font-family);
+}
+
+#st-vd-schedule>ul>li[data-filler] {
+    background: none;
+    border: none;
+    margin: -10px 0;
+    max-height: 120px;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+#st-vd-schedule>ul>li[data-filler]:last-child {
+    display: none;
+}
+
+#st-vd-schedule>ul>li[data-filler]:before {
+    content: '';
+    height: 100%;
+    border-left: 2px dashed #ccc;
+    margin: 30px 0 10px;
+}
+
+#st-vd-schedule>ul>li[data-current] {
+    background: var(--st-highlight-background) !important;
+}
+
+#st-vd-schedule>ul>li[data-filler]>span:nth-child(1) {
+    position: absolute;
+    top: 14px;
+    font-weight: 600;
+}
+
+#st-vd-schedule>ul>li[data-filler]>span:nth-child(1):after {
+    content: attr(data-filler)
+}
+
+#st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(1):after {
+    content: " (nu)"
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(2) {
+    font-size: 14px;
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(3) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 100%;
+    text-align: center;
+    background: var(--st-highlight-background);
+    font: var(--st-widget-heading-font);
+    line-height: 40px;
+}
+
+#st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(3) {
+    background: var(--st-accent-primary);
+    color: #fff;
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4) {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: var(--st-accent-primary);
+    color: #fff;
+}
+
+#st-vd-schedule>ul>li:not([data-filler]):has(span:nth-child(4)) {
+    background: linear-gradient(45deg, var(--st-primary-background), var(--st-highlight-background));
+}`, 'study-tools-vd-overhaul')
     }
 
     if (await getSetting('magister-vd-deblue')) {

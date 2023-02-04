@@ -1,20 +1,176 @@
+let subjects
+
 init()
 
 async function vandaag() {
-    let lastGrade = await getElement('.block.grade-widget span.cijfer')
-    if (lastGrade && !lastGrade.innerText.includes('-')) lastGrade.parentElement.parentElement.parentElement.classList.add('st-grade-widget-yes')
-    setTimeout(() => {
-        if (lastGrade && !lastGrade.innerText.includes('-')) lastGrade.parentElement.parentElement.parentElement.classList.add('st-grade-widget-yes')
-    }, 300)
-}
+    if (!await getSetting('magister-vd-overhaul')) return
+    let mainSection = await getElement('section.main'),
+        container = document.createElement('div')
+    mainSection.append(container)
+    container.id = 'st-vd'
 
+    // Schedule
+    {
+        await getElement('.agenda-list > li')
 
-async function agenda() {
-    // TODO: CSS
-    if (await getSetting('magister-ag-large')) {
-        let agendaItems = await getElement('tr.ng-scope', true)
-        if (agendaItems) agendaItems.forEach(e => e.style.height = "40px")
+        let agendaElems = await getElement('.agenda-list > li', true),
+            events = [],
+            scheduleWrapper = document.createElement('div'),
+            scheduleTodayContainer = document.createElement('ul'),
+            scheduleTomorrowContainer = document.createElement('ul'),
+            scheduleDaySwitcher = document.createElement('a')
+
+        container.append(scheduleWrapper)
+        scheduleWrapper.append(scheduleTodayContainer, scheduleTomorrowContainer, scheduleDaySwitcher)
+        scheduleWrapper.id = 'st-vd-schedule'
+        scheduleTomorrowContainer.dataset.hidden = true
+        scheduleDaySwitcher.addEventListener('click', () => {
+            let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
+                shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
+            hidden.removeAttribute('data-hidden')
+            shown.setAttribute('data-hidden', true)
+        })
+        scheduleDaySwitcher.innerText = '⇆'
+        scheduleDaySwitcher.title = `Van dag wisselen`
+
+        if (agendaElems) agendaElems.forEach((e, i, a) => {
+            let time = e.querySelector('.time')?.innerText,
+                title = e.querySelector('.classroom')?.innerText,
+                period = e.querySelector('.nrblock')?.innerText,
+                href = e.querySelector('a')?.href,
+                tooltip = e.querySelector('.agenda-text-icon')?.innerText,
+                tomorrow = !e.parentElement.nextElementSibling,
+                dateStart = new Date(),
+                dateEnd = new Date(),
+                dateStartNext = new Date()
+
+            if (time) {
+                dateStart.setHours(time.split(' - ')[0].split(':')[0])
+                dateStart.setMinutes(time.split(' - ')[0].split(':')[1])
+
+                dateEnd.setHours(time.split(' - ')[1].split(':')[0])
+                dateEnd.setMinutes(time.split(' - ')[1].split(':')[1])
+            }
+
+            events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tomorrow })
+
+            if (a[i + 1]) {
+                let timeNext = a[i + 1].querySelector('.time').innerText
+                dateStartNext.setHours(timeNext.split(' - ')[0].split(':')[0])
+                dateStartNext.setMinutes(timeNext.split(' - ')[0].split(':')[1])
+
+                if (dateStartNext - dateEnd > 1000) {
+                    time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} - ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                    events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext, tomorrow })
+                }
+            }
+        })
+
+        if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip, tomorrow }, a, i) => {
+            let settingSubjects = await getSetting('magister-subjects'),
+                elementWrapper = document.createElement('li'),
+                elementTime = document.createElement('span'),
+                elementTitle = document.createElement('span'),
+                elementPeriod = document.createElement('span'),
+                elementTooltip = document.createElement('span'),
+                now = new Date(),
+                subject,
+                searchString
+
+            if (title) {
+                searchString = title.split(' (')[0].split(' - ')[0]
+                settingSubjects.forEach(subjectEntry => {
+                    testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
+                    testArray.forEach(testString => {
+                        if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(searchString)) subject = subjectEntry.name
+                    })
+                })
+            } else {
+                elementWrapper.dataset.filler = true
+                elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? ' pauze' : ' lesvrij'
+            }
+
+            height = ((dateEnd - dateStart) / 50000) + 'px'
+
+            elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
+            elementTime.innerText = time || ''
+            elementTitle.innerHTML = '<b>' + (subject || title?.split(' (')[0] || '') + '</b>' + (title?.replace(searchString, '') || '')
+            elementPeriod.innerText = period || ''
+            elementTooltip.innerText = tooltip || ''
+            elementWrapper.style.height = height
+            elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
+
+            if (!tooltip) elementTooltip.remove()
+
+            if (now >= dateStart && now <= dateEnd) elementWrapper.dataset.current = 'true'
+            scheduleTodayContainer.append(elementWrapper)
+            if (tomorrow) scheduleTomorrowContainer.append(elementWrapper)
+        })
+
+        setTimeout(async () => {
+            let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4')
+            scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle.innerText.replace('Wijzigingen voor ', '')}`
+        }, 500)
     }
+
+    // Notifications and grades
+
+    {
+        let lastGrade = await getElement('.block.grade-widget span.cijfer'),
+            lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
+            unreadItems = await getElement('#notificatie-widget ul>li.unread', true),
+            notifcationsWrapper = document.createElement('div'),
+            gradeNotification = document.createElement('div'),
+            unreadWrapper = document.createElement('ul'),
+            unreadAssignmentWrapper = document.createElement('li'),
+            unreadAssignmentCount = 0
+
+        container.append(notifcationsWrapper)
+        notifcationsWrapper.append(gradeNotification, unreadWrapper)
+        notifcationsWrapper.id = 'st-vd-notifications'
+        gradeNotification.id = 'st-vd-grade-notification'
+        gradeNotification.innerText = lastGrade.innerText
+        gradeNotification.dataset.gradePrefix = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
+
+        if (lastGrade.innerText === '-' || lastGradeDescription.innerTExt === 'geen cijfers') gradeNotification.remove()
+
+        unreadWrapper.id = 'st-vd-unread-notification'
+        unreadWrapper.append(unreadAssignmentWrapper)
+        unreadAssignmentWrapper.id = 'st-vd-unread-assignment-notification'
+
+        setTimeout(() => {
+            unreadItems.forEach((e, i, a) => {
+                if (!e.classList.contains('unread') || e.firstElementChild.innerText.includes('geen') || e.firstElementChild.innerText.includes('?')) return console.warn('Notification item wrongfully marked as having content: ')
+
+                let amount = e.firstElementChild.firstElementChild.innerText,
+                    description = e.firstElementChild.innerText.replace(`${amount} `, ''),
+                    href = e.firstElementChild.href,
+                    element = document.createElement('li')
+
+
+                if (description.includes('opdracht')) {
+                    element = document.createElement('span')
+                    if (description.includes('deadline')) description = 'met naderende deadline'
+                    else if (description.includes('openstaand')) description = 'openstaand'
+                    else if (description.includes('beoordeeld')) description = 'beoordeeld'
+                    element.innerText = `${amount} ${description}`
+                    element.setAttribute('onclick', `window.location.href = '${href}'`)
+                    unreadAssignmentWrapper.append(element)
+                    unreadAssignmentCount += Number(amount) || 0
+                } else {
+                    element.innerText = `${amount} ${description}`
+                    element.setAttribute('onclick', `window.location.href = '${href}'`)
+                    unreadWrapper.append(element)
+                }
+            })
+
+            unreadAssignmentWrapper.dataset.assignments = unreadAssignmentCount
+            if (unreadAssignmentCount === 0) unreadAssignmentWrapper.remove()
+            if (!unreadWrapper.firstElementChild) unreadWrapper.remove()
+        }, unreadItems[0].firstElementChild.innerText.includes('?') ? 1000 : 0)
+
+    }
+
 }
 
 async function studiewijzers() {
@@ -27,7 +183,7 @@ async function studiewijzer() {
     if (await getSetting('magister-sw-thisWeek')) {
         let list = await getElement('ul:has(li.studiewijzer-onderdeel)'),
             titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(`(?<![0-9])(${await getWeekNumber()}){1}(?![0-9])`, "g")
+            regex = new RegExp(`(?< ![0 - 9])(${await getWeekNumber()}){ 1 } (? ![0 - 9])`, "g")
 
         titles.forEach(title => {
             if (regex.test(title.innerText) || list.childElementCount === 1) {
@@ -60,7 +216,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         grid = document.createElement('div')
 
     if (settingGrid) {
-        createStyle(`#st-sw-container{display:block!important}#studiewijzer-container>aside,section.main>.content-container:has(.studiewijzer-list),div.full-height.widget>div.block:has(li[data-ng-repeat^="studiewijzer in items"]){display:none!important}#studiewijzer-container{padding-right:8px}.sidecolumn section.main{padding-bottom:0!important}`, 'study-tools-sw-grid')
+        createStyle(`#st - sw - container{ display: block!important } #studiewijzer - container > aside, section.main >.content - container: has(.studiewijzer - list), div.full - height.widget > div.block: has(li[data - ng - repeat^= "studiewijzer in items"]){ display: none!important } #studiewijzer - container{ padding - right: 8px }.sidecolumn section.main{ padding - bottom: 0!important } `, 'study-tools-sw-grid')
         gridContainer.appendChild(gridWrapper)
         gridWrapper.id = 'st-sw-container'
         gridWrapper.appendChild(grid)
@@ -75,9 +231,9 @@ async function displayStudiewijzerArray(gridContainer, compact) {
             periodTextIndex = title.search(/(t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
         settingSubjects.forEach(subjectEntry => {
-            testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
+            testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
             testArray.forEach(testString => {
-                if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name
+                if ((new RegExp(`^ (${testString.trim()})$ |^ (${testString.trim()})[^ a - z] | [^ a - z](${testString.trim()})$ | [^ a - z](${testString.trim()})[^ a - z]`, 'i')).test(title)) subject = subjectEntry.name
             })
         })
 
@@ -100,7 +256,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         elem.dataset.title = title
         if (settingGrid) {
             let itemButton = document.createElement('button'),
-                subjectTile = document.querySelector(`div[data-subject='${subject}']`)
+                subjectTile = document.querySelector(`div[data - subject= '${subject}']`)
             if (!subjectTile) {
                 subjectTile = document.createElement('div')
                 grid.appendChild(subjectTile)
@@ -113,15 +269,15 @@ async function displayStudiewijzerArray(gridContainer, compact) {
                 if (compact) subjectTile.classList.add('st-sw-compact')
             }
             if (settingShowPeriod) {
-                itemButton.innerText = period ? `periode ${period}` : "geen periode"
+                itemButton.innerText = period ? `periode ${period} ` : "geen periode"
                 itemButton.dataset.title = title
             } else {
                 itemButton.innerText = title
                 itemButton.style.fontSize = '11px'
                 itemButton.style.minHeight = '2rem'
             }
-            itemButton.classList.add(`st-sw-${priority}`)
-            if (viewTitle && viewTitle.toLowerCase() === title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) itemButton.classList.add(`st-sw-selected`)
+            itemButton.classList.add(`st - sw - ${priority} `)
+            if (viewTitle && viewTitle.toLowerCase() === title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) itemButton.classList.add(`st - sw - selected`)
             itemButton.setAttribute('onclick', `document.querySelector('li[data-sw-st="${i}"], li[data-title="${title}"]>a').click()`)
             subjectTile.appendChild(itemButton)
         } else {
@@ -155,6 +311,8 @@ async function init() {
     window.addEventListener('locationchange', popstate)
 
     let appbar = await getElement('.appbar')
+
+    subjects = await getSetting('magister-subjects')
 
     if (await getSetting('magister-appbar-zermelo')) {
         const appbarZermelo = document.createElement('div'),

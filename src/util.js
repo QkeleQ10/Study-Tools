@@ -32,9 +32,9 @@ function getElement(querySelector, all, immediate) {
 
         let timeout = setTimeout(() => {
             clearInterval(interval)
-            console.error("Could not find element: ", querySelector)
+            console.warn("Could not find element: ", querySelector, all, immediate)
             return resolve(undefined)
-        }, 10000)
+        }, immediate? 100 : 10000)
     })
 }
 
