@@ -45,22 +45,22 @@ async function vandaag() {
                 dateStartNext = new Date()
 
             if (time) {
-                dateStart.setHours(time.split(' - ')[0].split(':')[0])
-                dateStart.setMinutes(time.split(' - ')[0].split(':')[1])
+                dateStart.setHours(time.split('-')[0].split(':')[0])
+                dateStart.setMinutes(time.split('-')[0].split(':')[1])
 
-                dateEnd.setHours(time.split(' - ')[1].split(':')[0])
-                dateEnd.setMinutes(time.split(' - ')[1].split(':')[1])
+                dateEnd.setHours(time.split('-')[1].split(':')[0])
+                dateEnd.setMinutes(time.split('-')[1].split(':')[1])
             }
 
             events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tomorrow })
 
             if (a[i + 1]) {
                 let timeNext = a[i + 1].querySelector('.time').innerText
-                dateStartNext.setHours(timeNext.split(' - ')[0].split(':')[0])
-                dateStartNext.setMinutes(timeNext.split(' - ')[0].split(':')[1])
+                dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
+                dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
 
                 if (dateStartNext - dateEnd > 1000) {
-                    time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} - ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                    time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')}-${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
                     events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext, tomorrow })
                 }
             }
@@ -78,7 +78,7 @@ async function vandaag() {
                 searchString
 
             if (title) {
-                searchString = title.split(' (')[0].split(' - ')[0]
+                searchString = title.split(' (')[0].split('-')[0]
                 settingSubjects.forEach(subjectEntry => {
                     testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
                     testArray.forEach(testString => {
@@ -183,7 +183,7 @@ async function studiewijzer() {
     if (await getSetting('magister-sw-thisWeek')) {
         let list = await getElement('ul:has(li.studiewijzer-onderdeel)'),
             titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(`(?< ![0 - 9])(${await getWeekNumber()}){ 1 } (? ![0 - 9])`, "g")
+            regex = new RegExp(`(?<![0-9])(${await getWeekNumber()}){1}(?![0-9])`, "g")
 
         titles.forEach(title => {
             if (regex.test(title.innerText) || list.childElementCount === 1) {
@@ -216,7 +216,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         grid = document.createElement('div')
 
     if (settingGrid) {
-        createStyle(`#st - sw - container{ display: block!important } #studiewijzer - container > aside, section.main >.content - container: has(.studiewijzer - list), div.full - height.widget > div.block: has(li[data - ng - repeat^= "studiewijzer in items"]){ display: none!important } #studiewijzer - container{ padding - right: 8px }.sidecolumn section.main{ padding - bottom: 0!important } `, 'study-tools-sw-grid')
+        createStyle(`#st-sw-container{ display: block!important } #studiewijzer-container > aside, section.main >.content-container:has(.studiewijzer-list), div.full-height.widget > div.block:has(li[data-ng-repeat^="studiewijzer in items"]){ display: none!important } #studiewijzer-container{ padding-right: 8px }.sidecolumn section.main{ padding-bottom: 0!important } `, 'study-tools-sw-grid')
         gridContainer.appendChild(gridWrapper)
         gridWrapper.id = 'st-sw-container'
         gridWrapper.appendChild(grid)
@@ -233,7 +233,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         settingSubjects.forEach(subjectEntry => {
             testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
             testArray.forEach(testString => {
-                if ((new RegExp(`^ (${testString.trim()})$ |^ (${testString.trim()})[^ a - z] | [^ a - z](${testString.trim()})$ | [^ a - z](${testString.trim()})[^ a - z]`, 'i')).test(title)) subject = subjectEntry.name
+                if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name
             })
         })
 
@@ -256,7 +256,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         elem.dataset.title = title
         if (settingGrid) {
             let itemButton = document.createElement('button'),
-                subjectTile = document.querySelector(`div[data - subject= '${subject}']`)
+                subjectTile = document.querySelector(`div[data-subject='${subject}']`)
             if (!subjectTile) {
                 subjectTile = document.createElement('div')
                 grid.appendChild(subjectTile)
@@ -276,8 +276,8 @@ async function displayStudiewijzerArray(gridContainer, compact) {
                 itemButton.style.fontSize = '11px'
                 itemButton.style.minHeight = '2rem'
             }
-            itemButton.classList.add(`st - sw - ${priority} `)
-            if (viewTitle && viewTitle.toLowerCase() === title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) itemButton.classList.add(`st - sw - selected`)
+            itemButton.classList.add(`st-sw-${priority}`)
+            if (viewTitle && viewTitle.toLowerCase() === title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) itemButton.classList.add(`st-sw-selected`)
             itemButton.setAttribute('onclick', `document.querySelector('li[data-sw-st="${i}"], li[data-title="${title}"]>a').click()`)
             subjectTile.appendChild(itemButton)
         } else {

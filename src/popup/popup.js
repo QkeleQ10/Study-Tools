@@ -65,8 +65,8 @@ async function init() {
         document.querySelectorAll('label[data-version]').forEach(element => {
             if (element.dataset.version.localeCompare(start.openedPopup, undefined, { numeric: true, sensitivity: 'base' }) === 1) element.classList.add('new')
         })
-        pushSetting('openedPopup', chrome.runtime.getManifest().version)
     }
+    setSetting('openedPopup', chrome.runtime.getManifest().version)
 
     document.querySelectorAll('#sectionPicker div[data-section]').forEach(element => element.addEventListener('click', openSection))
 

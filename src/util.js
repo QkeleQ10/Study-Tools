@@ -1,9 +1,11 @@
-checkSettings()
-checkUpdates()
+window.addEventListener('DOMContentLoaded', (event) => {
+    checkSettings()
+    checkUpdates()
+})
 
 async function checkSettings() {
-    if (await getSetting('openedPopup')) return
-    showNotification("Functies inschakelen", `Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.`)
+    if (!await getSetting('openedPopup'))
+        showNotification("Functies inschakelen", `Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.`)
 }
 
 async function checkUpdates(override) {
@@ -34,7 +36,7 @@ function getElement(querySelector, all, immediate) {
             clearInterval(interval)
             console.warn("Could not find element: ", querySelector, all, immediate)
             return resolve(undefined)
-        }, immediate? 100 : 10000)
+        }, immediate ? 100 : 10000)
     })
 }
 
