@@ -2,25 +2,100 @@ let subjects
 
 init()
 
+async function displayScheduleList(agendaElems, container) {
+    let events = []
+
+    if (agendaElems) agendaElems.forEach((e, i, a) => {
+        let time = e.querySelector('.time')?.innerText,
+            title = e.querySelector('.classroom')?.innerText,
+            period = e.querySelector('.nrblock')?.innerText,
+            href = e.querySelector('a')?.href,
+            tooltip = e.querySelector('.agenda-text-icon')?.innerText,
+            dateStart = new Date(),
+            dateEnd = new Date(),
+            dateStartNext = new Date()
+
+        if (time) {
+            dateStart.setHours(time.split('-')[0].split(':')[0])
+            dateStart.setMinutes(time.split('-')[0].split(':')[1])
+
+            dateEnd.setHours(time.split('-')[1].split(':')[0])
+            dateEnd.setMinutes(time.split('-')[1].split(':')[1])
+        }
+
+        events.push({ time, title, period, dateStart, dateEnd, href, tooltip })
+
+        if (a[i + 1]) {
+            let timeNext = a[i + 1].querySelector('.time').innerText
+            dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
+            dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
+
+            if (dateStartNext - dateEnd > 1000) {
+                time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')}-${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext })
+            }
+        }
+    })
+
+    if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip }, a, i) => {
+        let settingSubjects = await getSetting('magister-subjects'),
+            elementWrapper = document.createElement('li'),
+            elementTime = document.createElement('span'),
+            elementTitle = document.createElement('span'),
+            elementPeriod = document.createElement('span'),
+            elementTooltip = document.createElement('span'),
+            now = new Date(),
+            subject,
+            searchString
+
+        container.append(elementWrapper)
+
+        if (title) {
+            searchString = title.split(' (')[0].split('-')[0]
+            settingSubjects.forEach(subjectEntry => {
+                testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
+                testArray.forEach(testString => {
+                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(searchString)) subject = subjectEntry.name
+                })
+            })
+        } else {
+            elementWrapper.dataset.filler = true
+            elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? ' pauze' : ' lesvrij'
+        }
+
+        height = ((dateEnd - dateStart) / 50000) + 'px'
+
+        elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
+        elementTime.innerText = time || ''
+        elementTitle.innerHTML = '<b>' + (subject || title?.split(' (')[0] || '') + '</b>' + (title?.replace(searchString, '') || '')
+        elementPeriod.innerText = period || ''
+        elementTooltip.innerText = tooltip || ''
+        elementWrapper.style.height = height
+        elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
+
+        if (!tooltip) elementTooltip.remove()
+
+        if (now >= dateStart && now <= dateEnd) elementWrapper.dataset.current = 'true'
+    })
+}
+
 async function vandaag() {
     if (!await getSetting('magister-vd-overhaul')) return
     let mainSection = await getElement('section.main'),
-        container = document.createElement('div')
+        container = document.createElement('div'),
+        scheduleWrapper = document.createElement('div'),
+        notifcationsWrapper = document.createElement('div')
     mainSection.append(container)
+    container.append(scheduleWrapper, notifcationsWrapper)
     container.id = 'st-vd'
 
     // Schedule
     {
-        await getElement('.agenda-list > li')
-
-        let agendaElems = await getElement('.agenda-list > li', true),
-            events = [],
-            scheduleWrapper = document.createElement('div'),
+        let agendaTodayElems = await getElement('.agenda-list:first-child>li, .agenda-list:nth-child(2)>li', true),
             scheduleTodayContainer = document.createElement('ul'),
             scheduleTomorrowContainer = document.createElement('ul'),
             scheduleDaySwitcher = document.createElement('a')
 
-        container.append(scheduleWrapper)
         scheduleWrapper.append(scheduleTodayContainer, scheduleTomorrowContainer, scheduleDaySwitcher)
         scheduleWrapper.id = 'st-vd-schedule'
         scheduleTomorrowContainer.dataset.hidden = true
@@ -33,82 +108,12 @@ async function vandaag() {
         scheduleDaySwitcher.innerText = '⇆'
         scheduleDaySwitcher.title = `Van dag wisselen`
 
-        if (agendaElems) agendaElems.forEach((e, i, a) => {
-            let time = e.querySelector('.time')?.innerText,
-                title = e.querySelector('.classroom')?.innerText,
-                period = e.querySelector('.nrblock')?.innerText,
-                href = e.querySelector('a')?.href,
-                tooltip = e.querySelector('.agenda-text-icon')?.innerText,
-                tomorrow = !e.parentElement.nextElementSibling,
-                dateStart = new Date(),
-                dateEnd = new Date(),
-                dateStartNext = new Date()
-
-            if (time) {
-                dateStart.setHours(time.split('-')[0].split(':')[0])
-                dateStart.setMinutes(time.split('-')[0].split(':')[1])
-
-                dateEnd.setHours(time.split('-')[1].split(':')[0])
-                dateEnd.setMinutes(time.split('-')[1].split(':')[1])
-            }
-
-            events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tomorrow })
-
-            if (a[i + 1]) {
-                let timeNext = a[i + 1].querySelector('.time').innerText
-                dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
-                dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
-
-                if (dateStartNext - dateEnd > 1000) {
-                    time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')}-${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-                    events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext, tomorrow })
-                }
-            }
-        })
-
-        if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip, tomorrow }, a, i) => {
-            let settingSubjects = await getSetting('magister-subjects'),
-                elementWrapper = document.createElement('li'),
-                elementTime = document.createElement('span'),
-                elementTitle = document.createElement('span'),
-                elementPeriod = document.createElement('span'),
-                elementTooltip = document.createElement('span'),
-                now = new Date(),
-                subject,
-                searchString
-
-            if (title) {
-                searchString = title.split(' (')[0].split('-')[0]
-                settingSubjects.forEach(subjectEntry => {
-                    testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
-                    testArray.forEach(testString => {
-                        if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(searchString)) subject = subjectEntry.name
-                    })
-                })
-            } else {
-                elementWrapper.dataset.filler = true
-                elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? ' pauze' : ' lesvrij'
-            }
-
-            height = ((dateEnd - dateStart) / 50000) + 'px'
-
-            elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
-            elementTime.innerText = time || ''
-            elementTitle.innerHTML = '<b>' + (subject || title?.split(' (')[0] || '') + '</b>' + (title?.replace(searchString, '') || '')
-            elementPeriod.innerText = period || ''
-            elementTooltip.innerText = tooltip || ''
-            elementWrapper.style.height = height
-            elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
-
-            if (!tooltip) elementTooltip.remove()
-
-            if (now >= dateStart && now <= dateEnd) elementWrapper.dataset.current = 'true'
-            scheduleTodayContainer.append(elementWrapper)
-            if (tomorrow) scheduleTomorrowContainer.append(elementWrapper)
-        })
+        displayScheduleList(agendaTodayElems, scheduleTodayContainer)
 
         setTimeout(async () => {
-            let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4')
+            let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4'),
+                agendaTomorrowElems = await getElement('.agenda-list:not(.ng-hide):last-of-type>li', true)
+            displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
             scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle.innerText.replace('Wijzigingen voor ', '')}`
         }, 500)
     }
@@ -119,13 +124,11 @@ async function vandaag() {
         let lastGrade = await getElement('.block.grade-widget span.cijfer'),
             lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
             unreadItems = await getElement('#notificatie-widget ul>li.unread', true),
-            notifcationsWrapper = document.createElement('div'),
             gradeNotification = document.createElement('div'),
             unreadWrapper = document.createElement('ul'),
             unreadAssignmentWrapper = document.createElement('li'),
             unreadAssignmentCount = 0
 
-        container.append(notifcationsWrapper)
         notifcationsWrapper.append(gradeNotification, unreadWrapper)
         notifcationsWrapper.id = 'st-vd-notifications'
         gradeNotification.id = 'st-vd-grade-notification'
@@ -140,7 +143,7 @@ async function vandaag() {
 
         setTimeout(() => {
             unreadItems.forEach((e, i, a) => {
-                if (!e.classList.contains('unread') || e.firstElementChild.innerText.includes('geen') || e.firstElementChild.innerText.includes('?')) return console.warn('Notification item wrongfully marked as having content: ')
+                if (!e.classList.contains('unread') || e.firstElementChild.innerText.includes('geen') || e.firstElementChild.innerText.includes('?')) return console.warn('Notification item wrongfully marked as having content: ', e)
 
                 let amount = e.firstElementChild.firstElementChild.innerText,
                     description = e.firstElementChild.innerText.replace(`${amount} `, ''),

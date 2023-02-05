@@ -226,7 +226,8 @@ html {
 .k-block,
 .k-widget,
 body,
-div.loading-overlay {
+div.loading-overlay,
+input[type=checkbox]+label span {
     background: var(--st-body-background)
 }
 
@@ -237,7 +238,6 @@ div.loading-overlay {
 
 .block,
 .content-container,
-.k-dropdown .k-dropdown-wrap.k-state-default,
 .studiewijzer-onderdeel>div.block>div.content:not(#studiewijzer-detail-container div, #studiewijzer-detail-container ul) {
     border: var(--st-widget-border);
     border-radius: var(--st-widget-border-radius)
@@ -256,7 +256,11 @@ div.loading-overlay {
 .ng-scope td.vrijstelling,
 .versions li.selected,
 .versions li:hover,
-.k-scheduler .k-event.k-state-selected, .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
+.k-scheduler .k-event.k-state-selected, 
+.cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade,
+.alert,
+.k-dropdown .k-dropdown-wrap.k-state-active,
+.projects li.selected {
     background: var(--st-highlight-background) !important;
     background-color: var(--st-highlight-background) !important
 }
@@ -300,7 +304,7 @@ aside .block .content,
 dl.list-dl,
 footer.endlink,
 table.table-grid-layout th,
-td.k-group-cell {
+td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li:hover, .projects li:hover {
     background: var(--st-primary-background)
 }
 
@@ -310,7 +314,7 @@ td.k-group-cell {
     color: var(--st-primary-color) !important
 }
 
-.block h3 {
+.block h3, #studiewijzer-container div.studiewijzer-list div.head {
     box-shadow: var(--st-widget-edges-box-shadow)
 }
 
@@ -318,7 +322,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a) {
+a:not(.user-content a), table.table-grid-layout td a {
     color: var(--st-a-color);
     text-decoration: none;
     overflow-wrap: anywhere
@@ -333,12 +337,13 @@ table.table-grid-layout tr:hover,
 .cijfers-k-grid.k-grid .k-grid-content tr,
 .cijfers-k-grid.k-grid .k-grid-content tr.k-alt,
 .k-grid-header,
-#cijfers-container aside .widget .cijfer-berekend tr {
+#cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label {
     background-color: var(--st-primary-background) !important;
     box-shadow: none !important
 }
 
-.cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .grade.eloopdracht {
+.cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .grade.eloopdracht,
+table.table-grid-layout tr, table.table-grid-layout td {
     background-color: var(--st-primary-background) !important;
     color: var(--st-primary-color)
 }
@@ -348,7 +353,7 @@ table.table-grid-layout tr:hover,
 .cijfers-k-grid.k-grid .k-grid-content,
 .cijfers-k-grid.k-grid .k-grid-header th.k-header,
 table,
-table.table-grid-layout td {
+table.table-grid-layout td,  {
     background: var(--st-body-background) !important;
     color: var(--st-primary-color);
     border-color: var(--st-primary-border-color) !important
@@ -360,10 +365,18 @@ table.table-grid-layout td {
 .widget li,
 dl.list-dl dd,
 dl.list-dl dt,
-table * {
-    border-color: var(--st-primary-border-color) !important
+table *, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li>a>span, #studiewijzer-container div.studiewijzer-list div.head span:first-child, 
+form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
+.k-dropdown .k-dropdown-wrap.k-state-default,
+.projects li.selected, .projects li:hover,
+.studiewijzer-onderdeel div.content ul>li,
+table.table-grid-layout,
+input[type=checkbox]+label span {
+    border-color: var(--st-primary-border-color) !important;
+    outline-color: var(--st-primary-border-color) !important
 }
 
+ul>li:has(a):not(:has(.content)):hover,
 .k-dropdown-wrap.k-state-hover,
 .k-scheduler .k-event:hover,
 .sm-grid.k-grid .k-grid-content tr:hover,
@@ -372,9 +385,11 @@ table * {
 .widget .list li.no-data a:hover,
 .widget .list li.no-data:hover,
 .widget .list li:hover,
-table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover {
+table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover,
+.k-dropdown .k-dropdown-wrap.k-state-active,
+input[type=radio]~label:hover {
     filter: brightness(.85);
-    transition: filter .2s
+    transition: filter .2s;
 }
 
 .widget .list li.no-data a:hover,
@@ -418,7 +433,8 @@ strong,
 td,
 th,
 .k-scheduler .k-event,
-.block .content p:not(.user-content p) {
+.block .content p:not(.user-content p),
+form .radio input[type=radio]:checked~label {
     font-family: var(--st-secondary-font-family);
     color: var(--st-primary-color)
 }
@@ -431,7 +447,7 @@ th,
 }
 
 .alt-nrblock i,
-.k-scheduler .k-event.k-state-selected, .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
+.k-scheduler .k-event.k-state-selected, .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade, .k-dropdown .k-input, .k-dropdown .k-state-focused .k-input {
     color: var(--st-primary-color) !important
 }
 
@@ -490,10 +506,28 @@ a.appbar-button,
 section.main .content-container:has(#vandaagschermtop) {
     display: none !important
 }
+
+#vandaag-container .main {
+    padding-top: 85px !important;
+}
         
 #st-vd {
+    display: grid;
+    grid-template: 
+        'schedule notifications' 1fr
+        / 1fr auto;
+    gap: 25px;
     position: relative;
     height: 100%;
+}
+
+@media (max-width:1150px) {
+    #st-vd {
+        grid-template: 
+            'schedule' 1fr
+            'notifications' auto
+            / 1fr
+    }
 }
 
 #st-vd *[onclick] {
@@ -512,8 +546,6 @@ section.main .content-container:has(#vandaagschermtop) {
 }
 
 #st-vd-notifications {
-    position: absolute;
-    bottom: 0;
     min-height: 60px;
     width: 100%;
     color: var(--st-primary-color);
@@ -585,6 +617,8 @@ section.main .content-container:has(#vandaagschermtop) {
 
 #st-vd-schedule {
     position: relative;
+    width: 100%;
+    min-width: 300px;
 }
 
 #st-vd-schedule>a {
@@ -601,7 +635,7 @@ section.main .content-container:has(#vandaagschermtop) {
     top: 0;
     left: 0;
     width: 100%;
-    min-height: 100px;
+    min-height: 300px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -726,10 +760,6 @@ section.main .content-container:has(#vandaagschermtop) {
 }`, 'study-tools-vd-overhaul')
     }
 
-    if (await getSetting('magister-vd-deblue')) {
-        createStyle(`.widget .agenda-list li.alert{border-left:unset!important;background-color:unset!important}.widget .agenda-list li.alert span.time:after,.widget .agenda-list li.alert span.time:before{content:unset}`, 'study-tools-vd-deblue')
-    }
-
     if (await getSetting('magister-cf-failred')) {
         createStyle(`.grade[title="5,0"],.grade[title="5,1"],.grade[title="5,2"],.grade[title="5,3"],.grade[title="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
     }
@@ -741,9 +771,4 @@ section.main .content-container:has(#vandaagschermtop) {
     if (await getSetting('magister-appbar-hidePicture')) {
         createStyle(`.menu-button figure img{display: none}`, 'study-tools-appbar-hidePicture')
     }
-
-    if (await getSetting('magister-vd-gradewidget')) {
-        // Now always enabled if experimental CSS is enabled
-    }
-
 }
