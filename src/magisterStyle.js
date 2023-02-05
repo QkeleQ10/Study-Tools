@@ -389,7 +389,7 @@ table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover,
 .k-dropdown .k-dropdown-wrap.k-state-active,
 input[type=radio]~label:hover {
     filter: brightness(.85);
-    transition: filter .2s;
+    transition: filter 200ms, transform 200ms;
 }
 
 .widget .list li.no-data a:hover,
@@ -532,92 +532,15 @@ section.main .content-container:has(#vandaagschermtop) {
 
 #st-vd *[onclick] {
     cursor: pointer;
-    transition: filter 200ms;
+    transition: filter 200ms, transform 200ms;
 }
 
 #st-vd *[onclick]:hover {
     filter: brightness(.85);
 }
 
-#st-vd-notifications:not(:empty):before {
-    content: 'Meldingen';
-    padding: 0 25px;
-    font: var(--st-widget-heading-font);
-}
-
-#st-vd-notifications {
-    min-height: 60px;
-    width: 100%;
-    color: var(--st-primary-color);
-    border: var(--st-widget-border);
-    border-radius: var(--st-widget-border-radius);
-    font-family: var(--st-secondary-font-family);
-    overflow: hidden;
-}
-
-#st-vd-notifications:empty:after {
-    content: 'Geen meldingen';
-    position: absolute;
-    top: 50%;
-    translate: 0 -50%;
-    width: 100%;
-    font: var(--st-widget-heading-font);
-    padding: 0 25px;
-    opacity: .6;
-}
-
-#st-vd-notifications>*,#st-vd-unread-notification>li:not(:first-child) {
-    border-top: var(--st-widget-border);
-}
-
-#st-vd-grade-notification {
-    font: var(--st-widget-heading-font);
-    font-size: 32px;
-    line-height: 80px;
-    text-align: center;
-    color: #fff;
-    background: linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary));
-}
-
-#st-vd-grade-notification:before {
-    display: inline-block;
-    translate: -10px -4px;
-    content: attr(data-grade-prefix);
-    font-size: 16px;
-}
-
-#st-vd-unread-notification {
-    font: var(--st-widget-heading-font);
-    font-size: 16px;
-    line-height: 60px;
-    text-align: start;
-}
-
-#st-vd-unread-notification>li {
-    padding: 0 25px;
-    color: var(--st-primar-color);
-    background: linear-gradient(45deg,var(--st-highlight-background),var(--st-primary-background));
-}
-
-#st-vd-unread-assignment-notification:before {
-    content: attr(data-assignments) ' opdrachten: ';
-}
-
-#st-vd-unread-assignment-notification>span {
-    font: var(--st-widget-heading-font);
-    font-size: 16px;
-    font-weight: normal;
-    line-height: normal;
-}
-
-#st-vd-unread-assignment-notification>span:not(:last-child):after {
-    content: ' • ';
-    opacity: .6;
-}
-
 #st-vd-schedule {
     position: relative;
-    width: 100%;
     min-width: 300px;
 }
 
@@ -625,9 +548,21 @@ section.main .content-container:has(#vandaagschermtop) {
     position: absolute;
     top: 0;
     right: 0;
-    font-size: 25px;
-    padding-left: 15px;
+    padding: 10px;
+    margin: -10px;
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 500;
+    font-size: 20px;
     user-select: none;
+    transition: filter 200ms, transform 200ms;
+}
+
+#st-vd-schedule>a:hover {
+    transform: rotate(15deg) scale(1.3);
+}
+
+#st-vd-schedule>a:active {
+    transform: rotate(180deg) scale(.8);
 }
 
 #st-vd-schedule>ul {
@@ -706,8 +641,12 @@ section.main .content-container:has(#vandaagschermtop) {
     margin: 30px 0 10px;
 }
 
-#st-vd-schedule>ul>li[data-current] {
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-current] {
     background: var(--st-highlight-background) !important;
+}
+
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-past] {
+    opacity: 0.6;
 }
 
 #st-vd-schedule>ul>li[data-filler]>span:nth-child(1) {
@@ -720,7 +659,7 @@ section.main .content-container:has(#vandaagschermtop) {
     content: attr(data-filler)
 }
 
-#st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(1):after {
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-current]:not([data-filler])>span:nth-child(1):after {
     content: " (nu)"
 }
 
@@ -757,7 +696,84 @@ section.main .content-container:has(#vandaagschermtop) {
 
 #st-vd-schedule>ul>li:not([data-filler]):has(span:nth-child(4)) {
     background: linear-gradient(45deg, var(--st-primary-background), var(--st-highlight-background));
-}`, 'study-tools-vd-overhaul')
+}
+
+#st-vd-notifications:not(:empty):before {
+    content: 'Meldingen';
+    padding: 0 25px;
+    font: var(--st-widget-heading-font);
+}
+
+#st-vd-notifications {
+    min-width: 300px;
+    min-height: 60px;
+    color: var(--st-primary-color);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    font-family: var(--st-secondary-font-family);
+    overflow: hidden;
+}
+
+#st-vd-notifications:empty:after {
+    content: 'Geen meldingen';
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    width: 100%;
+    font: var(--st-widget-heading-font);
+    padding: 0 25px;
+    opacity: .6;
+}
+
+#st-vd-notifications>*,#st-vd-unread-notification>li:not(:first-child) {
+    border-top: var(--st-widget-border);
+}
+
+#st-vd-grade-notification {
+    font: var(--st-widget-heading-font);
+    font-size: 32px;
+    line-height: 80px;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary));
+}
+
+#st-vd-grade-notification:before {
+    display: inline-block;
+    translate: -10px -4px;
+    content: attr(data-grade-prefix);
+    font-size: 16px;
+}
+
+#st-vd-unread-notification {
+    font: var(--st-widget-heading-font);
+    font-size: 16px;
+    line-height: 60px;
+    text-align: start;
+}
+
+#st-vd-unread-notification>li {
+    padding: 0 25px;
+    color: var(--st-primar-color);
+    background: linear-gradient(45deg,var(--st-highlight-background),var(--st-primary-background));
+}
+
+#st-vd-unread-assignment-notification:before {
+    content: attr(data-assignments) ' opdrachten: ';
+}
+
+#st-vd-unread-assignment-notification>span {
+    font: var(--st-widget-heading-font);
+    font-size: 16px;
+    font-weight: normal;
+    line-height: normal;
+}
+
+#st-vd-unread-assignment-notification>span:not(:last-child):after {
+    content: ' • ';
+    opacity: .6;
+}
+`, 'study-tools-vd-overhaul')
     }
 
     if (await getSetting('magister-cf-failred')) {

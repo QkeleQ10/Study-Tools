@@ -2,83 +2,6 @@ let subjects
 
 init()
 
-async function displayScheduleList(agendaElems, container) {
-    let events = []
-
-    if (agendaElems) agendaElems.forEach((e, i, a) => {
-        let time = e.querySelector('.time')?.innerText,
-            title = e.querySelector('.classroom')?.innerText,
-            period = e.querySelector('.nrblock')?.innerText,
-            href = e.querySelector('a')?.href,
-            tooltip = e.querySelector('.agenda-text-icon')?.innerText,
-            dateStart = new Date(),
-            dateEnd = new Date(),
-            dateStartNext = new Date()
-
-        if (time) {
-            dateStart.setHours(time.split('-')[0].split(':')[0])
-            dateStart.setMinutes(time.split('-')[0].split(':')[1])
-
-            dateEnd.setHours(time.split('-')[1].split(':')[0])
-            dateEnd.setMinutes(time.split('-')[1].split(':')[1])
-        }
-
-        events.push({ time, title, period, dateStart, dateEnd, href, tooltip })
-
-        if (a[i + 1]) {
-            let timeNext = a[i + 1].querySelector('.time').innerText
-            dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
-            dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
-
-            if (dateStartNext - dateEnd > 1000) {
-                time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')}-${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-                events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext })
-            }
-        }
-    })
-
-    if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip }, a, i) => {
-        let settingSubjects = await getSetting('magister-subjects'),
-            elementWrapper = document.createElement('li'),
-            elementTime = document.createElement('span'),
-            elementTitle = document.createElement('span'),
-            elementPeriod = document.createElement('span'),
-            elementTooltip = document.createElement('span'),
-            now = new Date(),
-            subject,
-            searchString
-
-        container.append(elementWrapper)
-
-        if (title) {
-            searchString = title.split(' (')[0].split('-')[0]
-            settingSubjects.forEach(subjectEntry => {
-                testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
-                testArray.forEach(testString => {
-                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(searchString)) subject = subjectEntry.name
-                })
-            })
-        } else {
-            elementWrapper.dataset.filler = true
-            elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? ' pauze' : ' lesvrij'
-        }
-
-        height = ((dateEnd - dateStart) / 50000) + 'px'
-
-        elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
-        elementTime.innerText = time || ''
-        elementTitle.innerHTML = '<b>' + (subject || title?.split(' (')[0] || '') + '</b>' + (title?.replace(searchString, '') || '')
-        elementPeriod.innerText = period || ''
-        elementTooltip.innerText = tooltip || ''
-        elementWrapper.style.height = height
-        elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
-
-        if (!tooltip) elementTooltip.remove()
-
-        if (now >= dateStart && now <= dateEnd) elementWrapper.dataset.current = 'true'
-    })
-}
-
 async function vandaag() {
     if (!await getSetting('magister-vd-overhaul')) return
     let mainSection = await getElement('section.main'),
@@ -99,14 +22,6 @@ async function vandaag() {
         scheduleWrapper.append(scheduleTodayContainer, scheduleTomorrowContainer, scheduleDaySwitcher)
         scheduleWrapper.id = 'st-vd-schedule'
         scheduleTomorrowContainer.dataset.hidden = true
-        scheduleDaySwitcher.addEventListener('click', () => {
-            let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
-                shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
-            hidden.removeAttribute('data-hidden')
-            shown.setAttribute('data-hidden', true)
-        })
-        scheduleDaySwitcher.innerText = '⇆'
-        scheduleDaySwitcher.title = `Van dag wisselen`
 
         displayScheduleList(agendaTodayElems, scheduleTodayContainer)
 
@@ -115,6 +30,14 @@ async function vandaag() {
                 agendaTomorrowElems = await getElement('.agenda-list:not(.ng-hide):last-of-type>li', true)
             displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
             scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle.innerText.replace('Wijzigingen voor ', '')}`
+            scheduleDaySwitcher.addEventListener('click', () => {
+                let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
+                    shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
+                hidden.removeAttribute('data-hidden')
+                shown.setAttribute('data-hidden', true)
+            })
+            scheduleDaySwitcher.innerText = ''
+            scheduleDaySwitcher.title = `Van dag wisselen`
         }, 500)
     }
 
@@ -204,6 +127,86 @@ async function studiewijzer() {
     if (!await getSetting('magister-sw-sort')) return
     const gridContainer = await getElement('div.full-height.widget')
     displayStudiewijzerArray(gridContainer, true)
+}
+
+
+
+async function displayScheduleList(agendaElems, container) {
+    let events = []
+
+    if (agendaElems) agendaElems.forEach((e, i, a) => {
+        let time = e.querySelector('.time')?.innerText,
+            title = e.querySelector('.classroom')?.innerText,
+            period = e.querySelector('.nrblock')?.innerText,
+            href = e.querySelector('a')?.href,
+            tooltip = e.querySelector('.agenda-text-icon')?.innerText,
+            dateStart = new Date(),
+            dateEnd = new Date(),
+            dateStartNext = new Date()
+
+        if (time) {
+            dateStart.setHours(time.split('-')[0].split(':')[0])
+            dateStart.setMinutes(time.split('-')[0].split(':')[1])
+
+            dateEnd.setHours(time.split('-')[1].split(':')[0])
+            dateEnd.setMinutes(time.split('-')[1].split(':')[1])
+        }
+
+        events.push({ time, title, period, dateStart, dateEnd, href, tooltip })
+
+        if (a[i + 1]) {
+            let timeNext = a[i + 1].querySelector('.time').innerText
+            dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
+            dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
+
+            if (dateStartNext - dateEnd > 1000) {
+                time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} - ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext })
+            }
+        }
+    })
+
+    if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip }, a, i) => {
+        let settingSubjects = await getSetting('magister-subjects'),
+            elementWrapper = document.createElement('li'),
+            elementTime = document.createElement('span'),
+            elementTitle = document.createElement('span'),
+            elementPeriod = document.createElement('span'),
+            elementTooltip = document.createElement('span'),
+            now = new Date(),
+            subject,
+            searchString
+
+        container.append(elementWrapper)
+
+        if (title) {
+            searchString = title.split(' (')[0].split('-')[0]
+            settingSubjects.forEach(subjectEntry => {
+                testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
+                testArray.forEach(testString => {
+                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(searchString)) subject = subjectEntry.name + ' '
+                })
+            })
+        } else {
+            elementWrapper.dataset.filler = true
+            elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? ' pauze' : ' lesvrij'
+        }
+
+        height = ((dateEnd - dateStart) / 50000) + 'px'
+
+        elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
+        elementTime.innerText = time || ''
+        elementTitle.innerHTML = '<b>' + (subject || title?.split(' (')[0] || '') + '</b>' + (title?.replace(searchString, '') || '')
+        elementPeriod.innerText = period || ''
+        elementTooltip.innerText = tooltip || ''
+        elementWrapper.style.height = height
+        elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
+
+        if (!tooltip) elementTooltip.remove()
+
+        if (now >= dateStart && now <= dateEnd) elementWrapper.dataset.current = 'true'
+        else if (now > dateEnd) elementWrapper.dataset.past = 'true'
+    })
 }
 
 async function displayStudiewijzerArray(gridContainer, compact) {
@@ -357,7 +360,6 @@ async function popstate() {
     const href = document.location.href.split('?')[0]
 
     if (href.endsWith('/vandaag')) vandaag()
-    else if (href.endsWith('/agenda')) agenda()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
 }
