@@ -200,23 +200,6 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     font-weight: 700
 }
 
-.main-menu li.children>a::after {
-    content: '';
-    transition: transform 200ms, translate 200ms;
-}
-
-.main-menu li.children:active>a::after {
-    translate: 0 6px;
-}
-
-.main-menu li.expanded>a::after {
-    transform: rotate(180deg);
-}
-
-.main-menu li.expanded:active>a::after {
-    translate: 0 -6px;
-}
-
 @media (min-width:1400px) {
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
@@ -512,6 +495,23 @@ a.appbar-button,
 .main-menu>li.active>a,
 .main-menu>li>a:hover {
     background: var(--st-accent-secondary)
+}
+
+.main-menu li.children>a::after {
+    content: '';
+    transition: transform 200ms, translate 200ms;
+}
+
+.main-menu li.children:active>a::after {
+    translate: 0 6px;
+}
+
+.main-menu li.expanded>a::after {
+    transform: rotate(180deg);
+}
+
+.main-menu li.expanded:active>a::after {
+    translate: 0 -6px;
 }
 `, 'study-tools-experimental')
 

@@ -42,7 +42,6 @@ async function vandaag() {
     }
 
     // Notifications and grades
-
     {
         let lastGrade = await getElement('.block.grade-widget span.cijfer'),
             lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
