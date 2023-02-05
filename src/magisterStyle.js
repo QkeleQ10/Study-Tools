@@ -200,6 +200,15 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     font-weight: 700
 }
 
+.main-menu li.children>a::after {
+    content: '';
+    transition: transform 200ms;
+}
+
+.main-menu li.expanded>a::after {
+    transform: rotate(180deg);
+}
+
 @media (min-width:1400px) {
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
@@ -656,11 +665,11 @@ section.main .content-container:has(#vandaagschermtop) {
 }
 
 #st-vd-schedule>ul>li[data-filler]>span:nth-child(1):after {
-    content: attr(data-filler)
+    content: ' ' attr(data-filler)
 }
 
 #st-vd-schedule>ul:not([data-tomorrow])>li[data-current]:not([data-filler])>span:nth-child(1):after {
-    content: " (nu)"
+    content: ' (nu)'
 }
 
 #st-vd-schedule>ul>li:not([data-filler])>span:nth-child(2) {

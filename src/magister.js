@@ -189,7 +189,7 @@ async function displayScheduleList(agendaElems, container) {
             })
         } else {
             elementWrapper.dataset.filler = true
-            elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? ' pauze' : ' lesvrij'
+            elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
         }
 
         height = ((dateEnd - dateStart) / 50000) + 'px'

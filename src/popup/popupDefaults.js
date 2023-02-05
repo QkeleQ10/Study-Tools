@@ -111,6 +111,7 @@ const defaults = {
             "color": "#000000"
         }
     ],
+    "magister-css-experimental": true,
     "magister-periods": "30, 47, 9",
     "magister-css-hue": 207,
     "magister-css-saturation": 95,
