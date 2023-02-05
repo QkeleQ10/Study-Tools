@@ -202,11 +202,19 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 
 .main-menu li.children>a::after {
     content: '';
-    transition: transform 200ms;
+    transition: transform 200ms, translate 200ms;
+}
+
+.main-menu li.children:active>a::after {
+    translate: 0 6px;
 }
 
 .main-menu li.expanded>a::after {
     transform: rotate(180deg);
+}
+
+.main-menu li.expanded:active>a::after {
+    translate: 0 -6px;
 }
 
 @media (min-width:1400px) {
