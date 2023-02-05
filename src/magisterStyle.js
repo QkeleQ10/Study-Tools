@@ -546,7 +546,7 @@ section.main .content-container:has(#vandaagschermtop) {
 
 #st-vd-schedule>a {
     position: absolute;
-    top: 0;
+    top: 10px;;
     right: 0;
     padding: 10px;
     margin: -10px;
