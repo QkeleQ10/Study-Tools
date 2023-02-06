@@ -538,15 +538,6 @@ section.main .content-container:has(#vandaagschermtop) {
     height: 100%;
 }
 
-@media (max-width:1150px) {
-    #st-vd {
-        grid-template: 
-            'schedule' 1fr
-            'notifications' auto
-            / 1fr
-    }
-}
-
 #st-vd *[onclick] {
     cursor: pointer;
     transition: filter 200ms, transform 200ms;
@@ -717,12 +708,14 @@ section.main .content-container:has(#vandaagschermtop) {
 
 #st-vd-notifications:not(:empty):before {
     content: 'Meldingen';
-    padding: 0 25px;
+    padding: 20px 25px;
+    line-height: normal;
     font: var(--st-widget-heading-font);
 }
 
 #st-vd-notifications {
     min-width: 300px;
+    max-width: 500px;
     min-height: 60px;
     color: var(--st-primary-color);
     border: var(--st-widget-border);
@@ -770,9 +763,12 @@ section.main .content-container:has(#vandaagschermtop) {
 }
 
 #st-vd-unread-notification>li {
-    padding: 0 25px;
+    padding: 20px 25px;
+    line-height: normal;
     color: var(--st-primar-color);
     background: linear-gradient(45deg,var(--st-highlight-background),var(--st-primary-background));
+    text-indent: -6.75em;
+    padding-left: calc(25px + 6.75em);
 }
 
 #st-vd-unread-assignment-notification:before {
@@ -789,6 +785,19 @@ section.main .content-container:has(#vandaagschermtop) {
 #st-vd-unread-assignment-notification>span:not(:last-child):after {
     content: ' • ';
     opacity: .6;
+}
+
+@media (max-width:1150px) {
+    #st-vd {
+        grid-template: 
+            'schedule' 1fr
+            'notifications' auto
+            / 1fr
+    }
+    
+    #st-vd-notifications {
+        max-width: 100vw;
+    }
 }
 `, 'study-tools-vd-overhaul')
     }

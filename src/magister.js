@@ -14,7 +14,7 @@ async function vandaag() {
 
     // Schedule
     {
-        let agendaTodayElems = await getElement('.agenda-list:first-child>li, .agenda-list:nth-child(2)>li', true),
+        let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true),
             scheduleTodayContainer = document.createElement('ul'),
             scheduleTomorrowContainer = document.createElement('ul'),
             scheduleDaySwitcher = document.createElement('a')
@@ -27,7 +27,8 @@ async function vandaag() {
 
         setTimeout(async () => {
             let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4'),
-                agendaTomorrowElems = await getElement('.agenda-list:not(.ng-hide):last-of-type>li', true)
+                agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true)
+            if (!agendaTomorrowTitle, agendaTomorrowElems) return
             displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
             scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle.innerText.replace('Wijzigingen voor ', '')}`
             scheduleDaySwitcher.addEventListener('click', () => {
@@ -81,7 +82,7 @@ async function vandaag() {
                     element.innerText = `${amount} ${description}`
                     element.setAttribute('onclick', `window.location.href = '${href}'`)
                     unreadAssignmentWrapper.append(element)
-                    unreadAssignmentCount += Number(amount) || 0
+                    if (!description.includes('deadline')) unreadAssignmentCount += Number(amount) || 0
                 } else {
                     element.innerText = `${amount} ${description}`
                     element.setAttribute('onclick', `window.location.href = '${href}'`)
@@ -154,7 +155,8 @@ async function displayScheduleList(agendaElems, container) {
         events.push({ time, title, period, dateStart, dateEnd, href, tooltip })
 
         if (a[i + 1]) {
-            let timeNext = a[i + 1].querySelector('.time').innerText
+            let timeNext = a[i + 1]?.querySelector('.time')?.innerText
+            if (!timeNext) return
             dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
             dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
 
