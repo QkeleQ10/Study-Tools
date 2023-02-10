@@ -53,6 +53,7 @@ async function applyStyles() {
     --st-a-color: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
+    --st-hover-brightness: .8;
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
@@ -73,6 +74,7 @@ async function applyStyles() {
     --st-a-color: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
+    --st-hover-brightness: 1.4;
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
@@ -139,7 +141,7 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     border: none;
     color: var(--st-primary-color);
     cursor: pointer;
-    transition: filter .1s
+    transition: filter 200ms;
 }
 
 .st-sw-subject>button:first-child {
@@ -190,7 +192,7 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 .st-sw-selected,
 .st-sw-subject:has(.st-sw-selected)>button:first-child,
 .st-sw-subject>button:hover {
-    filter: brightness(.85)
+    filter: brightness(var(--st-hover-brightness))
 }
 
 .st-current-sw>div>div>footer.endlink,
@@ -376,7 +378,7 @@ input[type=checkbox]+label span {
     outline-color: var(--st-primary-border-color) !important
 }
 
-ul>li:has(a):not(:has(.content)):hover,
+ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
 .k-dropdown-wrap.k-state-hover,
 .k-scheduler .k-event:hover,
 .sm-grid.k-grid .k-grid-content tr:hover,
@@ -388,7 +390,7 @@ ul>li:has(a):not(:has(.content)):hover,
 table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover,
 .k-dropdown .k-dropdown-wrap.k-state-active,
 input[type=radio]~label:hover {
-    filter: brightness(.85);
+    filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
 
@@ -473,7 +475,7 @@ span.nrblock {
 }
 
 .endlink a:hover {
-    filter: brightness(.85)
+    filter: brightness(var(--st-hover-brightness))
 }
 
 .widget .endlink a:after {
@@ -515,7 +517,7 @@ a.appbar-button,
 }
 `, 'study-tools-experimental')
 
-        createStyle(`.block.grade-widget{background:var(--st-primary-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-primary-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-widget-heading-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-widget-heading-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
+        // createStyle(`.block.grade-widget{background:var(--st-primary-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-primary-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-widget-heading-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-widget-heading-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
     }
 
     if (await getSetting('magister-vd-overhaul')) {
@@ -532,6 +534,7 @@ section.main .content-container:has(#vandaagschermtop) {
     display: grid;
     grid-template: 
         'schedule notifications' 1fr
+        'schedule shortcuts' auto
         / 1fr auto;
     gap: 25px;
     position: relative;
@@ -540,16 +543,18 @@ section.main .content-container:has(#vandaagschermtop) {
 
 #st-vd *[onclick] {
     cursor: pointer;
-    transition: filter 200ms, transform 200ms;
+    transition: color 200ms, filter 200ms, transform 200ms;
 }
 
 #st-vd *[onclick]:hover {
-    filter: brightness(.85);
+    color: var(--st-a-color);
+    filter: brightness(var(--st-hover-brightness));
 }
 
 #st-vd-schedule {
     position: relative;
     min-width: 300px;
+    grid-area: schedule;
 }
 
 #st-vd-schedule>a {
@@ -563,6 +568,10 @@ section.main .content-container:has(#vandaagschermtop) {
     font-size: 20px;
     user-select: none;
     transition: filter 200ms, transform 200ms;
+}
+
+#st-vd-schedule:not(:has(ul[data-hidden])) > a {
+    display: none;
 }
 
 #st-vd-schedule>a:hover {
@@ -585,7 +594,7 @@ section.main .content-container:has(#vandaagschermtop) {
     transition: scale 200ms, translate 200ms;
 }
 
-#st-vd-schedule>ul:empty:after, #st-vd-schedule>ul:has(li[data-filler]:first-child:last-child):after {
+#st-vd-schedule>ul:not(:has(li:not([data-filler]))):after {
     content: 'Geen afspraken';
     position: absolute;
     top: 35px;
@@ -653,8 +662,8 @@ section.main .content-container:has(#vandaagschermtop) {
     background: var(--st-highlight-background) !important;
 }
 
-#st-vd-schedule>ul:not([data-tomorrow])>li[data-past] {
-    opacity: 0.6;
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-past]>span:nth-child(3) {
+    opacity: 0.5;
 }
 
 #st-vd-schedule>ul>li[data-filler]>span:nth-child(1) {
@@ -706,33 +715,27 @@ section.main .content-container:has(#vandaagschermtop) {
     background: linear-gradient(45deg, var(--st-primary-background), var(--st-highlight-background));
 }
 
-#st-vd-notifications:not(:empty):before {
-    content: 'Meldingen';
-    padding: 20px 25px;
-    line-height: normal;
-    font: var(--st-widget-heading-font);
-}
-
 #st-vd-notifications {
     min-width: 300px;
     max-width: 500px;
     min-height: 60px;
+    background: var(--st-primary-background);
     color: var(--st-primary-color);
     border: var(--st-widget-border);
     border-radius: var(--st-widget-border-radius);
     font-family: var(--st-secondary-font-family);
     overflow: hidden;
+    grid-area: notifications;
 }
 
-#st-vd-notifications:empty:after {
-    content: 'Geen meldingen';
-    position: absolute;
-    top: 50%;
-    translate: 0 -50%;
-    width: 100%;
+#st-vd-notifications:before {
+    content: 'Meldingen';
+    padding: 20px 25px;
     font: var(--st-widget-heading-font);
-    padding: 0 25px;
-    opacity: .6;
+}
+
+#st-vd-notifications:empty {
+    display: none;
 }
 
 #st-vd-notifications>*,#st-vd-unread-notification>li:not(:first-child) {
@@ -767,24 +770,36 @@ section.main .content-container:has(#vandaagschermtop) {
     line-height: normal;
     color: var(--st-primar-color);
     background: linear-gradient(45deg,var(--st-highlight-background),var(--st-primary-background));
-    text-indent: -6.75em;
-    padding-left: calc(25px + 6.75em);
 }
 
-#st-vd-unread-assignment-notification:before {
-    content: attr(data-assignments) ' opdrachten: ';
+#st-vd-unread-notification>li[data-additional-info]:after {
+    content: '\\A' attr(data-additional-info);
+    opacity: 0.8;
+    font-weight: 400;
+    white-space: pre; 
 }
 
-#st-vd-unread-assignment-notification>span {
+#st-vd-shortcuts {
+    min-width: 300px;
+    max-width: 500px;
+    min-height: 60px;
+    background: var(--st-primary-background);
+    color: var(--st-primary-color);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    font-family: var(--st-secondary-font-family);
+    overflow: hidden;
+    grid-area: shortcuts;
+}
+
+#st-vd-shortcuts:before {
+    content: 'Snelkoppelingen';
+    padding: 20px 25px;
     font: var(--st-widget-heading-font);
-    font-size: 16px;
-    font-weight: normal;
-    line-height: normal;
 }
 
-#st-vd-unread-assignment-notification>span:not(:last-child):after {
-    content: ' • ';
-    opacity: .6;
+#st-vd-shortcuts:empty {
+    display: none;
 }
 
 @media (max-width:1150px) {
@@ -792,10 +807,11 @@ section.main .content-container:has(#vandaagschermtop) {
         grid-template: 
             'schedule' 1fr
             'notifications' auto
+            'shortcuts' auto
             / 1fr
     }
     
-    #st-vd-notifications {
+    #st-vd-notifications, #st-vd-shortcuts {
         max-width: 100vw;
     }
 }

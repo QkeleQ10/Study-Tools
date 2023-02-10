@@ -7,9 +7,10 @@ async function vandaag() {
     let mainSection = await getElement('section.main'),
         container = document.createElement('div'),
         scheduleWrapper = document.createElement('div'),
-        notifcationsWrapper = document.createElement('div')
+        notifcationsWrapper = document.createElement('div'),
+        shortcutWrapper = document.createElement('div')
     mainSection.append(container)
-    container.append(scheduleWrapper, notifcationsWrapper)
+    container.append(scheduleWrapper, notifcationsWrapper, shortcutWrapper)
     container.id = 'st-vd'
 
     // Schedule
@@ -19,9 +20,17 @@ async function vandaag() {
             scheduleTomorrowContainer = document.createElement('ul'),
             scheduleDaySwitcher = document.createElement('a')
 
-        scheduleWrapper.append(scheduleTodayContainer, scheduleTomorrowContainer, scheduleDaySwitcher)
+        scheduleWrapper.append(scheduleTodayContainer, scheduleDaySwitcher)
         scheduleWrapper.id = 'st-vd-schedule'
         scheduleTomorrowContainer.dataset.hidden = true
+        scheduleDaySwitcher.innerText = ''
+        scheduleDaySwitcher.title = `Van dag wisselen`
+        scheduleDaySwitcher.addEventListener('click', () => {
+            let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
+                shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
+            hidden.removeAttribute('data-hidden')
+            shown.setAttribute('data-hidden', true)
+        })
 
         displayScheduleList(agendaTodayElems, scheduleTodayContainer)
 
@@ -29,16 +38,9 @@ async function vandaag() {
             let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4'),
                 agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true)
             if (!agendaTomorrowTitle, agendaTomorrowElems) return
-            displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
+            scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
             scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle.innerText.replace('Wijzigingen voor ', '')}`
-            scheduleDaySwitcher.addEventListener('click', () => {
-                let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
-                    shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
-                hidden.removeAttribute('data-hidden')
-                shown.setAttribute('data-hidden', true)
-            })
-            scheduleDaySwitcher.innerText = ''
-            scheduleDaySwitcher.title = `Van dag wisselen`
+            displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
         }, 500)
     }
 
@@ -48,21 +50,16 @@ async function vandaag() {
             lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
             unreadItems = await getElement('#notificatie-widget ul>li.unread', true),
             gradeNotification = document.createElement('div'),
-            unreadWrapper = document.createElement('ul'),
-            unreadAssignmentWrapper = document.createElement('li'),
-            unreadAssignmentCount = 0
+            unreadWrapper = document.createElement('ul')
 
         notifcationsWrapper.append(gradeNotification, unreadWrapper)
         notifcationsWrapper.id = 'st-vd-notifications'
         gradeNotification.id = 'st-vd-grade-notification'
         gradeNotification.innerText = lastGrade.innerText
         gradeNotification.dataset.gradePrefix = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
-
         if (lastGrade.innerText === '-' || lastGradeDescription.innerTExt === 'geen cijfers') gradeNotification.remove()
 
         unreadWrapper.id = 'st-vd-unread-notification'
-        unreadWrapper.append(unreadAssignmentWrapper)
-        unreadAssignmentWrapper.id = 'st-vd-unread-assignment-notification'
 
         setTimeout(() => {
             unreadItems.forEach((e, i, a) => {
@@ -73,28 +70,21 @@ async function vandaag() {
                     href = e.firstElementChild.href,
                     element = document.createElement('li')
 
-
-                if (description.includes('opdracht')) {
-                    element = document.createElement('span')
-                    if (description.includes('deadline')) description = 'met naderende deadline'
-                    else if (description.includes('openstaand')) description = 'openstaand'
-                    else if (description.includes('beoordeeld')) description = 'beoordeeld'
-                    element.innerText = `${amount} ${description}`
-                    element.setAttribute('onclick', `window.location.href = '${href}'`)
-                    unreadAssignmentWrapper.append(element)
-                    if (!description.includes('deadline')) unreadAssignmentCount += Number(amount) || 0
+                if (description.includes('deadline')) {
+                    document.querySelector('#st-vd-unread-open-assignments').dataset.additionalInfo = `waarvan ${amount} met naderende deadline`
                 } else {
                     element.innerText = `${amount} ${description}`
                     element.setAttribute('onclick', `window.location.href = '${href}'`)
                     unreadWrapper.append(element)
+                    if (description.includes('openstaand')) element.id = 'st-vd-unread-open-assignments'
                 }
             })
-
-            unreadAssignmentWrapper.dataset.assignments = unreadAssignmentCount
-            if (unreadAssignmentCount === 0) unreadAssignmentWrapper.remove()
-            if (!unreadWrapper.firstElementChild) unreadWrapper.remove()
         }, unreadItems[0].firstElementChild.innerText.includes('?') ? 1000 : 0)
+    }
 
+    // Shortcuts
+    {
+        shortcutWrapper.id = 'st-vd-shortcuts'
     }
 
 }
@@ -172,6 +162,8 @@ async function displayScheduleList(agendaElems, container) {
             elementWrapper = document.createElement('li'),
             elementTime = document.createElement('span'),
             elementTitle = document.createElement('span'),
+            elementTitleBold = document.createElement('b'),
+            elementTitleNormal = document.createElement('span'),
             elementPeriod = document.createElement('span'),
             elementTooltip = document.createElement('span'),
             now = new Date(),
@@ -197,7 +189,9 @@ async function displayScheduleList(agendaElems, container) {
 
         elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
         elementTime.innerText = time || ''
-        elementTitle.innerHTML = '<b>' + (subject || title?.split(' (')[0] || '') + '</b>' + (title?.replace(searchString, '') || '')
+        elementTitleBold.innerText = subject || title?.split(' (')[0] || ''
+        elementTitleNormal.innerText = title?.replace(searchString, '') || ''
+        elementTitle.append(elementTitleBold, elementTitleNormal)
         elementPeriod.innerText = period || ''
         elementTooltip.innerText = tooltip || ''
         elementWrapper.style.height = height
