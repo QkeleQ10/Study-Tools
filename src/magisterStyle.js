@@ -306,7 +306,12 @@ aside .block .content,
 dl.list-dl,
 footer.endlink,
 table.table-grid-layout th,
-td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li:hover, .projects li:hover {
+td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li:hover, .projects li:hover,
+.collapsed-menu .popup-menu,
+.collapsed-menu #faux-label,
+.collapsed-menu .popup-menu ul li a:hover,
+.toast,
+.alert-toast i {
     background: var(--st-primary-background)
 }
 
@@ -328,6 +333,12 @@ a:not(.user-content a), table.table-grid-layout td a {
     color: var(--st-a-color);
     text-decoration: none;
     overflow-wrap: anywhere
+}
+
+.collapsed-menu .popup-menu h3,
+.collapsed-menu #faux-label,
+.collapsed-menu .popup-menu ul li a:hover {
+    color: var(--st-a-color);
 }
 
 .alert a:hover,
@@ -373,9 +384,16 @@ form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
 .projects li.selected, .projects li:hover,
 .studiewijzer-onderdeel div.content ul>li,
 table.table-grid-layout,
-input[type=checkbox]+label span {
+input[type=checkbox]+label span, 
+.collapsed-menu .popup-menu,
+.collapsed-menu #faux-label {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
+}
+
+.collapsed-menu .popup-menu::after,
+.collapsed-menu li:hover span::after {
+    border-right: 6px solid var(--st-primary-border-color) !important;
 }
 
 ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
@@ -389,7 +407,8 @@ ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
 .widget .list li:hover,
 table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover,
 .k-dropdown .k-dropdown-wrap.k-state-active,
-input[type=radio]~label:hover {
+input[type=radio]~label:hover,
+.collapsed-menu .popup-menu ul li a:hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
@@ -436,7 +455,8 @@ td,
 th,
 .k-scheduler .k-event,
 .block .content p:not(.user-content p),
-form .radio input[type=radio]:checked~label {
+form .radio input[type=radio]:checked~label,
+.toast em {
     font-family: var(--st-secondary-font-family);
     color: var(--st-primary-color)
 }
@@ -515,6 +535,14 @@ a.appbar-button,
 .main-menu li.expanded:active>a::after {
     translate: 0 -6px;
 }
+
+.alert-toast:before {
+    background-color: var(--st-accent-warn);
+}
+
+.alert-toast, .alert-toast i {
+    border-color: var(--st-accent-warn);
+}
 `, 'study-tools-experimental')
 
         // createStyle(`.block.grade-widget{background:var(--st-primary-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-primary-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-widget-heading-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-widget-heading-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
@@ -522,8 +550,8 @@ a.appbar-button,
 
     if (await getSetting('magister-vd-overhaul')) {
         createStyle(`
-section.main .content-container:has(#vandaagschermtop) {
-    display: none !important
+#vandaag-container .main .content-container {
+    display: none !important;
 }
 
 #vandaag-container .main {
@@ -535,7 +563,7 @@ section.main .content-container:has(#vandaagschermtop) {
     grid-template: 
         'schedule notifications' 1fr
         'schedule shortcuts' auto
-        / 1fr auto;
+        / calc(65% - 25px) 35%;
     gap: 25px;
     position: relative;
     height: 100%;
@@ -551,9 +579,20 @@ section.main .content-container:has(#vandaagschermtop) {
     filter: brightness(var(--st-hover-brightness));
 }
 
+#st-vd>*:not([ready]):empty:after {
+    content: 'Wachten op items...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    font: var(--st-widget-heading-font);
+    opacity: .6;
+}
+
 #st-vd-schedule {
     position: relative;
-    min-width: 300px;
+    width: 100%;
+    height: 100%
     grid-area: schedule;
 }
 
@@ -587,7 +626,7 @@ section.main .content-container:has(#vandaagschermtop) {
     top: 0;
     left: 0;
     width: 100%;
-    min-height: 300px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -595,9 +634,11 @@ section.main .content-container:has(#vandaagschermtop) {
 }
 
 #st-vd-schedule>ul:not(:has(li:not([data-filler]))):after {
-    content: 'Geen afspraken';
+    content: 'Geen items';
     position: absolute;
-    top: 35px;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
     font: var(--st-widget-heading-font);
     opacity: .6;
 }
@@ -716,9 +757,8 @@ section.main .content-container:has(#vandaagschermtop) {
 }
 
 #st-vd-notifications {
-    min-width: 300px;
-    max-width: 500px;
-    min-height: 60px;
+    width: 100%;
+    height: 100%
     background: var(--st-primary-background);
     color: var(--st-primary-color);
     border: var(--st-widget-border);
@@ -780,9 +820,8 @@ section.main .content-container:has(#vandaagschermtop) {
 }
 
 #st-vd-shortcuts {
-    min-width: 300px;
-    max-width: 500px;
-    min-height: 60px;
+    width: 100%;
+    height: 100%
     background: var(--st-primary-background);
     color: var(--st-primary-color);
     border: var(--st-widget-border);
@@ -810,12 +849,29 @@ section.main .content-container:has(#vandaagschermtop) {
             'shortcuts' auto
             / 1fr
     }
-    
-    #st-vd-notifications, #st-vd-shortcuts {
-        max-width: 100vw;
-    }
 }
 `, 'study-tools-vd-overhaul')
+    }
+
+    if (await getSetting('magister-sw-grid')) {
+        createStyle(`
+#st-sw-container {
+    display: block !important
+}
+
+#studiewijzer-container aside,
+#studiewijzer-container .content-container,
+#studiewijzer-detail-container .widget.full-height .block {
+    display: none !important;
+}
+
+#studiewijzer-container {
+    padding-right: 8px
+}
+
+.sidecolumn section.main {
+    padding-bottom: 0 !important
+}`, 'study-tools-sw-grid')
     }
 
     if (await getSetting('magister-cf-failred')) {

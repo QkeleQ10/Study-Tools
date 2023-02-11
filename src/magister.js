@@ -10,38 +10,15 @@ async function vandaag() {
         notifcationsWrapper = document.createElement('div'),
         shortcutWrapper = document.createElement('div')
     mainSection.append(container)
-    container.append(scheduleWrapper, notifcationsWrapper, shortcutWrapper)
     container.id = 'st-vd'
+    container.append(scheduleWrapper, notifcationsWrapper, shortcutWrapper)
+    scheduleWrapper.id = 'st-vd-schedule'
+    notifcationsWrapper.id = 'st-vd-notifications'
+    shortcutWrapper.id = 'st-vd-shortcuts'
 
-    // Schedule
+    // Shortcuts
     {
-        let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true),
-            scheduleTodayContainer = document.createElement('ul'),
-            scheduleTomorrowContainer = document.createElement('ul'),
-            scheduleDaySwitcher = document.createElement('a')
-
-        scheduleWrapper.append(scheduleTodayContainer, scheduleDaySwitcher)
-        scheduleWrapper.id = 'st-vd-schedule'
-        scheduleTomorrowContainer.dataset.hidden = true
-        scheduleDaySwitcher.innerText = ''
-        scheduleDaySwitcher.title = `Van dag wisselen`
-        scheduleDaySwitcher.addEventListener('click', () => {
-            let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
-                shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
-            hidden.removeAttribute('data-hidden')
-            shown.setAttribute('data-hidden', true)
-        })
-
-        displayScheduleList(agendaTodayElems, scheduleTodayContainer)
-
-        setTimeout(async () => {
-            let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4'),
-                agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true)
-            if (!agendaTomorrowTitle, agendaTomorrowElems) return
-            scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
-            scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle.innerText.replace('Wijzigingen voor ', '')}`
-            displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
-        }, 500)
+        shortcutWrapper.dataset.ready = true
     }
 
     // Notifications and grades
@@ -53,7 +30,6 @@ async function vandaag() {
             unreadWrapper = document.createElement('ul')
 
         notifcationsWrapper.append(gradeNotification, unreadWrapper)
-        notifcationsWrapper.id = 'st-vd-notifications'
         gradeNotification.id = 'st-vd-grade-notification'
         gradeNotification.innerText = lastGrade.innerText
         gradeNotification.dataset.gradePrefix = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
@@ -80,13 +56,41 @@ async function vandaag() {
                 }
             })
         }, unreadItems[0].firstElementChild.innerText.includes('?') ? 1000 : 0)
+
+        notifcationsWrapper.dataset.ready = true
     }
 
-    // Shortcuts
+    // Schedule
     {
-        shortcutWrapper.id = 'st-vd-shortcuts'
-    }
+        let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000),
+            scheduleTodayContainer = document.createElement('ul'),
+            scheduleTomorrowContainer = document.createElement('ul'),
+            scheduleDaySwitcher = document.createElement('a')
 
+        scheduleWrapper.append(scheduleTodayContainer, scheduleDaySwitcher)
+        scheduleTomorrowContainer.dataset.hidden = true
+        scheduleDaySwitcher.innerText = ''
+        scheduleDaySwitcher.title = `Van dag wisselen`
+        scheduleDaySwitcher.addEventListener('click', () => {
+            let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
+                shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
+            hidden.removeAttribute('data-hidden')
+            shown.setAttribute('data-hidden', true)
+        })
+
+        displayScheduleList(agendaTodayElems, scheduleTodayContainer)
+
+        setTimeout(async () => {
+            let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4', 4000),
+                agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
+            if (!agendaTomorrowTitle, agendaTomorrowElems) return
+            scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
+            scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle?.innerText?.replace('Wijzigingen voor ', '') || 'morgen'}`
+            displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
+        }, 500)
+
+        scheduleWrapper.dataset.ready = true
+    }
 }
 
 async function studiewijzers() {
@@ -97,7 +101,7 @@ async function studiewijzers() {
 
 async function studiewijzer() {
     if (await getSetting('magister-sw-thisWeek')) {
-        let list = await getElement('ul:has(li.studiewijzer-onderdeel)'),
+        let list = await getElement('.studiewijzer-list>ul, .content.projects>ul'),
             titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(`(?<![0-9])(${await getWeekNumber()}){1}(?![0-9])`, "g")
 
@@ -210,14 +214,13 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         settingSubjects = await getSetting('magister-subjects'),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-        originalList = await getElement('ul:has(li[data-ng-repeat^="studiewijzer in items"])'),
+        originalList = await getElement('.studiewijzer-list>ul, .content.projects>ul'),
         originalItems = await getElement('li[data-ng-repeat^="studiewijzer in items"]', true),
         originalItemsArray = [...originalItems],
         gridWrapper = document.createElement('div'),
         grid = document.createElement('div')
 
     if (settingGrid) {
-        createStyle(`#st-sw-container{ display: block!important } #studiewijzer-container > aside, section.main >.content-container:has(.studiewijzer-list), div.full-height.widget > div.block:has(li[data-ng-repeat^="studiewijzer in items"]){ display: none!important } #studiewijzer-container{ padding-right: 8px }.sidecolumn section.main{ padding-bottom: 0!important } `, 'study-tools-sw-grid')
         gridContainer.appendChild(gridWrapper)
         gridWrapper.id = 'st-sw-container'
         gridWrapper.appendChild(grid)
