@@ -30,40 +30,35 @@ header {
     position: fixed;
     z-index: 100;
     width: 100%;
-    height: 7.5em;
+    height: 90px;
     box-sizing: border-box;
     background: var(--color);
     color: white;
-    padding: 1em;
+    padding: 12px;
     overflow: hidden;
 }
-
-header:after {
-    content: 'Wijzigingen opgeslagen!';
-    position: absolute;
-    top: 4.5em;
-    font-weight: bold;
-    opacity: 0;
-}
-
 
 html[data-section] header {
     cursor: pointer;
 }
 
 main {
-    padding-top: 7.5em;
+    padding-top: 90px;
 }
 
 section {
     position: absolute;
     translate: 360px;
     width: 100%;
-    height: calc(100% - 7.5em);
+    height: calc(100% - 90px);
     bottom: 0;
     box-sizing: border-box;
     overflow-x: hidden;
     pointer-events: none;
+}
+
+#sectionPicker {
+    height: calc(100% - 90px);
 }
 
 section.open {
@@ -84,12 +79,16 @@ h3,
 h4,
 h5,
 h6 {
-    margin: .5em 0;
+    margin: 6px 0;
 }
 
 header>h1 {
     margin: 0;
     translate: 0 6px;
+}
+
+h1 {
+    font-size: 24px;
 }
 
 h1:after {
@@ -98,12 +97,13 @@ h1:after {
 }
 
 h3 {
-    margin-top: 1em;
-    margin-left: .75em;
+    margin-top: 12px;
+    margin-left: 9px;
     display: flex;
     width: 100%;
     align-items: center;
     color: #777;
+    font-size: 14px;
 }
 
 i {
@@ -124,7 +124,7 @@ label,
     flex-direction: column;
     align-items: stretch;
     max-height: 100px;
-    padding: .75em;
+    padding: 9px;
     background: #fff;
     border-top: solid 1px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -136,7 +136,7 @@ label:last-child,
     border-bottom: solid 1px rgba(0, 0, 0, 0.1);
 }
 
-label:has(#magister-subjects),
+label.large,
 [role=listitem].long {
     max-height: 200vh !important;
 }
@@ -149,7 +149,7 @@ label>div:first-child,
     overflow: hidden;
 }
 
-label:has(input[type="checkbox"]) {
+label[data-checkbox] {
     display: grid;
     align-items: center;
     grid-template-columns: 1fr 40px;
@@ -245,20 +245,20 @@ html[data-section] #sectionPicker {
     position: absolute;
     font-family: 'material-icons';
     font-size: 24px;
-    translate: 0 -3px;
+    top: 52px;
 }
 
 header:active #sectionReturn {
-    translate: 4px -3px;
+    translate: 4px;
     scale: .8 1;
 }
 
-html[data-section]:has(header:active) section.open {
+html[data-section] header:active~main>section.open {
     translate: 10px;
 }
 
 html:not([data-section]) #sectionReturn {
-    translate: -40px -3px;
+    translate: -40px;
     scale: 1.2 1;
 }
 
@@ -297,6 +297,9 @@ input[type="checkbox"]:checked:after {
     color: #fff;
     content: 'done';
     translate: 16px;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
 }
 
 label:hover input[type="checkbox"] {
@@ -313,7 +316,7 @@ label:active input[type="checkbox"]:after {
     scale: .65;
 }
 
-label:has(input[type=range])>div {
+label[data-range]>div {
     position: absolute;
     top: 12px;
     right: 10px;
@@ -324,17 +327,17 @@ label:has(input[type=range])>div {
     font-size: 14px;
 }
 
-label:has(input[type=range])>div>.default-value {
+label[data-range]>div>.default-value {
     font-size: 11px;
     opacity: 0;
     text-align: end;
 }
 
-label:has(input[type=range]):hover>div>.default-value {
+label[data-range]:hover>div>.default-value {
     opacity: .8;
 }
 
-label:has(input[type=range])>div>.default-value:before {
+label[data-range]>div>.default-value:before {
     content: 'Standaard: ';
     font-size: 9px;
 }
@@ -422,7 +425,7 @@ input[type=password]:active {
     opacity: .5;
 }
 
-#magister-subjects .grid-subjects:last-child:not(:has(:focus)):after {
+#magister-subjects .grid-subjects:last-child:not(:focus, :focus-within):after {
     position: absolute;
     top: 0;
     left: 0;
@@ -433,7 +436,7 @@ input[type=password]:active {
     pointer-events: none;
 }
 
-#magister-subjects .grid-subjects:last-child:not(:has(:focus)):before {
+#magister-subjects .grid-subjects:last-child:not(:focus, :focus-within):before {
     position: absolute;
     top: 0;
     left: 0;
@@ -444,7 +447,7 @@ input[type=password]:active {
 }
 
 label>.grid-subjects {
-    margin-top: 1em;
+    margin-top: 12px;
 }
 
 details {
@@ -458,7 +461,7 @@ details>summary {
 }
 
 details[open]>summary {
-    margin-bottom: 0.5em;
+    margin-bottom: 6px;
 }
 
 details[open] .details-show-when-collapsed {
@@ -476,15 +479,6 @@ details[open] .details-show-when-collapsed {
 
 .hide {
     display: none;
-}
-
-.lgbt {
-    background: linear-gradient(180deg, #FE0000 16.66%, #FD8C00 16.66%, 33.32%, #FFE500 33.32%, 49.98%, #119F0B 49.98%, 66.64%, #0644B3 66.64%, 83.3%, #C22EDC 83.3%) !important;
-}
-
-*:has(.nice),
-*:has(.nice) * {
-    font-family: "Comic Sans MS", "Comic Sans", cursive !important;
 }
 
 input#magister-css-hue {
@@ -527,5 +521,38 @@ input#magister-css-luminance {
 
     to {
         transform: rotate(-359deg);
+    }
+}
+
+@-moz-document url-prefix() {
+    #sectionReturn {
+        top: 50px;
+    }
+
+    input[type="checkbox"]:checked:after {
+        font-size: 20px;
+    }
+
+    input[type="range"] {
+        height: 2px;
+        transition: height 200ms, margin 200ms;
+    }
+
+    input[type="range"]:hover,
+    input[type="range"]:active {
+        height: 8px;
+        margin: 4px 0 2px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        border: none;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: #fff;
+        outline: solid 1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0px 1px 10px -2px rgba(0, 0, 0, 0.75);
+        margin: -7px 0;
+        transition: box-shadow 200ms, scale 200ms, margin 200ms;
     }
 }

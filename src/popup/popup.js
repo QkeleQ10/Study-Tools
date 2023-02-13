@@ -8,6 +8,7 @@ async function init() {
     if (chrome?.storage) start = await getSettings(null, null, true)
 
     document.querySelectorAll('.bind-boolean').forEach(element => {
+        element.parentElement.dataset.checkbox = true
         let value = start[element.id]
         if (element.tagName === 'INPUT' && element.getAttribute('type') === 'checkbox') {
             element.checked = value
@@ -25,6 +26,7 @@ async function init() {
     })
 
     document.querySelectorAll('.bind-color').forEach(element => {
+        element.parentElement.dataset.range = true
         let value = start[element.id] || defaults[element.id]
         if (element.tagName === 'INPUT' && element.getAttribute('type') === 'range') {
             if (value) element.value = value
@@ -127,8 +129,6 @@ function pushSetting(key, value, element) {
     }
     diff[key] = value
     diffTimestamp = new Date().getTime()
-    if (String(value).toLowerCase().includes('lgbt')) document.querySelector('header').classList.add('lgbt')
-    if (value === '69420') document.querySelector('header').classList.add('nice')
 }
 
 function refreshConditionals() {
@@ -161,10 +161,10 @@ function refreshConditionals() {
 }
 
 function openSection(event) {
-    let targetSection = document.querySelector(`section[data-title="${event.currentTarget.dataset.section}"]`) || document.querySelector(`section[data-title="Algemeen"]`)
+    let targetSection = document.querySelector(`section[data-link="${event.currentTarget.dataset.section}"]`) || document.querySelector(`section[data-title="Algemeen"]`)
     document.querySelectorAll('section.open').forEach(e => e.classList.remove('open'))
     targetSection.classList.add('open')
-    document.getElementById('sectionName').innerText = event.currentTarget.dataset.section || 'Algemeen'
+    document.getElementById('sectionName').innerText = targetSection.dataset.title || 'Algemeen'
     document.documentElement.setAttribute('data-section', event.currentTarget.dataset.section || 'Algemeen')
 }
 

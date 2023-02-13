@@ -28,27 +28,39 @@
         </span>
     </header>
     <main>
-        <div role="list" id="sectionPicker">
-            <div>
-                <div role="listitem" data-section="Ontwikkelaar" class="if-no-update-url hide">
-                    Ontwikkelaar
-                    <i>Deze instellingen zijn alleen beschikbaar in de ontwikkelaarsmodus</i>
+        <div id="sectionPicker">
+            <div role="list">
+                <h3>Magister</h3>
+                <div role="listitem" data-section="magister-theme">
+                    Thema
+                    <i>Het thema en de kleuren van Magister wijzigen</i>
                 </div>
-                <div role="listitem" data-section="Magister - Vormgeving">
-                    Magister - Vormgeving
-                    <i>De opmaak van Magister aanpassen</i>
+                <div role="listitem" data-section="magister-login">
+                    Inloggen
+                    <i>Opties voor het automatisch inloggen op Magister wijzigen</i>
                 </div>
-                <div role="listitem" data-section="Magister - Overig">
-                    Magister - Overig
-                    <i>Overige instellingen voor Magister wijzigen</i>
+                <div role="listitem" data-section="magister-general">
+                    Algemeen
+                    <i>Allerlei instellingen voor Magister wijzigen</i>
                 </div>
-                <div role="listitem" data-section="Noordhoff">
-                    Noordhoff
+                <div role="listitem" data-section="magister-values">
+                    Globale waarden
+                    <i>Globaal gebruikte waarden voor Magister aanpassen</i>
+                </div>
+            </div>
+            <div role="list">
+                <h3>Noordhoff</h3>
+                <div role="listitem" data-section="noordhoff">
+                    Inloggen
                     <i>Instellingen voor Noordhoff wijzigen</i>
                 </div>
             </div>
-            <div>
+            <div role="list">
                 <h3>Over</h3>
+                <div role="listitem" data-section="dev" class="if-no-update-url hide">
+                    Ontwikkelaar
+                    <i>Deze instellingen zijn alleen beschikbaar in de ontwikkelaarsmodus</i>
+                </div>
                 <div role="listitem" class="long" disabled>
                     <div>
                         Ontwikkeld door <a href="https://QkeleQ10.GitHub.io" target="_blank">Quinten Althues</a>
@@ -71,29 +83,12 @@
                 </div>
             </div>
         </div>
+
         </div>
-        <section data-title="Ontwikkelaar">
+        </div>
+        <section data-title="Magister" data-link="magister-theme">
             <div role="list">
-                <label role="listitem" for="updates">
-                    <div>
-                        Updates aanbieden
-                        <i>Melding bij nieuwe versie</i>
-                    </div>
-                    <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
-                </label>
-                <label role="listitem" for="beta" data-appear-if="updates" data-version=1.2.5>
-                    <div>
-                        Bètaversies aanbieden
-                        <i>Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten.
-                            Je hebt altijd de keuze om de versie niet te installeren.</i>
-                    </div>
-                    <input type="checkbox" name="Bètaversies aanbieden" id="beta" class="bind-boolean">
-                </label>
-            </div>
-        </section>
-        <section data-title="Magister - Vormgeving">
-            <div role="list">
-                <h3>Algemeen</h3>
+                <h3>Thema</h3>
                 <label role="listitem" for="magister-css-experimental" data-version=2.0.1>
                     <div>
                         Verbeteringen aan uiterlijk
@@ -101,36 +96,6 @@
                     </div>
                     <input type="checkbox" name="Verbeteringen aan uiterlijk" id="magister-css-experimental"
                         class="bind-boolean">
-                </label>
-                <label role="listitem" for="magister-css-hue" data-appear-if="magister-css-experimental"
-                    data-version=2.0.1>
-                    Tint accentkleur
-                    <div>
-                        <span class="default-value">207°</span>
-                        <span><span class="current-value">207</span>°</span>
-                    </div>
-                    <input type="range" name="Tint accentkleur" id="magister-css-hue" class="bind-color"
-                        data-color-component="hue" min="0" max="360" step="1">
-                </label>
-                <label role="listitem" for="magister-css-saturation" data-appear-if="magister-css-experimental"
-                    data-version=2.0.1>
-                    Verzadiging accentkleur
-                    <div>
-                        <span class="default-value">95%</span>
-                        <span><span class="current-value">95</span>%</span>
-                    </div>
-                    <input type="range" name="Verzadiging accentkleur" id="magister-css-saturation" class="bind-color"
-                        data-color-component="saturation" min="0" max="100" step="1">
-                </label>
-                <label role="listitem" for="magister-css-luminance" data-appear-if="magister-css-experimental"
-                    data-version=2.0.1>
-                    Helderheid accentkleur
-                    <div>
-                        <span class="default-value">55%</span>
-                        <span><span class="current-value">55</span>%</span>
-                    </div>
-                    <input type="range" name="Helderheid accentkleur" id="magister-css-luminance" class="bind-color"
-                        data-color-component="luminance" min="0" max="100" step="1">
                 </label>
                 <label role="listitem" for="magister-css-dark" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
@@ -157,34 +122,43 @@
                         class="bind-boolean">
                 </label>
             </div>
-            <div role="list">
-                <h3>Vandaag</h3>
-                <label role="listitem" for="magister-vd-overhaul" data-version="2.2.1">
-                    Alternatieve startpagina
-                    <input type="checkbox" name="Alternatieve startpagina" id="magister-vd-overhaul"
-                        class="bind-boolean">
+            <div role="list" data-appear-if="magister-css-experimental">
+                <h3>Accentkleur</h3>
+                <label role="listitem" for="magister-css-hue" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
+                    Tint
+                    <div>
+                        <span class="default-value">207°</span>
+                        <span><span class="current-value">207</span>°</span>
+                    </div>
+                    <input type="range" name="Tint" id="magister-css-hue" class="bind-color" data-color-component="hue"
+                        min="0" max="360" step="1">
                 </label>
-            </div>
-            <div role="list">
-                <h3>Opdrachten</h3>
-                <label role="listitem" for="magister-op-oldgrey">
-                    Verstreken opdrachten grijs maken
-                    <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
-                        class="bind-boolean">
+                <label role="listitem" for="magister-css-saturation" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
+                    Verzadiging
+                    <div>
+                        <span class="default-value">95%</span>
+                        <span><span class="current-value">95</span>%</span>
+                    </div>
+                    <input type="range" name="Verzadiging" id="magister-css-saturation" class="bind-color"
+                        data-color-component="saturation" min="0" max="100" step="1">
                 </label>
-            </div>
-            <div role="list">
-                <h3>Cijfers</h3>
-                <label role="listitem" for="magister-cf-failred">
-                    Onvoldoendes rood kleuren
-                    <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred"
-                        class="bind-boolean">
+                <label role="listitem" for="magister-css-luminance" data-appear-if="magister-css-experimental"
+                    data-version=2.0.1>
+                    Helderheid
+                    <div>
+                        <span class="default-value">55%</span>
+                        <span><span class="current-value">55</span>%</span>
+                    </div>
+                    <input type="range" name="Helderheid" id="magister-css-luminance" class="bind-color"
+                        data-color-component="luminance" min="0" max="100" step="1">
                 </label>
             </div>
         </section>
-        <section data-title="Magister - Overig">
+        <section data-title="Magister" data-link="magister-login">
             <div role="list">
-                <h3>Inlogpagina</h3>
+                <h3>Inloggen</h3>
                 <label role="listitem" for="magisterLogin-enabled">
                     Automatisch inloggen
                     <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
@@ -213,6 +187,8 @@
                     <input type="email" name="Microsoft-e-mailadres" id="magisterLogin-email" class="bind-string">
                 </label>
             </div>
+        </section>
+        <section data-title="Magister" data-link="magister-general">
             <div role="list">
                 <h3>Zijbalk</h3>
                 <label role="listitem" for="magister-appbar-week">
@@ -227,6 +203,14 @@
                 <label role="listitem" for="magister-appbar-hidePicture">
                     Profielfoto verbergen
                     <input type="checkbox" name="Profielfoto verbergen" id="magister-appbar-hidePicture"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div role="list">
+                <h3>Vandaag</h3>
+                <label role="listitem" for="magister-vd-overhaul" data-version="2.2.1">
+                    Alternatieve pagina 'Vandaag'
+                    <input type="checkbox" name="Alternatieve pagina 'Vandaag'" id="magister-vd-overhaul"
                         class="bind-boolean">
                 </label>
             </div>
@@ -262,7 +246,25 @@
                 </label>
             </div>
             <div role="list">
-                <h3>Geavanceerd</h3>
+                <h3>Opdrachten</h3>
+                <label role="listitem" for="magister-op-oldgrey">
+                    Verstreken opdrachten grijs maken
+                    <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
+                        class="bind-boolean">
+                </label>
+            </div>
+            <div role="list">
+                <h3>Cijfers</h3>
+                <label role="listitem" for="magister-cf-failred">
+                    Onvoldoendes rood kleuren
+                    <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-failred"
+                        class="bind-boolean">
+                </label>
+            </div>
+        </section>
+        <section data-title="Magister" data-link="magister-values">
+            <div role="list">
+                <h3>Globale waarden</h3>
                 <label role="listitem" for="magister-periods">
                     <div>
                         Beginweken perioden
@@ -273,7 +275,7 @@
                 <label role="listitem" for="magister-subjects" class="large">
                     <div>
                         Vakken
-                        <i>Worden op dit moment alleen gebruikt om studiewijzers in te delen</i>
+                        <i>Worden gebruikt voor het indelen van studiewijzers en voor het opmaken van je rooster</i>
                     </div>
                     <div class="grid-subjects">
                         <i>Weergavenaam</i>
@@ -283,9 +285,9 @@
                 </label>
             </div>
         </section>
-        <section data-title="Noordhoff">
+        <section data-title="Noordhoff" data-link="noordhoff">
             <div role="list">
-                <h3>Inlogpagina</h3>
+                <h3>Inloggen</h3>
                 <label role="listitem" for="noordhoff-login-enabled">
                     Automatisch doorgaan
                     <input type="checkbox" name="Automatisch doorgaan" id="noordhoff-login-enabled"
@@ -294,6 +296,25 @@
                 <label role="listitem" for="noordhoff-login-entree">
                     Inloggen met Entree
                     <input type="checkbox" name="Inloggen met Entree" id="noordhoff-login-entree" class="bind-boolean">
+                </label>
+            </div>
+        </section>
+        <section data-title="Ontwikkelaar" data-link="dev">
+            <div role="list">
+                <label role="listitem" for="updates">
+                    <div>
+                        Updates aanbieden
+                        <i>Melding bij nieuwe versie</i>
+                    </div>
+                    <input type="checkbox" name="Updates aanbieden" id="updates" class="bind-boolean">
+                </label>
+                <label role="listitem" for="beta" data-appear-if="updates" data-version=1.2.5>
+                    <div>
+                        Bètaversies aanbieden
+                        <i>Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten.
+                            Je hebt altijd de keuze om de versie niet te installeren.</i>
+                    </div>
+                    <input type="checkbox" name="Bètaversies aanbieden" id="beta" class="bind-boolean">
                 </label>
             </div>
         </section>

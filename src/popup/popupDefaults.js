@@ -56,7 +56,7 @@ const defaults = {
             "color": "#000000"
         },
         {
-            "name": "Kunst",
+            "name": "Kunst algemeen",
             "aliases": "ku, kua",
             "color": "#000000"
         },

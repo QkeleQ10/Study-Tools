@@ -46,6 +46,7 @@ async function applyStyles() {
     --st-highlight-warn: #fff0f5;
     --st-total-background: #cdf4cd;
     --st-primary-color: #333333;
+    --st-insignificant-color: #888;
     --st-primary-border-color: #e7e7e7;
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
@@ -67,6 +68,7 @@ async function applyStyles() {
     --st-highlight-warn: #511f1f;
     --st-total-background: #2f462f;
     --st-primary-color: #fff;
+    --st-insignificant-color: #888;
     --st-primary-border-color: #333;
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
@@ -309,9 +311,11 @@ table.table-grid-layout th,
 td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li:hover, .projects li:hover,
 .collapsed-menu .popup-menu,
 .collapsed-menu #faux-label,
+.appbar .menu-button>a:hover>span,
 .collapsed-menu .popup-menu ul li a:hover,
 .toast,
-.alert-toast i {
+.alert-toast i,
+#vandaag-container .grade-widget ul {
     background: var(--st-primary-background)
 }
 
@@ -321,7 +325,8 @@ td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewij
     color: var(--st-primary-color) !important
 }
 
-.block h3, #studiewijzer-container div.studiewijzer-list div.head {
+.block h3, #studiewijzer-container div.studiewijzer-list div.head,
+table.table-grid-layout th {
     box-shadow: var(--st-widget-edges-box-shadow)
 }
 
@@ -337,6 +342,7 @@ a:not(.user-content a), table.table-grid-layout td a {
 
 .collapsed-menu .popup-menu h3,
 .collapsed-menu #faux-label,
+.appbar .menu-button>a:hover>span,
 .collapsed-menu .popup-menu ul li a:hover {
     color: var(--st-a-color);
 }
@@ -386,14 +392,18 @@ form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
 table.table-grid-layout,
 input[type=checkbox]+label span, 
 .collapsed-menu .popup-menu,
-.collapsed-menu #faux-label {
+.collapsed-menu #faux-label,
+.appbar .menu-button>a:hover>span,
+#vandaag-container .grade-widget ul {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
 }
 
 .collapsed-menu .popup-menu::after,
-.collapsed-menu li:hover span::after {
-    border-right: 6px solid var(--st-primary-border-color) !important;
+.collapsed-menu li:hover span::after,
+.appbar .menu-button>a:hover>span::after {
+    border-right: 5px solid var(--st-primary-border-color) !important;
+    left: -5px;
 }
 
 ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
@@ -405,7 +415,7 @@ ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
 .widget .list li.no-data a:hover,
 .widget .list li.no-data:hover,
 .widget .list li:hover,
-table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover, #st-vd a:hover,
+table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover,
 .k-dropdown .k-dropdown-wrap.k-state-active,
 input[type=radio]~label:hover,
 .collapsed-menu .popup-menu ul li a:hover {
@@ -562,11 +572,12 @@ a.appbar-button,
     display: grid;
     grid-template: 
         'schedule notifications' 1fr
-        'schedule shortcuts' auto
         / calc(65% - 25px) 35%;
     gap: 25px;
     position: relative;
     height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 #st-vd *[onclick] {
@@ -574,9 +585,21 @@ a.appbar-button,
     transition: color 200ms, filter 200ms, transform 200ms;
 }
 
-#st-vd *[onclick]:hover {
+#st-vd *[onclick]:hover, #st-vd *[href]:hover, #st-vd-notifications > #st-vd-grade-notification[onclick]:hover {
     color: var(--st-a-color);
     filter: brightness(var(--st-hover-brightness));
+}
+
+#st-vd a:hover, #st-vd-notifications > li:hover:before {
+    transform: scale(1.3);
+}
+
+#st-vd a:active, #st-vd-notifications > li:active:before {
+    transform: scale(.8);
+}
+
+#st-vd>* {
+    position: relative;
 }
 
 #st-vd>*:not([ready]):empty:after {
@@ -586,47 +609,45 @@ a.appbar-button,
     left: 50%;
     translate: -50% -50%;
     font: var(--st-widget-heading-font);
+    line-height: normal;
     opacity: .6;
 }
 
 #st-vd-schedule {
-    position: relative;
-    width: 100%;
-    height: 100%
     grid-area: schedule;
 }
 
-#st-vd-schedule>a {
+#st-vd-schedule>div {
+    display: flex;
+    gap: 20px;
     position: absolute;
-    top: 10px;;
+    top: 10px;
     right: 0;
-    padding: 10px;
-    margin: -10px;
+}
+
+#st-vd-schedule>div>a {
     font-family: 'Font Awesome 5 Pro';
     font-weight: 500;
     font-size: 20px;
     user-select: none;
+    padding: 10px;
+    margin: -10px;
     transition: filter 200ms, transform 200ms;
 }
 
-#st-vd-schedule:not(:has(ul[data-hidden])) > a {
+ul:only-of-type ~ div>#st-vd-schedule-switch {
     display: none;
 }
 
-#st-vd-schedule>a:hover {
+#st-vd-schedule-switch:hover {
     transform: rotate(15deg) scale(1.3);
 }
 
-#st-vd-schedule>a:active {
+#st-vd-schedule-switch:active {
     transform: rotate(180deg) scale(.8);
 }
 
 #st-vd-schedule>ul {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -757,97 +778,94 @@ a.appbar-button,
 }
 
 #st-vd-notifications {
-    width: 100%;
-    height: 100%
-    background: var(--st-primary-background);
     color: var(--st-primary-color);
     border: var(--st-widget-border);
     border-radius: var(--st-widget-border-radius);
-    font-family: var(--st-secondary-font-family);
-    overflow: hidden;
+    font: var(--st-widget-heading-font);
     grid-area: notifications;
 }
 
 #st-vd-notifications:before {
     content: 'Meldingen';
-    padding: 20px 25px;
+    display: block;
+    padding: 15px 25px;
+    width: 100%;
     font: var(--st-widget-heading-font);
+    line-height: normal;
+    border-bottom: var(--st-widget-border);
 }
 
 #st-vd-notifications:empty {
     display: none;
 }
 
-#st-vd-notifications>*,#st-vd-unread-notification>li:not(:first-child) {
-    border-top: var(--st-widget-border);
-}
-
-#st-vd-grade-notification {
-    font: var(--st-widget-heading-font);
-    font-size: 32px;
-    line-height: 80px;
-    text-align: center;
-    color: #fff;
-    background: linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary));
-}
-
-#st-vd-grade-notification:before {
-    display: inline-block;
-    translate: -10px -4px;
-    content: attr(data-grade-prefix);
-    font-size: 16px;
-}
-
-#st-vd-unread-notification {
-    font: var(--st-widget-heading-font);
-    font-size: 16px;
-    line-height: 60px;
-    text-align: start;
-}
-
-#st-vd-unread-notification>li {
-    padding: 20px 25px;
+#st-vd-notifications > li {
+    position: relative;
+    padding: 20px 60px 20px 25px;
     line-height: normal;
-    color: var(--st-primar-color);
+    color: var(--st-primary-color);
     background: linear-gradient(45deg,var(--st-highlight-background),var(--st-primary-background));
+    border-bottom: var(--st-widget-border);
 }
 
-#st-vd-unread-notification>li[data-additional-info]:after {
+#st-vd-notifications > li:first-letter {
+    text-transform: capitalize;
+}
+
+#st-vd-notifications > li[data-insignificant], #st-vd-notifications > #st-vd-grade-notification[data-insignificant] {
+    color: var(--st-insignificant-color);
+    background: var(--st-body-background);
+}
+
+#st-vd-notifications > li[data-additional-info]:after {
     content: '\\A' attr(data-additional-info);
     opacity: 0.8;
     font-weight: 400;
     white-space: pre; 
 }
 
-#st-vd-shortcuts {
-    width: 100%;
-    height: 100%
-    background: var(--st-primary-background);
-    color: var(--st-primary-color);
-    border: var(--st-widget-border);
-    border-radius: var(--st-widget-border-radius);
-    font-family: var(--st-secondary-font-family);
-    overflow: hidden;
-    grid-area: shortcuts;
+#st-vd-notifications > li:before {
+    content: attr(data-icon);
+    position: absolute;
+    right: 25px;
+    width: 22px;
+    text-align: center;
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 500;
+    font-size: 20px;
+    transition: transform 200ms;
 }
 
-#st-vd-shortcuts:before {
-    content: 'Snelkoppelingen';
-    padding: 20px 25px;
+#st-vd-notifications > #st-vd-grade-notification {
+    color: #fff;
+    background: var(--st-accent-primary);
+}
+
+#st-vd-notifications > #st-vd-grade-notification[data-grade]:after {
+    display: inline-block;
+    content: attr(data-grade);
     font: var(--st-widget-heading-font);
+    font-size: 32px;
+    line-height: normal;
+    vertical-align: -4px;
+    translate: 4px;
 }
 
-#st-vd-shortcuts:empty {
-    display: none;
-}
-
-@media (max-width:1150px) {
+@media (max-width:1100px) {
     #st-vd {
         grid-template: 
-            'schedule' 1fr
-            'notifications' auto
-            'shortcuts' auto
-            / 1fr
+        'schedule' 1fr
+        'notifications' auto
+        / 1fr;
+    }
+
+    #st-vd-notifications {
+        height: max-content;
+        overflow: hidden;
+    }
+
+    #st-vd-notifications > li[data-insignificant], #st-vd-notifications > #st-vd-grade-notification[data-insignificant] {
+        display: none;
     }
 }
 `, 'study-tools-vd-overhaul')
