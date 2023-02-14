@@ -30,7 +30,7 @@ async function vandaag() {
             gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
         gradeNotification.dataset.grade = lastGrade.innerText
         }
-        gradeNotification.setAttribute('onclick', `window.location.href = '"#/cijfers'`)
+        gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
         gradeNotification.dataset.icon = ''
         notifcationsWrapper.append(gradeNotification)
 
