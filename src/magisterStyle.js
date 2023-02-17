@@ -592,14 +592,14 @@ a.appbar-button,
     width: 100%;
     display: flex;
     padding: 2rem 1.5rem 1rem;
-    background: white;
+    background: var(--st-body-background);
     z-index: 1000;
     transition: opacity
 }
 
 #st-vd-header>span {
     font: 700 28px / 2rem arboria, sans-serif;
-    color: var(--st-accent-primary);
+    color: var(--st-a-color);
     transition: opacity 500ms;
 }
 
