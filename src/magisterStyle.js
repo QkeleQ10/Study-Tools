@@ -82,12 +82,28 @@ async function applyStyles() {
     --st-accent-info: #016695;
     color-scheme: dark;
 }`,
+        invertCss = `
+    .user-content, .content-auto.background-white {
+        filter: invert(1) hue-rotate(180deg);
+    }
+
+    .user-content ul, .user-content font, .user-content span, .user-content p, .block .content .user-content p, #opdracht-detail .list li.onecol p {
+        color: #000;
+    }
+    
+    .user-content iframe:not(:fullscreen), .user-content img {
+        filter: invert(1) hue-rotate(180deg);
+    }
+    
+    .content-auto.background-white {
+        background: #fff !important;
+        color: #000 !important;
+    }`,
         rootVars = `${lightThemeCss}
 ${await getSetting('magister-css-dark-auto') ? '@media (prefers-color-scheme: dark) {' : ''}
 ${await getSetting('magister-css-dark') ? darkThemeCss : ''}
+${await getSetting('magister-css-dark-invert') ? invertCss : ''}
 ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
-
-    // INVERSION!!
 
     createStyle(rootVars + `
 .st-sw-subject,
@@ -264,7 +280,8 @@ input[type=checkbox]+label span {
 .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade,
 .alert,
 .k-dropdown .k-dropdown-wrap.k-state-active,
-.projects li.selected {
+.projects li.selected,
+.agenda-lesdashboard aside .agenda-list li a.current {
     background: var(--st-highlight-background) !important;
     background-color: var(--st-highlight-background) !important
 }
@@ -394,7 +411,8 @@ input[type=checkbox]+label span,
 .collapsed-menu .popup-menu,
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
-#vandaag-container .grade-widget ul {
+#vandaag-container .grade-widget ul,
+.widget .dualcolumn-list li {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
 }

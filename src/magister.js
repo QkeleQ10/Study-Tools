@@ -400,7 +400,7 @@ async function init() {
         })
     })
 
-    if (Math.random() < 0.005) logos.forEach(e => e.classList.add('dvd-screensaver'))
+    if (Math.random() < 0.005) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 }
 
 // Run when the URL changes
