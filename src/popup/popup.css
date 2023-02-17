@@ -141,7 +141,7 @@ label.large,
     max-height: 200vh !important;
 }
 
-label>div:first-child,
+label>div:first-child:not(.range-values),
 #sectionPicker>div>div {
     display: flex;
     flex-direction: column;
@@ -316,7 +316,7 @@ label:active input[type="checkbox"]:after {
     scale: .65;
 }
 
-label[data-range]>div {
+label[data-range]>div, .range-values {
     position: absolute;
     top: 12px;
     right: 10px;
@@ -327,17 +327,17 @@ label[data-range]>div {
     font-size: 14px;
 }
 
-label[data-range]>div>.default-value {
+label[data-range]>div>.default-value, .range-values>.default-value {
     font-size: 11px;
     opacity: 0;
     text-align: end;
 }
 
-label[data-range]:hover>div>.default-value {
+label[data-range]:hover>div>.default-value, label:hover .range-values>.default-value {
     opacity: .8;
 }
 
-label[data-range]>div>.default-value:before {
+label[data-range]>div>.default-value:before, .range-values>.default-value:before {
     content: 'Standaard: ';
     font-size: 9px;
 }
@@ -479,6 +479,10 @@ details[open] .details-show-when-collapsed {
 
 .hide {
     display: none;
+}
+
+input[type=range] {
+    background: var(--color)
 }
 
 input#magister-css-hue {

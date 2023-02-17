@@ -25,6 +25,19 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
     })
 
+    document.querySelectorAll('.bind-number').forEach(element => {
+        let value = start[element.id] || defaults[element.id]
+        if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'range')) {
+            if (value) element.value = value
+            element.parentElement.querySelector('.current-value').innerText = Number(value).toLocaleString('nl-NL')
+            element.addEventListener('input', event => {
+                pushSetting(event.target.id, event.target.value, event.target)
+                event.target.parentElement.querySelector('.current-value').innerText = Number(event.target.value).toLocaleString('nl-NL')
+            })
+        }
+        if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
+    })
+
     document.querySelectorAll('.bind-color').forEach(element => {
         element.parentElement.dataset.range = true
         let value = start[element.id] || defaults[element.id]

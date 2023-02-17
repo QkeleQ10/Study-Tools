@@ -66,6 +66,11 @@ const defaults = {
             "color": "#000000"
         },
         {
+            "name": "Lichamelijke opvoeding",
+            "aliases": "lo",
+            "color": "#000000"
+        },
+        {
             "name": "Loopbaan&shy;oriëntatie en -begeleiding",
             "aliases": "lob",
             "color": "#000000"
@@ -115,5 +120,6 @@ const defaults = {
     "magister-periods": "30, 47, 9",
     "magister-css-hue": 207,
     "magister-css-saturation": 95,
-    "magister-css-luminance": 55
+    "magister-css-luminance": 55,
+    "magister-vd-agendaHeight": 100
 }

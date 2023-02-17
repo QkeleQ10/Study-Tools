@@ -6,110 +6,139 @@ async function vandaag() {
     if (!await getSetting('magister-vd-overhaul')) return
     let mainSection = await getElement('section.main'),
         container = document.createElement('div'),
+        header = document.createElement('div'),
+        headerText = document.createElement('span'),
         scheduleWrapper = document.createElement('div'),
         notifcationsWrapper = document.createElement('div')
-    mainSection.append(container)
+    mainSection.append(header, container)
+    header.id = 'st-vd-header'
+    header.append(headerText)
     container.id = 'st-vd'
     container.append(scheduleWrapper, notifcationsWrapper)
     scheduleWrapper.id = 'st-vd-schedule'
     notifcationsWrapper.id = 'st-vd-notifications'
 
-    // Notifications and grades
-    {
-        let lastGrade = await getElement('.block.grade-widget span.cijfer'),
-            lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
-            unreadItems = await getElement('#notificatie-widget ul>li', true),
-            gradeNotification = document.createElement('li')
+    vandaagNotifications(notifcationsWrapper)
+    vandaagSchedule(scheduleWrapper)
 
-        gradeNotification.id = 'st-vd-grade-notification'
-        
-        if (lastGrade.innerText === '-' || lastGradeDescription.innerTExt === 'geen cijfers') {
-            gradeNotification.innerText = 'Geen cijfers'
-            gradeNotification.dataset.insignificant = true
-        } else {
-            gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
-        gradeNotification.dataset.grade = lastGrade.innerText
+    const greetings = [
+        [22, 'Goedenavond', 'Goedenavond, nachtbraker'],
+        [18, 'Goedenavond', 'Hallo'],
+        [12, 'Goedemiddag', 'Hallo'],
+        [5, 'Goedemorgen', 'Goeiemorgen', 'Hallo'],
+        [0, 'Goedenacht', 'Goedemorgen, vroege vogel']
+    ],
+        hour = new Date().getHours()
+    greetings.forEach(e => {
+        if (hour >= e[0]) {
+            e.shift()
+            if (!headerText.innerText) headerText.innerText = e[Math.floor(Math.random() * e.length)]
         }
-        gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
-        gradeNotification.dataset.icon = ''
-        notifcationsWrapper.append(gradeNotification)
+    })
+    if (Math.random() < 0.01) headerText.innerText = "Bedankt voor het gebruiken van StudyTools"
+    if (Math.random() < 0.005) headerText.innerText = "Welkom op het Magister dat Iddink niet kon creëren"
 
-        unreadItems.forEach((e, i, a) => {
-            setTimeout(() => {
-                let amount = e.firstElementChild.firstElementChild.innerText,
-                    description = e.firstElementChild.innerText.replace(`${amount} `, ''),
-                    href = e.firstElementChild.href,
-                    element = document.createElement('li')
+    setTimeout(() => header.dataset.transition = true, 2000)
+    setTimeout(() => {
+        headerText.innerText = new Date().toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        if (Math.random() < 0.005) headerText.innerText = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
+        header.removeAttribute('data-transition')
+    }, 2500)
+}
 
-                if (description.includes('deadline')) {
-                    if (e.firstElementChild.innerText.includes('geen')) return
-                    document.querySelector('#st-vd-unread-open-assignments').dataset.additionalInfo = `waarvan ${amount} met naderende deadline`
-                } else {
-                    element.innerText = `${amount} ${description}`
-                    element.setAttribute('onclick', `window.location.href = '${href}'`)
-                    notifcationsWrapper.append(element)
-                    if (e.firstElementChild.innerText.includes('geen')) element.dataset.insignificant = true
-                    if (description.includes('openstaand')) {
-                        element.id = 'st-vd-unread-open-assignments'
-                        element.dataset.icon = ''
-                    } else if (description.includes('beoordeeld')) {
-                        element.dataset.icon = ''
-                    } else if (description.includes('activiteit')) {
-                        element.dataset.icon = ''
-                    } else if (description.includes('logboek')) {
-                        element.dataset.icon = ''
-                    }
+async function vandaagNotifications(notifcationsWrapper) {
+    let lastGrade = await getElement('.block.grade-widget span.cijfer'),
+        lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
+        unreadItems = await getElement('#notificatie-widget ul>li', true),
+        gradeNotification = document.createElement('li')
+
+    gradeNotification.id = 'st-vd-grade-notification'
+
+    if (lastGrade.innerText === '-' || lastGradeDescription.innerTExt === 'geen cijfers') {
+        gradeNotification.innerText = 'Geen cijfers'
+        gradeNotification.dataset.insignificant = true
+    } else {
+        gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
+        gradeNotification.dataset.grade = lastGrade.innerText
+    }
+    gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
+    gradeNotification.dataset.icon = ''
+    notifcationsWrapper.append(gradeNotification)
+
+    unreadItems.forEach((e, i, a) => {
+        setTimeout(() => {
+            let amount = e.firstElementChild.firstElementChild.innerText,
+                description = e.firstElementChild.innerText.replace(`${amount} `, ''),
+                href = e.firstElementChild.href,
+                element = document.createElement('li')
+
+            if (description.includes('deadline')) {
+                if (e.firstElementChild.innerText.includes('geen')) return
+                document.querySelector('#st-vd-unread-open-assignments').dataset.additionalInfo = `waarvan ${amount} met naderende deadline`
+            } else {
+                element.innerText = `${amount} ${description}`
+                element.setAttribute('onclick', `window.location.href = '${href}'`)
+                notifcationsWrapper.append(element)
+                if (e.firstElementChild.innerText.includes('geen')) element.dataset.insignificant = true
+                if (description.includes('openstaand')) {
+                    element.id = 'st-vd-unread-open-assignments'
+                    element.dataset.icon = ''
+                } else if (description.includes('beoordeeld')) {
+                    element.dataset.icon = ''
+                } else if (description.includes('activiteit')) {
+                    element.dataset.icon = ''
+                } else if (description.includes('logboek')) {
+                    element.dataset.icon = ''
                 }
-            }, e.firstElementChild.innerText.includes('?') ? 1000 : 0)
-        })
+            }
+        }, e.firstElementChild.innerText.includes('?') ? 1000 : 0)
+    })
 
-        notifcationsWrapper.dataset.ready = true
-    }
+    notifcationsWrapper.dataset.ready = true
+}
 
-    // Schedule
-    {
-        let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000),
-            scheduleTodayContainer = document.createElement('ul'),
-            scheduleTomorrowContainer = document.createElement('ul'),
-            scheduleButtonWrapper = document.createElement('div'),
-            scheduleDaySwitcher = document.createElement('a'),
-            scheduleLinkWeek = document.createElement('a'),
-            scheduleLinkList = document.createElement('a')
+async function vandaagSchedule(scheduleWrapper) {
+    let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000),
+        scheduleTodayContainer = document.createElement('ul'),
+        scheduleTomorrowContainer = document.createElement('ul'),
+        scheduleButtonWrapper = document.createElement('div'),
+        scheduleDaySwitcher = document.createElement('a'),
+        scheduleLinkWeek = document.createElement('a'),
+        scheduleLinkList = document.createElement('a')
 
-        scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
-        scheduleTomorrowContainer.dataset.hidden = true
-        scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList, scheduleDaySwitcher)
-        scheduleDaySwitcher.innerText = ''
-        scheduleDaySwitcher.id = 'st-vd-schedule-switch'
-        scheduleDaySwitcher.title = `Van dag wisselen`
-        scheduleDaySwitcher.addEventListener('click', () => {
-            let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
-                shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
-            hidden.removeAttribute('data-hidden')
-            shown.setAttribute('data-hidden', true)
-        })
-        scheduleLinkWeek.innerText = ''
-        scheduleLinkWeek.classList.add('st-vd-schedule-link')
-        scheduleLinkWeek.title = `Weekoverzicht`
-        scheduleLinkWeek.href = '#/agenda/werkweek'
-        scheduleLinkList.innerText = ''
-        scheduleLinkList.classList.add('st-vd-schedule-link')
-        scheduleLinkList.title = `Afsprakenlijst`
-        scheduleLinkList.href = '#/agenda'
+    scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
+    scheduleTomorrowContainer.dataset.hidden = true
+    scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList, scheduleDaySwitcher)
+    scheduleDaySwitcher.innerText = ''
+    scheduleDaySwitcher.id = 'st-vd-schedule-switch'
+    scheduleDaySwitcher.title = `Van dag wisselen`
+    scheduleDaySwitcher.addEventListener('click', () => {
+        let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
+            shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
+        hidden.removeAttribute('data-hidden')
+        shown.setAttribute('data-hidden', true)
+    })
+    scheduleLinkWeek.innerText = ''
+    scheduleLinkWeek.classList.add('st-vd-schedule-link')
+    scheduleLinkWeek.title = `Weekoverzicht`
+    scheduleLinkWeek.href = '#/agenda/werkweek'
+    scheduleLinkList.innerText = ''
+    scheduleLinkList.classList.add('st-vd-schedule-link')
+    scheduleLinkList.title = `Afsprakenlijst`
+    scheduleLinkList.href = '#/agenda'
 
-        displayScheduleList(agendaTodayElems, scheduleTodayContainer)
+    displayScheduleList(agendaTodayElems, scheduleTodayContainer)
 
-        setTimeout(async () => {
-            let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4', 4000),
-                agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
-            if (!agendaTomorrowTitle, agendaTomorrowElems) return
-            scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
-            scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle?.innerText?.replace('Wijzigingen voor ', '') || 'morgen'}`
-            displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
-        }, 500)
+    setTimeout(async () => {
+        let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4', 4000),
+            agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
+        if (!agendaTomorrowTitle, agendaTomorrowElems) return
+        scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
+        scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle?.innerText?.replace('Wijzigingen voor ', '') || 'morgen'}`
+        displayScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
+    }, 500)
 
-        scheduleWrapper.dataset.ready = true
-    }
+    scheduleWrapper.dataset.ready = true
 }
 
 async function studiewijzers() {
@@ -142,10 +171,10 @@ async function studiewijzer() {
     displayStudiewijzerArray(gridContainer, true)
 }
 
-
-
 async function displayScheduleList(agendaElems, container) {
-    let events = []
+    let events = [],
+        settingSubjects = await getSetting('magister-subjects'),
+        settingAgendaHeight = await getSetting('magister-vd-agendaHeight') || 50
 
     if (agendaElems) agendaElems.forEach((e, i, a) => {
         let time = e.querySelector('.time')?.innerText,
@@ -181,8 +210,7 @@ async function displayScheduleList(agendaElems, container) {
     })
 
     if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip }, a, i) => {
-        let settingSubjects = await getSetting('magister-subjects'),
-            elementWrapper = document.createElement('li'),
+        let elementWrapper = document.createElement('li'),
             elementTime = document.createElement('span'),
             elementTitle = document.createElement('span'),
             elementTitleBold = document.createElement('b'),
@@ -208,7 +236,7 @@ async function displayScheduleList(agendaElems, container) {
             elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
         }
 
-        height = ((dateEnd - dateStart) / 50000) + 'px'
+        height = ((0.0000222222 * settingAgendaHeight) * (dateEnd - dateStart)) + 'px'
 
         elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
         elementTime.innerText = time || ''
@@ -333,7 +361,8 @@ async function init() {
     window.addEventListener('popstate', popstate)
     window.addEventListener('locationchange', popstate)
 
-    let appbar = await getElement('.appbar')
+    let appbar = await getElement('.appbar'),
+        logos = await getElement('img.logo-expanded, img.logo-collapsed', true)
 
     subjects = await getSetting('magister-subjects')
 
@@ -370,6 +399,8 @@ async function init() {
             await setSetting('force-logout', new Date().getTime(), 'local')
         })
     })
+
+    if (Math.random() < 0.005) logos.forEach(e => e.classList.add('dvd-screensaver'))
 }
 
 // Run when the URL changes

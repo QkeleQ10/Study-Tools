@@ -127,7 +127,7 @@
                 <label role="listitem" for="magister-css-hue" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     Tint
-                    <div>
+                    <div class="range-values">
                         <span class="default-value">207°</span>
                         <span><span class="current-value">207</span>°</span>
                     </div>
@@ -137,7 +137,7 @@
                 <label role="listitem" for="magister-css-saturation" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     Verzadiging
-                    <div>
+                    <div class="range-values">
                         <span class="default-value">95%</span>
                         <span><span class="current-value">95</span>%</span>
                     </div>
@@ -147,7 +147,7 @@
                 <label role="listitem" for="magister-css-luminance" data-appear-if="magister-css-experimental"
                     data-version=2.0.1>
                     Helderheid
-                    <div>
+                    <div class="range-values">
                         <span class="default-value">55%</span>
                         <span><span class="current-value">55</span>%</span>
                     </div>
@@ -212,6 +212,16 @@
                     Alternatieve pagina 'Vandaag'
                     <input type="checkbox" name="Alternatieve pagina 'Vandaag'" id="magister-vd-overhaul"
                         class="bind-boolean">
+                </label>
+                <label role="listitem" for="magister-vd-agendaHeight" data-version="2.2.5"
+                    data-appear-if="magister-vd-overhaul">
+                    Hoogte agenda-items
+                    <div class="range-values">
+                        <span class="default-value">1x</span>
+                        <span><span class="current-value">1</span>x</span>
+                    </div>
+                    <input type="range" name="Hoogte agenda-items" id="magister-vd-agendaHeight" class="bind-number"
+                        min="0.5" max="1.5" step="0.1">
                 </label>
             </div>
             <div role="list">
