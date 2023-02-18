@@ -177,68 +177,80 @@ async function cijferoverzicht() {
         menuCollapser = await getElement('.menu-footer>a'),
         gradesContainer = await getElement('.content-container-cijfers'),
         gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
-        calculateInitiator = document.createElement('a'),
-        calculatorOverlay = document.createElement('div'),
-        calculatorQuitter = document.createElement('a'),
-        calculatorHeading = document.createElement('span'),
-        calculatorStep = document.createElement('span'),
-        calculatorAddPre = document.createElement('a'),
-        calculatorAddCus = document.createElement('a'),
-        calculatorCusResult = document.createElement('input'),
-        calculatorCusWeight = document.createElement('input'),
-        calculatorContent = document.createElement('p'),
-        calculatorResult = document.createElement('p'),
-        canvas = document.createElement('canvas'),
-        canvasHighlightBox = document.createElement('div'),
-        canvasHighlightText = document.createElement('p'),
+        clOpen = document.createElement('a'),
+        clWrapper = document.createElement('div'),
+        clCloser = document.createElement('a'),
+        clTitle = document.createElement('span'),
+        clSubtitle = document.createElement('span'),
+        clAddTable = document.createElement('a'),
+        clAddCustom = document.createElement('a'),
+        clAddCustomResult = document.createElement('input'),
+        clAddCustomWeight = document.createElement('input'),
+        clAdded = document.createElement('p'),
+        clMean = document.createElement('p'),
+        clFutureWeight = document.createElement('input'),
+        clFutureDesc = document.createElement('p'),
+        clCanvas = document.createElement('canvas'),
+        clCanvasHighlight = document.createElement('div'),
         resultsList = [],
-        weightsList = []
+        weightsList = [],
+        hypotheticalWeight = 1,
+        mean
 
-    mainSection.append(calculateInitiator)
-    calculateInitiator.id = 'st-cf-calculate-initiator'
-    calculateInitiator.innerText = ''
-    document.body.append(calculatorOverlay)
-    calculatorOverlay.id = 'st-cf-calculator'
-    calculatorOverlay.dataset.step = 0
-    calculatorOverlay.append(calculatorQuitter, calculatorHeading, calculatorStep, calculatorContent, calculatorResult, calculatorAddPre, calculatorAddCus, calculatorCusResult, calculatorCusWeight, canvas, canvasHighlightBox, canvasHighlightText)
-    calculatorQuitter.id = 'st-cf-calculator-quitter'
-    calculatorQuitter.innerText = ''
-    calculatorHeading.id = 'st-cf-calculator-heading'
-    calculatorHeading.innerText = "Cijfercalculator"
-    calculatorStep.id = 'st-cf-calculator-step'
-    calculatorContent.id = 'st-cf-calculator-content'
-    calculatorResult.id = 'st-cf-calculator-result'
-    canvasHighlightText.id = 'st-cf-calculator-canvas-highlight-text'
-    calculatorAddPre.id = 'st-cf-calculator-add-pre'
-    calculatorAddPre.innerText = "Cijfer uit overzicht toevoegen"
-    calculatorAddCus.id = 'st-cf-calculator-add-cus'
-    calculatorAddCus.innerText = "Cijfer handmatig toevoegen"
-    setAttributes(calculatorCusResult, { id: 'st-cf-calculator-cus-result', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 })
-    setAttributes(calculatorCusWeight, { id: 'st-cf-calculator-cus-weight', type: 'number', placeholder: 'Weging', min: 1 })
-    canvas.id = 'st-cf-calculator-canvas'
-    setAttributes(canvas, { height: 182, width: 424 })
-    let ctx = canvas.getContext('2d')
-    ctx.transform(1, 0, 0, -1, 0, canvas.height)
-    canvasHighlightBox.id = 'st-cf-calculator-canvas-highlight'
+    mainSection.append(clOpen)
+    clOpen.id = 'st-cf-cl-open'
+    clOpen.innerText = ''
+    document.body.append(clWrapper)
+    clWrapper.id = 'st-cf-cl'
+    clWrapper.dataset.step = 0
+    clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustom, clAddCustomResult, clAddCustomWeight, clCanvas, clCanvasHighlight, clFutureDesc, clFutureWeight)
+    clCloser.id = 'st-cf-cl-closer'
+    clCloser.innerText = ''
+    clTitle.id = 'st-cf-cl-title'
+    clTitle.innerText = "Cijfercalculator"
+    clSubtitle.id = 'st-cf-cl-subtitle'
+    clAdded.id = 'st-cf-cl-added'
+    clMean.id = 'st-cf-cl-mean'
+    clAddTable.id = 'st-cf-cl-add-table'
+    clAddTable.innerText = "Cijfer uit cijferoverzicht toevoegen"
+    clAddCustom.id = 'st-cf-cl-add-custom'
+    clAddCustom.innerText = "Cijfer handmatig toevoegen"
+    setAttributes(clAddCustomResult, { id: 'st-cf-cl-add-custom-result', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 })
+    setAttributes(clAddCustomWeight, { id: 'st-cf-cl-add-custom-weight', type: 'number', placeholder: 'Weging', min: 1 })
+    setAttributes(clFutureWeight, { id: 'st-cf-cl-future-weight', type: 'number', placeholder: 'Weging', min: 1, value: 1 })
+    clFutureDesc.id = 'st-cf-cl-future-desc'
+    clCanvas.id = 'st-cf-cl-canvas'
+    setAttributes(clCanvas, { height: 182, width: 424 })
+    let ctx = clCanvas.getContext('2d')
+    ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+    clCanvasHighlight.id = 'st-cf-cl-canvas-highlight'
 
-    calculateInitiator.addEventListener('click', async () => {
+    clOpen.addEventListener('click', async () => {
         document.body.style.marginLeft = '-130px'
         mainSection.classList.add('st-trigger')
-        calculatorOverlay.dataset.step = 1
+        clWrapper.dataset.step = 1
         resultsList = []
         weightsList = []
-        calculatorContent.innerText = ''
-        calculatorResult.innerText = ''
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        calculatorStep.innerText = "Voeg cijfers toe aan de berekening met de knoppen rechtsboven \nof voeg een cijfer uit het overzicht toe door erop te dubbelklikken."
+        clAdded.innerText = ''
+        clMean.innerText = ''
+        clFutureDesc.innerText = 'Voordat je kunt berekenen wat je moet halen of wat je zult staan, moet je eerst cijfers toevoegen aan de berekening.'
+        ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
+        clSubtitle.innerText = "Voeg cijfers toe aan de berekening met de knoppen rechtsboven \nof voeg een cijfer uit het overzicht toe door erop te dubbelklikken."
         gradesContainer.style.zIndex = '999999'
         if (!menuHost.classList.contains('collapsed-menu')) menuCollapser.click()
     })
 
-    gradesContainer.addEventListener('dblclick', () => setTimeout(() => calculatorAddPre.click(), 200))
+    gradesContainer.addEventListener('dblclick', () => {
+        clAddTable.setAttribute('disabled', true)
+        setTimeout(() => {
+            clAddTable.removeAttribute('disabled')
+            clAddTable.click()
+        }, 400)
+    })
 
-    calculatorAddPre.addEventListener('click', async () => {
-        let result, weight, mean
+    clAddTable.addEventListener('click', async () => {
+        if (clAddTable.disabled) return
+        let result, weight
         gradeDetails.childNodes.forEach(element => {
             if (element.innerText === 'Beoordeling') {
                 result = Number(element.nextElementSibling.innerText.replace(',', '.'))
@@ -248,78 +260,122 @@ async function cijferoverzicht() {
         })
 
         if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
-        calculatorContent.innerText += `${result.toLocaleString('nl-NL')} (${weight}x)\n`
+        clAdded.innerText += `${result.toLocaleString('nl-NL')} (${weight}x)\n`
         resultsList.push(result)
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
 
-        calculatorResult.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        if (mean < 5.5) calculatorResult.classList.add('insufficient')
-        else calculatorResult.classList.remove('insufficient')
+        clMean.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        if (mean < 5.5) clMean.classList.add('insufficient')
+        else clMean.classList.remove('insufficient')
 
-        updateGradeChart(resultsList, weightsList, 1, ctx, canvas, canvasHighlightBox, canvasHighlightText)
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc)
     })
 
-    calculatorAddCus.addEventListener('click', async () => {
-        let result = Number(calculatorCusResult.value), weight = Number(calculatorCusWeight.value), mean
+    clAddCustom.addEventListener('click', async () => {
+        let result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
 
         if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
-        calculatorContent.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x, handmatig ingevoerd)\n`
+        clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x, handmatig ingevoerd)\n`
         resultsList.push(result)
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
 
-        calculatorResult.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        if (mean < 5.5) calculatorResult.classList.add('insufficient')
-        else calculatorResult.classList.remove('insufficient')
+        clMean.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        if (mean < 5.5) clMean.classList.add('insufficient')
+        else clMean.classList.remove('insufficient')
 
-        updateGradeChart(resultsList, weightsList, 1, ctx, canvas, canvasHighlightBox, canvasHighlightText)
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc)
     })
 
-    calculatorQuitter.addEventListener('click', async () => {
+    clFutureWeight.addEventListener('input', async () => {
+        hypotheticalWeight = Number(clFutureWeight.value)
+        if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) return
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc)
+    })
+
+    clCloser.addEventListener('click', async () => {
         document.body.style.marginLeft = '0'
         mainSection.classList.remove('st-trigger')
-        calculatorOverlay.dataset.step = 0
+        clWrapper.dataset.step = 0
     })
 }
 
-async function updateGradeChart(resultsList, weightsList, weight, ctx, canvas, canvasHighlightBox, canvasHighlightText) {
+async function updateGradeChart(resultsList, weightsList, weight = 1, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc) {
     let means = weightedPossibleMeans(resultsList, weightsList, weight),
         landmarks = [1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10]
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
-    ctx.font = "10px sans-serif"
+    ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
     landmarks.forEach(num => {
         if (num !== 5.5) ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-border-color')
         else ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
         ctx.globalAlpha = 0.5
         ctx.beginPath()
         ctx.moveTo(0, (num * 10 - 9) * 2)
-        ctx.lineTo(canvas.width, (num * 10 - 9) * 2)
+        ctx.lineTo(clCanvas.width, (num * 10 - 9) * 2)
         ctx.stroke()
         ctx.beginPath()
         ctx.moveTo((num * 10 - 9) * 4.62, 0)
-        ctx.lineTo((num * 10 - 9) * 4.62, canvas.height)
+        ctx.lineTo((num * 10 - 9) * 4.62, clCanvas.height)
         ctx.stroke()
     })
-    means[0].forEach(async (mean, i, a) => {
-        let grade = means[1][i]
-        ctx.globalAlpha = 1
-        if (grade < 5.5) ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
-        else ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
-        ctx.fillRect((grade * 10 - 9) * 4.62, (mean * 10 - 9) * 2, 2, 2)
-    })
 
-    canvas.addEventListener('mousemove', (e) => {
-        canvasHighlightBox.style.left = e.clientX + 'px'
-        let rect = e.target.getBoundingClientRect(),
-            x = e.clientX - rect.left,
-            y = e.clientY - rect.top,
-            index = Math.round(x / 4.62) - 1
-        if (index < 0) index = 0
-        if (index > 90) index = 90
-        canvasHighlightText.innerText = `Als je een ${means[1][index]} haalt die ${weight}x meetelt, dan sta je gemiddeld een ${means[0][index]}`
-    })
+    ctx.save()
+    ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+    ctx.font = '12px open-sans, sans-serif'
+    ctx.fillText("Cijfer ➔", 370, 170)
+    ctx.translate(clCanvas.width / 2, clCanvas.height / 2)
+    ctx.rotate(-Math.PI / 2)
+    ctx.fillText("Gemiddelde ➔", 0, -190)
+    ctx.restore()
+
+    let grade1 = means[1][0],
+        mean1 = means[0][0],
+        grade55 = means[1][45],
+        mean55 = means[0][45],
+        grade10 = means[1][90],
+        mean10 = means[0][90]
+    ctx.globalAlpha = 1
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
+    ctx.beginPath()
+    ctx.moveTo((grade1 * 10 - 9) * 4.62, (mean1 * 10 - 9) * 2)
+    ctx.lineTo((grade55 * 10 - 9) * 4.62, (mean55 * 10 - 9) * 2)
+    ctx.stroke()
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
+    ctx.beginPath()
+    ctx.moveTo((grade55 * 10 - 9) * 4.62, (mean55 * 10 - 9) * 2)
+    ctx.lineTo((grade10 * 10 - 9) * 4.62, (mean10 * 10 - 9) * 2)
+    ctx.stroke()
+    clCanvasHighlight.classList.remove('show')
+    clFutureDesc.innerText = ''
+
+    for (let i = 0; i < means[0].length; i++) {
+        let meanH = means[0][i],
+            gradeH = means[1][i - 1] || 1.0
+        if (gradeH <= 1.0 && meanH >= 5.5) {
+            clFutureDesc.style.color = 'var(--st-primary-color)'
+            clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt blijf je hoe dan ook een voldoende staan.`
+            break
+        } else if (meanH >= 5.5) {
+            clFutureDesc.style.color = 'var(--st-primary-color)'
+            clFutureDesc.innerText = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+            break
+        } else {
+            clFutureDesc.style.color = 'var(--st-accent-warn)'
+            clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt kun je geen voldoende komen te staan.`
+        }
+
+        clCanvas.addEventListener('mousemove', (e) => {
+            clCanvasHighlight.classList.add('show')
+            clCanvasHighlight.style.left = e.clientX + 'px'
+            let rect = e.target.getBoundingClientRect(),
+                x = e.clientX - rect.left,
+                y = e.clientY - rect.top,
+                index = Math.round(x / 4.62) - 1
+            if (index < 0) index = 0
+            if (index > 90) index = 90
+            clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan sta je gemiddeld een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        })
+    }
 }
 
 async function displayScheduleList(agendaElems, container) {
@@ -608,8 +664,8 @@ function weightedPossibleMeans(valueArray, weightArray, newWeight) {
     let means = [],
         grades = []
     for (let i = 1.0; i <= 10; i += 0.1) {
-        grades.push(i.toFixed(1))
-        means.push(weightedMean(valueArray.concat([i]), weightArray.concat([newWeight])).toFixed(2))
+        grades.push(Number(i))
+        means.push(Number(weightedMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
     }
     return [means, grades]
 }

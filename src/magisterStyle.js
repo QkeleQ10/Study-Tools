@@ -945,10 +945,10 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
 
     if (true) {
         createStyle(`
-#st-cf-calculate-initiator, #st-cf-calculator-quitter {
+#st-cf-cl-open, #st-cf-cl-closer {
     position: absolute;
     top: 80px;
-    right: 65px;
+    right: 160px;
     padding: 10px;
     margin: -10px 0;
     z-index: 9999;
@@ -959,35 +959,35 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     transition: transform 200ms;
 }
 
-#st-cf-calculator-quitter {
-    top: 25px;
-    right: 90px;
-}
-
-#st-cf-calculator-quitter:after {
-    width: 45px;
-    content: "Sluiten";
+#st-cf-cl-open:after, #st-cf-cl-closer:after {
+    width: 115px;
+    content: "Cijfercalculator";
     font-family: var(--st-secondary-font-family);
     font-size: 14px;
     display: block;
     position: absolute;
-    left: 30px;
+    left: 35px;
     top: 12px;
 }
 
-#st-cf-calculate-initiator:hover, #st-cf-calculator-quitter:hover {
-    transform: scale(1.3)
+#st-cf-cl-closer:after {
+    content: "Wissen en sluiten";
 }
 
-#st-cf-calculator-quitter:hover {
-    transform: scale(1.1)
+#st-cf-cl-closer {
+    top: 25px;
+    right: 150px;
 }
 
-#st-cf-calculate-initiator:active, #st-cf-calculator-quitter:active {
-    transform: scale(.8)
+#st-cf-cl-open:hover, #st-cf-cl-closer:hover {
+    transform: scale(1.07)
 }
 
-#st-cf-calculator {
+#st-cf-cl-open:active, #st-cf-cl-closer:active {
+    transform: scale(.95)
+}
+
+#st-cf-cl {
     position: absolute;
     top: 0;
     left: 0;
@@ -998,11 +998,11 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     z-index: 99999;
 }
 
-#st-cf-calculator[data-step="0"] {
+#st-cf-cl[data-step="0"] {
     display: none;
 }
 
-#st-cf-calculator-heading {
+#st-cf-cl-title {
     position: absolute;
     top: 40px;
     left: 23px;
@@ -1010,21 +1010,21 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     color: var(--st-a-color);
 }
 
-#st-cf-calculator-heading:after {
+#st-cf-cl-title:after {
     content: ".";
     display: inline-block;
     width: 3px;
     color: #ff8205;
 }
 
-#st-cf-calculator-step {
+#st-cf-cl-subtitle {
     position: absolute;
     top: 80px;
     left: 23px;
     font: 14px var(--st-secondary-font-family);
 }
 
-#st-cf-calculator-content {
+#st-cf-cl-added {
     position: absolute;
     top: 154px;
     right: 16px;
@@ -1036,32 +1036,71 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     font-size: 14px;
 }
 
-#st-cf-calculator-result, #st-cf-calculator-canvas-highlight-text {
+#st-cf-cl-added:before {
+    content: 'Toegevoegde cijfers\\A';
+    white-space: pre-wrap;
+    font: var(--st-widget-heading-font);
+}
+
+#st-cf-cl-mean, #st-cf-cl-future-desc {
     position: absolute;
-    bottom: 240px;
+    bottom: 300px;
     right: 16px;
     width: 425px;
     font-size: 14px;
     font-weight: 600;
-    text-align: center;
+    padding: 16px;
 }
 
-#st-cf-calculator-canvas-highlight-text {
+#st-cf-cl-mean:after {
+    content: '';
+    position: absolute;
+    width: 425px;
+    left: 0;
+    height: 1px;
+    bottom: 0px;
+    background: var(--st-primary-border-color);
+    display: block;
+}
+
+#st-cf-cl-future-desc {
     bottom: 220px;
+    height: 50px;
     font-size: 12px;
     font-weight: normal;
-    opacity: 0;
-    transition: opacity 200ms;
 }
 
-#st-cf-calculator-canvas {
+#st-cf-cl-future-desc:before {
+    position: absolute;
+    bottom: 30px;
+    content: 'Toekomstig cijfer';
+    font: var(--st-widget-heading-font);
+}
+
+#st-cf-cl-future-desc:after {
+    position: absolute;
+    bottom: 30px;
+    left: 147px;
+    content: 'met weging';
+    font: var(--st-widget-heading-font);
+    font-weight: 400;
+    opacity: .8;
+}
+
+#st-cf-cl #st-cf-cl-future-weight {
+    bottom: 256px;
+    right: 147px;
+    top: auto;
+}
+
+#st-cf-cl-canvas {
     position: absolute;
     right: 17px;
     bottom: 25px;
     border-radius: var(--st-widget-border-radius)
 }
 
-#st-cf-calculator-canvas-highlight {
+#st-cf-cl-canvas-highlight {
     position: absolute;
     width: 4px;
     translate: -2px;
@@ -1073,20 +1112,15 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     transition: opacity 200ms;
 }
 
-#st-cf-calculator-canvas-highlight:after {
-    content: 'Cijfer: ' attr(data-grade) '\\AGem.: ' attr(data-mean);
-    white-space: pre-wrap;
-}
-
-#st-cf-calculator-canvas:hover ~ #st-cf-calculator-canvas-highlight, #st-cf-calculator-canvas:hover ~ #st-cf-calculator-canvas-highlight-text {
+#st-cf-cl-canvas-highlight.show {
     opacity: .4;
 }
 
-#st-cf-calculator-result.insufficient {
+#st-cf-cl-mean.insufficient {
     color: var(--st-accent-warn);
 }
 
-#st-cf-calculator-add-pre, #st-cf-calculator-add-cus {
+#st-cf-cl-add-table, #st-cf-cl-add-custom {
     position: absolute;
     top: 55px;
     right: 30px;
@@ -1102,19 +1136,24 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     transition: filter 200ms, transform 200ms;
 }
 
-#st-cf-calculator-add-cus {
+#st-cf-cl-add-table[disabled] {
+    pointer-events: none;
+    opacity: .5;
+}
+
+#st-cf-cl-add-custom {
     top: 90px;
 }
 
-#st-cf-calculator-add-pre:hover, #st-cf-calculator-add-cus:hover {
+#st-cf-cl-add-table:hover, #st-cf-cl-add-custom:hover {
     filter: brightness(var(--st-hover-brightness));
 }
 
-#st-cf-calculator-add-pre:active, #st-cf-calculator-add-cus:active {
+#st-cf-cl-add-table:active, #st-cf-cl-add-custom:active {
     transform: scale(.9);
 }
 
-#st-cf-calculator-cus-result, #st-cf-calculator-cus-weight {
+#st-cf-cl input[type=number] {
     position: absolute;
     top: 90px;
     right: 320px;
@@ -1128,7 +1167,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     border-radius: var(--st-widget-border-radius);
 }
 
-#st-cf-calculator-cus-weight {
+#st-cf-cl #st-cf-cl-add-custom-weight {
     right: 255px;
 }
 
