@@ -42,6 +42,7 @@ async function applyStyles() {
     --st-secondary-font-family: 'open-sans', sans-serif;
     --st-body-background: #ffffff;
     --st-primary-background: #ffffff;
+    --st-overlay-background: #fffffff5;
     --st-highlight-background: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
     --st-highlight-warn: #fff0f5;
     --st-total-background: #cdf4cd;
@@ -64,6 +65,7 @@ async function applyStyles() {
     --st-secondary-font-family: 'open-sans', sans-serif;
     --st-body-background: #121212;
     --st-primary-background: #161616;
+    --st-overlay-background: #161616f5;
     --st-highlight-background: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-warn: #511f1f;
     --st-total-background: #2f462f;
@@ -258,7 +260,8 @@ input[type=checkbox]+label span {
 
 .block,
 .content-container,
-.studiewijzer-onderdeel>div.block>div.content:not(#studiewijzer-detail-container div, #studiewijzer-detail-container ul) {
+.studiewijzer-onderdeel>div.block>div.content:not(#studiewijzer-detail-container div, #studiewijzer-detail-container ul),
+#cijfers-container .main div.content-container-cijfers {
     border: var(--st-widget-border);
     border-radius: var(--st-widget-border-radius)
 }
@@ -412,7 +415,8 @@ input[type=checkbox]+label span,
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
 #vandaag-container .grade-widget ul,
-.widget .dualcolumn-list li {
+.widget .dualcolumn-list li,
+#cijfers-container .main div.content-container-cijfers {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
 }
@@ -937,6 +941,203 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     }
 }
 `, 'study-tools-vd-overhaul')
+    }
+
+    if (true) {
+        createStyle(`
+#st-cf-calculate-initiator, #st-cf-calculator-quitter {
+    position: absolute;
+    top: 80px;
+    right: 65px;
+    padding: 10px;
+    margin: -10px 0;
+    z-index: 9999;
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 500;
+    font-size: 20px;
+    user-select: none;
+    transition: transform 200ms;
+}
+
+#st-cf-calculator-quitter {
+    top: 25px;
+    right: 90px;
+}
+
+#st-cf-calculator-quitter:after {
+    width: 45px;
+    content: "Sluiten";
+    font-family: var(--st-secondary-font-family);
+    font-size: 14px;
+    display: block;
+    position: absolute;
+    left: 30px;
+    top: 12px;
+}
+
+#st-cf-calculate-initiator:hover, #st-cf-calculator-quitter:hover {
+    transform: scale(1.3)
+}
+
+#st-cf-calculator-quitter:hover {
+    transform: scale(1.1)
+}
+
+#st-cf-calculate-initiator:active, #st-cf-calculator-quitter:active {
+    transform: scale(.8)
+}
+
+#st-cf-calculator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--st-overlay-background);
+    color: var(--st-primary-color);
+    z-index: 99999;
+}
+
+#st-cf-calculator[data-step="0"] {
+    display: none;
+}
+
+#st-cf-calculator-heading {
+    position: absolute;
+    top: 40px;
+    left: 23px;
+    font: 700 28px / 2rem arboria, sans-serif;
+    color: var(--st-a-color);
+}
+
+#st-cf-calculator-heading:after {
+    content: ".";
+    display: inline-block;
+    width: 3px;
+    color: #ff8205;
+}
+
+#st-cf-calculator-step {
+    position: absolute;
+    top: 80px;
+    left: 23px;
+    font: 14px var(--st-secondary-font-family);
+}
+
+#st-cf-calculator-content {
+    position: absolute;
+    top: 154px;
+    right: 16px;
+    width: 425px;
+    height: calc(100% - 178px);
+    padding: 0 16px;
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    font-size: 14px;
+}
+
+#st-cf-calculator-result, #st-cf-calculator-canvas-highlight-text {
+    position: absolute;
+    bottom: 240px;
+    right: 16px;
+    width: 425px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+#st-cf-calculator-canvas-highlight-text {
+    bottom: 220px;
+    font-size: 12px;
+    font-weight: normal;
+    opacity: 0;
+    transition: opacity 200ms;
+}
+
+#st-cf-calculator-canvas {
+    position: absolute;
+    right: 17px;
+    bottom: 25px;
+    border-radius: var(--st-widget-border-radius)
+}
+
+#st-cf-calculator-canvas-highlight {
+    position: absolute;
+    width: 4px;
+    translate: -2px;
+    height: 184px;
+    bottom: 25px;
+    opacity: 0;
+    background: var(--st-accent-primary);
+    pointer-events: none;
+    transition: opacity 200ms;
+}
+
+#st-cf-calculator-canvas-highlight:after {
+    content: 'Cijfer: ' attr(data-grade) '\\AGem.: ' attr(data-mean);
+    white-space: pre-wrap;
+}
+
+#st-cf-calculator-canvas:hover ~ #st-cf-calculator-canvas-highlight, #st-cf-calculator-canvas:hover ~ #st-cf-calculator-canvas-highlight-text {
+    opacity: .4;
+}
+
+#st-cf-calculator-result.insufficient {
+    color: var(--st-accent-warn);
+}
+
+#st-cf-calculator-add-pre, #st-cf-calculator-add-cus {
+    position: absolute;
+    top: 55px;
+    right: 30px;
+    display: block;
+    background: var(--st-accent-primary);
+    font-family: var(--st-secondary-font-family);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: var(--st-widget-border-radius);
+    color: #fff;
+    user-select: none;
+    transition: filter 200ms, transform 200ms;
+}
+
+#st-cf-calculator-add-cus {
+    top: 90px;
+}
+
+#st-cf-calculator-add-pre:hover, #st-cf-calculator-add-cus:hover {
+    filter: brightness(var(--st-hover-brightness));
+}
+
+#st-cf-calculator-add-pre:active, #st-cf-calculator-add-cus:active {
+    transform: scale(.9);
+}
+
+#st-cf-calculator-cus-result, #st-cf-calculator-cus-weight {
+    position: absolute;
+    top: 90px;
+    right: 320px;
+    width: 60px;
+    height: 32px;
+    font-family: var(--st-secondary-font-family);
+    font-size: 14px;
+    padding: 6px;
+    background: var(--st-primary-background);
+    border: 2px solid var(--st-accent-primary);
+    border-radius: var(--st-widget-border-radius);
+}
+
+#st-cf-calculator-cus-weight {
+    right: 255px;
+}
+
+.main.st-trigger:hover ~ aside {
+    z-index: 999999;
+    background: var(--st-primary-background);
+    opacity: 0.7;
+}
+`, 'study-tools-cf-calculator')
     }
 
     if (await getSetting('magister-sw-grid')) {

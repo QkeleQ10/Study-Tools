@@ -121,5 +121,5 @@ const defaults = {
     "magister-css-hue": 207,
     "magister-css-saturation": 95,
     "magister-css-luminance": 55,
-    "magister-vd-agendaHeight": 100
+    "magister-vd-agendaHeight": 1
 }

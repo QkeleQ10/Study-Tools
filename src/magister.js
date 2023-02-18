@@ -54,7 +54,7 @@ async function vandaagNotifications(notifcationsWrapper) {
 
     gradeNotification.id = 'st-vd-grade-notification'
 
-    if (lastGrade.innerText === '-' || lastGradeDescription.innerTExt === 'geen cijfers') {
+    if (lastGrade.innerText === '-' || lastGradeDescription.innerText === 'geen cijfers') {
         gradeNotification.innerText = 'Geen cijfers'
         gradeNotification.dataset.insignificant = true
     } else {
@@ -169,6 +169,157 @@ async function studiewijzer() {
     if (!await getSetting('magister-sw-sort')) return
     const gridContainer = await getElement('div.full-height.widget')
     displayStudiewijzerArray(gridContainer, true)
+}
+
+async function cijferoverzicht() {
+    let mainSection = await getElement('section.main'),
+        menuHost = await getElement('.menu-host'),
+        menuCollapser = await getElement('.menu-footer>a'),
+        gradesContainer = await getElement('.content-container-cijfers'),
+        gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
+        calculateInitiator = document.createElement('a'),
+        calculatorOverlay = document.createElement('div'),
+        calculatorQuitter = document.createElement('a'),
+        calculatorHeading = document.createElement('span'),
+        calculatorStep = document.createElement('span'),
+        calculatorAddPre = document.createElement('a'),
+        calculatorAddCus = document.createElement('a'),
+        calculatorCusResult = document.createElement('input'),
+        calculatorCusWeight = document.createElement('input'),
+        calculatorContent = document.createElement('p'),
+        calculatorResult = document.createElement('p'),
+        canvas = document.createElement('canvas'),
+        canvasHighlightBox = document.createElement('div'),
+        canvasHighlightText = document.createElement('p'),
+        resultsList = [],
+        weightsList = []
+
+    mainSection.append(calculateInitiator)
+    calculateInitiator.id = 'st-cf-calculate-initiator'
+    calculateInitiator.innerText = ''
+    document.body.append(calculatorOverlay)
+    calculatorOverlay.id = 'st-cf-calculator'
+    calculatorOverlay.dataset.step = 0
+    calculatorOverlay.append(calculatorQuitter, calculatorHeading, calculatorStep, calculatorContent, calculatorResult, calculatorAddPre, calculatorAddCus, calculatorCusResult, calculatorCusWeight, canvas, canvasHighlightBox, canvasHighlightText)
+    calculatorQuitter.id = 'st-cf-calculator-quitter'
+    calculatorQuitter.innerText = ''
+    calculatorHeading.id = 'st-cf-calculator-heading'
+    calculatorHeading.innerText = "Cijfercalculator"
+    calculatorStep.id = 'st-cf-calculator-step'
+    calculatorContent.id = 'st-cf-calculator-content'
+    calculatorResult.id = 'st-cf-calculator-result'
+    canvasHighlightText.id = 'st-cf-calculator-canvas-highlight-text'
+    calculatorAddPre.id = 'st-cf-calculator-add-pre'
+    calculatorAddPre.innerText = "Cijfer uit overzicht toevoegen"
+    calculatorAddCus.id = 'st-cf-calculator-add-cus'
+    calculatorAddCus.innerText = "Cijfer handmatig toevoegen"
+    setAttributes(calculatorCusResult, { id: 'st-cf-calculator-cus-result', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 })
+    setAttributes(calculatorCusWeight, { id: 'st-cf-calculator-cus-weight', type: 'number', placeholder: 'Weging', min: 1 })
+    canvas.id = 'st-cf-calculator-canvas'
+    setAttributes(canvas, { height: 182, width: 424 })
+    let ctx = canvas.getContext('2d')
+    ctx.transform(1, 0, 0, -1, 0, canvas.height)
+    canvasHighlightBox.id = 'st-cf-calculator-canvas-highlight'
+
+    calculateInitiator.addEventListener('click', async () => {
+        document.body.style.marginLeft = '-130px'
+        mainSection.classList.add('st-trigger')
+        calculatorOverlay.dataset.step = 1
+        resultsList = []
+        weightsList = []
+        calculatorContent.innerText = ''
+        calculatorResult.innerText = ''
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        calculatorStep.innerText = "Voeg cijfers toe aan de berekening met de knoppen rechtsboven \nof voeg een cijfer uit het overzicht toe door erop te dubbelklikken."
+        gradesContainer.style.zIndex = '999999'
+        if (!menuHost.classList.contains('collapsed-menu')) menuCollapser.click()
+    })
+
+    gradesContainer.addEventListener('dblclick', () => setTimeout(() => calculatorAddPre.click(), 200))
+
+    calculatorAddPre.addEventListener('click', async () => {
+        let result, weight, mean
+        gradeDetails.childNodes.forEach(element => {
+            if (element.innerText === 'Beoordeling') {
+                result = Number(element.nextElementSibling.innerText.replace(',', '.'))
+            } else if (element.innerText === 'Weging') {
+                weight = Number(element.nextElementSibling.innerText.replace(',', '.'))
+            }
+        })
+
+        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
+        calculatorContent.innerText += `${result.toLocaleString('nl-NL')} (${weight}x)\n`
+        resultsList.push(result)
+        weightsList.push(weight)
+        mean = weightedMean(resultsList, weightsList)
+
+        calculatorResult.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        if (mean < 5.5) calculatorResult.classList.add('insufficient')
+        else calculatorResult.classList.remove('insufficient')
+
+        updateGradeChart(resultsList, weightsList, 1, ctx, canvas, canvasHighlightBox, canvasHighlightText)
+    })
+
+    calculatorAddCus.addEventListener('click', async () => {
+        let result = Number(calculatorCusResult.value), weight = Number(calculatorCusWeight.value), mean
+
+        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
+        calculatorContent.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x, handmatig ingevoerd)\n`
+        resultsList.push(result)
+        weightsList.push(weight)
+        mean = weightedMean(resultsList, weightsList)
+
+        calculatorResult.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        if (mean < 5.5) calculatorResult.classList.add('insufficient')
+        else calculatorResult.classList.remove('insufficient')
+
+        updateGradeChart(resultsList, weightsList, 1, ctx, canvas, canvasHighlightBox, canvasHighlightText)
+    })
+
+    calculatorQuitter.addEventListener('click', async () => {
+        document.body.style.marginLeft = '0'
+        mainSection.classList.remove('st-trigger')
+        calculatorOverlay.dataset.step = 0
+    })
+}
+
+async function updateGradeChart(resultsList, weightsList, weight, ctx, canvas, canvasHighlightBox, canvasHighlightText) {
+    let means = weightedPossibleMeans(resultsList, weightsList, weight),
+        landmarks = [1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10]
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
+    ctx.font = "10px sans-serif"
+    landmarks.forEach(num => {
+        if (num !== 5.5) ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-border-color')
+        else ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
+        ctx.globalAlpha = 0.5
+        ctx.beginPath()
+        ctx.moveTo(0, (num * 10 - 9) * 2)
+        ctx.lineTo(canvas.width, (num * 10 - 9) * 2)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo((num * 10 - 9) * 4.62, 0)
+        ctx.lineTo((num * 10 - 9) * 4.62, canvas.height)
+        ctx.stroke()
+    })
+    means[0].forEach(async (mean, i, a) => {
+        let grade = means[1][i]
+        ctx.globalAlpha = 1
+        if (grade < 5.5) ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
+        else ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
+        ctx.fillRect((grade * 10 - 9) * 4.62, (mean * 10 - 9) * 2, 2, 2)
+    })
+
+    canvas.addEventListener('mousemove', (e) => {
+        canvasHighlightBox.style.left = e.clientX + 'px'
+        let rect = e.target.getBoundingClientRect(),
+            x = e.clientX - rect.left,
+            y = e.clientY - rect.top,
+            index = Math.round(x / 4.62) - 1
+        if (index < 0) index = 0
+        if (index > 90) index = 90
+        canvasHighlightText.innerText = `Als je een ${means[1][index]} haalt die ${weight}x meetelt, dan sta je gemiddeld een ${means[0][index]}`
+    })
 }
 
 async function displayScheduleList(agendaElems, container) {
@@ -410,6 +561,7 @@ async function popstate() {
     if (href.endsWith('/vandaag')) vandaag()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
+    else if (href.includes('/cijfers/cijferoverzicht')) cijferoverzicht()
 }
 
 function getWeekNumber() {
@@ -433,4 +585,31 @@ async function getPeriodNumber(w = getWeekNumber()) {
     })
 
     return periodNumber
+}
+
+function weightedMean(valueArray, weightArray) {
+    let result = valueArray.map((value, i) => {
+        let weight = weightArray[i],
+            sum = value * weight
+        return [sum, weight]
+    }).reduce((p, c) => {
+        return [p[0] + c[0], p[1] + c[1]]
+    }, [0, 0])
+    return (result[0] / result[1])
+}
+
+function setAttributes(el, attrs) {
+    for (var key in attrs) {
+        el.setAttribute(key, attrs[key]);
+    }
+}
+
+function weightedPossibleMeans(valueArray, weightArray, newWeight) {
+    let means = [],
+        grades = []
+    for (let i = 1.0; i <= 10; i += 0.1) {
+        grades.push(i.toFixed(1))
+        means.push(weightedMean(valueArray.concat([i]), weightArray.concat([newWeight])).toFixed(2))
+    }
+    return [means, grades]
 }
