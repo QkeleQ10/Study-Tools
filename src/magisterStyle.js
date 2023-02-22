@@ -69,7 +69,7 @@ async function applyStyles() {
     --st-body-background: #121212;
     --st-primary-background: #161616;
     --st-inactive-background: #0c0c0c;
-    --st-overlay-background: #161616f5;
+    --st-overlay-background: #121212f5;
     --st-highlight-background: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
