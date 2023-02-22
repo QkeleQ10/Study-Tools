@@ -42,9 +42,12 @@ async function applyStyles() {
     --st-secondary-font-family: 'open-sans', sans-serif;
     --st-body-background: #ffffff;
     --st-primary-background: #ffffff;
+    --st-inactive-background: #f5f5f5;
     --st-overlay-background: #fffffff5;
     --st-highlight-background: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
+    --st-highlight-ok: #81e3bc;
     --st-highlight-warn: #fff0f5;
+    --st-highlight-info: #dceefd;
     --st-total-background: #cdf4cd;
     --st-primary-color: #333333;
     --st-insignificant-color: #888;
@@ -55,19 +58,22 @@ async function applyStyles() {
     --st-a-color: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
-    --st-hover-brightness: .8;
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
+    --st-hover-brightness: .8;
 }`,
         darkThemeCss = `:root {
     --st-widget-heading-font: 600 16px/44px 'arboria', sans-serif;
     --st-secondary-font-family: 'open-sans', sans-serif;
     --st-body-background: #121212;
     --st-primary-background: #161616;
+    --st-inactive-background: #0c0c0c;
     --st-overlay-background: #161616f5;
     --st-highlight-background: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
+    --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
+    --st-highlight-info: #101a22;
     --st-total-background: #2f462f;
     --st-primary-color: #fff;
     --st-insignificant-color: #888;
@@ -78,10 +84,10 @@ async function applyStyles() {
     --st-a-color: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
-    --st-hover-brightness: 1.4;
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
+    --st-hover-brightness: 1.4;
     color-scheme: dark;
 }`,
         invertCss = `
@@ -108,6 +114,43 @@ ${await getSetting('magister-css-dark-invert') ? invertCss : ''}
 ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 
     createStyle(rootVars + `
+.st-button {
+    height: 32px;
+    padding: 6px 16px;
+    background: var(--st-accent-primary);
+    font-family: var(--st-secondary-font-family);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    outline: none;
+    border-radius: var(--st-widget-border-radius);
+    color: #fff;
+    cursor: pointer;
+    transition: filter 200ms, transform 200ms;
+}
+
+.st-button:hover, .st-button:focus {
+    filter: brightness(var(--st-hover-brightness));
+}
+
+.st-button:active {
+    transform: scale(.9);
+}
+
+.st-button[data-icon]:before {
+    content: attr(data-icon);
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 500;
+    font-size: 18px;
+    vertical-align: -2px;
+    margin-right: 10px;
+}
+
+.st-button[disabled] {
+    pointer-events: none;
+    opacity: .5;
+}
+
 .st-sw-subject,
 .st-sw-subject>button {
     background-color: var(--st-primary-background)
@@ -272,15 +315,12 @@ input[type=checkbox]+label span {
 }
 
 .agenda-text-icon,
-.cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen,
-.cijfers-k-grid.k-grid .grade.vrijstellingcolumn,
 .k-scheduler-weekview .k-scheduler-table .k-today,
 .k-scheduler-workWeekview .k-scheduler-table .k-today,
 .ng-scope td.vrijstelling,
 .versions li.selected,
 .versions li:hover,
-.k-scheduler .k-event.k-state-selected, 
-.cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade,
+.k-scheduler .k-event.k-state-selected,
 .alert,
 .k-dropdown .k-dropdown-wrap.k-state-active,
 .projects li.selected,
@@ -335,14 +375,9 @@ td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewij
 .collapsed-menu .popup-menu ul li a:hover,
 .toast,
 .alert-toast i,
-#vandaag-container .grade-widget ul {
+#vandaag-container .grade-widget ul,
+.cijfers-k-grid.k-grid .k-grid-header th.k-header {
     background: var(--st-primary-background)
-}
-
-.cijfers-k-grid.k-grid .grade.gemiddeldecolumn {
-    background: var(--st-total-background) !important;
-    background-color: var(--st-total-background) !important;
-    color: var(--st-primary-color) !important
 }
 
 .block h3, #studiewijzer-container div.studiewijzer-list div.head,
@@ -354,7 +389,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a), table.table-grid-layout td a {
+a:not(.user-content a, .st-button), table.table-grid-layout td a {
     color: var(--st-a-color);
     text-decoration: none;
     overflow-wrap: anywhere
@@ -373,24 +408,18 @@ a:not(.user-content a), table.table-grid-layout td a {
 .k-scheduler-weekview .k-scheduler-header .k-scheduler-table th,
 .k-scheduler-workWeekview .k-scheduler-header .k-scheduler-table th,
 table.table-grid-layout tr:hover,
-.cijfers-k-grid.k-grid .k-grid-content tr,
-.cijfers-k-grid.k-grid .k-grid-content tr.k-alt,
 .k-grid-header,
 #cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label {
     background-color: var(--st-primary-background) !important;
     box-shadow: none !important
 }
 
-.cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .grade.eloopdracht,
-table.table-grid-layout tr, table.table-grid-layout td {
+table.table-grid-layout tr, table.table-grid-layout td,
+#cijfers-container .main div.content-container-cijfers {
     background-color: var(--st-primary-background) !important;
     color: var(--st-primary-color)
 }
 
-#cijfers-container .main div.content-container-cijfers,
-.cijfers-k-grid.k-grid .grade.empty,
-.cijfers-k-grid.k-grid .k-grid-content,
-.cijfers-k-grid.k-grid .k-grid-header th.k-header,
 table,
 table.table-grid-layout td,  {
     background: var(--st-body-background) !important;
@@ -501,7 +530,7 @@ form .radio input[type=radio]:checked~label,
 }
 
 .alt-nrblock i,
-.k-scheduler .k-event.k-state-selected, .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade, .k-dropdown .k-input, .k-dropdown .k-state-focused .k-input {
+.k-scheduler .k-event.k-state-selected, .k-dropdown .k-input, .k-dropdown .k-state-focused .k-input {
     color: var(--st-primary-color) !important
 }
 
@@ -576,6 +605,31 @@ a.appbar-button,
     border-color: var(--st-accent-warn);
 }
 
+.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht {
+    background-color: var(--st-primary-background) !important;
+}
+
+.cijfers-k-grid.k-grid .grade.empty {
+    background: var(--st-inactive-background) !important;
+}
+
+.cijfers-k-grid.k-grid .k-grid-content, .cijfers-k-grid.k-grid .k-grid-content tr, .cijfers-k-grid.k-grid .k-grid-content tr.k-alt {
+    background: var(--st-body-background);
+}
+
+.cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen {
+    background-color: var(--st-highlight-info) !important;
+}
+
+.cijfers-k-grid.k-grid .grade.gemiddeldecolumn {
+    background-color: var(--st-highlight-ok) !important;
+}
+
+.cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
+    color: var(--st-primary-color);
+    filter: brightness(var(--st-hover-brightness));
+}
+
 .dvd-screensaver {
     position: absolute;
     translate: -90px -30px;
@@ -592,8 +646,6 @@ a.appbar-button,
   from { top: 0; } to { top: calc(100vh - 37px); }
 }
 `, 'study-tools-experimental')
-
-        // createStyle(`.block.grade-widget{background:var(--st-primary-background)}.block.grade-widget .content{overflow:hidden}.block.grade-widget.st-grade-widget-yes{background:linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary))}.block.grade-widget *{background:0 0!important;border:none!important}.block.grade-widget.st-grade-widget-yes *{color:#fff!important}#cijfers-leerling .last-grade{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:100%;height:70%;margin:0;padding:8px}#cijfers-leerling .block.grade-widget:not(.st-grade-widget-yes) .last-grade{color:var(--st-primary-color)}#cijfers-leerling .last-grade span.cijfer{font-family:var(--st-widget-heading-font);max-width:100%;width:fit-content}.block.grade-widget footer,.block.grade-widget h3{box-shadow:none}#cijfers-leerling .last-grade span.omschrijving{font:var(--st-widget-heading-font)}.block.grade-widget footer a{text-decoration:none;font-family:open-sans,sans-serif;font-size:0}.block.grade-widget footer a:before{content:'Alle cijfers ';text-transform:none;font-size:11px;position:relative}.block.grade-widget ul.arrow-list{translate:0 100px;position:absolute;display:flex;height:1em;width:100%;gap:2em}.block.grade-widget ul.arrow-list:after{content:'•';opacity:.5;position:absolute;left:50%;translate:-2px;top:1em}.block.grade-widget ul.arrow-list>li{width:50%;font-family:open-sans,sans-serif}.block.grade-widget ul.arrow-list>li a:after{content:none}.block.grade-widget ul.arrow-list>li a{padding:0}.block.grade-widget ul.arrow-list>li:first-child{text-align:right}`, 'study-tools-vd-gradewidget')
     }
 
     if (await getSetting('magister-vd-overhaul')) {
@@ -707,7 +759,7 @@ a.appbar-button,
     transition: filter 200ms, transform 200ms;
 }
 
-ul:only-of-type ~ div>#st-vd-schedule-switch {
+ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden], #st-vd-schedule>ul[data-tomorrow]:not(:has(li:not([data-filler]))) {
     display: none;
 }
 
@@ -723,7 +775,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    transition: scale 200ms, translate 200ms;
+    transition: scale 200ms;
 }
 
 #st-vd-schedule>ul:not(:has(li:not([data-filler]))):after {
@@ -737,15 +789,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
 }
 
 #st-vd-schedule>ul[data-hidden] {
-    scale: 0 1;
-    translate: -50%;
-    pointer-events: none;
-}
-
-#st-vd-schedule>ul[data-tomorrow][data-hidden] {
-    scale: 0 1;
-    translate: 50%;
-    pointer-events: none;
+    scale: 1 0;
 }
 
 #st-vd-schedule>ul:before {
@@ -945,48 +989,6 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
 
     if (true) {
         createStyle(`
-#st-cf-cl-open, #st-cf-cl-closer {
-    position: absolute;
-    top: 80px;
-    right: 160px;
-    padding: 10px;
-    margin: -10px 0;
-    z-index: 9999;
-    font-family: 'Font Awesome 5 Pro';
-    font-weight: 500;
-    font-size: 20px;
-    user-select: none;
-    transition: transform 200ms;
-}
-
-#st-cf-cl-open:after, #st-cf-cl-closer:after {
-    width: 115px;
-    content: "Cijfercalculator";
-    font-family: var(--st-secondary-font-family);
-    font-size: 14px;
-    display: block;
-    position: absolute;
-    left: 35px;
-    top: 12px;
-}
-
-#st-cf-cl-closer:after {
-    content: "Wissen en sluiten";
-}
-
-#st-cf-cl-closer {
-    top: 25px;
-    right: 150px;
-}
-
-#st-cf-cl-open:hover, #st-cf-cl-closer:hover {
-    transform: scale(1.07)
-}
-
-#st-cf-cl-open:active, #st-cf-cl-closer:active {
-    transform: scale(.95)
-}
-
 #st-cf-cl {
     position: absolute;
     top: 0;
@@ -996,10 +998,13 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     background: var(--st-overlay-background);
     color: var(--st-primary-color);
     z-index: 99999;
+    transition: translate 200ms, opacity 200ms;
 }
 
 #st-cf-cl[data-step="0"] {
-    display: none;
+    opacity: 0;
+    pointer-events: none !important;
+    user-select: none !important;
 }
 
 #st-cf-cl-title {
@@ -1029,11 +1034,14 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     top: 154px;
     right: 16px;
     width: 425px;
-    height: calc(100% - 178px);
+    height: calc(100% - 550px);
     padding: 0 16px;
-    border: var(--st-widget-border);
-    border-radius: var(--st-widget-border-radius);
+    overflow: auto;
     font-size: 14px;
+    line-height: 28px;
+    border-radius: var(--st-widget-border-radius) var(--st-widget-border-radius) 0 0;
+    border: var(--st-widget-border);
+    border-bottom: none;
 }
 
 #st-cf-cl-added:before {
@@ -1042,69 +1050,83 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     font: var(--st-widget-heading-font);
 }
 
-#st-cf-cl-mean, #st-cf-cl-future-desc {
+#st-cf-cl-mean {
     position: absolute;
-    bottom: 300px;
+    bottom: 343px;
     right: 16px;
     width: 425px;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 16px;
+    height: 53px;
+    padding: 3px 16px;
+    font: var(--st-widget-heading-font);
+    font-size: 20px;
+    border: var(--st-widget-border);
 }
 
-#st-cf-cl-mean:after {
-    content: '';
-    position: absolute;
-    width: 425px;
-    left: 0;
-    height: 1px;
-    bottom: 0px;
-    background: var(--st-primary-border-color);
-    display: block;
+#st-cf-cl-mean:before {
+    content: "Gemiddelde: ";
+    font: var(--st-widget-heading-font);
+    color: var(--st-primary-color);
 }
 
 #st-cf-cl-future-desc {
-    bottom: 220px;
-    height: 50px;
+    position: absolute;
+    display: block;
+    height: 320px;
+    width: 425px;
+    bottom: 24px;
+    right: 16px;
+    padding: 40px 16px 16px;
     font-size: 12px;
     font-weight: normal;
+    border: var(--st-widget-border);
+    border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
 }
 
 #st-cf-cl-future-desc:before {
     position: absolute;
-    bottom: 30px;
+    bottom: 275px;
     content: 'Toekomstig cijfer';
     font: var(--st-widget-heading-font);
+    color: var(--st-primary-color);
 }
 
 #st-cf-cl-future-desc:after {
     position: absolute;
-    bottom: 30px;
-    left: 147px;
-    content: 'met weging';
-    font: var(--st-widget-heading-font);
-    font-weight: 400;
-    opacity: .8;
+    bottom: 287px;
+    right: 80px;
+    content: 'Weging';
+    font-family: var(--st-secondary-font);
+    font-size: 14px;
+    color: var(--st-primary-color);
 }
 
 #st-cf-cl #st-cf-cl-future-weight {
-    bottom: 256px;
-    right: 147px;
+    bottom: 306px;
+    right: 32px;
     top: auto;
+}
+
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-future-weight, #st-cf-cl:not([data-step="2"]) #st-cf-cl-future-desc:after {
+    display: none;
 }
 
 #st-cf-cl-canvas {
     position: absolute;
-    right: 17px;
+    right: 16px;
     bottom: 25px;
-    border-radius: var(--st-widget-border-radius)
+    z-index: 2;
+}
+
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas, #st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas-highlight {
+    pointer-events: none;
+    display: none;
 }
 
 #st-cf-cl-canvas-highlight {
     position: absolute;
     width: 4px;
     translate: -2px;
-    height: 184px;
+    height: 250px;
     bottom: 25px;
     opacity: 0;
     background: var(--st-accent-primary);
@@ -1120,43 +1142,29 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
     color: var(--st-accent-warn);
 }
 
-#st-cf-cl-add-table, #st-cf-cl-add-custom {
+#st-cf-cl-open, #st-cf-cl-closer {
     position: absolute;
-    top: 55px;
-    right: 30px;
-    display: block;
-    background: var(--st-accent-primary);
-    font-family: var(--st-secondary-font-family);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 6px 16px;
-    border-radius: var(--st-widget-border-radius);
-    color: #fff;
-    user-select: none;
-    transition: filter 200ms, transform 200ms;
+    top: 35px;
+    right: 28px;
+    z-index: 99999;
 }
 
-#st-cf-cl-add-table[disabled] {
-    pointer-events: none;
-    opacity: .5;
+#st-cf-cl-add-table {
+    position: absolute;
+    top: 35px;
+    right: 205px;
 }
 
 #st-cf-cl-add-custom {
-    top: 90px;
-}
-
-#st-cf-cl-add-table:hover, #st-cf-cl-add-custom:hover {
-    filter: brightness(var(--st-hover-brightness));
-}
-
-#st-cf-cl-add-table:active, #st-cf-cl-add-custom:active {
-    transform: scale(.9);
+    position: absolute;
+    top: 75px;
+    right: 28px;
 }
 
 #st-cf-cl input[type=number] {
     position: absolute;
-    top: 90px;
-    right: 320px;
+    top: 75px;
+    right: 318px;
     width: 60px;
     height: 32px;
     font-family: var(--st-secondary-font-family);
@@ -1168,7 +1176,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch {
 }
 
 #st-cf-cl #st-cf-cl-add-custom-weight {
-    right: 255px;
+    right: 253px;
 }
 
 .main.st-trigger:hover ~ aside {

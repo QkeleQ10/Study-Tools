@@ -107,17 +107,15 @@ async function vandaagSchedule(scheduleWrapper) {
         scheduleLinkList = document.createElement('a')
 
     scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
-    scheduleTomorrowContainer.dataset.hidden = true
-    scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList, scheduleDaySwitcher)
-    scheduleDaySwitcher.innerText = ''
+    scheduleButtonWrapper.append(scheduleDaySwitcher, scheduleLinkWeek, scheduleLinkList)
+    scheduleDaySwitcher.innerText = ''
     scheduleDaySwitcher.id = 'st-vd-schedule-switch'
     scheduleDaySwitcher.title = `Van dag wisselen`
     scheduleDaySwitcher.addEventListener('click', () => {
-        let hidden = document.querySelector('#st-vd-schedule>ul[data-hidden]'),
-            shown = document.querySelector('#st-vd-schedule>ul:not([data-hidden])')
-        hidden.removeAttribute('data-hidden')
-        shown.setAttribute('data-hidden', true)
+        document.querySelector('#st-vd-schedule>ul[data-tomorrow]').toggleAttribute('data-hidden')
     })
+    if (await getSetting('magister-vd-hide-tomorrow')) scheduleTomorrowContainer.dataset.hidden = true
+    else scheduleDaySwitcher.dataset.hidden = true
     scheduleLinkWeek.innerText = ''
     scheduleLinkWeek.classList.add('st-vd-schedule-link')
     scheduleLinkWeek.title = `Weekoverzicht`
@@ -177,13 +175,13 @@ async function cijferoverzicht() {
         menuCollapser = await getElement('.menu-footer>a'),
         gradesContainer = await getElement('.content-container-cijfers'),
         gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
-        clOpen = document.createElement('a'),
+        clOpen = document.createElement('button'),
+        clCloser = document.createElement('button'),
+        clAddTable = document.createElement('button'),
+        clAddCustom = document.createElement('button'),
         clWrapper = document.createElement('div'),
-        clCloser = document.createElement('a'),
         clTitle = document.createElement('span'),
         clSubtitle = document.createElement('span'),
-        clAddTable = document.createElement('a'),
-        clAddCustom = document.createElement('a'),
         clAddCustomResult = document.createElement('input'),
         clAddCustomWeight = document.createElement('input'),
         clAdded = document.createElement('p'),
@@ -191,28 +189,35 @@ async function cijferoverzicht() {
         clFutureWeight = document.createElement('input'),
         clFutureDesc = document.createElement('p'),
         clCanvas = document.createElement('canvas'),
+        ctx = clCanvas.getContext('2d'),
         clCanvasHighlight = document.createElement('div'),
         resultsList = [],
         weightsList = [],
         hypotheticalWeight = 1,
         mean
 
-    mainSection.append(clOpen)
+    document.body.append(clOpen)
+    clOpen.classList.add('st-button')
     clOpen.id = 'st-cf-cl-open'
-    clOpen.innerText = ''
+    clOpen.innerText = "Cijfercalculator"
+    clOpen.dataset.icon = ''
     document.body.append(clWrapper)
     clWrapper.id = 'st-cf-cl'
     clWrapper.dataset.step = 0
     clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustom, clAddCustomResult, clAddCustomWeight, clCanvas, clCanvasHighlight, clFutureDesc, clFutureWeight)
-    clCloser.id = 'st-cf-cl-closer'
-    clCloser.innerText = ''
     clTitle.id = 'st-cf-cl-title'
     clTitle.innerText = "Cijfercalculator"
     clSubtitle.id = 'st-cf-cl-subtitle'
     clAdded.id = 'st-cf-cl-added'
     clMean.id = 'st-cf-cl-mean'
+    clCloser.classList.add('st-button')
+    clCloser.id = 'st-cf-cl-closer'
+    clCloser.innerText = "Wissen en sluiten"
+    clCloser.dataset.icon = ''
+    clAddTable.classList.add('st-button')
     clAddTable.id = 'st-cf-cl-add-table'
-    clAddTable.innerText = "Cijfer uit cijferoverzicht toevoegen"
+    clAddTable.innerText = "Geselecteerd cijfer toevoegen"
+    clAddCustom.classList.add('st-button')
     clAddCustom.id = 'st-cf-cl-add-custom'
     clAddCustom.innerText = "Cijfer handmatig toevoegen"
     setAttributes(clAddCustomResult, { id: 'st-cf-cl-add-custom-result', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 })
@@ -220,12 +225,13 @@ async function cijferoverzicht() {
     setAttributes(clFutureWeight, { id: 'st-cf-cl-future-weight', type: 'number', placeholder: 'Weging', min: 1, value: 1 })
     clFutureDesc.id = 'st-cf-cl-future-desc'
     clCanvas.id = 'st-cf-cl-canvas'
-    setAttributes(clCanvas, { height: 182, width: 424 })
-    let ctx = clCanvas.getContext('2d')
+    setAttributes(clCanvas, { height: 250, width: 424 })
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
     clCanvasHighlight.id = 'st-cf-cl-canvas-highlight'
 
     clOpen.addEventListener('click', async () => {
+        clCanvas = document.getElementById('st-cf-cl-canvas')
+        ctx = clCanvas.getContext('2d')
         document.body.style.marginLeft = '-130px'
         mainSection.classList.add('st-trigger')
         clWrapper.dataset.step = 1
@@ -233,7 +239,7 @@ async function cijferoverzicht() {
         weightsList = []
         clAdded.innerText = ''
         clMean.innerText = ''
-        clFutureDesc.innerText = 'Voordat je kunt berekenen wat je moet halen of wat je zult staan, moet je eerst cijfers toevoegen aan de berekening.'
+        clFutureDesc.innerText = ''
         ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
         clSubtitle.innerText = "Voeg cijfers toe aan de berekening met de knoppen rechtsboven \nof voeg een cijfer uit het overzicht toe door erop te dubbelklikken."
         gradesContainer.style.zIndex = '999999'
@@ -265,11 +271,12 @@ async function cijferoverzicht() {
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
 
-        clMean.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         if (mean < 5.5) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')
 
-        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc)
+        clWrapper.dataset.step = 2
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
     })
 
     clAddCustom.addEventListener('click', async () => {
@@ -281,27 +288,41 @@ async function cijferoverzicht() {
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
 
-        clMean.innerText = `Gemiddelde: ${mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         if (mean < 5.5) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')
 
-        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc)
+        clWrapper.dataset.step = 2
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
     })
 
     clFutureWeight.addEventListener('input', async () => {
         hypotheticalWeight = Number(clFutureWeight.value)
         if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) return
-        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc)
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
     })
 
     clCloser.addEventListener('click', async () => {
         document.body.style.marginLeft = '0'
         mainSection.classList.remove('st-trigger')
         clWrapper.dataset.step = 0
+        menuCollapser.click()
     })
 }
 
-async function updateGradeChart(resultsList, weightsList, weight = 1, mean, ctx, clCanvas, clCanvasHighlight, clFutureDesc) {
+async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCanvasHighlight, clFutureDesc) {
+    let clCanvas = document.getElementById('st-cf-cl-canvas'),
+        oldElement = clCanvas,
+        newElement = oldElement.cloneNode(true),
+        widthCoefficient = clCanvas.width / 91,
+        heightCoefficient = clCanvas.height / 91
+    oldElement.parentElement.replaceChild(newElement, oldElement)
+    clCanvas = newElement
+    oldElement.remove()
+
+    let ctx = clCanvas.getContext('2d')
+    ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+
     let means = weightedPossibleMeans(resultsList, weightsList, weight),
         landmarks = [1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10]
     ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
@@ -310,22 +331,23 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, ctx,
         else ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
         ctx.globalAlpha = 0.5
         ctx.beginPath()
-        ctx.moveTo(0, (num * 10 - 9) * 2)
-        ctx.lineTo(clCanvas.width, (num * 10 - 9) * 2)
+        ctx.moveTo(0, (num * 10 - 9) * heightCoefficient - 1)
+        ctx.lineTo(clCanvas.width, (num * 10 - 9) * heightCoefficient - 1)
         ctx.stroke()
         ctx.beginPath()
-        ctx.moveTo((num * 10 - 9) * 4.62, 0)
-        ctx.lineTo((num * 10 - 9) * 4.62, clCanvas.height)
+        ctx.moveTo((num * 10 - 9) * widthCoefficient - 1, 0)
+        ctx.lineTo((num * 10 - 9) * widthCoefficient - 1, clCanvas.height)
         ctx.stroke()
     })
 
     ctx.save()
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
     ctx.font = '12px open-sans, sans-serif'
-    ctx.fillText("Cijfer ➔", 370, 170)
+    ctx.fillText("Cijfer ➔", 370, 240)
     ctx.translate(clCanvas.width / 2, clCanvas.height / 2)
     ctx.rotate(-Math.PI / 2)
-    ctx.fillText("Gemiddelde ➔", 0, -190)
+    ctx.fillText("Gemiddelde ➔", 30, -190)
     ctx.restore()
 
     let grade1 = means[1][0],
@@ -337,45 +359,47 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, ctx,
     ctx.globalAlpha = 1
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
     ctx.beginPath()
-    ctx.moveTo((grade1 * 10 - 9) * 4.62, (mean1 * 10 - 9) * 2)
-    ctx.lineTo((grade55 * 10 - 9) * 4.62, (mean55 * 10 - 9) * 2)
+    ctx.moveTo((grade1 * 10 - 9) * widthCoefficient - 1, (mean1 * 10 - 9) * heightCoefficient - 1)
+    ctx.lineTo((grade55 * 10 - 9) * widthCoefficient - 1, (mean55 * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
     ctx.beginPath()
-    ctx.moveTo((grade55 * 10 - 9) * 4.62, (mean55 * 10 - 9) * 2)
-    ctx.lineTo((grade10 * 10 - 9) * 4.62, (mean10 * 10 - 9) * 2)
+    ctx.moveTo((grade55 * 10 - 9) * widthCoefficient - 1, (mean55 * 10 - 9) * heightCoefficient - 1)
+    ctx.lineTo((grade10 * 10 - 9) * widthCoefficient - 1, (mean10 * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
     clCanvasHighlight.classList.remove('show')
     clFutureDesc.innerText = ''
 
     for (let i = 0; i < means[0].length; i++) {
         let meanH = means[0][i],
-            gradeH = means[1][i - 1] || 1.0
-        if (gradeH <= 1.0 && meanH >= 5.5) {
-            clFutureDesc.style.color = 'var(--st-primary-color)'
-            clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt blijf je hoe dan ook een voldoende staan.`
-            break
-        } else if (meanH >= 5.5) {
+            gradeH = means[1][i] || 1.0
+        if (meanH > 5.49) {
             clFutureDesc.style.color = 'var(--st-primary-color)'
             clFutureDesc.innerText = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+            if (gradeH <= 1.0) {
+                clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt blijf je in elk geval een voldoende staan.`
+            } else if (gradeH > 9.9) {
+                clFutureDesc.innerText = `Haal een 10,0 om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+            }
             break
         } else {
             clFutureDesc.style.color = 'var(--st-accent-warn)'
             clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt kun je geen voldoende komen te staan.`
         }
-
-        clCanvas.addEventListener('mousemove', (e) => {
-            clCanvasHighlight.classList.add('show')
-            clCanvasHighlight.style.left = e.clientX + 'px'
-            let rect = e.target.getBoundingClientRect(),
-                x = e.clientX - rect.left,
-                y = e.clientY - rect.top,
-                index = Math.round(x / 4.62) - 1
-            if (index < 0) index = 0
-            if (index > 90) index = 90
-            clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan sta je gemiddeld een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        })
     }
+
+    clCanvas.addEventListener('mousemove', (e) => {
+        clCanvasHighlight.classList.add('show')
+        clCanvasHighlight.style.left = e.clientX + 'px'
+        let rect = e.target.getBoundingClientRect(),
+            x = e.clientX - rect.left
+        index = Math.round(x / widthCoefficient) - 1
+        if (index < 0) index = 0
+        else if (index > 90) index = 90
+        if (means[0][index] > 5.49) clFutureDesc.style.color = 'var(--st-primary-color)'
+        else clFutureDesc.style.color = 'var(--st-accent-warn)'
+        clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan kom je gemiddeld een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} te staan.`
+    })
 }
 
 async function displayScheduleList(agendaElems, container) {
@@ -612,6 +636,10 @@ async function init() {
 
 // Run when the URL changes
 async function popstate() {
+    document.querySelectorAll('.st-button').forEach(e => {
+        e.remove()
+    })
+
     const href = document.location.href.split('?')[0]
 
     if (href.endsWith('/vandaag')) vandaag()
