@@ -147,12 +147,12 @@ async function studiewijzers() {
 
 async function studiewijzer() {
     if (await getSetting('magister-sw-thisWeek')) {
-        let list = await getElement('.studiewijzer-list>ul, .content.projects>ul'),
+        let list = await getElement('.studiewijzer-content-container>ul'),
             titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(`(?<![0-9])(${await getWeekNumber()}){1}(?![0-9])`, "g")
+            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
 
-        titles.forEach(title => {
-            if (regex.test(title.innerText) || list.childElementCount === 1) {
+        titles.forEach(async title => {
+            if (list.childElementCount === 1 || regex.exec(title.innerText.replace(await getWeekNumber(), 'match'))) {
                 let top = title.parentElement,
                     bottom = top.nextElementSibling.lastElementChild,
                     li = top.parentElement.parentElement
