@@ -49,21 +49,27 @@ async function vandaag() {
 async function vandaagNotifications(notifcationsWrapper) {
     let lastGrade = await getElement('.block.grade-widget span.cijfer'),
         lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
+        moreGrades = await getElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
         unreadItems = await getElement('#notificatie-widget ul>li', true),
-        gradeNotification = document.createElement('li')
-
-    gradeNotification.id = 'st-vd-grade-notification'
+        gradeNotification = document.createElement('li'),
+        gradeNotificationSpan = document.createElement('span')
 
     if (lastGrade.innerText === '-' || lastGradeDescription.innerText === 'geen cijfers') {
-        gradeNotification.innerText = 'Geen cijfers'
+        gradeNotification.innerText = 'Geen nieuwe cijfers'
         gradeNotification.dataset.insignificant = true
     } else {
         gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
-        gradeNotification.dataset.grade = lastGrade.innerText
+        gradeNotificationSpan.innerText = lastGrade.innerText
+        if (Number(moreGrades.innerText) > 1) {
+            gradeNotification.dataset.additionalInfo = `en nog ${Number(moreGrades.innerText) - 1} andere cijfers`
+        }
     }
+    notifcationsWrapper.append(gradeNotification)
+    gradeNotification.id = 'st-vd-grade-notification'
     gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
     gradeNotification.dataset.icon = ''
-    notifcationsWrapper.append(gradeNotification)
+    gradeNotification.append(gradeNotificationSpan)
+    gradeNotificationSpan.id = 'st-vd-grade-notification-span'
 
     unreadItems.forEach((e, i, a) => {
         setTimeout(() => {
@@ -98,8 +104,7 @@ async function vandaagNotifications(notifcationsWrapper) {
 }
 
 async function vandaagSchedule(scheduleWrapper) {
-    let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000),
-        scheduleTodayContainer = document.createElement('ul'),
+    let scheduleTodayContainer = document.createElement('ul'),
         scheduleTomorrowContainer = document.createElement('ul'),
         scheduleButtonWrapper = document.createElement('div'),
         scheduleDaySwitcher = document.createElement('a'),
@@ -125,6 +130,7 @@ async function vandaagSchedule(scheduleWrapper) {
     scheduleLinkList.title = `Afsprakenlijst`
     scheduleLinkList.href = '#/agenda'
 
+    let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
     displayScheduleList(agendaTodayElems, scheduleTodayContainer)
 
     setTimeout(async () => {
@@ -170,7 +176,7 @@ async function studiewijzer() {
 }
 
 async function cijferoverzicht() {
-    let mainSection = await getElement('section.main'),
+    let aside = await getElement('#cijfers-container aside'),
         menuHost = await getElement('.menu-host'),
         menuCollapser = await getElement('.menu-footer>a'),
         gradesContainer = await getElement('.content-container-cijfers'),
@@ -204,7 +210,7 @@ async function cijferoverzicht() {
     document.body.append(clWrapper)
     clWrapper.id = 'st-cf-cl'
     clWrapper.dataset.step = 0
-    clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustom, clAddCustomResult, clAddCustomWeight, clCanvas, clCanvasHighlight, clFutureDesc, clFutureWeight)
+    clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvas, clCanvasHighlight, clFutureDesc, clFutureWeight)
     clTitle.id = 'st-cf-cl-title'
     clTitle.innerText = "Cijfercalculator"
     clSubtitle.id = 'st-cf-cl-subtitle'
@@ -233,7 +239,6 @@ async function cijferoverzicht() {
         clCanvas = document.getElementById('st-cf-cl-canvas')
         ctx = clCanvas.getContext('2d')
         document.body.style.marginLeft = '-130px'
-        mainSection.classList.add('st-trigger')
         clWrapper.dataset.step = 1
         resultsList = []
         weightsList = []
@@ -241,9 +246,13 @@ async function cijferoverzicht() {
         clMean.innerText = ''
         clFutureDesc.innerText = ''
         ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
-        clSubtitle.innerText = "Voeg cijfers toe aan de berekening met de knoppen rechtsboven \nof voeg een cijfer uit het overzicht toe door erop te dubbelklikken."
+        clSubtitle.innerText = "Voeg cijfers toe met de knoppen of dubbelklik op een cijfer \nuit de tabel. Druk op de toets '?' om de zijbalk weer te geven."
         gradesContainer.style.zIndex = '999999'
         if (!menuHost.classList.contains('collapsed-menu')) menuCollapser.click()
+    })
+
+    addEventListener("keydown", e => {
+        if (clWrapper.dataset.step !== 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
     })
 
     gradesContainer.addEventListener('dblclick', () => {
@@ -256,17 +265,21 @@ async function cijferoverzicht() {
 
     clAddTable.addEventListener('click', async () => {
         if (clAddTable.disabled) return
-        let result, weight
+        let result, weight, column, title
         gradeDetails.childNodes.forEach(element => {
             if (element.innerText === 'Beoordeling') {
                 result = Number(element.nextElementSibling.innerText.replace(',', '.'))
             } else if (element.innerText === 'Weging') {
                 weight = Number(element.nextElementSibling.innerText.replace(',', '.'))
+            } else if (element.innerText === 'Kolomnaam') {
+                column = element.nextElementSibling.innerText
+            } else if (element.innerText === 'Kolomkop') {
+                title = element.nextElementSibling.innerText
             }
         })
 
         if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
-        clAdded.innerText += `${result.toLocaleString('nl-NL')} (${weight}x)\n`
+        clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
         resultsList.push(result)
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
@@ -283,7 +296,7 @@ async function cijferoverzicht() {
         let result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
 
         if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
-        clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x, handmatig ingevoerd)\n`
+        clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
         resultsList.push(result)
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
@@ -304,7 +317,6 @@ async function cijferoverzicht() {
 
     clCloser.addEventListener('click', async () => {
         document.body.style.marginLeft = '0'
-        mainSection.classList.remove('st-trigger')
         clWrapper.dataset.step = 0
         menuCollapser.click()
     })

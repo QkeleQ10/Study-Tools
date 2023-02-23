@@ -726,7 +726,7 @@ a.appbar-button,
     position: relative;
 }
 
-#st-vd>*:not([ready]):empty:after {
+#st-vd>*:not([data-ready]):after {
     content: 'Wachten op items...';
     position: absolute;
     top: 50%;
@@ -778,7 +778,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     transition: scale 200ms;
 }
 
-#st-vd-schedule>ul:not(:has(li:not([data-filler]))):after {
+#st-vd-schedule[data-ready]>ul:not(:has(li:not([data-filler]))):after {
     content: 'Geen items';
     position: absolute;
     top: 50%;
@@ -929,7 +929,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 }
 
 #st-vd-notifications > li[data-insignificant], #st-vd-notifications > #st-vd-grade-notification[data-insignificant] {
-    color: var(--st-insignificant-color);
+    color: var(--st-insignificant-color) !important;
     background: var(--st-body-background);
 }
 
@@ -953,18 +953,17 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 }
 
 #st-vd-notifications > #st-vd-grade-notification {
-    color: #fff;
-    background: var(--st-accent-primary);
+    color: #fff !important;
+    background: linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary));
 }
 
-#st-vd-notifications > #st-vd-grade-notification[data-grade]:after {
+#st-vd-grade-notification-span {
     display: inline-block;
-    content: attr(data-grade);
+    translate: 3px;
+    color: #fff !important;
     font: var(--st-widget-heading-font);
-    font-size: 32px;
-    line-height: normal;
-    vertical-align: -4px;
-    translate: 4px;
+    font-size: 24px;
+    line-height: 0px;
 }
 
 @media (max-width:1100px) {
@@ -1179,10 +1178,9 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     right: 253px;
 }
 
-.main.st-trigger:hover ~ aside {
+aside.st-appear-top {
     z-index: 999999;
     background: var(--st-primary-background);
-    opacity: 0.7;
 }
 `, 'study-tools-cf-calculator')
     }
