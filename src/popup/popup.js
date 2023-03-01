@@ -90,14 +90,16 @@ async function init() {
     refreshConditionals()
 
     setInterval(async () => {
-        document.querySelectorAll('[data-saved="saved"]').forEach(e => e.removeAttribute('data-saved'))
-        if (new Date().getTime() - diffTimestamp < 500) return
+        if (new Date().getTime() - diffTimestamp < 300) return
         if (Object.keys(diff).length === 0) return
         await setSettings(diff, 'sync')
         diff = {}
         diffTimestamp = 0
         document.querySelectorAll('[data-saved="not-saved"]').forEach(e => e.setAttribute('data-saved', 'saved'))
-    }, 500)
+        setTimeout(() => {
+            document.querySelectorAll('[data-saved="saved"]').forEach(e => e.removeAttribute('data-saved'))
+        }, 500)
+    }, 100)
 }
 
 function updateSubjects() {
@@ -163,12 +165,13 @@ function refreshConditionals() {
             if (negDependency?.checked && appear) appear = false
         }
         if (appear) {
-            e.classList.remove('collapse')
+            e.classList.remove('disabled-dependant')
             e.querySelector('input').removeAttribute('tabindex')
         }
         else {
-            e.classList.add('collapse')
+            e.classList.add('disabled-dependant')
             e.querySelector('input').setAttribute('tabindex', '-1')
+            if (e.querySelector('input').checked) e.querySelector('input').click()
         }
     })
 }

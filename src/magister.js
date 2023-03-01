@@ -35,8 +35,8 @@ async function vandaag() {
             if (!headerText.innerText) headerText.innerText = e[Math.floor(Math.random() * e.length)]
         }
     })
-    if (Math.random() < 0.01) headerText.innerText = "Bedankt voor het gebruiken van StudyTools"
-    if (Math.random() < 0.005) headerText.innerText = "Welkom op het Magister dat Iddink niet kon creëren"
+    if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van StudyTools!")
+    if (Math.random() < 0.005) showSnackbar("Welkom op het Magister dat Iddink niet kon creëren :)")
 
     setTimeout(() => header.dataset.transition = true, 2000)
     setTimeout(() => {
@@ -278,11 +278,13 @@ async function cijferoverzicht() {
             }
         })
 
-        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
+        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
+        if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
         clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
         resultsList.push(result)
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
+        showSnackbar('Cijfer toegevoegd aan de berekening.')
 
         clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         if (mean < 5.5) clMean.classList.add('insufficient')
@@ -295,11 +297,13 @@ async function cijferoverzicht() {
     clAddCustom.addEventListener('click', async () => {
         let result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
 
-        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10 || weight <= 0) return
+        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
+        if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
         clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
         resultsList.push(result)
         weightsList.push(weight)
         mean = weightedMean(resultsList, weightsList)
+        showSnackbar('Cijfer toegevoegd aan de berekening.')
 
         clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         if (mean < 5.5) clMean.classList.add('insufficient')

@@ -1,4 +1,21 @@
 window.addEventListener('DOMContentLoaded', (event) => {
+    const snackbarWrapper = document.createElement('div')
+    snackbarWrapper.id = 'st-snackbars'
+    document.body.append(snackbarWrapper)
+    createStyle(`
+#st-snackbars {
+    position: absolute; bottom: 32px; left: 32px; width: 400px; display: flex; flex-direction: column-reverse; gap: 16px; pointer-events: none;
+}
+
+#st-snackbars>div {
+    min-height: 40px; translate: 0 150%; opacity: 0; background-color: #111; color: #fff; padding: 14px 20px; border-radius: 8px; font-size: 16px; border: 1px solid #222; box-shadow: 0 0 5px 0 rgba(0,0,0,0.75); z-index: 9999999; transition: translate 200ms, opacity 200ms;
+}
+
+#st-snackbars>div.open {
+    translate: 0; opacity: 1;
+}
+    `, 'st-snackbar')
+
     checkSettings()
     checkUpdates()
 })
@@ -91,10 +108,26 @@ function showNotification(title, body, timeout) {
     if (timeout) setTimeout(() => notification.remove(), timeout)
 }
 
-function createStyle(content, id) {
+async function showSnackbar(body, duration = 4000) {
+    const snackbar = document.createElement('div'),
+        snackbarWrapper = await getElement('#st-snackbars')
+    snackbarWrapper.append(snackbar)
+    snackbar.innerText = body
+    setTimeout(() => {
+        snackbar.classList.add('open')
+    }, 50)
+    setTimeout(() => {
+        snackbar.classList.remove('open')
+    }, duration)
+    setTimeout(() => {
+        snackbar.remove()
+    }, duration + 150)
+}
+
+function createStyle(content, id = 'st-style') {
     return new Promise((resolve, reject) => {
-        let styleElem = document.createElement('style')
-        if (id) styleElem.id = id
+        let styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
+        styleElem.id = id
         styleElem.textContent = content
         document.head.append(styleElem)
         resolve(styleElem)

@@ -114,6 +114,14 @@ ${await getSetting('magister-css-dark-invert') ? invertCss : ''}
 ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 
     createStyle(rootVars + `
+#st-snackbars > div {
+    font: 16px arboria, sans-serif;
+    background-color: var(--st-primary-background);
+    color: var(--st-primary-color);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+}
+
 .st-button {
     height: 32px;
     padding: 6px 16px;
@@ -269,7 +277,7 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
     }
-}`, 'study-tools-essential')
+}`, 'study-tools-mandatory')
 
     if (await getSetting('magister-css-experimental')) {
         createStyle(`.block h3,
