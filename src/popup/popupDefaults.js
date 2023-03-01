@@ -56,13 +56,18 @@ const defaults = {
             "color": "#000000"
         },
         {
-            "name": "Kunst",
+            "name": "Kunst algemeen",
             "aliases": "ku, kua",
             "color": "#000000"
         },
         {
             "name": "Levensbeschouwing",
             "aliases": "lv",
+            "color": "#000000"
+        },
+        {
+            "name": "Lichamelijke opvoeding",
+            "aliases": "lo",
             "color": "#000000"
         },
         {
@@ -111,5 +116,10 @@ const defaults = {
             "color": "#000000"
         }
     ],
-    "magister-periods": "30, 47, 9"
+    "magister-css-experimental": true,
+    "magister-periods": "30, 47, 9",
+    "magister-css-hue": 207,
+    "magister-css-saturation": 95,
+    "magister-css-luminance": 55,
+    "magister-vd-agendaHeight": 1
 }

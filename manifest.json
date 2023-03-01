@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "1.2.5",
+    "version": "2.2.8",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -14,6 +14,11 @@
         "300": "icons/300.png",
         "512": "icons/512.png"
     },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "studytools@qkeleq10.dev"
+        }
+    },
     "content_scripts": [
         {
             "matches": [
@@ -22,7 +27,16 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "util.js"
+                "src/util.js"
+            ],
+            "run_at": "document_start"
+        },
+        {
+            "matches": [
+                "*://*.magister.net/*"
+            ],
+            "js": [
+                "src/magisterStyle.js"
             ],
             "run_at": "document_start"
         },
@@ -31,7 +45,7 @@
                 "*://accounts.magister.net/account/login*"
             ],
             "js": [
-                "magisterLogin.js"
+                "src/magisterLogin.js"
             ],
             "run_at": "document_end"
         },
@@ -40,7 +54,7 @@
                 "*://*.magister.net/magister/*"
             ],
             "js": [
-                "magister.js"
+                "src/magister.js"
             ],
             "run_at": "document_end"
         },
@@ -50,7 +64,7 @@
                 "*://identity.noordhoff.nl/*"
             ],
             "js": [
-                "noordhoff.js"
+                "src/noordhoff.js"
             ],
             "run_at": "document_end"
         },
@@ -59,19 +73,19 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "microsoftLogin.js"
+                "src/microsoftLogin.js"
             ],
             "run_at": "document_end"
         }
     ],
     "action": {
         "default_icon": "icons/512.png",
-        "default_popup": "popup.html",
+        "default_popup": "src/popup/popup.html",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
-    "options_page": "popup.html",
+    "options_page": "src/popup/popup.html",
     "options_ui": {
-        "page": "popup.html",
+        "page": "src/popup/popup.html",
         "open_in_tab": false
     },
     "permissions": [

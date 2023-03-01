@@ -8,9 +8,9 @@ async function login() {
 
     footer.style.translate = '0 -2rem'
     if (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000)
-        return footer.innerHTML = "<p><b>Automatisch inloggen is tijdelijk gepauzeerd.</b> De volgende keer zal er weer automatisch worden ingelogd.</p>"
+        return footer.innerText = "Automatisch inloggen is tijdelijk gepauzeerd. De volgende keer zal er weer automatisch worden ingelogd."
 
-    footer.innerHTML = "<p><b>Automatisch inloggen is ingeschakeld.</b> Je kunt de instellingen aanpassen via de extensie van Study Tools.</p>"
+    footer.innerText = "Automatisch inloggen is ingeschakeld. Je kunt de instellingen aanpassen via de extensie van Study Tools."
 
     let usernameField = await getElement('#username'),
         username = await getSetting('magisterLogin-username')
