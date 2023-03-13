@@ -293,7 +293,8 @@ footer.endlink {
 
 body,
 html {
-    height: calc(100vh + 1px)
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 .k-block,

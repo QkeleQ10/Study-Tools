@@ -22,11 +22,11 @@ async function vandaag() {
     vandaagSchedule(scheduleWrapper)
 
     const greetings = [
-        [22, 'Goedenavond', 'Goedenavond, nachtbraker'],
+        [22, 'Goedenavond', 'Hallo', 'Goedenavond, nachtuil'],
         [18, 'Goedenavond', 'Hallo'],
         [12, 'Goedemiddag', 'Hallo'],
-        [5, 'Goedemorgen', 'Goeiemorgen', 'Hallo'],
-        [0, 'Goedenacht', 'Goedemorgen, vroege vogel']
+        [5, 'Goedemorgen', 'Hallo', 'Goeiemorgen'],
+        [0, 'Goedenacht', 'Hallo', 'Goedemorgen, vroege vogel']
     ],
         hour = new Date().getHours()
     greetings.forEach(e => {
@@ -515,6 +515,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         grid = document.createElement('div')
 
     if (settingGrid) {
+        document.querySelectorAll('#st-sw-container').forEach(e=>e.remove())
         gridContainer.appendChild(gridWrapper)
         gridWrapper.id = 'st-sw-container'
         gridWrapper.appendChild(grid)
@@ -550,8 +551,6 @@ async function displayStudiewijzerArray(gridContainer, compact) {
 
 
     mappedArray.forEach(async ({ elem, title, period, subject, priority }, i) => {
-        elem.dataset.swStIndex = i
-        elem.dataset.title = title
         if (settingGrid) {
             let itemButton = document.createElement('button'),
                 subjectTile = document.querySelector(`div[data-subject='${subject}']`)
@@ -576,7 +575,10 @@ async function displayStudiewijzerArray(gridContainer, compact) {
             }
             itemButton.classList.add(`st-sw-${priority}`)
             if (viewTitle && viewTitle.toLowerCase() === title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) itemButton.classList.add(`st-sw-selected`)
-            itemButton.setAttribute('onclick', `document.querySelector('li[data-sw-st="${i}"], li[data-title="${title}"]>a').click()`)
+            itemButton.setAttribute('onclick', `
+            for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
+                if (e.textContent.includes("${title}")) e.click()
+            }`)
             subjectTile.appendChild(itemButton)
         } else {
             originalList.appendChild(elem)
