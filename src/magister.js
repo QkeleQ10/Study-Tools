@@ -464,7 +464,6 @@ async function displayScheduleList(agendaElems, container) {
             elementTitleNormal = document.createElement('span'),
             elementPeriod = document.createElement('span'),
             elementTooltip = document.createElement('span'),
-            elementPassed = document.createElement('div'),
             now = new Date(),
             subject,
             searchString
@@ -500,10 +499,8 @@ async function displayScheduleList(agendaElems, container) {
 
         if (now >= dateStart && now <= dateEnd) {
             elementWrapper.dataset.current = 'true'
-            // elementWrapper.append(elementPassed)
-            // elementPassed.style.height = await msToPixels(now - dateStart) + 'px'
-        }
-        else if (now > dateEnd) elementWrapper.dataset.past = 'true'
+            if (title) elementPeriod.style.borderBottom = await msToPixels(dateEnd - now) + 'px solid var(--st-accent-primary)'
+        } else if (now > dateEnd) elementWrapper.dataset.past = 'true'
     })
 }
 
@@ -668,7 +665,7 @@ async function popstate() {
     if (href.endsWith('/vandaag')) vandaag()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
-    else if (href.includes('/cijfers/cijferoverzicht')) cijferoverzicht()
+    else if (href.includes('/cijfers')) cijferoverzicht()
 }
 
 function getWeekNumber() {

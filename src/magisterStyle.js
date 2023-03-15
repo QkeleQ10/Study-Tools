@@ -828,10 +828,14 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 #st-vd-schedule>ul>li[data-filler] {
     background: none;
     border: none;
-    margin: -10px 0;
+    margin: -7px 0;
     max-height: 120px;
     opacity: 0.6;
     pointer-events: none;
+}
+
+#st-vd-schedule>ul>li[data-filler][data-current] {
+    opacity: 1;
 }
 
 #st-vd-schedule>ul>li[data-filler]:last-child {
@@ -845,7 +849,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     margin: 30px 0 10px;
 }
 
-#st-vd-schedule>ul:not([data-tomorrow])>li[data-current] {
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-current]:not([data-filler]) {
     background: var(--st-highlight-background) !important;
 }
 
@@ -880,12 +884,11 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     text-align: center;
     background: var(--st-highlight-background);
     font: var(--st-widget-heading-font);
-    z-index: 3;
     line-height: 40px;
 }
 
 #st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(3) {
-    background: var(--st-accent-primary);
+    background: var(--st-accent-secondary);
     color: #fff;
 }
 
