@@ -252,10 +252,11 @@ async function cijferoverzicht() {
     })
 
     addEventListener("keydown", e => {
-        if (clWrapper.dataset.step !== 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
+        if (clWrapper.dataset.step != 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
     })
 
     gradesContainer.addEventListener('dblclick', () => {
+        if (clWrapper.dataset.step == 0) return
         clAddTable.setAttribute('disabled', true)
         setTimeout(() => {
             clAddTable.removeAttribute('disabled')
@@ -450,7 +451,7 @@ async function displayScheduleList(agendaElems, container) {
             dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
 
             if (dateStartNext - dateEnd > 1000) {
-                time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} - ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
                 events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext })
             }
         }
@@ -515,7 +516,7 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         grid = document.createElement('div')
 
     if (settingGrid) {
-        document.querySelectorAll('#st-sw-container').forEach(e=>e.remove())
+        document.querySelectorAll('#st-sw-container').forEach(e => e.remove())
         gridContainer.appendChild(gridWrapper)
         gridWrapper.id = 'st-sw-container'
         gridWrapper.appendChild(grid)
