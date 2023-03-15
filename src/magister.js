@@ -421,8 +421,7 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCa
 
 async function displayScheduleList(agendaElems, container) {
     let events = [],
-        settingSubjects = await getSetting('magister-subjects'),
-        settingAgendaHeight = await getSetting('magister-vd-agendaHeight') || 50
+        settingSubjects = await getSetting('magister-subjects')
 
     if (agendaElems) agendaElems.forEach((e, i, a) => {
         let time = e.querySelector('.time')?.innerText,
@@ -465,6 +464,7 @@ async function displayScheduleList(agendaElems, container) {
             elementTitleNormal = document.createElement('span'),
             elementPeriod = document.createElement('span'),
             elementTooltip = document.createElement('span'),
+            elementPassed = document.createElement('div'),
             now = new Date(),
             subject,
             searchString
@@ -484,7 +484,7 @@ async function displayScheduleList(agendaElems, container) {
             elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
         }
 
-        height = ((0.0000222222 * settingAgendaHeight) * (dateEnd - dateStart)) + 'px'
+        height = await msToPixels(dateEnd - dateStart) + 'px'
 
         elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
         elementTime.innerText = time || ''
@@ -498,7 +498,11 @@ async function displayScheduleList(agendaElems, container) {
 
         if (!tooltip) elementTooltip.remove()
 
-        if (now >= dateStart && now <= dateEnd) elementWrapper.dataset.current = 'true'
+        if (now >= dateStart && now <= dateEnd) {
+            elementWrapper.dataset.current = 'true'
+            // elementWrapper.append(elementPassed)
+            // elementPassed.style.height = await msToPixels(now - dateStart) + 'px'
+        }
         else if (now > dateEnd) elementWrapper.dataset.past = 'true'
     })
 }
@@ -699,6 +703,13 @@ function weightedMean(valueArray, weightArray) {
         return [p[0] + c[0], p[1] + c[1]]
     }, [0, 0])
     return (result[0] / result[1])
+}
+
+async function msToPixels(ms) {
+    return new Promise(async (resolve, reject) => {
+        let settingAgendaHeight = await getSetting('magister-vd-agendaHeight') || 50
+        resolve(0.0000222222 * settingAgendaHeight * ms)
+    })
 }
 
 function setAttributes(el, attrs) {

@@ -880,6 +880,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     text-align: center;
     background: var(--st-highlight-background);
     font: var(--st-widget-heading-font);
+    z-index: 3;
     line-height: 40px;
 }
 
