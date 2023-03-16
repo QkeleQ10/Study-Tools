@@ -175,11 +175,11 @@ async function studiewijzer() {
     displayStudiewijzerArray(gridContainer, true)
 }
 
-async function cijferoverzicht() {
-    let aside = await getElement('#cijfers-container aside'),
+async function cijfers() {
+    let aside = await getElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         menuHost = await getElement('.menu-host'),
         menuCollapser = await getElement('.menu-footer>a'),
-        gradesContainer = await getElement('.content-container-cijfers'),
+        gradesContainer = await getElement('.content-container-cijfers, .content-container'),
         gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
         clOpen = document.createElement('button'),
         clCloser = document.createElement('button'),
@@ -268,13 +268,13 @@ async function cijferoverzicht() {
         if (clAddTable.disabled) return
         let result, weight, column, title
         gradeDetails.childNodes.forEach(element => {
-            if (element.innerText === 'Beoordeling') {
+            if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
                 result = Number(element.nextElementSibling.innerText.replace(',', '.'))
-            } else if (element.innerText === 'Weging') {
-                weight = Number(element.nextElementSibling.innerText.replace(',', '.'))
-            } else if (element.innerText === 'Kolomnaam') {
+            } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
+                weight = Number(element.nextElementSibling.innerText.replace('x', '').replace(',', '.'))
+            } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
                 column = element.nextElementSibling.innerText
-            } else if (element.innerText === 'Kolomkop') {
+            } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
                 title = element.nextElementSibling.innerText
             }
         })
@@ -656,16 +656,14 @@ async function init() {
 
 // Run when the URL changes
 async function popstate() {
-    document.querySelectorAll('.st-button').forEach(e => {
-        e.remove()
-    })
+    document.querySelectorAll('.st-button').forEach(e => e.remove())
 
     const href = document.location.href.split('?')[0]
 
     if (href.endsWith('/vandaag')) vandaag()
+    else if (href.includes('/cijfers')) cijfers()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
-    else if (href.includes('/cijfers')) cijferoverzicht()
 }
 
 function getWeekNumber() {
