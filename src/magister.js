@@ -305,8 +305,8 @@ async function cijfers() {
                 if (mean < 5.5) clMean.classList.add('insufficient')
                 else clMean.classList.remove('insufficient')
 
-                clWrapper.dataset.step = 2
                 updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
+                if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) clWrapper.dataset.step = 1
             })
 
             resultsList.push(result)
@@ -399,35 +399,55 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     ctx.stroke()
     clCanvasHighlight.classList.remove('show')
 
-    for (let i = 0; i < means[0].length; i++) {
-        let meanH = means[0][i],
-            gradeH = means[1][i] || 1.0
-        if (meanH > 5.49) {
-            clFutureDesc.style.color = 'var(--st-primary-color)'
-            clFutureDesc.innerText = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
-            if (gradeH <= 1.0) {
-                clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt blijf je in elk geval een voldoende staan.`
-            } else if (gradeH > 9.9) {
-                clFutureDesc.innerText = `Haal een 10,0 om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
-            }
-            break
-        } else {
-            clFutureDesc.style.color = 'var(--st-accent-warn)'
-            clFutureDesc.innerText = `Met een cijfer dat ${weight}x meetelt kun je geen voldoende komen te staan.`
-        }
-    }
+    let gradeAdvice = await formulateGradeAdvice(means, weight, mean)
+    clFutureDesc.innerText = gradeAdvice.text
+    clFutureDesc.style.color = gradeAdvice.color
 
-    clCanvas.addEventListener('mousemove', (e) => {
+    clCanvas.addEventListener('mousemove', event => {
         clCanvasHighlight.classList.add('show')
-        clCanvasHighlight.style.left = e.clientX + 'px'
-        let rect = e.target.getBoundingClientRect(),
-            x = e.clientX - rect.left
+        clCanvasHighlight.style.left = event.clientX + 'px'
+        let rect = event.target.getBoundingClientRect(),
+            x = event.clientX - rect.left
         index = Math.round(x / widthCoefficient) - 1
         if (index < 0) index = 0
         else if (index > 90) index = 90
         if (means[0][index] > 5.49) clFutureDesc.style.color = 'var(--st-primary-color)'
         else clFutureDesc.style.color = 'var(--st-accent-warn)'
         clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan kom je gemiddeld een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} te staan.`
+    })
+
+    clCanvas.addEventListener('mouseleave', async event => {
+        clCanvasHighlight.classList.remove('show')
+        gradeAdvice = await formulateGradeAdvice(means, weight, mean)
+        clFutureDesc.innerText = gradeAdvice.text
+        clFutureDesc.style.color = gradeAdvice.color
+    })
+}
+
+async function formulateGradeAdvice(means, weight, mean) {
+    return new Promise((resolve, reject) => {
+        let text, color
+        for (let i = 0; i < means[0].length; i++) {
+            let meanH = means[0][i],
+                gradeH = means[1][i] || 1.0
+            if (meanH > 5.49) {
+                color = 'var(--st-primary-color)'
+                text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+                if (gradeH <= 1.0) {
+                    text = `Met een cijfer dat ${weight}x meetelt blijf je in elk geval een voldoende staan.`
+                } else if (gradeH > 9.9) {
+                    text = `Haal een 10,0 om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+                }
+                break
+            } else {
+                color = 'var(--st-accent-warn)'
+                text = `Met een cijfer dat ${weight}x meetelt kun je geen voldoende komen te staan.`
+            }
+        }
+        resolve({
+            text: text || '',
+            color: color || 'var(--st-primary-color)'
+        })
     })
 }
 

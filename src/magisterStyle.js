@@ -627,7 +627,7 @@ a.appbar-button,
     background: var(--st-body-background);
 }
 
-.cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen {
+.cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
     background-color: var(--st-highlight-info) !important;
 }
 
@@ -1084,7 +1084,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 
 .st-cf-cl-added-element:before {
     right: 20px;
-    content: 'Verwijderen';
+    content: 'Wissen';
 }
 
 .st-cf-cl-added-element:after {
@@ -1133,6 +1133,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     font-weight: normal;
     border: var(--st-widget-border);
     border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
+    transition: color 150ms;
 }
 
 #st-cf-cl-future-desc:before {
@@ -1178,7 +1179,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 #st-cf-cl-canvas-highlight {
     position: absolute;
     width: 4px;
-    translate: -2px;
+    translate: -3px;
     height: 250px;
     bottom: 25px;
     opacity: 0;
