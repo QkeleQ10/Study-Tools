@@ -134,6 +134,7 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     border-radius: var(--st-widget-border-radius);
     color: #fff;
     cursor: pointer;
+    user-select: none;
     transition: filter 200ms, transform 200ms;
 }
 
@@ -957,6 +958,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     content: attr(data-icon);
     position: absolute;
     right: 25px;
+    top: 17px;
     width: 22px;
     text-align: center;
     font-family: 'Font Awesome 5 Pro';
@@ -1050,10 +1052,49 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     padding: 0 16px;
     overflow: auto;
     font-size: 14px;
-    line-height: 28px;
     border-radius: var(--st-widget-border-radius) var(--st-widget-border-radius) 0 0;
     border: var(--st-widget-border);
     border-bottom: none;
+}
+
+.st-cf-cl-added-element {
+    position: relative;
+    display: block;
+    height: 27px;
+    padding: 4px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: color 200ms, padding 200ms;
+}
+
+.st-cf-cl-added-element:hover {
+    color: var(--st-accent-warn);
+    padding-right: 110px;
+}
+
+.st-cf-cl-added-element:before, .st-cf-cl-added-element:after {
+    position: absolute;
+    top: 50%;
+    translate: 100px -50%;
+    color: var(--st-accent-warn);
+    transition: translate 200ms;
+}
+
+.st-cf-cl-added-element:before {
+    right: 20px;
+    content: 'Verwijderen';
+}
+
+.st-cf-cl-added-element:after {
+    right: 0;
+    content: '';
+    font-family: 'Font Awesome 5 Pro';
+}
+
+.st-cf-cl-added-element:hover:before, .st-cf-cl-added-element:hover:after {
+    translate: 0 -50%;
 }
 
 #st-cf-cl-added:before {

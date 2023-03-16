@@ -7,6 +7,8 @@ init()
 async function init() {
     if (chrome?.storage) start = await getSettings(null, null, true)
 
+    document.getElementById('version-label').innerText = 'Versie ' + chrome.runtime.getManifest().version
+
     document.querySelectorAll('.bind-boolean').forEach(element => {
         element.parentElement.dataset.checkbox = true
         let value = start[element.id]

@@ -265,54 +265,62 @@ async function cijfers() {
         }, 400)
     })
 
-    clAddTable.addEventListener('click', async () => {
-        if (clAddTable.disabled) return
-        let result, weight, column, title
-        gradeDetails.childNodes.forEach(element => {
-            if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
-                result = Number(element.nextElementSibling.innerText.replace(',', '.'))
-            } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
-                weight = Number(element.nextElementSibling.innerText.replace('x', '').replace(',', '.'))
-            } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
-                column = element.nextElementSibling.innerText
-            } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
-                title = element.nextElementSibling.innerText
+    document.querySelectorAll('#st-cf-cl-add-table, #st-cf-cl-add-custom').forEach(e => {
+        e.addEventListener('click', async event => {
+            if (clAddTable.disabled) return
+            let result, weight, column, title
+            if (event.target.id === 'st-cf-cl-add-table') {
+                gradeDetails.childNodes.forEach(element => {
+                    if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
+                        result = Number(element.nextElementSibling.innerText.replace(',', '.'))
+                    } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
+                        weight = Number(element.nextElementSibling.innerText.replace('x', '').replace(',', '.'))
+                    } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
+                        column = element.nextElementSibling.innerText
+                    } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
+                        title = element.nextElementSibling.innerText
+                    }
+                })
+            } else if (event.target.id === 'st-cf-cl-add-custom') {
+                result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
             }
+
+            if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
+            if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+
+            let addedElement = document.createElement('span')
+            clAdded.append(addedElement)
+            setAttributes(addedElement, { class: 'st-cf-cl-added-element', 'data-grade-index': resultsList.length })
+            if (column && title)
+                addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
+            else
+                addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
+            addedElement.addEventListener('click', event => {
+                resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
+                weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
+                event.target.remove()
+                mean = weightedMean(resultsList, weightsList)
+                showSnackbar('Cijfer verwijderd uit de berekening.')
+                clMean.innerText = isNaN(mean) ? '' : mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                if (mean < 5.5) clMean.classList.add('insufficient')
+                else clMean.classList.remove('insufficient')
+
+                clWrapper.dataset.step = 2
+                updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
+            })
+
+            resultsList.push(result)
+            weightsList.push(weight)
+            mean = weightedMean(resultsList, weightsList)
+            showSnackbar('Cijfer toegevoegd aan de berekening.')
+
+            clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            if (mean < 5.5) clMean.classList.add('insufficient')
+            else clMean.classList.remove('insufficient')
+
+            clWrapper.dataset.step = 2
+            updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
         })
-
-        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
-        if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
-        clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
-        resultsList.push(result)
-        weightsList.push(weight)
-        mean = weightedMean(resultsList, weightsList)
-        showSnackbar('Cijfer toegevoegd aan de berekening.')
-
-        clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        if (mean < 5.5) clMean.classList.add('insufficient')
-        else clMean.classList.remove('insufficient')
-
-        clWrapper.dataset.step = 2
-        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
-    })
-
-    clAddCustom.addEventListener('click', async () => {
-        let result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
-
-        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
-        if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
-        clAdded.innerText += `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
-        resultsList.push(result)
-        weightsList.push(weight)
-        mean = weightedMean(resultsList, weightsList)
-        showSnackbar('Cijfer toegevoegd aan de berekening.')
-
-        clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        if (mean < 5.5) clMean.classList.add('insufficient')
-        else clMean.classList.remove('insufficient')
-
-        clWrapper.dataset.step = 2
-        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
     })
 
     clFutureWeight.addEventListener('input', async () => {
@@ -338,9 +346,12 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     oldElement.parentElement.replaceChild(newElement, oldElement)
     clCanvas = newElement
     oldElement.remove()
+    clFutureDesc.innerText = ''
 
     let ctx = clCanvas.getContext('2d')
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+
+    if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) return
 
     let means = weightedPossibleMeans(resultsList, weightsList, weight),
         landmarks = [1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10]
@@ -387,7 +398,6 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     ctx.lineTo((grade10 * 10 - 9) * widthCoefficient - 1, (mean10 * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
     clCanvasHighlight.classList.remove('show')
-    clFutureDesc.innerText = ''
 
     for (let i = 0; i < means[0].length; i++) {
         let meanH = means[0][i],
@@ -707,12 +717,6 @@ async function msToPixels(ms) {
         let settingAgendaHeight = await getSetting('magister-vd-agendaHeight') || 50
         resolve(0.0000222222 * settingAgendaHeight * ms)
     })
-}
-
-function setAttributes(el, attrs) {
-    for (var key in attrs) {
-        el.setAttribute(key, attrs[key]);
-    }
 }
 
 function weightedPossibleMeans(valueArray, weightArray, newWeight) {
