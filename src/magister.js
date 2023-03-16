@@ -248,6 +248,7 @@ async function cijfers() {
         ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
         clSubtitle.innerText = "Voeg cijfers toe met de knoppen of dubbelklik op een cijfer \nuit de tabel. Druk op de toets '?' om de zijbalk weer te geven."
         gradesContainer.style.zIndex = '999999'
+        gradesContainer.style.maxWidth = 'calc(100vw - 477px)'
         if (!menuHost.classList.contains('collapsed-menu')) menuCollapser.click()
     })
 
@@ -322,6 +323,7 @@ async function cijfers() {
 
     clCloser.addEventListener('click', async () => {
         document.body.style.marginLeft = '0'
+        gradesContainer.removeAttribute('style')
         clWrapper.dataset.step = 0
         menuCollapser.click()
     })
@@ -656,7 +658,7 @@ async function init() {
 
 // Run when the URL changes
 async function popstate() {
-    document.querySelectorAll('.st-button').forEach(e => e.remove())
+    document.querySelectorAll('.st-button, [id^=st-cf-cl]').forEach(e => e.remove())
 
     const href = document.location.href.split('?')[0]
 

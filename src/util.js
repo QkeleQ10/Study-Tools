@@ -36,19 +36,22 @@ async function checkUpdates(override) {
                 if (data.version > chrome.runtime.getManifest().version) {
                     showNotification(`Nieuwe ${beta ? 'bèta' : ''}versie (${data.version})`, `Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a>`)
                 }
-                if (data.version > getSetting('usedExtension')) {
-                    fetch(`https://api.github.com/repos/QkeleQ10/Study-Tools/commits`)
-                        .then(async response => {
-                            if (response.ok) {
-                                let data = await response.json()
-                                showSnackbar(`Nieuw in deze update:\n${data[0].commit.message}`, 6000)
-                            } else {
-                                console.warn("Error requesting Study Tools manifest", response)
-                            }
-                        })
-                        .catch(error => {
-                            if (!override) checkUpdates(true)
-                        })
+            } else {
+                console.warn("Error requesting Study Tools manifest", response)
+            }
+        })
+        .catch(error => {
+            if (!override) checkUpdates(true)
+        })
+    
+    fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
+        .then(async response => {
+            if (response.ok) {
+                let data = await response.json(),
+                currentIndex = Object.keys(data).indexOf(data.version)
+                for (let i = 0; i < currentIndex; i++) {
+                    const element = data[i]
+                    
                 }
             } else {
                 console.warn("Error requesting Study Tools manifest", response)
