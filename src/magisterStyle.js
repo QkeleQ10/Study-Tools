@@ -55,6 +55,7 @@ async function applyStyles() {
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
+    --st-shadow-value: 100;
     --st-a-color: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
@@ -81,6 +82,7 @@ async function applyStyles() {
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
+    --st-shadow-value: 0;
     --st-a-color: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
@@ -108,18 +110,23 @@ async function applyStyles() {
         color: #000 !important;
     }`,
         rootVars = `${lightThemeCss}
-${await getSetting('magister-css-dark-auto') ? '@media (prefers-color-scheme: dark) {' : ''}
-${await getSetting('magister-css-dark') ? darkThemeCss : ''}
+${await getSetting('magister-css-theme') === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
+${await getSetting('magister-css-theme') !== 'light' ? darkThemeCss : ''}
 ${await getSetting('magister-css-dark-invert') ? invertCss : ''}
-${await getSetting('magister-css-dark-auto') ? '}' : ''}`
+${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 
     createStyle(rootVars + `
+#st-snackbars:has(div.open) {
+    background: radial-gradient(at bottom left, rgba(var(--st-shadow-value),var(--st-shadow-value),var(--st-shadow-value),0.75) 0%, rgba(var(--st-shadow-value),var(--st-shadow-value),var(--st-shadow-value),0) 70%)
+}
+
 #st-snackbars > div {
     font: 16px arboria, sans-serif;
     background-color: var(--st-primary-background);
     color: var(--st-primary-color);
     border: var(--st-widget-border);
     border-radius: var(--st-widget-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value),var(--st-shadow-value),var(--st-shadow-value),1);
 }
 
 .st-button {
@@ -769,16 +776,8 @@ a.appbar-button,
     transition: filter 200ms, transform 200ms;
 }
 
-ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden], #st-vd-schedule>ul[data-tomorrow]:not(:has(li:not([data-filler]))) {
+#st-vd-schedule>ul[data-tomorrow]:not(:has(li:not([data-filler]))) {
     display: none;
-}
-
-#st-vd-schedule-switch:hover {
-    transform: rotate(15deg) scale(1.3);
-}
-
-#st-vd-schedule-switch:active {
-    transform: rotate(180deg) scale(.8);
 }
 
 #st-vd-schedule>ul {
@@ -1128,7 +1127,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     width: 425px;
     bottom: 24px;
     right: 16px;
-    padding: 40px 16px 16px;
+    padding: 40px 10px 16px 16px;
     font-size: 12px;
     font-weight: normal;
     border: var(--st-widget-border);
@@ -1169,16 +1168,18 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     right: 16px;
     bottom: 25px;
     z-index: 2;
+    border-top: var(--st-widget-border);
+    border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
 }
 
-#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas, #st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas-highlight {
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas, #st-cf-cl:not([data-step="2"]) .st-cf-cl-canvas-hl {
     pointer-events: none;
     display: none;
 }
 
-#st-cf-cl-canvas-highlight {
+.st-cf-cl-canvas-hl {
     position: absolute;
-    width: 4px;
+    width: 2px;
     translate: -3px;
     height: 250px;
     bottom: 25px;
@@ -1188,8 +1189,39 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     transition: opacity 200ms;
 }
 
-#st-cf-cl-canvas-highlight.show {
-    opacity: .4;
+#st-cf-cl-canvas-hl-vertical.show {
+    opacity: .75;
+}
+
+#st-cf-cl-canvas-hl-horizontal {
+    height: 2px;
+    width: 424px;
+    right: 16px;
+    translate: 0 2px;
+    opacity: .75;
+}
+
+#st-cf-cl-canvas-hl-horizontal:before {
+    position: absolute;
+    left: 30px;
+    bottom: 5px;
+    content: 'nu ' attr(data-average-now);
+    font: 12px open-sans, sans-serif;
+    color: var(--st-a-color);
+}
+
+#st-cf-cl-canvas-hl-horizontal.show:before {
+    content: attr(data-average);
+}
+
+#st-cf-cl-canvas-hl-horizontal.show[data-very-high=true]:before {
+    bottom: unset;
+    top: 5px;
+}
+
+#st-cf-cl-canvas-hl-horizontal:not(.show)[data-very-high-now=true]:not(.show):before {
+    bottom: unset;
+    top: 5px;
 }
 
 #st-cf-cl-mean.insufficient {

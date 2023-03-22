@@ -58,18 +58,27 @@ async function vandaagNotifications(notifcationsWrapper) {
         gradeNotification.innerText = 'Geen nieuwe cijfers'
         gradeNotification.dataset.insignificant = true
     } else {
-        gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
-        gradeNotificationSpan.innerText = lastGrade.innerText
-        if (Number(moreGrades.innerText) > 1) {
-            gradeNotification.dataset.additionalInfo = `en nog ${Number(moreGrades.innerText) - 1} andere cijfers`
+        if (await getSetting('magister-vd-grade') === 'partial') {
+            gradeNotification.innerText = `${Number(moreGrades.innerText)} nieuwe cijfers`
+        } else {
+            gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
+            gradeNotificationSpan.innerText = lastGrade.innerText
+            if (Number(moreGrades.innerText) === 2) {
+                gradeNotification.dataset.additionalInfo = `en nog ${Number(moreGrades.innerText) - 1} ander cijfer`
+            } else if (Number(moreGrades.innerText) > 2) {
+                gradeNotification.dataset.additionalInfo = `en nog ${Number(moreGrades.innerText) - 1} andere cijfers`
+            }
         }
     }
-    notifcationsWrapper.append(gradeNotification)
-    gradeNotification.id = 'st-vd-grade-notification'
-    gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
-    gradeNotification.dataset.icon = ''
-    gradeNotification.append(gradeNotificationSpan)
-    gradeNotificationSpan.id = 'st-vd-grade-notification-span'
+
+    if (await getSetting('magister-vd-grade') !== 'off') {
+        notifcationsWrapper.append(gradeNotification)
+        gradeNotification.id = 'st-vd-grade-notification'
+        gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
+        gradeNotification.dataset.icon = ''
+        gradeNotification.append(gradeNotificationSpan)
+        gradeNotificationSpan.id = 'st-vd-grade-notification-span'
+    }
 
     unreadItems.forEach((e, i, a) => {
         setTimeout(() => {
@@ -97,7 +106,7 @@ async function vandaagNotifications(notifcationsWrapper) {
                     element.dataset.icon = ''
                 }
             }
-        }, e.firstElementChild.innerText.includes('?') ? 1000 : 0)
+        }, e.firstElementChild.innerText.includes('?') ? 500 : 0)
     })
 
     notifcationsWrapper.dataset.ready = true
@@ -107,20 +116,11 @@ async function vandaagSchedule(scheduleWrapper) {
     let scheduleTodayContainer = document.createElement('ul'),
         scheduleTomorrowContainer = document.createElement('ul'),
         scheduleButtonWrapper = document.createElement('div'),
-        scheduleDaySwitcher = document.createElement('a'),
         scheduleLinkWeek = document.createElement('a'),
         scheduleLinkList = document.createElement('a')
 
     scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
-    scheduleButtonWrapper.append(scheduleDaySwitcher, scheduleLinkWeek, scheduleLinkList)
-    scheduleDaySwitcher.innerText = ''
-    scheduleDaySwitcher.id = 'st-vd-schedule-switch'
-    scheduleDaySwitcher.title = `Van dag wisselen`
-    scheduleDaySwitcher.addEventListener('click', () => {
-        document.querySelector('#st-vd-schedule>ul[data-tomorrow]').toggleAttribute('data-hidden')
-    })
-    if (await getSetting('magister-vd-hide-tomorrow')) scheduleTomorrowContainer.dataset.hidden = true
-    else scheduleDaySwitcher.dataset.hidden = true
+    scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList)
     scheduleLinkWeek.innerText = ''
     scheduleLinkWeek.classList.add('st-vd-schedule-link')
     scheduleLinkWeek.title = `Weekoverzicht`
@@ -176,6 +176,7 @@ async function studiewijzer() {
 }
 
 async function cijfers() {
+    if (!await getSetting('magister-cf-calculator')) return
     let aside = await getElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         menuHost = await getElement('.menu-host'),
         menuCollapser = await getElement('.menu-footer>a'),
@@ -196,7 +197,8 @@ async function cijfers() {
         clFutureDesc = document.createElement('p'),
         clCanvas = document.createElement('canvas'),
         ctx = clCanvas.getContext('2d'),
-        clCanvasHighlight = document.createElement('div'),
+        clCanvasHlVertical = document.createElement('div'),
+        clCanvasHlHorizontal = document.createElement('div'),
         resultsList = [],
         weightsList = [],
         hypotheticalWeight = 1,
@@ -210,7 +212,7 @@ async function cijfers() {
     document.body.append(clWrapper)
     clWrapper.id = 'st-cf-cl'
     clWrapper.dataset.step = 0
-    clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvas, clCanvasHighlight, clFutureDesc, clFutureWeight)
+    clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvas, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc, clFutureWeight)
     clTitle.id = 'st-cf-cl-title'
     clTitle.innerText = "Cijfercalculator"
     clSubtitle.id = 'st-cf-cl-subtitle'
@@ -233,7 +235,8 @@ async function cijfers() {
     clCanvas.id = 'st-cf-cl-canvas'
     setAttributes(clCanvas, { height: 250, width: 424 })
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
-    clCanvasHighlight.id = 'st-cf-cl-canvas-highlight'
+    setAttributes(clCanvasHlVertical, { id: 'st-cf-cl-canvas-hl-vertical', class: 'st-cf-cl-canvas-hl' })
+    setAttributes(clCanvasHlHorizontal, { id: 'st-cf-cl-canvas-hl-horizontal', class: 'st-cf-cl-canvas-hl' })
 
     clOpen.addEventListener('click', async () => {
         clCanvas = document.getElementById('st-cf-cl-canvas')
@@ -305,7 +308,7 @@ async function cijfers() {
                 if (mean < 5.5) clMean.classList.add('insufficient')
                 else clMean.classList.remove('insufficient')
 
-                updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
+                updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
                 if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) clWrapper.dataset.step = 1
             })
 
@@ -319,14 +322,14 @@ async function cijfers() {
             else clMean.classList.remove('insufficient')
 
             clWrapper.dataset.step = 2
-            updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
+            updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
         })
     })
 
     clFutureWeight.addEventListener('input', async () => {
         hypotheticalWeight = Number(clFutureWeight.value)
         if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) return
-        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHighlight, clFutureDesc)
+        updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
     })
 
     clCloser.addEventListener('click', async () => {
@@ -337,7 +340,7 @@ async function cijfers() {
     })
 }
 
-async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCanvasHighlight, clFutureDesc) {
+async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc) {
     let clCanvas = document.getElementById('st-cf-cl-canvas'),
         oldElement = clCanvas,
         newElement = oldElement.cloneNode(true),
@@ -350,30 +353,48 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCa
 
     let ctx = clCanvas.getContext('2d')
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+    ctx.font = '12px open-sans, sans-serif'
 
     if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) return
 
     let means = weightedPossibleMeans(resultsList, weightsList, weight),
-        landmarks = [1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10]
+        landmarks = [2, 3, 4, 5, 6, 7, 8, 9]
     ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
     landmarks.forEach(num => {
-        if (num !== 5.5) ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-border-color')
-        else ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
         ctx.globalAlpha = 0.5
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-border-color')
         ctx.beginPath()
         ctx.moveTo(0, (num * 10 - 9) * heightCoefficient - 1)
         ctx.lineTo(clCanvas.width, (num * 10 - 9) * heightCoefficient - 1)
         ctx.stroke()
         ctx.beginPath()
-        ctx.moveTo((num * 10 - 9) * widthCoefficient - 1, 0)
-        ctx.lineTo((num * 10 - 9) * widthCoefficient - 1, clCanvas.height)
+        ctx.moveTo((num * 10 - 9) * widthCoefficient - 3, 0)
+        ctx.lineTo((num * 10 - 9) * widthCoefficient - 3, clCanvas.height)
         ctx.stroke()
     })
 
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-a-color')
+    ctx.beginPath()
+    ctx.moveTo(0, (mean * 10 - 9) * heightCoefficient - 1)
+    ctx.lineTo(clCanvas.width, (mean * 10 - 9) * heightCoefficient - 1)
+    ctx.stroke()
+
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-ok')
+    ctx.globalAlpha = .075
+    ctx.fillRect(0, 125, 212, 125)
+    ctx.globalAlpha = .175
+    ctx.fillRect(212, 125, 212, 125)
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
+    ctx.globalAlpha = .175
+    ctx.fillRect(0, 0, 212, 125)
+    ctx.globalAlpha = .075
+    ctx.fillRect(212, 0, 212, 125)
+
     ctx.save()
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
+    ctx.globalAlpha = .75
+
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
-    ctx.font = '12px open-sans, sans-serif'
     ctx.fillText("Cijfer ➔", 370, 240)
     ctx.translate(clCanvas.width / 2, clCanvas.height / 2)
     ctx.rotate(-Math.PI / 2)
@@ -387,37 +408,56 @@ async function updateGradeChart(resultsList, weightsList, weight = 1, mean, clCa
         grade10 = means[1][90],
         mean10 = means[0][90]
     ctx.globalAlpha = 1
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
+    ctx.lineWidth = 2
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
     ctx.beginPath()
-    ctx.moveTo((grade1 * 10 - 9) * widthCoefficient - 1, (mean1 * 10 - 9) * heightCoefficient - 1)
-    ctx.lineTo((grade55 * 10 - 9) * widthCoefficient - 1, (mean55 * 10 - 9) * heightCoefficient - 1)
+    ctx.moveTo((grade1 * 10 - 9) * widthCoefficient - 3, (mean1 * 10 - 9) * heightCoefficient - 1)
+    ctx.lineTo((grade55 * 10 - 9) * widthCoefficient - 3, (mean55 * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
     ctx.beginPath()
-    ctx.moveTo((grade55 * 10 - 9) * widthCoefficient - 1, (mean55 * 10 - 9) * heightCoefficient - 1)
-    ctx.lineTo((grade10 * 10 - 9) * widthCoefficient - 1, (mean10 * 10 - 9) * heightCoefficient - 1)
+    ctx.moveTo((grade55 * 10 - 9) * widthCoefficient - 3, (mean55 * 10 - 9) * heightCoefficient - 1)
+    ctx.lineTo((grade10 * 10 - 9) * widthCoefficient - 3, (mean10 * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
-    clCanvasHighlight.classList.remove('show')
+    clCanvasHlVertical.classList.remove('show')
+
+    clCanvasHlHorizontal.style.bottom = Math.abs(mean * 10 * heightCoefficient) + 'px'
+    clCanvasHlHorizontal.dataset.averageNow = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    clCanvasHlHorizontal.dataset.veryHighNow = (mean > 9.2)
 
     let gradeAdvice = await formulateGradeAdvice(means, weight, mean)
     clFutureDesc.innerText = gradeAdvice.text
     clFutureDesc.style.color = gradeAdvice.color
 
     clCanvas.addEventListener('mousemove', event => {
-        clCanvasHighlight.classList.add('show')
-        clCanvasHighlight.style.left = event.clientX + 'px'
         let rect = event.target.getBoundingClientRect(),
             x = event.clientX - rect.left
         index = Math.round(x / widthCoefficient) - 1
         if (index < 0) index = 0
         else if (index > 90) index = 90
+
+        clCanvasHlVertical.classList.add('show')
+        clCanvasHlVertical.style.left = event.clientX + 'px'
+        clCanvasHlHorizontal.classList.add('show')
+        clCanvasHlHorizontal.style.bottom = Math.abs(means[0][index] * 10 * heightCoefficient) + 'px'
+        clCanvasHlHorizontal.dataset.average = means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        clCanvasHlHorizontal.dataset.veryHigh = (means[0][index] > 9.2)
+
         if (means[0][index] > 5.49) clFutureDesc.style.color = 'var(--st-primary-color)'
         else clFutureDesc.style.color = 'var(--st-accent-warn)'
-        clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan kom je gemiddeld een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} te staan.`
+
+        if (means[0][index].toFixed(2) > mean.toFixed(2))
+            clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan stijgt je gemiddelde tot een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+        else if (means[0][index].toFixed(2) < mean.toFixed(2))
+            clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan zakt je gemiddelde tot een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+        else
+            clFutureDesc.innerText = `Als je een ${means[1][index].toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, dan blijf je gemiddeld een ${means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
     })
 
     clCanvas.addEventListener('mouseleave', async event => {
-        clCanvasHighlight.classList.remove('show')
+        clCanvasHlVertical.classList.remove('show')
+        clCanvasHlHorizontal.classList.remove('show')
+        clCanvasHlHorizontal.style.bottom = Math.abs(mean * 10 * heightCoefficient) + 'px'
         gradeAdvice = await formulateGradeAdvice(means, weight, mean)
         clFutureDesc.innerText = gradeAdvice.text
         clFutureDesc.style.color = gradeAdvice.color
@@ -452,8 +492,7 @@ async function formulateGradeAdvice(means, weight, mean) {
 }
 
 async function displayScheduleList(agendaElems, container) {
-    let events = [],
-        settingSubjects = await getSetting('magister-subjects')
+    let events = []
 
     if (agendaElems) agendaElems.forEach((e, i, a) => {
         let time = e.querySelector('.time')?.innerText,
@@ -483,7 +522,7 @@ async function displayScheduleList(agendaElems, container) {
 
             if (dateStartNext - dateEnd > 1000) {
                 time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-                events.push({ time, dateStart: dateEnd, dateEnd: dateStartNext })
+                events.push({ time, title: 'filler', dateStart: dateEnd, dateEnd: dateStartNext })
             }
         }
     })
@@ -493,23 +532,19 @@ async function displayScheduleList(agendaElems, container) {
             elementTime = document.createElement('span'),
             elementTitle = document.createElement('span'),
             elementTitleBold = document.createElement('b'),
-            elementTitleNormal = document.createElement('span'),
+            elementTitleNormal1 = document.createElement('span'),
+            elementTitleNormal2 = document.createElement('span'),
             elementPeriod = document.createElement('span'),
             elementTooltip = document.createElement('span'),
             now = new Date(),
-            subject,
-            searchString
+            parsedTitle
 
         container.append(elementWrapper)
-
-        if (title) {
-            searchString = title.split(' (')[0].split('-')[0]
-            settingSubjects.forEach(subjectEntry => {
-                testArray = `${subjectEntry.name},${subjectEntry.aliases}`.split(',')
-                testArray.forEach(testString => {
-                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(searchString)) subject = subjectEntry.name + ' '
-                })
-            })
+        if (title !== 'filler') {
+            parsedTitle = await parseSubject(title, await getSetting('magister-vd-subjects'), await getSetting('magister-subjects'))
+            elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
+            elementTitleBold.innerText = parsedTitle.subjectName || ''
+            elementTitleNormal2.innerText = parsedTitle.stringAfter || ''
         } else {
             elementWrapper.dataset.filler = true
             elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
@@ -519,9 +554,7 @@ async function displayScheduleList(agendaElems, container) {
 
         elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
         elementTime.innerText = time || ''
-        elementTitleBold.innerText = subject || title?.split(' (')[0] || ''
-        elementTitleNormal.innerText = title?.replace(searchString, '') || ''
-        elementTitle.append(elementTitleBold, elementTitleNormal)
+        elementTitle.append(elementTitleNormal1, elementTitleBold, elementTitleNormal2)
         elementPeriod.innerText = period || ''
         elementTooltip.innerText = tooltip || ''
         elementWrapper.style.height = height
@@ -529,10 +562,20 @@ async function displayScheduleList(agendaElems, container) {
 
         if (!tooltip) elementTooltip.remove()
 
-        if (now >= dateStart && now <= dateEnd) {
-            elementWrapper.dataset.current = 'true'
-            if (title) elementPeriod.style.borderBottom = await msToPixels(dateEnd - now) + 'px solid var(--st-accent-primary)'
-        } else if (now > dateEnd) elementWrapper.dataset.past = 'true'
+        setIntervalImmediately(async () => {
+            if (now >= dateStart && now <= dateEnd) {
+                elementWrapper.dataset.current = 'true'
+                if (title) elementPeriod.style.borderBottom = await msToPixels(dateEnd - now) + 'px solid var(--st-accent-primary)'
+            } else if (now > dateEnd) {
+                elementWrapper.dataset.past = 'true'
+                elementPeriod.removeAttribute('data-current')
+                elementPeriod.removeAttribute('style')
+            } else {
+                elementPeriod.removeAttribute('data-current')
+                elementPeriod.removeAttribute('data-past')
+                elementPeriod.removeAttribute('style')
+            }
+        }, 10000)
     })
 }
 
@@ -747,4 +790,23 @@ function weightedPossibleMeans(valueArray, weightArray, newWeight) {
         means.push(Number(weightedMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
     }
     return [means, grades]
+}
+
+function parseSubject(string, enabled, subjects) {
+    return new Promise(async (resolve, reject) => {
+        string = string.toLowerCase()
+        if (!enabled) resolve({ subjectAlias: '', subjectName: '', stringBefore: string, stringAfter: '', success: false })
+        subjects.forEach(subjectEntry => {
+            testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
+            testArray.forEach(testString => {
+                testString = testString.toLowerCase().trim()
+                if ((new RegExp(`^(${testString})$|^(${testString})[^a-z]|[^a-z](${testString})$|[^a-z](${testString})[^a-z]`, 'i')).test(string)) {
+                    let stringBefore = string.toLowerCase().replace(testString, '%%').split('%%')[0],
+                        stringAfter = string.toLowerCase().replace(testString, '%%').split('%%')[1]
+                    resolve({ subjectAlias: testString, subjectName: subjectEntry.name, stringBefore, stringAfter, success: true })
+                }
+            })
+        })
+        resolve({ subjectAlias: '', subjectName: '', stringBefore: string, stringAfter: '', success: false })
+    })
 }

@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     if (!await getSetting('openedPopup'))
         showSnackbar("Study Tools zal momenteel niet correct werken. Schakel eerst de gewenste opties in bij 'Study Tools' in het menu Extensies.")
-    
+
     checkUpdates()
 })
 
@@ -38,7 +38,7 @@ async function checkUpdates(override) {
             if (response.ok) {
                 let data = await response.json()
                 if (data.version > chrome.runtime.getManifest().version) {
-                    showSnackbar(`Nieuwe ${beta ? 'bèta' : ''}versie van Study Tools (${data.version}) beschikbaar.`, 120000, [{ innerText: "installeren", href: 'https://QkeleQ10.github.io/extensions/studytools/update', target: 'blank' }])
+                    showSnackbar(`Nieuwe ${beta ? 'bèta' : ''}versie van Study Tools (${data.version}) beschikbaar.`, 120000, [{ innerText: "installeren", href: 'https://qkeleq10.github.io/extensions/studytools/update', target: 'blank' }])
                 }
             } else console.warn("Error requesting Study Tools manifest", response)
         })
@@ -46,21 +46,29 @@ async function checkUpdates(override) {
             if (!override) checkUpdates(true)
         })
 
-    fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
-        .then(async response => {
-            if (response.ok) {
-                let data = await response.json()
-                for (const key in data) {
-                    if (Object.hasOwnProperty.call(data, key) && key > await getSetting('usedExtension', 'local')) {
-                        showSnackbar(`Nieuw in ${key}:\n${data[key]}`, 8000)
+    if (await getSetting("update-notes")) {
+        fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
+            .then(async response => {
+                if (response.ok) {
+                    let data = await response.json()
+                    for (const key in data) {
+                        if (Object.hasOwnProperty.call(data, key) && key > await getSetting('usedExtension', 'local')) {
+                            showSnackbar(`Nieuw in ${key}:\n${data[key]}`, 10000)
+                        }
                     }
-                }
-            } else console.warn("Error requesting Study Tools updates", response)
-        })
+                } else console.warn("Error requesting Study Tools updates", response)
+            })
+    }
 
     setTimeout(() =>
         setSetting('usedExtension', chrome.runtime.getManifest().version, 'local'), 4000)
 }
+
+function setIntervalImmediately(func, interval) {
+    func()
+    return setInterval(func, interval)
+}
+
 
 function getElement(querySelector, all, duration) {
     return new Promise((resolve, reject) => {

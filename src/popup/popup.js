@@ -7,8 +7,6 @@ init()
 async function init() {
     if (chrome?.storage) start = await getSettings(null, null, true)
 
-    document.getElementById('version-label').innerText = 'Versie ' + chrome.runtime.getManifest().version
-
     document.querySelectorAll('.bind-boolean').forEach(element => {
         element.parentElement.dataset.checkbox = true
         let value = start[element.id]
@@ -20,7 +18,7 @@ async function init() {
 
     document.querySelectorAll('.bind-string').forEach(element => {
         let value = start[element.id] || defaults[element.id]
-        if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password' || element.getAttribute('type') === 'email')) {
+        if (element.tagName === 'SELECT' || (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password' || element.getAttribute('type') === 'email'))) {
             if (value) element.value = value
             element.addEventListener('input', event => pushSetting(event.target.id, event.target.value, event.target))
         }
@@ -75,8 +73,48 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
-    if (!chrome?.runtime?.getManifest()?.update_url) document.querySelectorAll('.if-no-update-url').forEach(e => e.classList.remove('hide'))
-    else document.querySelectorAll('.if-update-url').forEach(e => e.classList.remove('hide'))
+    document.getElementById('about-version').innerText = `Updatelogboek (versie ${chrome.runtime.getManifest().version})`
+
+    if (chrome?.runtime?.getManifest()?.update_url) document.querySelectorAll('.remove-if-prod').forEach(e => e.remove())
+    else document.querySelectorAll('.remove-if-dev').forEach(e => e.remove())
+
+    document.querySelectorAll('section[data-group][data-title]').forEach(section => {
+        let aside = document.querySelector('aside'),
+            group = document.querySelector(`aside>div[data-group="${section.dataset.group}"]`)
+        if (!group) {
+            group = document.createElement('div')
+            aside.appendChild(group)
+            group.dataset.group = section.dataset.group
+            let groupHeading = document.createElement('h3')
+            group.appendChild(groupHeading)
+            groupHeading.innerText = section.dataset.group
+        }
+        let sectionButton = document.createElement('a')
+        group.appendChild(sectionButton)
+        sectionButton.dataset.linkSection = section.id
+        sectionButton.innerText = section.dataset.title
+        sectionButton.addEventListener('click', () => section.scrollIntoView({ block: 'start', behavior: 'smooth' }))
+        let sectionHeading = document.createElement('h3')
+        section.prepend(sectionHeading)
+        sectionHeading.innerText = section.dataset.title
+    })
+
+    document.querySelector('aside a').dataset.active = true
+
+    document.querySelector('main').addEventListener('scroll', event => {
+        let sections = document.querySelectorAll('main>section'),
+            currentSection
+
+        for (const section of sections) {
+            let rect = section.getBoundingClientRect(),
+                sectionButton = document.querySelector(`[data-link-section=${section.id}]`)
+            if (!currentSection && rect.top <= 250 && rect.bottom > 150) {
+                currentSection = section.id
+                document.querySelectorAll('aside a[data-active=true]').forEach(element => element.setAttribute('data-active', false))
+                sectionButton.dataset.active = true
+            }
+        }
+    })
 
     if (chrome?.runtime?.getManifest()?.version && start.openedPopup) {
         document.querySelectorAll('label[data-version]').forEach(element => {
@@ -84,10 +122,6 @@ async function init() {
         })
     }
     setSetting('openedPopup', chrome.runtime.getManifest().version)
-
-    document.querySelectorAll('#sectionPicker div[data-section]').forEach(element => element.addEventListener('click', openSection))
-
-    document.querySelector('header').addEventListener('click', closeSection)
 
     refreshConditionals()
 
@@ -126,7 +160,6 @@ function updateSubjects() {
             input2.setAttribute('type', 'text')
             newSubjectWrapper.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
             parent.appendChild(newSubjectWrapper)
-            document.querySelector('section.open').scrollBy({ top: newSubjectWrapper.clientHeight, behavior: 'smooth' })
         }
         if (empty && !lastChild) {
             subjectWrapper.remove()
@@ -168,28 +201,13 @@ function refreshConditionals() {
         }
         if (appear) {
             e.classList.remove('disabled-dependant')
-            e.querySelector('input').removeAttribute('tabindex')
+            e.querySelector('input, select, textarea').removeAttribute('tabindex')
         }
         else {
             e.classList.add('disabled-dependant')
-            e.querySelector('input').setAttribute('tabindex', '-1')
-            if (e.querySelector('input').checked) e.querySelector('input').click()
+            e.querySelector('input, select, textarea').setAttribute('tabindex', '-1')
         }
     })
-}
-
-function openSection(event) {
-    let targetSection = document.querySelector(`section[data-link="${event.currentTarget.dataset.section}"]`) || document.querySelector(`section[data-title="Algemeen"]`)
-    document.querySelectorAll('section.open').forEach(e => e.classList.remove('open'))
-    targetSection.classList.add('open')
-    document.getElementById('sectionName').innerText = targetSection.dataset.title || 'Algemeen'
-    document.documentElement.setAttribute('data-section', event.currentTarget.dataset.section || 'Algemeen')
-}
-
-function closeSection(event) {
-    document.querySelectorAll('section.open').forEach(e => e.classList.remove('open'))
-    document.getElementById('sectionName').innerText = 'Configuratiepaneel'
-    document.documentElement.removeAttribute('data-section')
 }
 
 function getSetting(key, location) {
