@@ -13,6 +13,9 @@
     --background: #fff;
     --backgroundWarn: #fff6f6;
     --backgroundOk: #f8fff6;
+    --backgroundSel: hsla(var(--hue),
+            var(--saturation),
+            var(--luminance), .1);
     --backgroundIntense: #fafafa;
     --text: #000;
     --textWarn: #b70000;
@@ -33,6 +36,9 @@
         --background: #121212;
         --backgroundWarn: #181111;
         --backgroundOk: #121611;
+        --backgroundSel: hsla(var(--hue),
+                var(--saturation),
+                var(--luminance), .1);
         --backgroundIntense: #0c0c0c;
         --text: #fff;
         --textWarn: #ce4a4a;
@@ -163,7 +169,8 @@ i {
     font-family: 'material-icons';
 }
 
-#section-about>*:not(:first-child) {
+#section-about>*:not(:first-child),
+.select>* {
     margin: 6px 5px;
     padding: 6px 9px;
     padding-right: 30px;
@@ -203,7 +210,6 @@ label {
     gap: 3px;
     flex-direction: column;
     align-items: stretch;
-    max-height: 100px;
     padding: 9px;
     background: var(--background);
     border-top: solid 1px var(--border);
@@ -220,7 +226,7 @@ label.large,
     max-height: 200vh !important;
 }
 
-label>div:first-child:not(.range-values) {
+label>div:not(.select):first-child:not(.range-values) {
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -239,7 +245,7 @@ label {
 }
 
 label.new {
-    background: #f6fcff;
+    background: var(--backgroundOk);
 }
 
 label[data-saved="not-saved"] {
@@ -369,14 +375,88 @@ input[type=range]:active::-webkit-slider-thumb {
     margin: -4px 0;
 }
 
-select {
+label:has(.select.collapse) {
     cursor: pointer;
+}
+
+.select {
+    display: flex;
+    flex-direction: column;
+    overflow-x: visible;
+    gap: 5px;
+    transition: gap 200ms, scale 200ms, box-shadow 200ms;
+}
+
+.select.collapse {
+    gap: 2px;
+}
+
+.select>* {
+    position: relative;
+    max-height: 18px;
+    margin: 0;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0px 4px 8px -8px var(--shadow);
+    transition: max-height 200ms, padding 200ms, margin 200ms, background 200ms, scale 200ms, box-shadow 200ms;
+}
+
+.select>*[data-selected] {
+    background: var(--backgroundSel);
+    pointer-events: none;
+}
+
+.select.collapse>*:not([data-selected]) {
+    max-height: 0;
+    padding: 0 9px;
+    margin: 0 9px;
+    cursor: pointer;
+    pointer-events: none;
+}
+
+.select.collapse>*[data-selected] {
+    background: var(--background);
+}
+
+.select>*:after {
+    position: absolute;
+    top: 50%;
+    right: 7px;
+    translate: 0 -50%;
+    content: '\e5ca';
+    font-family: 'material-icons';
+    font-weight: 400;
+    font-size: 16px;
+    opacity: 0;
+    transition: rotate 200ms, opacity 200ms;
+}
+
+.select>*[data-selected]:after {
+    opacity: 1;
+}
+
+.select.collapse>*[data-selected]:after {
+    content: '\e5ce';
+    font-size: 22px;
+    rotate: 180deg;
+    right: 4px;
+}
+
+label:hover .select.collapse>*[data-selected],
+.select>div:hover {
+    scale: 1.02;
+    box-shadow: 0px 5px 10px -8px var(--shadow);
+}
+
+label:active .select.collapse>*[data-selected],
+.select>div:active {
+    scale: .98;
+    box-shadow: 0px 3px 5px -4px var(--shadow);
 }
 
 input[type=text],
 input[type=email],
-input[type=password],
-select {
+input[type=password] {
     min-height: 24px;
     padding: 1px 0;
     margin: 0 2px;
@@ -390,20 +470,16 @@ select {
 label:hover>input[type=text],
 label:hover>input[type=email],
 label:hover>input[type=password],
-label:hover>select,
 input[type=text]:hover,
 input[type=email]:hover,
-input[type=password]:hover,
-select:hover {
+input[type=password]:hover {
     border-bottom: solid 1px var(--borderActive);
     box-shadow: 0px 4px 10px -8px var(--shadow);
 }
 
 input[type=text]:focus,
 input[type=email]:focus,
-input[type=password]:focus
-select:focus,
-select:focus-within {
+input[type=password]:focus select:focus {
     border-color: var(--color) !important;
     outline: none;
     box-shadow: 0px 8px 16px -8px hsla(var(--hue), var(--saturation), var(--luminance), 0.75) !important;
@@ -411,9 +487,35 @@ select:focus-within {
 
 input[type=text]:active,
 input[type=email]:active,
-input[type=password]:active,
-select:active {
+input[type=password]:active {
     scale: 0.97;
+}
+
+#quick-colors {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    overflow: visible;
+}
+
+#quick-colors>div {
+    width: 43px;
+    height: 43px;
+    border-radius: 100%;
+    border: var(--border);
+    box-shadow: 0px 6px 16px -8px var(--shadow);
+    cursor: pointer;
+    transition: scale 200ms, box-shadow 200ms;
+}
+
+#quick-colors>div:hover {
+    scale: 1.1;
+    box-shadow: 0px 8px 20px -8px var(--shadow);
+}
+
+#quick-colors>div:active {
+    scale: .9;
+    box-shadow: 0px 3px 8px -4px var(--shadowActive);
 }
 
 .grid-subjects {

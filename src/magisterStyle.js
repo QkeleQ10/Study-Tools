@@ -393,7 +393,9 @@ td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewij
 .toast,
 .alert-toast i,
 #vandaag-container .grade-widget ul,
-.cijfers-k-grid.k-grid .k-grid-header th.k-header {
+.cijfers-k-grid.k-grid .k-grid-header th.k-header,
+div.ngRow.odd, div.ngRow.even,
+dna-card {
     background: var(--st-primary-background)
 }
 
@@ -426,19 +428,22 @@ a:not(.user-content a, .st-button), table.table-grid-layout td a {
 .k-scheduler-workWeekview .k-scheduler-header .k-scheduler-table th,
 table.table-grid-layout tr:hover,
 .k-grid-header,
-#cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label {
+#cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
+.wizzard div.sheet div.grid-col div.ngHeaderContainer, div.ngHeaderCell {
     background-color: var(--st-primary-background) !important;
     box-shadow: none !important
 }
 
 table.table-grid-layout tr, table.table-grid-layout td,
-#cijfers-container .main div.content-container-cijfers {
+#cijfers-container .main div.content-container-cijfers,
+div.ngRow:hover>:not(.unselectable) {
     background-color: var(--st-primary-background) !important;
     color: var(--st-primary-color)
 }
 
 table,
-table.table-grid-layout td,  {
+table.table-grid-layout td,
+.ngGrid {
     background: var(--st-body-background) !important;
     color: var(--st-primary-color);
     border-color: var(--st-primary-border-color) !important
@@ -462,7 +467,9 @@ input[type=checkbox]+label span,
 .appbar .menu-button>a:hover>span,
 #vandaag-container .grade-widget ul,
 .widget .dualcolumn-list li,
-#cijfers-container .main div.content-container-cijfers {
+#cijfers-container .main div.content-container-cijfers,
+div.ngCell,
+dna-card {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
 }
@@ -486,7 +493,8 @@ ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
 table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover,
 .k-dropdown .k-dropdown-wrap.k-state-active,
 input[type=radio]~label:hover,
-.collapsed-menu .popup-menu ul li a:hover {
+.collapsed-menu .popup-menu ul li a:hover,
+div.ngRow:hover>:not(.unselectable) {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
@@ -534,9 +542,14 @@ th,
 .k-scheduler .k-event,
 .block .content p:not(.user-content p),
 form .radio input[type=radio]:checked~label,
-.toast em {
+.toast em,
+div.ngCell, div.ngCellText, div.ngVerticalBar, div.ngHeaderCell, div.ngHeaderContainer {
     font-family: var(--st-secondary-font-family);
     color: var(--st-primary-color)
+}
+
+div.ngVerticalBar {
+    background-color: var(--st-primary-border-color);
 }
 
 .k-scheduler-table td,
@@ -1272,7 +1285,7 @@ aside.st-appear-top {
 `, 'study-tools-cf-calculator')
     }
 
-    if (await getSetting('magister-sw-grid')) {
+    if (await getSetting('magister-sw-display') === 'grid') {
         createStyle(`
 #st-sw-container {
     display: block !important

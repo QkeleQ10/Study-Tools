@@ -146,7 +146,7 @@ async function vandaagSchedule(scheduleWrapper) {
 }
 
 async function studiewijzers() {
-    if (!await getSetting('magister-sw-sort')) return
+    if (await getSetting('magister-sw-display') === 'off') return
     const gridContainer = await getElement('section.main')
     displayStudiewijzerArray(gridContainer)
 }
@@ -170,7 +170,7 @@ async function studiewijzer() {
         })
     }
 
-    if (!await getSetting('magister-sw-sort')) return
+    if (await getSetting('magister-sw-display') === 'off') return
     const gridContainer = await getElement('div.full-height.widget')
     displayStudiewijzerArray(gridContainer, true)
 }
@@ -507,9 +507,11 @@ async function displayScheduleList(agendaElems, container) {
         if (time) {
             dateStart.setHours(time.split('-')[0].split(':')[0])
             dateStart.setMinutes(time.split('-')[0].split(':')[1])
+            dateStart.setSeconds(0)
 
             dateEnd.setHours(time.split('-')[1].split(':')[0])
             dateEnd.setMinutes(time.split('-')[1].split(':')[1])
+            dateEnd.setSeconds(0)
         }
 
         events.push({ time, title, period, dateStart, dateEnd, href, tooltip })
@@ -519,6 +521,7 @@ async function displayScheduleList(agendaElems, container) {
             if (!timeNext) return
             dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
             dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
+            dateStartNext.setSeconds(0)
 
             if (dateStartNext - dateEnd > 1000) {
                 time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
@@ -536,7 +539,6 @@ async function displayScheduleList(agendaElems, container) {
             elementTitleNormal2 = document.createElement('span'),
             elementPeriod = document.createElement('span'),
             elementTooltip = document.createElement('span'),
-            now = new Date(),
             parsedTitle
 
         container.append(elementWrapper)
@@ -563,16 +565,16 @@ async function displayScheduleList(agendaElems, container) {
         if (!tooltip) elementTooltip.remove()
 
         setIntervalImmediately(async () => {
-            if (now >= dateStart && now <= dateEnd) {
+            if (new Date() >= dateStart && new Date() <= dateEnd) {
                 elementWrapper.dataset.current = 'true'
-                if (title) elementPeriod.style.borderBottom = await msToPixels(dateEnd - now) + 'px solid var(--st-accent-primary)'
-            } else if (now > dateEnd) {
+                if (title) elementPeriod.style.borderBottom = await msToPixels(dateEnd - new Date()) + 'px solid var(--st-accent-primary)'
+            } else if (new Date() > dateEnd) {
                 elementWrapper.dataset.past = 'true'
-                elementPeriod.removeAttribute('data-current')
+                elementWrapper.removeAttribute('data-current')
                 elementPeriod.removeAttribute('style')
             } else {
-                elementPeriod.removeAttribute('data-current')
-                elementPeriod.removeAttribute('data-past')
+                elementWrapper.removeAttribute('data-current')
+                elementWrapper.removeAttribute('data-past')
                 elementPeriod.removeAttribute('style')
             }
         }, 10000)
@@ -580,7 +582,7 @@ async function displayScheduleList(agendaElems, container) {
 }
 
 async function displayStudiewijzerArray(gridContainer, compact) {
-    const settingGrid = await getSetting('magister-sw-grid'),
+    const settingGrid = (await getSetting('magister-sw-display') === 'grid'),
         settingShowPeriod = await getSetting('magister-sw-period'),
         settingSubjects = await getSetting('magister-subjects'),
         currentPeriod = await getPeriodNumber(),
@@ -624,8 +626,8 @@ async function displayStudiewijzerArray(gridContainer, compact) {
         else priority = 1
 
         return { elem, title, period, subject, priority }
-    }).sort((a, b) => settingGrid ? (a.subject.localeCompare(b.subject) || a.period - b.period) : (b.priority - a.priority || a.subject.localeCompare(b.subject)))
-
+    })
+        .sort((a, b) => settingGrid ? (a.subject.localeCompare(b.subject) || a.period - b.period) : (b.priority - a.priority || a.subject.localeCompare(b.subject)))
 
     mappedArray.forEach(async ({ elem, title, period, subject, priority }, i) => {
         if (settingGrid) {
@@ -676,7 +678,6 @@ async function displayStudiewijzerArray(gridContainer, compact) {
                     break
             }
         }
-
     })
 }
 
@@ -794,15 +795,14 @@ function weightedPossibleMeans(valueArray, weightArray, newWeight) {
 
 function parseSubject(string, enabled, subjects) {
     return new Promise(async (resolve, reject) => {
-        string = string.toLowerCase()
         if (!enabled) resolve({ subjectAlias: '', subjectName: '', stringBefore: string, stringAfter: '', success: false })
         subjects.forEach(subjectEntry => {
             testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
             testArray.forEach(testString => {
                 testString = testString.toLowerCase().trim()
                 if ((new RegExp(`^(${testString})$|^(${testString})[^a-z]|[^a-z](${testString})$|[^a-z](${testString})[^a-z]`, 'i')).test(string)) {
-                    let stringBefore = string.toLowerCase().replace(testString, '%%').split('%%')[0],
-                        stringAfter = string.toLowerCase().replace(testString, '%%').split('%%')[1]
+                    let stringBefore = string.replace(new RegExp(`(${testString})`, 'i'), '%%').split('%%')[0],
+                        stringAfter = string.replace(new RegExp(`(${testString})`, 'i'), '%%').split('%%')[1]
                     resolve({ subjectAlias: testString, subjectName: subjectEntry.name, stringBefore, stringAfter, success: true })
                 }
             })

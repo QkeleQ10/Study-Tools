@@ -18,11 +18,31 @@ async function init() {
 
     document.querySelectorAll('.bind-string').forEach(element => {
         let value = start[element.id] || defaults[element.id]
-        if (element.tagName === 'SELECT' || (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password' || element.getAttribute('type') === 'email'))) {
+        if (element.tagName === 'INPUT' && (element.getAttribute('type') === 'text' || element.getAttribute('type') === 'password' || element.getAttribute('type') === 'email')) {
             if (value) element.value = value
             element.addEventListener('input', event => pushSetting(event.target.id, event.target.value, event.target))
         }
+        if (element.tagName === 'DIV' && element.classList.contains('select')) {
+            if (value) element.querySelector(`[data-value="${value}"]`).dataset.selected = true
+            element.querySelectorAll('[data-value]').forEach(optionElement => {
+                optionElement.addEventListener('click', event => {
+                    element.querySelectorAll('[data-value][data-selected]').forEach(e => e.removeAttribute('data-selected'))
+                    event.target.dataset.selected = true
+                    console.log(element.id, event.target.dataset.value, element)
+                    pushSetting(element.id, event.target.dataset.value, element)
+                })
+            })
+        }
         if (!start[element.id] && defaults[element.id]) pushSetting(element.id, defaults[element.id], element)
+    })
+
+    document.querySelectorAll('label:has(.select)').forEach(element => {
+        element.addEventListener('click', event => {
+            element.querySelector('.select').classList.toggle('collapse')
+        })
+        element.addEventListener('mouseleave', event => {
+            element.querySelector('.select').classList.add('collapse')
+        })
     })
 
     document.querySelectorAll('.bind-number').forEach(element => {
@@ -73,10 +93,33 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
-    document.getElementById('about-version').innerText = `Updatelogboek (versie ${chrome.runtime.getManifest().version})`
+    document.querySelectorAll('#quick-colors>div').forEach(element => {
+        element.addEventListener('click', event => {
+            const hueSlider = document.getElementById('magister-css-hue'),
+                saturationSlider = document.getElementById('magister-css-saturation'),
+                luminanceSlider = document.getElementById('magister-css-luminance'),
+                values = event.target.dataset.colorValues.split(', ')
 
+            hueSlider.value = values[0]
+            hueSlider.dispatchEvent(new Event('input'))
+            saturationSlider.value = values[1]
+            saturationSlider.dispatchEvent(new Event('input'))
+            luminanceSlider.value = values[2]
+            luminanceSlider.dispatchEvent(new Event('input'))
+        })
+    })
+
+    document.getElementById('about-version').firstElementChild.innerText = `Updatelogboek (versie ${chrome.runtime.getManifest().version})`
     if (chrome?.runtime?.getManifest()?.update_url) document.querySelectorAll('.remove-if-prod').forEach(e => e.remove())
     else document.querySelectorAll('.remove-if-dev').forEach(e => e.remove())
+
+    fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
+        .then(async response => {
+            if (response.ok) {
+                let data = await response.json()
+                document.getElementById('about-version').lastElementChild.innerText = `${Object.keys(data)[0]}: ${data[Object.keys(data)[0]]}`
+            } else console.warn("Error requesting Study Tools updates", response)
+        })
 
     document.querySelectorAll('section[data-group][data-title]').forEach(section => {
         let aside = document.querySelector('aside'),
@@ -184,12 +227,13 @@ function pushSetting(key, value, element) {
 function refreshConditionals() {
     document.querySelectorAll('[data-appear-if], [data-disappear-if]').forEach(e => {
         let appear = false,
-            negDependency
+            negDependency,
+            posDependency
         if (e.dataset.appearIf) {
             let appearIfs = e.dataset.appearIf.split(' '),
                 numberSuccess = 0
             appearIfs.forEach((e, i, a) => {
-                let posDependency = document.getElementById(e)
+                posDependency = document.getElementById(e)
                 if (posDependency?.checked && !appear) numberSuccess++
                 if (numberSuccess === a.length) appear = true
             })
@@ -201,11 +245,13 @@ function refreshConditionals() {
         }
         if (appear) {
             e.classList.remove('disabled-dependant')
-            e.querySelector('input, select, textarea').removeAttribute('tabindex')
+            if (e.querySelector('input, select, textarea, .select'))
+                e.querySelector('input, select, textarea, .select').removeAttribute('tabindex')
         }
         else {
             e.classList.add('disabled-dependant')
-            e.querySelector('input, select, textarea').setAttribute('tabindex', '-1')
+            if (e.querySelector('input, select, textarea, .select'))
+                e.querySelector('input, select, textarea, .select').setAttribute('tabindex', '-1')
         }
     })
 }

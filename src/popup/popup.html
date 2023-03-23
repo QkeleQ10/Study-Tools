@@ -28,7 +28,7 @@
     </header>
     <aside>
     </aside>
-    <main>
+    <main id="settings">
         <section data-group="Magister" data-title="Thema" id="section-magister-theme">
             <label role="listitem" for="magister-css-experimental" data-version=2.0.1>
                 <div>
@@ -41,11 +41,11 @@
             <label role="listitem" for="magister-css-theme" data-appear-if="magister-css-experimental"
                 data-version=2.3.0>
                 Kleurenthema
-                <select name="Kleurenthema" id="magister-css-theme" class="bind-string">
-                    <option value="auto">Aanpassen aan systeemthema</option>
-                    <option value="light">Licht thema</option>
-                    <option value="dark">Donker thema</option>
-                </select>
+                <div name="Kleurenthema" id="magister-css-theme" class="select collapse bind-string">
+                    <div data-value="auto">Aanpassen aan systeemthema</div>
+                    <div data-value="light">Licht thema</div>
+                    <div data-value="dark">Donker thema</div>
+                </div>
             </label>
             <label role="listitem" for="magister-css-dark-invert" data-appear-if="magister-css-experimental"
                 data-version=2.0.1>
@@ -59,7 +59,18 @@
             </label>
         </section>
         <section data-group="Magister" data-title="Accentkleur" id="section-magister-color">
-            <label role="listitem" for="magister-css-hue" data-appear-if="magister-css-experimental" data-version=2.0.1>
+            <label role="listitem" for="quick-colors" data-appear-if="magister-css-experimental" data-version=2.3.2>
+                Voorinstellingen
+                <div id="quick-colors">
+                    <div style="background: hsl(207deg, 95%, 55%)" data-color-values="207, 95, 55"></div>
+                    <div style="background: hsl(161deg, 51%, 41%)" data-color-values="161, 51, 41"></div>
+                    <div style="background: hsl(40deg, 51%, 41%)" data-color-values="40, 51, 41"></div>
+                    <div style="background: hsl(360deg, 51%, 41%)" data-color-values="360, 51, 41"></div>
+                    <div style="background: hsl(331deg, 51%, 41%)" data-color-values="331, 51, 41"></div>
+                    <div style="background: hsl(266deg, 51%, 41%)" data-color-values="266, 51, 41"></div>
+                </div>
+            </label>
+            <label role="listitem" for="magister-css-hue">
                 Tint
                 <div class="range-values">
                     <span class="default-value">207°</span>
@@ -157,30 +168,24 @@
             <label role="listitem" for="magister-vd-grade" data-version=2.3.0
                 data-appear-if="magister-css-experimental magister-vd-overhaul">
                 Weergave laatste cijfers
-                <select name="Cijferweergave" id="magister-vd-grade" class="bind-string">
-                    <option value="full">Volledig (cijfer weergeven)</option>
-                    <option value="partial">Gedeeltelijk (cijfer verbergen)</option>
-                    <option value="off">Uit</option>
-                </select>
+                <div name="Cijferweergave" id="magister-vd-grade" class="select collapse bind-string">
+                    <div data-value="full">Volledig (cijfer weergeven)</div>
+                    <div data-value="partial">Gedeeltelijk (cijfer verbergen)</div>
+                    <div data-value="off">Uit</div>
+                </div>
             </label>
         </section>
         <section data-group="Magister" data-title="Studiewijzers" id="section-magister-studiewijzers">
-            <label role="listitem" for="magister-sw-sort">
-                <div>
-                    Studiewijzers sorteren
-                    <i>Op periodenummer en vak</i>
+            <label role="listitem" for="magister-sw-display" data-version=2.3.2
+                data-appear-if="magister-css-experimental">
+                Weergave studiewijzers
+                <div name="Weergave studiewijzers" id="magister-sw-display" class="select collapse bind-string">
+                    <div data-value="grid">Geordend raster</div>
+                    <div data-value="list">Geordende lijst</div>
+                    <div data-value="off">Origineel</div>
                 </div>
-                <input type="checkbox" name="Studiewijzers sorteren" id="magister-sw-sort" class="bind-boolean">
             </label>
-            <label role="listitem" for="magister-sw-grid" data-appear-if="magister-sw-sort magister-css-experimental">
-                <div>
-                    Studiewijzers in raster plaatsen
-                    <i>Elk vak krijgt een tegel met daarin de bijbehorende studiewijzers. Je aangepaste vaknamen worden hier gebruikt.</i>
-                </div>
-                <input type="checkbox" name="Studiewijzers in raster plaatsen" id="magister-sw-grid"
-                    class="bind-boolean">
-            </label>
-            <label role="listitem" for="magister-sw-period" data-appear-if="magister-sw-sort">
+            <label role="listitem" for="magister-sw-period">
                 <div>
                     Periodenummers tonen
                     <i>In plaats van de naam van de studiewijzer</i>
@@ -203,9 +208,11 @@
             <label role="listitem" for="magister-cf-calculator" data-version="2.3.1">
                 <div>
                     Cijfercalculator
-                    <i>Een zeer krachtige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.</i>
+                    <i>Een zeer krachtige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen
+                        of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.</i>
                 </div>
-                <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-calculator" class="bind-boolean">
+                <input type="checkbox" name="Onvoldoendes rood kleuren" id="magister-cf-calculator"
+                    class="bind-boolean">
             </label>
             <label role="listitem" for="magister-cf-failred">
                 Onvoldoendes rood kleuren
@@ -271,7 +278,9 @@
                 Downloadpagina
             </a>
             <a href="https://github.com/QkeleQ10/Study-Tools/blob/dev/updates.json" target="blank" id="about-version">
-                Updatelogboek
+                <span>Updatelogboek</span>
+                <br>
+                <i></i>
             </a>
             <a href="mailto:quinten@althues.nl?subject=Feedback m.b.t. Study Tools">
                 Feedback geven of een probleem melden

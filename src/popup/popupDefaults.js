@@ -118,6 +118,7 @@ const defaults = {
     ],
     "magister-css-experimental": true,
     "magister-css-theme": "auto",
+    "magister-css-dark-invert": true,
     "magister-periods": "30, 47, 9",
     "magister-css-hue": 207,
     "magister-css-saturation": 95,
@@ -125,6 +126,7 @@ const defaults = {
     "magister-vd-agendaHeight": 1,
     "magister-vd-grade": "full",
     "magister-vd-subjects": true,
+    "magister-sw-display": 'grid',
     "magister-cf-calculator": true,
     "update-notes": true
 }
