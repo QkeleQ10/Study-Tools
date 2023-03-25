@@ -1,7 +1,7 @@
 login()
 
 async function login() {
-    if (!await getSetting('magisterLogin-enabled')) return
+    if (await getSetting('magisterLogin-method') === 'off') return
 
     const forceLogoutTimestamp = await getSetting('force-logout', 'local'),
         footer = document.querySelector('.bottom')

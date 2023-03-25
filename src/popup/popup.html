@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <header>
+    <header id="header">
         <h1>Study Tools</h1>
         <span>
             <p id="sectionName">Configuratiepaneel</p>
@@ -60,17 +60,19 @@
         </section>
         <section data-group="Magister" data-title="Accentkleur" id="section-magister-color">
             <label role="listitem" for="quick-colors" data-appear-if="magister-css-experimental" data-version=2.3.2>
-                Voorinstellingen
+                
                 <div id="quick-colors">
-                    <div style="background: hsl(207deg, 95%, 55%)" data-color-values="207, 95, 55"></div>
-                    <div style="background: hsl(161deg, 51%, 41%)" data-color-values="161, 51, 41"></div>
-                    <div style="background: hsl(40deg, 51%, 41%)" data-color-values="40, 51, 41"></div>
-                    <div style="background: hsl(360deg, 51%, 41%)" data-color-values="360, 51, 41"></div>
-                    <div style="background: hsl(331deg, 51%, 41%)" data-color-values="331, 51, 41"></div>
-                    <div style="background: hsl(266deg, 51%, 41%)" data-color-values="266, 51, 41"></div>
+                    <div class="icon" style="background: hsl(207deg, 95%, 55%)" data-color-values="207, 95, 55"></div>
+                    <div class="icon" style="background: hsl(161deg, 51%, 41%)" data-color-values="161, 51, 41"></div>
+                    <div class="icon" style="background: hsl(40deg, 51%, 41%)" data-color-values="40, 51, 41"></div>
+                    <div class="icon" style="background: hsl(360deg, 51%, 41%)" data-color-values="360, 51, 41"></div>
+                    <div class="icon" style="background: hsl(331deg, 51%, 41%)" data-color-values="331, 51, 41"></div>
+                    <div class="icon" style="background: hsl(266deg, 51%, 41%)" data-color-values="266, 51, 41"></div>
+                    <div id="advanced-color-toggle" class="icon collapse">&#xe5ce;</div>
                 </div>
             </label>
-            <label role="listitem" for="magister-css-hue">
+            <label class="collapse" role="listitem" for="magister-css-hue" data-appear-if="magister-css-experimental"
+                data-version=2.0.1>
                 Tint
                 <div class="range-values">
                     <span class="default-value">207°</span>
@@ -79,8 +81,8 @@
                 <input type="range" name="Tint" id="magister-css-hue" class="bind-color" data-color-component="hue"
                     min="0" max="360" step="1">
             </label>
-            <label role="listitem" for="magister-css-saturation" data-appear-if="magister-css-experimental"
-                data-version=2.0.1>
+            <label class="collapse" role="listitem" for="magister-css-saturation"
+                data-appear-if="magister-css-experimental" data-version=2.0.1>
                 Verzadiging
                 <div class="range-values">
                     <span class="default-value">95%</span>
@@ -89,8 +91,8 @@
                 <input type="range" name="Verzadiging" id="magister-css-saturation" class="bind-color"
                     data-color-component="saturation" min="0" max="100" step="1">
             </label>
-            <label role="listitem" for="magister-css-luminance" data-appear-if="magister-css-experimental"
-                data-version=2.0.1>
+            <label class="collapse" role="listitem" for="magister-css-luminance"
+                data-appear-if="magister-css-experimental" data-version=2.0.1>
                 Helderheid
                 <div class="range-values">
                     <span class="default-value">55%</span>
@@ -101,25 +103,24 @@
             </label>
         </section>
         <section data-group="Magister" data-title="Inloggen" id="section-magister-login">
-            <label role="listitem" for="magisterLogin-enabled">
+            <label role="listitem" for="magisterLogin-method" data-version=2.3.2>
                 Automatisch inloggen
-                <input type="checkbox" name="Automatisch inloggen" id="magisterLogin-enabled" class="bind-boolean">
+                <div name="Automatisch inloggen" id="magisterLogin-method" class="select collapse bind-string">
+                    <div data-value="microsoft">Met een Microsoft-account</div>
+                    <div data-value="password">Met een Magister-wachtwoord</div>
+                    <div data-value="off">Uit</div>
+                </div>
             </label>
-            <label role="listitem" for="magisterLogin-microsoft" data-appear-if="magisterLogin-enabled"
-                data-version=1.2.5>
-                Inloggen met Microsoft
-                <input type="checkbox" name="Inloggen met Microsoft" id="magisterLogin-microsoft" class="bind-boolean">
-            </label>
-            <label role="listitem" for="magisterLogin-username" data-appear-if="magisterLogin-enabled">
+            <label role="listitem" for="magisterLogin-username" data-appear-if="magisterLogin-method!==off">
                 Gebruikersnaam
                 <input type="text" name="Gebruikersnaam" id="magisterLogin-username" class="bind-string">
             </label>
-            <label role="listitem" for="magisterLogin-password" data-appear-if="magisterLogin-enabled"
+            <label role="listitem" for="magisterLogin-password" data-appear-if="magisterLogin-method===password"
                 data-disappear-if="magisterLogin-microsoft">
                 Wachtwoord
                 <input type="password" name="Wachtwoord" id="magisterLogin-password" class="bind-string">
             </label>
-            <label role="listitem" for="magisterLogin-email" data-appear-if="magisterLogin-microsoft"
+            <label role="listitem" for="magisterLogin-email" data-appear-if="magisterLogin-method===microsoft"
                 data-version=1.2.5>
                 <div>
                     E-mailadres
@@ -199,8 +200,8 @@
         </section>
         <section data-group="Magister" data-title="Opdrachten" id="section-magister-assignments">
             <label role="listitem" for="magister-op-oldgrey">
-                Verstreken opdrachten grijs maken
-                <input type="checkbox" name="Verstreken opdrachten grijs maken" id="magister-op-oldgrey"
+                Oude opdrachten grijs kleuren
+                <input type="checkbox" name="Oude opdrachten grijs kleuren" id="magister-op-oldgrey"
                     class="bind-boolean">
             </label>
         </section>

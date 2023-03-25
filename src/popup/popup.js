@@ -24,11 +24,12 @@ async function init() {
         }
         if (element.tagName === 'DIV' && element.classList.contains('select')) {
             if (value) element.querySelector(`[data-value="${value}"]`).dataset.selected = true
+            element.dataset.value = value
             element.querySelectorAll('[data-value]').forEach(optionElement => {
                 optionElement.addEventListener('click', event => {
                     element.querySelectorAll('[data-value][data-selected]').forEach(e => e.removeAttribute('data-selected'))
                     event.target.dataset.selected = true
-                    console.log(element.id, event.target.dataset.value, element)
+                    element.dataset.value = event.target.dataset.value
                     pushSetting(element.id, event.target.dataset.value, element)
                 })
             })
@@ -68,6 +69,10 @@ async function init() {
                 pushSetting(event.target.id, event.target.value, event.target)
                 document.querySelector(':root').style.setProperty(`--${event.target.dataset.colorComponent}`, event.target.dataset.colorComponent === 'hue' ? event.target.value : event.target.value + '%')
                 event.target.parentElement.querySelector('.current-value').innerText = event.target.value
+                document.querySelectorAll('#quick-colors>div[data-color-values]').forEach(qElement => {
+                    if (window.getComputedStyle(document.getElementById('header'), null).getPropertyValue('background-color') === qElement.style.background) qElement.innerHTML = '&#xe5ca;'
+                    else qElement.innerText = ''
+                })
             })
         }
         document.querySelector(':root').style.setProperty(`--${element.dataset.colorComponent}`, element.dataset.colorComponent === 'hue' ? element.value : element.value + '%')
@@ -93,7 +98,9 @@ async function init() {
         if (!start[element.id] && defaults[element.id]) updateSubjects()
     })
 
-    document.querySelectorAll('#quick-colors>div').forEach(element => {
+    document.querySelectorAll('#quick-colors>div[data-color-values]').forEach(element => {
+        if (window.getComputedStyle(document.getElementById('header'), null).getPropertyValue('background-color') === element.style.background) element.innerHTML = '&#xe5ca;'
+        else element.innerText = ''
         element.addEventListener('click', event => {
             const hueSlider = document.getElementById('magister-css-hue'),
                 saturationSlider = document.getElementById('magister-css-saturation'),
@@ -107,6 +114,11 @@ async function init() {
             luminanceSlider.value = values[2]
             luminanceSlider.dispatchEvent(new Event('input'))
         })
+    })
+
+    document.getElementById('advanced-color-toggle').addEventListener('click', event => {
+        event.target.parentElement.parentElement.parentElement.querySelectorAll('label:not(:nth-child(2))').forEach(e => e.classList.toggle('collapse'))
+        event.target.classList.toggle('collapse')
     })
 
     document.getElementById('about-version').firstElementChild.innerText = `Updatelogboek (versie ${chrome.runtime.getManifest().version})`
@@ -225,33 +237,45 @@ function pushSetting(key, value, element) {
 }
 
 function refreshConditionals() {
-    document.querySelectorAll('[data-appear-if], [data-disappear-if]').forEach(e => {
+    document.querySelectorAll('[data-appear-if], [data-disappear-if]').forEach(element => {
         let appear = false,
             negDependency,
-            posDependency
-        if (e.dataset.appearIf) {
-            let appearIfs = e.dataset.appearIf.split(' '),
+            posDependency,
+            c
+        if (element.dataset.appearIf) {
+            let appearIfs = element.dataset.appearIf.split(' '),
                 numberSuccess = 0
             appearIfs.forEach((e, i, a) => {
-                posDependency = document.getElementById(e)
-                if (posDependency?.checked && !appear) numberSuccess++
+                if (e.includes('===')) {
+                    [e, c] = e.split('===')
+                    posDependency = document.getElementById(e)
+                    if ((posDependency.value || posDependency.dataset.value) === c && !appear) numberSuccess++
+                } else if (e.includes('!==')) {
+                    [e, c] = e.split('!==')
+                    posDependency = document.getElementById(e)
+                    if ((posDependency.value || posDependency.dataset.value) !== c && !appear) numberSuccess++
+                } else {
+                    posDependency = document.getElementById(e)
+                    if (posDependency.getAttribute('type') === 'checkbox' && posDependency?.checked && !appear) numberSuccess++
+                    else if ((posDependency.value || posDependency.dataset.value)?.length > 0 && !appear) numberSuccess++
+                }
                 if (numberSuccess === a.length) appear = true
             })
         }
-        if (e.dataset.disappearIf) {
-            negDependency = document.getElementById(e.dataset.disappearIf)
+        if (element.dataset.disappearIf) {
+            negDependency = document.getElementById(element.dataset.disappearIf)
             if (!negDependency?.checked && appear !== false) appear = true
             if (negDependency?.checked && appear) appear = false
         }
         if (appear) {
-            e.classList.remove('disabled-dependant')
-            if (e.querySelector('input, select, textarea, .select'))
-                e.querySelector('input, select, textarea, .select').removeAttribute('tabindex')
+            element.classList.remove('disabled-dependant')
+            if (element.querySelector('input, select, textarea, .select'))
+                element.querySelector('input, select, textarea, .select').removeAttribute('tabindex')
         }
         else {
-            e.classList.add('disabled-dependant')
-            if (e.querySelector('input, select, textarea, .select'))
-                e.querySelector('input, select, textarea, .select').setAttribute('tabindex', '-1')
+            element.classList.add('disabled-dependant')
+            if (element.querySelector('input, select, textarea, .select'))
+                element.querySelector('input, select, textarea, .select').setAttribute('tabindex', '-1')
         }
     })
 }

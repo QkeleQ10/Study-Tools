@@ -116,6 +116,7 @@ const defaults = {
             "color": "#000000"
         }
     ],
+    "magisterLogin-method": "microsoft",
     "magister-css-experimental": true,
     "magister-css-theme": "auto",
     "magister-css-dark-invert": true,

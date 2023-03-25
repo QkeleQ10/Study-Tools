@@ -57,7 +57,7 @@
 
 * {
     font-family: 'Montserrat', sans-serif;
-    transition: background 200ms, background-color 200ms, opacity 200ms, translate 200ms cubic-bezier(1, 0, 0, 1), scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1), rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms, max-height 200ms, padding 200ms, margin 200ms;
+    transition: opacity 200ms, translate 200ms cubic-bezier(1, 0, 0, 1), scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1), rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms, max-height 200ms, padding 200ms, margin 200ms;
     overflow-x: hidden;
 }
 
@@ -207,6 +207,7 @@ i {
 
 label {
     display: flex;
+    max-height: 50vh;
     gap: 3px;
     flex-direction: column;
     align-items: stretch;
@@ -214,10 +215,10 @@ label {
     background: var(--background);
     border-top: solid 1px var(--border);
     overflow: hidden;
-    transition: scale 200ms, max-height 200ms, padding 200ms, background-color 200ms, color 200ms, filter 200ms;
+    transition: scale 200ms, max-height 200ms, padding 200ms, margin 200ms, border 200ms, background-color 200ms, color 200ms, filter 200ms;
 }
 
-label:last-child {
+label:not(.collapse):last-of-type {
     border-bottom: solid 1px var(--border);
 }
 
@@ -255,6 +256,18 @@ label[data-saved="not-saved"] {
 
 label[data-saved^="saved"] {
     background: var(--backgroundOk);
+}
+
+label.collapse {
+    min-height: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    overflow: hidden;
 }
 
 input[type="checkbox"] {
@@ -424,6 +437,7 @@ label:has(.select.collapse) {
     right: 7px;
     translate: 0 -50%;
     content: '\e5ca';
+    color: var(--color);
     font-family: 'material-icons';
     font-weight: 400;
     font-size: 16px;
@@ -499,13 +513,27 @@ input[type=password]:active {
 }
 
 #quick-colors>div {
-    width: 43px;
-    height: 43px;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 18px;
+    line-height: 36px;
     border-radius: 100%;
-    border: var(--border);
+    outline: solid 1px var(--outline);
     box-shadow: 0px 6px 16px -8px var(--shadow);
     cursor: pointer;
-    transition: scale 200ms, box-shadow 200ms;
+    transition: scale 200ms, rotate 200ms, box-shadow 200ms;
+}
+
+#quick-colors>div:last-child {
+    color: var(--color);
+    font-size: 22px;
+}
+
+#quick-colors>div.collapse {
+    rotate: 180deg;
+    box-shadow: 0px -6px 16px -8px var(--shadow) !important;
 }
 
 #quick-colors>div:hover {
@@ -551,6 +579,8 @@ input[type=password]:active {
 
 label>.grid-subjects {
     margin-top: 12px;
+    flex-direction: row !important;
+    justify-content: space-between;
 }
 
 details {

@@ -3,7 +3,7 @@ init()
 async function magisterLogin() {
     const forceLogoutTimestamp = await getSetting('force-logout', 'local')
 
-    if (!await getSetting('magisterLogin-microsoft') || !await getSetting('magisterLogin-email') || (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000)) return
+    if (await getSetting('magisterLogin-method') !== 'microsoft' || !await getSetting('magisterLogin-email') || (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000)) return
 
     let signInButton = await getElement(`div.table[data-test-id="${await getSetting('magisterLogin-email')}"]`)
     if (signInButton) signInButton.click()
