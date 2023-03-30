@@ -86,6 +86,11 @@ main {
     grid-area: main;
 }
 
+section {
+    background: var(--background);
+    min-height: max-content;
+}
+
 aside {
     grid-area: aside;
     border-right: solid 1px var(--border);
@@ -130,25 +135,20 @@ h3,
 h4,
 h5,
 h6 {
-    margin: 6px 0;
+    margin: 0;
 }
 
 header>h1 {
-    margin: 0;
     translate: 0 6px;
-}
-
-h1 {
     font-size: 24px;
 }
 
-h1:after {
+header>h1:after {
     content: '.';
     color: #ff8205;
 }
 
 h3 {
-    margin: 0;
     padding-top: 16px;
     padding-bottom: 6px;
     padding-left: 9px;
@@ -158,10 +158,18 @@ h3 {
     font-size: 14px;
 }
 
+h4 {
+    font: 500 14px 'Montserrat', sans-serif;
+}
+
+h5 {
+    font: 400 11px 'Montserrat', sans-serif;
+    color: #808080;
+}
+
 i {
     color: #808080;
     font-size: 11px;
-    margin-top: -4px;
     font-style: normal;
 }
 
@@ -177,6 +185,7 @@ i {
     background: var(--background);
     border-radius: 9px;
     border: solid 1px var(--border);
+    font-size: 12px;
 }
 
 #section-about>a {
@@ -206,39 +215,55 @@ i {
 }
 
 label {
-    display: flex;
-    max-height: 50vh;
+    display: grid;
+    align-items: center;
     gap: 3px;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 9px;
-    background: var(--background);
-    border-top: solid 1px var(--border);
+    min-height: 20px;
+    padding: 10px 0;
     overflow: hidden;
-    transition: scale 200ms, max-height 200ms, padding 200ms, margin 200ms, border 200ms, background-color 200ms, color 200ms, filter 200ms;
+    transition: scale 200ms, min-height 200ms, max-height 200ms, padding 200ms, margin 200ms, border 200ms, background-color 200ms, color 200ms, filter 200ms;
 }
 
-label:not(.collapse):last-of-type {
+section>label {
+    padding: 11px;
+    border-top: solid 1px var(--border);
+}
+
+section>label:last-child {
     border-bottom: solid 1px var(--border);
+}
+
+label.has-checkbox {
+    grid-template: 'title input' / 1fr 40px;
+}
+
+label.has-text {
+    grid-template:
+        'title' auto
+        'input' auto
+        / 1fr;
+}
+
+label.has-select {
+    grid-template-rows: auto;
+}
+
+label.has-color-picker {
+    gap: 0;
+    grid-template-rows: auto;
+}
+
+label.has-slider {
+    max-height: 50px;
+    grid-template:
+        'title default current' auto
+        'input input input' auto
+        / 1fr auto auto;
 }
 
 label.large,
 [role=listitem].long {
     max-height: 200vh !important;
-}
-
-label>div:not(.select):first-child:not(.range-values) {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    overflow: hidden;
-}
-
-label[data-checkbox] {
-    display: grid;
-    align-items: center;
-    grid-template-columns: 1fr 40px;
-    cursor: pointer;
 }
 
 label {
@@ -268,6 +293,10 @@ label.collapse {
     border-top-width: 0;
     border-bottom-width: 0;
     overflow: hidden;
+}
+
+input {
+    grid-area: input;
 }
 
 input[type="checkbox"] {
@@ -320,32 +349,17 @@ label:active input[type="checkbox"]:after {
     scale: .65;
 }
 
-label[data-range]>div,
-.range-values {
-    position: absolute;
-    top: 12px;
-    right: 10px;
-    display: flex;
-    flex-direction: row;
-    align-items: end;
-    gap: 6px;
-    font-size: 14px;
-}
-
-label[data-range]>div>.default-value,
-.range-values>.default-value {
+label>.default-value {
     font-size: 11px;
     opacity: 0;
     text-align: end;
 }
 
-label[data-range]:hover>div>.default-value,
-label:hover .range-values>.default-value {
+label:hover>.default-value {
     opacity: .8;
 }
 
-label[data-range]>div>.default-value:before,
-.range-values>.default-value:before {
+label>.default-value:before {
     content: 'Standaard: ';
     font-size: 9px;
 }
@@ -406,20 +420,23 @@ label:has(.select.collapse) {
 
 .select>* {
     position: relative;
-    max-height: 18px;
+    min-height: 29px;
+    max-height: 29px;
     margin: 0;
     overflow: hidden;
+    text-align: left;
     cursor: pointer;
     box-shadow: 0px 4px 8px -8px var(--shadow);
-    transition: max-height 200ms, padding 200ms, margin 200ms, background 200ms, scale 200ms, box-shadow 200ms;
+    transition: min-height 200ms, max-height 200ms, padding 200ms, margin 200ms, background 200ms, scale 200ms, box-shadow 200ms;
 }
 
-.select>*[data-selected] {
+.select>*[data-selected=true] {
     background: var(--backgroundSel);
     pointer-events: none;
 }
 
-.select.collapse>*:not([data-selected]) {
+.select.collapse>*:not([data-selected=true]) {
+    min-height: 0;
     max-height: 0;
     padding: 0 9px;
     margin: 0 9px;
@@ -427,7 +444,7 @@ label:has(.select.collapse) {
     pointer-events: none;
 }
 
-.select.collapse>*[data-selected] {
+.select.collapse>*[data-selected=true] {
     background: var(--background);
 }
 
@@ -445,25 +462,25 @@ label:has(.select.collapse) {
     transition: rotate 200ms, opacity 200ms;
 }
 
-.select>*[data-selected]:after {
+.select>*[data-selected=true]:after {
     opacity: 1;
 }
 
-.select.collapse>*[data-selected]:after {
+.select.collapse>*[data-selected=true]:after {
     content: '\e5ce';
     font-size: 22px;
     rotate: 180deg;
     right: 4px;
 }
 
-label:hover .select.collapse>*[data-selected],
-.select>div:hover {
+label:hover .select.collapse>*[data-selected=true],
+.select>button:hover {
     scale: 1.02;
     box-shadow: 0px 5px 10px -8px var(--shadow);
 }
 
-label:active .select.collapse>*[data-selected],
-.select>div:active {
+label:active .select.collapse>*[data-selected=true],
+.select>button:active {
     scale: .98;
     box-shadow: 0px 3px 5px -4px var(--shadow);
 }
@@ -508,42 +525,92 @@ input[type=password]:active {
 #quick-colors {
     display: flex;
     flex-direction: row;
-    gap: 6px;
+    justify-content: space-between;
     overflow: visible;
+    padding: 6px 0;
 }
 
-#quick-colors>div {
-    width: 36px;
-    height: 36px;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 18px;
-    line-height: 36px;
+#quick-colors>button {
+    position: relative;
+    overflow: hidden;
+    width: 32px;
+    aspect-ratio: 1;
     border-radius: 100%;
     outline: solid 1px var(--outline);
+    border: none;
+    padding: 0;
     box-shadow: 0px 6px 16px -8px var(--shadow);
-    cursor: pointer;
-    transition: scale 200ms, rotate 200ms, box-shadow 200ms;
-}
-
-#quick-colors>div:last-child {
+    background: var(--background);
     color: var(--color);
-    font-size: 22px;
+    cursor: pointer;
+    transition: scale 200ms, box-shadow 200ms;
 }
 
-#quick-colors>div.collapse {
-    rotate: 180deg;
-    box-shadow: 0px -6px 16px -8px var(--shadow) !important;
+#quick-colors>button.swatch {
+    color: #fff;
+    font-size: 18px;
 }
 
-#quick-colors>div:hover {
+#quick-colors>button:hover {
     scale: 1.1;
     box-shadow: 0px 8px 20px -8px var(--shadow);
 }
 
-#quick-colors>div:active {
+#quick-colors>button:active {
     scale: .9;
     box-shadow: 0px 3px 8px -4px var(--shadowActive);
+}
+
+#quick-colors>button:after {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    text-align: center;
+    font: 22px material-icons;
+    transition: rotate 200ms, opacity 200ms;
+}
+
+#quick-colors>button.swatch:after {
+    content: '\e5ca';
+    font-size: 18px;
+    opacity: 0;
+}
+
+#quick-colors>button.swatch.active:after {
+    opacity: 1;
+}
+
+#quick-colors>button>.icon {
+    width: 100%;
+    overflow: hidden;
+}
+
+#color-eyedropper:after {
+    content: '\e3b8';
+}
+
+#color-eyedropper:active:after {
+    rotate: -45deg;
+    content: '\e3b8';
+}
+
+#color-advanced-toggle:after {
+    content: '\e145';
+    rotate: 135deg;
+}
+
+#color-advanced-toggle:active:after {
+    rotate: 150deg;
+}
+
+#color-advanced-toggle.collapse:after {
+    rotate: 0deg;
+}
+
+#color-advanced-toggle.collapse:active:after {
+    rotate: -15deg;
 }
 
 .grid-subjects {
