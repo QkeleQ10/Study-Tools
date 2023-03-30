@@ -40,6 +40,8 @@ async function vandaag() {
 
     setTimeout(() => header.dataset.transition = true, 2000)
     setTimeout(() => {
+        vandaagNotifications(notifcationsWrapper)
+
         headerText.innerText = new Date().toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         if (Math.random() < 0.005) headerText.innerText = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
         header.removeAttribute('data-transition')
@@ -51,8 +53,11 @@ async function vandaagNotifications(notifcationsWrapper) {
         lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
         moreGrades = await getElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
         unreadItems = await getElement('#notificatie-widget ul>li', true),
-        gradeNotification = document.createElement('li'),
-        gradeNotificationSpan = document.createElement('span')
+        gradeNotification = document.getElementById('st-vd-grade-notification') || document.createElement('li'),
+        gradeNotificationSpan = document.getElementById('st-vd-grade-notification-span') || document.createElement('span')
+
+    gradeNotification.id = 'st-vd-grade-notification'
+    gradeNotificationSpan.id = 'st-vd-grade-notification-span'
 
     if (lastGrade.innerText === '-' || lastGradeDescription.innerText === 'geen cijfers') {
         gradeNotification.innerText = 'Geen nieuwe cijfers'
@@ -72,12 +77,10 @@ async function vandaagNotifications(notifcationsWrapper) {
     }
 
     if (await getSetting('magister-vd-grade') !== 'off') {
-        notifcationsWrapper.append(gradeNotification)
-        gradeNotification.id = 'st-vd-grade-notification'
+        if (!gradeNotification.parentElement) notifcationsWrapper.append(gradeNotification)
         gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
         gradeNotification.dataset.icon = ''
         gradeNotification.append(gradeNotificationSpan)
-        gradeNotificationSpan.id = 'st-vd-grade-notification-span'
     }
 
     unreadItems.forEach((e, i, a) => {
@@ -85,15 +88,24 @@ async function vandaagNotifications(notifcationsWrapper) {
             let amount = e.firstElementChild.firstElementChild.innerText,
                 description = e.firstElementChild.innerText.replace(`${amount} `, ''),
                 href = e.firstElementChild.href,
-                element = document.createElement('li')
+                element = document.querySelector(`li[data-description="${description}"]`) || document.createElement('li')
+
+            element.dataset.description = description
+            if (e.firstElementChild.innerText.includes('?') || !description) return element.remove()
 
             if (description.includes('deadline')) {
                 if (e.firstElementChild.innerText.includes('geen')) return
                 document.querySelector('#st-vd-unread-open-assignments').dataset.additionalInfo = `waarvan ${amount} met naderende deadline`
             } else {
+                let insertIndex = Array.prototype.indexOf.call(e.parentElement.children, e)
+
+                console.log(insertIndex)
+                if (!element.parentElement) notifcationsWrapper.append(element)
+                notifcationsWrapper.insertBefore(element, notifcationsWrapper.children[insertIndex + 2])
+
                 element.innerText = `${amount} ${description}`
                 element.setAttribute('onclick', `window.location.href = '${href}'`)
-                notifcationsWrapper.append(element)
+
                 if (e.firstElementChild.innerText.includes('geen')) element.dataset.insignificant = true
                 if (description.includes('openstaand')) {
                     element.id = 'st-vd-unread-open-assignments'
