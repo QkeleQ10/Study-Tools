@@ -194,6 +194,7 @@ async function cijfers() {
         menuCollapser = await getElement('.menu-footer>a'),
         gradesContainer = await getElement('.content-container-cijfers, .content-container'),
         gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
+        gradeDownload = document.createElement('button'),
         clOpen = document.createElement('button'),
         clCloser = document.createElement('button'),
         clAddTable = document.createElement('button'),
@@ -216,7 +217,15 @@ async function cijfers() {
         hypotheticalWeight = 1,
         mean
 
-    document.body.append(clOpen)
+    document.body.append(gradeDownload, clOpen)
+    gradeDownload.classList.add('st-button')
+    gradeDownload.id = 'st-cf-export'
+    gradeDownload.innerText = "Exporteren"
+    gradeDownload.dataset.icon = ''
+    gradeDownload.addEventListener('click', () => {
+        showSnackbar("Download het bestand met de knop hiernaast. Je kunt het later op deze pagina weer importeren.", 121000, [{ innerText: "downloaden", href: `data:text/html;base64,${window.btoa(unescape(encodeURIComponent(gradesContainer.innerHTML)))}`, download: 'Cijferlijst ' + (new Date()).toLocaleString('nl-NL') }])
+    })
+
     clOpen.classList.add('st-button')
     clOpen.id = 'st-cf-cl-open'
     clOpen.innerText = "Cijfercalculator"

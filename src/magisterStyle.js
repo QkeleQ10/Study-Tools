@@ -1241,11 +1241,15 @@ a.appbar-button,
     color: var(--st-accent-warn);
 }
 
-#st-cf-cl-open, #st-cf-cl-closer {
+#st-cf-export, #st-cf-cl-open, #st-cf-cl-closer {
     position: absolute;
     top: 35px;
     right: 28px;
     z-index: 99999;
+}
+
+#st-cf-export {
+    right: 195px;
 }
 
 #st-cf-cl-add-table {

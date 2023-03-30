@@ -86,7 +86,7 @@ main {
     grid-area: main;
 }
 
-section {
+#settings-wrapper>section {
     background: var(--background);
     min-height: max-content;
 }
@@ -295,7 +295,7 @@ label.collapse {
     overflow: hidden;
 }
 
-input {
+label>input {
     grid-area: input;
 }
 
@@ -510,7 +510,7 @@ input[type=password]:hover {
 
 input[type=text]:focus,
 input[type=email]:focus,
-input[type=password]:focus select:focus {
+input[type=password]:focus {
     border-color: var(--color) !important;
     outline: none;
     box-shadow: 0px 8px 16px -8px hsla(var(--hue), var(--saturation), var(--luminance), 0.75) !important;
@@ -613,17 +613,22 @@ input[type=password]:active {
     rotate: -15deg;
 }
 
-.grid-subjects {
+#magister-subjects {
+    display: grid;
+    grid-template-rows: auto;
+}
+
+#magister-subjects>div {
     display: grid;
     grid-template-columns: 3fr 2fr;
 }
 
-#magister-subjects .grid-subjects:last-child {
+#magister-subjects>div:last-child {
     position: relative;
     opacity: .5;
 }
 
-#magister-subjects .grid-subjects:last-child:not(:focus, :focus-within):after {
+#magister-subjects>div:last-child:not(:focus, :focus-within):after {
     position: absolute;
     top: 0;
     left: 0;
@@ -634,7 +639,7 @@ input[type=password]:active {
     pointer-events: none;
 }
 
-#magister-subjects .grid-subjects:last-child:not(:focus, :focus-within):before {
+#magister-subjects>div:last-child:not(:focus, :focus-within):before {
     position: absolute;
     top: 0;
     left: 0;
@@ -642,12 +647,6 @@ input[type=password]:active {
     translate: 20px 4px;
     font-size: 12px;
     pointer-events: none;
-}
-
-label>.grid-subjects {
-    margin-top: 12px;
-    flex-direction: row !important;
-    justify-content: space-between;
 }
 
 details {

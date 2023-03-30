@@ -28,7 +28,7 @@ const settingsBuilder = [
                         value: "dark",
                         title: "Donker thema"
                     },
-                ],
+                ]
             },
             {
                 id: "color-picker",
@@ -38,9 +38,9 @@ const settingsBuilder = [
             },
             {
                 id: "magister-css-dark-invert",
-                title: "Aangepaste inhoud donker maken",
+                title: "Inhoud donker maken",
                 subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
-                default: true
+                default: true,
             },
         ]
     },
@@ -50,7 +50,7 @@ const settingsBuilder = [
         title: "Inloggen",
         settings: [
             {
-                id: 'magisterLogin-method',
+                id: "magisterLogin-method",
                 title: "Automatisch inloggen",
                 type: "select",
                 options: [
@@ -70,10 +70,219 @@ const settingsBuilder = [
                 ]
             },
             {
-                id: 'magisterLogin-username',
+                id: "magisterLogin-username",
                 title: "Gebruikersnaam",
-                type: "text"
+                type: "text",
+            },
+            {
+                id: "magisterLogin-email",
+                title: "E-mailadres",
+                subtitle: "Van het Microsoft-account dat moet worden gekozen",
+                type: "text",
+                fieldType: "email",
+            },
+            {
+                id: "magisterLogin-password",
+                title: "Wachtwoord",
+                type: "text",
+                fieldType: "password",
+            },
+        ]
+    },
+    {
+        id: "section-magister-sidebar",
+        group: "Magister",
+        title: "Zijbalk",
+        settings: [
+            {
+                id: "magister-appbar-week",
+                title: "Weeknummer tonen"
+            },
+            {
+                id: "magister-appbar-zermelo",
+                title: "Link naar Zermelo tonen"
+            },
+            {
+                id: "magister-appbar-hidePicture",
+                title: "Profielfoto verbergen"
+            },
+        ]
+    },
+    {
+        id: "section-magister-today",
+        group: "Magister",
+        title: "Vandaag",
+        settings: [
+            {
+                id: "magister-vd-overhaul",
+                title: "Alternatieve pagina 'Vandaag'",
+                default: true,
+            },
+            {
+                id: "magister-vd-agendaHeight",
+                title: "Hoogte agenda-items",
+                type: "slider",
+                default: 1,
+                defaultFormatted: "1,0×",
+                suffix: "×",
+                min: 0.5,
+                max: 1.5,
+                step: 0.1,
+            },
+            {
+                id: "magister-vd-subjects",
+                title: "Aangepaste vaknamen",
+                default: true,
+            },
+            {
+                id: "magister-vd-grade",
+                title: "Weergave laatste cijfers",
+                type: "select",
+                options: [
+                    {
+                        value: "full",
+                        title: "Volledig (cijfer weergeven)",
+                        default: true
+                    },
+                    {
+                        value: "partial",
+                        title: "Gedeeltelijk (cijfer verbergen)"
+                    },
+                    {
+                        value: "off",
+                        title: "Uit"
+                    },
+                ]
+            },
+        ]
+    },
+    {
+        id: "section-magister-studiewijzers",
+        group: "Magister",
+        title: "Studiewijzers",
+        settings: [
+            {
+                id: "magister-sw-display",
+                title: "Weergave studiewijzers",
+                type: "select",
+                options: [
+                    {
+                        value: "grid",
+                        title: "Geordend raster",
+                        default: true
+                    },
+                    {
+                        value: "list",
+                        title: "Geordende lijst"
+                    },
+                    {
+                        value: "off",
+                        title: "Origineel"
+                    },
+                ]
+            },
+            {
+                id: "magister-sw-period",
+                title: "Periodenummers tonen",
+                subtitle: "In plaats van de naam van de studiewijzer",
+                default: true,
+            },
+            {
+                id: "magister-sw-thisWeek",
+                title: "Naar huidige week scrollen",
+                default: true,
             }
         ]
-    }
+    },
+    {
+        id: "section-magister-assignments",
+        group: "Magister",
+        title: "Opdrachten",
+        settings: [
+            {
+                id: "magister-op-oldgrey",
+                title: "Oude opdrachten grijs kleuren",
+                default: true,
+            }
+        ]
+    },
+    {
+        id: "section-magister-grades",
+        group: "Magister",
+        title: "Cijfers",
+        settings: [
+            {
+                id: "magister-cf-calculator",
+                title: "Cijfercalculator",
+                subtitle: "Een zeer krachtige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-failred",
+                title: "Onvoldoendes rood kleuren",
+                subtitle: "Alleen in het cijferoverzicht.",
+                default: true,
+            }
+        ]
+    },
+    {
+        id: "section-magister-values",
+        group: "Magister",
+        title: "Globale waarden",
+        settings: [
+            {
+                id: "magister-periods",
+                title: "Beginweken perioden",
+                subtitle: "Het eerste weeknummer van elke periode, gescheiden door komma's.",
+                type: "text",
+                default: "30, 47, 9",
+            },
+            {
+                id: "magister-subjects",
+                title: "Aangepaste vaknamen",
+                type: "subjects",
+                default: [{ name: "Aardrijkskunde", aliases: "ak" }, { name: "Bedrijfseconomie", aliases: "beco" }, { name: "Beeldende vorming", aliases: "be, bv, kubv" }, { name: "Biologie", aliases: "bi" }, { name: "Cult. en kunstz. vorming", aliases: "ckv" }, { name: "Drama", aliases: "dr, kudr" }, { name: "Duitse taal", aliases: "du, dutl" }, { name: "Economie", aliases: "ec" }, { name: "Engelse taal", aliases: "en, entl" }, { name: "Franse taal", aliases: "fa, fatl" }, { name: "Geschiedenis", aliases: "gs" }, { name: "Kunst algemeen", aliases: "ku, kua" }, { name: "Levensbeschouwing", aliases: "lv" }, { name: "Lichamelijke opvoeding", aliases: "lo" }, { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" }, { name: "Maatschappijleer", aliases: "ma, malv" }, { name: "Maatschappij&shy;wetenschappen", aliases: "maw" }, { name: "Mentor", aliases: "mentoruur, mentoraat" }, { name: "Muziek", aliases: "mu, kumu" }, { name: "Natuurkunde", aliases: "na" }, { name: "Nederlandse taal", aliases: "ne, netl" }, { name: "Scheikunde", aliases: "sk" }, { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd" }]
+            }
+        ]
+    },
+    {
+        id: "section-noordhoff",
+        group: "Noordhoff",
+        title: "Inloggen",
+        settings: [
+            {
+                id: "noordhoff-login-enabled",
+                title: "Automatisch doorgaan"
+            },
+            {
+                id: "noordhoff-login-entree",
+                title: "Inloggen met Entree"
+            },
+        ]
+    },
+    {
+        id: "section-dev",
+        group: "Study Tools",
+        title: "Opties",
+        settings: [
+            {
+                id: "updates",
+                title: "Updates aanbieden",
+                subtitle: "Melding bij nieuwe versie.",
+                devOnly: true,
+            },
+            {
+                id: "beta",
+                title: "Bètaversies aanbieden",
+                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
+                devOnly: true,
+            },
+            {
+                id: "update-notes",
+                title: "Update-informatie weergeven",
+                subtitle: "Een korte melding over de nieuwste update wordt weergegeven als er een nieuwe beschikbaar of onlangs geïnstalleerd is.",
+                default: true,
+            },
+        ]
+    },
 ]

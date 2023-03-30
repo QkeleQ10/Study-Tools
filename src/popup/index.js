@@ -29,20 +29,42 @@ async function init() {
         sectionButton.addEventListener('click', () => sectionWrapper.scrollIntoView({ block: 'start', behavior: 'smooth' }))
 
         section.settings.forEach(setting => {
-            let value = start[setting.id] || setting.default || false,
+            if (setting.prodOnly && !chrome?.runtime?.getManifest()?.update_url) return
+            else if (setting.devOnly && chrome?.runtime?.getManifest()?.update_url) return
+
+            let value = typeof start[setting.id] === 'undefined' ? setting.default || (!setting.type ? false : '') : start[setting.id],
                 inputElement,
                 labelElement
 
             switch (setting.type) {
                 case 'text':
-                    sectionWrapper.innerHTML += `<label class="has-text" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="text" name="${setting.title}" id="${setting.id}"></label>`
+                    sectionWrapper.innerHTML += `<label class="has-text" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
+                        if (!start[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                    }, 50)
+                    break
+
+                case 'slider':
+                    sectionWrapper.innerHTML += `<label class="has-slider" role="listitem" for="${setting.id}" data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        inputElement.addEventListener('input', () => {
+                            pushSetting(setting.id, inputElement.value, inputElement)
+                            labelElement.querySelector('.current-value').innerText = String(inputElement.value).replace('.', ',')
+                        })
+                        if (!start[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                    }, 50)
                     break
 
                 case 'select':
                     sectionWrapper.innerHTML += `<label class="has-select" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
-                    setting.options.forEach(option => inputElement.innerHTML += `<button data-value="${option.value}" data-selected="${value === option.value}">${option.title}</button>`)
+                    setting.options.forEach(option => inputElement.innerHTML += `<button data-value="${option.value}" data-selected="${value ? value === option.value : option.default}">${option.title}</button>`)
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -60,6 +82,11 @@ async function init() {
                                 pushSetting(setting.id, optionElement.dataset.value, inputElement)
                             })
                         })
+                        if (!start[setting.id]) {
+                            setting.options.forEach(option => {
+                                if (option.default) pushSetting(setting.id, option.value, inputElement)
+                            })
+                        }
                     }, 50)
                     break
 
@@ -114,17 +141,35 @@ async function init() {
                                 .then((result) => setColor(result.sRGBHex))
                         })
                         document.querySelectorAll('label.has-color-picker>label.has-slider>input').forEach(e => {
-                            e.addEventListener('input', e => { setColor() })
+                            e.addEventListener('input', () => setColor())
                         })
                     }, 50)
+                    break
 
+                case 'subjects':
+                    sectionWrapper.innerHTML += `<label role="listitem" for="${setting.id}" class="large">${setting.title}<div class="grid-subjects"><h5>Weergavenaam</h5><h5>Aliassen</h5></div><div id="${setting.id}"></div></label>`
+                    inputElement = document.getElementById(setting.id)
+                    labelElement = inputElement.parentElement
+                    value.forEach(valueListing => {
+                        inputElement.innerHTML += `<div><input type="text" value="${valueListing.name}"><input type="text" value="${valueListing.aliases}"></div>`
+                    })
+                    if (!start[setting.id]) updateSubjects()
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        inputElement.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
+                        updateSubjects()
+                    }, 50)
                     break
 
                 default:
-                    sectionWrapper.innerHTML += `<label class="has-checkbox" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" checked="${value}"></label>`
-                    inputElement = document.getElementById(setting.id)
-                    labelElement = inputElement.parentElement
-                    inputElement.addEventListener('input', event => pushSetting(setting.id, inputElement.checked, inputElement))
+                    sectionWrapper.innerHTML += `<label class="has-checkbox" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.checked, inputElement))
+                        if (typeof start[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                    }, 50)
                     break
             }
         })
@@ -145,7 +190,14 @@ async function init() {
     aside.querySelector('a').dataset.active = true
     aside.innerHTML += `<a data-link-section="section-about">Over</a>`
 
-    document.querySelector('main').addEventListener('scroll', event => {
+    document.querySelectorAll('aside a[data-link-section]').forEach(sectionButton => {
+        sectionButton.addEventListener('click', () => {
+            let section = document.querySelector(`section#${sectionButton.dataset.linkSection}`)
+            section.scrollIntoView({ behavior: 'smooth' })
+        })
+    })
+
+    document.querySelector('main').addEventListener('scroll', () => {
         let sections = document.querySelectorAll('main section'),
             currentSection
 
@@ -167,7 +219,7 @@ async function init() {
     }
     setSetting('openedPopup', chrome?.runtime?.getManifest()?.version)
 
-    refreshConditionals()
+    // refreshConditionals()
 
     setColor({ h: start['magister-css-hue'], s: start['magister-css-saturation'], l: start['magister-css-luminance'] }, true)
 
@@ -184,7 +236,7 @@ async function init() {
     }, 100)
 }
 
-function updateSubjects() {
+function updateSubjects(event) {
     let subjectValues = []
     const parent = document.getElementById('magister-subjects'),
         subjectWrappers = [...parent.children]
@@ -197,15 +249,14 @@ function updateSubjects() {
             lastChild = !subjectWrapper.nextSibling
         if (subjectValue.name) subjectValues.push(subjectValue)
         if (!empty && lastChild) {
-            const newSubjectWrapper = document.createElement('div'),
-                input1 = document.createElement('input'),
-                input2 = document.createElement('input')
-            newSubjectWrapper.append(input1, input2)
-            newSubjectWrapper.classList.add('grid-subjects')
-            input1.setAttribute('type', 'text')
-            input2.setAttribute('type', 'text')
-            newSubjectWrapper.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
-            parent.appendChild(newSubjectWrapper)
+            parent.innerHTML += `<div><input type="text"><input type="text"></div>`
+            setTimeout(() => {
+                if (event) {
+                    parent.lastElementChild.previousElementSibling.firstElementChild.focus()
+                    parent.lastElementChild.previousElementSibling.firstElementChild.value = event.data
+                }
+                parent.querySelectorAll('input').forEach(inputElement => inputElement.addEventListener('input', updateSubjects))
+            }, 50)
         }
         if (empty && !lastChild) {
             subjectWrapper.remove()
@@ -214,61 +265,6 @@ function updateSubjects() {
 
     })
     pushSetting(parent.id, subjectValues, parent)
-}
-
-function pushSetting(key, value, element) {
-    if (!chrome?.storage) return
-    refreshConditionals()
-    if (element) {
-        element.parentElement.setAttribute('data-saved', 'not-saved')
-        element.parentElement.classList.remove('new')
-    }
-    diff[key] = value
-    diffTimestamp = new Date().getTime()
-}
-
-function refreshConditionals() {
-    document.querySelectorAll('[data-appear-if], [data-disappear-if]').forEach(element => {
-        let appear = false,
-            negDependency,
-            posDependency,
-            c
-        if (element.dataset.appearIf) {
-            let appearIfs = element.dataset.appearIf.split(' '),
-                numberSuccess = 0
-            appearIfs.forEach((e, i, a) => {
-                if (e.includes('===')) {
-                    [e, c] = e.split('===')
-                    posDependency = document.getElementById(e)
-                    if ((posDependency.value || posDependency.dataset.value) === c && !appear) numberSuccess++
-                } else if (e.includes('!==')) {
-                    [e, c] = e.split('!==')
-                    posDependency = document.getElementById(e)
-                    if ((posDependency.value || posDependency.dataset.value) !== c && !appear) numberSuccess++
-                } else {
-                    posDependency = document.getElementById(e)
-                    if (posDependency.getAttribute('type') === 'checkbox' && posDependency?.checked && !appear) numberSuccess++
-                    else if ((posDependency.value || posDependency.dataset.value)?.length > 0 && !appear) numberSuccess++
-                }
-                if (numberSuccess === a.length) appear = true
-            })
-        }
-        if (element.dataset.disappearIf) {
-            negDependency = document.getElementById(element.dataset.disappearIf)
-            if (!negDependency?.checked && appear !== false) appear = true
-            if (negDependency?.checked && appear) appear = false
-        }
-        if (appear) {
-            element.classList.remove('disabled-dependant')
-            if (element.querySelector('input, select, textarea, .select'))
-                element.querySelector('input, select, textarea, .select').removeAttribute('tabindex')
-        }
-        else {
-            element.classList.add('disabled-dependant')
-            if (element.querySelector('input, select, textarea, .select'))
-                element.querySelector('input, select, textarea, .select').setAttribute('tabindex', '-1')
-        }
-    })
 }
 
 function setColor(color, noSave) {
@@ -318,8 +314,10 @@ function setColor(color, noSave) {
         }
     }
 
-    if (!color.h || !color.s || !color.l) {
-        return setColor({h: 207, s: 95, l: 55})
+    console.log(color)
+
+    if (typeof color.h === 'undefined' || typeof color.s === 'undefined' || typeof color.l === 'undefined') {
+        return setColor({ h: 207, s: 95, l: 55 })
     }
 
     hueSlider.value = color.h
@@ -343,6 +341,17 @@ function setColor(color, noSave) {
         if (window.getComputedStyle(document.getElementById('header'), null).getPropertyValue('background-color') === qElement.style.background) qElement.classList.add('active')
         else qElement.classList.remove('active')
     })
+}
+
+function pushSetting(key, value, element) {
+    if (!chrome?.storage) return
+    // refreshConditionals()
+    if (element) {
+        element.parentElement.setAttribute('data-saved', 'not-saved')
+        element.parentElement.classList.remove('new')
+    }
+    diff[key] = value
+    diffTimestamp = new Date().getTime()
 }
 
 function getSettings(array, location, all) {
