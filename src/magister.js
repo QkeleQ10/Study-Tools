@@ -434,6 +434,8 @@ async function cijferexport() {
     exImportInput.addEventListener('change', async event => {
         exImport.disabled = true
         exImport.dataset.busy = true
+        exExport.setAttribute('style', 'transform: scaleX(0); right: 50px; pointer-events: none;')
+        exImport.setAttribute('style', 'right: 200px;')
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
         showSnackbar("Cijfers uit bestand extraheren en plaatsen op pagina...", 3000)
         list = []
@@ -468,7 +470,7 @@ async function cijferexport() {
             exImport.dataset.done = true
             setTimeout(() => {
                 exImport.removeAttribute('disabled')
-                exImport.removeAttribute('style')
+                exImport.setAttribute('style', 'right: 200px;')
                 exImport.removeAttribute('data-busy')
                 exImport.removeAttribute('data-done')
             }, 5000)

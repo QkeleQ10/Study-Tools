@@ -1314,7 +1314,7 @@ aside.st-appear-top {
     background-image: linear-gradient(to right, var(--st-accent-primary) 50%, var(--st-accent-secondary) 50%);
     background-size: 200% 100%;
     background-position: 0 0;
-    transition: background-position 200ms linear, transform 200ms, filter 200ms;
+    transition: background-position 200ms linear, transform 200ms, filter 200ms, right 200ms;
 }
 
 #st-cf-ex-import {
