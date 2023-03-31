@@ -13,7 +13,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     z-index: 99999999;
 }
 #st-snackbars>div {
-    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 210px; translate: 0 150%; opacity: 0; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 8px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
+    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 8px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
 }
 #st-snackbars>div.open {
     translate: 0; opacity: 1;
@@ -51,7 +51,7 @@ async function checkUpdates(override) {
                 }
             } else console.warn("Error requesting Study Tools manifest", response)
         })
-        .catch(error => {
+        .catch(() => {
             if (!override) checkUpdates(true)
         })
 

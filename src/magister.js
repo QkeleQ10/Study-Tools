@@ -187,14 +187,13 @@ async function studiewijzer() {
     displayStudiewijzerArray(gridContainer, true)
 }
 
-async function cijfers() {
+async function cijfercalculator() {
     if (!await getSetting('magister-cf-calculator')) return
     let aside = await getElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         menuHost = await getElement('.menu-host'),
         menuCollapser = await getElement('.menu-footer>a'),
         gradesContainer = await getElement('.content-container-cijfers, .content-container'),
         gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
-        gradeDownload = document.createElement('button'),
         clOpen = document.createElement('button'),
         clCloser = document.createElement('button'),
         clAddTable = document.createElement('button'),
@@ -217,15 +216,7 @@ async function cijfers() {
         hypotheticalWeight = 1,
         mean
 
-    document.body.append(gradeDownload, clOpen)
-    gradeDownload.classList.add('st-button')
-    gradeDownload.id = 'st-cf-export'
-    gradeDownload.innerText = "Exporteren"
-    gradeDownload.dataset.icon = ''
-    gradeDownload.addEventListener('click', () => {
-        showSnackbar("Download het bestand met de knop hiernaast. Je kunt het later op deze pagina weer importeren.", 121000, [{ innerText: "downloaden", href: `data:text/html;base64,${window.btoa(unescape(encodeURIComponent(gradesContainer.innerHTML)))}`, download: 'Cijferlijst ' + (new Date()).toLocaleString('nl-NL') }])
-    })
-
+    document.body.append(clOpen)
     clOpen.classList.add('st-button')
     clOpen.id = 'st-cf-cl-open'
     clOpen.innerText = "Cijfercalculator"
@@ -271,7 +262,7 @@ async function cijfers() {
         clFutureDesc.innerText = ''
         ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
         clSubtitle.innerText = "Voeg cijfers toe met de knoppen of dubbelklik op een cijfer \nuit de tabel. Druk op de toets '?' om de zijbalk weer te geven."
-        gradesContainer.style.zIndex = '999999'
+        gradesContainer.style.zIndex = '9999999'
         gradesContainer.style.maxWidth = 'calc(100vw - 477px)'
         if (!menuHost.classList.contains('collapsed-menu')) menuCollapser.click()
     })
@@ -358,6 +349,214 @@ async function cijfers() {
         gradesContainer.removeAttribute('style')
         clWrapper.dataset.step = 0
         menuCollapser.click()
+    })
+}
+
+async function cijferexport() {
+    if (!await getSetting('magister-cf-calculator')) return
+    let aside = await getElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
+        gradesContainer = await getElement('.content-container-cijfers, .content-container'),
+        gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
+        exExport = document.createElement('button'),
+        exImport = document.createElement('label'),
+        exImportInput = document.createElement('input'),
+        list = [],
+        num = 0
+
+    document.body.append(exExport, exImport)
+    exExport.classList.add('st-button')
+    exExport.id = 'st-cf-ex-export'
+    exExport.innerText = "Exporteren"
+    exExport.dataset.icon = ''
+    exImport.classList.add('st-button')
+    exImport.id = 'st-cf-ex-import'
+    exImport.innerText = "Importeren"
+    exImport.dataset.icon = ''
+    exImport.append(exImportInput)
+    exImportInput.type = 'file'
+    exImportInput.accept = '.json'
+    exImportInput.style.display = 'none'
+
+    exExport.addEventListener('click', async () => {
+        exExport.disabled = true
+        exExport.dataset.busy = true
+        gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
+        showSnackbar("Cijfers verzamelen en toevoegen aan bestand...", 8000)
+        list = []
+        num = 0
+        let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
+            array = [...nodeList],
+            td
+
+        if (array.length > 250)
+            showSnackbar("Dit kan even duren — af en toe stopt het proces voor maximaal 5 seconden, zodat het quotum van Magister niet wordt overschreden.\n\nKrijg je een foutmelding rechtsonderin? Dan is het quotum toch overschreden. Er ontbreken dan cijfers in je bestand.\n\nProbeer het dan later opnieuw of stuur me een e-mail via het configuratiepaneel.", 40000)
+
+        for (let i = 0; i < array.length; i++) {
+            exExport.style.backgroundPosition = `-${(i + 1) / array.length * 100}% 0`
+            td = array[i]
+            await getGradeDetails(td, gradeDetails, num)
+                .then(result => {
+                    list.push(result)
+                    if (result.type === 'grade') num++
+                    return result
+                })
+        }
+
+        let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify(list))))}`,
+            a = document.createElement("a")
+        a.download = `Cijferlijst ${document.querySelector('#idWeergave form>div:nth-child(1) span.k-input').innerText} ${(new Date).toLocaleString()}`;
+        a.href = uri
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        delete a
+        gradesContainer.removeAttribute('style')
+        exExport.dataset.done = true
+        setTimeout(() => {
+            exExport.removeAttribute('disabled')
+            exExport.removeAttribute('style')
+            exExport.removeAttribute('data-busy')
+            exExport.removeAttribute('data-done')
+        }, 5000)
+    })
+
+    exImportInput.addEventListener('change', async event => {
+        exImport.disabled = true
+        exImport.dataset.busy = true
+        gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
+        showSnackbar("Cijfers uit bestand extraheren en plaatsen op pagina...", 5000)
+        list = []
+        num = 0
+
+        let reader = new FileReader()
+        reader.onload = async event => {
+            list = JSON.parse(event.target.result)
+            gradesContainer.innerText = ''
+            let div1 = document.createElement('div')
+            setAttributes(div1, { id: 'cijferoverzichtgrid', 'data-role': 'grid', class: 'cijfers-k-grid ng-isolate-scope k-grid k-widget', style: 'height: 100%' })
+            gradesContainer.append(div1)
+            let div2 = document.createElement('div')
+            setAttributes(div2, { class: 'k-grid-content', style: 'height: 100% !important' })
+            div1.append(div2)
+            let table = document.createElement('table')
+            setAttributes(table, { role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
+            div2.append(table)
+            aside.style.display = 'none'
+
+            for (let i = 0; i < list.length; i++) {
+                exImport.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
+                item = list[i]
+                await addGradeItem(item, gradesContainer.querySelector('table'))
+                    .then(() => {
+                        return
+                    })
+            }
+
+            gradesContainer.removeAttribute('style')
+            exImport.dataset.done = true
+            setTimeout(() => {
+                exImport.removeAttribute('disabled')
+                exImport.removeAttribute('style')
+                exImport.removeAttribute('data-busy')
+                exImport.removeAttribute('data-done')
+            }, 5000)
+        }
+        reader.readAsText(event.target.files[0])
+    })
+}
+
+async function getGradeDetails(td, gradeDetails, num) {
+    return new Promise(async (resolve, reject) => {
+        let timeout = 30,
+            result, weight, column, title
+        if (num > 1 && num % 50 === 0) timeout = 1000
+        if (num > 1 && num % 100 === 0) timeout = 3000
+        if (num > 1 && num % 150 === 0) timeout = 5000
+        if (!td.innerText || td.innerText.trim().length < 1) return resolve({ className: td.firstElementChild?.className, type: 'filler' })
+        if (td.firstElementChild?.classList.contains('text')) resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
+        td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+        td.dispatchEvent(new Event('pointerup', { bubbles: true }))
+        let interval = setInterval(() => {
+            gradeDetails.childNodes.forEach(element => {
+                if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
+                    result = element.nextElementSibling.innerText
+                } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
+                    weight = element.nextElementSibling.innerText
+                } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
+                    column = element.nextElementSibling.innerText
+                } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
+                    title = element.nextElementSibling.innerText
+                }
+            })
+            setTimeout(() => {
+                clearInterval(interval)
+                return resolve({ className: td.firstElementChild?.className, result, weight, column, type: 'grade', title })
+            }, timeout)
+        }, 10)
+        setTimeout(() => {
+            clearInterval(interval)
+            reject()
+        }, 6000)
+    })
+}
+
+async function addGradeItem(item, container) {
+    return new Promise(async (resolve, reject) => {
+        let tr = container.querySelector(`tr:last-child`), td, span
+        switch (item.type) {
+            case 'rowheader':
+                tr = document.createElement('tr')
+                tr.role = 'row'
+                container.append(tr)
+                let tdPre = document.createElement('td')
+                tdPre.role = 'gridcell'
+                tdPre.style.display = 'none'
+                td = document.createElement('td')
+                td.role = 'gridcell'
+                tr.append(tdPre, td)
+                span = document.createElement('span')
+                span.className = item.className
+                span.innerText = item.title
+                td.append(span)
+                break
+
+            case 'filler':
+                if (!tr) {
+                    tr = document.createElement('tr')
+                    tr.role = 'row'
+                    container.append(tr)
+                }
+                td = document.createElement('td')
+                td.role = 'gridcell'
+                tr.append(td)
+                span = document.createElement('span')
+                span.className = item.className
+                span.style.height = '40px'
+                td.append(span)
+                break
+
+            default:
+                if (!tr) {
+                    tr = document.createElement('tr')
+                    tr.role = 'row'
+                    container.append(tr)
+                }
+                td = document.createElement('td')
+                td.role = 'gridcell'
+                td.dataset.result = item.result
+                td.dataset.weight = item.weight
+                td.dataset.column = item.column
+                td.dataset.title = item.title
+                tr.append(td)
+                span = document.createElement('span')
+                span.className = item.className
+                span.innerText = item.result
+                td.append(span)
+                break
+        }
+        setTimeout(() => {
+            resolve()
+        }, 10)
     })
 }
 
@@ -758,7 +957,8 @@ async function popstate() {
     const href = document.location.href.split('?')[0]
 
     if (href.endsWith('/vandaag')) vandaag()
-    else if (href.includes('/cijfers')) cijfers()
+    else if (href.includes('/cijfers')) cijfercalculator()
+    if (href.includes('/cijfers/cijferoverzicht')) cijferexport()
     else if (href.endsWith('/studiewijzer')) studiewijzers()
     else if (href.includes('/studiewijzer/')) studiewijzer()
 }

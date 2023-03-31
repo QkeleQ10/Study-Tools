@@ -142,7 +142,7 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     color: #fff;
     cursor: pointer;
     user-select: none;
-    transition: filter 200ms, transform 200ms;
+    transition: filter 200ms, transform 200ms, border 200ms;
 }
 
 .st-button:hover, .st-button:focus {
@@ -155,6 +155,10 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 
 .st-button[data-icon]:before {
     content: attr(data-icon);
+    display: inline-block;
+    width: 20px;
+    overflow: visible;
+    text-align: center;
     font-family: 'Font Awesome 5 Pro';
     font-weight: 500;
     font-size: 18px;
@@ -285,6 +289,15 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
     }
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }`, 'study-tools-mandatory')
 
     if (await getSetting('magister-css-experimental')) {
@@ -1033,12 +1046,13 @@ a.appbar-button,
     height: 100vh;
     background: var(--st-overlay-background);
     color: var(--st-primary-color);
-    z-index: 99999;
-    transition: translate 200ms, opacity 200ms;
+    z-index: 999998;
+    transition: translate 300ms, opacity 200ms;
 }
 
 #st-cf-cl[data-step="0"] {
     opacity: 0;
+    translate: 200px;
     pointer-events: none !important;
     user-select: none !important;
 }
@@ -1251,21 +1265,17 @@ a.appbar-button,
     color: var(--st-accent-warn);
 }
 
-#st-cf-export, #st-cf-cl-open, #st-cf-cl-closer {
+#st-cf-cl-open, #st-cf-cl-closer {
     position: absolute;
     top: 35px;
     right: 28px;
     z-index: 99999;
 }
 
-#st-cf-export {
-    right: 195px;
-}
-
 #st-cf-cl-add-table {
     position: absolute;
     top: 35px;
-    right: 205px;
+    right: 215px;
 }
 
 #st-cf-cl-add-custom {
@@ -1295,6 +1305,35 @@ a.appbar-button,
 aside.st-appear-top {
     z-index: 999999;
     background: var(--st-primary-background);
+}
+
+#st-cf-ex-export, #st-cf-ex-import {
+    position: absolute;
+    top: 35px;
+    right: 200px;
+    background-image: linear-gradient(to right, var(--st-accent-primary) 50%, var(--st-accent-secondary) 50%);
+    background-size: 200% 100%;
+    background-position: 0 0;
+    transition: background-position 200ms linear, transform 200ms, filter 200ms;
+}
+
+#st-cf-ex-import {
+    right: 344px;
+}
+
+#st-cf-ex-export[data-busy], #st-cf-ex-import[data-busy] {
+    opacity: 1;
+    pointer-events: none;
+}
+
+#st-cf-ex-export[data-busy]:before, #st-cf-ex-import[data-busy]:before {
+    content: '';
+    animation: rotation 1s infinite linear;
+}
+
+#st-cf-ex-export[data-done]:before, #st-cf-ex-import[data-done]:before {
+    content: '';
+    animation: none;
 }
 `, 'study-tools-cf-calculator')
     }
