@@ -99,7 +99,6 @@ async function vandaagNotifications(notifcationsWrapper) {
             } else {
                 let insertIndex = Array.prototype.indexOf.call(e.parentElement.children, e)
 
-                console.log(insertIndex)
                 if (!element.parentElement) notifcationsWrapper.append(element)
                 notifcationsWrapper.insertBefore(element, notifcationsWrapper.children[insertIndex + 2])
 
@@ -273,68 +272,80 @@ async function cijfercalculator() {
 
     gradesContainer.addEventListener('dblclick', () => {
         if (clWrapper.dataset.step == 0) return
+        clAddTable.click()
         clAddTable.setAttribute('disabled', true)
         setTimeout(() => {
             clAddTable.removeAttribute('disabled')
-            clAddTable.click()
-        }, 400)
+        }, 200)
     })
 
     document.querySelectorAll('#st-cf-cl-add-table, #st-cf-cl-add-custom').forEach(e => {
         e.addEventListener('click', async event => {
+            let item = document.querySelector('.k-state-selected'),
+                result, weight, column, title
+
             if (clAddTable.disabled) return
-            let result, weight, column, title
-            if (event.target.id === 'st-cf-cl-add-table') {
-                gradeDetails.childNodes.forEach(element => {
-                    if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
-                        result = Number(element.nextElementSibling.innerText.replace(',', '.'))
-                    } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
-                        weight = Number(element.nextElementSibling.innerText.replace('x', '').replace(',', '.'))
-                    } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
-                        column = element.nextElementSibling.innerText
-                    } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
-                        title = element.nextElementSibling.innerText
-                    }
-                })
+            if (item.dataset.title) {
+                result = Number(item.dataset.result.replace(',', '.'))
+                weight = Number(item.dataset.weight.replace('x', '').replace(',', '.'))
+                column = item.dataset.column
+                title = item.dataset.title
+            } else if (event.target.id === 'st-cf-cl-add-table') {
+                setTimeout(() => {
+                    gradeDetails.childNodes.forEach(element => {
+                        if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
+                            result = Number(element.nextElementSibling.innerText.replace(',', '.'))
+                        } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
+                            weight = Number(element.nextElementSibling.innerText.replace('x', '').replace(',', '.'))
+                        } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
+                            column = element.nextElementSibling.innerText
+                        } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
+                            title = element.nextElementSibling.innerText
+                        }
+                    })
+                }, 200)
             } else if (event.target.id === 'st-cf-cl-add-custom') {
                 result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
             }
 
-            if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
-            if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+            if (event.target.id === 'st-cf-cl-add-table') setTimeout(() => {
 
-            let addedElement = document.createElement('span')
-            clAdded.append(addedElement)
-            setAttributes(addedElement, { class: 'st-cf-cl-added-element', 'data-grade-index': resultsList.length })
-            if (column && title)
-                addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
-            else
-                addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
-            addedElement.addEventListener('click', event => {
-                resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
-                weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
-                event.target.remove()
+                if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
+                if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+
+                let addedElement = document.createElement('span')
+                clAdded.append(addedElement)
+                setAttributes(addedElement, { class: 'st-cf-cl-added-element', 'data-grade-index': resultsList.length })
+                if (column && title)
+                    addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
+                else
+                    addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
+                addedElement.addEventListener('click', event => {
+                    resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
+                    weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
+                    event.target.remove()
+                    mean = weightedMean(resultsList, weightsList)
+                    showSnackbar('Cijfer verwijderd uit de berekening.')
+                    clMean.innerText = isNaN(mean) ? '' : mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    if (mean < 5.5) clMean.classList.add('insufficient')
+                    else clMean.classList.remove('insufficient')
+
+                    updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
+                    if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) clWrapper.dataset.step = 1
+                })
+
+                resultsList.push(result)
+                weightsList.push(weight)
                 mean = weightedMean(resultsList, weightsList)
-                showSnackbar('Cijfer verwijderd uit de berekening.')
-                clMean.innerText = isNaN(mean) ? '' : mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                showSnackbar('Cijfer toegevoegd aan de berekening.')
+
+                clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 if (mean < 5.5) clMean.classList.add('insufficient')
                 else clMean.classList.remove('insufficient')
 
+                clWrapper.dataset.step = 2
                 updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
-                if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) clWrapper.dataset.step = 1
-            })
-
-            resultsList.push(result)
-            weightsList.push(weight)
-            mean = weightedMean(resultsList, weightsList)
-            showSnackbar('Cijfer toegevoegd aan de berekening.')
-
-            clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            if (mean < 5.5) clMean.classList.add('insufficient')
-            else clMean.classList.remove('insufficient')
-
-            clWrapper.dataset.step = 2
-            updateGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
+            }, 200)
         })
     })
 
@@ -424,7 +435,7 @@ async function cijferexport() {
         exImport.disabled = true
         exImport.dataset.busy = true
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
-        showSnackbar("Cijfers uit bestand extraheren en plaatsen op pagina...", 5000)
+        showSnackbar("Cijfers uit bestand extraheren en plaatsen op pagina...", 3000)
         list = []
         num = 0
 
@@ -441,12 +452,13 @@ async function cijferexport() {
             let table = document.createElement('table')
             setAttributes(table, { role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
             div2.append(table)
-            aside.style.display = 'none'
+            aside.innerText = "Deze cijfers zijn geïmporteerd uit een eerdere back-up. Niet alle informatie is beschikbaar.\n\nSelecteer een cijfer om details weer te geven."
+            aside.setAttribute('style', 'font: 14px/30px var(--st-secondary-font-family)')
 
             for (let i = 0; i < list.length; i++) {
                 exImport.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
                 item = list[i]
-                await addGradeItem(item, gradesContainer.querySelector('table'))
+                await addGradeItem(item, gradesContainer.querySelector('table'), aside)
                     .then(() => {
                         return
                     })
@@ -467,7 +479,7 @@ async function cijferexport() {
 
 async function getGradeDetails(td, gradeDetails, num) {
     return new Promise(async (resolve, reject) => {
-        let timeout = 30,
+        let timeout = 60,
             result, weight, column, title
         if (num > 1 && num % 50 === 0) timeout = 1000
         if (num > 1 && num % 100 === 0) timeout = 3000
@@ -476,7 +488,7 @@ async function getGradeDetails(td, gradeDetails, num) {
         if (td.firstElementChild?.classList.contains('text')) resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
         td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
         td.dispatchEvent(new Event('pointerup', { bubbles: true }))
-        let interval = setInterval(() => {
+        setTimeout(() => {
             gradeDetails.childNodes.forEach(element => {
                 if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
                     result = element.nextElementSibling.innerText
@@ -488,19 +500,12 @@ async function getGradeDetails(td, gradeDetails, num) {
                     title = element.nextElementSibling.innerText
                 }
             })
-            setTimeout(() => {
-                clearInterval(interval)
-                return resolve({ className: td.firstElementChild?.className, result, weight, column, type: 'grade', title })
-            }, timeout)
-        }, 10)
-        setTimeout(() => {
-            clearInterval(interval)
-            reject()
-        }, 6000)
+            return resolve({ className: td.firstElementChild?.className, result, weight, column, type: 'grade', title })
+        }, timeout)
     })
 }
 
-async function addGradeItem(item, container) {
+async function addGradeItem(item, container, aside) {
     return new Promise(async (resolve, reject) => {
         let tr = container.querySelector(`tr:last-child`), td, span
         switch (item.type) {
@@ -551,12 +556,16 @@ async function addGradeItem(item, container) {
                 span = document.createElement('span')
                 span.className = item.className
                 span.innerText = item.result
+                span.title = item.result
                 td.append(span)
+                td.addEventListener('click', () => {
+                    document.querySelectorAll('.k-state-selected').forEach(e => e.classList.remove('k-state-selected'))
+                    td.classList.add('k-state-selected')
+                    aside.innerText = `Deze cijfers zijn geïmporteerd uit een eerdere back-up. Niet alle informatie is beschikbaar.\n\nResultaat: ${item.result}\nWeegfactor: ${item.weight}\nKolomnaam: ${item.column}\nKolomkop: ${item.title}`
+                })
                 break
         }
-        setTimeout(() => {
-            resolve()
-        }, 10)
+        resolve()
     })
 }
 
