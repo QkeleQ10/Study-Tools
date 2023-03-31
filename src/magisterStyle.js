@@ -310,7 +310,7 @@ html {
 body,
 div.loading-overlay,
 input[type=checkbox]+label span {
-    background: var(--st-body-background)
+    background: var(--st-body-background) !important
 }
 
 .block h3 b {
@@ -436,7 +436,13 @@ table.table-grid-layout tr:hover,
 
 table.table-grid-layout tr, table.table-grid-layout td,
 #cijfers-container .main div.content-container-cijfers,
-div.ngRow:hover>:not(.unselectable) {
+div.ngRow:hover>:not(.unselectable),
+.card,
+form input[type=text], form input[type=password], form input[type=search], form input[type=email], form input[type=url], form input[type=tel], form input[type=number], fieldset input[type=text], fieldset input[type=password], fieldset input[type=search], fieldset input[type=email], fieldset input[type=url], fieldset input[type=tel], fieldset input[type=number],
+.settings-container .widget .multi-line li:hover,
+#agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap,
+.k-editor .k-content,
+.k-editable-area {
     background-color: var(--st-primary-background) !important;
     color: var(--st-primary-color)
 }
@@ -469,7 +475,11 @@ input[type=checkbox]+label span,
 .widget .dualcolumn-list li,
 #cijfers-container .main div.content-container-cijfers,
 div.ngCell,
-dna-card {
+dna-card,
+.card,
+form input[type=text], form input[type=password], form input[type=search], form input[type=email], form input[type=url], form input[type=tel], form input[type=number], fieldset input[type=text], fieldset input[type=password], fieldset input[type=search], fieldset input[type=email], fieldset input[type=url], fieldset input[type=tel], fieldset input[type=number],
+.settings-container ul.multi-line,
+#agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
 }
@@ -1319,6 +1329,6 @@ aside.st-appear-top {
     }
 
     if (await getSetting('magister-appbar-hidePicture')) {
-        createStyle(`.menu-button figure img{display: none}`, 'study-tools-appbar-hidePicture')
+        createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-appbar-hidePicture')
     }
 }
