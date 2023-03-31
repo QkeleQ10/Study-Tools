@@ -134,11 +134,15 @@ async function init() {
                             labelElement.querySelectorAll('label.has-slider').forEach(e => e.classList.toggle('collapse'))
                         })
                         document.getElementById('color-eyedropper').addEventListener('click', () => {
-                            if (!window.EyeDropper) return console.error("Your browser does not support the EyeDropper API")
+                            if (!window.EyeDropper) return showSnackbar("Fout bij het uitkiezen van een kleur: pipet niet ondersteund")
                             const eyeDropper = new EyeDropper()
                             eyeDropper
                                 .open()
-                                .then((result) => setColor(result.sRGBHex))
+                                .then(result => setColor(result.sRGBHex))
+                                .catch(error => {
+                                    console.error(error)
+                                    showSnackbar("Fout bij het uitkiezen van een kleur.")
+                                })
                         })
                         document.querySelectorAll('label.has-color-picker>label.has-slider>input').forEach(e => {
                             e.addEventListener('input', () => setColor())
@@ -314,8 +318,6 @@ function setColor(color, noSave) {
         }
     }
 
-    console.log(color)
-
     if (typeof color.h === 'undefined' || typeof color.s === 'undefined' || typeof color.l === 'undefined') {
         return setColor({ h: 207, s: 95, l: 55 })
     }
@@ -341,6 +343,27 @@ function setColor(color, noSave) {
         if (window.getComputedStyle(document.getElementById('header'), null).getPropertyValue('background-color') === qElement.style.background) qElement.classList.add('active')
         else qElement.classList.remove('active')
     })
+}
+
+function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
+    const snackbar = document.createElement('div'),
+        snackbarWrapper = document.getElementById('st-snackbars')
+    snackbarWrapper.append(snackbar)
+    snackbar.innerText = body
+    snackbar.addEventListener('dblclick', () => {
+        snackbar.classList.remove('open')
+        setTimeout(() => snackbar.remove(), 200)
+    })
+    buttons.forEach(element => {
+        let a = document.createElement('a')
+        snackbar.append(a)
+        setAttributes(a, element)
+        if (element.innerText) a.innerText = element.innerText
+        a.addEventListener('click', event => event.stopPropagation())
+    })
+    setTimeout(() => snackbar.classList.add('open'), 50)
+    setTimeout(() => snackbar.classList.remove('open'), duration)
+    setTimeout(() => snackbar.remove(), duration + 200)
 }
 
 function pushSetting(key, value, element) {
