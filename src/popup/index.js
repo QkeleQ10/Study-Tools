@@ -7,6 +7,12 @@ let start = {},
 init()
 
 async function init() {
+    start = {}
+    diff = {}
+    diffTimestamp = 0
+    settingsWrapper.innerText = ''
+    aside.innerText = ''
+
     if (chrome?.storage) start = await getSettings(null, null, true)
 
     settingsBuilder.forEach(section => {
@@ -38,7 +44,7 @@ async function init() {
 
             switch (setting.type) {
                 case 'text':
-                    sectionWrapper.innerHTML += `<label class="has-text" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
+                    sectionWrapper.innerHTML += `<label class="has-text" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -48,7 +54,7 @@ async function init() {
                     break
 
                 case 'slider':
-                    sectionWrapper.innerHTML += `<label class="has-slider" role="listitem" for="${setting.id}" data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
+                    sectionWrapper.innerHTML += `<label class="has-slider" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -61,19 +67,15 @@ async function init() {
                     break
 
                 case 'select':
-                    sectionWrapper.innerHTML += `<label class="has-select" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse"></div></label>`
+                    sectionWrapper.innerHTML += `<label class="has-select" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse" data-value="${value}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
                     setting.options.forEach(option => inputElement.innerHTML += `<button data-value="${option.value}" data-selected="${value ? value === option.value : option.default}">${option.title}</button>`)
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
-                        labelElement.addEventListener('click', () => {
-                            inputElement.classList.toggle('collapse')
-                        })
-                        labelElement.addEventListener('mouseleave', () => {
-                            inputElement.classList.add('collapse')
-                        })
+                        labelElement.addEventListener('click', () => inputElement.classList.toggle('collapse'))
+                        labelElement.addEventListener('mouseleave', () => inputElement.classList.add('collapse'))
                         inputElement.querySelectorAll('[data-value]').forEach(optionElement => {
                             optionElement.addEventListener('click', () => {
                                 inputElement.querySelectorAll('[data-value][data-selected]').forEach(e => e.dataset.selected = false)
@@ -84,7 +86,10 @@ async function init() {
                         })
                         if (!start[setting.id]) {
                             setting.options.forEach(option => {
-                                if (option.default) pushSetting(setting.id, option.value, inputElement)
+                                if (option.default) {
+                                    inputElement.dataset.value = option.value
+                                    pushSetting(setting.id, option.value, inputElement)
+                                }
                             })
                         }
                     }, 50)
@@ -92,7 +97,7 @@ async function init() {
 
                 case 'color-picker':
                     sectionWrapper.innerHTML += `
-<label class="has-color-picker" role="listitem" for="${setting.id}" data-version="${setting.version}">
+<label class="has-color-picker" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}">
     <h4>${setting.title}</h4>
     <div id="quick-colors">
         <button class="icon swatch" style="background: hsl(207deg, 95%, 55%)" data-color-values="207, 95, 55"></button>
@@ -127,7 +132,7 @@ async function init() {
                         inputElement = document.getElementById('quick-colors')
                         labelElement = inputElement.parentElement
                         document.querySelectorAll('#quick-colors>button.swatch').forEach(e => {
-                            e.addEventListener('click', () => setColor(window.getComputedStyle(e, null).getPropertyValue('background-color')))
+                            e.addEventListener('click', () => updateColor(window.getComputedStyle(e, null).getPropertyValue('background-color')))
                         })
                         document.getElementById('color-advanced-toggle').addEventListener('click', event => {
                             event.target.classList.toggle('collapse')
@@ -138,14 +143,14 @@ async function init() {
                             const eyeDropper = new EyeDropper()
                             eyeDropper
                                 .open()
-                                .then(result => setColor(result.sRGBHex))
+                                .then(result => updateColor(result.sRGBHex))
                                 .catch(error => {
                                     console.error(error)
                                     showSnackbar("Fout bij het uitkiezen van een kleur.")
                                 })
                         })
                         document.querySelectorAll('label.has-color-picker>label.has-slider>input').forEach(e => {
-                            e.addEventListener('input', () => setColor())
+                            e.addEventListener('input', () => updateColor())
                         })
                     }, 50)
                     break
@@ -167,11 +172,13 @@ async function init() {
                     break
 
                 default:
-                    sectionWrapper.innerHTML += `<label class="has-checkbox" role="listitem" for="${setting.id}" data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
+                    sectionWrapper.innerHTML += `<label class="has-checkbox" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
-                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.checked, inputElement))
+                        inputElement.addEventListener('input', () => {
+                            pushSetting(setting.id, inputElement.checked, inputElement)
+                        })
                         if (typeof start[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
@@ -222,10 +229,9 @@ async function init() {
         })
     }
     setSetting('openedPopup', chrome?.runtime?.getManifest()?.version)
+    updateConditionals()
 
-    // refreshConditionals()
-
-    setColor({ h: start['magister-css-hue'], s: start['magister-css-saturation'], l: start['magister-css-luminance'] }, true)
+    updateColor({ h: start['magister-css-hue'], s: start['magister-css-saturation'], l: start['magister-css-luminance'] }, true)
 
     setInterval(async () => {
         if (new Date().getTime() - diffTimestamp < 300) return
@@ -271,7 +277,7 @@ function updateSubjects(event) {
     pushSetting(parent.id, subjectValues, parent)
 }
 
-function setColor(color, noSave) {
+function updateColor(color, noSave) {
     let r, g, b,
         colorPicker = document.querySelector('label.has-color-picker'),
         hueSlider = document.getElementById('magister-css-hue'),
@@ -319,7 +325,7 @@ function setColor(color, noSave) {
     }
 
     if (typeof color.h === 'undefined' || typeof color.s === 'undefined' || typeof color.l === 'undefined') {
-        return setColor({ h: 207, s: 95, l: 55 })
+        return updateColor({ h: 207, s: 95, l: 55 })
     }
 
     hueSlider.value = color.h
@@ -342,6 +348,33 @@ function setColor(color, noSave) {
     document.querySelectorAll('#quick-colors>button.swatch').forEach(qElement => {
         if (window.getComputedStyle(document.getElementById('header'), null).getPropertyValue('background-color') === qElement.style.background) qElement.classList.add('active')
         else qElement.classList.remove('active')
+    })
+}
+
+function updateConditionals() {
+    document.querySelectorAll(`label[data-require]`).forEach(element => {
+        let requirements = element.dataset.require.split(' '),
+            matched = 0
+
+        requirements.forEach(requirement => {
+            if (requirement.includes('===')) {
+                let leftHand = requirement.split('===')[0],
+                    rightHand = requirement.split('===')[1],
+                    dependency = document.getElementById(leftHand)
+                if (dependency.dataset.value === rightHand) matched++
+            } else if (requirement.includes('!==')) {
+                let leftHand = requirement.split('!==')[0],
+                    rightHand = requirement.split('!==')[1],
+                    dependency = document.getElementById(leftHand)
+                if (dependency.dataset.value !== rightHand) matched++
+            } else {
+                let dependency = document.getElementById(requirement)
+                if (dependency.checked) matched++
+            }
+        })
+
+        if (matched === requirements.length) element.dataset.appear = true
+        else element.dataset.appear = false
     })
 }
 
@@ -368,7 +401,7 @@ function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
 
 function pushSetting(key, value, element) {
     if (!chrome?.storage) return
-    // refreshConditionals()
+    updateConditionals()
     if (element) {
         element.parentElement.setAttribute('data-saved', 'not-saved')
         element.parentElement.classList.remove('new')

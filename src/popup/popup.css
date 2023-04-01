@@ -221,7 +221,12 @@ label {
     min-height: 20px;
     padding: 10px 0;
     overflow: hidden;
-    transition: scale 200ms, min-height 200ms, max-height 200ms, padding 200ms, margin 200ms, border 200ms, background-color 200ms, color 200ms, filter 200ms;
+    transition: scale 200ms, min-height 200ms, max-height 200ms, padding 200ms, margin 200ms, border 200ms, background-color 200ms, color 200ms, filter 200ms, opacity 200ms;
+}
+
+label[data-appear=false] {
+    opacity: .3;
+    pointer-events: none;
 }
 
 section>label {
@@ -235,6 +240,7 @@ section>label:last-child {
 
 label.has-checkbox {
     grid-template: 'title input' / 1fr 40px;
+    cursor: pointer;
 }
 
 label.has-text {
@@ -246,6 +252,10 @@ label.has-text {
 
 label.has-select {
     grid-template-rows: auto;
+}
+
+label.has-select:has(.collapse) {
+    cursor: pointer;
 }
 
 label.has-color-picker {
@@ -369,6 +379,7 @@ input[type=range] {
     margin: 7px 0 5px 0;
     overflow: visible;
     border-radius: 4px;
+    cursor: pointer;
 }
 
 input[type=range]::-webkit-slider-thumb {
@@ -400,10 +411,6 @@ input[type=range]:active::-webkit-slider-thumb {
     scale: .8;
     box-shadow: 0px .5px 5px -1px var(--shadow);
     margin: -4px 0;
-}
-
-label:has(.select.collapse) {
-    cursor: pointer;
 }
 
 .select {
@@ -665,11 +672,6 @@ details[open]>summary {
 
 details[open] .details-show-when-collapsed {
     display: none;
-}
-
-.disabled-dependant {
-    opacity: .4;
-    pointer-events: none;
 }
 
 .hide {

@@ -8,12 +8,14 @@ const settingsBuilder = [
                 id: "magister-css-experimental",
                 title: "Verbeteringen aan uiterlijk",
                 subtitle: "Veel functies van Study Tools werken mogelijk niet goed als dit is uitgeschakeld.",
-                default: true
+                default: true,
             },
             {
                 id: "magister-css-theme",
                 title: "Kleurenthema",
                 type: "select",
+                wizard: "Kies in welk kleurenthema Magister moet worden weergegeven.",
+                require: "magister-css-experimental",
                 options: [
                     {
                         value: "auto",
@@ -35,12 +37,15 @@ const settingsBuilder = [
                 title: "Accentkleur",
                 version: "2.3.4",
                 type: "color-picker",
+                wizard: "Wil je een alternatieve accentkleur kiezen?",
+                require: "magister-css-experimental",
             },
             {
                 id: "magister-css-dark-invert",
                 title: "Inhoud donker maken",
                 subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
                 default: true,
+                require: "magister-css-experimental",
             },
         ]
     },
@@ -48,6 +53,7 @@ const settingsBuilder = [
         id: "section-magister-login",
         group: "Magister",
         title: "Inloggen",
+        wizard: "Kies de manier van inloggen op je school om automatisch inloggen in te schakelen.",
         settings: [
             {
                 id: "magisterLogin-method",
@@ -73,6 +79,7 @@ const settingsBuilder = [
                 id: "magisterLogin-username",
                 title: "Gebruikersnaam",
                 type: "text",
+                require: "magisterLogin-method!==off",
             },
             {
                 id: "magisterLogin-email",
@@ -80,12 +87,14 @@ const settingsBuilder = [
                 subtitle: "Van het Microsoft-account dat moet worden gekozen",
                 type: "text",
                 fieldType: "email",
+                require: "magisterLogin-method===microsoft",
             },
             {
                 id: "magisterLogin-password",
                 title: "Wachtwoord",
                 type: "text",
                 fieldType: "password",
+                require: "magisterLogin-method===password",
             },
         ]
     },
@@ -117,6 +126,7 @@ const settingsBuilder = [
                 id: "magister-vd-overhaul",
                 title: "Alternatieve pagina 'Vandaag'",
                 default: true,
+                require: "magister-css-experimental",
             },
             {
                 id: "magister-vd-agendaHeight",
@@ -128,16 +138,19 @@ const settingsBuilder = [
                 min: 0.5,
                 max: 1.5,
                 step: 0.1,
+                require: "magister-css-experimental magister-vd-overhaul",
             },
             {
                 id: "magister-vd-subjects",
                 title: "Aangepaste vaknamen",
                 default: true,
+                require: "magister-css-experimental magister-vd-overhaul",
             },
             {
                 id: "magister-vd-grade",
                 title: "Weergave laatste cijfers",
                 type: "select",
+                require: "magister-css-experimental magister-vd-overhaul",
                 options: [
                     {
                         value: "full",
@@ -165,6 +178,7 @@ const settingsBuilder = [
                 id: "magister-sw-display",
                 title: "Weergave studiewijzers",
                 type: "select",
+                require: "magister-css-experimental",
                 options: [
                     {
                         value: "grid",
@@ -186,6 +200,7 @@ const settingsBuilder = [
                 title: "Periodenummers tonen",
                 subtitle: "In plaats van de naam van de studiewijzer",
                 default: true,
+                require: "magister-css-experimental magister-sw-period===grid",
             },
             {
                 id: "magister-sw-thisWeek",
@@ -215,6 +230,12 @@ const settingsBuilder = [
                 id: "magister-cf-calculator",
                 title: "Cijfercalculator",
                 subtitle: "Een zeer krachtige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-backup",
+                title: "Cijferback-up",
+                subtitle: "[Experimenteel] Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren.",
                 default: true,
             },
             {
@@ -276,6 +297,7 @@ const settingsBuilder = [
                 title: "Bètaversies aanbieden",
                 subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
                 devOnly: true,
+                require: "updates",
             },
             {
                 id: "update-notes",
