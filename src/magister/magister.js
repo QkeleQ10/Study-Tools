@@ -939,7 +939,7 @@ async function init() {
         appbarZermelo.classList.add('menu-button')
         appbarZermelo.append(zermeloA)
         zermeloA.classList.add('zermelo-menu')
-        zermeloA.setAttribute('href', `https://${window.location.hostname.split('.')[0]}.zportal.nl/app`)
+        zermeloA.setAttribute('href', `https://${await getSetting('magister-appbar-zermelo-url') || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
         zermeloA.setAttribute('target', '_blank')
         zermeloA.append(zermeloImg)
         zermeloImg.setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png')

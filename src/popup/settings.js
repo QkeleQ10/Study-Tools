@@ -112,6 +112,12 @@ const settingsBuilder = [
                 title: "Link naar Zermelo tonen"
             },
             {
+                id: "magister-appbar-zermelo-url",
+                title: "Webadres Zermelo",
+                type: "text",
+                require: "magister-appbar-zermelo",
+            },
+            {
                 id: "magister-appbar-hidePicture",
                 title: "Profielfoto verbergen"
             },
