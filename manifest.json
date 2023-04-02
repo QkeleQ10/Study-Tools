@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "2.2.8",
+    "version": "2.4.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -36,7 +36,7 @@
                 "*://*.magister.net/*"
             ],
             "js": [
-                "src/magisterStyle.js"
+                "src/magister/style.js"
             ],
             "run_at": "document_start"
         },
@@ -45,7 +45,7 @@
                 "*://accounts.magister.net/account/login*"
             ],
             "js": [
-                "src/magisterLogin.js"
+                "src/magister/login.js"
             ],
             "run_at": "document_end"
         },
@@ -54,7 +54,7 @@
                 "*://*.magister.net/magister/*"
             ],
             "js": [
-                "src/magister.js"
+                "src/magister/magister.js"
             ],
             "run_at": "document_end"
         },
@@ -86,7 +86,7 @@
     "options_page": "src/popup/popup.html",
     "options_ui": {
         "page": "src/popup/popup.html",
-        "open_in_tab": false
+        "open_in_tab": true
     },
     "permissions": [
         "storage"

@@ -1,43 +1,83 @@
-window.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener('DOMContentLoaded', async () => {
     const snackbarWrapper = document.createElement('div')
     snackbarWrapper.id = 'st-snackbars'
     document.body.append(snackbarWrapper)
     createStyle(`
 #st-snackbars {
-    position: absolute; bottom: 32px; left: 32px; width: 400px; display: flex; flex-direction: column-reverse; gap: 16px; pointer-events: none;
+    position: absolute; bottom: 0; left: 0; padding: 0 32px; width: 464px; display: flex; flex-direction: column-reverse; background: linear-gradient(18deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%); transition: background 200ms, opacity 200ms, padding 200ms;
 }
-
+#st-snackbars:has(div) {
+    padding: 32px; 
+    opacity: 1;
+    background: radial-gradient(at bottom left, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 70%);
+    z-index: 99999999;
+}
 #st-snackbars>div {
-    min-height: 40px; translate: 0 150%; opacity: 0; background-color: #111; color: #fff; padding: 14px 20px; border-radius: 8px; font-size: 16px; border: 1px solid #222; box-shadow: 0 0 5px 0 rgba(0,0,0,0.75); z-index: 9999999; transition: translate 200ms, opacity 200ms;
+    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 8px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
 }
-
 #st-snackbars>div.open {
     translate: 0; opacity: 1;
 }
+#st-snackbars>div:not(.open) {
+    max-height: 0;
+    min-height: 0;
+    padding: 0 20px;
+    margin-top: 0;
+    overflow: hidden;
+    line-height: 0;
+    pointer-events: none;
+}
+#st-snackbars>div>a {
+    min-width: fit-content; text-transform: uppercase; font-weight: bold; cursor: pointer;
+}
     `, 'st-snackbar')
 
-    checkSettings()
+    if (!await getSetting('openedPopup'))
+        showSnackbar("Study Tools zal momenteel niet correct werken. Schakel eerst de gewenste opties in bij 'Study Tools' in het menu Extensies.")
+
     checkUpdates()
 })
-
-async function checkSettings() {
-    if (!await getSetting('openedPopup'))
-        showNotification("Functies inschakelen", `Alle functies van Study Tools zijn standaard uitgeschakeld. <b>Schakel ze in bij 'Study Tools' onder het menu 'Extensies'.</b><br><br>Dit bericht verdwijnt na het eenmalig openen van de extensie permanent.`)
-}
 
 async function checkUpdates(override) {
     let beta = await getSetting('beta')
     if (override) beta = false
     if (!await getSetting('updates')) return
     fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/manifest.json`)
-        .then((response) => response.json())
-        .then(async data => {
-            if (data.version > chrome.runtime.getManifest().version) showNotification(`Nieuwe ${beta ? 'bèta' : ''}versie (${data.version})`, `Er is een nieuwere versie van Study Tools beschikbaar. <a href="https://QkeleQ10.github.io/extensions/studytools/update">Klik hier om deze te installeren.</a>`)
+        .then(async response => {
+            if (response.ok) {
+                let data = await response.json()
+                if (data.version > chrome.runtime.getManifest().version) {
+                    showSnackbar(`Nieuwe ${beta ? 'bèta' : ''}versie van Study Tools (${data.version}) beschikbaar.`, 121000, [{ innerText: "installeren", href: 'https://qkeleq10.github.io/extensions/studytools/update', target: 'blank' }])
+                }
+            } else console.warn("Error requesting Study Tools manifest", response)
         })
-        .catch(error => {
+        .catch(() => {
             if (!override) checkUpdates(true)
         })
+
+    if (await getSetting("update-notes")) {
+        fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
+            .then(async response => {
+                if (response.ok) {
+                    let data = await response.json()
+                    for (const key in data) {
+                        if (Object.hasOwnProperty.call(data, key) && key > await getSetting('usedExtension', 'local')) {
+                            showSnackbar(`Nieuw in ${key}:\n${data[key]}`, 10000)
+                        }
+                    }
+                } else console.warn("Error requesting Study Tools updates", response)
+            })
+    }
+
+    setTimeout(() =>
+        setSetting('usedExtension', chrome.runtime.getManifest().version, 'local'), 4000)
 }
+
+function setIntervalImmediately(func, interval) {
+    func()
+    return setInterval(func, interval)
+}
+
 
 function getElement(querySelector, all, duration) {
     return new Promise((resolve, reject) => {
@@ -86,42 +126,31 @@ function setSettings(object, location) {
     })
 }
 
-function showNotification(title, body, timeout) {
-    const notification = document.createElement('div'),
-        notificationStyle = document.createElement('style'),
-        notificationH = document.createElement('h1'),
-        notificationH2 = document.createElement('h1'),
-        notificationP = document.createElement('p'),
-        notificationA = document.createElement('a')
-    notification.append(notificationStyle, notificationH, notificationH2, notificationP)
-    notificationStyle.textContent = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');#stnotifh,#stnotifh2,#stnotifp{font-family:'montserrat',system-ui,sans-serif;user-select:none;color:#fff}#stnotifh, #stnotifh2{margin:.5em 0;font-size:24px;font-weight:700}#stnotifh:after{content:'.';color:#ff8205}#stnotifh2{font-size:18px}#stnotifp{font-size:12px}#stnotifp>a{color:#fff!important;text-decoration:underline!important}`
-    notificationH.innerText = "Study Tools"
-    notificationH.id = 'stnotifh'
-    notificationH2.innerText = title
-    notificationH2.id = 'stnotifh2'
-    notificationP.innerHTML = body
-    notificationP.id = 'stnotifp'
-    notification.setAttribute('style',
-        `width:276px;position:fixed;top:0;right:${document.body.clientWidth > 500 ? '20em' : '0'};padding:.5em 1em 2em;background-color:#1f97f9;color:#fff;font-family:system-ui,sans-serif;user-select:none;outline:#808080 solid 1px;box-shadow:0 0 1em #000;z-index:9999`)
-    document.body.prepend(notification)
-
-    if (timeout) setTimeout(() => notification.remove(), timeout)
+function setAttributes(el, attrs) {
+    for (var key in attrs) {
+        el.setAttribute(key, attrs[key])
+    }
 }
 
-async function showSnackbar(body, duration = 4000) {
+async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
     const snackbar = document.createElement('div'),
         snackbarWrapper = await getElement('#st-snackbars')
     snackbarWrapper.append(snackbar)
     snackbar.innerText = body
-    setTimeout(() => {
-        snackbar.classList.add('open')
-    }, 50)
-    setTimeout(() => {
+    snackbar.addEventListener('dblclick', () => {
         snackbar.classList.remove('open')
-    }, duration)
-    setTimeout(() => {
-        snackbar.remove()
-    }, duration + 150)
+        setTimeout(() => snackbar.remove(), 200)
+    })
+    buttons.forEach(element => {
+        let a = document.createElement('a')
+        snackbar.append(a)
+        setAttributes(a, element)
+        if (element.innerText) a.innerText = element.innerText
+        a.addEventListener('click', event => event.stopPropagation())
+    })
+    setTimeout(() => snackbar.classList.add('open'), 50)
+    setTimeout(() => snackbar.classList.remove('open'), duration)
+    setTimeout(() => snackbar.remove(), duration + 200)
 }
 
 function createStyle(content, id = 'st-style') {

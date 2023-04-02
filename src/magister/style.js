@@ -55,6 +55,7 @@ async function applyStyles() {
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
+    --st-shadow-value: 100;
     --st-a-color: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
@@ -81,6 +82,7 @@ async function applyStyles() {
     --st-widget-border: 1px solid var(--st-primary-border-color);
     --st-widget-border-radius: 8px;
     --st-widget-edges-box-shadow: none;
+    --st-shadow-value: 0;
     --st-a-color: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
@@ -108,18 +110,23 @@ async function applyStyles() {
         color: #000 !important;
     }`,
         rootVars = `${lightThemeCss}
-${await getSetting('magister-css-dark-auto') ? '@media (prefers-color-scheme: dark) {' : ''}
-${await getSetting('magister-css-dark') ? darkThemeCss : ''}
+${await getSetting('magister-css-theme') === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
+${await getSetting('magister-css-theme') !== 'light' ? darkThemeCss : ''}
 ${await getSetting('magister-css-dark-invert') ? invertCss : ''}
-${await getSetting('magister-css-dark-auto') ? '}' : ''}`
+${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 
     createStyle(rootVars + `
+#st-snackbars:has(div.open) {
+    background: radial-gradient(at bottom left, rgba(var(--st-shadow-value),var(--st-shadow-value),var(--st-shadow-value),0.75) 0%, rgba(var(--st-shadow-value),var(--st-shadow-value),var(--st-shadow-value),0) 70%)
+}
+
 #st-snackbars > div {
     font: 16px arboria, sans-serif;
     background-color: var(--st-primary-background);
     color: var(--st-primary-color);
     border: var(--st-widget-border);
     border-radius: var(--st-widget-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value),var(--st-shadow-value),var(--st-shadow-value),1);
 }
 
 .st-button {
@@ -134,7 +141,8 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     border-radius: var(--st-widget-border-radius);
     color: #fff;
     cursor: pointer;
-    transition: filter 200ms, transform 200ms;
+    user-select: none;
+    transition: filter 200ms, transform 200ms, border 200ms;
 }
 
 .st-button:hover, .st-button:focus {
@@ -147,6 +155,10 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
 
 .st-button[data-icon]:before {
     content: attr(data-icon);
+    display: inline-block;
+    width: 20px;
+    overflow: visible;
+    text-align: center;
     font-family: 'Font Awesome 5 Pro';
     font-weight: 500;
     font-size: 18px;
@@ -277,6 +289,15 @@ ${await getSetting('magister-css-dark-auto') ? '}' : ''}`
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
     }
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }`, 'study-tools-mandatory')
 
     if (await getSetting('magister-css-experimental')) {
@@ -293,7 +314,8 @@ footer.endlink {
 
 body,
 html {
-    height: calc(100vh + 1px)
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 .k-block,
@@ -301,7 +323,7 @@ html {
 body,
 div.loading-overlay,
 input[type=checkbox]+label span {
-    background: var(--st-body-background)
+    background: var(--st-body-background) !important
 }
 
 .block h3 b {
@@ -384,7 +406,9 @@ td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewij
 .toast,
 .alert-toast i,
 #vandaag-container .grade-widget ul,
-.cijfers-k-grid.k-grid .k-grid-header th.k-header {
+.cijfers-k-grid.k-grid .k-grid-header th.k-header,
+div.ngRow.odd, div.ngRow.even,
+dna-card {
     background: var(--st-primary-background)
 }
 
@@ -417,19 +441,28 @@ a:not(.user-content a, .st-button), table.table-grid-layout td a {
 .k-scheduler-workWeekview .k-scheduler-header .k-scheduler-table th,
 table.table-grid-layout tr:hover,
 .k-grid-header,
-#cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label {
+#cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
+.wizzard div.sheet div.grid-col div.ngHeaderContainer, div.ngHeaderCell {
     background-color: var(--st-primary-background) !important;
     box-shadow: none !important
 }
 
 table.table-grid-layout tr, table.table-grid-layout td,
-#cijfers-container .main div.content-container-cijfers {
+#cijfers-container .main div.content-container-cijfers,
+div.ngRow:hover>:not(.unselectable),
+.card,
+form input[type=text], form input[type=password], form input[type=search], form input[type=email], form input[type=url], form input[type=tel], form input[type=number], fieldset input[type=text], fieldset input[type=password], fieldset input[type=search], fieldset input[type=email], fieldset input[type=url], fieldset input[type=tel], fieldset input[type=number],
+.settings-container .widget .multi-line li:hover,
+#agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap,
+.k-editor .k-content,
+.k-editable-area {
     background-color: var(--st-primary-background) !important;
     color: var(--st-primary-color)
 }
 
 table,
-table.table-grid-layout td,  {
+table.table-grid-layout td,
+.ngGrid {
     background: var(--st-body-background) !important;
     color: var(--st-primary-color);
     border-color: var(--st-primary-border-color) !important
@@ -453,7 +486,13 @@ input[type=checkbox]+label span,
 .appbar .menu-button>a:hover>span,
 #vandaag-container .grade-widget ul,
 .widget .dualcolumn-list li,
-#cijfers-container .main div.content-container-cijfers {
+#cijfers-container .main div.content-container-cijfers,
+div.ngCell,
+dna-card,
+.card,
+form input[type=text], form input[type=password], form input[type=search], form input[type=email], form input[type=url], form input[type=tel], form input[type=number], fieldset input[type=text], fieldset input[type=password], fieldset input[type=search], fieldset input[type=email], fieldset input[type=url], fieldset input[type=tel], fieldset input[type=number],
+.settings-container ul.multi-line,
+#agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap {
     border-color: var(--st-primary-border-color) !important;
     outline-color: var(--st-primary-border-color) !important
 }
@@ -477,7 +516,8 @@ ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
 table.table-grid-layout tr:hover, #st-vd-schedule>ul>li:hover,
 .k-dropdown .k-dropdown-wrap.k-state-active,
 input[type=radio]~label:hover,
-.collapsed-menu .popup-menu ul li a:hover {
+.collapsed-menu .popup-menu ul li a:hover,
+div.ngRow:hover>:not(.unselectable) {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
@@ -525,9 +565,14 @@ th,
 .k-scheduler .k-event,
 .block .content p:not(.user-content p),
 form .radio input[type=radio]:checked~label,
-.toast em {
+.toast em,
+div.ngCell, div.ngCellText, div.ngVerticalBar, div.ngHeaderCell, div.ngHeaderContainer {
     font-family: var(--st-secondary-font-family);
     color: var(--st-primary-color)
+}
+
+div.ngVerticalBar {
+    background-color: var(--st-primary-border-color);
 }
 
 .k-scheduler-table td,
@@ -625,7 +670,7 @@ a.appbar-button,
     background: var(--st-body-background);
 }
 
-.cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen {
+.cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
     background-color: var(--st-highlight-info) !important;
 }
 
@@ -767,16 +812,8 @@ a.appbar-button,
     transition: filter 200ms, transform 200ms;
 }
 
-ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden], #st-vd-schedule>ul[data-tomorrow]:not(:has(li:not([data-filler]))) {
+#st-vd-schedule>ul[data-tomorrow]:not(:has(li:not([data-filler]))) {
     display: none;
-}
-
-#st-vd-schedule-switch:hover {
-    transform: rotate(15deg) scale(1.3);
-}
-
-#st-vd-schedule-switch:active {
-    transform: rotate(180deg) scale(.8);
 }
 
 #st-vd-schedule>ul {
@@ -827,10 +864,14 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 #st-vd-schedule>ul>li[data-filler] {
     background: none;
     border: none;
-    margin: -10px 0;
+    margin: -7px 0;
     max-height: 120px;
     opacity: 0.6;
     pointer-events: none;
+}
+
+#st-vd-schedule>ul>li[data-filler][data-current] {
+    opacity: 1;
 }
 
 #st-vd-schedule>ul>li[data-filler]:last-child {
@@ -844,7 +885,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     margin: 30px 0 10px;
 }
 
-#st-vd-schedule>ul:not([data-tomorrow])>li[data-current] {
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-current]:not([data-filler]) {
     background: var(--st-highlight-background) !important;
 }
 
@@ -883,7 +924,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 }
 
 #st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(3) {
-    background: var(--st-accent-primary);
+    background: var(--st-accent-secondary);
     color: #fff;
 }
 
@@ -936,7 +977,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     text-transform: capitalize;
 }
 
-#st-vd-notifications > li[data-insignificant], #st-vd-notifications > #st-vd-grade-notification[data-insignificant] {
+#st-vd-notifications > li[data-insignificant=true], #st-vd-notifications > #st-vd-grade-notification[data-insignificant=true] {
     color: var(--st-insignificant-color) !important;
     background: var(--st-body-background);
 }
@@ -952,6 +993,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     content: attr(data-icon);
     position: absolute;
     right: 25px;
+    top: 17px;
     width: 22px;
     text-align: center;
     font-family: 'Font Awesome 5 Pro';
@@ -987,7 +1029,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
         overflow: hidden;
     }
 
-    #st-vd-notifications > li[data-insignificant], #st-vd-notifications > #st-vd-grade-notification[data-insignificant] {
+    #st-vd-notifications > li[data-insignificant=true], #st-vd-notifications > #st-vd-grade-notification[data-insignificant=true] {
         display: none;
     }
 }
@@ -1004,12 +1046,13 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     height: 100vh;
     background: var(--st-overlay-background);
     color: var(--st-primary-color);
-    z-index: 99999;
-    transition: translate 200ms, opacity 200ms;
+    z-index: 999998;
+    transition: translate 300ms, opacity 200ms;
 }
 
 #st-cf-cl[data-step="0"] {
     opacity: 0;
+    translate: 200px;
     pointer-events: none !important;
     user-select: none !important;
 }
@@ -1045,10 +1088,49 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     padding: 0 16px;
     overflow: auto;
     font-size: 14px;
-    line-height: 28px;
     border-radius: var(--st-widget-border-radius) var(--st-widget-border-radius) 0 0;
     border: var(--st-widget-border);
     border-bottom: none;
+}
+
+.st-cf-cl-added-element {
+    position: relative;
+    display: block;
+    height: 27px;
+    padding: 4px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: color 200ms, padding 200ms;
+}
+
+.st-cf-cl-added-element:hover {
+    color: var(--st-accent-warn);
+    padding-right: 110px;
+}
+
+.st-cf-cl-added-element:before, .st-cf-cl-added-element:after {
+    position: absolute;
+    top: 50%;
+    translate: 100px -50%;
+    color: var(--st-accent-warn);
+    transition: translate 200ms;
+}
+
+.st-cf-cl-added-element:before {
+    right: 20px;
+    content: 'Wissen';
+}
+
+.st-cf-cl-added-element:after {
+    right: 0;
+    content: '';
+    font-family: 'Font Awesome 5 Pro';
+}
+
+.st-cf-cl-added-element:hover:before, .st-cf-cl-added-element:hover:after {
+    translate: 0 -50%;
 }
 
 #st-cf-cl-added:before {
@@ -1082,11 +1164,12 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     width: 425px;
     bottom: 24px;
     right: 16px;
-    padding: 40px 16px 16px;
+    padding: 40px 10px 16px 16px;
     font-size: 12px;
     font-weight: normal;
     border: var(--st-widget-border);
     border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
+    transition: color 150ms;
 }
 
 #st-cf-cl-future-desc:before {
@@ -1122,17 +1205,19 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     right: 16px;
     bottom: 25px;
     z-index: 2;
+    border-top: var(--st-widget-border);
+    border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
 }
 
-#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas, #st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas-highlight {
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas, #st-cf-cl:not([data-step="2"]) .st-cf-cl-canvas-hl {
     pointer-events: none;
     display: none;
 }
 
-#st-cf-cl-canvas-highlight {
+.st-cf-cl-canvas-hl {
     position: absolute;
-    width: 4px;
-    translate: -2px;
+    width: 2px;
+    translate: -3px;
     height: 250px;
     bottom: 25px;
     opacity: 0;
@@ -1141,8 +1226,39 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
     transition: opacity 200ms;
 }
 
-#st-cf-cl-canvas-highlight.show {
-    opacity: .4;
+#st-cf-cl-canvas-hl-vertical.show {
+    opacity: .75;
+}
+
+#st-cf-cl-canvas-hl-horizontal {
+    height: 2px;
+    width: 424px;
+    right: 16px;
+    translate: 0 2px;
+    opacity: .75;
+}
+
+#st-cf-cl-canvas-hl-horizontal:before {
+    position: absolute;
+    left: 30px;
+    bottom: 5px;
+    content: 'nu ' attr(data-average-now);
+    font: 12px open-sans, sans-serif;
+    color: var(--st-a-color);
+}
+
+#st-cf-cl-canvas-hl-horizontal.show:before {
+    content: attr(data-average);
+}
+
+#st-cf-cl-canvas-hl-horizontal.show[data-very-high=true]:before {
+    bottom: unset;
+    top: 5px;
+}
+
+#st-cf-cl-canvas-hl-horizontal:not(.show)[data-very-high-now=true]:not(.show):before {
+    bottom: unset;
+    top: 5px;
 }
 
 #st-cf-cl-mean.insufficient {
@@ -1159,7 +1275,7 @@ ul:only-of-type ~ div>#st-vd-schedule-switch, #st-vd-schedule-switch[data-hidden
 #st-cf-cl-add-table {
     position: absolute;
     top: 35px;
-    right: 205px;
+    right: 215px;
 }
 
 #st-cf-cl-add-custom {
@@ -1190,10 +1306,39 @@ aside.st-appear-top {
     z-index: 999999;
     background: var(--st-primary-background);
 }
+
+#st-cf-bk-export, #st-cf-bk-import {
+    position: absolute;
+    top: 35px;
+    right: 200px;
+    background-image: linear-gradient(to right, var(--st-accent-primary) 50%, var(--st-accent-secondary) 50%);
+    background-size: 200% 100%;
+    background-position: 0 0;
+    transition: background-position 200ms linear, transform 200ms, filter 200ms, translate 200ms;
+}
+
+#st-cf-bk-export {
+    right: 347px;
+}
+
+#st-cf-bk-export[data-busy], #st-cf-bk-import[data-busy] {
+    opacity: 1;
+    pointer-events: none;
+}
+
+#st-cf-bk-export[data-busy]:before, #st-cf-bk-import[data-busy]:before {
+    content: '';
+    animation: rotation 1s infinite linear;
+}
+
+#st-cf-bk-export[data-done]:before, #st-cf-bk-import[data-done]:before {
+    content: '';
+    animation: none;
+}
 `, 'study-tools-cf-calculator')
     }
 
-    if (await getSetting('magister-sw-grid')) {
+    if (await getSetting('magister-sw-display') === 'grid') {
         createStyle(`
 #st-sw-container {
     display: block !important
@@ -1215,7 +1360,7 @@ aside.st-appear-top {
     }
 
     if (await getSetting('magister-cf-failred')) {
-        createStyle(`.grade[title="5,0"],.grade[title="5,1"],.grade[title="5,2"],.grade[title="5,3"],.grade[title="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
+        createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
     }
 
     if (await getSetting('magister-op-oldgrey')) {
@@ -1223,6 +1368,6 @@ aside.st-appear-top {
     }
 
     if (await getSetting('magister-appbar-hidePicture')) {
-        createStyle(`.menu-button figure img{display: none}`, 'study-tools-appbar-hidePicture')
+        createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-appbar-hidePicture')
     }
 }
