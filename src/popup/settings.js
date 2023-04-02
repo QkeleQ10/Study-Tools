@@ -114,6 +114,7 @@ const settingsBuilder = [
             {
                 id: "magister-appbar-zermelo-url",
                 title: "Webadres Zermelo",
+                subtitle: "Bijvoorbeeld 'school.zportal.nl/app'. Als dit niet wordt opgegeven, werkt de link soms nog wel.",
                 type: "text",
                 require: "magister-appbar-zermelo",
             },
