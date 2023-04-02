@@ -63,12 +63,12 @@
 
 body {
     display: grid;
-    width: 500px;
-    height: 600px;
+    min-width: 500px;
+    min-height: 600px;
     grid-template:
         'header header' 90px
         'aside main' 1fr
-        / 180px 320px;
+        / 36% 64%;
     background: var(--backgroundIntense);
     margin: 0;
     user-select: none;

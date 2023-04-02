@@ -86,7 +86,7 @@
     "options_page": "src/popup/popup.html",
     "options_ui": {
         "page": "src/popup/popup.html",
-        "open_in_tab": false
+        "open_in_tab": true
     },
     "permissions": [
         "storage"

@@ -138,6 +138,7 @@ async function init() {
                             event.target.classList.toggle('collapse')
                             labelElement.querySelectorAll('label.has-slider').forEach(e => e.classList.toggle('collapse'))
                         })
+                        if (!window.EyeDropper) document.getElementById('color-eyedropper').style.display = 'none'
                         document.getElementById('color-eyedropper').addEventListener('click', () => {
                             if (!window.EyeDropper) return showSnackbar("Fout bij het uitkiezen van een kleur: pipet niet ondersteund")
                             const eyeDropper = new EyeDropper()

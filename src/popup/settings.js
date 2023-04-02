@@ -84,7 +84,7 @@ const settingsBuilder = [
             {
                 id: "magisterLogin-email",
                 title: "E-mailadres",
-                subtitle: "Van het Microsoft-account dat moet worden gekozen",
+                subtitle: "Van het Microsoft-account dat moet worden gekozen.",
                 type: "text",
                 fieldType: "email",
                 require: "magisterLogin-method===microsoft",
@@ -198,9 +198,9 @@ const settingsBuilder = [
             {
                 id: "magister-sw-period",
                 title: "Periodenummers tonen",
-                subtitle: "In plaats van de naam van de studiewijzer",
+                subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
-                require: "magister-css-experimental magister-sw-period===grid",
+                require: "magister-css-experimental magister-sw-display===grid",
             },
             {
                 id: "magister-sw-thisWeek",
