@@ -740,15 +740,13 @@ async function gradeBackup() {
         bkExport.disabled = true
         bkExport.dataset.busy = true
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
-        showSnackbar("Cijfers verzamelen en toevoegen aan back-upbestand...", 8000)
         list = []
-        num = 0
         let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
             array = [...nodeList],
-            td
+            td,
+            message = `Cijfers verzamelen en toevoegen aan back-upbestand... Er zijn ${array.length} items om te controleren. ${array.length > 250 ? "Dit kan even duren." : ''}`
 
-        if (array.length > 250)
-            showSnackbar("Dit kan even duren — af en toe stopt het proces voor maximaal 5 seconden, zodat het quotum van Magister niet wordt overschreden.\n\nKrijg je een foutmelding rechtsonderin? Dan is het quotum toch overschreden. Er ontbreken dan cijfers in je back-upbestand.\n\nProbeer het dan later opnieuw of stuur me een e-mail via het configuratiepaneel.", 40000)
+        showSnackbar(message, 8000)
 
         for (let i = 0; i < array.length; i++) {
             bkExport.style.backgroundPosition = `-${(i + 1) / array.length * 100}% 0`
@@ -771,6 +769,7 @@ async function gradeBackup() {
         delete a
         gradesContainer.removeAttribute('style')
         bkExport.dataset.done = true
+        showSnackbar("Back-up voltooid! Controleer je downloads.")
         setTimeout(() => {
             bkExport.removeAttribute('disabled')
             bkExport.removeAttribute('style')
@@ -786,7 +785,6 @@ async function gradeBackup() {
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
         showSnackbar("Cijfers uit back-up extraheren en plaatsen op pagina...", 3000)
         list = []
-        num = 0
 
         let reader = new FileReader()
         reader.onload = async event => {
@@ -828,13 +826,14 @@ async function gradeBackup() {
 
 async function gatherExportGrade(td, gradeDetails, num) {
     return new Promise(async (resolve, reject) => {
-        let timeout = 60,
+        let timeout = 50,
             result, weight, column, title
-        if (num > 1 && num % 50 === 0) timeout = 1000
-        if (num > 1 && num % 100 === 0) timeout = 3000
-        if (num > 1 && num % 150 === 0) timeout = 5000
+        if (num > 1 && num % 130 === 0) {
+            timeout = 16000
+            showSnackbar("Het proces is stilgelegd. Zo wordt het quotum van Magister niet overschreden. Na 16 seconden gaat het weer verder.", 16000)
+        }
         if (!td.innerText || td.innerText.trim().length < 1) return resolve({ className: td.firstElementChild?.className, type: 'filler' })
-        if (td.firstElementChild?.classList.contains('text')) resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
+        if (td.firstElementChild?.classList.contains('text')) return resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
         td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
         td.dispatchEvent(new Event('pointerup', { bubbles: true }))
         setTimeout(() => {
