@@ -113,19 +113,19 @@ async function init() {
         <h4>Tint</h4>
         <span class="default-value">207°</span>
         <span><span class="current-value">207</span>°</span>
-        <input type="range" name="Tint" id="magister-css-hue" class="bind-color" data-color-component="hue" min="0" max="360" step="1">
+        <input type="range" name="Tint" id="magister-css-hue" class="bind-color" data-color-component="hue" min="1" max="360" step="1">
     </label>
     <label class="has-slider collapse" for="magister-css-saturation">
         <h4>Verzadiging</h4>
         <span class="default-value">95%</span>
         <span><span class="current-value">95</span>%</span>
-        <input type="range" name="Verzadiging" id="magister-css-saturation" class="bind-color" data-color-component="saturation" min="0" max="100" step="1">
+        <input type="range" name="Verzadiging" id="magister-css-saturation" class="bind-color" data-color-component="saturation" min="1" max="100" step="1">
     </label>
     <label class="has-slider collapse" for="magister-css-luminance">
         <h4>Helderheid</h4>
         <span class="default-value">55%</span>
         <span><span class="current-value">55</span>%</span>
-        <input type="range" name="Helderheid" id="magister-css-luminance" class="bind-color" data-color-component="luminance" min="0" max="100" step="1">
+        <input type="range" name="Helderheid" id="magister-css-luminance" class="bind-color" data-color-component="luminance" min="1" max="100" step="1">
     </label>
 </label>`
                     setTimeout(() => {
@@ -328,6 +328,8 @@ function updateColor(color, noSave) {
     if (typeof color.h === 'undefined' || typeof color.s === 'undefined' || typeof color.l === 'undefined') {
         return updateColor({ h: 207, s: 95, l: 55 })
     }
+
+    if(color.h == 0) color.h = 360
 
     hueSlider.value = color.h
     hueSlider.parentElement.querySelector('.current-value').innerText = color.h

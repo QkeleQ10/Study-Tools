@@ -583,7 +583,8 @@ div.ngVerticalBar {
 }
 
 .alt-nrblock i,
-.k-scheduler .k-event.k-state-selected, .k-dropdown .k-input, .k-dropdown .k-state-focused .k-input {
+.k-scheduler .k-event.k-state-selected, .k-dropdown .k-input, .k-dropdown .k-state-focused .k-input,
+div.faux.popup-menu>ul>li.submenu>a {
     color: var(--st-primary-color) !important
 }
 
@@ -689,6 +690,30 @@ a.appbar-button,
     mix-blend-mode: exclusion;
     z-index: 99999;
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate;
+}
+
+.container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host([default]) {
+    --title-color: var(--st-a-color);
+    --color: var(--st-a-color);
+    --background: var(--st-a-color);
+    --dna-text-color: var(--st-a-color);
+    --separator-color: var(--st-a-color);
+    --primary-background: var(--st-a-color);
+}
+
+dna-button[variant=primary] {
+    --color: #fff;
+    --background: var(--st-accent-primary);
+}
+
+dna-button:not([variant=primary], [fill=clear]) {
+    --color: var(--st-a-color);
+    --background: var(--st-primary-background);
+    border-color: var(--st-accent-primary);
+}
+
+dna-button:hover {
+    filter: brightness(var(--st-hover-brightness));
 }
 
 @keyframes moveX {
