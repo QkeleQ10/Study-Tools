@@ -44,7 +44,6 @@ async function today() {
         todayNotifications(notifcationsWrapper)
 
         headerText.innerText = new Date().toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-        if (Math.random() < 0.005) headerText.innerText = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
         header.removeAttribute('data-transition')
     }, 2500)
 }
@@ -168,6 +167,7 @@ async function renderScheduleList(agendaElems, container) {
             period = e.querySelector('.nrblock')?.innerText,
             href = e.querySelector('a')?.href,
             tooltip = e.querySelector('.agenda-text-icon')?.innerText,
+            tooltipIncomplete = e.querySelector('.agenda-text-icon')?.classList.contains('outline'),
             dateStart = new Date(),
             dateEnd = new Date(),
             dateStartNext = new Date()
@@ -182,7 +182,7 @@ async function renderScheduleList(agendaElems, container) {
             dateEnd.setSeconds(0)
         }
 
-        events.push({ time, title, period, dateStart, dateEnd, href, tooltip })
+        events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete })
 
         if (a[i + 1]) {
             let timeNext = a[i + 1]?.querySelector('.time')?.innerText
@@ -198,7 +198,7 @@ async function renderScheduleList(agendaElems, container) {
         }
     })
 
-    if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip }, a, i) => {
+    if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete }, a, i) => {
         let elementWrapper = document.createElement('li'),
             elementTime = document.createElement('span'),
             elementTitle = document.createElement('span'),
@@ -227,6 +227,7 @@ async function renderScheduleList(agendaElems, container) {
         elementTitle.append(elementTitleNormal1, elementTitleBold, elementTitleNormal2)
         elementPeriod.innerText = period || ''
         elementTooltip.innerText = tooltip || ''
+        if (tooltipIncomplete) elementTooltip.classList.add('incomplete')
         elementWrapper.style.height = height
         elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
 
@@ -719,10 +720,13 @@ async function gradeBackup() {
         bkExport = document.createElement('button'),
         bkImport = document.createElement('label'),
         bkImportInput = document.createElement('input'),
+        bkBusyAd = document.createElement('div'),
+        bkBusyAdBody = document.createElement('p'),
+        bkBusyAdLink = document.createElement('a'),
         list = [],
         num = 0
 
-    document.body.append(bkExport, bkImport)
+    document.body.append(bkExport, bkImport, bkBusyAd)
     bkExport.classList.add('st-button')
     bkExport.id = 'st-cf-bk-export'
     bkExport.innerText = "Exporteren"
@@ -735,11 +739,19 @@ async function gradeBackup() {
     bkImportInput.type = 'file'
     bkImportInput.accept = '.json'
     bkImportInput.style.display = 'none'
+    bkBusyAd.id = 'st-cf-bk-busy-ad'
+    bkBusyAd.style.display = 'none'
+    bkBusyAd.append(bkBusyAdBody, bkBusyAdLink)
+    bkBusyAdBody.innerText = "Bedankt voor het gebruiken van Study Tools."
+    bkBusyAdLink.innerText = "Deel de extensie met vrienden!"
+    bkBusyAdLink.href = 'https://qkeleq10.github.io/extensions/studytools'
+    bkBusyAdLink.target = '_blank'
 
     bkExport.addEventListener('click', async () => {
         bkExport.disabled = true
         bkExport.dataset.busy = true
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
+        bkBusyAd.style.display = 'grid'
         list = []
         let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
             array = [...nodeList],
@@ -775,6 +787,7 @@ async function gradeBackup() {
             bkExport.removeAttribute('style')
             bkExport.removeAttribute('data-busy')
             bkExport.removeAttribute('data-done')
+            bkBusyAd.style.display = 'none'
         }, 5000)
     })
 
@@ -917,6 +930,79 @@ async function appendImportedGrade(item, container, aside) {
     })
 }
 
+// Page 'Cijferoverzicht', statistics
+async function gradeStatistics() {
+    if (!await getSetting('magister-cf-statistics')) return
+    let tabs = await getElement('#cijfers-container > aside > div.head-bar > ul'),
+        scTab = document.createElement('li'),
+        scTabLink = document.createElement('a'),
+        scContainer = document.createElement('div'),
+        scFilterContainer = document.createElement('div'),
+        scRowFilterWrapper = document.createElement('div'),
+        scRowResetter = document.createElement('button'),
+        scRowSelector = document.createElement('button'),
+        scYearFilterWrapper = document.createElement('div'),
+        scYearCurrent = document.createElement('button'),
+        scYearAll = document.createElement('button'),
+        scAveragesContainer = document.createElement('div'),
+        settings = { rows: 'all', years: 'current' },
+        grades = []
+
+    tabs.appendChild(scTab)
+    scTab.id = 'st-cf-sc-tab'
+    scTab.classList.add('asideTrigger')
+    scTab.appendChild(scTabLink)
+    scTabLink.innerText = "Statistieken"
+    document.body.appendChild(scContainer)
+    scContainer.id = 'st-cf-sc-container'
+    scContainer.style.display = 'none'
+    scContainer.append(scFilterContainer, scAveragesContainer)
+    scFilterContainer.id = 'st-cf-sc-filter-container'
+    scFilterContainer.innerText = "Cijfers gebruikt in berekeningen"
+    scFilterContainer.append(scRowFilterWrapper, scYearFilterWrapper)
+    scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
+    scRowFilterWrapper.append(scRowResetter, scRowSelector)
+    scRowResetter.id = 'st-cf-sc-row-resetter'
+    scRowResetter.classList.add('st-button', 'switch-left')
+    scRowResetter.innerText = "Geheel overzicht"
+    scRowSelector.id = 'st-cf-sc-row-selector'
+    scRowSelector.classList.add('st-button', 'secondary', 'switch-right')
+    scRowSelector.innerText = "Rijen kiezen"
+    scYearFilterWrapper.id = 'st-cf-sc-year-filter-wrapper'
+    scYearFilterWrapper.append(scYearAll, scYearCurrent)
+    scYearAll.id = 'st-cf-sc-year-all'
+    scYearAll.classList.add('st-button', 'secondary', 'switch-left')
+    scYearAll.innerText = "Alle jaren"
+    scYearCurrent.id = 'st-cf-sc-year-current'
+    scYearCurrent.classList.add('st-button', 'switch-right')
+    scYearCurrent.innerText = "Geselecteerd jaar"
+    scAveragesContainer.innerText = "Gemiddeld cijfer"
+
+    tabs.addEventListener('click', () => {
+        if (scTab.classList.contains('active')) {
+            scTab.classList.remove('active')
+            tabs.classList.remove('st-cf-sc-override')
+            scContainer.style.display = 'none'
+        }
+    })
+
+    scTab.addEventListener('click', async event => {
+        grades = []
+        event.stopPropagation()
+        tabs.classList.add('st-cf-sc-override')
+        scTab.classList.add('active')
+        scContainer.style.display = 'flex'
+
+        let gradeElements = await getElement('#cijferoverzichtgrid tr td>span.grade:not(.empty, .gemiddeldecolumn)', true)
+        gradeElements.forEach(grade => {
+            let parsed = Number(grade.innerText.replace(',', '.').replace('', ''))
+            if (!isNaN(parsed)) grades.push(parsed)
+        })
+
+        scAveragesContainer.innerText = `Gemiddelde van ${grades.length} cijfers\n${weightedMean(grades).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+    })
+}
+
 // Run when the extension and page are loaded
 async function init() {
     popstate()
@@ -973,8 +1059,13 @@ async function popstate() {
     const href = document.location.href.split('?')[0]
 
     if (href.endsWith('/vandaag')) today()
-    else if (href.includes('/cijfers')) gradeCalculator()
-    if (href.includes('/cijfers/cijferoverzicht')) gradeBackup()
+    else if (href.includes('/cijfers')) {
+        gradeCalculator()
+        if (href.includes('/cijfers/cijferoverzicht')) {
+            gradeBackup()
+            gradeStatistics()
+        }
+    }
     else if (href.endsWith('/studiewijzer')) studyguideList()
     else if (href.includes('/studiewijzer/')) studyguideIndividual()
 }
@@ -1027,9 +1118,9 @@ async function msToPixels(ms) {
     })
 }
 
-function weightedMean(valueArray, weightArray) {
+function weightedMean(valueArray = [], weightArray = []) {
     let result = valueArray.map((value, i) => {
-        let weight = weightArray[i],
+        let weight = weightArray[i] ?? 1,
             sum = value * weight
         return [sum, weight]
     }).reduce((p, c) => {

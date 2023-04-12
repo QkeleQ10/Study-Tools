@@ -145,6 +145,23 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     transition: filter 200ms, transform 200ms, border 200ms;
 }
 
+.st-button.secondary {
+    background: var(--st-primary-background);
+    color: var(--st-a-color);
+    outline: 2px solid var(--st-accent-primary);
+    outline-offset: -2px;
+}
+
+.st-button.switch-left {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.st-button.switch-right {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
 .st-button:hover, .st-button:focus {
     filter: brightness(var(--st-hover-brightness));
 }
@@ -434,6 +451,10 @@ a:not(.user-content a, .st-button), table.table-grid-layout td a {
     color: var(--st-a-color);
 }
 
+aside .tabs li.active {
+    border-color: var(--st-a-color);
+}
+
 .alert a:hover,
 .k-dropdown .k-dropdown-wrap.k-state-hover,
 .k-scheduler-dayview .k-scheduler-header .k-scheduler-table th,
@@ -692,6 +713,50 @@ a.appbar-button,
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate;
 }
 
+.sidecolumn aside .head-bar {
+    padding: 0;
+}
+
+aside .tabs {
+    display: flex;
+}
+
+aside .tabs li {
+    width: auto;
+    flex-grow: 2;
+}
+
+aside .tabs li.active, aside .tabs li:hover {
+    border: none;
+    font-weight: 400;
+}
+
+aside .tabs li:after {
+  content: '';
+  display: block;
+  margin-top: 38px;
+  top: 0;
+  left: 50%;
+  translate: -50% 1px;
+  height: 0px;
+  width: 0px;
+  background: var(--st-accent-primary);
+  border-radius: 3px 3px 0 0;
+  transition: width 200ms ease, height 200ms ease, translate 200ms ease;
+}
+
+aside .tabs li:hover:after {
+  width: 20px;
+  height: 3px;
+  translate: -50%;
+}
+
+aside .tabs:not(.st-cf-sc-override) li.active:after, #st-cf-sc-tab.active:after {
+  width: calc(100% - 24px);
+  height: 3px;
+  translate: -50%;
+}
+
 .container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host([default]) {
     --title-color: var(--st-a-color);
     --color: var(--st-a-color);
@@ -704,6 +769,10 @@ a.appbar-button,
 dna-button[variant=primary] {
     --color: #fff;
     --background: var(--st-accent-primary);
+}
+
+dna-breadcrumbs > dna-breadcrumb > a {
+    --color: var(--st-a-color) !important;
 }
 
 dna-button:not([variant=primary], [fill=clear]) {
@@ -961,6 +1030,10 @@ dna-button:hover {
     padding: 6px 10px;
     background: var(--st-accent-primary);
     color: #fff;
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4).incomplete {
+    background: var(--st-accent-warn);
 }
 
 #st-vd-schedule>ul>li:not([data-filler]):has(span:nth-child(4)) {
@@ -1360,7 +1433,90 @@ aside.st-appear-top {
     content: '';
     animation: none;
 }
-`, 'study-tools-cf-calculator')
+
+#st-cf-bk-busy-ad {
+    position: absolute;
+    width: 294px;
+    bottom: 24px;
+    top: 154px;
+    right: 16px;
+    padding: 12px;
+    place-content: center;
+    background: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
+    border-radius: var(--st-widget-border-radius);
+    z-index: 999;
+}
+
+#st-cf-bk-busy-ad>* {
+    font: 16px var(--st-secondary-font-family);
+    color: #fff;
+}
+
+#st-cf-bk-busy-ad>a {
+    text-decoration: underline;
+    transition: filter 200ms;
+}
+
+#st-cf-bk-busy-ad>a:hover {
+    filter: brightness(var(--st-hover-brightness));
+}
+
+#st-cf-sc-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: absolute;
+    width: 294px;
+    bottom: 24px;
+    top: 195px;
+    right: 16px;
+    padding: 0 12px;
+    background: var(--st-primary-background);
+    border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
+    border: var(--st-widget-border);
+    border-top: none;
+    font: 12px var(--st-secondary-font-family);
+    z-index: 999;
+}
+
+#st-cf-sc-container:before {
+    content: 'Statistieken\\A';
+    white-space: pre-wrap;
+    font: var(--st-widget-heading-font);
+    margin-bottom: -16px;
+}
+
+#st-cf-sc-container>div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#st-cf-sc-row-filter-wrapper, #st-cf-sc-year-filter-wrapper {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+#st-cf-sc-tab:before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    translate: 28px;
+    overflow: visible;
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--st-a-color);
+    text-shadow: none;
+}
+
+#st-cf-sc-average {
+    font: var(--st-widget-heading-font);
+    line-height: normal;
+    font-size: 20px;
+}
+`, 'study-tools-cf')
     }
 
     if (await getSetting('magister-sw-display') === 'grid') {

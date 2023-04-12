@@ -75,11 +75,47 @@ body {
 }
 
 header {
+    position: absolute;
+    width: 100%;
+    height: 90px;
     grid-area: header;
     background: var(--color);
     color: #fff;
-    padding: 12px;
-    overflow: hidden;
+    z-index: 2;
+    transition: height 200ms;
+}
+
+header.splash {
+    height: 100%;
+}
+
+header #headerContent {
+    display: grid;
+    align-content: center;
+    gap: 8px;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    translate: 0 -50%;
+    transition: left 200ms, translate 200ms;
+}
+
+header #headerSubtitle {
+    margin: 0;
+}
+
+header .icon {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    font-size: 70px;
+    color: #333;
+    opacity: 0.1;
+}
+
+header.splash #headerContent {
+    left: 50%;
+    translate: -50% -50%;
 }
 
 main {
@@ -138,12 +174,11 @@ h6 {
     margin: 0;
 }
 
-header>h1 {
-    translate: 0 6px;
+h1 {
     font-size: 24px;
 }
 
-header>h1:after {
+h1:after {
     content: '.';
     color: #ff8205;
 }
@@ -208,7 +243,14 @@ i {
 }
 
 #section-about>*:nth-child(2) {
-    background: linear-gradient(300deg, rgb(34, 117, 56), rgb(31, 95, 69));
+    background: linear-gradient(300deg, hsl(130, 40%, 29%), hsl(130, 36%, 30%));
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+#section-about>*:nth-child(3) {
+    background: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
     color: #fff;
     font-weight: 700;
     font-size: 14px;

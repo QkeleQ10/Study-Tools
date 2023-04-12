@@ -240,9 +240,15 @@ const settingsBuilder = [
                 default: true,
             },
             {
+                id: "magister-cf-statistics",
+                title: "Cijferstatistieken",
+                subtitle: "Verscheidene statistieken en grafiekjesa. Open met de knop in de zijbalk van het cijferoverzicht.",
+                default: true,
+            },
+            {
                 id: "magister-cf-backup",
                 title: "Cijferback-up",
-                subtitle: "[Experimenteel] Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren.",
+                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren.",
                 default: true,
             },
             {

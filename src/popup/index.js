@@ -2,7 +2,8 @@ let start = {},
     diff = {},
     diffTimestamp = 0,
     settingsWrapper = document.getElementById('settings-wrapper'),
-    aside = document.querySelector('aside')
+    aside = document.getElementById('aside'),
+    header = document.getElementById('header')
 
 init()
 
@@ -234,6 +235,11 @@ async function init() {
 
     updateColor({ h: start['magister-css-hue'], s: start['magister-css-saturation'], l: start['magister-css-luminance'] }, true)
 
+    setTimeout(() => {
+        header.classList.remove('splash')
+        header.querySelector('#headerSubtitle').innerText = 'Configuratiepaneel'
+    }, 200)
+
     setInterval(async () => {
         if (new Date().getTime() - diffTimestamp < 300) return
         if (Object.keys(diff).length === 0) return
@@ -329,7 +335,7 @@ function updateColor(color, noSave) {
         return updateColor({ h: 207, s: 95, l: 55 })
     }
 
-    if(color.h == 0) color.h = 360
+    if (color.h == 0) color.h = 360
 
     hueSlider.value = color.h
     hueSlider.parentElement.querySelector('.current-value').innerText = color.h
