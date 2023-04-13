@@ -302,6 +302,15 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     font-weight: 700
 }
 
+#st-prevent-interactions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999999;
+}
+
 @media (min-width:1400px) {
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
@@ -1461,10 +1470,10 @@ aside.st-appear-top {
     filter: brightness(var(--st-hover-brightness));
 }
 
-#st-cf-sc-container {
+#st-cf-sc {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     position: absolute;
     width: 294px;
     bottom: 24px;
@@ -1479,14 +1488,19 @@ aside.st-appear-top {
     z-index: 999;
 }
 
-#st-cf-sc-container:before {
+#st-cf-sc.small {
+    top: 425px;
+    border-top: var(--st-widget-border);
+}
+
+#st-cf-sc:before {
     content: 'Statistieken\\A';
     white-space: pre-wrap;
     font: var(--st-widget-heading-font);
-    margin-bottom: -16px;
+    margin-bottom: -24px;
 }
 
-#st-cf-sc-container>div {
+#st-cf-sc>div {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -1511,10 +1525,79 @@ aside.st-appear-top {
     text-shadow: none;
 }
 
-#st-cf-sc-average {
+#st-cf-sc>#st-cf-sc-filter-container {
+    margin-top: auto;
+    margin-bottom: 12px;
+    border-top: var(--st-widget-border);
+}
+
+#st-cf-sc-filter-container:before {
+    content: 'Opties\\A';
+    white-space: pre-wrap;
+    font: var(--st-widget-heading-font);
+    margin-bottom: -16px;
+}
+
+#st-cf-sc>#st-cf-sc-averages-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#st-cf-sc-averages-container>div {
     font: var(--st-widget-heading-font);
     line-height: normal;
     font-size: 20px;
+    flex-grow: 2;
+    color: var(--st-insignificant-color);
+}
+
+#st-cf-sc-averages-container>div:before {
+    content: attr(data-description) '\\A';
+    white-space: pre-wrap;
+    font: 12px var(--st-secondary-font-family);
+}
+
+#st-cf-sc>#st-cf-sc-grades-container {
+    position: relative;
+    flex-direction: row;
+    align-items: end;
+    gap: 2px;
+    padding-top: 34px;
+    margin-bottom: 16px;
+}
+
+#st-cf-sc-grades-container:before {
+    position: absolute;
+    top: 0;
+    content: 'Histogram (afgerond op helen)\\A';
+    white-space: pre-wrap;
+    font: 12px var(--st-secondary-font-family);
+}
+
+#st-cf-sc-grades-container > div {
+    background: var(--st-accent-ok);
+    height: 100px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+}
+
+#st-cf-sc-grades-container > div:nth-child(-n+5) {
+    background: var(--st-accent-warn)
+}
+
+#st-cf-sc-grades-container > div:before {
+    content: attr(data-times) '×';
+    translate: 0 -18px;
+}
+
+#st-cf-sc-grades-container > div:after {
+    content: attr(data-grade);
+    position: absolute;
+    bottom: -19px;
+    width: 25px;
 }
 `, 'study-tools-cf')
     }

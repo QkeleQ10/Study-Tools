@@ -59,6 +59,8 @@ async function todayNotifications(notifcationsWrapper) {
     gradeNotification.id = 'st-vd-grade-notification'
     gradeNotificationSpan.id = 'st-vd-grade-notification-span'
 
+    if (!lastGrade || !lastGradeDescription) return
+
     if (lastGrade.innerText === '-' || lastGradeDescription.innerText === 'geen cijfers') {
         gradeNotification.innerText = 'Geen nieuwe cijfers'
         gradeNotification.dataset.insignificant = true
@@ -824,6 +826,12 @@ async function gradeBackup() {
                     })
             }
 
+            if (document.querySelector('#st-cf-sc')) {
+                document.querySelector('#st-cf-sc').classList.add('small')
+                document.querySelector('#st-cf-sc-year-current').click()
+                document.querySelector('#st-cf-sc-year-filter-wrapper').style.display = 'none'
+            }
+
             gradesContainer.removeAttribute('style')
             bkImport.dataset.done = true
             setTimeout(() => {
@@ -945,29 +953,37 @@ async function gradeStatistics() {
         scYearCurrent = document.createElement('button'),
         scYearAll = document.createElement('button'),
         scAveragesContainer = document.createElement('div'),
-        settings = { rows: 'all', years: 'current' },
-        grades = []
+        scNum = document.createElement('div'),
+        scMean = document.createElement('div'),
+        scMedian = document.createElement('div'),
+        scRange = document.createElement('div'),
+        scSufficient = document.createElement('div'),
+        scInsufficient = document.createElement('div'),
+        scGradesContainer = document.createElement('div'),
+        scInteractionPreventer = document.createElement('div'),
+        rowTitles = new Set(),
+        years = 1
 
-    tabs.appendChild(scTab)
+    tabs.append(scTab)
     scTab.id = 'st-cf-sc-tab'
     scTab.classList.add('asideTrigger')
-    scTab.appendChild(scTabLink)
+    scTab.append(scTabLink)
     scTabLink.innerText = "Statistieken"
-    document.body.appendChild(scContainer)
-    scContainer.id = 'st-cf-sc-container'
+    document.body.append(scContainer, scInteractionPreventer)
+    scContainer.id = 'st-cf-sc'
     scContainer.style.display = 'none'
-    scContainer.append(scFilterContainer, scAveragesContainer)
+    scContainer.append(scAveragesContainer, scGradesContainer, scFilterContainer)
     scFilterContainer.id = 'st-cf-sc-filter-container'
-    scFilterContainer.innerText = "Cijfers gebruikt in berekeningen"
+    scFilterContainer.innerText = "Welke cijfers moeten er worden gebruikt?"
     scFilterContainer.append(scRowFilterWrapper, scYearFilterWrapper)
     scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
     scRowFilterWrapper.append(scRowResetter, scRowSelector)
     scRowResetter.id = 'st-cf-sc-row-resetter'
     scRowResetter.classList.add('st-button', 'switch-left')
-    scRowResetter.innerText = "Geheel overzicht"
+    scRowResetter.innerText = "Alle vakken"
     scRowSelector.id = 'st-cf-sc-row-selector'
     scRowSelector.classList.add('st-button', 'secondary', 'switch-right')
-    scRowSelector.innerText = "Rijen kiezen"
+    scRowSelector.innerText = "Geselect. vakken"
     scYearFilterWrapper.id = 'st-cf-sc-year-filter-wrapper'
     scYearFilterWrapper.append(scYearAll, scYearCurrent)
     scYearAll.id = 'st-cf-sc-year-all'
@@ -976,7 +992,9 @@ async function gradeStatistics() {
     scYearCurrent.id = 'st-cf-sc-year-current'
     scYearCurrent.classList.add('st-button', 'switch-right')
     scYearCurrent.innerText = "Geselecteerd jaar"
-    scAveragesContainer.innerText = "Gemiddeld cijfer"
+    scAveragesContainer.id = 'st-cf-sc-averages-container'
+    scAveragesContainer.append(scNum, scSufficient, scInsufficient, scMean, scMedian, scRange)
+    scGradesContainer.id = 'st-cf-sc-grades-container'
 
     tabs.addEventListener('click', () => {
         if (scTab.classList.contains('active')) {
@@ -987,19 +1005,155 @@ async function gradeStatistics() {
     })
 
     scTab.addEventListener('click', async event => {
-        grades = []
         event.stopPropagation()
-        tabs.classList.add('st-cf-sc-override')
-        scTab.classList.add('active')
-        scContainer.style.display = 'flex'
+        scInteractionPreventer.id = 'st-prevent-interactions'
+        let grades = [],
+            gradeFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
 
-        let gradeElements = await getElement('#cijferoverzichtgrid tr td>span.grade:not(.empty, .gemiddeldecolumn)', true)
-        gradeElements.forEach(grade => {
-            let parsed = Number(grade.innerText.replace(',', '.').replace('', ''))
-            if (!isNaN(parsed)) grades.push(parsed)
+        console.log(years, rowTitles)
+
+        if (years > 1) {
+            scRowFilterWrapper.setAttribute('style', 'pointer-events: none;opacity: .5;')
+            document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
+            document.querySelector(`#aanmeldingenSelect_listbox>li:last-child`).click()
+            document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
+            document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
+        }
+
+        for (let i = 0; i < years; i++) {
+            if (years > 1) {
+                setTimeout(() => {
+                    document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
+                    document.querySelector(`#aanmeldingenSelect_listbox>li:nth-child(${i + 1})`).click()
+                }, i * 1000)
+            }
+            setTimeout(async () => {
+                if (rowTitles.size < 1) {
+                    let gradeElements = await getElement('#cijferoverzichtgrid tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzicht tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true)
+
+                    gradeElements.forEach(grade => {
+                        let parsed = Number(grade.innerText.replace(',', '.').replace('', ''))
+                        if (!isNaN(parsed)) {
+                            grades.push(parsed)
+                            gradeFrequencies[Math.round(parsed)]++
+                        }
+                    })
+                } else {
+                    rowTitles.forEach(title => {
+                        document.querySelectorAll(`#cijferoverzichtgrid tr:has(td:nth-child(2)>span.text[title="${title}"]) td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid tr:has(td:nth-child(2)>span.text[title="${title}"]) td>span.grade.herkansingKolom:not(.empty), #cijferoverzicht tr:has(td:nth-child(2)>span.text[title="${title}"]) td>span.grade.heeftonderliggendekolommen:not(.empty)`).forEach(grade => {
+                            let parsed = Number(grade.innerText.replace(',', '.').replace('', ''))
+                            if (!isNaN(parsed)) {
+                                grades.push(parsed)
+                                gradeFrequencies[Math.round(parsed)]++
+                            }
+                        })
+                    })
+                }
+            }, years > 1 ? 1000 * (years - 1) + 100 : 0)
+        }
+
+        setTimeout(() => {
+            scGradesContainer.innerText = ''
+            tabs.classList.add('st-cf-sc-override')
+            scTab.classList.add('active')
+            scContainer.style.display = 'flex'
+
+            scNum.dataset.description = "Aantal"
+            scNum.innerText = grades.length
+
+            scMean.dataset.description = "Gemiddelde"
+            scMean.innerText = weightedMean(grades).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+            scMean.style.color = 'var(--st-primary-color)'
+
+            scMedian.dataset.description = "Mediaan"
+            scMedian.innerText = median(grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
+            scRange.dataset.description = "Bereik"
+            scRange.innerText = `${Math.min(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} - ${Math.max(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
+
+            scSufficient.dataset.description = "Voldoendes"
+            let gradesSufficient = grades.filter((e) => { return e >= 5.5 })
+            scSufficient.innerText = `${gradesSufficient.length} (${(gradesSufficient.length / grades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
+            if (gradesSufficient.length < 1) scSufficient.innerText = 'geen'
+
+            scInsufficient.dataset.description = "Onvoldoendes"
+            let gradesInsufficient = grades.filter((e) => { return e < 5.5 })
+            scInsufficient.innerText = `${gradesInsufficient.length} (${(gradesInsufficient.length / grades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
+            if (gradesInsufficient.length < 1) scInsufficient.innerText = 'geen'
+
+            Object.keys(gradeFrequencies).forEach(key => {
+                let value = gradeFrequencies[key],
+                    element = document.createElement('div')
+                scGradesContainer.append(element)
+                element.dataset.grade = key
+                element.dataset.times = value
+                element.style.height = `${value * 210 / grades.length + 2}px`
+            })
+            scInteractionPreventer.id = ''
+
+            if (grades.length < 1 && rowTitles.size > 0) {
+                rowTitles.clear()
+                scTab.click()
+            }
+        }, years > 1 ? 1000 * (years - 1) + 500 : 100)
+    })
+
+    scRowSelector.addEventListener('click', async event => {
+        showSnackbar("Dubbelklik op een vaknaam om de rij toe te voegen aan de berekeningen. Dubbelklik opnieuw om hem weer te verwijderen.")
+        if (rowTitles.size > 0) {
+            scRowSelector.classList.remove('secondary')
+            scRowResetter.classList.add('secondary')
+        }
+    })
+
+    scRowResetter.addEventListener('click', async event => {
+        scRowSelector.classList.add('secondary')
+        scRowResetter.classList.remove('secondary')
+        rowTitles.forEach(title => {
+            createStyle(``, `st-cf-sc-${title.toLowerCase().replace(/\s/g, '')}`)
+            rowTitles.delete(title)
         })
+        scTab.click()
+    })
 
-        scAveragesContainer.innerText = `Gemiddelde van ${grades.length} cijfers\n${weightedMean(grades).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+    setInterval(() => {
+        document.querySelectorAll('#cijferoverzichtgrid tr td:nth-child(2) > span.text').forEach(rowElement => {
+            if (rowElement.dataset.stCfScResponds) return
+            rowElement.dataset.stCfScResponds = true
+            rowElement.addEventListener('dblclick', () => {
+                let title = rowElement.title
+                if (rowTitles.has(title)) {
+                    createStyle(``, `st-cf-sc-${title.toLowerCase().replace(/\s/g, '')}`)
+                    rowTitles.delete(title)
+                }
+                else {
+                    rowTitles.add(title)
+                    createStyle(`#cijferoverzichtgrid tr td:nth-child(2)>span.text[title="${title}"] { background-color: var(--st-highlight-background) !important; font-weight: bold }`, `st-cf-sc-${title.toLowerCase().replace(/\s/g, '')}`)
+                }
+                if (rowTitles.size < 1) scRowResetter.click()
+                else if (scRowSelector.classList.contains('secondary')) scRowSelector.click()
+                scTab.click()
+            })
+        })
+    }, 1000)
+
+    scYearAll.addEventListener('click', async event => {
+        document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
+        years = document.querySelector(`#aanmeldingenSelect_listbox`).childElementCount
+        if (years > 1) {
+            scYearCurrent.classList.add('secondary')
+            scYearAll.classList.remove('secondary')
+        } else {
+            showSnackbar("Dit is je enige schooljaar met een cijferoverzicht.")
+        }
+        scRowResetter.click()
+    })
+
+    scYearCurrent.addEventListener('click', async event => {
+        years = 1
+        scYearAll.classList.add('secondary')
+        scYearCurrent.classList.remove('secondary')
+        scTab.click()
     })
 }
 
@@ -1054,7 +1208,7 @@ async function init() {
 
 // Run when the URL changes
 async function popstate() {
-    document.querySelectorAll('.st-button, [id^=st-cf-cl]').forEach(e => e.remove())
+    document.querySelectorAll('.st-button, [id^=st-cf]').forEach(e => e.remove())
 
     const href = document.location.href.split('?')[0]
 
@@ -1127,6 +1281,13 @@ function weightedMean(valueArray = [], weightArray = []) {
         return [p[0] + c[0], p[1] + c[1]]
     }, [0, 0])
     return (result[0] / result[1])
+}
+
+function median(valueArray = []) {
+    valueArray.sort()
+    var half = Math.floor(valueArray.length / 2)
+    if (valueArray.length % 2) return valueArray[half]
+    return (valueArray[half - 1] + valueArray[half]) / 2.0
 }
 
 function weightedPossibleMeans(valueArray, weightArray, newWeight) {
