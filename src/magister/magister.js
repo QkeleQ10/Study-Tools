@@ -953,10 +953,14 @@ async function gradeStatistics() {
         scYearCurrent = document.createElement('button'),
         scYearAll = document.createElement('button'),
         scAveragesContainer = document.createElement('div'),
+        scAveragesWrapper1 = document.createElement('div'),
+        scAveragesWrapper2 = document.createElement('div'),
+        scAveragesWrapper3 = document.createElement('div'),
         scNum = document.createElement('div'),
         scMean = document.createElement('div'),
         scMedian = document.createElement('div'),
-        scRange = document.createElement('div'),
+        scMin = document.createElement('div'),
+        scMax = document.createElement('div'),
         scSufficient = document.createElement('div'),
         scInsufficient = document.createElement('div'),
         scGradesContainer = document.createElement('div'),
@@ -993,8 +997,14 @@ async function gradeStatistics() {
     scYearCurrent.classList.add('st-button', 'switch-right')
     scYearCurrent.innerText = "Geselecteerd jaar"
     scAveragesContainer.id = 'st-cf-sc-averages-container'
-    scAveragesContainer.append(scNum, scSufficient, scInsufficient, scMean, scMedian, scRange)
+    scAveragesContainer.append(scAveragesWrapper1, scAveragesWrapper2, scAveragesWrapper3)
+    scAveragesWrapper1.append(scMean, scMedian)
+    scAveragesWrapper2.append(scNum, scSufficient, scInsufficient)
+    scAveragesWrapper3.append(scMin, scMax)
     scGradesContainer.id = 'st-cf-sc-grades-container'
+
+    rowTitles = new Set()
+    years = 1
 
     tabs.addEventListener('click', () => {
         if (scTab.classList.contains('active')) {
@@ -1009,16 +1019,6 @@ async function gradeStatistics() {
         scInteractionPreventer.id = 'st-prevent-interactions'
         let grades = [],
             gradeFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
-
-        console.log(years, rowTitles)
-
-        if (years > 1) {
-            scRowFilterWrapper.setAttribute('style', 'pointer-events: none;opacity: .5;')
-            document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
-            document.querySelector(`#aanmeldingenSelect_listbox>li:last-child`).click()
-            document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
-            document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
-        }
 
         for (let i = 0; i < years; i++) {
             if (years > 1) {
@@ -1061,15 +1061,18 @@ async function gradeStatistics() {
             scNum.dataset.description = "Aantal"
             scNum.innerText = grades.length
 
-            scMean.dataset.description = "Gemiddelde"
+            scMean.dataset.description = "Gemiddelde (excl. weging)"
             scMean.innerText = weightedMean(grades).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
             scMean.style.color = 'var(--st-primary-color)'
 
             scMedian.dataset.description = "Mediaan"
             scMedian.innerText = median(grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-            scRange.dataset.description = "Bereik"
-            scRange.innerText = `${Math.min(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} - ${Math.max(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
+            scMin.dataset.description = "Laagste cijfer"
+            scMin.innerText = Math.min(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
+            scMax.dataset.description = "Hoogste cijfer"
+            scMax.innerText = Math.max(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scSufficient.dataset.description = "Voldoendes"
             let gradesSufficient = grades.filter((e) => { return e >= 5.5 })
@@ -1118,7 +1121,7 @@ async function gradeStatistics() {
 
     setInterval(() => {
         document.querySelectorAll('#cijferoverzichtgrid tr td:nth-child(2) > span.text').forEach(rowElement => {
-            if (rowElement.dataset.stCfScResponds) return
+            if (rowElement.dataset.stCfScResponds || years > 1) return
             rowElement.dataset.stCfScResponds = true
             rowElement.addEventListener('dblclick', () => {
                 let title = rowElement.title
@@ -1146,6 +1149,13 @@ async function gradeStatistics() {
         } else {
             showSnackbar("Dit is je enige schooljaar met een cijferoverzicht.")
         }
+
+        scRowFilterWrapper.setAttribute('style', 'pointer-events: none;opacity: .5;')
+        document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
+        document.querySelector(`#aanmeldingenSelect_listbox>li:last-child`).click()
+        document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
+        document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
+        
         scRowResetter.click()
     })
 

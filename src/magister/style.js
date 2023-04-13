@@ -1538,12 +1538,12 @@ aside.st-appear-top {
     margin-bottom: -16px;
 }
 
-#st-cf-sc>#st-cf-sc-averages-container {
-    flex-direction: row;
-    flex-wrap: wrap;
+#st-cf-sc-averages-container>div {
+    display: flex;
+    gap: 6px;
 }
 
-#st-cf-sc-averages-container>div {
+#st-cf-sc-averages-container>div>div {
     font: var(--st-widget-heading-font);
     line-height: normal;
     font-size: 20px;
@@ -1551,7 +1551,7 @@ aside.st-appear-top {
     color: var(--st-insignificant-color);
 }
 
-#st-cf-sc-averages-container>div:before {
+#st-cf-sc-averages-container>div>div:before {
     content: attr(data-description) '\\A';
     white-space: pre-wrap;
     font: 12px var(--st-secondary-font-family);
