@@ -766,7 +766,7 @@ aside .tabs:not(.st-cf-sc-override) li.active:after, #st-cf-sc-tab.active:after 
   translate: -50%;
 }
 
-.container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host([default]) {
+.container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-a-color);
     --color: var(--st-a-color);
     --background: var(--st-a-color);

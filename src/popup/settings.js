@@ -16,11 +16,11 @@ const settingsBuilder = [
                 type: "select",
                 wizard: "Kies in welk kleurenthema Magister moet worden weergegeven.",
                 require: "magister-css-experimental",
+                default: "auto",
                 options: [
                     {
                         value: "auto",
-                        title: "Aanpassen aan systeemthema",
-                        default: true
+                        title: "Aanpassen aan systeemthema"
                     },
                     {
                         value: "light",
@@ -59,11 +59,11 @@ const settingsBuilder = [
                 id: "magisterLogin-method",
                 title: "Automatisch inloggen",
                 type: "select",
+                default: "microsoft",
                 options: [
                     {
                         value: "microsoft",
-                        title: "Met een Microsoft-account",
-                        default: true
+                        title: "Met een Microsoft-account"
                     },
                     {
                         value: "password",
@@ -157,12 +157,12 @@ const settingsBuilder = [
                 id: "magister-vd-grade",
                 title: "Weergave laatste cijfers",
                 type: "select",
+                default: "full",
                 require: "magister-css-experimental magister-vd-overhaul",
                 options: [
                     {
                         value: "full",
-                        title: "Volledig (cijfer weergeven)",
-                        default: true
+                        title: "Volledig (cijfer weergeven)"
                     },
                     {
                         value: "partial",
@@ -186,11 +186,11 @@ const settingsBuilder = [
                 title: "Weergave studiewijzers",
                 type: "select",
                 require: "magister-css-experimental",
+                default: "grid",
                 options: [
                     {
                         value: "grid",
-                        title: "Geordend raster",
-                        default: true
+                        title: "Geordend raster"
                     },
                     {
                         value: "list",
@@ -288,10 +288,10 @@ const settingsBuilder = [
                 id: "noordhoff-login-enabled",
                 title: "Automatisch doorgaan"
             },
-            {
-                id: "noordhoff-login-entree",
-                title: "Inloggen met Entree"
-            },
+            // {
+            //     id: "noordhoff-login-entree",
+            //     title: "Inloggen met Entree"
+            // },
         ]
     },
     {

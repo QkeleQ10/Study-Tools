@@ -238,7 +238,7 @@ async function renderScheduleList(agendaElems, container) {
         setIntervalImmediately(async () => {
             if (new Date() >= dateStart && new Date() <= dateEnd) {
                 elementWrapper.dataset.current = 'true'
-                if (title) elementPeriod.style.borderBottom = await msToPixels(dateEnd - new Date()) + 'px solid var(--st-accent-primary)'
+                if (title !== 'filler') elementPeriod.style.borderBottom = await msToPixels(dateEnd - new Date()) + 'px solid var(--st-accent-primary)'
             } else if (new Date() > dateEnd) {
                 elementWrapper.dataset.past = 'true'
                 elementWrapper.removeAttribute('data-current')
@@ -1213,7 +1213,7 @@ async function init() {
         })
     })
 
-    if (Math.random() < 0.005) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
+    if (Math.random() < 0.003) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 }
 
 // Run when the URL changes

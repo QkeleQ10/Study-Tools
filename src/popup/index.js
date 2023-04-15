@@ -1,4 +1,4 @@
-let start = {},
+let settings = {},
     diff = {},
     diffTimestamp = 0,
     settingsWrapper = document.getElementById('settings-wrapper'),
@@ -8,13 +8,13 @@ let start = {},
 init()
 
 async function init() {
-    start = {}
+    settings = {}
     diff = {}
     diffTimestamp = 0
     settingsWrapper.innerText = ''
     aside.innerText = ''
 
-    if (chrome?.storage) start = await getSettings(null, null, true)
+    if (chrome?.storage) settings = await getSettings(null, null, true)
 
     settingsBuilder.forEach(section => {
         settingsWrapper.innerHTML += `<section data-group="${section.group}" data-title="${section.title}" id="${section.id}"><h3>${section.title}</h3></section>`
@@ -39,7 +39,7 @@ async function init() {
             if (setting.prodOnly && !chrome?.runtime?.getManifest()?.update_url) return
             else if (setting.devOnly && chrome?.runtime?.getManifest()?.update_url) return
 
-            let value = typeof start[setting.id] === 'undefined' ? setting.default || (!setting.type ? false : '') : start[setting.id],
+            let value = typeof settings[setting.id] === 'undefined' ? setting.default || (!setting.type ? false : '') : settings[setting.id],
                 inputElement,
                 labelElement
 
@@ -50,7 +50,7 @@ async function init() {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
                         inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
-                        if (!start[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
 
@@ -63,7 +63,7 @@ async function init() {
                             pushSetting(setting.id, inputElement.value, inputElement)
                             labelElement.querySelector('.current-value').innerText = String(inputElement.value).replace('.', ',')
                         })
-                        if (!start[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
 
@@ -71,7 +71,7 @@ async function init() {
                     sectionWrapper.innerHTML += `<label class="has-select" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse" data-value="${value}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
-                    setting.options.forEach(option => inputElement.innerHTML += `<button data-value="${option.value}" data-selected="${value ? value === option.value : option.default}">${option.title}</button>`)
+                    setting.options.forEach(option => inputElement.innerHTML += `<button data-value="${option.value}" data-selected="${value ? value === option.value : option.value === setting.default}">${option.title}</button>`)
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -85,13 +85,9 @@ async function init() {
                                 pushSetting(setting.id, optionElement.dataset.value, inputElement)
                             })
                         })
-                        if (!start[setting.id]) {
-                            setting.options.forEach(option => {
-                                if (option.default) {
-                                    inputElement.dataset.value = option.value
-                                    pushSetting(setting.id, option.value, inputElement)
-                                }
-                            })
+                        if (!settings[setting.id]) {
+                            inputElement.dataset.value = setting.default
+                            pushSetting(setting.id, setting.default, inputElement)
                         }
                     }, 50)
                     break
@@ -164,7 +160,7 @@ async function init() {
                     value.forEach(valueListing => {
                         inputElement.innerHTML += `<div><input type="text" value="${valueListing.name}"><input type="text" value="${valueListing.aliases}"></div>`
                     })
-                    if (!start[setting.id]) updateSubjects()
+                    if (!settings[setting.id]) updateSubjects()
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -181,7 +177,7 @@ async function init() {
                         inputElement.addEventListener('input', () => {
                             pushSetting(setting.id, inputElement.checked, inputElement)
                         })
-                        if (typeof start[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (typeof settings[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
             }
@@ -225,15 +221,15 @@ async function init() {
         }
     })
 
-    if (chrome?.runtime?.getManifest()?.version && start.openedPopup) {
+    if (chrome?.runtime?.getManifest()?.version && settings.openedPopup) {
         document.querySelectorAll('label[data-version]').forEach(element => {
-            if (element.dataset.version !== 'undefined' && element.dataset.version.localeCompare(start.openedPopup, undefined, { numeric: true, sensitivity: 'base' }) === 1) element.classList.add('new')
+            if (element.dataset.version !== 'undefined' && element.dataset.version.localeCompare(settings.openedPopup, undefined, { numeric: true, sensitivity: 'base' }) === 1) element.classList.add('new')
         })
     }
     setSetting('openedPopup', chrome?.runtime?.getManifest()?.version)
     updateConditionals()
 
-    updateColor({ h: start['magister-css-hue'], s: start['magister-css-saturation'], l: start['magister-css-luminance'] }, true)
+    updateColor({ h: settings['magister-css-hue'], s: settings['magister-css-saturation'], l: settings['magister-css-luminance'] }, true)
 
     setTimeout(() => {
         header.classList.remove('splash')
