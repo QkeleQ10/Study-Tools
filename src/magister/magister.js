@@ -947,11 +947,11 @@ async function gradeStatistics() {
         scContainer = document.createElement('div'),
         scFilterContainer = document.createElement('div'),
         scRowFilterWrapper = document.createElement('div'),
-        scRowResetter = document.createElement('button'),
-        scRowSelector = document.createElement('button'),
+        // scRowResetter = document.createElement('button'),
+        // scRowSelector = document.createElement('button'),
         scYearFilterWrapper = document.createElement('div'),
-        scYearCurrent = document.createElement('button'),
-        scYearAll = document.createElement('button'),
+        // scYearCurrent = document.createElement('button'),
+        // scYearAll = document.createElement('button'),
         scAveragesContainer = document.createElement('div'),
         scAveragesWrapper1 = document.createElement('div'),
         scAveragesWrapper2 = document.createElement('div'),
@@ -965,8 +965,9 @@ async function gradeStatistics() {
         scInsufficient = document.createElement('div'),
         scGradesContainer = document.createElement('div'),
         scInteractionPreventer = document.createElement('div'),
-        rowTitles = new Set(),
-        years = 1
+        grades = new Set(),
+        subjects = [],
+        years = new Set()
 
     tabs.append(scTab)
     scTab.id = 'st-cf-sc-tab'
@@ -981,30 +982,13 @@ async function gradeStatistics() {
     scFilterContainer.innerText = "Welke cijfers moeten er worden gebruikt?"
     scFilterContainer.append(scRowFilterWrapper, scYearFilterWrapper)
     scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
-    scRowFilterWrapper.append(scRowResetter, scRowSelector)
-    scRowResetter.id = 'st-cf-sc-row-resetter'
-    scRowResetter.classList.add('st-button', 'switch-left')
-    scRowResetter.innerText = "Alle vakken"
-    scRowSelector.id = 'st-cf-sc-row-selector'
-    scRowSelector.classList.add('st-button', 'secondary', 'switch-right')
-    scRowSelector.innerText = "Geselect. vakken"
     scYearFilterWrapper.id = 'st-cf-sc-year-filter-wrapper'
-    scYearFilterWrapper.append(scYearAll, scYearCurrent)
-    scYearAll.id = 'st-cf-sc-year-all'
-    scYearAll.classList.add('st-button', 'secondary', 'switch-left')
-    scYearAll.innerText = "Alle jaren"
-    scYearCurrent.id = 'st-cf-sc-year-current'
-    scYearCurrent.classList.add('st-button', 'switch-right')
-    scYearCurrent.innerText = "Geselecteerd jaar"
     scAveragesContainer.id = 'st-cf-sc-averages-container'
     scAveragesContainer.append(scAveragesWrapper1, scAveragesWrapper2, scAveragesWrapper3)
     scAveragesWrapper1.append(scMean, scMedian)
     scAveragesWrapper2.append(scNum, scSufficient, scInsufficient)
     scAveragesWrapper3.append(scMin, scMax)
     scGradesContainer.id = 'st-cf-sc-grades-container'
-
-    rowTitles = new Set()
-    years = 1
 
     tabs.addEventListener('click', () => {
         if (scTab.classList.contains('active')) {
@@ -1016,155 +1000,111 @@ async function gradeStatistics() {
 
     scTab.addEventListener('click', async event => {
         event.stopPropagation()
-        scInteractionPreventer.id = 'st-prevent-interactions'
-        let grades = [],
-            gradeFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
+        tabs.classList.add('st-cf-sc-override')
+        scTab.classList.add('active')
+        scContainer.style.display = 'flex'
+    })
 
-        for (let i = 0; i < years; i++) {
-            if (years > 1) {
+    document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
+    document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
+    let yearSelect = await getElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span')
+    yearSelect.click()
+    document.querySelectorAll(`#aanmeldingenSelect_listbox>li.k-item`).forEach((year, index) => {
+        if (document.getElementById(`st-cf-sc-year-${index}`)) return
+        years.add(year.innerText)
+        let label = document.createElement('label'),
+            input = document.createElement('input')
+        scYearFilterWrapper.append(label)
+        label.innerText = year.innerText
+        label.setAttribute('for', `st-cf-sc-year-${index}`)
+        label.append(input)
+        setAttributes(input, { type: 'checkbox', id: `st-cf-sc-year-${index}` })
+    })
+    yearSelect.click()
+
+    grades = await gatherGrades(grades, years, false)
+    await displayStatistics(grades, subjects, years)
+
+    async function gatherGrades(grades = new Set(), years = new Set(), collectAllYears) {
+        return new Promise(async (resolve, reject) => {
+            let yearsArray = [...years]
+            if (!collectAllYears) yearsArray = [yearsArray[0]]
+            scTab.dataset.loading = true
+            scInteractionPreventer.id = 'st-prevent-interactions'
+            yearsArray.forEach((year, index) => {
                 setTimeout(() => {
-                    document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
-                    document.querySelector(`#aanmeldingenSelect_listbox>li:nth-child(${i + 1})`).click()
-                }, i * 1000)
-            }
-            setTimeout(async () => {
-                if (rowTitles.size < 1) {
-                    let gradeElements = await getElement('#cijferoverzichtgrid tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzicht tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true)
-
-                    gradeElements.forEach(grade => {
-                        let parsed = Number(grade.innerText.replace(',', '.').replace('', ''))
-                        if (!isNaN(parsed)) {
-                            grades.push(parsed)
-                            gradeFrequencies[Math.round(parsed)]++
-                        }
-                    })
-                } else {
-                    rowTitles.forEach(title => {
-                        document.querySelectorAll(`#cijferoverzichtgrid tr:has(td:nth-child(2)>span.text[title="${title}"]) td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid tr:has(td:nth-child(2)>span.text[title="${title}"]) td>span.grade.herkansingKolom:not(.empty), #cijferoverzicht tr:has(td:nth-child(2)>span.text[title="${title}"]) td>span.grade.heeftonderliggendekolommen:not(.empty)`).forEach(grade => {
-                            let parsed = Number(grade.innerText.replace(',', '.').replace('', ''))
-                            if (!isNaN(parsed)) {
-                                grades.push(parsed)
-                                gradeFrequencies[Math.round(parsed)]++
-                            }
+                    document.querySelector(`#aanmeldingenSelect_listbox>li:nth-child(${index + 1})`).click()
+                    setTimeout(async () => {
+                        document.querySelectorAll('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)').forEach(grade => {
+                            let result = Number(grade.innerText.replace(',', '.').replace('', '')),
+                                subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText,
+                                year = document.querySelector('#aanmeldingenSelect > option[selected]').innerText
+                            if (!isNaN(result) && !grades.has({ result, subject, year })) grades.add({ result, subject, year })
                         })
-                    })
-                }
-            }, years > 1 ? 1000 * (years - 1) + 100 : 0)
-        }
+                    }, 700)
+                }, index * 1000)
+            })
 
-        setTimeout(() => {
-            scGradesContainer.innerText = ''
-            tabs.classList.add('st-cf-sc-override')
-            scTab.classList.add('active')
-            scContainer.style.display = 'flex'
+            setTimeout(() => {
+                scInteractionPreventer.id = ''
+                resolve(grades)
+            }, yearsArray.length * 1000)
+        })
+    }
+
+    async function displayStatistics(grades = new Set(), subjects = [], years = []) {
+        return new Promise(async (resolve, reject) => {
+            let results = [...grades]
+                // .filter(({ subject, year }) => {
+                //     (subjects.size < 1 || subjects.include(subject)) && (years.size < 1 || years.include(year))
+                // })
+                .map(({ result }) => result),
+                gradeFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
 
             scNum.dataset.description = "Aantal"
-            scNum.innerText = grades.length
+            scNum.innerText = results.length
 
             scMean.dataset.description = "Gemiddelde (excl. weging)"
-            scMean.innerText = weightedMean(grades).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+            scMean.innerText = weightedMean(results).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
             scMean.style.color = 'var(--st-primary-color)'
 
             scMedian.dataset.description = "Mediaan"
-            scMedian.innerText = median(grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMedian.innerText = median(results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scMin.dataset.description = "Laagste cijfer"
-            scMin.innerText = Math.min(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMin.innerText = Math.min(...results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scMax.dataset.description = "Hoogste cijfer"
-            scMax.innerText = Math.max(...grades).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMax.innerText = Math.max(...results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scSufficient.dataset.description = "Voldoendes"
-            let gradesSufficient = grades.filter((e) => { return e >= 5.5 })
-            scSufficient.innerText = `${gradesSufficient.length} (${(gradesSufficient.length / grades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
-            if (gradesSufficient.length < 1) scSufficient.innerText = 'geen'
+            let resultsSufficient = results.filter((e) => { return e >= 5.5 })
+            scSufficient.innerText = `${resultsSufficient.length} (${(resultsSufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
+            if (resultsSufficient.length < 1) scSufficient.innerText = 'geen'
 
             scInsufficient.dataset.description = "Onvoldoendes"
-            let gradesInsufficient = grades.filter((e) => { return e < 5.5 })
-            scInsufficient.innerText = `${gradesInsufficient.length} (${(gradesInsufficient.length / grades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
-            if (gradesInsufficient.length < 1) scInsufficient.innerText = 'geen'
+            let resultsInsufficient = results.filter((e) => { return e < 5.5 })
+            scInsufficient.innerText = `${resultsInsufficient.length} (${(resultsInsufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
+            if (resultsInsufficient.length < 1) scInsufficient.innerText = 'geen'
 
+            results.forEach(result => {
+                gradeFrequencies[Math.round(result)]++
+            })
+
+            scGradesContainer.innerText = ''
             Object.keys(gradeFrequencies).forEach(key => {
                 let value = gradeFrequencies[key],
                     element = document.createElement('div')
                 scGradesContainer.append(element)
                 element.dataset.grade = key
                 element.dataset.times = value
-                element.style.height = `${value * 210 / grades.length + 2}px`
+                element.dataset.percentage = (value / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                element.style.height = `${value * 210 / results.length + 2}px`
             })
-            scInteractionPreventer.id = ''
-
-            if (grades.length < 1 && rowTitles.size > 0) {
-                rowTitles.clear()
-                scTab.click()
-            }
-        }, years > 1 ? 1000 * (years - 1) + 500 : 100)
-    })
-
-    scRowSelector.addEventListener('click', async event => {
-        showSnackbar("Dubbelklik op een vaknaam om de rij toe te voegen aan de berekeningen. Dubbelklik opnieuw om hem weer te verwijderen.")
-        if (rowTitles.size > 0) {
-            scRowSelector.classList.remove('secondary')
-            scRowResetter.classList.add('secondary')
-        }
-    })
-
-    scRowResetter.addEventListener('click', async event => {
-        scRowSelector.classList.add('secondary')
-        scRowResetter.classList.remove('secondary')
-        rowTitles.forEach(title => {
-            createStyle(``, `st-cf-sc-${title.toLowerCase().replace(/\s/g, '')}`)
-            rowTitles.delete(title)
+            scTab.dataset.loading = false
+            resolve()
         })
-        scTab.click()
-    })
-
-    setInterval(() => {
-        document.querySelectorAll('#cijferoverzichtgrid tr td:nth-child(2) > span.text').forEach(rowElement => {
-            if (rowElement.dataset.stCfScResponds || years > 1) return
-            rowElement.dataset.stCfScResponds = true
-            rowElement.addEventListener('dblclick', () => {
-                let title = rowElement.title
-                if (rowTitles.has(title)) {
-                    createStyle(``, `st-cf-sc-${title.toLowerCase().replace(/\s/g, '')}`)
-                    rowTitles.delete(title)
-                }
-                else {
-                    rowTitles.add(title)
-                    createStyle(`#cijferoverzichtgrid tr td:nth-child(2)>span.text[title="${title}"] { background-color: var(--st-highlight-background) !important; font-weight: bold }`, `st-cf-sc-${title.toLowerCase().replace(/\s/g, '')}`)
-                }
-                if (rowTitles.size < 1) scRowResetter.click()
-                else if (scRowSelector.classList.contains('secondary')) scRowSelector.click()
-                scTab.click()
-            })
-        })
-    }, 1000)
-
-    scYearAll.addEventListener('click', async event => {
-        document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
-        years = document.querySelector(`#aanmeldingenSelect_listbox`).childElementCount
-        if (years > 1) {
-            scYearCurrent.classList.add('secondary')
-            scYearAll.classList.remove('secondary')
-        } else {
-            showSnackbar("Dit is je enige schooljaar met een cijferoverzicht.")
-        }
-
-        scRowFilterWrapper.setAttribute('style', 'pointer-events: none;opacity: .5;')
-        document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span').click()
-        document.querySelector(`#aanmeldingenSelect_listbox>li:last-child`).click()
-        document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
-        document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
-        
-        scRowResetter.click()
-    })
-
-    scYearCurrent.addEventListener('click', async event => {
-        years = 1
-        scYearAll.classList.add('secondary')
-        scYearCurrent.classList.remove('secondary')
-        scTab.click()
-    })
+    }
 }
 
 // Run when the extension and page are loaded

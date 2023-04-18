@@ -733,6 +733,7 @@ aside .tabs {
 aside .tabs li {
     width: auto;
     flex-grow: 2;
+    transition: filter 200ms;
 }
 
 aside .tabs li.active, aside .tabs li:hover {
@@ -1511,6 +1512,10 @@ aside.st-appear-top {
     grid-template-columns: auto auto;
 }
 
+#st-cf-sc-tab>a {
+    transition: opacity 200ms;
+}
+
 #st-cf-sc-tab:before {
     content: '';
     position: absolute;
@@ -1523,6 +1528,18 @@ aside.st-appear-top {
     font-size: 11px;
     color: var(--st-a-color);
     text-shadow: none;
+}
+
+#st-cf-sc-tab[data-loading=true]>a {
+    opacity: .2;
+}
+
+#st-cf-sc-tab[data-loading=true]:before {
+    top: 50%;
+    translate: -50% -50%;
+    content: '';
+    font-size: 20px;
+    animation: rotation 1s infinite linear;
 }
 
 #st-cf-sc>#st-cf-sc-filter-container {
@@ -1589,6 +1606,7 @@ aside.st-appear-top {
 }
 
 #st-cf-sc-grades-container > div:before {
+    white-space: pre-wrap;
     content: attr(data-times) '×';
     translate: 0 -18px;
 }
@@ -1598,6 +1616,7 @@ aside.st-appear-top {
     position: absolute;
     bottom: -19px;
     width: 25px;
+    color: var(--st-insignificant-color);
 }
 `, 'study-tools-cf')
     }
