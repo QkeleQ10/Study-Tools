@@ -308,6 +308,8 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     left: 0;
     width: 100vw;
     height: 100vh;
+    opacity: .1;
+    background-color: var(--st-overlay-background);
     z-index: 99999999;
 }
 
@@ -1187,18 +1189,25 @@ dna-button:hover {
     font: 14px var(--st-secondary-font-family);
 }
 
-#st-cf-cl-added {
+#st-cf-cl-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     position: absolute;
     top: 154px;
     right: 16px;
     width: 425px;
-    height: calc(100% - 550px);
+    bottom: 24px;
     padding: 0 16px;
     overflow: auto;
     font-size: 14px;
-    border-radius: var(--st-widget-border-radius) var(--st-widget-border-radius) 0 0;
-    border: var(--st-widget-border);
-    border-bottom: none;
+    border-radius: var(--st-widget-border-radius);
+    border: var(--st-widget-border)
+}
+
+#st-cf-cl-added {
+    overflow: auto;
+    font-size: 14px;
 }
 
 .st-cf-cl-added-element {
@@ -1247,36 +1256,31 @@ dna-button:hover {
     font: var(--st-widget-heading-font);
 }
 
-#st-cf-cl-mean {
-    position: absolute;
-    bottom: 343px;
-    right: 16px;
-    width: 425px;
-    height: 53px;
-    padding: 3px 16px;
-    font: var(--st-widget-heading-font);
-    font-size: 20px;
-    border: var(--st-widget-border);
+#st-cf-cl-averages { 
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding: 5px 0 2px;
+    border-top: var(--st-widget-border);
 }
 
-#st-cf-cl-mean:before {
-    content: "Gemiddelde: ";
+#st-cf-cl-averages>div {
     font: var(--st-widget-heading-font);
+    line-height: normal;
+    font-size: 20px;
+    flex-grow: 2;
+    color: var(--st-insignificant-color);
+}
+
+#st-cf-cl-averages>#st-cf-cl-mean {
     color: var(--st-primary-color);
 }
 
 #st-cf-cl-future-desc {
-    position: absolute;
-    display: block;
-    height: 320px;
-    width: 425px;
-    bottom: 24px;
-    right: 16px;
-    padding: 40px 10px 16px 16px;
+    padding-top: 40px;
     font-size: 12px;
     font-weight: normal;
-    border: var(--st-widget-border);
-    border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
+    border-top: var(--st-widget-border);
     transition: color 150ms;
 }
 
@@ -1308,18 +1312,14 @@ dna-button:hover {
     display: none;
 }
 
-#st-cf-cl-canvas {
-    position: absolute;
-    right: 16px;
-    bottom: 25px;
-    z-index: 2;
+#st-cf-cl-canvas { 
+    margin: 0 -16px;
     border-top: var(--st-widget-border);
-    border-radius: 0 0 var(--st-widget-border-radius) var(--st-widget-border-radius);
 }
 
 #st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas, #st-cf-cl:not([data-step="2"]) .st-cf-cl-canvas-hl {
     pointer-events: none;
-    display: none;
+    visibility: hidden;
 }
 
 .st-cf-cl-canvas-hl {
@@ -1369,8 +1369,8 @@ dna-button:hover {
     top: 5px;
 }
 
-#st-cf-cl-mean.insufficient {
-    color: var(--st-accent-warn);
+#st-cf-cl-averages>div.insufficient {
+    color: var(--st-accent-warn) !important;
 }
 
 #st-cf-cl-open, #st-cf-cl-closer {
@@ -1471,6 +1471,21 @@ aside.st-appear-top {
     filter: brightness(var(--st-hover-brightness));
 }
 
+#st-cf-bk-aside {
+    background-color: var(--st-primary-background);
+    padding: 0 12px;
+    font: 12px var(--st-secondary-font-family);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+}
+
+#st-cf-bk-aside:before {
+    content: 'Details\\A';
+    white-space: pre-wrap;
+    font: var(--st-widget-heading-font);
+    margin-bottom: -24px;
+}
+
 #st-cf-sc {
     display: flex;
     flex-direction: column;
@@ -1486,12 +1501,23 @@ aside.st-appear-top {
     border: var(--st-widget-border);
     border-top: none;
     font: 12px var(--st-secondary-font-family);
+    overflow-y: auto;
     z-index: 999;
 }
 
 #st-cf-sc.small {
     top: 425px;
     border-top: var(--st-widget-border);
+}
+
+#st-cf-sc.empty>#st-cf-sc-averages-container, #st-cf-sc.empty>#st-cf-sc-grades-container {
+    visibility: hidden;
+}
+
+#st-cf-sc.empty:after {
+    content: 'Er zijn geen cijfers die voldoen aan de criteria.';
+    position: absolute;
+    top: 40px;
 }
 
 #st-cf-sc:before {
@@ -1505,11 +1531,6 @@ aside.st-appear-top {
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-#st-cf-sc-row-filter-wrapper, #st-cf-sc-year-filter-wrapper {
-    display: grid;
-    grid-template-columns: auto auto;
 }
 
 #st-cf-sc-tab>a {
@@ -1548,19 +1569,27 @@ aside.st-appear-top {
     border-top: var(--st-widget-border);
 }
 
-#st-cf-sc-filter-container:before {
-    content: 'Opties\\A';
+#st-cf-sc-year-filter-wrapper:before {
+    content: 'Filteren op leerjaar\\A';
     white-space: pre-wrap;
     font: var(--st-widget-heading-font);
-    margin-bottom: -16px;
+    margin-bottom: -10px;
 }
 
-#st-cf-sc-averages-container>div {
+#st-cf-sc-row-filter-wrapper:before {
+    content: 'Filteren op vak\\A';
+    white-space: pre-wrap;
+    font: var(--st-widget-heading-font);
+    margin-bottom: -10px;
+}
+
+#st-cf-sc-averages-container>div, #st-cf-bk-i-wrapper {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
-#st-cf-sc-averages-container>div>div {
+#st-cf-sc-averages-container>div>div, #st-cf-bk-i-wrapper>div {
     font: var(--st-widget-heading-font);
     line-height: normal;
     font-size: 20px;
@@ -1568,7 +1597,7 @@ aside.st-appear-top {
     color: var(--st-insignificant-color);
 }
 
-#st-cf-sc-averages-container>div>div:before {
+#st-cf-sc-averages-container>div>div:before, #st-cf-cl-averages>div:before, #st-cf-bk-i-wrapper>div:before {
     content: attr(data-description) '\\A';
     white-space: pre-wrap;
     font: 12px var(--st-secondary-font-family);
@@ -1581,6 +1610,7 @@ aside.st-appear-top {
     gap: 2px;
     padding-top: 34px;
     margin-bottom: 16px;
+    min-height: 150px;
 }
 
 #st-cf-sc-grades-container:before {
@@ -1599,16 +1629,22 @@ aside.st-appear-top {
     display: flex;
     flex-direction: column-reverse;
     justify-content: flex-end;
+    transition: max-height 200ms, min-height 200ms;
 }
 
 #st-cf-sc-grades-container > div:nth-child(-n+5) {
-    background: var(--st-accent-warn)
+    background: var(--st-accent-warn);
 }
 
 #st-cf-sc-grades-container > div:before {
     white-space: pre-wrap;
     content: attr(data-times) '×';
+    max-width: 25px;
     translate: 0 -18px;
+}
+
+#st-cf-sc-grades-container > div:hover:before {
+    content: attr(data-percentage) '%';
 }
 
 #st-cf-sc-grades-container > div:after {
@@ -1617,6 +1653,74 @@ aside.st-appear-top {
     bottom: -19px;
     width: 25px;
     color: var(--st-insignificant-color);
+}
+
+#st-cf-sc-year-filter-wrapper, #st-cf-sc-row-filter-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#st-cf-sc-year-filter-wrapper>label {
+    position: relative;
+    padding: 4px 10px 4px 30px;
+    border-radius: var(--st-widget-border-radius);
+    cursor: pointer;
+}
+
+#st-cf-sc-year-filter-wrapper>label:has(input:checked) {
+    background-color: var(--st-highlight-background);
+}
+
+#st-cf-sc-year-filter-wrapper>label:before {
+    content: '';
+    position: absolute;
+    display: block;
+    height: 25px;
+    width: 25px;
+    left: 0;
+    top: 0;
+    color: var(--st-primary-color);
+    background: var(--st-primary-background);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    font: 16px 'Font Awesome 5 Pro';
+    text-align: center;
+    padding-top: 3px;
+}
+
+#st-cf-sc-year-filter-wrapper>label:has(input:checked):before {
+    content: '';
+}
+
+#st-cf-sc-year-filter-wrapper>label[data-loading=true]:before {
+    content: '' !important;
+    border: none;
+    background: none;
+    padding: 4px 2px 2px 2px;
+    translate: 1px;
+    animation: rotation 1s infinite linear;
+}
+
+#st-cf-sc-row-filter {
+    background: var(--st-highlight-background);
+    border: none;
+    position: relative;
+    padding: 4px 10px 4px 10px;
+    border-radius: var(--st-widget-border-radius);
+    font: 11px var(--st-secondary-font-family);
+    word-wrap: break-word;
+    text-wrap: unrestricted;
+}
+
+#st-cf-sc-row-filter-toggle {
+    position: absolute;
+    top: 10px;
+    right: 0;
+    padding: 2px 14px;
+    font-size: 12px;
+    height: 24px;
 }
 `, 'study-tools-cf')
     }

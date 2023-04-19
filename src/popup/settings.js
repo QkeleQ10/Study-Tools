@@ -236,19 +236,19 @@ const settingsBuilder = [
             {
                 id: "magister-cf-calculator",
                 title: "Cijfercalculator",
-                subtitle: "Een zeer krachtige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                subtitle: "Een handige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
                 default: true,
             },
             {
                 id: "magister-cf-statistics",
                 title: "Cijferstatistieken",
-                subtitle: "Verscheidene statistieken en grafiekjesa. Open met de knop in de zijbalk van het cijferoverzicht.",
+                subtitle: "[Experimenteel] Verscheidene statistieken en grafiekjes bij je cijfers, met handige filters. Te vinden onder het nieuwe tabblad in de zijbalk van het cijferoverzicht.",
                 default: true,
             },
             {
                 id: "magister-cf-backup",
                 title: "Cijferback-up",
-                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren.",
+                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren. Gebruik met de knop rechtsboven in het cijferoverzicht.",
                 default: true,
             },
             {

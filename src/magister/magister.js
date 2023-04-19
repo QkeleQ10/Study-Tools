@@ -396,13 +396,16 @@ async function gradeCalculator() {
         clCloser = document.createElement('button'),
         clAddTable = document.createElement('button'),
         clAddCustom = document.createElement('button'),
-        clWrapper = document.createElement('div'),
+        clContainer = document.createElement('div'),
+        clSidebar = document.createElement('div'),
         clTitle = document.createElement('span'),
         clSubtitle = document.createElement('span'),
         clAddCustomResult = document.createElement('input'),
         clAddCustomWeight = document.createElement('input'),
         clAdded = document.createElement('p'),
-        clMean = document.createElement('p'),
+        clAveragesWrapper = document.createElement('div'),
+        clMean = document.createElement('div'),
+        clMedian = document.createElement('div'),
         clFutureWeight = document.createElement('input'),
         clFutureDesc = document.createElement('p'),
         clCanvas = document.createElement('canvas'),
@@ -412,22 +415,29 @@ async function gradeCalculator() {
         resultsList = [],
         weightsList = [],
         hypotheticalWeight = 1,
-        mean
+        calcMean,
+        calcMedian
 
     document.body.append(clOpen)
     clOpen.classList.add('st-button')
     clOpen.id = 'st-cf-cl-open'
     clOpen.innerText = "Cijfercalculator"
     clOpen.dataset.icon = ''
-    document.body.append(clWrapper)
-    clWrapper.id = 'st-cf-cl'
-    clWrapper.dataset.step = 0
-    clWrapper.append(clCloser, clTitle, clSubtitle, clAdded, clMean, clAddTable, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvas, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc, clFutureWeight)
+    document.body.append(clContainer)
+    clContainer.id = 'st-cf-cl'
+    clContainer.dataset.step = 0
+    clContainer.append(clCloser, clTitle, clSubtitle, clAddTable, clSidebar, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvasHlVertical, clCanvasHlHorizontal, clFutureWeight)
+    clSidebar.id = 'st-cf-cl-sidebar'
+    clSidebar.append(clAdded, clAveragesWrapper, clFutureDesc, clCanvas)
     clTitle.id = 'st-cf-cl-title'
     clTitle.innerText = "Cijfercalculator"
     clSubtitle.id = 'st-cf-cl-subtitle'
     clAdded.id = 'st-cf-cl-added'
+    clAveragesWrapper.append(clMean, clMedian)
+    clAveragesWrapper.id = 'st-cf-cl-averages'
+    clMean.dataset.description = "Gemiddelde"
     clMean.id = 'st-cf-cl-mean'
+    clMedian.dataset.description = "Mediaan"
     clCloser.classList.add('st-button')
     clCloser.id = 'st-cf-cl-closer'
     clCloser.innerText = "Wissen en sluiten"
@@ -452,25 +462,26 @@ async function gradeCalculator() {
         clCanvas = document.getElementById('st-cf-cl-canvas')
         ctx = clCanvas.getContext('2d')
         document.body.style.marginLeft = '-130px'
-        clWrapper.dataset.step = 1
+        clContainer.dataset.step = 1
         resultsList = []
         weightsList = []
         clAdded.innerText = ''
-        clMean.innerText = ''
-        clFutureDesc.innerText = ''
+        clMean.innerText = '?'
+        clMedian.innerText = '?'
+        clFutureDesc.innerText = "Zie hier wat je moet halen en wat je komt te staan."
         ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
-        clSubtitle.innerText = "Voeg cijfers toe met de knoppen of dubbelklik op een cijfer \nuit de tabel. Druk op de toets '?' om de zijbalk weer te geven."
+        clSubtitle.innerText = "Voeg cijfers toe met de knoppen of dubbelklik op een cijfer uit de tabel. \nDruk op de toets '?' om de zijbalk weer te geven."
         gradesContainer.style.zIndex = '9999999'
         gradesContainer.style.maxWidth = 'calc(100vw - 477px)'
         if (!menuHost.classList.contains('collapsed-menu')) menuCollapser.click()
     })
 
     addEventListener("keydown", e => {
-        if (clWrapper.dataset.step != 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
+        if (clContainer.dataset.step != 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
     })
 
     gradesContainer.addEventListener('dblclick', () => {
-        if (clWrapper.dataset.step == 0) return
+        if (clContainer.dataset.step == 0) return
         clAddTable.click()
         clAddTable.setAttribute('disabled', true)
         setTimeout(() => {
@@ -507,8 +518,7 @@ async function gradeCalculator() {
                 result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
             }
 
-            if (event.target.id === 'st-cf-cl-add-table') setTimeout(() => {
-
+            setTimeout(() => {
                 if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
                 if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
 
@@ -523,41 +533,45 @@ async function gradeCalculator() {
                     resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
                     weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
                     event.target.remove()
-                    mean = weightedMean(resultsList, weightsList)
+                    calcMean = weightedMean(resultsList, weightsList)
+                    calcMedian = median(resultsList)
                     showSnackbar('Cijfer verwijderd uit de berekening.')
-                    clMean.innerText = isNaN(mean) ? '' : mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    if (mean < 5.5) clMean.classList.add('insufficient')
+                    clMean.innerText = isNaN(calcMean) ? '?' : calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    clMedian.innerText = isNaN(calcMedian) ? '?' : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    if (calcMean < 5.5) clMean.classList.add('insufficient')
                     else clMean.classList.remove('insufficient')
 
-                    renderGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
-                    if (resultsList.length < 1 || weightsList.length < 1 || isNaN(mean)) clWrapper.dataset.step = 1
+                    renderGradeChart(resultsList, weightsList, hypotheticalWeight, calcMean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
+                    if (resultsList.length < 1 || weightsList.length < 1 || isNaN(calcMean)) clContainer.dataset.step = 1
                 })
 
                 resultsList.push(result)
                 weightsList.push(weight)
-                mean = weightedMean(resultsList, weightsList)
+                calcMean = weightedMean(resultsList, weightsList)
+                calcMedian = median(resultsList)
                 showSnackbar('Cijfer toegevoegd aan de berekening.')
 
-                clMean.innerText = mean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                if (mean < 5.5) clMean.classList.add('insufficient')
+                clMean.innerText = calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                clMedian.innerText = calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                if (calcMean < 5.5) clMean.classList.add('insufficient')
                 else clMean.classList.remove('insufficient')
 
-                clWrapper.dataset.step = 2
-                renderGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
-            }, 200)
+                clContainer.dataset.step = 2
+                renderGradeChart(resultsList, weightsList, hypotheticalWeight, calcMean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
+            }, event.target.id === 'st-cf-cl-add-table' ? 200 : 0)
         })
     })
 
     clFutureWeight.addEventListener('input', async () => {
         hypotheticalWeight = Number(clFutureWeight.value)
         if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) return
-        renderGradeChart(resultsList, weightsList, hypotheticalWeight, mean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
+        renderGradeChart(resultsList, weightsList, hypotheticalWeight, calcMean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
     })
 
     clCloser.addEventListener('click', async () => {
         document.body.style.marginLeft = '0'
         gradesContainer.removeAttribute('style')
-        clWrapper.dataset.step = 0
+        clContainer.dataset.step = 0
         menuCollapser.click()
     })
 }
@@ -571,7 +585,7 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     oldElement.parentElement.replaceChild(newElement, oldElement)
     clCanvas = newElement
     oldElement.remove()
-    clFutureDesc.innerText = ''
+    clFutureDesc.innerText = "Zie hier wat je moet halen en wat je komt te staan."
 
     let ctx = clCanvas.getContext('2d')
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
@@ -725,6 +739,11 @@ async function gradeBackup() {
         bkBusyAd = document.createElement('div'),
         bkBusyAdBody = document.createElement('p'),
         bkBusyAdLink = document.createElement('a'),
+        bkIWrapper = document.createElement('div'),
+        bkIResult = document.createElement('div'),
+        bkIWeight = document.createElement('div'),
+        bkIColumn = document.createElement('div'),
+        bkITitle = document.createElement('div'),
         list = [],
         num = 0
 
@@ -814,8 +833,20 @@ async function gradeBackup() {
             let table = document.createElement('table')
             setAttributes(table, { role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
             div2.append(table)
-            aside.innerText = "Deze cijfers zijn geïmporteerd uit een eerdere back-up. Niet alle informatie is beschikbaar.\n\nSelecteer een cijfer om details weer te geven."
-            aside.setAttribute('style', 'background-color: var(--st-primary-background); font: 14px/30px var(--st-secondary-font-family)')
+            aside.innerText = "Geïmporteerd uit back-up."
+            aside.id = 'st-cf-bk-aside'
+            aside.append(bkIWrapper)
+            bkIWrapper.id = 'st-cf-bk-i-wrapper'
+            bkIWrapper.append(bkIResult, bkIWeight, bkIColumn, bkITitle)
+            bkIResult.dataset.description = "Resultaat"
+            bkIResult.innerText = "?"
+            bkIResult.style.color = 'var(--st-primary-color)'
+            bkIWeight.dataset.description = "Weegfactor"
+            bkIWeight.innerText = "?"
+            bkIColumn.dataset.description = "Kolomnaam"
+            bkIColumn.innerText = "?"
+            bkITitle.dataset.description = "Kolomkop"
+            bkITitle.innerText = "Klik op een cijfer"
 
             for (let i = 0; i < list.length; i++) {
                 bkImport.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
@@ -827,8 +858,9 @@ async function gradeBackup() {
             }
 
             if (document.querySelector('#st-cf-sc')) {
+                document.querySelector('#st-cf-sc').style.display = 'flex'
                 document.querySelector('#st-cf-sc').classList.add('small')
-                document.querySelector('#st-cf-sc-year-current').click()
+                document.querySelector('#st-cf-sc-bk-communication').click()
                 document.querySelector('#st-cf-sc-year-filter-wrapper').style.display = 'none'
             }
 
@@ -843,99 +875,103 @@ async function gradeBackup() {
         }
         reader.readAsText(event.target.files[0])
     })
-}
 
-async function gatherExportGrade(td, gradeDetails, num) {
-    return new Promise(async (resolve, reject) => {
-        let timeout = 50,
-            result, weight, column, title
-        if (num > 1 && num % 130 === 0) {
-            timeout = 16000
-            showSnackbar("Het proces is stilgelegd. Zo wordt het quotum van Magister niet overschreden. Na 16 seconden gaat het weer verder.", 16000)
-        }
-        if (!td.innerText || td.innerText.trim().length < 1) return resolve({ className: td.firstElementChild?.className, type: 'filler' })
-        if (td.firstElementChild?.classList.contains('text')) return resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
-        td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
-        td.dispatchEvent(new Event('pointerup', { bubbles: true }))
-        setTimeout(() => {
-            gradeDetails.childNodes.forEach(element => {
-                if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
-                    result = element.nextElementSibling.innerText
-                } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
-                    weight = element.nextElementSibling.innerText
-                } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
-                    column = element.nextElementSibling.innerText
-                } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
-                    title = element.nextElementSibling.innerText
-                }
-            })
-            return resolve({ className: td.firstElementChild?.className, result, weight, column, type: 'grade', title })
-        }, timeout)
-    })
-}
-
-async function appendImportedGrade(item, container, aside) {
-    return new Promise(async (resolve, reject) => {
-        let tr = container.querySelector(`tr:last-child`), td, span
-        switch (item.type) {
-            case 'rowheader':
-                tr = document.createElement('tr')
-                tr.role = 'row'
-                container.append(tr)
-                let tdPre = document.createElement('td')
-                tdPre.role = 'gridcell'
-                tdPre.style.display = 'none'
-                td = document.createElement('td')
-                td.role = 'gridcell'
-                tr.append(tdPre, td)
-                span = document.createElement('span')
-                span.className = item.className
-                span.innerText = item.title
-                td.append(span)
-                break
-
-            case 'filler':
-                if (!tr) {
-                    tr = document.createElement('tr')
-                    tr.role = 'row'
-                    container.append(tr)
-                }
-                td = document.createElement('td')
-                td.role = 'gridcell'
-                tr.append(td)
-                span = document.createElement('span')
-                span.className = item.className
-                span.style.height = '40px'
-                td.append(span)
-                break
-
-            default:
-                if (!tr) {
-                    tr = document.createElement('tr')
-                    tr.role = 'row'
-                    container.append(tr)
-                }
-                td = document.createElement('td')
-                td.role = 'gridcell'
-                td.dataset.result = item.result
-                td.dataset.weight = item.weight
-                td.dataset.column = item.column
-                td.dataset.title = item.title
-                tr.append(td)
-                span = document.createElement('span')
-                span.className = item.className
-                span.innerText = item.result
-                span.title = item.result
-                td.append(span)
-                td.addEventListener('click', () => {
-                    document.querySelectorAll('.k-state-selected').forEach(e => e.classList.remove('k-state-selected'))
-                    td.classList.add('k-state-selected')
-                    aside.innerText = `Deze cijfers zijn geïmporteerd uit een eerdere back-up. Niet alle informatie is beschikbaar.\n\nResultaat: ${item.result}\nWeegfactor: ${item.weight}\nKolomnaam: ${item.column}\nKolomkop: ${item.title}`
+    async function gatherExportGrade(td, gradeDetails, num) {
+        return new Promise(async (resolve, reject) => {
+            let timeout = 50,
+                result, weight, column, title
+            if (num > 1 && num % 130 === 0) {
+                timeout = 16000
+                showSnackbar("Het proces is stilgelegd. Zo wordt het quotum van Magister niet overschreden. Na 16 seconden gaat het weer verder.", 16000)
+            }
+            if (!td.innerText || td.innerText.trim().length < 1) return resolve({ className: td.firstElementChild?.className, type: 'filler' })
+            if (td.firstElementChild?.classList.contains('text')) return resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
+            td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+            td.dispatchEvent(new Event('pointerup', { bubbles: true }))
+            setTimeout(() => {
+                gradeDetails.childNodes.forEach(element => {
+                    if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
+                        result = element.nextElementSibling.innerText
+                    } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
+                        weight = element.nextElementSibling.innerText
+                    } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
+                        column = element.nextElementSibling.innerText
+                    } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
+                        title = element.nextElementSibling.innerText
+                    }
                 })
-                break
-        }
-        resolve()
-    })
+                return resolve({ className: td.firstElementChild?.className, result, weight, column, type: 'grade', title })
+            }, timeout)
+        })
+    }
+
+    async function appendImportedGrade(item, container, aside) {
+        return new Promise(async (resolve, reject) => {
+            let tr = container.querySelector(`tr:last-child`), td, span
+            switch (item.type) {
+                case 'rowheader':
+                    tr = document.createElement('tr')
+                    tr.role = 'row'
+                    container.append(tr)
+                    let tdPre = document.createElement('td')
+                    tdPre.role = 'gridcell'
+                    tdPre.style.display = 'none'
+                    td = document.createElement('td')
+                    td.role = 'gridcell'
+                    tr.append(tdPre, td)
+                    span = document.createElement('span')
+                    span.className = item.className
+                    span.innerText = item.title
+                    td.append(span)
+                    break
+
+                case 'filler':
+                    if (!tr) {
+                        tr = document.createElement('tr')
+                        tr.role = 'row'
+                        container.append(tr)
+                    }
+                    td = document.createElement('td')
+                    td.role = 'gridcell'
+                    tr.append(td)
+                    span = document.createElement('span')
+                    span.className = item.className
+                    span.style.height = '40px'
+                    td.append(span)
+                    break
+
+                default:
+                    if (!tr) {
+                        tr = document.createElement('tr')
+                        tr.role = 'row'
+                        container.append(tr)
+                    }
+                    td = document.createElement('td')
+                    td.role = 'gridcell'
+                    td.dataset.result = item.result
+                    td.dataset.weight = item.weight
+                    td.dataset.column = item.column
+                    td.dataset.title = item.title
+                    tr.append(td)
+                    span = document.createElement('span')
+                    span.className = item.className
+                    span.innerText = item.result
+                    span.title = item.result
+                    span.id = item.column
+                    td.append(span)
+                    td.addEventListener('click', () => {
+                        document.querySelectorAll('.k-state-selected').forEach(e => e.classList.remove('k-state-selected'))
+                        td.classList.add('k-state-selected')
+                        bkIResult.innerText = item.result
+                        bkIWeight.innerText = item.weight
+                        bkIColumn.innerText = item.column
+                        bkITitle.innerText = item.title
+                    })
+                    break
+            }
+            resolve()
+        })
+    }
 }
 
 // Page 'Cijferoverzicht', statistics
@@ -946,12 +982,10 @@ async function gradeStatistics() {
         scTabLink = document.createElement('a'),
         scContainer = document.createElement('div'),
         scFilterContainer = document.createElement('div'),
-        scRowFilterWrapper = document.createElement('div'),
-        // scRowResetter = document.createElement('button'),
-        // scRowSelector = document.createElement('button'),
         scYearFilterWrapper = document.createElement('div'),
-        // scYearCurrent = document.createElement('button'),
-        // scYearAll = document.createElement('button'),
+        scRowFilterWrapper = document.createElement('div'),
+        scRowFilter = document.createElement('textarea'),
+        scRowFilterToggle = document.createElement('button'),
         scAveragesContainer = document.createElement('div'),
         scAveragesWrapper1 = document.createElement('div'),
         scAveragesWrapper2 = document.createElement('div'),
@@ -965,30 +999,39 @@ async function gradeStatistics() {
         scInsufficient = document.createElement('div'),
         scGradesContainer = document.createElement('div'),
         scInteractionPreventer = document.createElement('div'),
-        grades = new Set(),
-        subjects = [],
-        years = new Set()
+        scBkCommunication = document.createElement('button'),
+        grades = {},
+        years = new Set(),
+        backup = false
 
     tabs.append(scTab)
     scTab.id = 'st-cf-sc-tab'
     scTab.classList.add('asideTrigger')
     scTab.append(scTabLink)
     scTabLink.innerText = "Statistieken"
-    document.body.append(scContainer, scInteractionPreventer)
+    document.body.append(scContainer, scInteractionPreventer, scBkCommunication)
     scContainer.id = 'st-cf-sc'
     scContainer.style.display = 'none'
     scContainer.append(scAveragesContainer, scGradesContainer, scFilterContainer)
     scFilterContainer.id = 'st-cf-sc-filter-container'
-    scFilterContainer.innerText = "Welke cijfers moeten er worden gebruikt?"
-    scFilterContainer.append(scRowFilterWrapper, scYearFilterWrapper)
-    scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
+    scFilterContainer.append(scYearFilterWrapper, scRowFilterWrapper)
     scYearFilterWrapper.id = 'st-cf-sc-year-filter-wrapper'
+    scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
+    scRowFilterWrapper.append(scRowFilter, scRowFilterToggle)
+    setAttributes(scRowFilter, { id: 'st-cf-sc-row-filter', rows: 3, placeholder: "Typ hier vaknamen, gescheiden door komma's.\nALLEEN deze vakken worden gebruikt in de berekening." })
+    scRowFilterToggle.id = 'st-cf-sc-row-filter-toggle'
+    scRowFilterToggle.classList.add('st-button')
+    scRowFilterToggle.dataset.type = 'positive'
+    scRowFilterToggle.innerText = "Modus: insluiten"
+    scRowFilterToggle.title = "INSLUITMODUS: Alleen de opgegeven vakken worden meegerekend.\nKlik om alle vakken mee te laten rekenen, behalve de opgegeven vakken (uitsluitmodus)."
     scAveragesContainer.id = 'st-cf-sc-averages-container'
     scAveragesContainer.append(scAveragesWrapper1, scAveragesWrapper2, scAveragesWrapper3)
     scAveragesWrapper1.append(scMean, scMedian)
     scAveragesWrapper2.append(scNum, scSufficient, scInsufficient)
     scAveragesWrapper3.append(scMin, scMax)
     scGradesContainer.id = 'st-cf-sc-grades-container'
+    scBkCommunication.id = 'st-cf-sc-bk-communication'
+    scBkCommunication.style.display = 'none'
 
     tabs.addEventListener('click', () => {
         if (scTab.classList.contains('active')) {
@@ -1005,6 +1048,36 @@ async function gradeStatistics() {
         scContainer.style.display = 'flex'
     })
 
+    scRowFilter.addEventListener('input', async () => {
+        await displayStatistics(grades)
+    })
+
+    scRowFilterToggle.addEventListener('click', async () => {
+        if (scRowFilterToggle.dataset.type === 'positive') {
+            scRowFilterToggle.dataset.type = 'negative'
+            scRowFilterToggle.innerText = "Modus: uitsluiten"
+            scRowFilterToggle.title = "UITSLUITMODUS: Alle vakken worden meegerekend, behalve de opgegeven vakken.\nKlik om alleen de opgegeven vakken mee te laten rekenen (insluitmodus)."
+            scRowFilter.placeholder = "Typ hier vaknamen, gescheiden door komma's.\nDeze vakken worden NIET gebruikt in de berekening."
+        } else {
+            scRowFilterToggle.dataset.type = 'positive'
+            scRowFilterToggle.innerText = "Modus: insluiten"
+            scRowFilterToggle.title = "INSLUITMODUS: Alleen de opgegeven vakken worden meegerekend.\nKlik om alle vakken mee te laten rekenen, behalve de opgegeven vakken (uitsluitmodus)."
+            scRowFilter.placeholder = "Typ hier vaknamen, gescheiden door komma's.\nALLEEN deze vakken worden gebruikt in de berekening."
+        }
+        await displayStatistics(grades)
+    })
+
+    scBkCommunication.addEventListener('click', async () => {
+        backup = true
+        years = new Set()
+        grades = {}
+        setTimeout(async () => {
+
+            grades = await gatherGradesForYear(grades)
+            await displayStatistics(grades)
+        }, 200);
+    })
+
     document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
     document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
     let yearSelect = await getElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span')
@@ -1019,47 +1092,73 @@ async function gradeStatistics() {
         label.setAttribute('for', `st-cf-sc-year-${index}`)
         label.append(input)
         setAttributes(input, { type: 'checkbox', id: `st-cf-sc-year-${index}` })
+        if (index === 0) input.checked = true
+        input.addEventListener('input', async () => {
+            if (!grades[index]) {
+                label.dataset.loading = true
+                grades = await gatherGradesForYear(grades, index)
+                label.dataset.loading = false
+            }
+            await displayStatistics(grades)
+        })
     })
     yearSelect.click()
 
-    grades = await gatherGrades(grades, years, false)
-    await displayStatistics(grades, subjects, years)
+    grades = await gatherGradesForYear(grades)
+    await displayStatistics(grades)
 
-    async function gatherGrades(grades = new Set(), years = new Set(), collectAllYears) {
+    async function gatherGradesForYear(grades = {}, index = 0) {
         return new Promise(async (resolve, reject) => {
-            let yearsArray = [...years]
-            if (!collectAllYears) yearsArray = [yearsArray[0]]
             scTab.dataset.loading = true
             scInteractionPreventer.id = 'st-prevent-interactions'
-            yearsArray.forEach((year, index) => {
-                setTimeout(() => {
-                    document.querySelector(`#aanmeldingenSelect_listbox>li:nth-child(${index + 1})`).click()
-                    setTimeout(async () => {
-                        document.querySelectorAll('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)').forEach(grade => {
-                            let result = Number(grade.innerText.replace(',', '.').replace('', '')),
-                                subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText,
-                                year = document.querySelector('#aanmeldingenSelect > option[selected]').innerText
-                            if (!isNaN(result) && !grades.has({ result, subject, year })) grades.add({ result, subject, year })
-                        })
-                    }, 700)
-                }, index * 1000)
-            })
+            if (!backup) {
+                let yearSelection = await getElement(`#aanmeldingenSelect_listbox>li:nth-child(${index + 1})`),
+                    tableBody = await getElement("#cijferoverzichtgrid tbody")
+                tableBody.innerText = ''
+                yearSelection.click()
+            }
 
-            setTimeout(() => {
-                scInteractionPreventer.id = ''
+            setTimeout(async () => {
+                let gradeElements = await getElement('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true)
+                gradeElements.forEach(grade => {
+                    let result = Number(grade.innerText.replace(',', '.').replace('', '')),
+                        id = grade.id,
+                        subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText
+                    if (!isNaN(result)) {
+                        if (!grades[index]) grades[index] = {}
+                        if (!grades[index][subject]) grades[index][subject] = {}
+                        grades[index][subject][id] = result
+                    }
+                })
                 resolve(grades)
-            }, yearsArray.length * 1000)
+                scInteractionPreventer.id = ''
+            }, index < 1 ? 0 : 500)
         })
     }
 
-    async function displayStatistics(grades = new Set(), subjects = [], years = []) {
+    async function displayStatistics(grades = new Set()) {
         return new Promise(async (resolve, reject) => {
-            let results = [...grades]
-                // .filter(({ subject, year }) => {
-                //     (subjects.size < 1 || subjects.include(subject)) && (years.size < 1 || years.include(year))
-                // })
-                .map(({ result }) => result),
-                gradeFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
+            let results = [],
+                roundedFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
+
+            Object.keys(grades).forEach(yearIndex => {
+                if (!backup && !document.querySelector(`#st-cf-sc-year-${yearIndex}`).checked) return
+                let yearObject = grades[yearIndex]
+                Object.keys(yearObject).forEach(subjectKey => {
+                    if (document.querySelector("#st-cf-sc-row-filter-toggle").dataset.type === 'positive' && document.querySelector("#st-cf-sc-row-filter").value && !document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
+                    if (document.querySelector("#st-cf-sc-row-filter-toggle").dataset.type === 'negative' && document.querySelector("#st-cf-sc-row-filter").value && document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
+                    let subjectObject = yearObject[subjectKey]
+                    Object.values(subjectObject).forEach(result => {
+                        results.push(result)
+                        roundedFrequencies[Math.round(result)]++
+                    })
+                })
+            })
+
+            if (results.length < 1) {
+                scContainer.classList.add('empty')
+                return
+            } else scContainer.classList.remove('empty')
 
             scNum.dataset.description = "Aantal"
             scNum.innerText = results.length
@@ -1087,19 +1186,21 @@ async function gradeStatistics() {
             scInsufficient.innerText = `${resultsInsufficient.length} (${(resultsInsufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
             if (resultsInsufficient.length < 1) scInsufficient.innerText = 'geen'
 
-            results.forEach(result => {
-                gradeFrequencies[Math.round(result)]++
-            })
-
-            scGradesContainer.innerText = ''
-            Object.keys(gradeFrequencies).forEach(key => {
-                let value = gradeFrequencies[key],
+            Object.keys(roundedFrequencies).forEach(key => {
+                let value = roundedFrequencies[key],
+                    element = document.getElementById(`st-cf-sc-histogram-${key}`),
+                    arr = Object.values(roundedFrequencies),
+                    max = Math.max(...arr)
+                if (!element) {
                     element = document.createElement('div')
-                scGradesContainer.append(element)
-                element.dataset.grade = key
+                    element.id = `st-cf-sc-histogram-${key}`
+                    scGradesContainer.append(element)
+                    element.dataset.grade = key
+                }
                 element.dataset.times = value
-                element.dataset.percentage = (value / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-                element.style.height = `${value * 210 / results.length + 2}px`
+                element.dataset.percentage = (value / results.length * 100).toLocaleString('nl-NL', { maximumFractionDigits: 0 })
+                element.style.maxHeight = `${value / max * 100}%`
+                element.style.minHeight = `${value / max * 100}%`
             })
             scTab.dataset.loading = false
             resolve()
@@ -1158,7 +1259,7 @@ async function init() {
 
 // Run when the URL changes
 async function popstate() {
-    document.querySelectorAll('.st-button, [id^=st-cf]').forEach(e => e.remove())
+    document.querySelectorAll('.st-button, [id^="st-cf"], .k-animation-container').forEach(e => e.remove())
 
     const href = document.location.href.split('?')[0]
 
