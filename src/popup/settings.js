@@ -16,11 +16,11 @@ const settingsBuilder = [
                 type: "select",
                 wizard: "Kies in welk kleurenthema Magister moet worden weergegeven.",
                 require: "magister-css-experimental",
+                default: "auto",
                 options: [
                     {
                         value: "auto",
-                        title: "Aanpassen aan systeemthema",
-                        default: true
+                        title: "Aanpassen aan systeemthema"
                     },
                     {
                         value: "light",
@@ -59,11 +59,11 @@ const settingsBuilder = [
                 id: "magisterLogin-method",
                 title: "Automatisch inloggen",
                 type: "select",
+                default: "microsoft",
                 options: [
                     {
                         value: "microsoft",
-                        title: "Met een Microsoft-account",
-                        default: true
+                        title: "Met een Microsoft-account"
                     },
                     {
                         value: "password",
@@ -143,7 +143,7 @@ const settingsBuilder = [
                 defaultFormatted: "1,0×",
                 suffix: "×",
                 min: 0.5,
-                max: 1.5,
+                max: 2.5,
                 step: 0.1,
                 require: "magister-css-experimental magister-vd-overhaul",
             },
@@ -157,12 +157,12 @@ const settingsBuilder = [
                 id: "magister-vd-grade",
                 title: "Weergave laatste cijfers",
                 type: "select",
+                default: "full",
                 require: "magister-css-experimental magister-vd-overhaul",
                 options: [
                     {
                         value: "full",
-                        title: "Volledig (cijfer weergeven)",
-                        default: true
+                        title: "Volledig (cijfer weergeven)"
                     },
                     {
                         value: "partial",
@@ -186,11 +186,11 @@ const settingsBuilder = [
                 title: "Weergave studiewijzers",
                 type: "select",
                 require: "magister-css-experimental",
+                default: "grid",
                 options: [
                     {
                         value: "grid",
-                        title: "Geordend raster",
-                        default: true
+                        title: "Geordend raster"
                     },
                     {
                         value: "list",
@@ -236,13 +236,19 @@ const settingsBuilder = [
             {
                 id: "magister-cf-calculator",
                 title: "Cijfercalculator",
-                subtitle: "Een zeer krachtige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                subtitle: "Een handige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-statistics",
+                title: "Cijferstatistieken",
+                subtitle: "[Experimenteel] Verscheidene statistieken en grafiekjes bij je cijfers, met handige filters. Te vinden onder het nieuwe tabblad in de zijbalk van het cijferoverzicht.",
                 default: true,
             },
             {
                 id: "magister-cf-backup",
                 title: "Cijferback-up",
-                subtitle: "[Experimenteel] Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren.",
+                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren. Gebruik met de knop rechtsboven in het cijferoverzicht.",
                 default: true,
             },
             {
@@ -269,7 +275,7 @@ const settingsBuilder = [
                 id: "magister-subjects",
                 title: "Aangepaste vaknamen",
                 type: "subjects",
-                default: [{ name: "Aardrijkskunde", aliases: "ak" }, { name: "Bedrijfseconomie", aliases: "beco" }, { name: "Beeldende vorming", aliases: "be, bv, kubv" }, { name: "Biologie", aliases: "bi" }, { name: "Cult. en kunstz. vorming", aliases: "ckv" }, { name: "Drama", aliases: "dr, kudr" }, { name: "Duitse taal", aliases: "du, dutl" }, { name: "Economie", aliases: "ec" }, { name: "Engelse taal", aliases: "en, entl" }, { name: "Franse taal", aliases: "fa, fatl" }, { name: "Geschiedenis", aliases: "gs" }, { name: "Kunst algemeen", aliases: "ku, kua" }, { name: "Levensbeschouwing", aliases: "lv" }, { name: "Lichamelijke opvoeding", aliases: "lo" }, { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" }, { name: "Maatschappijleer", aliases: "ma, malv" }, { name: "Maatschappij&shy;wetenschappen", aliases: "maw" }, { name: "Mentor", aliases: "mentoruur, mentoraat" }, { name: "Muziek", aliases: "mu, kumu" }, { name: "Natuurkunde", aliases: "na" }, { name: "Nederlandse taal", aliases: "ne, netl" }, { name: "Scheikunde", aliases: "sk" }, { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd" }]
+                default: [{ name: "Aardrijkskunde", aliases: "ak" }, { name: "Bedrijfseconomie", aliases: "beco" }, { name: "Beeldende vorming", aliases: "be, bv, kubv" }, { name: "Biologie", aliases: "bi" }, { name: "Cult. en kunstz. vorming", aliases: "ckv" }, { name: "Drama", aliases: "dr, kudr" }, { name: "Duitse taal", aliases: "du, dutl" }, { name: "Economie", aliases: "ec" }, { name: "Engelse taal", aliases: "en, entl" }, { name: "Franse taal", aliases: "fa, fatl" }, { name: "Geschiedenis", aliases: "gs" }, { name: "Kunst algemeen", aliases: "ku, kua" }, { name: "Levensbeschouwing", aliases: "lv" }, { name: "Lichamelijke opvoeding", aliases: "lo" }, { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" }, { name: "Maatschappijleer", aliases: "ma, malv" }, { name: "Maatschappij&shy;wetenschappen", aliases: "maw" }, { name: "Mentor", aliases: "mentoruur, mentoraat" }, { name: "Muziek", aliases: "mu, kumu" }, { name: "Natuurkunde", aliases: "na" }, { name: "Nederlandse taal", aliases: "ne, netl" }, { name: "Scheikunde", aliases: "sk" }, { name: "Spaanse taal", aliases: "sp, sptl" }, { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd" }]
             }
         ]
     },
@@ -282,10 +288,10 @@ const settingsBuilder = [
                 id: "noordhoff-login-enabled",
                 title: "Automatisch doorgaan"
             },
-            {
-                id: "noordhoff-login-entree",
-                title: "Inloggen met Entree"
-            },
+            // {
+            //     id: "noordhoff-login-entree",
+            //     title: "Inloggen met Entree"
+            // },
         ]
     },
     {

@@ -1,4 +1,8 @@
+let settings = {}
+
 window.addEventListener('DOMContentLoaded', async () => {
+    if (chrome?.storage) settings = await getSettings(null, null, true)
+
     const snackbarWrapper = document.createElement('div')
     snackbarWrapper.id = 'st-snackbars'
     document.body.append(snackbarWrapper)
@@ -32,16 +36,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 }
     `, 'st-snackbar')
 
-    if (!await getSetting('openedPopup'))
-        showSnackbar("Study Tools zal momenteel niet correct werken. Schakel eerst de gewenste opties in bij 'Study Tools' in het menu Extensies.")
-
     checkUpdates()
+    checkDefaults()
+
+    setTimeout(() => {
+        setSetting('usedExtension', chrome.runtime.getManifest().version, 'local')
+    }, 500)
 })
 
 async function checkUpdates(override) {
-    let beta = await getSetting('beta')
+    let beta = settings['beta']
     if (override) beta = false
-    if (!await getSetting('updates')) return
+    if (!settings['updates']) return
     fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/manifest.json`)
         .then(async response => {
             if (response.ok) {
@@ -55,7 +61,7 @@ async function checkUpdates(override) {
             if (!override) checkUpdates(true)
         })
 
-    if (await getSetting("update-notes")) {
+    if (settings['update-notes']) {
         fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
             .then(async response => {
                 if (response.ok) {
@@ -68,16 +74,29 @@ async function checkUpdates(override) {
                 } else console.warn("Error requesting Study Tools updates", response)
             })
     }
+}
 
-    setTimeout(() =>
-        setSetting('usedExtension', chrome.runtime.getManifest().version, 'local'), 4000)
+async function checkDefaults() {
+    settingsBuilder.forEach(section => {
+        section.settings.forEach(setting => {
+            if (typeof settings[setting.id] === 'undefined' && setting.default) { setSetting(setting.id, setting.default) }
+        })
+    })
+    let colorSettings = ['magister-css-hue', 'magister-css-saturation', 'magister-css-luminance'], colorDefaults = [207, 95, 55]
+    colorSettings.forEach((setting, index) => {
+        if (typeof settings[setting] === 'undefined') {
+            setSetting(setting, colorDefaults[index])
+        }
+    })
+
+    if (!await getSetting('usedExtension', 'local'))
+        showSnackbar("Vernieuw de pagina zodat Study Tools in werking kan treden.", 121000, [{ innerText: "vernieuwen", onclick: 'window.location.reload()' }])
 }
 
 function setIntervalImmediately(func, interval) {
     func()
     return setInterval(func, interval)
 }
-
 
 function getElement(querySelector, all, duration) {
     return new Promise((resolve, reject) => {
