@@ -62,6 +62,7 @@ async function applyStyles() {
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
+    --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-hover-brightness: .8;
 }`,
         darkThemeCss = `:root {
@@ -89,6 +90,7 @@ async function applyStyles() {
     --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
+    --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-hover-brightness: 1.4;
     color-scheme: dark;
 }`,
@@ -139,10 +141,16 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     border: none;
     outline: none;
     border-radius: var(--st-widget-border-radius);
-    color: #fff;
+    color: var(--st-contrast-accent);
     cursor: pointer;
     user-select: none;
     transition: filter 200ms, transform 200ms, border 200ms;
+}
+
+.st-button.small {
+    padding: 2px 10px;
+    font-size: 12px;
+    height: 24px;
 }
 
 .st-button.secondary {
@@ -205,7 +213,7 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 }
 
 #st-appbar-week {
-    color: #fff;
+    color: var(--st-contrast-accent);
     font-family: arboria, sans-serif;
     font-size: 16px;
     text-align: center;
@@ -622,7 +630,7 @@ div.faux.popup-menu>ul>li.submenu>a {
 
 .menu a,
 .menu a span {
-    color: #fff !important
+    color: var(--st-contrast-accent) !important
 }
 
 .k-scheduler .afspraak .afspraak-info>.title .schoolHour,
@@ -779,7 +787,7 @@ aside .tabs:not(.st-cf-sc-override) li.active:after, #st-cf-sc-tab.active:after 
 }
 
 dna-button[variant=primary] {
-    --color: #fff;
+    --color: var(--st-contrast-accent);
     --background: var(--st-accent-primary);
 }
 
@@ -1031,7 +1039,7 @@ dna-button:hover {
 
 #st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(3) {
     background: var(--st-accent-secondary);
-    color: #fff;
+    color: var(--st-contrast-accent);
 }
 
 #st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4) {
@@ -1041,7 +1049,7 @@ dna-button:hover {
     border-radius: 6px;
     padding: 6px 10px;
     background: var(--st-accent-primary);
-    color: #fff;
+    color: var(--st-contrast-accent);
 }
 
 #st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4).incomplete {
@@ -1113,14 +1121,14 @@ dna-button:hover {
 }
 
 #st-vd-notifications > #st-vd-grade-notification {
-    color: #fff !important;
+    color: var(--st-contrast-accent) !important;
     background: linear-gradient(45deg,var(--st-accent-primary),var(--st-accent-secondary));
 }
 
 #st-vd-grade-notification-span {
     display: inline-block;
     translate: 3px;
-    color: #fff !important;
+    color: var(--st-contrast-accent) !important;
     font: var(--st-widget-heading-font);
     font-size: 24px;
     line-height: 0px;
@@ -1325,7 +1333,6 @@ dna-button:hover {
 .st-cf-cl-canvas-hl {
     position: absolute;
     width: 2px;
-    translate: -3px;
     height: 250px;
     bottom: 25px;
     opacity: 0;
@@ -1639,7 +1646,7 @@ aside.st-appear-top {
 #st-cf-sc-grades-container > div:before {
     white-space: pre-wrap;
     content: attr(data-times) '×';
-    max-width: 25px;
+    max-width: 23.6px;
     translate: 0 -18px;
 }
 
@@ -1651,7 +1658,7 @@ aside.st-appear-top {
     content: attr(data-grade);
     position: absolute;
     bottom: -19px;
-    width: 25px;
+    width: 23.6px;
     color: var(--st-insignificant-color);
 }
 
@@ -1714,13 +1721,16 @@ aside.st-appear-top {
     text-wrap: unrestricted;
 }
 
-#st-cf-sc-row-filter-toggle {
+#st-cf-sc-row-filter-include {
+    position: absolute;
+    top: 10px;
+    right: 44px;
+}
+
+#st-cf-sc-row-filter-exclude {
     position: absolute;
     top: 10px;
     right: 0;
-    padding: 2px 14px;
-    font-size: 12px;
-    height: 24px;
 }
 `, 'study-tools-cf')
     }

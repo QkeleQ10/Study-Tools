@@ -501,6 +501,7 @@ async function gradeCalculator() {
                 column = item.dataset.column
                 title = item.dataset.title
             } else if (event.target.id === 'st-cf-cl-add-table') {
+                // TODO: Get rid of this annoying timeout
                 setTimeout(() => {
                     gradeDetails.childNodes.forEach(element => {
                         if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
@@ -668,7 +669,7 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     clCanvas.addEventListener('mousemove', event => {
         let rect = event.target.getBoundingClientRect(),
             x = event.clientX - rect.left
-        index = Math.round(x / widthCoefficient) - 1
+        index = Math.round(x / widthCoefficient) 
         if (index < 0) index = 0
         else if (index > 90) index = 90
 
@@ -985,7 +986,8 @@ async function gradeStatistics() {
         scYearFilterWrapper = document.createElement('div'),
         scRowFilterWrapper = document.createElement('div'),
         scRowFilter = document.createElement('textarea'),
-        scRowFilterToggle = document.createElement('button'),
+        scRowFilterInclude = document.createElement('button'),
+        scRowFilterExclude = document.createElement('button'),
         scAveragesContainer = document.createElement('div'),
         scAveragesWrapper1 = document.createElement('div'),
         scAveragesWrapper2 = document.createElement('div'),
@@ -1017,13 +1019,16 @@ async function gradeStatistics() {
     scFilterContainer.append(scYearFilterWrapper, scRowFilterWrapper)
     scYearFilterWrapper.id = 'st-cf-sc-year-filter-wrapper'
     scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
-    scRowFilterWrapper.append(scRowFilter, scRowFilterToggle)
-    setAttributes(scRowFilter, { id: 'st-cf-sc-row-filter', rows: 3, placeholder: "Typ hier vaknamen, gescheiden door komma's.\nALLEEN deze vakken worden gebruikt in de berekening." })
-    scRowFilterToggle.id = 'st-cf-sc-row-filter-toggle'
-    scRowFilterToggle.classList.add('st-button')
-    scRowFilterToggle.dataset.type = 'positive'
-    scRowFilterToggle.innerText = "Modus: insluiten"
-    scRowFilterToggle.title = "INSLUITMODUS: Alleen de opgegeven vakken worden meegerekend.\nKlik om alle vakken mee te laten rekenen, behalve de opgegeven vakken (uitsluitmodus)."
+    scRowFilterWrapper.append(scRowFilter, scRowFilterInclude, scRowFilterExclude)
+    setAttributes(scRowFilter, { id: 'st-cf-sc-row-filter', rows: 3, placeholder: "Typ hier vaknamen, gescheiden door komma's.\nWijzig de modus (insluiten of uitsluiten) met de knop hierboven." })
+    scRowFilterInclude.id = 'st-cf-sc-row-filter-include'
+    scRowFilterInclude.classList.add('st-button', 'small', 'switch-left')
+    scRowFilterInclude.innerText = "Wel"
+    scRowFilterInclude.title = "Alleen de opgegeven vakken worden meegerekend."
+    scRowFilterExclude.id = 'st-cf-sc-row-filter-exclude'
+    scRowFilterExclude.classList.add('st-button', 'small', 'secondary', 'switch-right')
+    scRowFilterExclude.innerText = "Niet"
+    scRowFilterExclude.title = "Alle vakken worden meegerekend, behalve de opgegeven vakken."
     scAveragesContainer.id = 'st-cf-sc-averages-container'
     scAveragesContainer.append(scAveragesWrapper1, scAveragesWrapper2, scAveragesWrapper3)
     scAveragesWrapper1.append(scMean, scMedian)
@@ -1052,18 +1057,15 @@ async function gradeStatistics() {
         await displayStatistics(grades)
     })
 
-    scRowFilterToggle.addEventListener('click', async () => {
-        if (scRowFilterToggle.dataset.type === 'positive') {
-            scRowFilterToggle.dataset.type = 'negative'
-            scRowFilterToggle.innerText = "Modus: uitsluiten"
-            scRowFilterToggle.title = "UITSLUITMODUS: Alle vakken worden meegerekend, behalve de opgegeven vakken.\nKlik om alleen de opgegeven vakken mee te laten rekenen (insluitmodus)."
-            scRowFilter.placeholder = "Typ hier vaknamen, gescheiden door komma's.\nDeze vakken worden NIET gebruikt in de berekening."
-        } else {
-            scRowFilterToggle.dataset.type = 'positive'
-            scRowFilterToggle.innerText = "Modus: insluiten"
-            scRowFilterToggle.title = "INSLUITMODUS: Alleen de opgegeven vakken worden meegerekend.\nKlik om alle vakken mee te laten rekenen, behalve de opgegeven vakken (uitsluitmodus)."
-            scRowFilter.placeholder = "Typ hier vaknamen, gescheiden door komma's.\nALLEEN deze vakken worden gebruikt in de berekening."
-        }
+    scRowFilterInclude.addEventListener('click', async () => {
+        scRowFilterInclude.classList.remove('secondary')
+        scRowFilterExclude.classList.add('secondary')
+        await displayStatistics(grades)
+    })
+
+    scRowFilterExclude.addEventListener('click', async () => {
+        scRowFilterExclude.classList.remove('secondary')
+        scRowFilterInclude.classList.add('secondary')
         await displayStatistics(grades)
     })
 
@@ -1145,8 +1147,8 @@ async function gradeStatistics() {
                 if (!backup && !document.querySelector(`#st-cf-sc-year-${yearIndex}`).checked) return
                 let yearObject = grades[yearIndex]
                 Object.keys(yearObject).forEach(subjectKey => {
-                    if (document.querySelector("#st-cf-sc-row-filter-toggle").dataset.type === 'positive' && document.querySelector("#st-cf-sc-row-filter").value && !document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
-                    if (document.querySelector("#st-cf-sc-row-filter-toggle").dataset.type === 'negative' && document.querySelector("#st-cf-sc-row-filter").value && document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
+                    if (document.querySelector("#st-cf-sc-row-filter-exclude").classList.contains('secondary') && document.querySelector("#st-cf-sc-row-filter").value && !document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
+                    if (document.querySelector("#st-cf-sc-row-filter-include").classList.contains('secondary') && document.querySelector("#st-cf-sc-row-filter").value && document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
                     let subjectObject = yearObject[subjectKey]
                     Object.values(subjectObject).forEach(result => {
                         results.push(result)

@@ -143,7 +143,7 @@ const settingsBuilder = [
                 defaultFormatted: "1,0×",
                 suffix: "×",
                 min: 0.5,
-                max: 1.5,
+                max: 2.5,
                 step: 0.1,
                 require: "magister-css-experimental magister-vd-overhaul",
             },
