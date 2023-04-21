@@ -1053,7 +1053,10 @@ dna-button:hover {
 }
 
 #st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4).incomplete {
-    background: var(--st-accent-warn);
+    outline: 2px solid var(--st-accent-primary);
+    outline-offset: -2px;
+    color: var(--st-accent-primary);
+    background: transparent;
 }
 
 #st-vd-schedule>ul>li:not([data-filler]):has(span:nth-child(4)) {
