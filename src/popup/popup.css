@@ -63,8 +63,8 @@
 
 body {
     display: grid;
-    min-width: 500px;
-    min-height: 600px;
+    width: 500px;
+    height: 600px;
     grid-template:
         'header header' 90px
         'aside main' 1fr

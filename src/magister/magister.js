@@ -22,18 +22,25 @@ async function today() {
     todayNotifications(notifcationsWrapper)
     todaySchedule(scheduleWrapper)
 
-    const greetings = [
-        [22, 'Goedenavond', 'Hallo', 'Goedenavond, nachtuil'],
-        [18, 'Goedenavond', 'Hallo'],
-        [12, 'Goedemiddag', 'Hallo'],
-        [5, 'Goedemorgen', 'Hallo', 'Goeiemorgen'],
-        [0, 'Goedenacht', 'Hallo', 'Goedemorgen, vroege vogel']
-    ],
-        hour = new Date().getHours()
+    const date = new Date(),
+        weekday = date.toLocaleString('nl-NL', { weekday: 'long' }),
+        greetings = [
+            [22, 'Goedenavond.', 'Goedenavond!', 'Goedenavond, nachtuil.', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
+            [18, 'Goedenavond.', 'Goedenavond!', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
+            [12, 'Goedemiddag.', 'Goedemiddag!', `Fijne ${weekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
+            [6, 'Goedemorgen.', 'Goedemorgen!', 'Goeiemorgen.', 'Goeiemorgen!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
+            [0, 'Goedemorgen.', 'Goedemorgen!', 'Goeiemorgen.', 'Goeiemorgen!', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
+        ],
+        hour = date.getHours()
     greetings.forEach(e => {
         if (hour >= e[0]) {
             e.shift()
-            if (!headerText.innerText) headerText.innerText = e[Math.floor(Math.random() * e.length)]
+            e.push('Hallo.', 'Hallo!')
+            if (!headerText.innerText) {
+                let greeting = e[Math.floor(Math.random() * e.length)]
+                headerText.innerText = greeting.slice(0, -1)
+                headerText.dataset.lastLetter = greeting.slice(-1)
+            }
         }
     })
     if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van StudyTools!")
@@ -43,7 +50,8 @@ async function today() {
     setTimeout(() => {
         todayNotifications(notifcationsWrapper)
 
-        headerText.innerText = new Date().toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        headerText.innerText = date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        headerText.dataset.lastLetter = '.'
         header.removeAttribute('data-transition')
     }, 2500)
 }
@@ -436,8 +444,10 @@ async function gradeCalculator() {
     clAveragesWrapper.append(clMean, clMedian)
     clAveragesWrapper.id = 'st-cf-cl-averages'
     clMean.dataset.description = "Gemiddelde"
+    clMean.classList.add('st-metric')
     clMean.id = 'st-cf-cl-mean'
     clMedian.dataset.description = "Mediaan"
+    clMedian.classList.add('st-metric')
     clCloser.classList.add('st-button')
     clCloser.id = 'st-cf-cl-closer'
     clCloser.innerText = "Wissen en sluiten"
@@ -669,7 +679,7 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     clCanvas.addEventListener('mousemove', event => {
         let rect = event.target.getBoundingClientRect(),
             x = event.clientX - rect.left
-        index = Math.round(x / widthCoefficient) 
+        index = Math.round(x / widthCoefficient)
         if (index < 0) index = 0
         else if (index > 90) index = 90
 
@@ -840,13 +850,17 @@ async function gradeBackup() {
             bkIWrapper.id = 'st-cf-bk-i-wrapper'
             bkIWrapper.append(bkIResult, bkIWeight, bkIColumn, bkITitle)
             bkIResult.dataset.description = "Resultaat"
+            bkIResult.classList.add('st-metric')
             bkIResult.innerText = "?"
             bkIResult.style.color = 'var(--st-primary-color)'
             bkIWeight.dataset.description = "Weegfactor"
+            bkIWeight.classList.add('st-metric')
             bkIWeight.innerText = "?"
             bkIColumn.dataset.description = "Kolomnaam"
+            bkIColumn.classList.add('st-metric')
             bkIColumn.innerText = "?"
             bkITitle.dataset.description = "Kolomkop"
+            bkITitle.classList.add('st-metric')
             bkITitle.innerText = "Klik op een cijfer"
 
             for (let i = 0; i < list.length; i++) {
@@ -1089,10 +1103,9 @@ async function gradeStatistics() {
         years.add(year.innerText)
         let label = document.createElement('label'),
             input = document.createElement('input')
-        scYearFilterWrapper.append(label)
+        scYearFilterWrapper.append(input, label)
         label.innerText = year.innerText
         label.setAttribute('for', `st-cf-sc-year-${index}`)
-        label.append(input)
         setAttributes(input, { type: 'checkbox', id: `st-cf-sc-year-${index}` })
         if (index === 0) input.checked = true
         input.addEventListener('input', async () => {
@@ -1163,30 +1176,47 @@ async function gradeStatistics() {
             } else scContainer.classList.remove('empty')
 
             scNum.dataset.description = "Aantal"
+            scNum.classList.add('st-metric')
             scNum.innerText = results.length
 
             scMean.dataset.description = "Gemiddelde (excl. weging)"
+            scMean.classList.add('st-metric')
             scMean.innerText = weightedMean(results).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
             scMean.style.color = 'var(--st-primary-color)'
 
             scMedian.dataset.description = "Mediaan"
+            scMedian.classList.add('st-metric')
             scMedian.innerText = median(results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scMin.dataset.description = "Laagste cijfer"
+            scMin.classList.add('st-metric')
             scMin.innerText = Math.min(...results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scMax.dataset.description = "Hoogste cijfer"
+            scMax.classList.add('st-metric')
             scMax.innerText = Math.max(...results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             scSufficient.dataset.description = "Voldoendes"
+            scSufficient.classList.add('st-metric')
             let resultsSufficient = results.filter((e) => { return e >= 5.5 })
-            scSufficient.innerText = `${resultsSufficient.length} (${(resultsSufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
-            if (resultsSufficient.length < 1) scSufficient.innerText = 'geen'
+            if (resultsSufficient.length > 0) {
+                scSufficient.innerText = resultsSufficient.length
+                scSufficient.dataset.extra = `${(resultsSufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+            } else {
+                scSufficient.innerText = 'geen'
+                scSufficient.removeAttribute('data-extra')
+            }
 
             scInsufficient.dataset.description = "Onvoldoendes"
+            scInsufficient.classList.add('st-metric')
             let resultsInsufficient = results.filter((e) => { return e < 5.5 })
-            scInsufficient.innerText = `${resultsInsufficient.length} (${(resultsInsufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%)`
-            if (resultsInsufficient.length < 1) scInsufficient.innerText = 'geen'
+            if (resultsInsufficient.length > 0) {
+                scInsufficient.innerText = resultsInsufficient.length
+                scInsufficient.dataset.extra = `${(resultsInsufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+            } else {
+                scInsufficient.innerText = 'geen'
+                scInsufficient.removeAttribute('data-extra')
+            }
 
             Object.keys(roundedFrequencies).forEach(key => {
                 let value = roundedFrequencies[key],
@@ -1223,12 +1253,14 @@ async function init() {
     subjects = await getSetting('magister-subjects')
 
     if (await getSetting('magister-appbar-zermelo')) {
-        const appbarZermelo = document.createElement('div'),
+        const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
             zermeloA = document.createElement('a'),
             zermeloImg = document.createElement('img'),
             zermeloSpan = document.createElement('span')
+        appbarZermelo.innerText = ''
         appbar.firstElementChild.after(appbarZermelo)
         appbarZermelo.classList.add('menu-button')
+        appbarZermelo.id = 'st-appbar-zermelo'
         appbarZermelo.append(zermeloA)
         zermeloA.classList.add('zermelo-menu')
         zermeloA.setAttribute('href', `https://${await getSetting('magister-appbar-zermelo-url') || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
@@ -1242,10 +1274,12 @@ async function init() {
     }
 
     if (await getSetting('magister-appbar-week')) {
-        let appbarWeek = document.createElement("h1")
-        appbarWeek.innerText = `week\r\n${await getWeekNumber()}`
-        appbarWeek.id = 'st-appbar-week'
+        let appbarWeek = document.getElementById('st-appbar-week') || document.createElement("h1")
         appbar.prepend(appbarWeek)
+        appbarWeek.id = 'st-appbar-week'
+        appbarWeek.classList.add('st-metric')
+        appbarWeek.dataset.description = 'Week'
+        appbarWeek.innerText = getWeekNumber()
     }
 
     let userMenuLink = await getElement('#user-menu')

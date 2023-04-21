@@ -196,12 +196,30 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     opacity: .5;
 }
 
+.st-metric {
+    font: var(--st-widget-heading-font);
+    line-height: normal;
+    font-size: 20px;
+    flex-grow: 2;
+}
+
+.st-metric[data-extra]:after {
+    content: ' (' attr(data-extra) ')';
+    white-space: pre-wrap;
+    font: 12px var(--st-secondary-font-family);
+}
+
+.st-metric:before {
+    content: attr(data-description) '\\A';
+    white-space: pre-wrap;
+    font: 12px var(--st-secondary-font-family);
+}
+
 .st-sw-subject,
 .st-sw-subject>button {
     background-color: var(--st-primary-background)
 }
 
-#st-appbar-week,
 .st-current,
 .st-sw-2 {
     font-weight: 700
@@ -214,10 +232,8 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 
 #st-appbar-week {
     color: var(--st-contrast-accent);
-    font-family: arboria, sans-serif;
-    font-size: 16px;
-    text-align: center;
-    opacity: .5
+    opacity: .5;
+    translate: 0 -8px;
 }
 
 #st-sw-container {
@@ -849,7 +865,7 @@ dna-button:hover {
 }
 
 #st-vd-header>span:after {
-    content: ".";
+    content: attr(data-last-letter);
     display: inline-block;
     width: 3px;
     color: #ff8205;
@@ -867,8 +883,7 @@ dna-button:hover {
     gap: 25px;
     position: relative;
     height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 #st-vd *[onclick] {
@@ -891,6 +906,8 @@ dna-button:hover {
 
 #st-vd>* {
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #st-vd>*:not([data-ready]):after {
@@ -1148,6 +1165,18 @@ dna-button:hover {
     #st-vd-notifications {
         height: max-content;
         overflow: hidden;
+    }
+
+    #st-vd-notifications > li {
+        padding: 12px 60px 12px 15px;
+    }
+
+    #st-vd-notifications:before {
+        padding: 10px 15px;
+    }
+
+    #st-vd-notifications > li:before {
+        top: 10px;
     }
 
     #st-vd-notifications > li[data-insignificant=true], #st-vd-notifications > #st-vd-grade-notification[data-insignificant=true] {
@@ -1607,12 +1636,6 @@ aside.st-appear-top {
     color: var(--st-insignificant-color);
 }
 
-#st-cf-sc-averages-container>div>div:before, #st-cf-cl-averages>div:before, #st-cf-bk-i-wrapper>div:before {
-    content: attr(data-description) '\\A';
-    white-space: pre-wrap;
-    font: 12px var(--st-secondary-font-family);
-}
-
 #st-cf-sc>#st-cf-sc-grades-container {
     position: relative;
     flex-direction: row;
@@ -1674,12 +1697,13 @@ aside.st-appear-top {
 
 #st-cf-sc-year-filter-wrapper>label {
     position: relative;
+    height: 25px;
     padding: 4px 10px 4px 30px;
     border-radius: var(--st-widget-border-radius);
     cursor: pointer;
 }
 
-#st-cf-sc-year-filter-wrapper>label:has(input:checked) {
+#st-cf-sc-year-filter-wrapper>input:checked + label {
     background-color: var(--st-highlight-background);
 }
 
@@ -1700,7 +1724,7 @@ aside.st-appear-top {
     padding-top: 3px;
 }
 
-#st-cf-sc-year-filter-wrapper>label:has(input:checked):before {
+#st-cf-sc-year-filter-wrapper>input:checked + label:before {
     content: '';
 }
 
