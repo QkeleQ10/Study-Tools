@@ -41,6 +41,18 @@ const settingsBuilder = [
                 require: "magister-css-experimental",
             },
             {
+                id: "magister-css-border-radius",
+                title: "Afgeronde hoeken",
+                type: "slider",
+                default: 8,
+                defaultFormatted: "8px",
+                suffix: "px",
+                min: 0,
+                max: 20,
+                step: 1,
+                require: "magister-css-experimental",
+            },
+            {
                 id: "magister-css-dark-invert",
                 title: "Inhoud donker maken",
                 subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",

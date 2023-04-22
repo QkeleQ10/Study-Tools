@@ -538,33 +538,34 @@ async function gradeCalculator() {
                 setAttributes(addedElement, { class: 'st-cf-cl-added-element', 'data-grade-index': resultsList.length })
                 addedElement.scrollIntoView({ behavior: 'smooth' })
 
-                if (event.target.id === 'st-cf-cl-add-table') {
-                    let pos = document.querySelector('.k-state-selected .grade')?.getBoundingClientRect()
-                    console.log(document.querySelector('.k-state-selected .grade'), pos)
-                    let ghostElement = document.createElement('span')
-                    setAttributes(ghostElement, { class: 'st-cf-cl-added-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
-                    ghostElement.innerText = result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                    document.body.append(ghostElement)
-                    setTimeout(() => {
-                        let pos = addedElement.getBoundingClientRect()
-                        ghostElement.setAttribute('style', `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;`)
-                    }, 50)
-                    setTimeout(() => {
-                        ghostElement.remove()
-                    }, 400)
-                }
+                let pos = event.target.id === 'st-cf-cl-add-table' ? document.querySelector('.k-state-selected .grade')?.getBoundingClientRect() : clAddCustomResult.getBoundingClientRect()
+                console.log(document.querySelector('.k-state-selected .grade'), pos)
+                let ghostElement = document.createElement('span')
+                setAttributes(ghostElement, { class: 'st-cf-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
+                ghostElement.innerText = result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })
+                document.body.append(ghostElement)
+                setTimeout(() => {
+                    pos = addedElement.getBoundingClientRect()
+                    ghostElement.setAttribute('style', `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;`)
+                }, 100)
+                setTimeout(() => {
+                    ghostElement.remove()
+                }, 450)
 
                 if (column && title)
                     addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
                 else
                     addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — handmatig ingevoerd\n`
+
                 addedElement.addEventListener('click', event => {
                     resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
                     weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
-                    event.target.remove()
+                    event.target.classList.add('remove')
+                    setTimeout(() => {
+                        event.target.remove()
+                    }, 200)
                     calcMean = weightedMean(resultsList, weightsList)
                     calcMedian = median(resultsList)
-                    showSnackbar('Cijfer verwijderd uit de berekening.')
                     clMean.innerText = isNaN(calcMean) ? '?' : calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     clMedian.innerText = isNaN(calcMedian) ? '?' : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     if (calcMean < 5.5) clMean.classList.add('insufficient')
@@ -578,7 +579,6 @@ async function gradeCalculator() {
                 weightsList.push(weight)
                 calcMean = weightedMean(resultsList, weightsList)
                 calcMedian = median(resultsList)
-                showSnackbar('Cijfer toegevoegd aan de berekening.')
 
                 clMean.innerText = calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 clMedian.innerText = calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -627,7 +627,7 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
     ctx.clearRect(0, 0, clCanvas.width, clCanvas.height)
     landmarks.forEach(num => {
         ctx.globalAlpha = 0.5
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-border-color')
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-border-color')
         ctx.beginPath()
         ctx.moveTo(0, (num * 10 - 9) * heightCoefficient - 1)
         ctx.lineTo(clCanvas.width, (num * 10 - 9) * heightCoefficient - 1)
@@ -638,28 +638,28 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
         ctx.stroke()
     })
 
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-a-color')
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-foreground-accent')
     ctx.beginPath()
     ctx.moveTo(0, (mean * 10 - 9) * heightCoefficient - 1)
     ctx.lineTo(clCanvas.width, (mean * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
 
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-ok')
-    ctx.globalAlpha = .075
+    ctx.globalAlpha = .05
     ctx.fillRect(0, 125, 212, 125)
-    ctx.globalAlpha = .175
+    ctx.globalAlpha = .15
     ctx.fillRect(212, 125, 212, 125)
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-accent-warn')
-    ctx.globalAlpha = .175
+    ctx.globalAlpha = .15
     ctx.fillRect(0, 0, 212, 125)
-    ctx.globalAlpha = .075
+    ctx.globalAlpha = .05
     ctx.fillRect(212, 0, 212, 125)
 
     ctx.save()
     ctx.transform(1, 0, 0, -1, 0, clCanvas.height)
     ctx.globalAlpha = .75
 
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-foreground-primary')
     ctx.fillText("Cijfer ➔", 370, 240)
     ctx.translate(clCanvas.width / 2, clCanvas.height / 2)
     ctx.rotate(-Math.PI / 2)
@@ -674,12 +674,12 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
         mean10 = means[0][90]
     ctx.globalAlpha = 1
     ctx.lineWidth = 2
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-foreground-primary')
     ctx.beginPath()
     ctx.moveTo((grade1 * 10 - 9) * widthCoefficient - 3, (mean1 * 10 - 9) * heightCoefficient - 1)
     ctx.lineTo((grade55 * 10 - 9) * widthCoefficient - 3, (mean55 * 10 - 9) * heightCoefficient - 1)
     ctx.stroke()
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-primary-color')
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--st-foreground-primary')
     ctx.beginPath()
     ctx.moveTo((grade55 * 10 - 9) * widthCoefficient - 3, (mean55 * 10 - 9) * heightCoefficient - 1)
     ctx.lineTo((grade10 * 10 - 9) * widthCoefficient - 3, (mean10 * 10 - 9) * heightCoefficient - 1)
@@ -708,7 +708,7 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
         clCanvasHlHorizontal.dataset.average = means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         clCanvasHlHorizontal.dataset.veryHigh = (means[0][index] > 9.2)
 
-        if (means[0][index] > 5.49) clFutureDesc.style.color = 'var(--st-primary-color)'
+        if (means[0][index] > 5.49) clFutureDesc.style.color = 'var(--st-foreground-primary)'
         else clFutureDesc.style.color = 'var(--st-accent-warn)'
 
         if (means[0][index].toFixed(2) > mean.toFixed(2))
@@ -736,7 +736,7 @@ async function formulateGradeAdvice(means, weight, mean) {
             let meanH = means[0][i],
                 gradeH = means[1][i] || 1.0
             if (meanH > 5.49) {
-                color = 'var(--st-primary-color)'
+                color = 'var(--st-foreground-primary)'
                 text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
                 if (gradeH <= 1.0) {
                     text = `Met een cijfer dat ${weight}x meetelt blijf je in elk geval een voldoende staan.`
@@ -751,7 +751,7 @@ async function formulateGradeAdvice(means, weight, mean) {
         }
         resolve({
             text: text || '',
-            color: color || 'var(--st-primary-color)'
+            color: color || 'var(--st-foreground-primary)'
         })
     })
 }
@@ -870,7 +870,7 @@ async function gradeBackup() {
             bkIResult.dataset.description = "Resultaat"
             bkIResult.classList.add('st-metric')
             bkIResult.innerText = "?"
-            bkIResult.style.color = 'var(--st-primary-color)'
+            bkIResult.style.color = 'var(--st-foreground-primary)'
             bkIWeight.dataset.description = "Weegfactor"
             bkIWeight.classList.add('st-metric')
             bkIWeight.innerText = "?"
@@ -1200,7 +1200,7 @@ async function gradeStatistics() {
             scMean.dataset.description = "Gemiddelde (excl. weging)"
             scMean.classList.add('st-metric')
             scMean.innerText = weightedMean(results).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-            scMean.style.color = 'var(--st-primary-color)'
+            scMean.style.color = 'var(--st-foreground-primary)'
 
             scMedian.dataset.description = "Mediaan"
             scMedian.classList.add('st-metric')
