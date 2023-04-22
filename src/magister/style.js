@@ -715,6 +715,10 @@ a.appbar-button,
     border-color: var(--st-accent-warn);
 }
 
+.cijfers-k-grid.k-grid .grade {
+    user-select: none;
+}
+
 .cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht {
     background-color: var(--st-primary-background) !important;
 }
@@ -1239,14 +1243,17 @@ dna-button:hover {
     width: 425px;
     bottom: 24px;
     padding: 0 16px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: visible;
     font-size: 14px;
     border-radius: var(--st-widget-border-radius);
     border: var(--st-widget-border)
 }
 
 #st-cf-cl-added {
-    overflow: auto;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: visible;
     font-size: 14px;
 }
 
@@ -1260,6 +1267,7 @@ dna-button:hover {
     text-overflow: ellipsis;
     cursor: pointer;
     transition: color 200ms, padding 200ms;
+    animation: gradeAdd 500ms ease-out;
 }
 
 .st-cf-cl-added-element:hover {
@@ -1288,6 +1296,20 @@ dna-button:hover {
 
 .st-cf-cl-added-element:hover:before, .st-cf-cl-added-element:hover:after {
     translate: 0 -50%;
+}
+
+.st-cf-cl-added-ghost {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: var(--st-primary-background);
+    border: var(--st-widget-border);
+    border-radius: var(--st-widget-border-radius);
+    text-align: center;
+    font: 11px/40px open-sans, sans-serif;
+    z-index: 10000000;
+    transition: top 400ms ease-in, right 400ms ease-in;
+    animation: gradeAddGhost 400ms;
 }
 
 #st-cf-cl-added:before {
@@ -1758,6 +1780,28 @@ aside.st-appear-top {
     position: absolute;
     top: 10px;
     right: 0;
+}
+
+@keyframes gradeAdd {
+	0%, 70% {
+		opacity: 0;
+		translate: -250px;
+	}
+
+	100% {
+		opacity: 1;
+		translate: 0;
+	}
+}
+
+@keyframes gradeAddGhost {
+	50% {
+		scale: 1.5;
+	}
+
+	100% {
+		rotate: 359deg;
+	}
 }
 `, 'study-tools-cf')
     }

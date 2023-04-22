@@ -536,6 +536,24 @@ async function gradeCalculator() {
                 let addedElement = document.createElement('span')
                 clAdded.append(addedElement)
                 setAttributes(addedElement, { class: 'st-cf-cl-added-element', 'data-grade-index': resultsList.length })
+                addedElement.scrollIntoView({ behavior: 'smooth' })
+
+                if (event.target.id === 'st-cf-cl-add-table') {
+                    let pos = document.querySelector('.k-state-selected .grade')?.getBoundingClientRect()
+                    console.log(document.querySelector('.k-state-selected .grade'), pos)
+                    let ghostElement = document.createElement('span')
+                    setAttributes(ghostElement, { class: 'st-cf-cl-added-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
+                    ghostElement.innerText = result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                    document.body.append(ghostElement)
+                    setTimeout(() => {
+                        let pos = addedElement.getBoundingClientRect()
+                        ghostElement.setAttribute('style', `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;`)
+                    }, 50)
+                    setTimeout(() => {
+                        ghostElement.remove()
+                    }, 400)
+                }
+
                 if (column && title)
                     addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
                 else
