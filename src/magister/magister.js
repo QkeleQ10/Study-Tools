@@ -273,8 +273,8 @@ async function renderStudyguideList(gridContainer, compact) {
         settingSubjects = await getSetting('magister-subjects'),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-        originalList = await getElement('.studiewijzer-list>ul, .content.projects>ul'),
-        originalItems = await getElement('li[data-ng-repeat^="studiewijzer in items"]', true),
+        originalList = await getElement('.studiewijzer-list > ul, .content.projects > ul'),
+        originalItems = await getElement('.studiewijzer-list > ul > li', true),
         originalItemsArray = [...originalItems],
         gridWrapper = document.createElement('div'),
         grid = document.createElement('div')
@@ -443,7 +443,7 @@ async function gradeCalculator() {
     clAdded.id = 'st-cf-cl-added'
     clAveragesWrapper.append(clMean, clMedian)
     clAveragesWrapper.id = 'st-cf-cl-averages'
-    clMean.dataset.description = "Gemiddelde"
+    clMean.dataset.description = "Gemiddelde (incl. weging)"
     clMean.classList.add('st-metric')
     clMean.id = 'st-cf-cl-mean'
     clMedian.dataset.description = "Mediaan"
@@ -493,18 +493,20 @@ async function gradeCalculator() {
     gradesContainer.addEventListener('dblclick', () => {
         if (clContainer.dataset.step == 0) return
         clAddTable.click()
-        clAddTable.setAttribute('disabled', true)
-        setTimeout(() => {
-            clAddTable.removeAttribute('disabled')
-        }, 200)
     })
 
     document.querySelectorAll('#st-cf-cl-add-table, #st-cf-cl-add-custom').forEach(e => {
         e.addEventListener('click', async event => {
+
             let item = document.querySelector('.k-state-selected'),
                 result, weight, column, title
 
             if (clAddTable.disabled) return
+            clAddTable.setAttribute('disabled', true)
+            setTimeout(() => {
+                clAddTable.removeAttribute('disabled')
+            }, 300)
+
             if (item.dataset.title) {
                 result = Number(item.dataset.result.replace(',', '.'))
                 weight = Number(item.dataset.weight.replace('x', '').replace(',', '.'))
@@ -524,33 +526,41 @@ async function gradeCalculator() {
                             title = element.nextElementSibling.innerText
                         }
                     })
-                }, 200)
+                }, 300)
             } else if (event.target.id === 'st-cf-cl-add-custom') {
                 result = Number(clAddCustomResult.value), weight = Number(clAddCustomWeight.value)
             }
 
+            let pos = event.target.id === 'st-cf-cl-add-table' ? document.querySelector('.k-state-selected .grade')?.getBoundingClientRect() : clAddCustomResult.getBoundingClientRect(),
+                ghostElement = document.createElement('span')
+            setAttributes(ghostElement, { class: 'st-cf-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
+            ghostElement.innerText = document.querySelector('.k-state-selected .grade').lastChild.wholeText
+            document.body.append(ghostElement)
+
             setTimeout(() => {
-                if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) return showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
-                if (weight <= 0) return showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+                if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
+                    ghostElement.remove()
+                    showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
+                    return
+                }
+                if (weight <= 0) {
+                    ghostElement.remove()
+                    showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+                    return
+                }
 
                 let addedElement = document.createElement('span')
                 clAdded.append(addedElement)
                 setAttributes(addedElement, { class: 'st-cf-cl-added-element', 'data-grade-index': resultsList.length })
                 addedElement.scrollIntoView({ behavior: 'smooth' })
 
-                let pos = event.target.id === 'st-cf-cl-add-table' ? document.querySelector('.k-state-selected .grade')?.getBoundingClientRect() : clAddCustomResult.getBoundingClientRect()
-                console.log(document.querySelector('.k-state-selected .grade'), pos)
-                let ghostElement = document.createElement('span')
-                setAttributes(ghostElement, { class: 'st-cf-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
-                ghostElement.innerText = result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })
-                document.body.append(ghostElement)
-                setTimeout(() => {
-                    pos = addedElement.getBoundingClientRect()
-                    ghostElement.setAttribute('style', `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;`)
-                }, 100)
+                pos = addedElement.getBoundingClientRect()
+                ghostElement.setAttribute('style', `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;`)
+                ghostElement.classList.add('st-cf-ghost-moving')
+
                 setTimeout(() => {
                     ghostElement.remove()
-                }, 450)
+                }, 400)
 
                 if (column && title)
                     addedElement.innerText = `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ${column}, ${title}\n`
@@ -587,7 +597,7 @@ async function gradeCalculator() {
 
                 clContainer.dataset.step = 2
                 renderGradeChart(resultsList, weightsList, hypotheticalWeight, calcMean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
-            }, event.target.id === 'st-cf-cl-add-table' ? 200 : 0)
+            }, event.target.id === 'st-cf-cl-add-table' ? 300 : 0)
         })
     })
 
@@ -1389,10 +1399,10 @@ function weightedMean(valueArray = [], weightArray = []) {
 }
 
 function median(valueArray = []) {
-    valueArray.sort()
-    var half = Math.floor(valueArray.length / 2)
-    if (valueArray.length % 2) return valueArray[half]
-    return (valueArray[half - 1] + valueArray[half]) / 2.0
+    let values = [...valueArray].sort()
+    var half = Math.floor(values.length / 2)
+    if (values.length % 2) return values[half]
+    return (values[half - 1] + values[half]) / 2.0
 }
 
 function weightedPossibleMeans(valueArray, weightArray, newWeight) {

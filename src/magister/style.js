@@ -274,12 +274,12 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     border-bottom: var(--st-border);
 }
 
-.st-sw-subject>button:not(:first-child) {
+.st-sw-subject>button:nth-child(n + 2) {
     min-height: 28px;
     font: 11px var(--st-font-family-secondary);
 }
 
-.st-sw-subject>button:not(:first-child)[data-title]:hover:after {
+.st-sw-subject>button:nth-child(n + 2)[data-title]:after {
     position: absolute;
     max-height: 100%;
     width: 100%;
@@ -289,7 +289,13 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
     background-color: var(--st-background-secondary);
     font-size: 10px;
     content: attr(data-title);
-    padding: 3px
+    padding: 3px;
+    opacity: 0;
+    transition: opacity 200ms;
+}
+
+.st-sw-subject>button:nth-child(n + 2)[data-title]:hover:after {
+    opacity: 1;
 }
 
 .st-obsolete,
@@ -1280,7 +1286,7 @@ dna-button:hover {
     text-overflow: ellipsis;
     cursor: pointer;
     transition: color 200ms, padding 200ms;
-    animation: gradeAdd 500ms ease-out;
+    animation: gradeAdd 400ms ease-out;
 }
 
 .st-cf-cl-added-element.remove {
@@ -1325,11 +1331,16 @@ dna-button:hover {
     border-radius: var(--st-border-radius);
     text-align: center;
     font: 11px/40px var(--st-font-family-secondary);
+    overflow: hidden;
+    pointer-events: none;
     z-index: 10000000;
     transition: top 300ms ease-in, right 300ms ease-in;
+    animation: fadeIn 200ms;
+}
+
+.st-cf-ghost-moving {
     animation: gradeGhost 400ms;
     animation-fill-mode: forwards;
-    pointer-events: none;
 }
 
 #st-cf-cl-added:before {
@@ -1796,10 +1807,21 @@ aside.st-appear-top {
     right: 0;
 }
 
-@keyframes gradeAdd {
-	0%, 70% {
+@keyframes fadeIn {
+	0% {
 		opacity: 0;
-		translate: -250px;
+        border-radius: 0;
+	}
+
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes gradeAdd {
+	0%, 50% {
+		opacity: 0;
+		translate: -370px;
 	}
 
 	100% {
@@ -1824,7 +1846,7 @@ aside.st-appear-top {
 }
 
 @keyframes gradeGhost {
-    85% {
+    30% {
         opacity: 1;
     }
 
