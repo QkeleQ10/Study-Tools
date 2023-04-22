@@ -1347,10 +1347,6 @@ dna-button:hover {
 }
 
 #st-cf-cl-averages>div {
-    font: var(--st-font-primary);
-    line-height: normal;
-    font-size: 20px;
-    flex-grow: 2;
     color: var(--st-foreground-insignificant);
 }
 
@@ -1672,10 +1668,6 @@ aside.st-appear-top {
 }
 
 #st-cf-sc-averages-container>div>div, #st-cf-bk-i-wrapper>div {
-    font: var(--st-font-primary);
-    line-height: normal;
-    font-size: 20px;
-    flex-grow: 2;
     color: var(--st-foreground-insignificant);
 }
 
