@@ -1,0 +1,626 @@
+#st-cf-cl {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--st-background-overlay);
+    color: var(--st-foreground-primary);
+    z-index: 999998;
+    transition: translate 300ms, opacity 200ms;
+}
+
+#st-cf-cl[data-step="0"] {
+    opacity: 0;
+    translate: 200px;
+    pointer-events: none !important;
+    user-select: none !important;
+}
+
+#st-cf-cl-title {
+    position: absolute;
+    top: 40px;
+    left: 23px;
+    font: 700 28px / 2rem arboria, sans-serif;
+    color: var(--st-foreground-accent);
+}
+
+#st-cf-cl-title:after {
+    content: ".";
+    display: inline-block;
+    width: 3px;
+    color: #ff8205;
+}
+
+#st-cf-cl-subtitle {
+    position: absolute;
+    top: 80px;
+    left: 23px;
+    font: 14px var(--st-font-family-secondary);
+}
+
+#st-cf-cl-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: absolute;
+    top: 154px;
+    right: 16px;
+    width: 425px;
+    bottom: 24px;
+    padding: 0 16px;
+    overflow-y: auto;
+    overflow-x: visible;
+    font-size: 14px;
+    border-radius: var(--st-border-radius);
+    border: var(--st-border)
+}
+
+#st-cf-cl-added {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: visible;
+    font-size: 14px;
+}
+
+.st-cf-cl-added-element {
+    position: relative;
+    display: block;
+    height: 27px;
+    padding: 4px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: color 200ms, padding 200ms;
+    animation: gradeAdd 400ms ease-out;
+}
+
+.st-cf-cl-added-element.remove {
+    animation: gradeRemove 200ms ease-in;
+    animation-fill-mode: forwards;
+}
+
+.st-cf-cl-added-element:hover {
+    color: var(--st-accent-warn);
+    padding-right: 110px;
+}
+
+.st-cf-cl-added-element:before,
+.st-cf-cl-added-element:after {
+    position: absolute;
+    top: 50%;
+    translate: 100px -50%;
+    color: var(--st-accent-warn);
+    transition: translate 200ms;
+}
+
+.st-cf-cl-added-element:before {
+    right: 20px;
+    content: 'Wissen';
+}
+
+.st-cf-cl-added-element:after {
+    right: 0;
+    content: '';
+    font-family: 'Font Awesome 5 Pro';
+}
+
+.st-cf-cl-added-element:hover:before,
+.st-cf-cl-added-element:hover:after {
+    translate: 0 -50%;
+}
+
+#st-cf-cl-added:before {
+    content: 'Toegevoegde cijfers\A';
+    white-space: pre-wrap;
+    font: var(--st-font-primary);
+}
+
+#st-cf-cl-averages {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding: 5px 0 2px;
+    border-top: var(--st-border);
+}
+
+#st-cf-cl-averages>div {
+    color: var(--st-foreground-insignificant);
+}
+
+#st-cf-cl-averages>#st-cf-cl-mean {
+    color: var(--st-foreground-primary);
+}
+
+#st-cf-cl-future-desc {
+    padding-top: 40px;
+    margin-right: -16px;
+    font-size: 12px;
+    font-weight: normal;
+    border-top: var(--st-border);
+    transition: color 150ms;
+}
+
+#st-cf-cl-future-desc:before {
+    position: absolute;
+    bottom: 275px;
+    content: 'Toekomstig cijfer';
+    font: var(--st-font-primary);
+    color: var(--st-foreground-primary);
+}
+
+#st-cf-cl-future-desc:after {
+    position: absolute;
+    bottom: 287px;
+    right: 80px;
+    content: 'Weging';
+    font-family: var(--st-secondary-font);
+    font-size: 14px;
+    color: var(--st-foreground-primary);
+}
+
+#st-cf-cl #st-cf-cl-future-weight {
+    bottom: 306px;
+    right: 32px;
+    top: auto;
+}
+
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-future-weight,
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-future-desc:after {
+    display: none;
+}
+
+#st-cf-cl-canvas {
+    margin: 0 -16px;
+    border-top: var(--st-border);
+}
+
+#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas,
+#st-cf-cl:not([data-step="2"]) .st-cf-cl-canvas-hl {
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.st-cf-cl-canvas-hl {
+    position: absolute;
+    width: 2px;
+    height: 250px;
+    bottom: 25px;
+    opacity: 0;
+    background: var(--st-accent-primary);
+    pointer-events: none;
+    transition: opacity 200ms;
+}
+
+#st-cf-cl-canvas-hl-vertical.show {
+    opacity: .75;
+}
+
+#st-cf-cl-canvas-hl-horizontal {
+    height: 2px;
+    width: 424px;
+    right: 16px;
+    translate: 0 2px;
+    opacity: .75;
+}
+
+#st-cf-cl-canvas-hl-horizontal:before {
+    position: absolute;
+    left: 30px;
+    bottom: 5px;
+    content: 'nu ' attr(data-average-now);
+    font: 12px var(--st-font-family-secondary);
+    color: var(--st-foreground-accent);
+}
+
+#st-cf-cl-canvas-hl-horizontal.show:before {
+    content: attr(data-average);
+}
+
+#st-cf-cl-canvas-hl-horizontal.show[data-very-high=true]:before {
+    bottom: unset;
+    top: 5px;
+}
+
+#st-cf-cl-canvas-hl-horizontal:not(.show)[data-very-high-now=true]:not(.show):before {
+    bottom: unset;
+    top: 5px;
+}
+
+#st-cf-cl-averages>div.insufficient {
+    color: var(--st-accent-warn) !important;
+}
+
+#st-cf-cl-open,
+#st-cf-cl-closer {
+    position: absolute;
+    top: 35px;
+    right: 28px;
+    z-index: 99999;
+}
+
+#st-cf-cl-add-table {
+    position: absolute;
+    top: 35px;
+    right: 215px;
+}
+
+#st-cf-cl-add-custom {
+    position: absolute;
+    top: 75px;
+    right: 28px;
+}
+
+#st-cf-cl input[type=number] {
+    position: absolute;
+    top: 75px;
+    right: 318px;
+    width: 60px;
+    height: 32px;
+    font-family: var(--st-font-family-secondary);
+    font-size: 14px;
+    padding: 6px;
+    background: var(--st-background-secondary);
+    border: 2px solid var(--st-accent-primary);
+    border-radius: var(--st-border-radius);
+}
+
+#st-cf-cl #st-cf-cl-add-custom-weight {
+    right: 253px;
+}
+
+#st-cf-bk-export,
+#st-cf-bk-import {
+    position: absolute;
+    top: 35px;
+    right: 200px;
+    background-image: linear-gradient(to right, var(--st-accent-primary) 50%, var(--st-accent-secondary) 50%);
+    background-size: 200% 100%;
+    background-position: 0 0;
+    transition: background-position 200ms linear, transform 200ms, filter 200ms, translate 200ms;
+}
+
+#st-cf-bk-export {
+    right: 347px;
+}
+
+#st-cf-bk-export[data-busy],
+#st-cf-bk-import[data-busy] {
+    opacity: 1;
+    pointer-events: none;
+}
+
+#st-cf-bk-export[data-busy]:before,
+#st-cf-bk-import[data-busy]:before {
+    content: '';
+    animation: rotation 1s infinite linear;
+}
+
+#st-cf-bk-export[data-done]:before,
+#st-cf-bk-import[data-done]:before {
+    content: '';
+    animation: none;
+}
+
+#st-cf-bk-busy-ad {
+    position: absolute;
+    width: 294px;
+    bottom: 24px;
+    top: 154px;
+    right: 16px;
+    padding: 12px;
+    place-content: center;
+    background: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
+    border-radius: var(--st-border-radius);
+    z-index: 999;
+}
+
+#st-cf-bk-busy-ad>* {
+    font: 16px var(--st-font-family-secondary);
+    color: #fff;
+}
+
+#st-cf-bk-busy-ad>a {
+    text-decoration: underline;
+    transition: filter 200ms;
+}
+
+#st-cf-bk-busy-ad>a:hover {
+    filter: brightness(var(--st-hover-brightness));
+}
+
+#st-cf-bk-aside {
+    background-color: var(--st-background-secondary);
+    padding: 0 12px;
+    font: 12px var(--st-font-family-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+}
+
+#st-cf-bk-aside:before {
+    content: 'Details\A';
+    white-space: pre-wrap;
+    font: var(--st-font-primary);
+    margin-bottom: -24px;
+}
+
+#st-cf-sc {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: absolute;
+    width: 294px;
+    bottom: 24px;
+    top: 195px;
+    right: 16px;
+    padding: 0 12px;
+    background: var(--st-background-secondary);
+    border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
+    border: var(--st-border);
+    border-top: none;
+    font: 12px var(--st-font-family-secondary);
+    overflow-y: auto;
+    z-index: 999;
+}
+
+#st-cf-sc.small {
+    top: 425px;
+    border-top: var(--st-border);
+}
+
+#st-cf-sc.empty>#st-cf-sc-averages-container,
+#st-cf-sc.empty>#st-cf-sc-grades-container {
+    visibility: hidden;
+}
+
+#st-cf-sc.empty:after {
+    content: 'Er zijn geen cijfers die voldoen aan de criteria.';
+    position: absolute;
+    top: 40px;
+}
+
+#st-cf-sc:before {
+    content: 'Statistieken\A';
+    white-space: pre-wrap;
+    font: var(--st-font-primary);
+    margin-bottom: -24px;
+}
+
+#st-cf-sc>div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#st-cf-sc-tab>a {
+    transition: opacity 200ms;
+}
+
+#st-cf-sc-tab:before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    translate: 28px;
+    overflow: visible;
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--st-foreground-accent);
+    text-shadow: none;
+}
+
+#st-cf-sc-tab[data-loading=true]>a {
+    opacity: .2;
+}
+
+#st-cf-sc-tab[data-loading=true]:before {
+    top: 50%;
+    translate: -50% -50%;
+    content: '';
+    font-size: 20px;
+    animation: rotation 1s infinite linear;
+}
+
+#st-cf-sc>#st-cf-sc-filter-container {
+    margin-top: auto;
+    margin-bottom: 12px;
+    border-top: var(--st-border);
+}
+
+#st-cf-sc-year-filter-wrapper:before {
+    content: 'Filteren op leerjaar\A';
+    white-space: pre-wrap;
+    font: var(--st-font-primary);
+    margin-bottom: -10px;
+}
+
+#st-cf-sc-row-filter-wrapper:before {
+    content: 'Filteren op vak\A';
+    white-space: pre-wrap;
+    font: var(--st-font-primary);
+    margin-bottom: -10px;
+}
+
+#st-cf-sc-averages-container>div,
+#st-cf-bk-i-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#st-cf-sc-averages-container>div>div,
+#st-cf-bk-i-wrapper>div {
+    color: var(--st-foreground-insignificant);
+}
+
+#st-cf-sc>#st-cf-sc-grades-container {
+    position: relative;
+    flex-direction: row;
+    align-items: end;
+    gap: 2px;
+    padding-top: 34px;
+    margin-bottom: 16px;
+    min-height: 150px;
+}
+
+#st-cf-sc-grades-container:before {
+    position: absolute;
+    top: 0;
+    content: 'Histogram (afgerond op helen)\A';
+    white-space: pre-wrap;
+    font: 12px var(--st-font-family-secondary);
+}
+
+#st-cf-sc-grades-container>div {
+    background: var(--st-accent-ok);
+    height: 100px;
+    width: 100%;
+    border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    transition: max-height 200ms, min-height 200ms;
+}
+
+#st-cf-sc-grades-container>div:nth-child(-n+5) {
+    background: var(--st-accent-warn);
+}
+
+#st-cf-sc-grades-container>div:before {
+    white-space: pre-wrap;
+    content: attr(data-times) '×';
+    max-width: 23.6px;
+    translate: 0 -18px;
+}
+
+#st-cf-sc-grades-container>div:hover:before {
+    content: attr(data-percentage) '%';
+}
+
+#st-cf-sc-grades-container>div:after {
+    content: attr(data-grade);
+    position: absolute;
+    bottom: -19px;
+    width: 23.6px;
+    color: var(--st-foreground-insignificant);
+}
+
+#st-cf-sc-year-filter-wrapper,
+#st-cf-sc-row-filter-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#st-cf-sc-year-filter-wrapper>label {
+    position: relative;
+    height: 25px;
+    padding: 4px 10px 4px 30px;
+    border-radius: var(--st-border-radius);
+    cursor: pointer;
+}
+
+#st-cf-sc-year-filter-wrapper>input:checked+label {
+    background-color: var(--st-highlight-primary);
+}
+
+#st-cf-sc-year-filter-wrapper>label:before {
+    content: '';
+    position: absolute;
+    display: block;
+    height: 25px;
+    width: 25px;
+    left: 0;
+    top: 0;
+    color: var(--st-foreground-primary);
+    background: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    font: 16px 'Font Awesome 5 Pro';
+    text-align: center;
+    padding-top: 3px;
+}
+
+#st-cf-sc-year-filter-wrapper>input:checked+label:before {
+    content: '';
+}
+
+#st-cf-sc-year-filter-wrapper>label[data-loading=true]:before {
+    content: '' !important;
+    border: none;
+    background: none;
+    padding: 4px 2px 2px 2px;
+    translate: 1px;
+    animation: rotation 1s infinite linear;
+}
+
+#st-cf-sc-row-filter {
+    background: var(--st-highlight-primary);
+    border: none;
+    position: relative;
+    padding: 4px 10px 4px 10px;
+    border-radius: var(--st-border-radius);
+    font: 11px var(--st-font-family-secondary);
+    word-wrap: break-word;
+}
+
+#st-cf-sc-row-filter-include {
+    position: absolute;
+    top: 10px;
+    right: 44px;
+}
+
+#st-cf-sc-row-filter-exclude {
+    position: absolute;
+    top: 10px;
+    right: 0;
+}
+
+aside.st-appear-top {
+    z-index: 999999;
+    background: var(--st-background-secondary);
+}
+
+@keyframes gradeAdd {
+
+    0%,
+    50% {
+        opacity: 0;
+        translate: -370px;
+    }
+
+    100% {
+        opacity: 1;
+        translate: 0;
+    }
+}
+
+@keyframes gradeRemove {
+    0% {
+        opacity: 1;
+        translate: 0;
+        max-height: 27px;
+    }
+
+    100% {
+        opacity: 0;
+        translate: -250px;
+        max-height: 0;
+        padding: 0;
+    }
+}
+
+@keyframes gradeGhost {
+    30% {
+        opacity: 1;
+    }
+
+    100% {
+        scale: 2;
+        opacity: 0;
+    }
+}

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Study Tools configureren</title>
-    <script src="index.js" defer></script>
+    <script src="popup.js" defer></script>
     <script src="settings.js"></script>
     <link rel="stylesheet" href="popup.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,18 +47,24 @@
                 <br>
                 <i>Bedankt voor het gebruiken van Study Tools. Je feedback wordt gewaardeerd.</i>
             </a>
-            <div>
+            <div id="about-privacy">
                 Privacystatement
                 <br>
-                <i>Deze extensie slaat gegevens over je identiteit, je accounts en je instellingen alleen op in de
+                <i>
+                    Deze extensie slaat gegevens over je identiteit, je accounts en je
+                    instellingen op in de
                     browser. Afhankelijk van je browserinstellingen worden ze al dan niet opgeslagen in de cloud.
                     <br><br>
-                    De ontwikkelaar heeft geen inzage in deze gegevens en de extensie verzendt geen gegevens naar
-                    derden.
+                    Om je ervaring te verbeteren, worden er slechts een aantal gegevens verzonden naar de ontwikkelaar.
+                    Er wordt geen gevoelige informatie meegezonden en de gebruiker is niet identificeerbaar. De door
+                    Magister verstrekte gebruikers-ID wordt meegezonden, maar deze is niet identiek aan het
+                    leerlingnummer en niet herleidbaar tot de gebruiker. Inspecteer de service worker om te zien wat er
+                    daadwerkelijk wordt verzonden.
                     <br><br>
                     De ontwikkelaar erkent geen aansprakelijkheid voor schade (zoals gelekte wachtwoorden) door
                     beveiligingsgebreken aan de kant van
-                    de gebruiker of de browser (zoals het niet gebruiken van een apparaatwachtwoord).</i>
+                    de gebruiker of de browser (zoals het niet gebruiken van een apparaatwachtwoord).
+                </i>
             </div>
         </section>
     </main>

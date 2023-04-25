@@ -1,6 +1,7 @@
 let settings = {},
     diff = {},
     diffTimestamp = 0,
+    mainElement = document.getElementById('main'),
     settingsWrapper = document.getElementById('settings-wrapper'),
     aside = document.getElementById('aside'),
     header = document.getElementById('header')
@@ -378,8 +379,8 @@ function updateConditionals() {
             }
         })
 
-        if (matched === requirements.length) element.dataset.appear = true
-        else element.dataset.appear = false
+        if (matched === requirements.length) element.classList.remove('collapse')
+        else element.classList.add('collapse')
     })
 }
 

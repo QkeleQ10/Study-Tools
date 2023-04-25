@@ -1,0 +1,348 @@
+#st-vd-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 85px;
+    width: 100%;
+    display: flex;
+    padding: 2rem 1.5rem 1rem;
+    background: var(--st-background-primary);
+    z-index: 1000;
+    transition: opacity
+}
+
+#st-vd-header>span {
+    font: 700 28px / 2rem arboria, sans-serif;
+    color: var(--st-foreground-accent);
+    transition: opacity 500ms;
+}
+
+#st-vd-header[data-transition]>span {
+    opacity: 0
+}
+
+#st-vd-header>span:after {
+    content: attr(data-last-letter);
+    display: inline-block;
+    width: 3px;
+    color: #ff8205;
+}
+
+#st-vd-header>span:first-letter {
+    text-transform: capitalize;
+}
+
+#st-vd {
+    display: grid;
+    grid-template:
+        'schedule notifications' 1fr
+        / calc(65% - 25px) 35%;
+    gap: 25px;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+}
+
+#st-vd *[onclick] {
+    cursor: pointer;
+    transition: color 200ms, filter 200ms, transform 200ms;
+}
+
+#st-vd *[onclick]:hover,
+#st-vd *[href]:hover,
+#st-vd-notifications>#st-vd-grade-notification[onclick]:hover {
+    color: var(--st-foreground-accent);
+    filter: brightness(var(--st-hover-brightness));
+}
+
+#st-vd a:hover,
+#st-vd-notifications>li:hover:before {
+    transform: scale(1.3);
+}
+
+#st-vd a:active,
+#st-vd-notifications>li:active:before {
+    transform: scale(.8);
+}
+
+#st-vd>* {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#st-vd>*:not([data-ready]):after {
+    content: 'Wachten op items...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    font: var(--st-font-primary);
+    line-height: normal;
+    opacity: .6;
+}
+
+#st-vd-schedule {
+    grid-area: schedule;
+}
+
+#st-vd-schedule>div {
+    display: flex;
+    gap: 20px;
+    position: absolute;
+    top: 10px;
+    right: 0;
+}
+
+#st-vd-schedule>div>a {
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 500;
+    font-size: 20px;
+    user-select: none;
+    padding: 10px;
+    margin: -10px;
+    transition: filter 200ms, transform 200ms;
+}
+
+#st-vd-schedule>ul[data-tomorrow]:not(:has(li:not([data-filler]))) {
+    display: none;
+}
+
+#st-vd-schedule>ul {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: scale 200ms;
+}
+
+#st-vd-schedule[data-ready]>ul:not(:has(li:not([data-filler]))):after {
+    content: 'Geen items';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    font: var(--st-font-primary);
+    opacity: .6;
+}
+
+#st-vd-schedule>ul[data-hidden] {
+    scale: 1 0;
+}
+
+#st-vd-schedule>ul:before {
+    content: 'Rooster van vandaag';
+    font: var(--st-font-primary);
+}
+
+#st-vd-schedule>ul[data-tomorrow]:before {
+    content: attr(data-tomorrow);
+    font: var(--st-font-primary);
+}
+
+#st-vd-schedule>ul>li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 45px;
+    padding: 6px 10px 6px 40px;
+    overflow: hidden;
+    background: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    font-family: var(--st-font-family-secondary);
+}
+
+#st-vd-schedule>ul>li[data-filler] {
+    background: none;
+    border: none;
+    margin: -7px 0;
+    max-height: 120px;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+#st-vd-schedule>ul>li[data-filler][data-current] {
+    opacity: 1;
+}
+
+#st-vd-schedule>ul>li[data-filler]:last-child {
+    display: none;
+}
+
+#st-vd-schedule>ul>li[data-filler]:before {
+    content: '';
+    height: 100%;
+    border-left: 2px dashed #ccc;
+    margin: 30px 0 10px;
+}
+
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-current]:not([data-filler]) {
+    background: var(--st-highlight-primary) !important;
+}
+
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-past]>span:nth-child(3) {
+    opacity: 0.5;
+}
+
+#st-vd-schedule>ul>li[data-filler]>span:nth-child(1) {
+    position: absolute;
+    top: 14px;
+    font-weight: 600;
+}
+
+#st-vd-schedule>ul>li[data-filler]>span:nth-child(1):after {
+    content: ' ' attr(data-filler)
+}
+
+#st-vd-schedule>ul:not([data-tomorrow])>li[data-current]:not([data-filler])>span:nth-child(1):after {
+    content: ' (nu)'
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(2) {
+    font-size: 14px;
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(3) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 100%;
+    text-align: center;
+    background: var(--st-highlight-primary);
+    font: var(--st-font-primary);
+    line-height: 40px;
+}
+
+#st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(3) {
+    background: var(--st-accent-secondary);
+    color: var(--st-contrast-accent);
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4) {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+}
+
+#st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4).incomplete {
+    outline: 2px solid var(--st-accent-primary);
+    outline-offset: -2px;
+    color: var(--st-accent-primary);
+    background: transparent;
+}
+
+#st-vd-schedule>ul>li:not([data-filler]):has(span:nth-child(4)) {
+    background: linear-gradient(45deg, var(--st-background-secondary), var(--st-highlight-primary));
+}
+
+#st-vd-notifications {
+    color: var(--st-foreground-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    font: var(--st-font-primary);
+    grid-area: notifications;
+}
+
+#st-vd-notifications:before {
+    content: 'Meldingen';
+    display: block;
+    padding: 15px 25px;
+    width: 100%;
+    font: var(--st-font-primary);
+    line-height: normal;
+    border-bottom: var(--st-border);
+}
+
+#st-vd-notifications:empty {
+    display: none;
+}
+
+#st-vd-notifications>li {
+    position: relative;
+    padding: 20px 60px 20px 25px;
+    line-height: normal;
+    color: var(--st-foreground-primary);
+    background: linear-gradient(45deg, var(--st-highlight-primary), var(--st-background-secondary));
+    border-bottom: var(--st-border);
+}
+
+#st-vd-notifications>li:first-letter {
+    text-transform: capitalize;
+}
+
+#st-vd-notifications>li[data-insignificant=true],
+#st-vd-notifications>#st-vd-grade-notification[data-insignificant=true] {
+    color: var(--st-foreground-insignificant) !important;
+    background: var(--st-background-primary);
+}
+
+#st-vd-notifications>li[data-additional-info]:after {
+    content: '\A' attr(data-additional-info);
+    opacity: 0.8;
+    font-weight: 400;
+    white-space: pre;
+}
+
+#st-vd-notifications>li:before {
+    content: attr(data-icon);
+    position: absolute;
+    right: 25px;
+    top: 17px;
+    width: 22px;
+    text-align: center;
+    font-family: 'Font Awesome 5 Pro';
+    font-weight: 500;
+    font-size: 20px;
+    transition: transform 200ms;
+}
+
+#st-vd-notifications>#st-vd-grade-notification {
+    color: var(--st-contrast-accent) !important;
+    background: linear-gradient(45deg, var(--st-accent-primary), var(--st-accent-secondary));
+}
+
+#st-vd-grade-notification-span {
+    display: inline-block;
+    translate: 3px;
+    color: var(--st-contrast-accent) !important;
+    font: var(--st-font-primary);
+    font-size: 24px;
+    line-height: 0px;
+}
+
+@media (max-width:1100px) {
+    #st-vd {
+        grid-template:
+            'schedule' 1fr
+            'notifications' auto
+            / 1fr;
+    }
+
+    #st-vd-notifications {
+        height: max-content;
+        overflow: hidden;
+    }
+
+    #st-vd-notifications>li {
+        padding: 12px 60px 12px 15px;
+    }
+
+    #st-vd-notifications:before {
+        padding: 10px 15px;
+    }
+
+    #st-vd-notifications>li:before {
+        top: 10px;
+    }
+
+    #st-vd-notifications>li[data-insignificant=true],
+    #st-vd-notifications>#st-vd-grade-notification[data-insignificant=true] {
+        display: none;
+    }
+}
