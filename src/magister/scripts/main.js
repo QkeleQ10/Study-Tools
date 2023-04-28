@@ -47,12 +47,75 @@ async function main() {
     })
 
     if (Math.random() < 0.003) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
+
+    if (await getSetting('magister-shortcut-keys')) {
+        let shortcutsWrapper = document.createElement('div'),
+            todayElem = document.createElement('a'),
+            agendaElem = document.createElement('a'),
+            gradesElem = document.createElement('a'),
+            studyguideElem = document.createElement('a'),
+            booksElem = document.createElement('a')
+
+        document.body.append(shortcutsWrapper)
+        shortcutsWrapper.id = 'st-shortcuts'
+        shortcutsWrapper.append(todayElem, agendaElem, gradesElem, studyguideElem, booksElem)
+
+        setAttributes(todayElem, { class: 'st-keyboard-hint', 'data-hint-primary': '1', 'data-hint-secondary': '!', href: '#/vandaag' })
+        todayElem.innerText = "Vandaag"
+
+        setAttributes(agendaElem, { class: 'st-keyboard-hint', 'data-hint-primary': '2', 'data-hint-secondary': '@', href: '#/agenda' })
+        agendaElem.innerText = "Agenda"
+
+        setAttributes(gradesElem, { class: 'st-keyboard-hint', 'data-hint-primary': '3', 'data-hint-secondary': '#', href: '#/cijfers' })
+        gradesElem.innerText = "Cijfers"
+
+        setAttributes(studyguideElem, { class: 'st-keyboard-hint', 'data-hint-primary': '4', 'data-hint-secondary': '$', href: '#/elo/studiewijzer' })
+        studyguideElem.innerText = "Studiewijzers"
+
+        setAttributes(booksElem, { class: 'st-keyboard-hint', 'data-hint-primary': '5', 'data-hint-secondary': '%', href: '#/leermiddelen' })
+        booksElem.innerText = "Leermiddelen"
+
+        addEventListener('keydown', e => {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
+            if (shortcutsWrapper.dataset.open === 'false' && (e.key === 's' || e.key === 'S')) {
+                shortcutsWrapper.dataset.open = true
+            }
+            shortcutsWrapper.querySelectorAll('a').forEach(shortcut => {
+                let primary = shortcut.dataset.hintPrimary,
+                    secondary = shortcut.dataset.hintSecondary
+                if ((e.key === primary || e.key === secondary) && shortcutsWrapper.dataset.open !== 'false') {
+                    shortcut.click()
+                }
+            })
+        })
+
+        addEventListener('keyup', e => {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
+            if (shortcutsWrapper.dataset.open === 'true' && (e.key === 's' || e.key === 'S')) {
+                setTimeout(() => {
+                    if (shortcutsWrapper.dataset.open === 'true') {
+                        shortcutsWrapper.dataset.open = false
+                    }
+                }, 1000)
+            }
+        })
+
+        window.addEventListener('popstate', async () => {
+            if (await getSetting('magister-shortcut-keys-today')) {
+                if (shortcutsWrapper?.dataset.open === 'force') shortcutsWrapper.dataset.open = false
+                if (document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
+            }
+        })
+
+        if (await getSetting('magister-shortcut-keys-today') && document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
+        else shortcutsWrapper.dataset.open = false
+    }
 }
 
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
-async function popstate() {
+function popstate() {
     document.querySelectorAll('.st-button, [id^="st-cf"], .k-animation-container').forEach(e => e.remove())
 }
 

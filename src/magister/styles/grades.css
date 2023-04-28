@@ -39,6 +39,13 @@
     font: 14px var(--st-font-family-secondary);
 }
 
+#st-cf-cl-keyboard-hint {
+    position: absolute;
+    top: 105px;
+    left: 23px;
+    font: 14px var(--st-font-family-secondary);
+}
+
 #st-cf-cl-sidebar {
     display: flex;
     flex-direction: column;
@@ -622,5 +629,6 @@ aside.st-appear-top {
     100% {
         scale: 2;
         opacity: 0;
+        background: var(--st-highlight-ok);
     }
 }

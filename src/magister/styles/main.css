@@ -244,6 +244,78 @@
     animation: fadeIn 200ms;
 }
 
+#st-shortcuts {
+    position: absolute;
+    bottom: -150px;
+    left: 0;
+    right: 0;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    margin-inline: auto;
+    padding: 12px;
+    display: flex;
+    column-gap: 20px;
+    row-gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: var(--st-background-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 1);
+    z-index: 9999999;
+    transition: bottom 500ms cubic-bezier(.75, 0, 1, 1);
+}
+
+#st-shortcuts>a {
+    color: var(--st-foreground-primary);
+    font: 14px var(--st-font-family-secondary);
+    max-width: 200px;
+    height: 40px;
+    overflow: hidden;
+    transition: color 200ms, filter 200ms, max-width 200ms;
+}
+
+#st-shortcuts[data-open=true],
+#st-shortcuts[data-open=force] {
+    bottom: 16px;
+    transition: bottom 200ms cubic-bezier(0, 0, .25, 1);
+}
+
+#st-shortcuts[data-open=force]>a:first-child {
+    max-width: 0;
+    margin-right: -16px;
+}
+
+.st-keyboard-hint {
+    position: relative;
+    color: var(--st-foreground-primary);
+}
+
+.st-keyboard-hint:before {
+    display: inline-block;
+    content: attr(data-hint-primary);
+    border: 2px solid var(--st-border-color);
+    border-radius: var(--st-border-radius);
+    min-width: 40px;
+    height: 40px;
+    padding: 6px;
+    text-align: center;
+    vertical-align: -1px;
+    margin-right: 10px;
+    background: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    font: 500 18px var(--st-font-family-primary);
+}
+
+.st-keyboard-hint:after {
+    content: attr(data-hint-secondary);
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    font: 12px var(--st-font-family-secondary);
+    color: var(--st-foreground-insignificant);
+}
+
 .st-cf-ghost-moving {
     animation: gradeGhost 400ms;
     animation-fill-mode: forwards;

@@ -22,6 +22,11 @@ async function today() {
     scheduleWrapper.id = 'st-vd-schedule'
     notifcationsWrapper.id = 'st-vd-notifications'
 
+    if (await getSetting('magister-shortcut-keys-today')) {
+        scheduleWrapper.style.paddingBottom = '70px'
+        notifcationsWrapper.style.paddingBottom = '70px'
+    }
+
     todayNotifications(notifcationsWrapper)
     todaySchedule(scheduleWrapper)
 
@@ -169,96 +174,96 @@ async function todaySchedule(scheduleWrapper) {
     }, 500)
 
     scheduleWrapper.dataset.ready = true
-}
 
-async function renderScheduleList(agendaElems, container) {
-    let events = []
+    async function renderScheduleList(agendaElems, container) {
+        let events = []
 
-    if (agendaElems) agendaElems.forEach((e, i, a) => {
-        let time = e.querySelector('.time')?.innerText,
-            title = e.querySelector('.classroom')?.innerText,
-            period = e.querySelector('.nrblock')?.innerText,
-            href = e.querySelector('a')?.href,
-            tooltip = e.querySelector('.agenda-text-icon')?.innerText,
-            tooltipIncomplete = e.querySelector('.agenda-text-icon')?.classList.contains('outline'),
-            dateStart = new Date(),
-            dateEnd = new Date(),
-            dateStartNext = new Date()
+        if (agendaElems) agendaElems.forEach((e, i, a) => {
+            let time = e.querySelector('.time')?.innerText,
+                title = e.querySelector('.classroom')?.innerText,
+                period = e.querySelector('.nrblock')?.innerText,
+                href = e.querySelector('a')?.href,
+                tooltip = e.querySelector('.agenda-text-icon')?.innerText,
+                tooltipIncomplete = e.querySelector('.agenda-text-icon')?.classList.contains('outline'),
+                dateStart = new Date(),
+                dateEnd = new Date(),
+                dateStartNext = new Date()
 
-        if (time) {
-            dateStart.setHours(time.split('-')[0].split(':')[0])
-            dateStart.setMinutes(time.split('-')[0].split(':')[1])
-            dateStart.setSeconds(0)
+            if (time) {
+                dateStart.setHours(time.split('-')[0].split(':')[0])
+                dateStart.setMinutes(time.split('-')[0].split(':')[1])
+                dateStart.setSeconds(0)
 
-            dateEnd.setHours(time.split('-')[1].split(':')[0])
-            dateEnd.setMinutes(time.split('-')[1].split(':')[1])
-            dateEnd.setSeconds(0)
-        }
-
-        events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete })
-
-        if (a[i + 1]) {
-            let timeNext = a[i + 1]?.querySelector('.time')?.innerText
-            if (!timeNext) return
-            dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
-            dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
-            dateStartNext.setSeconds(0)
-
-            if (dateStartNext - dateEnd > 1000) {
-                time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-                events.push({ time, title: 'filler', dateStart: dateEnd, dateEnd: dateStartNext })
+                dateEnd.setHours(time.split('-')[1].split(':')[0])
+                dateEnd.setMinutes(time.split('-')[1].split(':')[1])
+                dateEnd.setSeconds(0)
             }
-        }
-    })
 
-    if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete }, a, i) => {
-        let elementWrapper = document.createElement('li'),
-            elementTime = document.createElement('span'),
-            elementTitle = document.createElement('span'),
-            elementTitleBold = document.createElement('b'),
-            elementTitleNormal1 = document.createElement('span'),
-            elementTitleNormal2 = document.createElement('span'),
-            elementPeriod = document.createElement('span'),
-            elementTooltip = document.createElement('span'),
-            parsedTitle
+            events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete })
 
-        container.append(elementWrapper)
-        if (title !== 'filler') {
-            parsedTitle = await parseSubject(title, await getSetting('magister-vd-subjects'), await getSetting('magister-subjects'))
-            elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
-            elementTitleBold.innerText = parsedTitle.subjectName || ''
-            elementTitleNormal2.innerText = parsedTitle.stringAfter || ''
-        } else {
-            elementWrapper.dataset.filler = true
-            elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
-        }
+            if (a[i + 1]) {
+                let timeNext = a[i + 1]?.querySelector('.time')?.innerText
+                if (!timeNext) return
+                dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
+                dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
+                dateStartNext.setSeconds(0)
 
-        height = await msToPixels(dateEnd - dateStart) + 'px'
+                if (dateStartNext - dateEnd > 1000) {
+                    time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                    events.push({ time, title: 'filler', dateStart: dateEnd, dateEnd: dateStartNext })
+                }
+            }
+        })
 
-        elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
-        elementTime.innerText = time || ''
-        elementTitle.append(elementTitleNormal1, elementTitleBold, elementTitleNormal2)
-        elementPeriod.innerText = period || ''
-        elementTooltip.innerText = tooltip || ''
-        if (tooltipIncomplete) elementTooltip.classList.add('incomplete')
-        elementWrapper.style.height = height
-        elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
+        if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete }, a, i) => {
+            let elementWrapper = document.createElement('li'),
+                elementTime = document.createElement('span'),
+                elementTitle = document.createElement('span'),
+                elementTitleBold = document.createElement('b'),
+                elementTitleNormal1 = document.createElement('span'),
+                elementTitleNormal2 = document.createElement('span'),
+                elementPeriod = document.createElement('span'),
+                elementTooltip = document.createElement('span'),
+                parsedTitle
 
-        if (!tooltip) elementTooltip.remove()
-
-        setIntervalImmediately(async () => {
-            if (new Date() >= dateStart && new Date() <= dateEnd) {
-                elementWrapper.dataset.current = 'true'
-                if (title !== 'filler') elementPeriod.style.borderBottom = await msToPixels(dateEnd - new Date()) + 'px solid var(--st-accent-primary)'
-            } else if (new Date() > dateEnd) {
-                elementWrapper.dataset.past = 'true'
-                elementWrapper.removeAttribute('data-current')
-                elementPeriod.removeAttribute('style')
+            container.append(elementWrapper)
+            if (title !== 'filler') {
+                parsedTitle = await parseSubject(title, await getSetting('magister-vd-subjects'), await getSetting('magister-subjects'))
+                elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
+                elementTitleBold.innerText = parsedTitle.subjectName || ''
+                elementTitleNormal2.innerText = parsedTitle.stringAfter || ''
             } else {
-                elementWrapper.removeAttribute('data-current')
-                elementWrapper.removeAttribute('data-past')
-                elementPeriod.removeAttribute('style')
+                elementWrapper.dataset.filler = true
+                elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
             }
-        }, 10000)
-    })
+
+            height = await msToPixels(dateEnd - dateStart) + 'px'
+
+            elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
+            elementTime.innerText = time || ''
+            elementTitle.append(elementTitleNormal1, elementTitleBold, elementTitleNormal2)
+            elementPeriod.innerText = period || ''
+            elementTooltip.innerText = tooltip || ''
+            if (tooltipIncomplete) elementTooltip.classList.add('incomplete')
+            elementWrapper.style.height = height
+            elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
+
+            if (!tooltip) elementTooltip.remove()
+
+            setIntervalImmediately(async () => {
+                if (new Date() >= dateStart && new Date() <= dateEnd) {
+                    elementWrapper.dataset.current = 'true'
+                    if (title !== 'filler') elementPeriod.style.borderBottom = await msToPixels(dateEnd - new Date()) + 'px solid var(--st-accent-primary)'
+                } else if (new Date() > dateEnd) {
+                    elementWrapper.dataset.past = 'true'
+                    elementWrapper.removeAttribute('data-current')
+                    elementPeriod.removeAttribute('style')
+                } else {
+                    elementWrapper.removeAttribute('data-current')
+                    elementWrapper.removeAttribute('data-past')
+                    elementPeriod.removeAttribute('style')
+                }
+            }, 10000)
+        })
+    }
 }

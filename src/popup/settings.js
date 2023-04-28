@@ -116,6 +116,20 @@ const settingsBuilder = [
         title: "Zijbalk",
         settings: [
             {
+                id: 'magister-shortcut-keys',
+                title: "Sneltoetsen",
+                subtitle: "Houd 'S' ingedrukt en kies een nummer.",
+                default: true,
+                require: "magister-css-experimental",
+            },
+            {
+                id: 'magister-shortcut-keys-today',
+                title: "Snellere sneltoetsen",
+                subtitle: "Op de pagina 'Vandaag' zijn sneltoetsen bruikbaar zonder dat je de toets 'S' ingedrukt hoeft te houden.",
+                default: true,
+                require: "magister-shortcut-keys magister-css-experimental",
+            },
+            {
                 id: "magister-appbar-week",
                 title: "Weeknummer tonen"
             },
