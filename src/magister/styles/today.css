@@ -87,12 +87,15 @@
     grid-area: schedule;
 }
 
-#st-vd-schedule>div {
+#st-vd-schedule>div:first-of-type {
     display: flex;
+    justify-content: end;
     gap: 20px;
-    position: absolute;
-    top: 10px;
-    right: 0;
+    position: sticky;
+    top: 0;
+    padding: 10px;
+    background-color: var(--st-background-primary);
+    z-index: 9998;
 }
 
 #st-vd-schedule>div>a {
@@ -132,8 +135,9 @@
 
 #st-vd-schedule>ul:before {
     content: 'Rooster van vandaag';
-    background: var(--st-background-primary);
     font: var(--st-font-primary);
+    position: fixed;
+    z-index: 9999;
 }
 
 #vandaag-container:has(#st-vd)>dna-page-header {
@@ -146,17 +150,25 @@
 }
 
 #st-vd-schedule>ul>li {
-    position: relative;
+    position: absolute;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    min-height: 45px;
-    padding: 6px 10px 6px 40px;
-    overflow: hidden;
+    flex-wrap: wrap;
+    align-content: start;
+    column-gap: 10px;
+    padding: 6px 10px 0 40px;
+    overflow: visible;
     background: var(--st-background-secondary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
     font-family: var(--st-font-family-secondary);
+    transition: color 200ms, filter 200ms, transform 200ms, opacity 200ms !important;
+}
+
+#st-vd-schedule>ul:has(li:hover)>li:not(:hover) {
+    opacity: .5;
 }
 
 #st-vd-schedule>ul>li[data-filler] {
@@ -219,6 +231,7 @@
     background: var(--st-highlight-primary);
     font: var(--st-font-primary);
     line-height: 40px;
+    border-radius: var(--st-border-radius) 0 0 var(--st-border-radius);
 }
 
 #st-vd-schedule>ul>li[data-current]:not([data-filler])>span:nth-child(3) {
@@ -245,6 +258,14 @@
 
 #st-vd-schedule>ul>li:not([data-filler]):has(span:nth-child(4)) {
     background: linear-gradient(45deg, var(--st-background-secondary), var(--st-highlight-primary));
+}
+
+#st-vd-schedule-now {
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background-color: var(--st-foreground-accent);
+    z-index: 9999;
 }
 
 #st-vd-notifications {

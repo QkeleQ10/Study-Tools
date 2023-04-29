@@ -604,6 +604,8 @@ dna-button:not([variant=primary], [fill=clear]) {
 dna-button:hover {
     filter: brightness(var(--st-hover-brightness));
 }
+
+.overdue,.overdue *{color:grey!important}
 `, 'study-tools-experimental')
     }
 
@@ -638,10 +640,6 @@ dna-button:hover {
 
     if (await getSetting('magister-cf-failred')) {
         createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
-    }
-
-    if (await getSetting('magister-op-oldgrey')) {
-        createStyle(`.overdue,.overdue *{color:grey!important}`, 'study-tools-op-oldred')
     }
 
     if (await getSetting('magister-appbar-hidePicture')) {

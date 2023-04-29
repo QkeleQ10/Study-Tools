@@ -50,15 +50,21 @@ async function main() {
 
     if (await getSetting('magister-shortcut-keys')) {
         let shortcutsWrapper = document.createElement('div'),
+            sElem = document.createElement('span'),
             todayElem = document.createElement('a'),
             agendaElem = document.createElement('a'),
             gradesElem = document.createElement('a'),
             studyguideElem = document.createElement('a'),
-            booksElem = document.createElement('a')
+            booksElem = document.createElement('a'),
+            key = await getSetting('magister-shortcut-keys-master'),
+            keyUpper = key?.split('')?.[0]?.toUpperCase() || 'S',
+            keyLower = key?.split('')?.[0]?.toLowerCase() || 's'
 
         document.body.append(shortcutsWrapper)
         shortcutsWrapper.id = 'st-shortcuts'
-        shortcutsWrapper.append(todayElem, agendaElem, gradesElem, studyguideElem, booksElem)
+        shortcutsWrapper.append(sElem, todayElem, agendaElem, gradesElem, studyguideElem, booksElem)
+
+        setAttributes(sElem, { class: 'st-keyboard-hint', 'data-hint-primary': keyUpper })
 
         setAttributes(todayElem, { class: 'st-keyboard-hint', 'data-hint-primary': '1', 'data-hint-secondary': '!', href: '#/vandaag' })
         todayElem.innerText = "Vandaag"
@@ -77,21 +83,25 @@ async function main() {
 
         addEventListener('keydown', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
-            if (shortcutsWrapper.dataset.open === 'false' && (e.key === 's' || e.key === 'S')) {
+            if (shortcutsWrapper.dataset.open === 'false' && (e.key === keyLower || e.key === keyUpper)) {
                 shortcutsWrapper.dataset.open = true
             }
             shortcutsWrapper.querySelectorAll('a').forEach(shortcut => {
                 let primary = shortcut.dataset.hintPrimary,
                     secondary = shortcut.dataset.hintSecondary
-                if ((e.key === primary || e.key === secondary) && shortcutsWrapper.dataset.open !== 'false') {
+                if ((e.key === primary || e.key === secondary) && window.getComputedStyle(shortcutsWrapper).getPropertyValue('z-index') === '10000000') {
                     shortcut.click()
+                    shortcut.classList.add('clicked')
+                    setTimeout(() => {
+                        shortcut.classList.remove('clicked')
+                    }, 1500)
                 }
             })
         })
 
         addEventListener('keyup', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
-            if (shortcutsWrapper.dataset.open === 'true' && (e.key === 's' || e.key === 'S')) {
+            if (shortcutsWrapper.dataset.open === 'true' && (e.key === keyLower || e.key === keyUpper)) {
                 setTimeout(() => {
                     if (shortcutsWrapper.dataset.open === 'true') {
                         shortcutsWrapper.dataset.open = false
@@ -163,7 +173,7 @@ function parseSubject(string, enabled, subjects) {
 async function msToPixels(ms) {
     return new Promise(async (resolve, reject) => {
         let settingAgendaHeight = await getSetting('magister-vd-agendaHeight') || 1
-        resolve(0.0000222222 * settingAgendaHeight * ms)
+        resolve(0.000025 * settingAgendaHeight * ms)
     })
 }
 

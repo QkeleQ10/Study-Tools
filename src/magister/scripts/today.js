@@ -23,8 +23,8 @@ async function today() {
     notifcationsWrapper.id = 'st-vd-notifications'
 
     if (await getSetting('magister-shortcut-keys-today')) {
-        scheduleWrapper.style.paddingBottom = '70px'
-        notifcationsWrapper.style.paddingBottom = '70px'
+        scheduleWrapper.style.marginBottom = '70px'
+        notifcationsWrapper.style.marginBottom = '70px'
     }
 
     todayNotifications(notifcationsWrapper)
@@ -148,9 +148,10 @@ async function todaySchedule(scheduleWrapper) {
         scheduleTomorrowContainer = document.createElement('ul'),
         scheduleButtonWrapper = document.createElement('div'),
         scheduleLinkWeek = document.createElement('a'),
-        scheduleLinkList = document.createElement('a')
+        scheduleLinkList = document.createElement('a'),
+        scheduleNowLine = document.createElement('div')
 
-    scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
+    scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper, scheduleNowLine)
     scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList)
     scheduleLinkWeek.innerText = ''
     scheduleLinkWeek.classList.add('st-vd-schedule-link')
@@ -176,46 +177,57 @@ async function todaySchedule(scheduleWrapper) {
     scheduleWrapper.dataset.ready = true
 
     async function renderScheduleList(agendaElems, container) {
-        let events = []
+        let events = [],
+            overlapIndexMap = {},
+            overlapComparisonMap = {},
+            firstStart = new Date()
 
         if (agendaElems) agendaElems.forEach((e, i, a) => {
-            let time = e.querySelector('.time')?.innerText,
+            let time = e.querySelector('.time')?.innerText?.replace('00:00', '23:59'),
                 title = e.querySelector('.classroom')?.innerText,
                 period = e.querySelector('.nrblock')?.innerText,
                 href = e.querySelector('a')?.href,
                 tooltip = e.querySelector('.agenda-text-icon')?.innerText,
                 tooltipIncomplete = e.querySelector('.agenda-text-icon')?.classList.contains('outline'),
-                dateStart = new Date(),
-                dateEnd = new Date(),
+                start = new Date(),
+                end = new Date(),
+                duration = 0,
                 dateStartNext = new Date()
 
             if (time) {
-                dateStart.setHours(time.split('-')[0].split(':')[0])
-                dateStart.setMinutes(time.split('-')[0].split(':')[1])
-                dateStart.setSeconds(0)
+                start.setHours(time.split('-')[0].split(':')[0])
+                start.setMinutes(time.split('-')[0].split(':')[1])
+                start.setSeconds(0)
 
-                dateEnd.setHours(time.split('-')[1].split(':')[0])
-                dateEnd.setMinutes(time.split('-')[1].split(':')[1])
-                dateEnd.setSeconds(0)
+                end.setHours(time.split('-')[1].split(':')[0])
+                end.setMinutes(time.split('-')[1].split(':')[1])
+                end.setSeconds(0)
+
+                duration = end - start - i
             }
 
-            events.push({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete })
+            // if (a[i + 1]) {
+            //     let timeNext = a[i + 1]?.querySelector('.time')?.innerText
+            //     if (!timeNext) return
+            //     dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
+            //     dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
+            //     dateStartNext.setSeconds(0)
 
-            if (a[i + 1]) {
-                let timeNext = a[i + 1]?.querySelector('.time')?.innerText
-                if (!timeNext) return
-                dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
-                dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
-                dateStartNext.setSeconds(0)
+            //     if (dateStartNext - end > 1000) {
+            //         time = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+            //         events.push({ time, title: 'filler', start: end, dateEnd: dateStartNext })
+            //     }
+            // }
 
-                if (dateStartNext - dateEnd > 1000) {
-                    time = `${String(dateEnd.getHours()).padStart(2, '0')}:${String(dateEnd.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-                    events.push({ time, title: 'filler', dateStart: dateEnd, dateEnd: dateStartNext })
-                }
-            }
+            events.push({ id: i, time, title, period, start, end, duration, href, tooltip, tooltipIncomplete })
+
+            overlapIndexMap[i] = 0
+            overlapComparisonMap[i] = new Set()
+
+            if (i === 0) firstStart = start
         })
 
-        if (events) events.forEach(async ({ time, title, period, dateStart, dateEnd, href, tooltip, tooltipIncomplete }, a, i) => {
+        if (events) events.sort((a, b) => b.duration - a.duration).forEach(async ({ id, time, title, period, start, end, duration, href, tooltip, tooltipIncomplete }, i) => {
             let elementWrapper = document.createElement('li'),
                 elementTime = document.createElement('span'),
                 elementTitle = document.createElement('span'),
@@ -226,6 +238,29 @@ async function todaySchedule(scheduleWrapper) {
                 elementTooltip = document.createElement('span'),
                 parsedTitle
 
+            events.forEach(comparingEvent => {
+                if (id === comparingEvent.id || overlapComparisonMap[id].has(comparingEvent.id) || overlapComparisonMap[comparingEvent.id].has(id)) return
+                if ((start >= comparingEvent.start && start < comparingEvent.end)) {
+                    if (duration > comparingEvent.duration) {
+                        overlapIndexMap[comparingEvent.id] = overlapIndexMap[id] + 1
+                        overlapComparisonMap[comparingEvent.id].add(id)
+                    }
+                    else {
+                        overlapIndexMap[id] = overlapIndexMap[comparingEvent.id] + 1
+                        overlapComparisonMap[id].add(comparingEvent.id)
+                    }
+                } else if ((end > comparingEvent.start && end <= comparingEvent.end)) {
+                    if (duration > comparingEvent.duration) {
+                        overlapIndexMap[comparingEvent.id] = overlapIndexMap[id] + 1
+                        overlapComparisonMap[comparingEvent.id].add(id)
+                    }
+                    else {
+                        overlapIndexMap[id] = overlapIndexMap[comparingEvent.id] + 1
+                        overlapComparisonMap[id].add(comparingEvent.id)
+                    }
+                }
+            })
+
             container.append(elementWrapper)
             if (title !== 'filler') {
                 parsedTitle = await parseSubject(title, await getSetting('magister-vd-subjects'), await getSetting('magister-subjects'))
@@ -234,10 +269,8 @@ async function todaySchedule(scheduleWrapper) {
                 elementTitleNormal2.innerText = parsedTitle.stringAfter || ''
             } else {
                 elementWrapper.dataset.filler = true
-                elementTime.dataset.filler = dateEnd - dateStart < 2700000 ? 'pauze' : 'geen les'
+                elementTime.dataset.filler = end - start < 2700000 ? 'pauze' : 'geen les'
             }
-
-            height = await msToPixels(dateEnd - dateStart) + 'px'
 
             elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
             elementTime.innerText = time || ''
@@ -245,16 +278,21 @@ async function todaySchedule(scheduleWrapper) {
             elementPeriod.innerText = period || ''
             elementTooltip.innerText = tooltip || ''
             if (tooltipIncomplete) elementTooltip.classList.add('incomplete')
-            elementWrapper.style.height = height
+            elementWrapper.style.height = await msToPixels(duration) + 'px'
+            elementWrapper.style.top = await msToPixels(start - firstStart) + 44 + 'px'
+            elementWrapper.style.left = overlapIndexMap[id] * 15 + '%'
+            elementWrapper.style.width = 100 - overlapIndexMap[id] * 16 + '%'
+            elementWrapper.style.zIndex = overlapIndexMap[id]
             elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
 
             if (!tooltip) elementTooltip.remove()
 
             setIntervalImmediately(async () => {
-                if (new Date() >= dateStart && new Date() <= dateEnd) {
+                let now = new Date()
+                if (now >= start && now <= end) {
                     elementWrapper.dataset.current = 'true'
-                    if (title !== 'filler') elementPeriod.style.borderBottom = await msToPixels(dateEnd - new Date()) + 'px solid var(--st-accent-primary)'
-                } else if (new Date() > dateEnd) {
+                    if (title !== 'filler') elementPeriod.style.borderBottom = await msToPixels(end - now) + 'px solid var(--st-accent-primary)'
+                } else if (now > end) {
                     elementWrapper.dataset.past = 'true'
                     elementWrapper.removeAttribute('data-current')
                     elementPeriod.removeAttribute('style')
@@ -263,7 +301,16 @@ async function todaySchedule(scheduleWrapper) {
                     elementWrapper.removeAttribute('data-past')
                     elementPeriod.removeAttribute('style')
                 }
+                if (i === 0) {
+                    scheduleNowLine.style.top = await msToPixels(now - firstStart) + 43 + 'px'
+                }
             }, 10000)
+
+            if (i === 0) {
+                scheduleNowLine.style.top = await msToPixels(new Date() - firstStart) + 43 + 'px'
+                scheduleNowLine.id = 'st-vd-schedule-now'
+                // scheduleNowLine.scrollIntoView({ behavior: 'smooth' })
+            }
         })
     }
 }
