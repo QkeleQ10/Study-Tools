@@ -245,7 +245,7 @@
 }
 
 #st-shortcuts {
-    position: absolute;
+    position: fixed;
     bottom: -150px;
     /* left: 16px; */
     left: auto;

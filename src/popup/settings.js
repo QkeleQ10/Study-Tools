@@ -189,6 +189,11 @@ const settingsBuilder = [
                 require: "magister-css-experimental magister-vd-overhaul",
             },
             {
+                id: "magister-vd-agendaLegacy",
+                title: "Legacy-modus agenda",
+                subtitle: "Tijdelijke optie voor debugging.",
+            },
+            {
                 id: "magister-vd-subjects",
                 title: "Aangepaste vaknamen",
                 default: true,

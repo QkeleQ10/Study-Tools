@@ -91,8 +91,9 @@
     display: flex;
     justify-content: end;
     gap: 20px;
-    position: sticky;
+    position: absolute;
     top: 0;
+    right: 0;
     padding: 10px;
     background-color: var(--st-background-primary);
     z-index: 9998;
@@ -116,6 +117,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding-top: 44px;
     transition: scale 200ms;
 }
 
@@ -137,7 +139,11 @@
     content: 'Rooster van vandaag';
     font: var(--st-font-primary);
     position: fixed;
-    z-index: 9999;
+    top: 85px;
+    z-index: 999;
+    padding-right: 16px;
+    border-bottom-right-radius: var(--st-border-radius);
+    background: var(--st-background-primary);
 }
 
 #vandaag-container:has(#st-vd)>dna-page-header {
@@ -150,18 +156,19 @@
 }
 
 #st-vd-schedule>ul>li {
-    position: absolute;
-    width: 100%;
+    position: relative;
+    width: calc(100% - 2px);
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
     align-content: start;
     column-gap: 10px;
     padding: 6px 10px 0 40px;
+    margin: 1px;
     overflow: visible;
     background: var(--st-background-secondary);
     color: var(--st-foreground-primary);
-    border: var(--st-border);
+    outline: var(--st-border);
     border-radius: var(--st-border-radius);
     font-family: var(--st-font-family-secondary);
     transition: color 200ms, filter 200ms, transform 200ms, opacity 200ms !important;
@@ -173,7 +180,7 @@
 
 #st-vd-schedule>ul>li[data-filler] {
     background: none;
-    border: none;
+    outline: none;
     margin: -7px 0;
     max-height: 120px;
     opacity: 0.6;
@@ -264,8 +271,18 @@
     position: absolute;
     height: 2px;
     width: 100%;
-    background-color: var(--st-foreground-accent);
-    z-index: 9999;
+    left: 0;
+    background-color: var(--st-accent-primary);
+}
+
+#st-vd-schedule-now:after {
+    content: "NU";
+    position: absolute;
+    bottom: 2px;
+    left: 4px;
+    color: var(--st-foreground-accent);
+    opacity: .5;
+    font: 600 11px var(--st-font-family-secondary);
 }
 
 #st-vd-notifications {
@@ -306,7 +323,7 @@
 #st-vd-notifications>li[data-insignificant=true],
 #st-vd-notifications>#st-vd-grade-notification[data-insignificant=true] {
     color: var(--st-foreground-insignificant) !important;
-    background: var(--st-background-primary);
+    background: var(--st-background-secondary);
 }
 
 #st-vd-notifications>li[data-additional-info]:after {

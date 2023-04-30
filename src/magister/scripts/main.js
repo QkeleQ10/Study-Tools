@@ -103,9 +103,7 @@ async function main() {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
             if (shortcutsWrapper.dataset.open === 'true' && (e.key === keyLower || e.key === keyUpper)) {
                 setTimeout(() => {
-                    if (shortcutsWrapper.dataset.open === 'true') {
-                        shortcutsWrapper.dataset.open = false
-                    }
+                    if (shortcutsWrapper.dataset.open === 'true') shortcutsWrapper.dataset.open = false
                 }, 1000)
             }
         })

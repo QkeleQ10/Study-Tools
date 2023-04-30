@@ -106,8 +106,12 @@ async function todayNotifications(notifcationsWrapper) {
         setTimeout(() => {
             let amount = e.firstElementChild.firstElementChild.innerText,
                 description = e.firstElementChild.innerText.replace(`${amount} `, ''),
-                href = e.firstElementChild.href,
-                element = document.querySelector(`li[data-description="${description}"]`) || document.createElement('li')
+                href = e.firstElementChild.href
+
+            if (description === 'activiteiten waarop nog ingeschreven moet of kan worden') description = 'activiteiten'
+            if (description === 'activiteit waarop nog ingeschreven moet of kan worden') description = 'activiteit'
+            
+            let element = document.querySelector(`li[data-description="${description}"]`) || document.createElement('li')
 
             element.dataset.description = description
             if (e.firstElementChild.innerText.includes('?') || !description) return element.remove()
@@ -149,21 +153,29 @@ async function todaySchedule(scheduleWrapper) {
         scheduleButtonWrapper = document.createElement('div'),
         scheduleLinkWeek = document.createElement('a'),
         scheduleLinkList = document.createElement('a'),
-        scheduleNowLine = document.createElement('div')
+        scheduleNowLine = document.createElement('div'),
+        legacy = await getSetting('magister-vd-agendaLegacy')
 
-    scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper, scheduleNowLine)
-    scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList)
-    scheduleLinkWeek.innerText = ''
-    scheduleLinkWeek.classList.add('st-vd-schedule-link')
-    scheduleLinkWeek.title = `Weekoverzicht`
-    scheduleLinkWeek.href = '#/agenda/werkweek'
-    scheduleLinkList.innerText = ''
-    scheduleLinkList.classList.add('st-vd-schedule-link')
-    scheduleLinkList.title = `Afsprakenlijst`
-    scheduleLinkList.href = '#/agenda'
+    scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
+
+    if (legacy) {
+        scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList)
+        scheduleLinkWeek.innerText = ''
+        scheduleLinkWeek.classList.add('st-vd-schedule-link')
+        scheduleLinkWeek.title = `Weekoverzicht`
+        scheduleLinkWeek.href = '#/agenda/werkweek'
+        scheduleLinkList.innerText = ''
+        scheduleLinkList.classList.add('st-vd-schedule-link')
+        scheduleLinkList.title = `Afsprakenlijst`
+        scheduleLinkList.href = '#/agenda'
+    }
 
     let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
     renderScheduleList(agendaTodayElems, scheduleTodayContainer)
+
+    if (!legacy) {
+        scheduleTodayContainer.append(scheduleNowLine)
+    }
 
     setTimeout(async () => {
         let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4', 4000),
@@ -180,7 +192,8 @@ async function todaySchedule(scheduleWrapper) {
         let events = [],
             overlapIndexMap = {},
             overlapComparisonMap = {},
-            firstStart = new Date()
+            firstStart = new Date(),
+            lastEnd = new Date().setHours(0, 0, 0, 0)
 
         if (agendaElems) agendaElems.forEach((e, i, a) => {
             let time = e.querySelector('.time')?.innerText?.replace('00:00', '23:59'),
@@ -206,28 +219,32 @@ async function todaySchedule(scheduleWrapper) {
                 duration = end - start - i
             }
 
-            // if (a[i + 1]) {
-            //     let timeNext = a[i + 1]?.querySelector('.time')?.innerText
-            //     if (!timeNext) return
-            //     dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
-            //     dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
-            //     dateStartNext.setSeconds(0)
+            if (legacy && a[i + 1]) {
+                let timeNext = a[i + 1]?.querySelector('.time')?.innerText
+                if (!timeNext) return
+                dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
+                dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
+                dateStartNext.setSeconds(0)
 
-            //     if (dateStartNext - end > 1000) {
-            //         time = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-            //         events.push({ time, title: 'filler', start: end, dateEnd: dateStartNext })
-            //     }
-            // }
+                if (dateStartNext - end > 1000) {
+                    time = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
+                    events.push({ time, title: 'filler', start: end, end: dateStartNext })
+                }
+            }
 
-            events.push({ id: i, time, title, period, start, end, duration, href, tooltip, tooltipIncomplete })
+            events.push({ id: i, title, period, start, end, duration, href, tooltip, tooltipIncomplete })
 
             overlapIndexMap[i] = 0
             overlapComparisonMap[i] = new Set()
 
-            if (i === 0) firstStart = start
+            if (start < firstStart) firstStart = start
+            if (end > lastEnd) lastEnd = end
         })
 
-        if (events) events.sort((a, b) => b.duration - a.duration).forEach(async ({ id, time, title, period, start, end, duration, href, tooltip, tooltipIncomplete }, i) => {
+        if (events && !legacy) events.sort((a, b) => b.duration - a.duration)
+        else if (events && legacy) events.sort((a, b) => a.start - b.start)
+
+        if (events) events.forEach(async ({ id, title, period, start, end, duration, href, tooltip, tooltipIncomplete }, i) => {
             let elementWrapper = document.createElement('li'),
                 elementTime = document.createElement('span'),
                 elementTitle = document.createElement('span'),
@@ -238,7 +255,9 @@ async function todaySchedule(scheduleWrapper) {
                 elementTooltip = document.createElement('span'),
                 parsedTitle
 
-            events.forEach(comparingEvent => {
+            container.append(elementWrapper)
+
+            if (!legacy) events.forEach(comparingEvent => {
                 if (id === comparingEvent.id || overlapComparisonMap[id].has(comparingEvent.id) || overlapComparisonMap[comparingEvent.id].has(id)) return
                 if ((start >= comparingEvent.start && start < comparingEvent.end)) {
                     if (duration > comparingEvent.duration) {
@@ -259,31 +278,44 @@ async function todaySchedule(scheduleWrapper) {
                         overlapComparisonMap[id].add(comparingEvent.id)
                     }
                 }
+
+                if (-100 < comparingEvent.start - end && comparingEvent.start - end < 100) {
+                    elementWrapper.style.borderBottomLeftRadius = '0'
+                    elementWrapper.style.borderBottomRightRadius = '0'
+                }
+
+                if (-100 < comparingEvent.end - start && comparingEvent.end - start < 100) {
+                    elementWrapper.style.borderTopLeftRadius = '0'
+                    elementWrapper.style.borderTopRightRadius = '0'
+                }
             })
 
-            container.append(elementWrapper)
-            if (title !== 'filler') {
+            if (!legacy || title !== 'filler') {
                 parsedTitle = await parseSubject(title, await getSetting('magister-vd-subjects'), await getSetting('magister-subjects'))
                 elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
                 elementTitleBold.innerText = parsedTitle.subjectName || ''
                 elementTitleNormal2.innerText = parsedTitle.stringAfter || ''
-            } else {
+            } else if (legacy && title === 'filler') {
                 elementWrapper.dataset.filler = true
                 elementTime.dataset.filler = end - start < 2700000 ? 'pauze' : 'geen les'
             }
 
             elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
-            elementTime.innerText = time || ''
+            elementTime.innerText = start.toLocaleTimeString('nl-NL', { hour: 'numeric', minute: 'numeric' }) + ' – ' + end.toLocaleTimeString('nl-NL', { hour: 'numeric', minute: 'numeric' })
             elementTitle.append(elementTitleNormal1, elementTitleBold, elementTitleNormal2)
             elementPeriod.innerText = period || ''
             elementTooltip.innerText = tooltip || ''
+            elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
             if (tooltipIncomplete) elementTooltip.classList.add('incomplete')
             elementWrapper.style.height = await msToPixels(duration) + 'px'
-            elementWrapper.style.top = await msToPixels(start - firstStart) + 44 + 'px'
-            elementWrapper.style.left = overlapIndexMap[id] * 15 + '%'
-            elementWrapper.style.width = 100 - overlapIndexMap[id] * 16 + '%'
-            elementWrapper.style.zIndex = overlapIndexMap[id]
-            elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
+
+            if (!legacy) {
+                elementWrapper.style.position = 'absolute'
+                elementWrapper.style.top = await msToPixels(start - firstStart) + 44 + 'px'
+                elementWrapper.style.left = overlapIndexMap[id] * 15 + '%'
+                elementWrapper.style.width = 'calc(' + (100 - overlapIndexMap[id] * 16) + '% - 14px)'
+                elementWrapper.style.zIndex = overlapIndexMap[id]
+            }
 
             if (!tooltip) elementTooltip.remove()
 
@@ -306,10 +338,11 @@ async function todaySchedule(scheduleWrapper) {
                 }
             }, 10000)
 
-            if (i === 0) {
+            if (!legacy && i === 0) {
                 scheduleNowLine.style.top = await msToPixels(new Date() - firstStart) + 43 + 'px'
                 scheduleNowLine.id = 'st-vd-schedule-now'
-                // scheduleNowLine.scrollIntoView({ behavior: 'smooth' })
+                scheduleTodayContainer.style.height = await msToPixels(lastEnd - firstStart) + 44 + 'px'
+                scheduleTodayContainer.scroll({ top: await msToPixels(new Date() - firstStart) - (window.innerHeight * 0.5) })
             }
         })
     }
