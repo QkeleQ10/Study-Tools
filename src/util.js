@@ -8,16 +8,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.body.append(snackbarWrapper)
     createStyle(`
 #st-snackbars {
-    position: absolute; bottom: 0; left: 0; padding: 0 32px; width: 464px; display: flex; flex-direction: column-reverse; background: linear-gradient(18deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%); transition: background 200ms, opacity 200ms, padding 200ms;
+    position: absolute; bottom: 0; left: 0; padding: 0 32px; width: 464px; display: flex; flex-direction: column-reverse; opacity: 0; background: linear-gradient(18deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%); transition: background 500ms, opacity 500ms, padding 500ms;
 }
-#st-snackbars:has(div) {
+#st-snackbars:has(div.open) {
     padding: 32px; 
     opacity: 1;
     background: radial-gradient(at bottom left, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 70%);
     z-index: 99999999;
 }
 #st-snackbars>div {
-    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 8px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
+    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; line-height: 16px; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 8px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
 }
 #st-snackbars>div.open {
     translate: 0; opacity: 1;
@@ -25,11 +25,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 #st-snackbars>div:not(.open) {
     max-height: 0;
     min-height: 0;
-    padding: 0 20px;
-    margin-top: 0;
+    padding-block: 0;
+    margin-block: 0;
     overflow: hidden;
-    line-height: 0;
+    opacity: 0;
     pointer-events: none;
+    transition: translate 500ms cubic-bezier(.75, 0, 1, 1), opacity 500ms cubic-bezier(.75, 0, 1, 1), max-height 500ms cubic-bezier(.75, 0, 1, 1), min-height 500ms cubic-bezier(.75, 0, 1, 1), padding 500ms cubic-bezier(.75, 0, 1, 1), margin 500ms cubic-bezier(.75, 0, 1, 1), line-height 500ms cubic-bezier(.75, 0, 1, 1);
 }
 #st-snackbars>div>a {
     min-width: fit-content; text-transform: uppercase; font-weight: bold; cursor: pointer;
@@ -169,7 +170,7 @@ async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
     })
     setTimeout(() => snackbar.classList.add('open'), 50)
     setTimeout(() => snackbar.classList.remove('open'), duration)
-    setTimeout(() => snackbar.remove(), duration + 200)
+    setTimeout(() => snackbar.remove(), duration + 2000)
 }
 
 function createStyle(content, id = 'st-style') {

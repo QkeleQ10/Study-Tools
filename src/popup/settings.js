@@ -41,6 +41,18 @@ const settingsBuilder = [
                 require: "magister-css-experimental",
             },
             {
+                id: "magister-css-border-radius",
+                title: "Afgeronde hoeken",
+                type: "slider",
+                default: 8,
+                defaultFormatted: "8px",
+                suffix: "px",
+                min: 0,
+                max: 20,
+                step: 1,
+                require: "magister-css-experimental",
+            },
+            {
                 id: "magister-css-dark-invert",
                 title: "Inhoud donker maken",
                 subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
@@ -99,9 +111,38 @@ const settingsBuilder = [
         ]
     },
     {
+        id: "section-magister-shortcuts",
+        group: "Magister",
+        title: "Sneltoetsen",
+        settings: [
+            {
+                id: 'magister-shortcut-keys',
+                title: "Sneltoetsen",
+                subtitle: "Houd de activatietoets ingedrukt (bijv. 'S') en kies een nummer voor snelle navigatie.",
+                default: true,
+                require: "magister-css-experimental",
+            },
+            {
+                id: 'magister-shortcut-keys-master',
+                title: "Activatietoets",
+                subtitle: "De toets die de sneltoetsen activeert.",
+                type: "key",
+                default: "S",
+                require: "magister-shortcut-keys magister-css-experimental",
+            },
+            {
+                id: 'magister-shortcut-keys-today',
+                title: "Snellere sneltoetsen",
+                subtitle: "Op de pagina 'Vandaag' zijn sneltoetsen bruikbaar zonder dat je de activatietoets ingedrukt hoeft te houden.",
+                default: true,
+                require: "magister-shortcut-keys magister-css-experimental",
+            },
+        ]
+    },
+    {
         id: "section-magister-sidebar",
         group: "Magister",
-        title: "Zijbalk",
+        title: "Menubalk",
         settings: [
             {
                 id: "magister-appbar-week",
@@ -148,6 +189,11 @@ const settingsBuilder = [
                 require: "magister-css-experimental magister-vd-overhaul",
             },
             {
+                id: "magister-vd-agendaLegacy",
+                title: "Legacy-modus agenda",
+                subtitle: "Tijdelijke optie voor debugging.",
+            },
+            {
                 id: "magister-vd-subjects",
                 title: "Aangepaste vaknamen",
                 default: true,
@@ -174,6 +220,37 @@ const settingsBuilder = [
                     },
                 ]
             },
+        ]
+    },
+    {
+        id: "section-magister-grades",
+        group: "Magister",
+        title: "Cijfers",
+        settings: [
+            {
+                id: "magister-cf-calculator",
+                title: "Cijfercalculator",
+                subtitle: "Een handige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-statistics",
+                title: "Cijferstatistieken",
+                subtitle: "[Experimenteel] Verscheidene statistieken en grafiekjes bij je cijfers, met handige filters. Te vinden onder het nieuwe tabblad in de zijbalk van het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-backup",
+                title: "Cijferback-up",
+                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren. Gebruik met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-failred",
+                title: "Onvoldoendes rood kleuren",
+                subtitle: "Alleen in het cijferoverzicht.",
+                default: true,
+            }
         ]
     },
     {
@@ -212,49 +289,6 @@ const settingsBuilder = [
             {
                 id: "magister-sw-thisWeek",
                 title: "Naar huidige week scrollen",
-                default: true,
-            }
-        ]
-    },
-    {
-        id: "section-magister-assignments",
-        group: "Magister",
-        title: "Opdrachten",
-        settings: [
-            {
-                id: "magister-op-oldgrey",
-                title: "Oude opdrachten grijs kleuren",
-                default: true,
-            }
-        ]
-    },
-    {
-        id: "section-magister-grades",
-        group: "Magister",
-        title: "Cijfers",
-        settings: [
-            {
-                id: "magister-cf-calculator",
-                title: "Cijfercalculator",
-                subtitle: "Een handige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
-                default: true,
-            },
-            {
-                id: "magister-cf-statistics",
-                title: "Cijferstatistieken",
-                subtitle: "[Experimenteel] Verscheidene statistieken en grafiekjes bij je cijfers, met handige filters. Te vinden onder het nieuwe tabblad in de zijbalk van het cijferoverzicht.",
-                default: true,
-            },
-            {
-                id: "magister-cf-backup",
-                title: "Cijferback-up",
-                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren. Gebruik met de knop rechtsboven in het cijferoverzicht.",
-                default: true,
-            },
-            {
-                id: "magister-cf-failred",
-                title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht.",
                 default: true,
             }
         ]

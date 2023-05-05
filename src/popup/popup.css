@@ -1,12 +1,13 @@
 @font-face {
     font-family: material-icons;
-    src: url(../assets/icons.otf);
+    src: url(icons.otf);
 }
 
 :root {
     --hue: 207;
     --saturation: 95%;
     --luminance: 55%;
+    --font: 'Noto Sans';
     --color: hsl(var(--hue),
             var(--saturation),
             var(--luminance));
@@ -56,15 +57,15 @@
 }
 
 * {
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font), sans-serif;
     transition: opacity 200ms, translate 200ms cubic-bezier(1, 0, 0, 1), scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1), rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms, max-height 200ms, padding 200ms, margin 200ms;
     overflow-x: hidden;
 }
 
 body {
     display: grid;
-    min-width: 500px;
-    min-height: 600px;
+    width: 500px;
+    height: 600px;
     grid-template:
         'header header' 90px
         'aside main' 1fr
@@ -171,6 +172,7 @@ h3,
 h4,
 h5,
 h6 {
+    font-family: Montserrat, sans-serif;
     margin: 0;
 }
 
@@ -194,11 +196,11 @@ h3 {
 }
 
 h4 {
-    font: 500 14px 'Montserrat', sans-serif;
+    font: 500 14px var(--font), sans-serif;
 }
 
 h5 {
-    font: 400 11px 'Montserrat', sans-serif;
+    font: 400 11px var(--font), sans-serif;
     color: #808080;
 }
 
@@ -244,6 +246,7 @@ i {
 
 #section-about>*:nth-child(2) {
     background: linear-gradient(300deg, hsl(130, 40%, 29%), hsl(130, 36%, 30%));
+    font-family: 'Montserrat', sans-serif;
     color: #fff;
     font-weight: 700;
     font-size: 14px;
@@ -251,6 +254,7 @@ i {
 
 #section-about>*:nth-child(3) {
     background: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
+    font-family: 'Montserrat', sans-serif;
     color: #fff;
     font-weight: 700;
     font-size: 14px;
@@ -290,6 +294,12 @@ label.has-text {
         'title' auto
         'input' auto
         / 1fr;
+}
+
+label.has-key {
+    grid-template:
+        'title input' auto
+        / 1fr auto;
 }
 
 label.has-select {
@@ -532,6 +542,33 @@ label:active .select.collapse>*[data-selected=true],
 .select>button:active {
     scale: .98;
     box-shadow: 0px 3px 5px -4px var(--shadow);
+}
+
+input[type=text].input-key {
+    border-radius: 7px;
+    cursor: pointer;
+    outline: solid 1px var(--outline) !important;
+    border: none !important;
+    padding: 4px 1px;
+    max-width: 75px;
+    margin: 0;
+    text-align: center;
+    box-shadow: 0px 6px 16px -8px var(--shadow);
+}
+
+label:hover>input[type=text].input-key {
+    scale: 1.1;
+    box-shadow: 0px 8px 20px -8px var(--shadow);
+}
+
+label:active>input[type=text].input-key {
+    scale: .9;
+    box-shadow: 0px 3px 8px -4px var(--shadowActive);
+}
+
+input[type=text].input-key:focus {
+    outline-color: hsl(var(--hue), var(--saturation), var(--luminance)) !important;
+    box-shadow: 0px 8px 20px -8px var(--shadow);
 }
 
 input[type=text],
@@ -790,7 +827,7 @@ input#magister-css-luminance {
     padding: 14px 20px;
     margin-top: 16px;
     border-radius: 8px;
-    font: 500 14px 'Montserrat', system-ui;
+    font: 500 14px var(--font), system-ui;
     border: 1px solid var(--border);
     box-shadow: 0 0 8px 0 var(--shadow);
     transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;

@@ -1,6 +1,7 @@
 let settings = {},
     diff = {},
     diffTimestamp = 0,
+    mainElement = document.getElementById('main'),
     settingsWrapper = document.getElementById('settings-wrapper'),
     aside = document.getElementById('aside'),
     header = document.getElementById('header')
@@ -50,6 +51,28 @@ async function init() {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
                         inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                    }, 50)
+                    break
+
+                case 'key':
+                    sectionWrapper.innerHTML += `<label class="has-key" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" class="input-key" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        keyDisplay = value.charAt(0).toUpperCase() + value.slice(1) || 'S'
+                        if (value === 'Control') keyDisplay = 'Ctrl'
+                        if (value === ' ') keyDisplay = 'Spatie'
+                        inputElement.value = keyDisplay
+                        inputElement.addEventListener('keydown', e => {
+                            e.preventDefault()
+                            inputElement.blur()
+                            keyDisplay = e.key.charAt(0).toUpperCase() + e.key.slice(1) || 'S'
+                            if (e.key === 'Control') keyDisplay = 'Ctrl'
+                            if (e.key === ' ') keyDisplay = 'Spatie'
+                            inputElement.value = keyDisplay
+                            pushSetting(setting.id, e.key, inputElement)
+                        })
                         if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
@@ -378,8 +401,8 @@ function updateConditionals() {
             }
         })
 
-        if (matched === requirements.length) element.dataset.appear = true
-        else element.dataset.appear = false
+        if (matched === requirements.length) element.classList.remove('collapse')
+        else element.classList.add('collapse')
     })
 }
 
