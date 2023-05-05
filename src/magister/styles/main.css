@@ -268,7 +268,7 @@
     background-color: var(--st-highlight-primary);
     padding-right: 2px;
     height: 40px;
-    max-width: 50px;
+    max-width: 80px;
     border-radius: var(--st-border-radius) 0 0 var(--st-border-radius);
     transition: max-width 500ms, padding 500ms;
 }

@@ -55,6 +55,28 @@ async function init() {
                     }, 50)
                     break
 
+                case 'key':
+                    sectionWrapper.innerHTML += `<label class="has-key" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" class="input-key" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        keyDisplay = value.charAt(0).toUpperCase() + value.slice(1) || 'S'
+                        if (value === 'Control') keyDisplay = 'Ctrl'
+                        if (value === ' ') keyDisplay = 'Spatie'
+                        inputElement.value = keyDisplay
+                        inputElement.addEventListener('keydown', e => {
+                            e.preventDefault()
+                            inputElement.blur()
+                            keyDisplay = e.key.charAt(0).toUpperCase() + e.key.slice(1) || 'S'
+                            if (e.key === 'Control') keyDisplay = 'Ctrl'
+                            if (e.key === ' ') keyDisplay = 'Spatie'
+                            inputElement.value = keyDisplay
+                            pushSetting(setting.id, e.key, inputElement)
+                        })
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                    }, 50)
+                    break
+
                 case 'slider':
                     sectionWrapper.innerHTML += `<label class="has-slider" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
                     setTimeout(() => {

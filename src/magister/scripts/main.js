@@ -56,15 +56,17 @@ async function main() {
             gradesElem = document.createElement('a'),
             studyguideElem = document.createElement('a'),
             booksElem = document.createElement('a'),
-            key = await getSetting('magister-shortcut-keys-master'),
-            keyUpper = key?.split('')?.[0]?.toUpperCase() || 'S',
-            keyLower = key?.split('')?.[0]?.toLowerCase() || 's'
+            key = await getSetting('magister-shortcut-keys-master') || 'S',
+            keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
+
+        if (key === 'Control') keyDisplay = 'Ctrl'
+        if (key === ' ') keyDisplay = 'Spatie'
 
         document.body.append(shortcutsWrapper)
         shortcutsWrapper.id = 'st-shortcuts'
         shortcutsWrapper.append(sElem, todayElem, agendaElem, gradesElem, studyguideElem, booksElem)
 
-        setAttributes(sElem, { class: 'st-keyboard-hint', 'data-hint-primary': keyUpper })
+        setAttributes(sElem, { class: 'st-keyboard-hint', 'data-hint-primary': keyDisplay })
 
         setAttributes(todayElem, { class: 'st-keyboard-hint', 'data-hint-primary': '1', 'data-hint-secondary': '!', href: '#/vandaag' })
         todayElem.innerText = "Vandaag"
@@ -83,7 +85,8 @@ async function main() {
 
         addEventListener('keydown', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
-            if (shortcutsWrapper.dataset.open === 'false' && (e.key === keyLower || e.key === keyUpper)) {
+            if (shortcutsWrapper.dataset.open === 'false' && e.key.toLowerCase() === key.toLowerCase()) {
+                e.preventDefault()
                 shortcutsWrapper.dataset.open = true
             }
             shortcutsWrapper.querySelectorAll('a').forEach(shortcut => {
@@ -101,7 +104,7 @@ async function main() {
 
         addEventListener('keyup', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return
-            if (shortcutsWrapper.dataset.open === 'true' && (e.key === keyLower || e.key === keyUpper)) {
+            if (shortcutsWrapper.dataset.open === 'true' && e.key.toLowerCase() === key.toLowerCase()) {
                 setTimeout(() => {
                     if (shortcutsWrapper.dataset.open === 'true') shortcutsWrapper.dataset.open = false
                 }, 1000)

@@ -125,8 +125,8 @@ const settingsBuilder = [
             {
                 id: 'magister-shortcut-keys-master',
                 title: "Activatietoets",
-                subtitle: "De toets die de sneltoetsen activeert (zoals de 'S').",
-                type: "text",
+                subtitle: "De toets die de sneltoetsen activeert.",
+                type: "key",
                 default: "S",
                 require: "magister-shortcut-keys magister-css-experimental",
             },

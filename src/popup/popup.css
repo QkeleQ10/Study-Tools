@@ -292,6 +292,12 @@ label.has-text {
         / 1fr;
 }
 
+label.has-key {
+    grid-template:
+        'title input' auto
+        / 1fr auto;
+}
+
 label.has-select {
     grid-template-rows: auto;
 }
@@ -532,6 +538,33 @@ label:active .select.collapse>*[data-selected=true],
 .select>button:active {
     scale: .98;
     box-shadow: 0px 3px 5px -4px var(--shadow);
+}
+
+input[type=text].input-key {
+    border-radius: 7px;
+    cursor: pointer;
+    outline: solid 1px var(--outline) !important;
+    border: none !important;
+    padding: 4px 1px;
+    max-width: 75px;
+    margin: 0;
+    text-align: center;
+    box-shadow: 0px 6px 16px -8px var(--shadow);
+}
+
+label:hover>input[type=text].input-key {
+    scale: 1.1;
+    box-shadow: 0px 8px 20px -8px var(--shadow);
+}
+
+label:active>input[type=text].input-key {
+    scale: .9;
+    box-shadow: 0px 3px 8px -4px var(--shadowActive);
+}
+
+input[type=text].input-key:focus {
+    outline-color: hsl(var(--hue), var(--saturation), var(--luminance)) !important;
+    box-shadow: 0px 8px 20px -8px var(--shadow);
 }
 
 input[type=text],
