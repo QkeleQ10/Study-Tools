@@ -1,4 +1,5 @@
 {
+    "$schema": "https://json.schemastore.org/chrome-manifest",
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
@@ -18,6 +19,10 @@
         "gecko": {
             "id": "studytools@qkeleq10.dev"
         }
+    },
+    "background": {
+        "service_worker": "src/service-worker.js",
+        "type": "module"
     },
     "content_scripts": [
         {
@@ -41,6 +46,7 @@
             ],
             "css": [
                 "src/magister/styles/main.css",
+                "src/magister/styles/social.css",
                 "src/magister/styles/today.css",
                 "src/magister/styles/grades.css"
             ],
@@ -52,6 +58,7 @@
             ],
             "js": [
                 "src/magister/scripts/main.js",
+                "src/magister/scripts/social.js",
                 "src/magister/scripts/today.js",
                 "src/magister/scripts/grades.js",
                 "src/magister/scripts/studyguide.js"
@@ -98,6 +105,10 @@
         "open_in_tab": true
     },
     "permissions": [
-        "storage"
+        "storage",
+        "webRequest"
+    ],
+    "host_permissions": [
+        "*://*.magister.net/*"
     ]
 }

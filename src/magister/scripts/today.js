@@ -258,9 +258,6 @@ async function todaySchedule(scheduleWrapper) {
             container.append(elementWrapper)
 
             if (!legacy) events.forEach(comparingEvent => {
-
-                console.log(title, comparingEvent.title, comparingEvent.start - end, comparingEvent.end - start)
-
                 if (Math.abs(comparingEvent.start - end) < 100) {
                     elementWrapper.classList.add('border-bottom-radius-none')
                 }

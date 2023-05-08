@@ -10,11 +10,12 @@ async function main() {
 
     if (await getSetting('magister-appbar-zermelo')) {
         const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
+            spacer = await getElement('.appbar>.spacer'),
             zermeloA = document.createElement('a'),
             zermeloImg = document.createElement('img'),
             zermeloSpan = document.createElement('span')
         appbarZermelo.innerText = ''
-        appbar.firstElementChild.after(appbarZermelo)
+        spacer.after(appbarZermelo)
         appbarZermelo.classList.add('menu-button')
         appbarZermelo.id = 'st-appbar-zermelo'
         appbarZermelo.append(zermeloA)
@@ -30,8 +31,14 @@ async function main() {
     }
 
     if (await getSetting('magister-appbar-week')) {
-        let appbarWeek = document.getElementById('st-appbar-week') || document.createElement("h1")
-        appbar.prepend(appbarWeek)
+        let appbarMetrics = document.getElementById('st-appbar-metrics'),
+            appbarWeek = document.getElementById('st-appbar-week') || document.createElement('div')
+        if (!appbarMetrics) {
+            appbarMetrics = document.createElement('div')
+            appbarMetrics.id = 'st-appbar-metrics'
+            appbar.prepend(appbarMetrics)
+        }
+        appbarMetrics.prepend(appbarWeek)
         appbarWeek.id = 'st-appbar-week'
         appbarWeek.classList.add('st-metric')
         appbarWeek.dataset.description = 'Week'
