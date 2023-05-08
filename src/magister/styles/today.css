@@ -85,6 +85,7 @@
 
 #st-vd-schedule {
     grid-area: schedule;
+    padding-bottom: 2px;
 }
 
 #st-vd-schedule>div:first-of-type {
@@ -176,6 +177,7 @@
 
 #st-vd-schedule>ul:has(li:hover)>li:not(:hover) {
     opacity: .5;
+    transition: color 200ms, filter 200ms, transform 200ms, opacity 500ms 500ms !important;
 }
 
 #st-vd-schedule>ul>li[data-filler] {
@@ -368,6 +370,10 @@
             / 1fr;
         column-gap: 10px;
         row-gap: 20px;
+    }
+
+    #st-vd-schedule {
+        margin-bottom: 0 !important;
     }
 
     #st-vd-notifications {

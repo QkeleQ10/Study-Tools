@@ -110,7 +110,7 @@ async function todayNotifications(notifcationsWrapper) {
 
             if (description === 'activiteiten waarop nog ingeschreven moet of kan worden') description = 'activiteiten'
             if (description === 'activiteit waarop nog ingeschreven moet of kan worden') description = 'activiteit'
-            
+
             let element = document.querySelector(`li[data-description="${description}"]`) || document.createElement('li')
 
             element.dataset.description = description
@@ -258,6 +258,17 @@ async function todaySchedule(scheduleWrapper) {
             container.append(elementWrapper)
 
             if (!legacy) events.forEach(comparingEvent => {
+
+                console.log(title, comparingEvent.title, comparingEvent.start - end, comparingEvent.end - start)
+
+                if (Math.abs(comparingEvent.start - end) < 100) {
+                    elementWrapper.classList.add('border-bottom-radius-none')
+                }
+
+                if (Math.abs(comparingEvent.end - start) < 100) {
+                    elementWrapper.classList.add('border-top-radius-none')
+                }
+
                 if (id === comparingEvent.id || overlapComparisonMap[id].has(comparingEvent.id) || overlapComparisonMap[comparingEvent.id].has(id)) return
                 if ((start >= comparingEvent.start && start < comparingEvent.end)) {
                     if (duration > comparingEvent.duration) {
@@ -277,16 +288,6 @@ async function todaySchedule(scheduleWrapper) {
                         overlapIndexMap[id] = overlapIndexMap[comparingEvent.id] + 1
                         overlapComparisonMap[id].add(comparingEvent.id)
                     }
-                }
-
-                if (-100 < comparingEvent.start - end && comparingEvent.start - end < 100) {
-                    elementWrapper.style.borderBottomLeftRadius = '0'
-                    elementWrapper.style.borderBottomRightRadius = '0'
-                }
-
-                if (-100 < comparingEvent.end - start && comparingEvent.end - start < 100) {
-                    elementWrapper.style.borderTopLeftRadius = '0'
-                    elementWrapper.style.borderTopRightRadius = '0'
                 }
             })
 
@@ -334,13 +335,13 @@ async function todaySchedule(scheduleWrapper) {
                     elementPeriod.removeAttribute('style')
                 }
                 if (i === 0) {
-                    scheduleNowLine.style.top = await msToPixels(now - firstStart) + 43 + 'px'
+                    // scheduleNowLine.style.top = await msToPixels(now - firstStart) + 43 + 'px'
                 }
             }, 10000)
 
             if (!legacy && i === 0) {
-                scheduleNowLine.style.top = await msToPixels(new Date() - firstStart) + 43 + 'px'
-                scheduleNowLine.id = 'st-vd-schedule-now'
+                // scheduleNowLine.style.top = await msToPixels(new Date() - firstStart) + 43 + 'px'
+                // scheduleNowLine.id = 'st-vd-schedule-now'
                 scheduleTodayContainer.style.height = await msToPixels(lastEnd - firstStart) + 44 + 'px'
                 scheduleTodayContainer.scroll({ top: await msToPixels(new Date() - firstStart) - (window.innerHeight * 0.5) })
             }

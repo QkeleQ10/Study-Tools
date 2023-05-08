@@ -373,6 +373,18 @@
     z-index: 99999999;
 }
 
+.border-top-radius-none,
+.border-top-radius-none>span:nth-child(3) {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+.border-bottom-radius-none,
+.border-bottom-radius-none>span:nth-child(3) {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
 @media (min-width:1400px) {
     #st-sw-grid {
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr))
