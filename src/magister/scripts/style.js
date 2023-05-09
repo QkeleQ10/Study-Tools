@@ -50,6 +50,7 @@ async function applyStyles() {
     --st-background-secondary: #ffffff;
     --st-background-tertiary: #f5f5f5;
     --st-background-overlay: #fffffff5;
+    --st-background-transparent: #ffffffbb;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
     --st-highlight-ok: #81e3bc;
     --st-highlight-warn: #fff0f5;
@@ -78,6 +79,7 @@ async function applyStyles() {
     --st-background-secondary: #161616;
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f5;
+    --st-background-transparent: #121212bb;
     --st-highlight-primary: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
@@ -382,7 +384,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.caption, .k-dropdown, .user-content span),
+span:not(.st-title, .st-subtitle, .caption, .k-dropdown, .user-content span),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,
@@ -612,6 +614,90 @@ dna-button:hover {
 }
 
 .overdue,.overdue *{color:grey!important}
+
+.studiewijzer-onderdeel div.fold div.content {
+    height: auto;
+    overflow: hidden !important;
+    opacity: 1;
+}
+
+.content.content-auto {
+    grid-template-rows: 1fr;
+    display: grid;
+    overflow: hidden !important;
+    transition: grid-template-rows 200ms;
+}
+
+.content.content-auto>* {
+    overflow: hidden !important;
+}
+
+.fold .content.content-auto {
+    grid-template-rows: 0fr;
+}
+
+.clearfix.user-content {
+    transition: padding 200ms;
+}
+
+.fold .clearfix.user-content {
+    padding-block: 0 !important;
+}
+
+.block h3 strong, .block h3 strong.ng-hide:not(.ng-hide-animate) {
+    min-height: 0;
+    max-height: 0;
+    display: block !important;
+    overflow: hidden !important;
+    transition: min-height 200ms, max-height 200ms;
+}
+
+.fold h3 strong {
+    min-height: 44px;
+    max-height: 44px;
+}
+
+#studiewijzer-detail-container .content {
+    min-height: 0;
+}
+
+footer.endlink {
+    display: none;
+}
+
+.studiewijzer-onderdeel .block.ng-scope {
+    overflow: hidden !important;
+}
+
+.sources>li {
+    max-height: 39px;
+    transition: max-height 200ms;
+}
+
+.fold .sources>li {
+    max-height: 0;
+    border-top: none !important;
+}
+
+.icon-down-arrow:before, .icon-up-arrow:before {
+    content: '';
+    font: 400 24px/44px "Font Awesome 5 Pro" !important;
+    transition: rotate 200ms, translate 200ms;
+}
+
+.icon-up-arrow:before {
+    rotate: 180deg;
+}
+
+.studiewijzer-onderdeel:has(h3 b:active, .icon-down-arrow:active) .icon-down-arrow:before,
+h3:active> .icon-down-arrow:before{
+    translate: 0 6px;
+}
+
+.studiewijzer-onderdeel:has(h3 b:active, .icon-up-arrow:active) .icon-up-arrow:before,
+h3:active> .icon-up-arrow:before {
+    translate: 0 -6px;
+}
 `, 'study-tools-experimental')
     }
 

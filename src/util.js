@@ -99,7 +99,18 @@ function setIntervalImmediately(func, interval) {
     return setInterval(func, interval)
 }
 
-function getElement(querySelector, all, duration) {
+function element(tagName, id, parent, attributes) {
+    let elem = document.getElementById(id)
+    if (!elem) {
+        elem = document.createElement(tagName)
+        elem.id = id
+        if (parent) parent.append(elem)
+        if (attributes) setAttributes(elem, attributes)
+    }
+    return elem
+}
+
+function awaitElement(querySelector, all, duration) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             if (document.querySelector(querySelector)) {
@@ -146,15 +157,16 @@ function setSettings(object, location) {
     })
 }
 
-function setAttributes(el, attrs) {
-    for (var key in attrs) {
-        el.setAttribute(key, attrs[key])
+function setAttributes(elem, attributes) {
+    for (var key in attributes) {
+        if (key === 'innerText') elem.innerText = attributes[key]
+        else elem.setAttribute(key, attributes[key])
     }
 }
 
 async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
     const snackbar = document.createElement('div'),
-        snackbarWrapper = await getElement('#st-snackbars')
+        snackbarWrapper = await awaitElement('#st-snackbars')
     snackbarWrapper.append(snackbar)
     snackbar.innerText = body
     snackbar.addEventListener('dblclick', () => {

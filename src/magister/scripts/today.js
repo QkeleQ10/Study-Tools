@@ -8,7 +8,7 @@ async function popstate() {
 // Page 'Vandaag'
 async function today() {
     if (!await getSetting('magister-vd-overhaul')) return
-    let mainSection = await getElement('section.main'),
+    let mainSection = await awaitElement('section.main'),
         container = document.createElement('div'),
         header = document.createElement('div'),
         headerText = document.createElement('span'),
@@ -65,10 +65,10 @@ async function today() {
 }
 
 async function todayNotifications(notifcationsWrapper) {
-    let lastGrade = await getElement('.block.grade-widget span.cijfer'),
-        lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
-        moreGrades = await getElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
-        unreadItems = await getElement('#notificatie-widget ul>li', true),
+    let lastGrade = await awaitElement('.block.grade-widget span.cijfer'),
+        lastGradeDescription = await awaitElement('.block.grade-widget span.omschrijving'),
+        moreGrades = await awaitElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
+        unreadItems = await awaitElement('#notificatie-widget ul>li', true),
         gradeNotification = document.getElementById('st-vd-grade-notification') || document.createElement('li'),
         gradeNotificationSpan = document.getElementById('st-vd-grade-notification-span') || document.createElement('span')
 
@@ -170,7 +170,7 @@ async function todaySchedule(scheduleWrapper) {
         scheduleLinkList.href = '#/agenda'
     }
 
-    let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
+    let agendaTodayElems = await awaitElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
     renderScheduleList(agendaTodayElems, scheduleTodayContainer)
 
     if (!legacy) {
@@ -178,8 +178,8 @@ async function todaySchedule(scheduleWrapper) {
     }
 
     setTimeout(async () => {
-        let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4', 4000),
-            agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
+        let agendaTomorrowTitle = await awaitElement('#agendawidgetlistcontainer>h4', 4000),
+            agendaTomorrowElems = await awaitElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
         if (!agendaTomorrowTitle, agendaTomorrowElems) return
         scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
         scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle?.innerText?.replace('Wijzigingen voor ', '') || 'morgen'}`

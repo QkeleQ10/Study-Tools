@@ -5,7 +5,7 @@ async function magisterLogin() {
 
     if (await getSetting('magisterLogin-method') !== 'microsoft' || !await getSetting('magisterLogin-email') || (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000)) return
 
-    let signInButton = await getElement(`div.table[data-test-id="${await getSetting('magisterLogin-email')}"]`)
+    let signInButton = await awaitElement(`div.table[data-test-id="${await getSetting('magisterLogin-email')}"]`)
     if (signInButton) signInButton.click()
 }
 

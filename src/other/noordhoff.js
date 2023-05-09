@@ -1,7 +1,7 @@
 init()
 
 async function login() {
-    let signInButton = await getElement('button.button#login_container-login-button')
+    let signInButton = await awaitElement('button.button#login_container-login-button')
     signInButton.click()
     identity()
 }
@@ -9,7 +9,7 @@ async function login() {
 // BROKEN
 async function identity() {
     if (!await getSetting('noordhoff-login-entree')) return
-    let entreeButton = await getElement('div.login-form_entree-login > a')
+    let entreeButton = await awaitElement('div.login-form_entree-login > a')
     entreeButton.click()
 }
 

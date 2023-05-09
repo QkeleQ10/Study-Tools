@@ -13,15 +13,15 @@ async function popstate() {
 // Page 'Studiewijzers
 async function studyguideList() {
     if (await getSetting('magister-sw-display') === 'off') return
-    const gridContainer = await getElement('section.main')
+    const gridContainer = await awaitElement('section.main')
     renderStudyguideList(gridContainer)
 }
 
 // Page 'Studiewijzer
 async function studyguideIndividual() {
     if (await getSetting('magister-sw-thisWeek')) {
-        let list = await getElement('.studiewijzer-content-container>ul'),
-            titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
+        let list = await awaitElement('.studiewijzer-content-container>ul'),
+            titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
 
         titles.forEach(async title => {
@@ -38,7 +38,7 @@ async function studyguideIndividual() {
     }
 
     if (await getSetting('magister-sw-display') === 'off') return
-    const gridContainer = await getElement('div.full-height.widget')
+    const gridContainer = await awaitElement('div.full-height.widget')
     renderStudyguideList(gridContainer, true)
 }
 
@@ -48,8 +48,8 @@ async function renderStudyguideList(gridContainer, compact) {
         settingSubjects = await getSetting('magister-subjects'),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-        originalList = await getElement('.studiewijzer-list > ul, .content.projects > ul'),
-        originalItems = await getElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
+        originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),
+        originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
         originalItemsArray = [...originalItems],
         gridWrapper = document.createElement('div'),
         grid = document.createElement('div')

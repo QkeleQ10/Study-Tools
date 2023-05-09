@@ -3,14 +3,14 @@ let subjects
 // Run when the extension and page are loaded
 main()
 async function main() {
-    let appbar = await getElement('.appbar'),
-        logos = await getElement('img.logo-expanded, img.logo-collapsed', true)
+    let appbar = await awaitElement('.appbar'),
+        logos = await awaitElement('img.logo-expanded, img.logo-collapsed', true)
 
     subjects = await getSetting('magister-subjects')
 
     if (await getSetting('magister-appbar-zermelo')) {
         const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
-            spacer = await getElement('.appbar>.spacer'),
+            spacer = await awaitElement('.appbar>.spacer'),
             zermeloA = document.createElement('a'),
             zermeloImg = document.createElement('img'),
             zermeloSpan = document.createElement('span')
@@ -45,9 +45,9 @@ async function main() {
         appbarWeek.innerText = getWeekNumber()
     }
 
-    let userMenuLink = await getElement('#user-menu')
+    let userMenuLink = await awaitElement('#user-menu')
     userMenuLink.addEventListener('click', async () => {
-        let logoutLink = await getElement('.user-menu ul li:nth-child(3) a')
+        let logoutLink = await awaitElement('.user-menu ul li:nth-child(3) a')
         logoutLink.addEventListener('click', async () => {
             await setSetting('force-logout', new Date().getTime(), 'local')
         })
@@ -134,7 +134,8 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-button, [id^="st-cf"], .k-animation-container').forEach(e => e.remove())
+    document.querySelectorAll('.st-overlay').forEach(e => e.close())
+    document.querySelectorAll('.st-button, .st-overlay, [id^="st-cf"], .k-animation-container').forEach(e => e.remove())
 }
 
 function getWeekNumber() {
