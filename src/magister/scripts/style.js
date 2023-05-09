@@ -33,10 +33,14 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 }
 
 async function applyStyles() {
-    const hueWish = await getSetting('magister-css-hue'),
+    let hueWish = await getSetting('magister-css-hue'),
         saturationWish = await getSetting('magister-css-saturation'),
         luminanceWish = await getSetting('magister-css-luminance'),
         borderRadius = await getSetting('magister-css-border-radius')
+
+    if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
+        hueWish = 266, saturationWish = 51, luminanceWish = 41
+    }
 
     let lightThemeCss = `:root {
     --st-font-primary: 600 16px/44px 'arboria', sans-serif;
@@ -62,7 +66,8 @@ async function applyStyles() {
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 100;
+    --st-shadow-value: 50;
+    --st-shadow-alpha: .5;
     --st-hover-brightness: .8;
 }`,
         darkThemeCss = `:root {
@@ -90,6 +95,7 @@ async function applyStyles() {
     --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 0;
+    --st-shadow-alpha: 1;
     --st-hover-brightness: 1.4;
     color-scheme: dark;
 }`,

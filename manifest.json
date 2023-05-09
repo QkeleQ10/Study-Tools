@@ -46,7 +46,7 @@
             ],
             "css": [
                 "src/magister/styles/main.css",
-                "src/magister/styles/social.css",
+                "src/magister/styles/gamification.css",
                 "src/magister/styles/today.css",
                 "src/magister/styles/grades.css"
             ],
@@ -58,7 +58,7 @@
             ],
             "js": [
                 "src/magister/scripts/main.js",
-                "src/magister/scripts/social.js",
+                "src/magister/scripts/gamification.js",
                 "src/magister/scripts/today.js",
                 "src/magister/scripts/grades.js",
                 "src/magister/scripts/studyguide.js"

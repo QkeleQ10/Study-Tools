@@ -1,0 +1,44 @@
+#st-level {
+    position: absolute;
+    top: 25px;
+    right: calc(clamp(75px, 10vw, 300px) + 20px);
+    height: 40px;
+    width: 40px;
+    color: var(--st-foreground-accent);
+    background: var(--st-background-secondary);
+    border: 2px solid var(--st-accent-primary);
+    font: 600 20px var(--st-font-family-primary);
+    padding-block: 5px;
+    text-align: center;
+    border-radius: 50%;
+    z-index: 1002;
+}
+
+#st-progress {
+    position: absolute;
+    top: 35px;
+    right: 20px;
+    width: calc(clamp(75px, 10vw, 300px) + 15px);
+    box-sizing: border-box;
+    height: 20px;
+    background: var(--st-highlight-primary);
+    border-radius: var(--st-border-radius);
+    padding-left: 10px;
+    overflow: hidden;
+    z-index: 1001;
+}
+
+#st-progress:before {
+    content: '';
+    overflow: visible;
+    display: inline-block;
+    width: var(--level-progress);
+    padding: 1px 6px;
+    font: 14px var(--st-font-family-secondary);
+    height: 100%;
+    background: var(--st-accent-primary);
+}
+
+#st-progress:hover:before {
+    content: attr(data-progress) '/' attr(data-required);
+}

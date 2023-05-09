@@ -8,7 +8,7 @@
     color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 1);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
 }
 
 .st-button {
@@ -268,7 +268,7 @@
     background: var(--st-background-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 1);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 9999999;
     transition: bottom 500ms cubic-bezier(.75, 0, 1, 1), box-shadow 200ms;
 }
