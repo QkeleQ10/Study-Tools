@@ -7,16 +7,19 @@ async function popstate() {
 
 async function gamification() {
     let mainContainer = await getElement('section.main'),
-        levels = document.getElementById('st-level') || document.createElement('div'),
-        progress = document.getElementById('st-progress') || document.createElement('div')
-    points = await getSetting('points')
-    mainContainer.append(levels, progress)
-    levels.id = 'st-level'
-    // levels.classList.add('st-metric')
-    levels.dataset.description = 'Level'
-    levels.innerText = Math.round(points / 10)
-    progress.id = 'st-progress'
-    progress.dataset.progress = Math.round(points % 10)
-    progress.dataset.required = '10'
-    progress.setAttribute('style', `--level-progress: ${(points % 10) * 10}%;`)
+        levelElem = document.getElementById('st-level') || document.createElement('div'),
+        progressElem = document.getElementById('st-progress') || document.createElement('div'),
+        points = await getSetting('points'),
+        level = Math.floor(Math.sqrt(points + 9) - 3),
+        pointsRequired = 2 * level + 7,
+        pointsProgress = Math.floor(points - (level ** 2 + 6 * level))
+    mainContainer.append(levelElem, progressElem)
+    levelElem.id = 'st-level'
+    levelElem.dataset.description = 'Level'
+    levelElem.innerText = level
+    progressElem.id = 'st-progress'
+    console.log(points, pointsRequired)
+    progressElem.dataset.progress = pointsProgress
+    progressElem.dataset.required = pointsRequired
+    progressElem.setAttribute('style', `--level-progress: ${pointsProgress / pointsRequired * 100}%;`)
 }

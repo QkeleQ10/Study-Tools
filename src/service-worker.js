@@ -9,7 +9,7 @@ chrome.webRequest.onSendHeaders.addListener(async e => {
     })
     if (e.url.split('/api/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/api/personen/')[1].split('/')[0]
     date = new Date()
-    const currentGradesRes = await fetch(`https://amadeuslyceum.magister.net/api/personen/${userId}/cijfers/laatste?top=50`, {
+    const currentGradesRes = await fetch(`https://amadeuslyceum.magister.net/api/personen/${userId}/cijfers/laatste?top=200`, {
         headers: {
             Authorization: token
         }
@@ -39,7 +39,8 @@ function calculatePoints(currentGrades) {
         array.push({ result, importance, previousResult })
     })
 
-    const currentGradesPts = array.reduce((total, next) => total + next.result * next.importance, 0) / 25
+    // const currentGradesPts = array.reduce((total, next) => total + next.result * next.importance, 0) / 25
+    const currentGradesPts = array.reduce((total, next) => total + next.result, 0)
 
     return currentGradesPts
 }
