@@ -12,8 +12,6 @@
 }
 
 #st-vd-header>span {
-    font: 700 28px / 2rem arboria, sans-serif;
-    color: var(--st-foreground-accent);
     transition: opacity 500ms;
 }
 
@@ -23,9 +21,6 @@
 
 #st-vd-header>span:after {
     content: attr(data-last-letter);
-    display: inline-block;
-    width: 3px;
-    color: #ff8205;
 }
 
 #st-vd-header>span:first-letter {
@@ -329,10 +324,14 @@
 }
 
 #st-vd-notifications>li[data-additional-info]:after {
-    content: '\A' attr(data-additional-info);
+    content: attr(data-additional-info);
+    display: inline-block;
     opacity: 0.8;
     font-weight: 400;
-    white-space: pre;
+    width: calc(100% + 32px);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 #st-vd-notifications>li:before {

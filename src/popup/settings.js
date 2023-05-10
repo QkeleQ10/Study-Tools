@@ -172,7 +172,7 @@ const settingsBuilder = [
         settings: [
             {
                 id: "magister-vd-overhaul",
-                title: "Alternatieve pagina 'Vandaag'",
+                title: "Verbeterde pagina 'Vandaag'",
                 default: true,
                 require: "magister-css-experimental",
             },
@@ -187,11 +187,6 @@ const settingsBuilder = [
                 max: 2.5,
                 step: 0.1,
                 require: "magister-css-experimental magister-vd-overhaul",
-            },
-            {
-                id: "magister-vd-agendaLegacy",
-                title: "Legacy-modus agenda",
-                subtitle: "Tijdelijke optie voor debugging.",
             },
             {
                 id: "magister-vd-subjects",
@@ -311,21 +306,6 @@ const settingsBuilder = [
                 type: "subjects",
                 default: [{ name: "Aardrijkskunde", aliases: "ak" }, { name: "Bedrijfseconomie", aliases: "beco" }, { name: "Beeldende vorming", aliases: "be, bv, kubv" }, { name: "Biologie", aliases: "bi" }, { name: "Cult. en kunstz. vorming", aliases: "ckv" }, { name: "Drama", aliases: "dr, kudr" }, { name: "Duitse taal", aliases: "du, dutl" }, { name: "Economie", aliases: "ec" }, { name: "Engelse taal", aliases: "en, entl" }, { name: "Franse taal", aliases: "fa, fatl" }, { name: "Geschiedenis", aliases: "gs" }, { name: "Kunst algemeen", aliases: "ku, kua" }, { name: "Levensbeschouwing", aliases: "lv" }, { name: "Lichamelijke opvoeding", aliases: "lo" }, { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" }, { name: "Maatschappijleer", aliases: "ma, malv" }, { name: "Maatschappij&shy;wetenschappen", aliases: "maw" }, { name: "Mentor", aliases: "mentoruur, mentoraat" }, { name: "Muziek", aliases: "mu, kumu" }, { name: "Natuurkunde", aliases: "na" }, { name: "Nederlandse taal", aliases: "ne, netl" }, { name: "Scheikunde", aliases: "sk" }, { name: "Spaanse taal", aliases: "sp, sptl" }, { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd" }]
             }
-        ]
-    },
-    {
-        id: "section-noordhoff",
-        group: "Noordhoff",
-        title: "Inloggen",
-        settings: [
-            {
-                id: "noordhoff-login-enabled",
-                title: "Automatisch doorgaan"
-            },
-            // {
-            //     id: "noordhoff-login-entree",
-            //     title: "Inloggen met Entree"
-            // },
         ]
     },
     {

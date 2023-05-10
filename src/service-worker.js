@@ -2,84 +2,94 @@ let token,
     userId,
     date
 
-chrome.tabs.query({ url: '*://*.magister.net/magister/#/vandaag*', lastFocusedWindow: true }, function (tabs) {
-    console.log(tabs)
-});
-
-
 chrome.webRequest.onSendHeaders.addListener(async e => {
     if (date - new Date() < 10000) return
     Object.values(e.requestHeaders).forEach(async obj => {
         if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
     })
-    if (e.url.split('/api/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/api/personen/')[1].split('/')[0]
+    if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/personen/')[1].split('/')[0]
     date = new Date()
-    const currentGradesRes = await fetch(`${e.url.split('/api/personen/')[0]}/api/personen/${userId}/cijfers/laatste?top=200`, {
-        headers: {
-            Authorization: token
+
+    const yearsRes = await fetch(`${e.url.split('/api/')[0]}/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
+        yearsArray = (await yearsRes.json()).items,
+        years = {}
+
+
+    yearsArray.forEach(async year => {
+        console.log(year)
+        const gradesRes = await fetch(`${e.url.split('/api/')[0]}/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
+        const gradesJson = (await gradesRes.json()).Items
+
+        const absencesRes = await fetch(`${e.url.split('/api/')[0]}/api/personen/${userId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: token } }),
+            absencesJson = (await absencesRes.json()).Items
+
+        years[year.id] = { grades: gradesJson, absences: absencesJson, name: year.studie.code }
+    })
+
+    // TODO: yearsGrades is VERY USEFUL!!! Perhaps allow the content script and service worker to communicate, so that grade statistics can be gathered more accurately and swiftly?
+
+    function checkRequestsDone() {
+        if (Object.keys(years).length !== yearsArray.length) {
+            setTimeout(checkRequestsDone, 100)
+        } else {
+            let points = calculatePoints(years)
+            console.info(points)
+            chrome.storage.sync.set({ points })
         }
-    })
-    const currentGrades = (await currentGradesRes.json()).items
-    let points = calculatePoints(currentGrades)
-    chrome.storage.sync.set({ points })
-}, { urls: ['*://*.magister.net/api/personen/*'] }, ['requestHeaders', 'extraHeaders'])
+    }
+    checkRequestsDone()
+}, { urls: ['*://*.magister.net/api/m6/personen*instellingen/desktop?filter=VANDAAG_SCHERM*'] }, ['requestHeaders', 'extraHeaders'])
 
-function calculatePoints(currentGrades) {
-    // currentGrades: The sum of this year's grades (with an offset depending on the grade achieved) are added to the points count.
+function calculatePoints(years) {
     // TODO: Should resits be penalised or rewarded? Or should they be treated as separate grades?
-    // TODO: absences, assignments, past years
+    // TODO: absences, assignments
     // TODO: Are points allowed to decrease (when the grade average falls, when absences are added, when assignments are handed in late)
-
-    let array = []
-
-    currentGrades.forEach((e, i, a) => {
-        let result = Number(e.waarde.replace(',', '.')),
-            previousResult
-        if (Number.isNaN(result)) return
-        currentGrades.forEach(g => {
-            if (new Date(e.ingevoerdOp) <= new Date(g.ingevoerdOp)) return
-            if (e.omschrijving === g.omschrijving) previousResult = Number(g.waarde.replace(',', '.'))
-        })
-        array.push({ result, previousResult })
-    })
+    // TODO: Should certain absences (loopbaanbegeleiding, interne activiteit) be rewarded? Or should they be ignored?
 
     let points = {
-        g1: { n: 0, v: 0 },
-        g2: { n: 0, v: 0 },
-        g3: { n: 0, v: 0 },
-        g4: { n: 0, v: 0 },
-        g5: { n: 0, v: 0 },
-        gr: { n: 0, v: 0 }
+        absences: {},
+        grades: {}
     }
 
-    array.forEach(grade => {
-        if (grade.result >= 9.5) {
-            points.g1.n++
-            points.g1.v += grade.result + 6
-        } else if (grade.result >= 8.5) {
-            points.g2.n++
-            points.g2.v += grade.result + 4
-        } else if (grade.result >= 7.5) {
-            points.g3.n++
-            points.g3.v += grade.result + 2
-        } else if (grade.result >= 6.5) {
-            points.g4.n++
-            points.g4.v += grade.result
-        } else if (grade.result >= 5.5) {
-            points.g5.n++
-            points.g5.v += grade.result - 2
-        }
-        if (grade.previousResult && grade.result > grade.previousResult) {
-            points.gr.n++
-            points.gr.v += grade.result - grade.previousResult + 3
-        }
+    Object.keys(years).forEach((yearId, i, a) => {
+        let yearName = years[yearId].name,
+            gradesN = 0,
+            gradesV = 0,
+            absencesN = 0,
+            absencesV = 0
+
+        // Sufficient grades 
+        years[yearId].grades.filter(e => !Number.isNaN(Number(e.CijferStr?.replace(',', '.'))) && e.CijferKolom.KolomSoort === 1).forEach(grade => {
+            let result = Number(grade.CijferStr?.replace(',', '.'))
+            if (result < 5.5) return // This prevents point deduction if an insufficient grade is added
+            gradesN++
+            gradesV += (3 * result - 14)
+        })
+        gradesV = Math.ceil(gradesV * (0.25 * i + .5))
+        points.grades[yearId] = { n: gradesN, v: gradesV, g: yearName }
+
+        // Absences deduct points from the user's score
+        years[yearId].absences.filter(e => !e.Geoorloofd).forEach(absence => {
+            absencesN++
+            absencesV -= 15
+        })
+
+        points.absences[yearId] = { n: absencesN, v: absencesV, g: yearName }
     })
 
-    let total = 0
-
-    Object.values(points).forEach(val => {
-        total += val.v
+    // All points are added up and returned
+    points.total = 0
+    Object.keys(points).forEach(categoryKey => {
+        if (categoryKey === 'total') return
+        points[categoryKey].sum = 0
+        Object.keys(points[categoryKey]).forEach(yearKey => {
+            if (yearKey === 'sum') return
+            points[categoryKey].sum += points[categoryKey][yearKey].v
+        })
+        points.total += points[categoryKey].sum
     })
 
-    return { ...points, total: Math.ceil(total) }
+    if (points.total < 0) points.total = 0
+
+    return points
 }

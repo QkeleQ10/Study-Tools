@@ -17,6 +17,7 @@ async function today() {
     mainSection.append(header, container)
     header.id = 'st-vd-header'
     header.append(headerText)
+    headerText.classList.add('st-title')
     container.id = 'st-vd'
     container.append(scheduleWrapper, notifcationsWrapper)
     scheduleWrapper.id = 'st-vd-schedule'
@@ -154,7 +155,7 @@ async function todaySchedule(scheduleWrapper) {
         scheduleLinkWeek = document.createElement('a'),
         scheduleLinkList = document.createElement('a'),
         scheduleNowLine = document.createElement('div'),
-        legacy = await getSetting('magister-vd-agendaLegacy')
+        legacy = false
 
     scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
 

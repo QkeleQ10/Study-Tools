@@ -539,9 +539,10 @@ aside, aside .block,
 .dvd-screensaver {
     position: absolute;
     translate: -90px -30px;
-    mix-blend-mode: exclusion;
+    background: #0000ff;
+    padding: 16px;
     z-index: 99999;
-    animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate;
+    animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
 .sidecolumn aside .head-bar {
@@ -705,6 +706,8 @@ h3:active> .icon-up-arrow:before {
 }
 `, 'study-tools-experimental')
     }
+
+    if (Math.random() < 0.005) createStyle(`span.st-title:after { content: '❤️' !important; font-size: 8px !important; }`)
 
     if (await getSetting('magister-vd-overhaul')) {
         createStyle(`

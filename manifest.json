@@ -28,7 +28,6 @@
         {
             "matches": [
                 "*://*.magister.net/*",
-                "*://*.noordhoff.nl/*",
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
@@ -71,16 +70,6 @@
             ],
             "js": [
                 "src/magister/scripts/login.js"
-            ],
-            "run_at": "document_end"
-        },
-        {
-            "matches": [
-                "*://apps.noordhoff.nl/se*",
-                "*://identity.noordhoff.nl/*"
-            ],
-            "js": [
-                "src/other/noordhoff.js"
             ],
             "run_at": "document_end"
         },

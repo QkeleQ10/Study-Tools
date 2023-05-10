@@ -64,7 +64,7 @@
     transition: --level-progress 2000ms ease-in-out;
 }
 
-#st-gm {
+#st-gm[open] {
     display: flex;
     flex-direction: column;
 
@@ -182,4 +182,9 @@
     content: 'pt';
     position: absolute;
     right: 0;
+}
+
+#st-vd-notifications>#st-vd-gamification-notification {
+    color: var(--st-contrast-accent) !important;
+    background: linear-gradient(45deg, var(--st-accent-primary), var(--st-accent-secondary));
 }
