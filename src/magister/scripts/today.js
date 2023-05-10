@@ -192,7 +192,7 @@ async function todaySchedule(scheduleWrapper) {
         let events = [],
             overlapIndexMap = {},
             overlapComparisonMap = {},
-            firstStart = new Date(),
+            firstStart = new Date().setHours(23, 59, 59, 0),
             lastEnd = new Date().setHours(0, 0, 0, 0)
 
         if (agendaElems) agendaElems.forEach((e, i, a) => {
@@ -237,8 +237,8 @@ async function todaySchedule(scheduleWrapper) {
             overlapIndexMap[i] = 0
             overlapComparisonMap[i] = new Set()
 
-            if (start < firstStart) firstStart = start
-            if (end > lastEnd) lastEnd = end
+            if (start <= firstStart) firstStart = start
+            if (end >= lastEnd) lastEnd = end
         })
 
         if (events && !legacy) events.sort((a, b) => b.duration - a.duration)

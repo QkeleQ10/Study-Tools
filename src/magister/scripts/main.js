@@ -1,5 +1,7 @@
 let subjects
 
+//TODO: Sticky notes
+
 // Run when the extension and page are loaded
 main()
 async function main() {

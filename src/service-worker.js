@@ -48,7 +48,8 @@ function calculatePoints(currentGrades) {
         g2: { n: 0, v: 0 },
         g3: { n: 0, v: 0 },
         g4: { n: 0, v: 0 },
-        g5: { n: 0, v: 0 }
+        g5: { n: 0, v: 0 },
+        gr: { n: 0, v: 0 }
     }
 
     array.forEach(grade => {
@@ -68,6 +69,10 @@ function calculatePoints(currentGrades) {
             points.g5.n++
             points.g5.v += grade.result - 2
         }
+        if (grade.previousResult && grade.result > grade.previousResult) {
+            points.gr.n++
+            points.gr.v += grade.result - grade.previousResult + 3
+        }
     })
 
     let total = 0
@@ -76,5 +81,5 @@ function calculatePoints(currentGrades) {
         total += val.v
     })
 
-    return { ...points, total }
+    return { ...points, total: Math.ceil(total) }
 }

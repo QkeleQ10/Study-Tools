@@ -67,7 +67,7 @@ async function applyStyles() {
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 50;
+    --st-shadow-value: 150;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .8;
 }`,
@@ -96,8 +96,8 @@ async function applyStyles() {
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 0;
-    --st-shadow-alpha: 1;
+    --st-shadow-value: 10;
+    --st-shadow-alpha: .7;
     --st-hover-brightness: 1.4;
     color-scheme: dark;
 }`,
@@ -117,6 +117,10 @@ async function applyStyles() {
     .content-auto.background-white {
         background: #fff !important;
         color: #000 !important;
+    }
+    
+    .content-auto.background-white .comment * {
+        color: #000 !important;
     }`,
         rootVars = `${lightThemeCss}
 ${await getSetting('magister-css-theme') === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
@@ -131,6 +135,7 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 .block h4 {
     border-bottom: var(--st-border)
 }
+
 
 .block h4,
 footer.endlink {

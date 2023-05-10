@@ -318,7 +318,7 @@
     right: 16px;
     padding: 12px;
     place-content: center;
-    background: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
+    background: var(--st-linear-gradient-study-tools);
     border-radius: var(--st-border-radius);
     z-index: 999;
 }

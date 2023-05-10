@@ -259,9 +259,9 @@
 }
 
 #st-vd-schedule>ul>li:not([data-filler])>span:nth-child(4).incomplete {
-    outline: 2px solid var(--st-accent-primary);
+    outline: 2px solid var(--st-foreground-accent);
     outline-offset: -2px;
-    color: var(--st-accent-primary);
+    color: var(--st-foreground-accent);
     background: transparent;
 }
 

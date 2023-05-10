@@ -11,7 +11,8 @@ async function gamification() {
         g2: "Negens gehaald dit jaar",
         g3: "Achten gehaald dit jaar",
         g4: "Zevens gehaald dit jaar",
-        g5: "Zessen gehaald dit jaar"
+        g5: "Zessen gehaald dit jaar",
+        gr: "Cijfers verhoogd met herkansingen"
     },
         mainContainer = await awaitElement('section.main'),
         photo = await awaitElement("#user-menu > figure > img"),
@@ -19,18 +20,26 @@ async function gamification() {
         progressElem = element('div', 'st-progress', levelElem),
         progressFilled = element('div', 'st-progress-filled', progressElem),
         gmOverlay = element('dialog', 'st-gm', document.body, { class: 'st-overlay' }),
+        gmClose = element('button', 'st-gm-close', gmOverlay, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' }),
         gmTitle = element('span', 'st-gm-title', gmOverlay, { class: 'st-title', innerText: "Jouw score" }),
         gmSubtitle = element('span', 'st-gm-subtitle', gmOverlay, { class: 'st-subtitle', innerText: "Verdien punten en verhoog je niveau door voldoendes te halen, opdrachten vroeg in te leveren en zo min mogelijk absenties te hebben." }),
         gmCard = element('div', 'st-gm-card', gmOverlay),
         gmCardTitle = element('span', 'st-gm-card-title', gmCard, { class: 'st-title', innerText: photo.alt }),
-        gmCardSubtitle = element('span', 'st-gm-card-subtitle', gmCard, { class: 'st-subtitle', innerText: new Date().toLocaleDateString('nl-NL', {day: 'numeric', month: 'long', year: 'numeric'}) }),
+        gmCardSubtitle = element('span', 'st-gm-card-subtitle', gmCard, { class: 'st-subtitle', innerText: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) }),
         gmCardLevel = element('div', 'st-gm-card-level', gmCard),
         gmCardProgress = element('div', 'st-gm-card-progress', gmCard),
         gmCardProgressFilled = element('div', 'st-gm-card-progress-filled', gmCardProgress),
-        gmCardDivision = element('div', 'st-gm-card-division', gmCard)
+        gmCardDivision = element('div', 'st-gm-card-division', gmCard),
+        gmBannerAd = element('div', 'st-gm-ad', gmOverlay, {
+            class: 'st-banner-ad', innerText: "Gamificatie (het berekenen van scores en niveaus) is onderdeel van Study Tools voor Magister.", onclick: `window.open('https://qkeleq10.github.io/extensions/studytools', '_blank').focus()`
+        })
 
     levelElem.addEventListener('click', () => {
         gmOverlay.showModal()
+    })
+
+    gmClose.addEventListener('click', () => {
+        gmOverlay.close()
     })
 
     displayScore()

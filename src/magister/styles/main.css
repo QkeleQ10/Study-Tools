@@ -1,3 +1,7 @@
+:root {
+    --st-linear-gradient-study-tools: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
+}
+
 body,
 div.loading-overlay {
     background: var(--st-background-primary) !important
@@ -10,8 +14,9 @@ div.loading-overlay {
     max-height: none;
     background: var(--st-background-overlay);
     margin: 0;
-    padding: 32px 16px 16px 24px;
+    padding: 32px 24px 16px 24px;
     border: none;
+    overflow: hidden;
 }
 
 .st-overlay[open] {
@@ -20,6 +25,31 @@ div.loading-overlay {
 
 .st-overlay::backdrop {
     background: none;
+}
+
+.st-banner-ad {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    padding: 12px;
+    place-content: center;
+    place-items: center;
+    gap: 24px;
+    background: var(--st-linear-gradient-study-tools);
+    color: #fff;
+    font: 16px var(--st-font-family-secondary);
+    z-index: 9999;
+}
+
+.st-banner-ad:after {
+    padding: 6px 16px;
+    content: "Koppeling delen";
+    white-space: pre-wrap;
+    background: #fff;
+    color: hsl(209, 36%, 30%);
+    cursor: pointer;
 }
 
 span.st-title {
@@ -50,7 +80,7 @@ span.st-subtitle {
     color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
 }
 
 .st-button {
@@ -310,7 +340,7 @@ span.st-subtitle {
     background: var(--st-background-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 9999999;
     transition: bottom 500ms cubic-bezier(.75, 0, 1, 1), box-shadow 200ms;
 }
@@ -461,6 +491,20 @@ span.st-subtitle {
 
     100% {
         opacity: 1;
+    }
+}
+
+@keyframes floatDown {
+    from {
+        opacity: 0;
+        translate: 0 -200px;
+    }
+}
+
+@keyframes floatUp {
+    from {
+        opacity: 0;
+        translate: 0 200px;
     }
 }
 

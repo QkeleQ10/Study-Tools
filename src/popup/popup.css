@@ -829,7 +829,7 @@ input#magister-css-luminance {
     border-radius: 8px;
     font: 500 14px var(--font), system-ui;
     border: 1px solid var(--border);
-    box-shadow: 0 0 8px 0 var(--shadow);
+    box-shadow: 0 0 16px 0 var(--shadow);
     transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
 }
 

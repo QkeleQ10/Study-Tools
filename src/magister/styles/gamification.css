@@ -70,6 +70,12 @@
 
 }
 
+#st-gm-close {
+    position: absolute;
+    top: 32px;
+    right: 24px;
+}
+
 #st-gm-card {
     margin: auto;
     width: 500px;
@@ -77,7 +83,15 @@
     background: var(--st-background-secondary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+
+#st-gm[open] #st-gm-card {
+    animation: floatDown 500ms;
+}
+
+#st-gm[open] #st-gm-ad {
+    animation: floatUp 500ms;
 }
 
 #st-gm-card-subtitle {
@@ -118,18 +132,18 @@
 #st-gm-card-progress:before {
     content: attr(data-points-progress) ' /  ' attr(data-points-required) ' punten';
     position: absolute;
-    top: -24px;
+    top: -28px;
     left: 0;
-    font: 16px var(--st-font-family-secondary);
+    font: 14px var(--st-font-family-secondary);
     opacity: .7;
 }
 
 #st-gm-card-progress:after {
     content: 'nog ' attr(data-points-remaining) ' punten tot niveau ' attr(data-level-next);
     position: absolute;
-    top: -24px;
+    top: -28px;
     right: 0;
-    font: 16px var(--st-font-family-secondary);
+    font: 14px var(--st-font-family-secondary);
     opacity: .7;
 }
 
