@@ -16,7 +16,6 @@ div.loading-overlay {
     margin: 0;
     padding: 32px 24px 16px 24px;
     border: none;
-    overflow: hidden;
 }
 
 .st-overlay[open] {
@@ -27,13 +26,18 @@ div.loading-overlay {
     background: none;
 }
 
+.st-banned.ad.hide {
+    translate: 0 200px;
+}
+
 .st-banner-ad {
     display: flex;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
-    width: 100vw;
+    right: 0;
     padding: 12px;
+    margin-top: 16px;
     place-content: center;
     place-items: center;
     gap: 24px;
@@ -41,6 +45,7 @@ div.loading-overlay {
     color: #fff;
     font: 16px var(--st-font-family-secondary);
     z-index: 9999;
+    transition: translate 500ms;
 }
 
 .st-banner-ad:after {

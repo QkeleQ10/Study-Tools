@@ -29,10 +29,10 @@ async function gamification() {
         gmCardLevel = element('div', 'st-gm-card-level', gmCard),
         gmCardProgress = element('div', 'st-gm-card-progress', gmCard),
         gmCardProgressFilled = element('div', 'st-gm-card-progress-filled', gmCardProgress),
-        gmCardDivision = element('div', 'st-gm-card-division', gmCard),
-        gmBannerAd = element('div', 'st-gm-ad', gmOverlay, {
-            class: 'st-banner-ad', innerText: "Gamificatie (het berekenen van scores en niveaus) is onderdeel van Study Tools voor Magister.", onclick: `window.open('https://qkeleq10.github.io/extensions/studytools', '_blank').focus()`
-        })
+        gmCardDivision = element('div', 'st-gm-card-division', gmCard)
+        // gmBannerAd = element('div', 'st-gm-ad', gmOverlay, {
+        //     class: 'st-banner-ad', innerText: "Gamificatie (het berekenen van scores en niveaus) is onderdeel van Study Tools voor Magister.", onclick: `window.open('https://qkeleq10.github.io/extensions/studytools', '_blank').focus()`
+        // })
 
     levelElem.addEventListener('click', () => {
         gmOverlay.showModal()

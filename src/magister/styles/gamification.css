@@ -70,6 +70,10 @@
 
 }
 
+#st-gm-subtitle {
+    margin-bottom: 20px;
+}
+
 #st-gm-close {
     position: absolute;
     top: 32px;
@@ -88,10 +92,6 @@
 
 #st-gm[open] #st-gm-card {
     animation: floatDown 500ms;
-}
-
-#st-gm[open] #st-gm-ad {
-    animation: floatUp 500ms;
 }
 
 #st-gm-card-subtitle {
