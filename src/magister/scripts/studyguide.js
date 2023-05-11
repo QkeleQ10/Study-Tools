@@ -24,10 +24,14 @@ async function studyguideIndividual() {
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
 
+        list.parentElement.style.paddingTop = '8px !important'
+        list.parentElement.style.paddingLeft = '8px !important'
+        list.parentElement.setAttribute('style', 'border: none !important; padding: 8px 0 0 8px !important;')
+
         titles.forEach(async title => {
             if (list.childElementCount === 1 || regex.exec(title.innerText.replace(await getWeekNumber(), 'match'))) {
                 let top = title.parentElement,
-                    bottom = top.nextElementSibling.lastElementChild,
+                    bottom = top.nextElementSibling.lastElementChild.previousElementSibling,
                     li = top.parentElement.parentElement
                 li.classList.add('st-current-sw')
                 top.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")

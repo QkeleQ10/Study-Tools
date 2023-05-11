@@ -80,9 +80,16 @@
     right: 24px;
 }
 
-#st-gm-card {
+#st-gm-wrap {
     margin: auto;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+#st-gm-card {
     width: 500px;
+    max-height: max-content;
     padding: 32px;
     background: var(--st-background-secondary);
     border: var(--st-border);
@@ -124,7 +131,6 @@
 
 #st-gm-card-progress {
     position: relative;
-    margin-block: 32px;
     width: 100%;
     height: 25px;
 }
@@ -152,7 +158,9 @@
     padding-left: 0;
 }
 
-#st-gm-card-division {
+#st-gm-breakdown {
+    width: 350px;
+    place-self: start;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -160,28 +168,100 @@
     font: 14px var(--st-font-family-secondary);
 }
 
-#st-gm-card-division:before {
-    content: "Puntenverdeling\A";
+#st-gm[open] #st-gm-breakdown {
+    animation: fadeIn 500ms 300ms backwards;
+}
+
+#st-gm-breakdown:before {
+    content: "Uitsplitsing punten\A";
     white-space: pre-wrap;
     font: 600 16px/32px var(--st-font-family-primary);
 }
 
-#st-gm-card-division>div.total {
-    margin-top: 8px;
-    font-weight: 600;
+#st-gm-breakdown:after {
+    content: "Klik op een item voor details.";
+    position: absolute;
+    top: 8px;
+    right: 0;
+    font: 12px var(--st-font-family-secondary);
+    opacity: .4;
 }
 
-#st-gm-card-division>div:before {
+#st-gm-breakdown div {
+    position: relative;
+    font-weight: normal;
+}
+
+#st-gm-breakdown>div {
+    max-height: 23px;
+    padding-inline: 12px;
+    margin-inline: -12px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: var(--st-border-radius);
+    transition: max-height 200ms, padding 200ms, margin 200ms, border 200ms, background 200ms;
+}
+
+#st-gm-breakdown>div.expand {
+    max-height: 250px;
+    padding-block: 12px;
+    margin-block: 4px;
+    border: var(--st-border);
+    background: var(--st-background-secondary);
+}
+
+#st-gm-breakdown>div>div {
+    margin-block: 2px;
+}
+
+
+#st-gm-breakdown>div>div:first-child {
+    font-weight: 600;
+    margin-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#st-gm-breakdown>div>div:last-child {
+    margin-top: 8px;
+}
+
+#st-gm-breakdown>div:last-child {
+    max-height: 32px;
+    margin-top: 8px;
+    margin-inline: 0;
+    padding-inline: 0;
+    font: 600 16px var(--st-font-family-primary);
+}
+
+#st-gm-breakdown>div:last-child:before,
+#st-gm-breakdown>div:last-child:after {
+    font: 600 16px var(--st-font-family-primary);
+}
+
+#st-gm-breakdown div[data-value]:before {
     content: attr(data-value);
     position: absolute;
     right: 17px;
     font-weight: 600;
+    font: 14px var(--st-font-family-secondary);
 }
 
-#st-gm-card-division>div:after {
+#st-gm-breakdown div[data-value]:after {
     content: 'pt';
     position: absolute;
     right: 0;
+    top: 0;
+    font: 14px var(--st-font-family-secondary);
+}
+
+#st-gm-breakdown div[data-value='0'] {
+    color: var(--st-foreground-insignificant);
+}
+
+#st-gm-breakdown div[data-value^='-']:before,
+#st-gm-breakdown div[data-value^='-']:after {
+    color: var(--st-accent-warn);
 }
 
 #st-vd-notifications>#st-vd-gamification-notification {

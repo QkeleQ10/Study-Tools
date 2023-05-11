@@ -651,6 +651,7 @@ dna-button:hover {
 }
 
 .block h3 strong, .block h3 strong.ng-hide:not(.ng-hide-animate) {
+    line-height: 25px;
     min-height: 0;
     max-height: 0;
     display: block !important;
@@ -659,8 +660,9 @@ dna-button:hover {
 }
 
 .fold h3 strong {
-    min-height: 44px;
-    max-height: 44px;
+    line-height: 25px;
+    min-height: 35px;
+    max-height: 35px;
 }
 
 #studiewijzer-detail-container .content {
@@ -673,6 +675,7 @@ footer.endlink {
 
 .studiewijzer-onderdeel .block.ng-scope {
     overflow: hidden !important;
+    transition: box-shadow 200ms, margin 200ms;
 }
 
 .sources>li {
@@ -704,10 +707,29 @@ h3:active> .icon-down-arrow:before{
 h3:active> .icon-up-arrow:before {
     translate: 0 -6px;
 }
+
+.studiewijzer-onderdeel .block:not(.fold) {
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    margin-block: 8px;
+}
+
+#studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container {
+    padding: 8px 0 0 8px !important;
+    margin-left: -8px;
+    margin-top: -8px;
+    max-width: calc(100vw - 647px);
+    width: calc(100% + 8px);
+    max-height: none;
+    height: calc(100% + 8px);
+}
+
+#studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
+    max-width: calc(100vw - 469px);
+}
 `, 'study-tools-experimental')
     }
 
-    if (Math.random() < 0.005) createStyle(`span.st-title:after { content: '❤️' !important; font-size: 8px !important; }`)
+    if (Math.random() < 0.005) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
 
     if (await getSetting('magister-vd-overhaul')) {
         createStyle(`
