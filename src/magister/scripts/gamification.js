@@ -9,8 +9,8 @@ async function gamification() {
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],
         ['absences', "Ongeoorloofde absenties", "Absenties in ", "Je verliest 15 punten voor ongeoorloofde absenties."],
-        ['assignmentsEarly', "Opdrachten op tijd ingeleverd", "Opdrachten in ", "Je verdient 4 punten per op tijd ingeleverde opdracht, plus 8 punten per dag te vroeg."],
-        ['assignmentsLate', "Opdrachten te laat ingeleverd", "Opdrachten in ", "Voor elke dag dat je een opdracht te laat inlevert, kun je 2 punten verliezen."]
+        ['assignmentsEarly', "Opdrachten op tijd ingeleverd", "Opdrachten in ", "Je verdient punten per op tijd ingeleverde opdracht en extra punten per dag te vroeg. Latere leerjaren hebben meer impact op je score."]
+        // ['assignmentsLate', "Opdrachten te laat ingeleverd", "Opdrachten in ", "Voor elke dag dat je een opdracht te laat inlevert, kun je 2 punten verliezen."]
     ]
     mainContainer = await awaitElement('section.main'),
         photo = await awaitElement("#user-menu > figure > img"),
@@ -45,10 +45,10 @@ async function gamification() {
     displayScore()
     setTimeout(() => {
         displayScore()
-    }, 500)
+    }, 1000)
     setTimeout(() => {
         displayScore()
-    }, 1500)
+    }, 2000)
 
     async function displayScore() {
         let points = await getSetting('points'),

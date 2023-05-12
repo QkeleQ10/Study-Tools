@@ -729,7 +729,7 @@ h3:active> .icon-up-arrow:before {
 `, 'study-tools-experimental')
     }
 
-    if (Math.random() < 0.005) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
+    if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
 
     if (await getSetting('magister-vd-overhaul')) {
         createStyle(`

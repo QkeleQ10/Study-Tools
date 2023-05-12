@@ -51,8 +51,8 @@ function calculatePoints(years) {
     let points = {
         absences: {},
         grades: {},
-        assignmentsEarly: {},
-        assignmentsLate: {}
+        assignmentsEarly: {}
+        // assignmentsLate: {}
     }
 
     Object.keys(years).forEach((yearId, i, a) => {
@@ -62,9 +62,9 @@ function calculatePoints(years) {
             absencesN = 0,
             absencesV = 0,
             assignmentsEarlyN = 0,
-            assignmentsEarlyV = 0,
-            assignmentsLateN = 0,
-            assignmentsLateV = 0
+            assignmentsEarlyV = 0
+        // assignmentsLateN = 0,
+        // assignmentsLateV = 0
 
         // Sufficient grades grant points proportionally to the user's score
         years[yearId].grades.filter(e => !Number.isNaN(Number(e.CijferStr?.replace(',', '.'))) && e.CijferKolom.KolomSoort === 1).forEach(grade => {
@@ -76,32 +76,33 @@ function calculatePoints(years) {
         gradesV = Math.ceil(gradesV * (0.25 * i + .5))
         points.grades[yearId] = { n: gradesN, v: gradesV, g: yearName }
 
-        // Illicit absences deduct 15 pt from the user's score
+        // Illicit absences deduct 10 pt from the user's score
         years[yearId].absences.filter(e => !e.Geoorloofd).forEach(absence => {
             absencesN++
-            absencesV -= 15
+            absencesV -= 10
         })
         points.absences[yearId] = { n: absencesN, v: absencesV, g: yearName }
 
         // Assignments can either grant or deduct points
         years[yearId].assignments.filter(e => e.Afgesloten || e.IngeleverdOp || new Date(e.InleverenVoor) < new Date()).forEach(assignment => {
-            if (new Date(assignment.InleverenVoor) < new Date() && (!assignment.Afgesloten || !assignment.IngeleverdOp)) {
-                // Deduct 12 pt if the assignment wasn't handed in even after the due date
-                assignmentsLateN++
-                assignmentsLateV -= 12
-            } else if (new Date(assignment.IngeleverdOp) > new Date(assignment.InleverenVoor)) {
-                // Deduct at most 12 pt if the assignment was handed in after the due date
-                assignmentsLateN++
-                assignmentsLateV += Math.max(-12, (new Date(assignment.InleverenVoor) - new Date(assignment.IngeleverdOp)) / 43200000) // Deduct 1 pt per 12 h
-            } else if (new Date(assignment.IngeleverdOp) <= new Date(assignment.InleverenVoor)) {
-                // Grant at most 25 pt if the assignment was handed in before the due date
+            // if (new Date(assignment.InleverenVoor) < new Date() && (!assignment.Afgesloten || !assignment.IngeleverdOp)) {
+            //     // Deduct 12 pt if the assignment wasn't handed in even after the due date
+            //     assignmentsLateN++
+            //     assignmentsLateV -= 12
+            // } else if (new Date(assignment.IngeleverdOp) > new Date(assignment.InleverenVoor)) {
+            //     // Deduct at most 12 pt if the assignment was handed in after the due date
+            //     assignmentsLateN++
+            //     assignmentsLateV += Math.max(-12, (new Date(assignment.InleverenVoor) - new Date(assignment.IngeleverdOp)) / 43200000) // Deduct 1 pt per 12 h
+            // } else
+            if (new Date(assignment.IngeleverdOp) <= new Date(assignment.InleverenVoor)) {
+                // Grant at most 20 pt if the assignment was handed in before the due date
                 assignmentsEarlyN++
-                assignmentsEarlyV += Math.min(25, (new Date(assignment.InleverenVoor) - new Date(assignment.IngeleverdOp)) / 10800000 + 4) // Add 4 pt, plus 1 pt per 3 h
+                assignmentsEarlyV += Math.min(20, (new Date(assignment.InleverenVoor) - new Date(assignment.IngeleverdOp)) / 172800000 + 2) // Add 2 pt, plus 1 pt per 24 h
             }
         })
-        assignmentsLateV = Math.floor(assignmentsLateV)
-        points.assignmentsLate[yearId] = { n: assignmentsLateN, v: assignmentsLateV, g: yearName }
-        assignmentsEarlyV = Math.floor(assignmentsEarlyV)
+        // assignmentsLateV = Math.floor(assignmentsLateV)
+        // points.assignmentsLate[yearId] = { n: assignmentsLateN, v: assignmentsLateV, g: yearName }
+        assignmentsEarlyV = Math.ceil(assignmentsEarlyV * (0.25 * i + .5))
         points.assignmentsEarly[yearId] = { n: assignmentsEarlyN, v: assignmentsEarlyV, g: yearName }
     })
 
