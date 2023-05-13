@@ -24,8 +24,8 @@ async function today() {
     notifcationsWrapper.id = 'st-vd-notifications'
 
     if (await getSetting('magister-shortcut-keys-today')) {
-        scheduleWrapper.style.marginBottom = '70px'
-        notifcationsWrapper.style.marginBottom = '70px'
+        scheduleWrapper.style.marginBottom = '55px'
+        notifcationsWrapper.style.marginBottom = '55px'
     }
 
     todayNotifications(notifcationsWrapper)

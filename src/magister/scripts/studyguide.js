@@ -6,8 +6,8 @@ async function popstate() {
 
     const href = document.location.href.split('?')[0]
 
-    if (href.endsWith('/studiewijzer')) studyguideList()
-    else if (href.includes('/studiewijzer/')) studyguideIndividual()
+    if (href.includes('/studiewijzer/')) studyguideIndividual()
+    else if (href.includes('/studiewijzer')) studyguideList()
 }
 
 // Page 'Studiewijzers

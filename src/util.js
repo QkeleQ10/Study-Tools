@@ -100,10 +100,10 @@ function setIntervalImmediately(func, interval) {
 }
 
 function element(tagName, id, parent, attributes) {
-    let elem = document.getElementById(id)
+    let elem = id ? document.getElementById(id) : undefined
     if (!elem) {
         elem = document.createElement(tagName)
-        elem.id = id
+        if (id) elem.id = id
         if (parent) parent.append(elem)
         if (attributes) setAttributes(elem, attributes)
     }
@@ -160,6 +160,7 @@ function setSettings(object, location) {
 function setAttributes(elem, attributes) {
     for (var key in attributes) {
         if (key === 'innerText') elem.innerText = attributes[key]
+        if (key === 'innerHTML') elem.innerHTML = attributes[key]
         else elem.setAttribute(key, attributes[key])
     }
 }

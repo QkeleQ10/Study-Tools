@@ -52,6 +52,7 @@ async function applyStyles() {
     --st-background-overlay: #fffffff5;
     --st-background-transparent: #ffffffbb;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
+    --st-highlight-subtle: #f5f5f5;
     --st-highlight-ok: #81e3bc;
     --st-highlight-warn: #fff0f5;
     --st-highlight-info: #dceefd;
@@ -81,6 +82,7 @@ async function applyStyles() {
     --st-background-overlay: #121212f5;
     --st-background-transparent: #121212bb;
     --st-highlight-primary: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
+    --st-highlight-subtle: #161616;
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
     --st-highlight-info: #101a22;
@@ -253,7 +255,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button), table.table-grid-layout td a {
+a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout td a {
     color: var(--st-foreground-accent);
     text-decoration: none;
     overflow-wrap: anywhere

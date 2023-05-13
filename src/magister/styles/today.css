@@ -135,7 +135,7 @@
     content: 'Rooster van vandaag';
     font: var(--st-font-primary);
     position: fixed;
-    top: 85px;
+    top: 84px;
     z-index: 999;
     padding-right: 16px;
     border-bottom-right-radius: var(--st-border-radius);
