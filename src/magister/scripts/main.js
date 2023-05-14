@@ -147,10 +147,10 @@ async function main() {
             note.forEach((part, i) => {
                 let partElement
                 if (i === 0) {
-                    partElement = element('input', null, noteElement, { type: 'text', value: part, placeholder: "Titel", disabled: true })
+                    partElement = element('input', null, noteElement, { type: 'text', value: part, placeholder: "Titel", readonly: true })
                 }
                 else {
-                    partElement = element('textarea', null, noteElement, { innerText: part, disabled: true })
+                    partElement = element('textarea', null, noteElement, { innerText: part, readonly: true })
                     if (i === 1) partElement.placeholder = "Inhoud"
                     if (part.startsWith('==')) {
                         partElement.setAttribute('class', 'link')
@@ -215,7 +215,7 @@ async function main() {
                 event.preventDefault()
                 next.focus()
                 next.setSelectionRange(eSelStart, eSelEnd)
-            } else if (event.key === 'Backspace' && eSelStart === 0 && eSelEnd === 0 && prev?.tagName === 'TEXTAREA') {
+            } else if (event.key === 'Backspace' && eSelStart === 0 && eSelEnd === 0 && e.tagName === 'TEXTAREA' && prev?.tagName === 'TEXTAREA') {
                 event.preventDefault()
                 let oldLen = prev.value.length
                 prev.value += e.value
@@ -223,7 +223,7 @@ async function main() {
                 e.remove()
                 prev.focus()
                 prev.setSelectionRange(oldLen, oldLen)
-            } else if (event.key === 'Delete' && eSelStart === e.value.length && eSelEnd === e.value.length && next?.tagName === 'TEXTAREA') {
+            } else if (event.key === 'Delete' && eSelStart === e.value.length && eSelEnd === e.value.length && e.tagName === 'TEXTAREA' && next?.tagName === 'TEXTAREA') {
                 event.preventDefault()
                 let oldLen = e.value.length
                 next.value = e.value + next.value
@@ -246,12 +246,12 @@ async function main() {
             if (notesWrapper.dataset.open !== 'force') {
                 notesWrapper.dataset.open = 'force'
                 notesWrapper.querySelectorAll('div>input, div>textarea').forEach(noteElement => {
-                    noteElement.removeAttribute('disabled')
+                    noteElement.removeAttribute('readonly')
                 })
             } else if (notesWrapper.dataset.open === 'force') {
                 notesWrapper.dataset.open = false
                 notesWrapper.querySelectorAll('div>input, div>textarea').forEach(noteElement => {
-                    noteElement.setAttribute('disabled', true)
+                    noteElement.setAttribute('readonly', true)
                 })
             }
         })
