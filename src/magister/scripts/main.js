@@ -132,19 +132,20 @@ async function main() {
     }
 
     if (true) {
-        let notes = (await getSetting('st-notes')).map(e => e.split(/[\r\n\v]+/)),
+        let notes = await getSetting('st-notes'),
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
             pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '0'.` }),
-            newButton = element('a', 'st-notes-new', notesWrapper, { title: "Nieuwe notitie" })
+            newButton = element('a', 'st-notes-new', notesWrapper, { title: "Nieuwe notitie" }),
+            saveTimeout
 
-        if (notes.length < 1) {
-            notes.push(['', ''])
-        }
+        if (notes.length < 1) notes = ['\n']
 
-        notes.forEach((note, i) => {
+        notes.forEach(createNote)
+
+        function createNote(note) {
             let noteElement = element('div', null, notesWrapper)
 
-            note.forEach((part, i) => {
+            note.split(/[\r\n\v]/).forEach((part, i) => {
                 let partElement
                 if (i === 0) {
                     partElement = element('input', null, noteElement, { type: 'text', value: part, placeholder: "Titel", readonly: true })
@@ -155,42 +156,85 @@ async function main() {
                     if (part.startsWith('==')) {
                         partElement.setAttribute('class', 'link')
                         partElement.value = part.slice(2).split('==')[0]
+                        partElement.dispatchEvent(new Event('input'))
                         partElement.setAttribute('onclick', `window.location.href = "${window.location.origin + window.location.pathname + part.slice(2).split('==')[1]}"`)
                         partElement.setSelectionRange(0, 0)
                     }
+                    partElement.style.height = "17px"
+                    partElement.style.height = (partElement.scrollHeight) + "px"
                     partElement.addEventListener('input', textareaInput)
                 }
                 partElement.addEventListener('keydown', partElementKeydown)
             })
-        })
+        }
 
         function textareaInput(event) {
-            event.target.classList.remove('link')
+            if (event.target.classList.contains('link')) {
+                event.target.classList.remove('link')
+                event.target.removeAttribute('onclick')
+            }
             if (event.target.classList.contains('link-pending')) {
                 event.target.classList.remove('link-pending')
                 event.target.value = ''
             }
             if (event.target.value.startsWith('==')) {
                 event.target.setAttribute('class', 'link-pending')
-                event.target.value = "Selecteer tekst op de pagina en druk op '='."
+                event.target.value = "Selecteer nu de tekst die moet worden geplakt."
                 event.target.blur()
+                addEventListener('mouseup', () => {
+                    setTimeout(() => {
+                        if (document.getSelection()?.toString()) {
+                            event.target.setAttribute('class', 'link')
+                            const parts = document.getSelection().toString().split(/[\r\n\v]+/)
+                            event.target.value = parts[0]
+                            event.target.setAttribute('onclick', `document.location.href = '${document.location.href}'`)
+                            event.target.style.height = "17px"
+                            event.target.style.height = (event.target.scrollHeight) + "px"
+                            event.target.focus()
+                            parts.forEach((part, i) => {
+                                if (i === 0) return
+                                const newTextarea = element('textarea', null, event.target.parentElement, { innerText: part, class: 'link', onclick: `document.location.href = '${document.location.href}'` })
+                                event.target.after(newTextarea)
+                                newTextarea.addEventListener('input', textareaInput)
+                                newTextarea.addEventListener('keydown', partElementKeydown)
+                                newTextarea.style.height = "17px"
+                                newTextarea.style.height = (newTextarea.scrollHeight) + "px"
+                                newTextarea.focus()
+                            })
+                        } else {
+                            event.target.removeAttribute('class')
+                            event.target.removeAttribute('onclick')
+                            event.target.value = ''
+                        }
+                        save()
+                    }, 200)
+                }, { once: true })
             } else if (event.target.value.startsWith('!!')) {
                 event.target.classList.toggle('checkbox')
                 event.target.value = event.target.value.slice(2)
                 event.target.setSelectionRange(0, 0)
+            } else if (event.target.value.startsWith('##')) {
+                newButton.click()
+                if (event.target.nextElementSibling) event.target.remove()
+                notesWrapper.querySelector('div:last-of-type>input').focus()
             }
             if (/[\r\n\v]+/.test(event.target.value)) {
-                const [firstPart, secondPart] = event.target.value.split(/[\r\n\v]+/)
-                event.target.value = firstPart
-                const newTextarea = element('textarea', null, event.target.parentElement, { innerText: secondPart })
-                event.target.after(newTextarea)
-                newTextarea.addEventListener('keyup', textareaInput)
-                newTextarea.addEventListener('keydown', partElementKeydown)
-                newTextarea.focus()
-            } else {
-                event.target.style.height = "17px"
-                event.target.style.height = (event.target.scrollHeight) + "px"
+                const parts = event.target.value.split(/[\r\n\v]+/)
+                event.target.value = parts[0]
+                parts.forEach((part, i) => {
+                    if (i === 0) return
+                    const newTextarea = element('textarea', null, event.target.parentElement, { innerText: part })
+                    event.target.after(newTextarea)
+                    newTextarea.addEventListener('input', textareaInput)
+                    newTextarea.addEventListener('keydown', partElementKeydown)
+                    newTextarea.style.height = "17px"
+                    newTextarea.style.height = (newTextarea.scrollHeight) + "px"
+                    newTextarea.focus()
+                })
             }
+            event.target.style.height = "17px"
+            event.target.style.height = (event.target.scrollHeight) + "px"
+            save()
         }
 
         function partElementKeydown(event) {
@@ -219,30 +263,72 @@ async function main() {
                 event.preventDefault()
                 let oldLen = prev.value.length
                 prev.value += e.value
-                prev.removeAttribute('class')
+                if (e.value.length && oldLen) {
+                    prev.removeAttribute('class')
+                    prev.removeAttribute('onclick')
+                }
                 e.remove()
                 prev.focus()
                 prev.setSelectionRange(oldLen, oldLen)
+                save()
             } else if (event.key === 'Delete' && eSelStart === e.value.length && eSelEnd === e.value.length && e.tagName === 'TEXTAREA' && next?.tagName === 'TEXTAREA') {
                 event.preventDefault()
                 let oldLen = e.value.length
                 next.value = e.value + next.value
-                next.removeAttribute('class')
+                if (next.value.length && oldLen) {
+                    next.removeAttribute('class')
+                    next.removeAttribute('onclick')
+                }
                 e.remove()
                 next.focus()
                 next.setSelectionRange(oldLen, oldLen)
+                save()
+            } else if (event.key === 'Backspace' && e.tagName === 'INPUT' && e.value.length < 1) {
+                event.preventDefault()
+                e.parentElement.previousElementSibling.firstElementChild.focus()
+                e.parentElement.remove()
+                save()
+            } else {
+                save()
             }
         }
 
-        notesWrapper.addEventListener('click', e => {
-            if (!e.target.classList.contains('link') && notesWrapper.dataset.open !== 'force') {
+        function save() {
+            clearTimeout(saveTimeout)
+
+            saveTimeout = setTimeout(() => {
+                console.log('save started')
+                let resultArray = []
+                notesWrapper.querySelectorAll('div').forEach(noteElement => {
+                    let noteArray = []
+                    noteElement.querySelectorAll('input, textarea').forEach(partElement => {
+                        if (partElement.classList.contains('link-pending')) noteArray.push('')
+                        else if (partElement.classList.contains('link')) noteArray.push('==' + partElement.value + '==#' + partElement.getAttribute('onclick').split('#')[1].split('"')[0])
+                        else if (partElement.classList.contains('checkbox')) noteArray.push('!!' + partElement.value + '!!' + partElement.dataset.checked)
+                        else noteArray.push(partElement.value)
+                    })
+                    resultArray.push(noteArray.join('\n'))
+                })
+                setSetting('st-notes', resultArray)
+                console.log('save succes', resultArray)
+            }, 2000)
+        }
+
+        notesWrapper.addEventListener('click', event => {
+            if (!event.target.classList.contains('link') && notesWrapper.dataset.open !== 'force') {
                 pinButton.click()
-                e.target.focus()
+                event.target.focus()
+            } else if (!event.target.classList.contains('link') && notesWrapper.querySelector('*[readonly=true]')) {
+                notesWrapper.querySelectorAll('div>input, div>textarea').forEach(noteElement => {
+                    noteElement.removeAttribute('readonly')
+                })
+            } else if (event.target.classList.contains('link') && notesWrapper.dataset.open !== 'force') {
+                event.target.blur()
             }
         })
 
-        pinButton.addEventListener('click', e => {
-            e.stopPropagation()
+        pinButton.addEventListener('click', event => {
+            event.stopPropagation()
             if (notesWrapper.dataset.open !== 'force') {
                 notesWrapper.dataset.open = 'force'
                 notesWrapper.querySelectorAll('div>input, div>textarea').forEach(noteElement => {
@@ -256,20 +342,24 @@ async function main() {
             }
         })
 
-        addEventListener('keydown', e => {
+        newButton.addEventListener('click', event => {
+            createNote('\n')
+        })
+
+        addEventListener('keydown', event => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
-            if (notesWrapper.dataset.open === 'false' && e.key.toLowerCase() === key.toLowerCase()) {
-                e.preventDefault()
+            if (notesWrapper.dataset.open === 'false' && event.key.toLowerCase() === key.toLowerCase()) {
+                event.preventDefault()
                 notesWrapper.dataset.open = true
             }
-            if ((e.key === '0' || e.key === ')') && window.getComputedStyle(notesWrapper).getPropertyValue('z-index') === '10000000') {
+            if ((event.key === '0' || event.key === ')') && window.getComputedStyle(notesWrapper).getPropertyValue('z-index') === '10000000') {
                 pinButton.click()
             }
         })
 
-        addEventListener('keyup', e => {
+        addEventListener('keyup', event => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
-            if (notesWrapper.dataset.open === 'true' && e.key.toLowerCase() === key.toLowerCase()) {
+            if (notesWrapper.dataset.open === 'true' && event.key.toLowerCase() === key.toLowerCase()) {
                 setTimeout(() => {
                     if (notesWrapper.dataset.open === 'true') notesWrapper.dataset.open = false
                 }, 1000)

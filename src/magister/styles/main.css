@@ -504,7 +504,6 @@ span.st-subtitle {
     padding: 2px 10px;
     margin-inline: 2px;
     word-wrap: break-word;
-    word-break: break-all;
     background: transparent;
     color: var(--st-foreground-primary);
     border: none;
@@ -539,6 +538,7 @@ span.st-subtitle {
 
 #st-notes>div textarea.link {
     background-color: var(--st-highlight-primary);
+    color: var(--st-foreground-accent);
     font-style: italic;
     cursor: pointer;
 }
