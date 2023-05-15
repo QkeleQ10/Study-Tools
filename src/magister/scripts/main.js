@@ -132,13 +132,13 @@ async function main() {
     }
 
     if (true) {
-        let notes = await getSetting('st-notes'),
+        let notes = (await getSetting('st-notes')).map(e => e.split(/[\r\n\v]+/)),
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
             pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '0'.` }),
             newButton = element('a', 'st-notes-new', notesWrapper, { title: "Nieuwe notitie" })
 
         if (notes.length < 1) {
-            notes.push(["", ``])
+            notes.push(['', ''])
         }
 
         notes.forEach((note, i) => {
