@@ -7,7 +7,7 @@ main()
 async function main() {
     let appbar = await awaitElement('.appbar'),
         logos = await awaitElement('img.logo-expanded, img.logo-collapsed', true),
-        key = await getSetting('magister-shortcut-keys-master') || 'S',
+        key = await getSetting('magister-overlay-hotkey') || 'S',
         keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
 
     subjects = await getSetting('magister-subjects')
@@ -59,7 +59,7 @@ async function main() {
 
     if (Math.random() < 0.003) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 
-    if (await getSetting('magister-shortcut-keys')) {
+    if (await getSetting('magister-shortcuts')) {
         let shortcutsWrapper = document.createElement('div'),
             sElem = document.createElement('span'),
             todayElem = document.createElement('a'),
@@ -121,13 +121,13 @@ async function main() {
         })
 
         window.addEventListener('popstate', async () => {
-            if (await getSetting('magister-shortcut-keys-today')) {
+            if (await getSetting('magister-shortcuts-today')) {
                 if (shortcutsWrapper?.dataset.open === 'force') shortcutsWrapper.dataset.open = false
                 if (document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
             }
         })
 
-        if (await getSetting('magister-shortcut-keys-today') && document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
+        if (await getSetting('magister-shortcuts-today') && document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
         else shortcutsWrapper.dataset.open = false
     }
 

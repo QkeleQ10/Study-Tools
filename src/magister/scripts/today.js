@@ -23,7 +23,7 @@ async function today() {
     scheduleWrapper.id = 'st-vd-schedule'
     notifcationsWrapper.id = 'st-vd-notifications'
 
-    if (await getSetting('magister-shortcut-keys-today')) {
+    if (await getSetting('magister-shortcuts-today')) {
         scheduleWrapper.style.marginBottom = '55px'
         notifcationsWrapper.style.marginBottom = '55px'
     }

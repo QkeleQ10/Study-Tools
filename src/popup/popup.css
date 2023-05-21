@@ -284,6 +284,14 @@ section>label:last-child {
     border-bottom: solid 1px var(--border);
 }
 
+label.beta:before {
+    top: 6px    ;
+    right: 11px;
+    font-family: 'material-icons';
+    content: 'science';
+    position: absolute;
+}
+
 label.has-checkbox {
     grid-template: 'title input' / 1fr 40px;
     cursor: pointer;

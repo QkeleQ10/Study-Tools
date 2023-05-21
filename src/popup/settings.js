@@ -111,32 +111,40 @@ const settingsBuilder = [
         ]
     },
     {
-        id: "section-magister-shortcuts",
+        id: "section-magister-overlay",
         group: "Magister",
-        title: "Sneltoetsen",
+        title: "Overlay",
         settings: [
             {
-                id: 'magister-shortcut-keys',
-                title: "Sneltoetsen",
-                subtitle: "Houd de activatietoets ingedrukt (bijv. 'S') en kies een nummer voor snelle navigatie.",
-                default: true,
+                id: 'magister-overlay-hotkey',
+                title: "Activatietoets",
+                subtitle: "De toets waarmee de overlay opgeroepen kan worden.",
+                type: "key",
+                default: "S",
                 require: "magister-css-experimental",
             },
             {
-                id: 'magister-shortcut-keys-master',
-                title: "Activatietoets",
-                subtitle: "De toets die de sneltoetsen activeert.",
-                type: "key",
-                default: "S",
-                require: "magister-shortcut-keys magister-css-experimental",
+                id: 'magister-shortcuts',
+                title: "Sneltoetsen",
+                subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
+                default: true,
+                require: "magister-overlay-hotkey? magister-css-experimental",
             },
             {
-                id: 'magister-shortcut-keys-today',
+                id: 'magister-shortcuts-today',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de pagina 'Vandaag' zijn sneltoetsen bruikbaar zonder dat je de activatietoets ingedrukt hoeft te houden.",
                 default: true,
-                require: "magister-shortcut-keys magister-css-experimental",
+                require: "magister-overlay-hotkey? magister-shortcuts magister-css-experimental",
             },
+            {
+                id: 'magister-notes-beta',
+                title: "Notities",
+                subtitle: "Houd de activatietoets ingedrukt om notities weer te geven. Druk op '0' op je toetsenbord om vast te zetten.",
+                default: false,
+                class: 'beta',
+                require: "magister-overlay-hotkey? magister-css-experimental",
+            }
         ]
     },
     {
@@ -286,6 +294,21 @@ const settingsBuilder = [
                 title: "Naar huidige week scrollen",
                 default: true,
             }
+        ]
+    },
+    {
+        id: "section-magister-gamification",
+        group: "Magister",
+        title: "Gamificatie",
+        settings: [
+            {
+                id: "magister-gamification",
+                title: "Gamificatie",
+                subtitle: "Op de pagina 'Vandaag' kun je jouw punten bekijken. Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
+                default: false,
+                class: 'beta',
+                require: "magister-css-experimental",
+            },
         ]
     },
     {
