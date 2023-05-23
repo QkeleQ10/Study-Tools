@@ -1,6 +1,5 @@
 let token,
-    userId,
-    hostname
+    userId    
 
 init()
 async function init() {
@@ -13,14 +12,13 @@ async function init() {
             if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
         })
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/personen/')[1].split('/')[0]
-        if (e.url.split('/api/')[0]) hostname = e.url.split('/api/')[0]
 
-        console.info({ token, userId, url: hostname })
+        console.info({ token, userId })
     }, { urls: ['*://*.magister.net/api/m6/personen*instellingen/desktop?filter=VANDAAG_SCHERM*'] }, ['requestHeaders', 'extraHeaders'])
 }
 
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
-        sendResponse({ token, userId, hostname })
+        sendResponse({ token, userId })
     }
 );

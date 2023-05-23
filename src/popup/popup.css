@@ -128,6 +128,18 @@ main {
     min-height: max-content;
 }
 
+#settings-wrapper>section:not(:has(label:not(.collapse))):after {
+    display: inline-block;
+    content: "Geen toegestane opties in deze categorie.\AMisschien zijn deze opties afhankelijk van andere opties.";
+    white-space: pre-wrap;
+    font: 400 11px var(--font), sans-serif;
+    background: var(--backgroundIntense);
+    color: var(--textIntense);
+    border-bottom: solid 1px var(--border);
+    padding: 11px;
+    width: 100%;
+}
+
 aside {
     grid-area: aside;
     border-right: solid 1px var(--border);
@@ -285,7 +297,7 @@ section>label:last-child {
 }
 
 label.beta:before {
-    top: 6px    ;
+    top: 6px;
     right: 11px;
     font-family: 'material-icons';
     content: 'science';

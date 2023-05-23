@@ -599,6 +599,10 @@ dna-card-title.disabled {
     color: var(--st-foreground-primary) !important;
 }
 
+dna-card {
+    --box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
+}
+
 .container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
     --color: var(--st-foreground-accent);
@@ -640,7 +644,7 @@ dna-button:hover {
     grid-template-rows: 1fr;
     display: grid;
     overflow: hidden !important;
-    transition: grid-template-rows 200ms;
+    transition: grid-template-rows 200ms, opacity 200ms;
 }
 
 .content.content-auto>* {

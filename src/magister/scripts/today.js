@@ -148,6 +148,7 @@ async function todayNotifications(notifcationsWrapper) {
     notifcationsWrapper.dataset.ready = true
 }
 
+// TODO: Gather using the API rather than scraping
 async function todaySchedule(scheduleWrapper) {
     let scheduleTodayContainer = document.createElement('ul'),
         scheduleTomorrowContainer = document.createElement('ul'),

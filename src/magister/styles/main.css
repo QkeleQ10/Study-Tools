@@ -73,16 +73,16 @@ span.st-subtitle {
 }
 
 #st-snackbars:has(div.open) {
-    background: radial-gradient(at bottom left, rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 0.75) 0%, rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 0) 70%)
+    background: radial-gradient(at bottom left, rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 0.75) 0%, rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 0) 70%) !important;
 }
 
 #st-snackbars>div {
-    font: 16px arboria, sans-serif;
-    background-color: var(--st-background-secondary);
-    color: var(--st-foreground-primary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
-    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    font: 16px arboria, sans-serif !important;
+    background-color: var(--st-background-secondary) !important;
+    color: var(--st-foreground-primary) !important;
+    border: var(--st-border) !important;
+    border-radius: var(--st-border-radius) !important;
+    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
 }
 
 .st-button {

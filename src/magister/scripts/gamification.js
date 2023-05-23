@@ -8,7 +8,7 @@ async function popstate() {
 async function gamification() {
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],
-        ['absences', "Ongeoorloofde absenties", "Absenties in ", "Je verliest 15 punten voor ongeoorloofde absenties."],
+        ['absences', "Ongeoorloofde absenties", "Absenties in ", "Je verliest punten per ongeoorloofde absentie."],
         ['assignmentsEarly', "Opdrachten op tijd ingeleverd", "Opdrachten in ", "Je verdient punten per op tijd ingeleverde opdracht en extra punten per dag te vroeg. Latere leerjaren hebben meer impact op je score."]
         // ['assignmentsLate', "Opdrachten te laat ingeleverd", "Opdrachten in ", "Voor elke dag dat je een opdracht te laat inlevert, kun je 2 punten verliezen."]
     ]
@@ -41,26 +41,26 @@ async function gamification() {
 
     async function calculateScore() {
         let response = await chrome.runtime.sendMessage(['token', 'userId']),
-            token = response.token,
-            userId = response.userId,
-            hostname = response.hostname
+            token = response.token || Object.values(chrome.storage.local.get('user-token'))[0],
+            userId = response.userId || Object.values(chrome.storage.local.get('user-id'))[0]
 
-        console.log(response)
+        chrome.storage.local.set({ 'user-token': token })
+        chrome.storage.local.set({ 'user-id': userId })
 
         // Fetch all years and info related.
-        const yearsRes = await fetch(`${hostname}/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
+        const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
             yearsArray = (await yearsRes.json()).items,
             years = {}
 
         // Loop through each year and gather grades, absences and assignments. Bind them to their respective key in the 'years' object.
         yearsArray.forEach(async year => {
-            const gradesRes = await fetch(`${hostname}/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
+            const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
             const gradesJson = (await gradesRes.json()).Items
 
-            const absencesRes = await fetch(`${hostname}/api/personen/${userId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: token } }),
+            const absencesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: token } }),
                 absencesJson = (await absencesRes.json()).Items
 
-            const assignmentsRes = await fetch(`${hostname}/api/personen/${userId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: token } }),
+            const assignmentsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: token } }),
                 assignmentsJson = (await assignmentsRes.json()).Items
 
             years[year.id] = { grades: gradesJson, absences: absencesJson, assignments: assignmentsJson, name: year.studie.code }

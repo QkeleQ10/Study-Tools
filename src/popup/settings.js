@@ -143,7 +143,7 @@ const settingsBuilder = [
                 subtitle: "Houd de activatietoets ingedrukt om notities weer te geven. Druk op '0' op je toetsenbord om vast te zetten.",
                 default: false,
                 class: 'beta',
-                require: "magister-overlay-hotkey? magister-css-experimental",
+                require: "beta-options magister-overlay-hotkey? magister-css-experimental",
             }
         ]
     },
@@ -163,7 +163,7 @@ const settingsBuilder = [
             {
                 id: "magister-appbar-zermelo-url",
                 title: "Webadres Zermelo",
-                subtitle: "Bijvoorbeeld 'school.zportal.nl/app'. Als dit niet wordt opgegeven, werkt de link soms nog wel.",
+                subtitle: "Bijvoorbeeld 'school.zportal.nl/app'. Dit hoeft alleen ingevuld te worden als er problemen optreden.",
                 type: "text",
                 require: "magister-appbar-zermelo",
             },
@@ -307,7 +307,7 @@ const settingsBuilder = [
                 subtitle: "Op de pagina 'Vandaag' kun je jouw punten bekijken. Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
                 default: false,
                 class: 'beta',
-                require: "magister-css-experimental",
+                require: "beta-options magister-css-experimental",
             },
         ]
     },
@@ -343,17 +343,25 @@ const settingsBuilder = [
                 devOnly: true,
             },
             {
-                id: "beta",
-                title: "Bètaversies aanbieden",
-                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
-                devOnly: true,
-                require: "updates",
-            },
-            {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
                 subtitle: "Een korte melding over de nieuwste update wordt weergegeven als er een nieuwe beschikbaar of onlangs geïnstalleerd is.",
                 default: true,
+            },
+            {
+                id: "beta-options",
+                title: "Experimentele opties",
+                subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
+                class: 'beta',
+                default: false,
+            },
+            {
+                id: "beta",
+                title: "Bètaversies aanbieden",
+                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
+                devOnly: true,
+                class: 'beta',
+                require: "beta-options updates",
             },
         ]
     },
