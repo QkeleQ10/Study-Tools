@@ -405,7 +405,7 @@ span.st-subtitle {
     max-height: 50vh;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     background: var(--st-background-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
@@ -424,6 +424,7 @@ span.st-subtitle {
 
 #st-notes[data-open=force] {
     max-height: calc(100vh - 112px);
+    overflow-y: auto;
 }
 
 #st-notes:before {

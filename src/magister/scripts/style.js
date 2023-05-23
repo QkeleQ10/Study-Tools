@@ -167,7 +167,8 @@ input[type=checkbox]+label span {
 .block,
 .content-container,
 .studiewijzer-onderdeel>div.block>div.content:not(#studiewijzer-detail-container div, #studiewijzer-detail-container ul),
-#cijfers-container .main div.content-container-cijfers {
+#cijfers-container .main div.content-container-cijfers, dna-card,
+.opdracht-versions ul {
     border: var(--st-border);
     border-radius: var(--st-border-radius)
 }
@@ -334,7 +335,8 @@ form input[type=text], form input[type=password], form input[type=search], form 
 #agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap,
 html body .k-popup.k-list-container .k-item,
 .k-popup.k-list-container,
-.k-list-container.k-state-border-up .k-list {
+.k-list-container.k-state-border-up .k-list,
+.opdracht-versions ul {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -480,7 +482,8 @@ a.appbar-button,
 
 aside, aside .block,
 .main-menu>li.active>a,
-.main-menu>li>a:hover {
+.main-menu>li>a:hover,
+.opdracht-versions ul li {
     border-radius: var(--st-border-radius);
 }
 
@@ -592,6 +595,10 @@ aside .tabs:not(.st-cf-sc-override) li.active:after {
   translate: -50%;
 }
 
+dna-card-title.disabled {
+    color: var(--st-foreground-primary) !important;
+}
+
 .container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
     --color: var(--st-foreground-accent);
@@ -626,7 +633,7 @@ dna-button:hover {
 .studiewijzer-onderdeel div.fold div.content {
     height: auto;
     overflow: hidden !important;
-    opacity: 1;
+    opacity: 0;
 }
 
 .content.content-auto {
