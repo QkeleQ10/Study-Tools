@@ -12,19 +12,19 @@ async function login() {
 
     footer.innerText = "Automatisch inloggen is ingeschakeld. Je kunt de instellingen aanpassen via de extensie van Study Tools."
 
-    let usernameField = await getElement('#username'),
+    let usernameField = await awaitElement('#username'),
         username = await getSetting('magisterLogin-username')
     usernameField.value = username
     usernameField.dispatchEvent(new Event('input'))
 
-    let usernameSubmit = await getElement('#username_submit')
+    let usernameSubmit = await awaitElement('#username_submit')
     usernameSubmit.click()
 
     let password = await getSetting('magisterLogin-password'),
-        passwordField = await getElement('#rswp_password')
+        passwordField = await awaitElement('#rswp_password')
     passwordField.value = password
     passwordField.dispatchEvent(new Event('input'))
 
-    let passwordSubmit = await getElement('#rswp_submit')
+    let passwordSubmit = await awaitElement('#rswp_submit')
     passwordSubmit.click()
 }

@@ -1,7 +1,8 @@
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
-async function popstate() {if (document.location.href.split('?')[0].includes('/cijfers')) {
+async function popstate() {
+    if (document.location.href.split('?')[0].includes('/cijfers')) {
         gradeCalculator()
         if (document.location.href.split('?')[0].includes('/cijfers/cijferoverzicht')) {
             gradeBackup()
@@ -13,16 +14,16 @@ async function popstate() {if (document.location.href.split('?')[0].includes('/c
 // Page 'Cijfers', calculator
 async function gradeCalculator() {
     if (!await getSetting('magister-cf-calculator')) return
-    let aside = await getElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
-        menuHost = await getElement('.menu-host'),
-        menuCollapser = await getElement('.menu-footer>a'),
-        gradesContainer = await getElement('.content-container-cijfers, .content-container'),
-        gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
+    let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
+        menuHost = await awaitElement('.menu-host'),
+        menuCollapser = await awaitElement('.menu-footer>a'),
+        gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
+        gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
         clOpen = document.createElement('button'),
         clCloser = document.createElement('button'),
         clAddTable = document.createElement('button'),
         clAddCustom = document.createElement('button'),
-        clContainer = document.createElement('div'),
+        clOverlay = document.createElement('div'),
         clSidebar = document.createElement('div'),
         clTitle = document.createElement('span'),
         clSubtitle = document.createElement('span'),
@@ -49,10 +50,11 @@ async function gradeCalculator() {
     clOpen.id = 'st-cf-cl-open'
     clOpen.innerText = "Cijfercalculator"
     clOpen.dataset.icon = ''
-    document.body.append(clContainer)
-    clContainer.id = 'st-cf-cl'
-    clContainer.dataset.step = 0
-    clContainer.append(clCloser, clTitle, clSubtitle, clAddTable, clSidebar, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvasHlVertical, clCanvasHlHorizontal, clFutureWeight)
+    document.body.append(clOverlay)
+    clOverlay.id = 'st-cf-cl'
+    clOverlay.classList.add('st-overlay')
+    clOverlay.dataset.step = 0
+    clOverlay.append(clCloser, clTitle, clSubtitle, clAddTable, clSidebar, clAddCustomResult, clAddCustomWeight, clAddCustom, clCanvasHlVertical, clCanvasHlHorizontal, clFutureWeight)
     clSidebar.id = 'st-cf-cl-sidebar'
     clSidebar.append(clAdded, clAveragesWrapper, clFutureDesc, clCanvas)
     clTitle.id = 'st-cf-cl-title'
@@ -90,7 +92,7 @@ async function gradeCalculator() {
         clCanvas = document.getElementById('st-cf-cl-canvas')
         ctx = clCanvas.getContext('2d')
         document.body.style.marginLeft = '-130px'
-        clContainer.dataset.step = 1
+        clOverlay.dataset.step = 1
         resultsList = []
         weightsList = []
         clAdded.innerText = ''
@@ -105,11 +107,11 @@ async function gradeCalculator() {
     })
 
     addEventListener("keydown", e => {
-        if (clContainer.dataset.step != 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
+        if (clOverlay.dataset.step != 0 && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
     })
 
     gradesContainer.addEventListener('dblclick', () => {
-        if (clContainer.dataset.step == 0) return
+        if (clOverlay.dataset.step == 0) return
         clAddTable.click()
     })
 
@@ -200,7 +202,7 @@ async function gradeCalculator() {
                     else clMean.classList.remove('insufficient')
 
                     renderGradeChart(resultsList, weightsList, hypotheticalWeight, calcMean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
-                    if (resultsList.length < 1 || weightsList.length < 1 || isNaN(calcMean)) clContainer.dataset.step = 1
+                    if (resultsList.length < 1 || weightsList.length < 1 || isNaN(calcMean)) clOverlay.dataset.step = 1
                 })
 
                 resultsList.push(result)
@@ -213,7 +215,7 @@ async function gradeCalculator() {
                 if (calcMean < 5.5) clMean.classList.add('insufficient')
                 else clMean.classList.remove('insufficient')
 
-                clContainer.dataset.step = 2
+                clOverlay.dataset.step = 2
                 renderGradeChart(resultsList, weightsList, hypotheticalWeight, calcMean, clCanvasHlVertical, clCanvasHlHorizontal, clFutureDesc)
             }, event.target.id === 'st-cf-cl-add-table' ? 300 : 0)
         })
@@ -228,7 +230,7 @@ async function gradeCalculator() {
     clCloser.addEventListener('click', async () => {
         document.body.style.marginLeft = '0'
         gradesContainer.removeAttribute('style')
-        clContainer.dataset.step = 0
+        clOverlay.dataset.step = 0
         menuCollapser.click()
     })
 }
@@ -387,9 +389,9 @@ async function formulateGradeAdvice(means, weight, mean) {
 // Page 'Cijferoverzicht', backup
 async function gradeBackup() {
     if (!await getSetting('magister-cf-backup')) return
-    let aside = await getElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
-        gradesContainer = await getElement('.content-container-cijfers, .content-container'),
-        gradeDetails = await getElement('#idDetails>.tabsheet .block .content dl'),
+    let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
+        gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
+        gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
         bkExport = document.createElement('button'),
         bkImport = document.createElement('label'),
         bkImportInput = document.createElement('input'),
@@ -638,7 +640,7 @@ async function gradeBackup() {
 // Page 'Cijferoverzicht', statistics
 async function gradeStatistics() {
     if (!await getSetting('magister-cf-statistics')) return
-    let tabs = await getElement('#cijfers-container > aside > div.head-bar > ul'),
+    let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = document.createElement('li'),
         scTabLink = document.createElement('a'),
         scContainer = document.createElement('div'),
@@ -742,7 +744,7 @@ async function gradeStatistics() {
 
     document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
     document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
-    let yearSelect = await getElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span')
+    let yearSelect = await awaitElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span')
     yearSelect.click()
     document.querySelectorAll(`#aanmeldingenSelect_listbox>li.k-item`).forEach((year, index) => {
         if (document.getElementById(`st-cf-sc-year-${index}`)) return
@@ -773,14 +775,14 @@ async function gradeStatistics() {
             scTab.dataset.loading = true
             scInteractionPreventer.id = 'st-prevent-interactions'
             if (!backup) {
-                let yearSelection = await getElement(`#aanmeldingenSelect_listbox>li:nth-child(${index + 1})`),
-                    tableBody = await getElement("#cijferoverzichtgrid tbody")
+                let yearSelection = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${index + 1})`),
+                    tableBody = await awaitElement("#cijferoverzichtgrid tbody")
                 tableBody.innerText = ''
                 yearSelection.click()
             }
 
             setTimeout(async () => {
-                let gradeElements = await getElement('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true)
+                let gradeElements = await awaitElement('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true)
                 gradeElements.forEach(grade => {
                     let result = Number(grade.innerText.replace(',', '.').replace('', '')),
                         id = grade.id,

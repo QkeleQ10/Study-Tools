@@ -17,7 +17,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     z-index: 99999999;
 }
 #st-snackbars>div {
-    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; line-height: 16px; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 8px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
+    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; line-height: 16px; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 16px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
 }
 #st-snackbars>div.open {
     translate: 0; opacity: 1;
@@ -99,7 +99,18 @@ function setIntervalImmediately(func, interval) {
     return setInterval(func, interval)
 }
 
-function getElement(querySelector, all, duration) {
+function element(tagName, id, parent, attributes) {
+    let elem = id ? document.getElementById(id) : undefined
+    if (!elem) {
+        elem = document.createElement(tagName)
+        if (id) elem.id = id
+        if (parent) parent.append(elem)
+        if (attributes) setAttributes(elem, attributes)
+    }
+    return elem
+}
+
+function awaitElement(querySelector, all, duration) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             if (document.querySelector(querySelector)) {
@@ -146,15 +157,17 @@ function setSettings(object, location) {
     })
 }
 
-function setAttributes(el, attrs) {
-    for (var key in attrs) {
-        el.setAttribute(key, attrs[key])
+function setAttributes(elem, attributes) {
+    for (var key in attributes) {
+        if (key === 'innerText') elem.innerText = attributes[key]
+        if (key === 'innerHTML') elem.innerHTML = attributes[key]
+        else elem.setAttribute(key, attributes[key])
     }
 }
 
 async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
     const snackbar = document.createElement('div'),
-        snackbarWrapper = await getElement('#st-snackbars')
+        snackbarWrapper = await awaitElement('#st-snackbars')
     snackbarWrapper.append(snackbar)
     snackbar.innerText = body
     snackbar.addEventListener('dblclick', () => {

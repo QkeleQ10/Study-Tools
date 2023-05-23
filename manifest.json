@@ -1,8 +1,9 @@
 {
+    "$schema": "https://json.schemastore.org/chrome-manifest",
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "2.5.3",
+    "version": "2.6.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -19,11 +20,14 @@
             "id": "studytools@qkeleq10.dev"
         }
     },
+    "background": {
+        "service_worker": "src/service-worker.js",
+        "type": "module"
+    },
     "content_scripts": [
         {
             "matches": [
                 "*://*.magister.net/*",
-                "*://*.noordhoff.nl/*",
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
@@ -41,6 +45,7 @@
             ],
             "css": [
                 "src/magister/styles/main.css",
+                "src/magister/styles/gamification.css",
                 "src/magister/styles/today.css",
                 "src/magister/styles/grades.css"
             ],
@@ -52,6 +57,7 @@
             ],
             "js": [
                 "src/magister/scripts/main.js",
+                "src/magister/scripts/gamification.js",
                 "src/magister/scripts/today.js",
                 "src/magister/scripts/grades.js",
                 "src/magister/scripts/studyguide.js"
@@ -69,16 +75,6 @@
         },
         {
             "matches": [
-                "*://apps.noordhoff.nl/se*",
-                "*://identity.noordhoff.nl/*"
-            ],
-            "js": [
-                "src/other/noordhoff.js"
-            ],
-            "run_at": "document_end"
-        },
-        {
-            "matches": [
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
@@ -88,7 +84,16 @@
         }
     ],
     "action": {
-        "default_icon": "icons/512.png",
+        "default_icon": {
+            "16": "icons/16.png",
+            "32": "icons/32.png",
+            "48": "icons/48.png",
+            "64": "icons/64.png",
+            "128": "icons/128.png",
+            "256": "icons/256.png",
+            "300": "icons/300.png",
+            "512": "icons/512.png"
+        },
         "default_popup": "src/popup/popup.html",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
@@ -98,6 +103,10 @@
         "open_in_tab": true
     },
     "permissions": [
-        "storage"
+        "storage",
+        "webRequest"
+    ],
+    "host_permissions": [
+        "*://*.magister.net/*"
     ]
 }

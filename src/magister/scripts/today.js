@@ -8,7 +8,7 @@ async function popstate() {
 // Page 'Vandaag'
 async function today() {
     if (!await getSetting('magister-vd-overhaul')) return
-    let mainSection = await getElement('section.main'),
+    let mainSection = await awaitElement('section.main'),
         container = document.createElement('div'),
         header = document.createElement('div'),
         headerText = document.createElement('span'),
@@ -17,14 +17,15 @@ async function today() {
     mainSection.append(header, container)
     header.id = 'st-vd-header'
     header.append(headerText)
+    headerText.classList.add('st-title')
     container.id = 'st-vd'
     container.append(scheduleWrapper, notifcationsWrapper)
     scheduleWrapper.id = 'st-vd-schedule'
     notifcationsWrapper.id = 'st-vd-notifications'
 
-    if (await getSetting('magister-shortcut-keys-today')) {
-        scheduleWrapper.style.marginBottom = '70px'
-        notifcationsWrapper.style.marginBottom = '70px'
+    if (await getSetting('magister-shortcuts-today')) {
+        scheduleWrapper.style.marginBottom = '55px'
+        notifcationsWrapper.style.marginBottom = '55px'
     }
 
     todayNotifications(notifcationsWrapper)
@@ -65,10 +66,10 @@ async function today() {
 }
 
 async function todayNotifications(notifcationsWrapper) {
-    let lastGrade = await getElement('.block.grade-widget span.cijfer'),
-        lastGradeDescription = await getElement('.block.grade-widget span.omschrijving'),
-        moreGrades = await getElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
-        unreadItems = await getElement('#notificatie-widget ul>li', true),
+    let lastGrade = await awaitElement('.block.grade-widget span.cijfer'),
+        lastGradeDescription = await awaitElement('.block.grade-widget span.omschrijving'),
+        moreGrades = await awaitElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
+        unreadItems = await awaitElement('#notificatie-widget ul>li', true),
         gradeNotification = document.getElementById('st-vd-grade-notification') || document.createElement('li'),
         gradeNotificationSpan = document.getElementById('st-vd-grade-notification-span') || document.createElement('span')
 
@@ -147,6 +148,7 @@ async function todayNotifications(notifcationsWrapper) {
     notifcationsWrapper.dataset.ready = true
 }
 
+// TODO: Gather using the API rather than scraping
 async function todaySchedule(scheduleWrapper) {
     let scheduleTodayContainer = document.createElement('ul'),
         scheduleTomorrowContainer = document.createElement('ul'),
@@ -154,7 +156,7 @@ async function todaySchedule(scheduleWrapper) {
         scheduleLinkWeek = document.createElement('a'),
         scheduleLinkList = document.createElement('a'),
         scheduleNowLine = document.createElement('div'),
-        legacy = await getSetting('magister-vd-agendaLegacy')
+        legacy = false
 
     scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
 
@@ -170,7 +172,7 @@ async function todaySchedule(scheduleWrapper) {
         scheduleLinkList.href = '#/agenda'
     }
 
-    let agendaTodayElems = await getElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
+    let agendaTodayElems = await awaitElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
     renderScheduleList(agendaTodayElems, scheduleTodayContainer)
 
     if (!legacy) {
@@ -178,8 +180,8 @@ async function todaySchedule(scheduleWrapper) {
     }
 
     setTimeout(async () => {
-        let agendaTomorrowTitle = await getElement('#agendawidgetlistcontainer>h4', 4000),
-            agendaTomorrowElems = await getElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
+        let agendaTomorrowTitle = await awaitElement('#agendawidgetlistcontainer>h4', 4000),
+            agendaTomorrowElems = await awaitElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
         if (!agendaTomorrowTitle, agendaTomorrowElems) return
         scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
         scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle?.innerText?.replace('Wijzigingen voor ', '') || 'morgen'}`
@@ -192,7 +194,7 @@ async function todaySchedule(scheduleWrapper) {
         let events = [],
             overlapIndexMap = {},
             overlapComparisonMap = {},
-            firstStart = new Date(),
+            firstStart = new Date().setHours(23, 59, 59, 0),
             lastEnd = new Date().setHours(0, 0, 0, 0)
 
         if (agendaElems) agendaElems.forEach((e, i, a) => {
@@ -237,8 +239,8 @@ async function todaySchedule(scheduleWrapper) {
             overlapIndexMap[i] = 0
             overlapComparisonMap[i] = new Set()
 
-            if (start < firstStart) firstStart = start
-            if (end > lastEnd) lastEnd = end
+            if (start <= firstStart) firstStart = start
+            if (end >= lastEnd) lastEnd = end
         })
 
         if (events && !legacy) events.sort((a, b) => b.duration - a.duration)
@@ -258,9 +260,6 @@ async function todaySchedule(scheduleWrapper) {
             container.append(elementWrapper)
 
             if (!legacy) events.forEach(comparingEvent => {
-
-                console.log(title, comparingEvent.title, comparingEvent.start - end, comparingEvent.end - start)
-
                 if (Math.abs(comparingEvent.start - end) < 100) {
                     elementWrapper.classList.add('border-bottom-radius-none')
                 }

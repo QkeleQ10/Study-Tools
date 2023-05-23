@@ -6,28 +6,32 @@ async function popstate() {
 
     const href = document.location.href.split('?')[0]
 
-    if (href.endsWith('/studiewijzer')) studyguideList()
-    else if (href.includes('/studiewijzer/')) studyguideIndividual()
+    if (href.includes('/studiewijzer/')) studyguideIndividual()
+    else if (href.includes('/studiewijzer')) studyguideList()
 }
 
 // Page 'Studiewijzers
 async function studyguideList() {
     if (await getSetting('magister-sw-display') === 'off') return
-    const gridContainer = await getElement('section.main')
+    const gridContainer = await awaitElement('section.main')
     renderStudyguideList(gridContainer)
 }
 
 // Page 'Studiewijzer
 async function studyguideIndividual() {
     if (await getSetting('magister-sw-thisWeek')) {
-        let list = await getElement('.studiewijzer-content-container>ul'),
-            titles = await getElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
+        let list = await awaitElement('.studiewijzer-content-container>ul'),
+            titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
+
+        list.parentElement.style.paddingTop = '8px !important'
+        list.parentElement.style.paddingLeft = '8px !important'
+        list.parentElement.setAttribute('style', 'border: none !important; padding: 8px 0 0 8px !important;')
 
         titles.forEach(async title => {
             if (list.childElementCount === 1 || regex.exec(title.innerText.replace(await getWeekNumber(), 'match'))) {
                 let top = title.parentElement,
-                    bottom = top.nextElementSibling.lastElementChild,
+                    bottom = top.nextElementSibling.lastElementChild.previousElementSibling,
                     li = top.parentElement.parentElement
                 li.classList.add('st-current-sw')
                 top.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")
@@ -38,7 +42,7 @@ async function studyguideIndividual() {
     }
 
     if (await getSetting('magister-sw-display') === 'off') return
-    const gridContainer = await getElement('div.full-height.widget')
+    const gridContainer = await awaitElement('div.full-height.widget')
     renderStudyguideList(gridContainer, true)
 }
 
@@ -48,8 +52,8 @@ async function renderStudyguideList(gridContainer, compact) {
         settingSubjects = await getSetting('magister-subjects'),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-        originalList = await getElement('.studiewijzer-list > ul, .content.projects > ul'),
-        originalItems = await getElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
+        originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),
+        originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
         originalItemsArray = [...originalItems],
         gridWrapper = document.createElement('div'),
         grid = document.createElement('div')

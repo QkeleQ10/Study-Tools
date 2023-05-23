@@ -1,0 +1,270 @@
+@property --level-progress {
+    initial-value: 0;
+    inherits: false;
+    syntax: '<number>';
+}
+
+#st-level {
+    position: absolute;
+    top: 20px;
+    right: 16px;
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: scale 200ms;
+}
+
+#st-level:focus-visible,
+#st-level:hover {
+    scale: 1.1;
+}
+
+#st-level:active {
+    scale: .9;
+}
+
+#st-level:before {
+    content: attr(data-level);
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1;
+    margin-right: -20px;
+    padding-bottom: 4px;
+    color: var(--st-foreground-accent);
+    background: var(--st-background-secondary);
+    border: 2px solid var(--st-accent-primary);
+    border-radius: 50%;
+    font: 600 22px var(--st-font-family-primary);
+    z-index: 1;
+}
+
+#st-progress,
+#st-gm-card-progress {
+    width: calc(clamp(75px, 10vw, 300px) + 20px);
+    box-sizing: border-box;
+    height: 20px;
+    background: var(--st-highlight-primary);
+    outline: var(--st-border);
+    border-radius: var(--st-border-radius);
+}
+
+#st-progress-filled,
+#st-gm-card-progress-filled {
+    width: calc(var(--level-progress) * 100% - 20px);
+    height: 100%;
+    padding-left: 20px;
+    box-sizing: content-box;
+    background: linear-gradient(to right, var(--st-accent-secondary), var(--st-accent-primary));
+    border-radius: var(--st-border-radius) var(--st-border-radius);
+    transition: --level-progress 2000ms ease-in-out;
+}
+
+#st-gm[open] {
+    display: flex;
+    flex-direction: column;
+
+}
+
+#st-gm-subtitle {
+    margin-bottom: 20px;
+}
+
+#st-gm-close {
+    position: absolute;
+    top: 32px;
+    right: 24px;
+}
+
+#st-gm-wrap {
+    margin: auto;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+#st-gm-card {
+    width: 500px;
+    max-height: max-content;
+    padding: 32px;
+    background: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+
+#st-gm[open] #st-gm-card {
+    animation: floatDown 500ms;
+}
+
+#st-gm-card-subtitle {
+    color: var(--st-foreground-insignificant);
+}
+
+#st-gm-card-level {
+    margin-inline: auto;
+    margin-block: 16px;
+    margin-bottom: 50px;
+    width: 160px;
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--st-foreground-accent);
+    background: var(--st-background-secondary);
+    border: 2px solid var(--st-accent-primary);
+    border-radius: 50%;
+    font: 600 50px var(--st-font-family-primary);
+    z-index: 1;
+}
+
+#st-gm-card-level:before {
+    content: 'NIVEAU\A';
+    white-space: pre-wrap;
+    font-size: 14px;
+}
+
+#st-gm-card-progress {
+    position: relative;
+    width: 100%;
+    height: 25px;
+}
+
+#st-gm-card-progress:before {
+    content: attr(data-points-progress) ' /  ' attr(data-points-required) ' punten';
+    position: absolute;
+    top: -28px;
+    left: 0;
+    font: 14px var(--st-font-family-secondary);
+    opacity: .7;
+}
+
+#st-gm-card-progress:after {
+    content: 'nog ' attr(data-points-remaining) ' punten tot niveau ' attr(data-level-next);
+    position: absolute;
+    top: -28px;
+    right: 0;
+    font: 14px var(--st-font-family-secondary);
+    opacity: .7;
+}
+
+#st-gm-card-progress-filled {
+    width: calc(var(--level-progress) * 100%);
+    padding-left: 0;
+}
+
+#st-gm-breakdown {
+    width: 350px;
+    place-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    font: 14px var(--st-font-family-secondary);
+}
+
+#st-gm[open] #st-gm-breakdown {
+    animation: fadeIn 500ms 300ms backwards;
+}
+
+#st-gm-breakdown:before {
+    content: "Uitsplitsing punten\A";
+    white-space: pre-wrap;
+    font: 600 16px/32px var(--st-font-family-primary);
+}
+
+#st-gm-breakdown:after {
+    content: "Klik op een item voor details.";
+    position: absolute;
+    top: 8px;
+    right: 0;
+    font: 12px var(--st-font-family-secondary);
+    opacity: .4;
+}
+
+#st-gm-breakdown div {
+    position: relative;
+    font-weight: normal;
+}
+
+#st-gm-breakdown>div {
+    max-height: 23px;
+    padding-inline: 12px;
+    margin-inline: -12px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: var(--st-border-radius);
+    transition: max-height 200ms, padding 200ms, margin 200ms, border 200ms, background 200ms;
+}
+
+#st-gm-breakdown>div.expand {
+    max-height: 250px;
+    padding-block: 12px;
+    margin-block: 4px;
+    border: var(--st-border);
+    background: var(--st-background-secondary);
+}
+
+#st-gm-breakdown>div>div {
+    margin-block: 2px;
+}
+
+
+#st-gm-breakdown>div>div:first-child {
+    font-weight: 600;
+    margin-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#st-gm-breakdown>div>div:last-child {
+    margin-top: 8px;
+}
+
+#st-gm-breakdown>div:last-child {
+    max-height: 32px;
+    margin-top: 8px;
+    margin-inline: 0;
+    padding-inline: 0;
+    font: 600 16px var(--st-font-family-primary);
+}
+
+#st-gm-breakdown>div:last-child:before,
+#st-gm-breakdown>div:last-child:after {
+    font: 600 16px var(--st-font-family-primary);
+}
+
+#st-gm-breakdown div[data-value]:before {
+    content: attr(data-value);
+    position: absolute;
+    right: 17px;
+    font-weight: 600;
+    font: 14px var(--st-font-family-secondary);
+}
+
+#st-gm-breakdown div[data-value]:after {
+    content: 'pt';
+    position: absolute;
+    right: 0;
+    top: 0;
+    font: 14px var(--st-font-family-secondary);
+}
+
+#st-gm-breakdown div[data-value='0'] {
+    color: var(--st-foreground-insignificant);
+}
+
+#st-gm-breakdown div[data-value^='-']:before,
+#st-gm-breakdown div[data-value^='-']:after {
+    color: var(--st-accent-warn);
+}
+
+#st-vd-notifications>#st-vd-gamification-notification {
+    color: var(--st-contrast-accent) !important;
+    background: linear-gradient(45deg, var(--st-accent-primary), var(--st-accent-secondary));
+}

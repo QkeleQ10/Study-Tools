@@ -33,10 +33,14 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 }
 
 async function applyStyles() {
-    const hueWish = await getSetting('magister-css-hue'),
+    let hueWish = await getSetting('magister-css-hue'),
         saturationWish = await getSetting('magister-css-saturation'),
         luminanceWish = await getSetting('magister-css-luminance'),
         borderRadius = await getSetting('magister-css-border-radius')
+
+    if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
+        hueWish = 266, saturationWish = 51, luminanceWish = 41
+    }
 
     let lightThemeCss = `:root {
     --st-font-primary: 600 16px/44px 'arboria', sans-serif;
@@ -46,7 +50,9 @@ async function applyStyles() {
     --st-background-secondary: #ffffff;
     --st-background-tertiary: #f5f5f5;
     --st-background-overlay: #fffffff5;
+    --st-background-transparent: #ffffffbb;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
+    --st-highlight-subtle: #f5f5f5;
     --st-highlight-ok: #81e3bc;
     --st-highlight-warn: #fff0f5;
     --st-highlight-info: #dceefd;
@@ -62,7 +68,8 @@ async function applyStyles() {
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 100;
+    --st-shadow-value: 150;
+    --st-shadow-alpha: .5;
     --st-hover-brightness: .8;
 }`,
         darkThemeCss = `:root {
@@ -73,7 +80,9 @@ async function applyStyles() {
     --st-background-secondary: #161616;
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f5;
+    --st-background-transparent: #121212bb;
     --st-highlight-primary: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
+    --st-highlight-subtle: #161616;
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
     --st-highlight-info: #101a22;
@@ -89,7 +98,8 @@ async function applyStyles() {
     --st-accent-warn: #e94f4f;
     --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 0;
+    --st-shadow-value: 10;
+    --st-shadow-alpha: .7;
     --st-hover-brightness: 1.4;
     color-scheme: dark;
 }`,
@@ -109,6 +119,10 @@ async function applyStyles() {
     .content-auto.background-white {
         background: #fff !important;
         color: #000 !important;
+    }
+    
+    .content-auto.background-white .comment * {
+        color: #000 !important;
     }`,
         rootVars = `${lightThemeCss}
 ${await getSetting('magister-css-theme') === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
@@ -123,6 +137,7 @@ ${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
 .block h4 {
     border-bottom: var(--st-border)
 }
+
 
 .block h4,
 footer.endlink {
@@ -152,7 +167,8 @@ input[type=checkbox]+label span {
 .block,
 .content-container,
 .studiewijzer-onderdeel>div.block>div.content:not(#studiewijzer-detail-container div, #studiewijzer-detail-container ul),
-#cijfers-container .main div.content-container-cijfers {
+#cijfers-container .main div.content-container-cijfers, dna-card,
+.opdracht-versions ul {
     border: var(--st-border);
     border-radius: var(--st-border-radius)
 }
@@ -240,7 +256,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button), table.table-grid-layout td a {
+a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout td a {
     color: var(--st-foreground-accent);
     text-decoration: none;
     overflow-wrap: anywhere
@@ -319,7 +335,8 @@ form input[type=text], form input[type=password], form input[type=search], form 
 #agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap,
 html body .k-popup.k-list-container .k-item,
 .k-popup.k-list-container,
-.k-list-container.k-state-border-up .k-list {
+.k-list-container.k-state-border-up .k-list,
+.opdracht-versions ul {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -376,7 +393,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.caption, .k-dropdown, .user-content span),
+span:not(.st-title, .st-subtitle, .caption, .k-dropdown, .user-content span),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,
@@ -465,7 +482,8 @@ a.appbar-button,
 
 aside, aside .block,
 .main-menu>li.active>a,
-.main-menu>li>a:hover {
+.main-menu>li>a:hover,
+.opdracht-versions ul li {
     border-radius: var(--st-border-radius);
 }
 
@@ -526,9 +544,10 @@ aside, aside .block,
 .dvd-screensaver {
     position: absolute;
     translate: -90px -30px;
-    mix-blend-mode: exclusion;
+    background: #0000ff;
+    padding: 16px;
     z-index: 99999;
-    animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate;
+    animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
 .sidecolumn aside .head-bar {
@@ -576,6 +595,14 @@ aside .tabs:not(.st-cf-sc-override) li.active:after {
   translate: -50%;
 }
 
+dna-card-title.disabled {
+    color: var(--st-foreground-primary) !important;
+}
+
+dna-card {
+    --box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
+}
+
 .container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
     --color: var(--st-foreground-accent);
@@ -606,8 +633,116 @@ dna-button:hover {
 }
 
 .overdue,.overdue *{color:grey!important}
+
+.studiewijzer-onderdeel div.fold div.content {
+    height: auto;
+    overflow: hidden !important;
+    opacity: 0;
+}
+
+.content.content-auto {
+    grid-template-rows: 1fr;
+    display: grid;
+    overflow: hidden !important;
+    transition: grid-template-rows 200ms, opacity 200ms;
+}
+
+.content.content-auto>* {
+    overflow: hidden !important;
+}
+
+.fold .content.content-auto {
+    grid-template-rows: 0fr;
+}
+
+.clearfix.user-content {
+    transition: padding 200ms;
+}
+
+.fold .clearfix.user-content {
+    padding-block: 0 !important;
+}
+
+.block h3 strong, .block h3 strong.ng-hide:not(.ng-hide-animate) {
+    line-height: 25px;
+    min-height: 0;
+    max-height: 0;
+    display: block !important;
+    overflow: hidden !important;
+    transition: min-height 200ms, max-height 200ms;
+}
+
+.fold h3 strong {
+    line-height: 25px;
+    min-height: 35px;
+    max-height: 35px;
+}
+
+#studiewijzer-detail-container .content {
+    min-height: 0;
+}
+
+footer.endlink {
+    display: none;
+}
+
+.studiewijzer-onderdeel .block.ng-scope {
+    overflow: hidden !important;
+    transition: box-shadow 200ms, margin 200ms;
+}
+
+.sources>li {
+    max-height: 39px;
+    transition: max-height 200ms;
+}
+
+.fold .sources>li {
+    max-height: 0;
+    border-top: none !important;
+}
+
+.icon-down-arrow:before, .icon-up-arrow:before {
+    content: '';
+    font: 400 24px/44px "Font Awesome 5 Pro" !important;
+    transition: rotate 200ms, translate 200ms;
+}
+
+.icon-up-arrow:before {
+    rotate: 180deg;
+}
+
+.studiewijzer-onderdeel:has(h3 b:active, .icon-down-arrow:active) .icon-down-arrow:before,
+h3:active> .icon-down-arrow:before{
+    translate: 0 6px;
+}
+
+.studiewijzer-onderdeel:has(h3 b:active, .icon-up-arrow:active) .icon-up-arrow:before,
+h3:active> .icon-up-arrow:before {
+    translate: 0 -6px;
+}
+
+.studiewijzer-onderdeel .block:not(.fold) {
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    margin-block: 8px;
+}
+
+#studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container {
+    padding: 8px 0 0 8px !important;
+    margin-left: -8px;
+    margin-top: -8px;
+    max-width: calc(100vw - 647px);
+    width: calc(100% + 8px);
+    max-height: none;
+    height: calc(100% + 8px);
+}
+
+#studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
+    max-width: calc(100vw - 469px);
+}
 `, 'study-tools-experimental')
     }
+
+    if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
 
     if (await getSetting('magister-vd-overhaul')) {
         createStyle(`

@@ -46,7 +46,7 @@ async function init() {
 
             switch (setting.type) {
                 case 'text':
-                    sectionWrapper.innerHTML += `<label class="has-text" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
+                    sectionWrapper.innerHTML += `<label class="has-text ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -56,7 +56,7 @@ async function init() {
                     break
 
                 case 'key':
-                    sectionWrapper.innerHTML += `<label class="has-key" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" class="input-key" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
+                    sectionWrapper.innerHTML += `<label class="has-key ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" class="input-key" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -78,7 +78,7 @@ async function init() {
                     break
 
                 case 'slider':
-                    sectionWrapper.innerHTML += `<label class="has-slider" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
+                    sectionWrapper.innerHTML += `<label class="has-slider ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -91,7 +91,7 @@ async function init() {
                     break
 
                 case 'select':
-                    sectionWrapper.innerHTML += `<label class="has-select" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse" data-value="${value}"></div></label>`
+                    sectionWrapper.innerHTML += `<label class="has-select ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse" data-value="${value}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
                     setting.options.forEach(option => inputElement.innerHTML += `<button data-value="${option.value}" data-selected="${value ? value === option.value : option.value === setting.default}">${option.title}</button>`)
@@ -117,7 +117,7 @@ async function init() {
 
                 case 'color-picker':
                     sectionWrapper.innerHTML += `
-<label class="has-color-picker" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}">
+<label class="has-color-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}">
     <h4>${setting.title}</h4>
     <div id="quick-colors">
         <button class="icon swatch" style="background: hsl(207deg, 95%, 55%)" data-color-values="207, 95, 55"></button>
@@ -177,7 +177,7 @@ async function init() {
                     break
 
                 case 'subjects':
-                    sectionWrapper.innerHTML += `<label role="listitem" for="${setting.id}" class="large">${setting.title}<div class="grid-subjects"><h5>Weergavenaam</h5><h5>Aliassen</h5></div><div id="${setting.id}"></div></label>`
+                    sectionWrapper.innerHTML += `<label role="listitem" for="${setting.id}" class="large ${setting.class}">${setting.title}<div class="grid-subjects"><h5>Weergavenaam</h5><h5>Aliassen</h5></div><div id="${setting.id}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
                     value.forEach(valueListing => {
@@ -193,7 +193,7 @@ async function init() {
                     break
 
                 default:
-                    sectionWrapper.innerHTML += `<label class="has-checkbox" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
+                    sectionWrapper.innerHTML += `<label class="has-checkbox ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
@@ -389,12 +389,16 @@ function updateConditionals() {
                 let leftHand = requirement.split('===')[0],
                     rightHand = requirement.split('===')[1],
                     dependency = document.getElementById(leftHand)
-                if (dependency.dataset.value === rightHand) matched++
+                if (dependency.value === rightHand || dependency.dataset.value === rightHand) matched++
             } else if (requirement.includes('!==')) {
                 let leftHand = requirement.split('!==')[0],
                     rightHand = requirement.split('!==')[1],
                     dependency = document.getElementById(leftHand)
-                if (dependency.dataset.value !== rightHand) matched++
+                if (dependency.value !== rightHand || dependency.dataset.value !== rightHand) matched++
+            } else if (requirement.includes('?')) {
+                let leftHand = requirement.split('?')[0],
+                    dependency = document.getElementById(leftHand)
+                if (dependency.value.length > 0 || dependency.dataset.value.length > 0) matched++
             } else {
                 let dependency = document.getElementById(requirement)
                 if (dependency.checked) matched++

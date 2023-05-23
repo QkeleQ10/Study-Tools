@@ -111,32 +111,40 @@ const settingsBuilder = [
         ]
     },
     {
-        id: "section-magister-shortcuts",
+        id: "section-magister-overlay",
         group: "Magister",
-        title: "Sneltoetsen",
+        title: "Overlay",
         settings: [
             {
-                id: 'magister-shortcut-keys',
-                title: "Sneltoetsen",
-                subtitle: "Houd de activatietoets ingedrukt (bijv. 'S') en kies een nummer voor snelle navigatie.",
-                default: true,
+                id: 'magister-overlay-hotkey',
+                title: "Activatietoets",
+                subtitle: "De toets waarmee de overlay opgeroepen kan worden.",
+                type: "key",
+                default: "S",
                 require: "magister-css-experimental",
             },
             {
-                id: 'magister-shortcut-keys-master',
-                title: "Activatietoets",
-                subtitle: "De toets die de sneltoetsen activeert.",
-                type: "key",
-                default: "S",
-                require: "magister-shortcut-keys magister-css-experimental",
+                id: 'magister-shortcuts',
+                title: "Sneltoetsen",
+                subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
+                default: true,
+                require: "magister-overlay-hotkey? magister-css-experimental",
             },
             {
-                id: 'magister-shortcut-keys-today',
+                id: 'magister-shortcuts-today',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de pagina 'Vandaag' zijn sneltoetsen bruikbaar zonder dat je de activatietoets ingedrukt hoeft te houden.",
                 default: true,
-                require: "magister-shortcut-keys magister-css-experimental",
+                require: "magister-overlay-hotkey? magister-shortcuts magister-css-experimental",
             },
+            {
+                id: 'magister-notes-beta',
+                title: "Notities",
+                subtitle: "Houd de activatietoets ingedrukt om notities weer te geven. Druk op '0' op je toetsenbord om vast te zetten.",
+                default: false,
+                class: 'beta',
+                require: "beta-options magister-overlay-hotkey? magister-css-experimental",
+            }
         ]
     },
     {
@@ -155,7 +163,7 @@ const settingsBuilder = [
             {
                 id: "magister-appbar-zermelo-url",
                 title: "Webadres Zermelo",
-                subtitle: "Bijvoorbeeld 'school.zportal.nl/app'. Als dit niet wordt opgegeven, werkt de link soms nog wel.",
+                subtitle: "Bijvoorbeeld 'school.zportal.nl/app'. Dit hoeft alleen ingevuld te worden als er problemen optreden.",
                 type: "text",
                 require: "magister-appbar-zermelo",
             },
@@ -172,7 +180,7 @@ const settingsBuilder = [
         settings: [
             {
                 id: "magister-vd-overhaul",
-                title: "Alternatieve pagina 'Vandaag'",
+                title: "Verbeterde pagina 'Vandaag'",
                 default: true,
                 require: "magister-css-experimental",
             },
@@ -187,11 +195,6 @@ const settingsBuilder = [
                 max: 2.5,
                 step: 0.1,
                 require: "magister-css-experimental magister-vd-overhaul",
-            },
-            {
-                id: "magister-vd-agendaLegacy",
-                title: "Legacy-modus agenda",
-                subtitle: "Tijdelijke optie voor debugging.",
             },
             {
                 id: "magister-vd-subjects",
@@ -294,6 +297,21 @@ const settingsBuilder = [
         ]
     },
     {
+        id: "section-magister-gamification",
+        group: "Magister",
+        title: "Gamificatie",
+        settings: [
+            {
+                id: "magister-gamification",
+                title: "Gamificatie",
+                subtitle: "Op de pagina 'Vandaag' kun je jouw punten bekijken. Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
+                default: false,
+                class: 'beta',
+                require: "beta-options magister-css-experimental",
+            },
+        ]
+    },
+    {
         id: "section-magister-values",
         group: "Magister",
         title: "Globale waarden",
@@ -314,21 +332,6 @@ const settingsBuilder = [
         ]
     },
     {
-        id: "section-noordhoff",
-        group: "Noordhoff",
-        title: "Inloggen",
-        settings: [
-            {
-                id: "noordhoff-login-enabled",
-                title: "Automatisch doorgaan"
-            },
-            // {
-            //     id: "noordhoff-login-entree",
-            //     title: "Inloggen met Entree"
-            // },
-        ]
-    },
-    {
         id: "section-dev",
         group: "Study Tools",
         title: "Opties",
@@ -340,17 +343,25 @@ const settingsBuilder = [
                 devOnly: true,
             },
             {
-                id: "beta",
-                title: "Bètaversies aanbieden",
-                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
-                devOnly: true,
-                require: "updates",
-            },
-            {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
                 subtitle: "Een korte melding over de nieuwste update wordt weergegeven als er een nieuwe beschikbaar of onlangs geïnstalleerd is.",
                 default: true,
+            },
+            {
+                id: "beta-options",
+                title: "Experimentele opties",
+                subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
+                class: 'beta',
+                default: false,
+            },
+            {
+                id: "beta",
+                title: "Bètaversies aanbieden",
+                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
+                devOnly: true,
+                class: 'beta',
+                require: "beta-options updates",
             },
         ]
     },
