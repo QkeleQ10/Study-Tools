@@ -104,8 +104,7 @@
     },
     "permissions": [
         "storage",
-        "webRequest",
-        "tabs"
+        "webRequest"
     ],
     "host_permissions": [
         "*://*.magister.net/*"
