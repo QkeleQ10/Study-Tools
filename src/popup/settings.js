@@ -138,7 +138,7 @@ const settingsBuilder = [
                 require: "magister-overlay-hotkey? magister-shortcuts magister-css-experimental",
             },
             {
-                id: 'magister-notes-beta',
+                id: 'magister-notes-beta2',
                 title: "Notities",
                 subtitle: "Houd de activatietoets ingedrukt om notities weer te geven. Druk op '0' op je toetsenbord om vast te zetten.",
                 default: false,
@@ -297,12 +297,12 @@ const settingsBuilder = [
         ]
     },
     {
-        id: "section-magister-gamification",
+        id: "section-magister-gamification-beta",
         group: "Magister",
         title: "Gamificatie",
         settings: [
             {
-                id: "magister-gamification",
+                id: "magister-gamification-beta",
                 title: "Gamificatie",
                 subtitle: "Op de pagina 'Vandaag' kun je jouw punten bekijken. Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
                 default: false,

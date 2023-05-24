@@ -6,6 +6,8 @@ async function popstate() {
 }
 
 async function gamification() {
+    if (!await getSetting('magister-gamification-beta')) return
+
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],
         ['absences', "Ongeoorloofde absenties", "Absenties in ", "Je verliest punten per ongeoorloofde absentie."],

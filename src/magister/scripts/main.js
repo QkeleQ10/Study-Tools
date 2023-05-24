@@ -131,7 +131,7 @@ async function main() {
         else shortcutsWrapper.dataset.open = false
     }
 
-    if (true) {
+    if (await getSetting('magister-notes-beta2')) {
         let notes = await getSetting('st-notes'),
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
             pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '0'.` }),

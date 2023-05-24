@@ -696,7 +696,11 @@ footer.endlink {
     transition: max-height 200ms;
 }
 
-.fold .sources>li {
+.sources>li:has(div>ul) {
+    max-height: none;
+}
+
+.fold .sources>li, .fold .sources>li:has(div>ul) {
     max-height: 0;
     border-top: none !important;
 }

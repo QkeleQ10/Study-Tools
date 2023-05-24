@@ -3,7 +3,7 @@ let token,
 
 init()
 async function init() {
-    if (!Object.values(await chrome.storage.sync.get('magister-gamification'))[0]) return
+    if (!Object.values(await chrome.storage.sync.get('magister-gamification-beta'))[0]) return
 
     console.info("Some enabled features require making HTTP requests. Time to gather HTTP request information.")
 
