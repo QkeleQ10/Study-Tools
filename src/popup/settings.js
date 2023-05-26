@@ -154,11 +154,12 @@ const settingsBuilder = [
         settings: [
             {
                 id: "magister-appbar-week",
-                title: "Weeknummer tonen"
+                title: "Weeknummer tonen",
+                default: true,
             },
             {
                 id: "magister-appbar-zermelo",
-                title: "Link naar Zermelo tonen"
+                title: "Link naar Zermelo tonen",
             },
             {
                 id: "magister-appbar-zermelo-url",
@@ -169,7 +170,7 @@ const settingsBuilder = [
             },
             {
                 id: "magister-appbar-hidePicture",
-                title: "Profielfoto verbergen"
+                title: "Profielfoto verbergen",
             },
         ]
     },
