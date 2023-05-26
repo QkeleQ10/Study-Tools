@@ -13,6 +13,8 @@ async function init() {
         })
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/personen/')[1].split('/')[0]
 
+        chrome.storage.local.set({ 'user-token': token })
+        chrome.storage.local.set({ 'user-id': userId })
         console.info({ token, userId })
     }, { urls: ['*://*.magister.net/api/m6/personen*instellingen/desktop?filter=VANDAAG_SCHERM*'] }, ['requestHeaders', 'extraHeaders'])
 }

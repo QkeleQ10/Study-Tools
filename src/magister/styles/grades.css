@@ -481,7 +481,7 @@
 }
 
 #st-cf-sc-grades-container>div {
-    background: var(--st-accent-ok);
+    background: var(--st-highlight-ok);
     height: 100px;
     width: 100%;
     border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
@@ -493,7 +493,7 @@
 }
 
 #st-cf-sc-grades-container>div:nth-child(-n+5) {
-    background: var(--st-accent-warn);
+    background: var(--st-highlight-warn);
 }
 
 #st-cf-sc-grades-container>div:before {
