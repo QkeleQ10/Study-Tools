@@ -155,7 +155,9 @@ html {
 .k-widget,
 body,
 div.loading-overlay,
-input[type=checkbox]+label span {
+input[type=checkbox]+label span,
+.agenda-lesdashboard .lesvak-prev-next .content-auto .list li:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto .list a:hover,
+.agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.prev:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.next:hover {
     background: var(--st-background-primary) !important
 }
 
@@ -336,7 +338,9 @@ form input[type=text], form input[type=password], form input[type=search], form 
 html body .k-popup.k-list-container .k-item,
 .k-popup.k-list-container,
 .k-list-container.k-state-border-up .k-list,
-.opdracht-versions ul {
+.opdracht-versions ul,
+.agenda-lesdashboard span,
+.bottom_border {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -706,7 +710,7 @@ footer.endlink {
 }
 
 .icon-down-arrow:before, .icon-up-arrow:before {
-    content: '';
+    content: '' !important;
     font: 400 24px/44px "Font Awesome 5 Pro" !important;
     transition: rotate 200ms, translate 200ms;
 }
@@ -715,14 +719,48 @@ footer.endlink {
     rotate: 180deg;
 }
 
+.block.fold .icon-up-arrow:before {
+    rotate: 0deg;
+}
+
+.icon-up-arrow.prev:before {
+    rotate: 90deg;
+}
+
+.icon-up-arrow.next:before {
+    rotate: -90deg;
+}
+
 .studiewijzer-onderdeel:has(h3 b:active, .icon-down-arrow:active) .icon-down-arrow:before,
-h3:active> .icon-down-arrow:before{
+h3:active> .icon-down-arrow:before,
+.block.fold .icon-up-arrow:active:before {
     translate: 0 6px;
 }
 
 .studiewijzer-onderdeel:has(h3 b:active, .icon-up-arrow:active) .icon-up-arrow:before,
 h3:active> .icon-up-arrow:before {
     translate: 0 -6px;
+}
+
+.icon-up-arrow.prev:active:before {
+    translate: -6px 0;
+}
+
+.icon-up-arrow.next:active:before {
+    translate: 6px 0;
+}
+
+.block.fold.disabled {
+    opacity: .3;
+    pointer-events: none;
+}
+
+.main .widget.wide {
+    padding-right: 0px;
+}
+
+#agenda-section .content-container {
+    padding: 8px;
 }
 
 .studiewijzer-onderdeel .block:not(.fold) {
