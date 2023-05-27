@@ -441,6 +441,10 @@ li.k-item, span.k-input {
     color: var(--st-foreground-primary)
 }
 
+a.k-link.k-nav-fast {
+    font-family: var(--st-font-family-secondary) !important;
+}
+
 div.ngVerticalBar {
     background-color: var(--st-border-color);
 }
@@ -449,7 +453,6 @@ div.ngVerticalBar {
 .k-scheduler-table th,
 .k-scheduler-table th strong,
 .k-calendar .k-content *,
-a.k-link.k-nav-fast,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover a, .k-calendar .k-content tbody td.k-state-focused a, .k-calendar .k-content tbody td.k-state-hover a, .k-calendar .k-content tbody td.k-state-selected a {
     font-family: var(--st-font-family-secondary) !important;
     color: var(--st-foreground-primary) !important
@@ -472,9 +475,14 @@ div.faux.popup-menu>ul>li.submenu>a,
 span.nrblock {
     background: var(--st-foreground-primary) !important;
     color: var(--st-background-secondary) !important;
-    font-family: var(--st-font-family-secondary)
+    font-family: var(--st-font-family-secondary);
     font-weight: 700 !important;
     border-radius: calc(var(--st-border-radius) / 2);
+    aspect-ratio: 1;
+    width: auto;
+    height: 15px;
+    padding: 2px;
+    text-align: center;
 }
 
 .endlink a:first-letter {
@@ -598,6 +606,10 @@ aside, aside .block,
 td#calendar_cell_selected {
     background-color: var(--st-accent-primary) !important;
     border-color: var(--st-accent-primary) !important;
+}
+
+td#calendar_cell_selected>a {
+    color: #fff !important;
 }
 
 td.k-other-month {
@@ -759,7 +771,7 @@ footer.endlink {
     border-top: none !important;
 }
 
-.icon-down-arrow:before, .icon-up-arrow:before {
+.icon-down-arrow:before, .icon-up-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
     content: '' !important;
     font: 400 24px/44px "Font Awesome 5 Pro" !important;
     transition: rotate 200ms, translate 200ms;
@@ -773,11 +785,11 @@ footer.endlink {
     rotate: 0deg;
 }
 
-.icon-up-arrow.prev:before {
+.icon-up-arrow.prev:before, .k-calendar .k-header .k-i-arrow-w:after {
     rotate: 90deg;
 }
 
-.icon-up-arrow.next:before {
+.icon-up-arrow.next:before, .k-calendar .k-header .k-i-arrow-e:after {
     rotate: -90deg;
 }
 
@@ -792,12 +804,29 @@ h3:active> .icon-up-arrow:before {
     translate: 0 -6px;
 }
 
-.icon-up-arrow.prev:active:before {
+.icon-up-arrow.prev:active:before, .k-calendar .k-header .k-i-arrow-w:active:after {
     translate: -6px 0;
 }
 
-.icon-up-arrow.next:active:before {
+.icon-up-arrow.next:active:before, .k-calendar .k-header .k-i-arrow-e:active:after {
     translate: 6px 0;
+}
+
+.k-calendar .k-header .k-i-arrow-e:after, .k-calendar .k-header .k-i-arrow-w:after {
+    border: none !important;
+    height: auto !important;
+    width: auto !important;
+    top: -5px !important;
+    left: -20px !important;
+}
+
+.k-calendar .k-header .k-i-arrow-w:after {
+    left: 14px !important;
+}
+
+.k-calendar .k-header .k-link.k-nav-prev, .k-calendar .k-header .k-link.k-nav-next {
+    height: auto !important;
+    width: auto !important;
 }
 
 .block.fold.disabled {
