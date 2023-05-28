@@ -43,8 +43,9 @@ async function gamification() {
 
     async function calculateScore() {
         let response = await chrome.runtime.sendMessage(['token', 'userId']),
-            token = response.token || Object.values(chrome.storage.local.get('user-token'))[0],
-            userId = response.userId || Object.values(chrome.storage.local.get('user-id'))[0]
+            token = response?.token || await getSetting('token', 'local'),
+            userId = response?.userId || await getSetting('user-id', 'local')
+        console.info("Received user token and user ID from service worker.")
 
         // Fetch all years and info related.
         const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
