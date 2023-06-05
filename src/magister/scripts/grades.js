@@ -867,7 +867,9 @@ async function gradeStatistics() {
                 scInsufficient.removeAttribute('data-extra')
             }
 
-            Object.keys(roundedFrequencies).forEach(key => {
+            // I think I was drunk writing this lol
+            let iterable = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            iterable.forEach(key => {
                 let value = roundedFrequencies[key],
                     element = document.getElementById(`st-cf-sc-histogram-${key}`),
                     arr = Object.values(roundedFrequencies),

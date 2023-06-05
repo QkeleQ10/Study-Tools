@@ -336,7 +336,7 @@ const settingsBuilder = [
                     { name: "Cult. en kunstz. vorming", aliases: "ckv" },
                     { name: "Drama", aliases: "dr, kudr" },
                     { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
-                    { name: "Economie", aliases: "ec, eco" },
+                    { name: "Economie", aliases: "ec, eco, econ" },
                     { name: "Engels", aliases: "en, entl, Engels, English" },
                     { name: "Frans", aliases: "fa, fatl, Franse, Français" },
                     { name: "Geschiedenis", aliases: "gs" },
@@ -354,7 +354,7 @@ const settingsBuilder = [
                     { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
                     { name: "Scheikunde", aliases: "sk, sch" },
                     { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
-                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd" }]
+                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }]
             }
         ]
     },

@@ -71,7 +71,7 @@ async function renderStudyguideList(gridContainer, compact) {
             subject = "Geen vak",
             period = 0,
             priority,
-            periodTextIndex = title.search(/(t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
+            periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
         settingSubjects.forEach(subjectEntry => {
             testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
