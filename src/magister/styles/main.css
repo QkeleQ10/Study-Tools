@@ -544,13 +544,8 @@ span.st-subtitle {
     cursor: pointer;
 }
 
-#st-notes>div textarea.checkbox {
-    padding-left: 32px;
-    margin-block: 4px;
-}
-
-#st-notes>div textarea.checkbox:before {
-    content: '';
+#st-notes>div textarea.strikethrough {
+    text-decoration: line-through solid 2px;
 }
 
 #st-notes>div mark {

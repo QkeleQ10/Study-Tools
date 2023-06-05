@@ -3,8 +3,9 @@ popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
     if (document.location.href.split('?')[0].includes('/cijfers')) {
-        gradeCalculator()
+        // gradeCalculator()
         if (document.location.href.split('?')[0].includes('/cijfers/cijferoverzicht')) {
+            gradeCalculator()
             gradeBackup()
             gradeStatistics()
         }
