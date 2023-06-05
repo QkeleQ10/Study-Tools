@@ -52,9 +52,9 @@ async function applyStyles() {
     --st-background-overlay: #fffffff5;
     --st-background-transparent: #ffffffbb;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
-    --st-highlight-subtle: #f5f5f5;
-    --st-highlight-ok: #81e3bc;
-    --st-highlight-warn: #fff0f5;
+    --st-highlight-subtle: #f2f9ff;
+    --st-highlight-ok: #b6fadf;
+    --st-highlight-warn: #ffd4e2;
     --st-highlight-info: #dceefd;
     --st-foreground-primary: #333333;
     --st-foreground-insignificant: #888;
@@ -64,9 +64,7 @@ async function applyStyles() {
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
-    --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
-    --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 150;
     --st-shadow-alpha: .5;
@@ -82,10 +80,10 @@ async function applyStyles() {
     --st-background-overlay: #121212f5;
     --st-background-transparent: #121212bb;
     --st-highlight-primary: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
-    --st-highlight-subtle: #161616;
+    --st-highlight-subtle: #181f24;
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
-    --st-highlight-info: #101a22;
+    --st-highlight-info: #0f314d;
     --st-foreground-primary: #fff;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
@@ -94,9 +92,7 @@ async function applyStyles() {
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
-    --st-accent-ok: #00965a;
     --st-accent-warn: #e94f4f;
-    --st-accent-info: #016695;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 10;
     --st-shadow-alpha: .7;
@@ -155,7 +151,9 @@ html {
 .k-widget,
 body,
 div.loading-overlay,
-input[type=checkbox]+label span {
+input[type=checkbox]+label span,
+.agenda-lesdashboard .lesvak-prev-next .content-auto .list li:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto .list a:hover,
+.agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.prev:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.next:hover {
     background: var(--st-background-primary) !important
 }
 
@@ -189,13 +187,32 @@ input[type=checkbox]+label span {
 .k-dropdown .k-dropdown-wrap.k-state-active,
 .projects li.selected,
 .agenda-lesdashboard aside .agenda-list li a.current,
-.k-list-container .k-item.k-state-focused.k-state-selected {
+.k-list-container .k-item.k-state-focused.k-state-selected,
+.k-calendar td.range-select,
+.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
+.k-calendar .k-header .k-state-hover {
     background: var(--st-highlight-primary) !important;
     background-color: var(--st-highlight-primary) !important
 }
 
+.k-calendar .k-content tbody td.k-other-month.k-state-hover a, .k-calendar .k-content tbody td.k-state-focused a, .k-calendar .k-content tbody td.k-state-hover a, .k-calendar .k-content tbody td.k-state-selected a {
+    background: none !important;
+    background-color: none !important;
+}
+
+.agenda-text-icon, .text-icon, .agenda-text-icon.outline[icon-type=information] {
+    background-color: var(--st-highlight-warn) !important;
+    border: var(--st-border);
+    border-radius: calc(var(--st-border-radius) / 2);
+    color: var(--st-foreground-primary) !important;
+}
+
+.text-icon[icon-type=information], .agenda-text-icon[icon-type=information] {
+    background: var(--st-highlight-info) !important;
+}
+
 .agenda-text-icon[icon-type=ok] {
-    background: var(--st-accent-ok) !important
+    background: var(--st-highlight-ok) !important
 }
 
 #studiewijzer-detail-container .content>ul.sources,
@@ -243,7 +260,8 @@ td.k-group-cell, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewij
 #vandaag-container .grade-widget ul,
 .cijfers-k-grid.k-grid .k-grid-header th.k-header,
 div.ngRow.odd, div.ngRow.even,
-dna-card {
+dna-card,
+.k-calendar .k-header {
     background: var(--st-background-secondary)
 }
 
@@ -256,7 +274,8 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout td a {
+a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout td a,
+.k-calendar .k-header .k-nav-fast {
     color: var(--st-foreground-accent);
     text-decoration: none;
     overflow-wrap: anywhere
@@ -295,7 +314,8 @@ form input[type=text], form input[type=password], form input[type=search], form 
 #agenda-afspraak-bewerken-container .k-datepicker .k-picker-wrap,
 .k-editor .k-content,
 .k-editable-area,
-.k-list-container, html body .k-popup.k-list-container .k-item {
+.k-list-container, html body .k-popup.k-list-container .k-item,
+.k-calendar thead th, .k-calendar .k-header * {
     background-color: var(--st-background-secondary) !important;
     color: var(--st-foreground-primary)
 }
@@ -336,7 +356,12 @@ form input[type=text], form input[type=password], form input[type=search], form 
 html body .k-popup.k-list-container .k-item,
 .k-popup.k-list-container,
 .k-list-container.k-state-border-up .k-list,
-.opdracht-versions ul {
+.opdracht-versions ul,
+.agenda-lesdashboard span,
+.bottom_border,
+.k-calendar,
+.k-calendar td.range-select,
+.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -416,13 +441,19 @@ li.k-item, span.k-input {
     color: var(--st-foreground-primary)
 }
 
+a.k-link.k-nav-fast {
+    font-family: var(--st-font-family-secondary) !important;
+}
+
 div.ngVerticalBar {
     background-color: var(--st-border-color);
 }
 
 .k-scheduler-table td,
 .k-scheduler-table th,
-.k-scheduler-table th strong {
+.k-scheduler-table th strong,
+.k-calendar .k-content *,
+.k-calendar .k-content tbody td.k-other-month.k-state-hover a, .k-calendar .k-content tbody td.k-state-focused a, .k-calendar .k-content tbody td.k-state-hover a, .k-calendar .k-content tbody td.k-state-selected a {
     font-family: var(--st-font-family-secondary) !important;
     color: var(--st-foreground-primary) !important
 }
@@ -430,7 +461,8 @@ div.ngVerticalBar {
 .alt-nrblock i,
 .k-scheduler .k-event.k-state-selected, .k-dropdown .k-input, .k-dropdown .k-state-focused .k-input,
 div.faux.popup-menu>ul>li.submenu>a,
-.k-list-container .k-item.k-state-focused.k-state-selected {
+.k-list-container .k-item.k-state-focused.k-state-selected,
+.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected {
     color: var(--st-foreground-primary) !important
 }
 
@@ -443,7 +475,14 @@ div.faux.popup-menu>ul>li.submenu>a,
 span.nrblock {
     background: var(--st-foreground-primary) !important;
     color: var(--st-background-secondary) !important;
-    font-family: var(--st-font-family-secondary)
+    font-family: var(--st-font-family-secondary);
+    font-weight: 700 !important;
+    border-radius: calc(var(--st-border-radius) / 2);
+    aspect-ratio: 1;
+    width: auto;
+    height: 15px;
+    padding: 2px;
+    text-align: center;
 }
 
 .endlink a:first-letter {
@@ -529,7 +568,7 @@ aside, aside .block,
 }
 
 .cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
-    background-color: var(--st-highlight-info) !important;
+    background-color: var(--st-highlight-subtle) !important;
 }
 
 .cijfers-k-grid.k-grid .grade.gemiddeldecolumn {
@@ -550,8 +589,35 @@ aside, aside .block,
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
-.sidecolumn aside .head-bar {
+.sidecolumn aside .head-bar,
+.k-calendar tbody tr td {
     padding: 0;
+}
+
+.k-calendar tbody tr td {
+    height: 30px;
+}
+
+.k-calendar .k-content tbody td.k-today a, .k-calendar .k-content .k-link {
+    margin-left: 0;
+    padding: 0;
+}
+
+td#calendar_cell_selected {
+    background-color: var(--st-accent-primary) !important;
+    border-color: var(--st-accent-primary) !important;
+}
+
+td#calendar_cell_selected>a {
+    color: #fff !important;
+}
+
+td.k-other-month {
+    background-image: none !important;
+}
+
+td.k-other-month a {
+    opacity: .3;
 }
 
 aside .tabs {
@@ -705,8 +771,8 @@ footer.endlink {
     border-top: none !important;
 }
 
-.icon-down-arrow:before, .icon-up-arrow:before {
-    content: '';
+.icon-down-arrow:before, .icon-up-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
+    content: '' !important;
     font: 400 24px/44px "Font Awesome 5 Pro" !important;
     transition: rotate 200ms, translate 200ms;
 }
@@ -715,14 +781,65 @@ footer.endlink {
     rotate: 180deg;
 }
 
+.block.fold .icon-up-arrow:before {
+    rotate: 0deg;
+}
+
+.icon-up-arrow.prev:before, .k-calendar .k-header .k-i-arrow-w:after {
+    rotate: 90deg;
+}
+
+.icon-up-arrow.next:before, .k-calendar .k-header .k-i-arrow-e:after {
+    rotate: -90deg;
+}
+
 .studiewijzer-onderdeel:has(h3 b:active, .icon-down-arrow:active) .icon-down-arrow:before,
-h3:active> .icon-down-arrow:before{
+h3:active> .icon-down-arrow:before,
+.block.fold .icon-up-arrow:active:before {
     translate: 0 6px;
 }
 
 .studiewijzer-onderdeel:has(h3 b:active, .icon-up-arrow:active) .icon-up-arrow:before,
 h3:active> .icon-up-arrow:before {
     translate: 0 -6px;
+}
+
+.icon-up-arrow.prev:active:before, .k-calendar .k-header .k-i-arrow-w:active:after {
+    translate: -6px 0;
+}
+
+.icon-up-arrow.next:active:before, .k-calendar .k-header .k-i-arrow-e:active:after {
+    translate: 6px 0;
+}
+
+.k-calendar .k-header .k-i-arrow-e:after, .k-calendar .k-header .k-i-arrow-w:after {
+    border: none !important;
+    height: auto !important;
+    width: auto !important;
+    top: -5px !important;
+    left: -20px !important;
+}
+
+.k-calendar .k-header .k-i-arrow-w:after {
+    left: 14px !important;
+}
+
+.k-calendar .k-header .k-link.k-nav-prev, .k-calendar .k-header .k-link.k-nav-next {
+    height: auto !important;
+    width: auto !important;
+}
+
+.block.fold.disabled {
+    opacity: .3;
+    pointer-events: none;
+}
+
+.main .widget.wide {
+    padding-right: 0px;
+}
+
+#agenda-section .content-container {
+    padding: 8px;
 }
 
 .studiewijzer-onderdeel .block:not(.fold) {

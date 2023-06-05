@@ -158,7 +158,11 @@ async function main() {
                         partElement.value = part.slice(2).split('==')[0]
                         partElement.dispatchEvent(new Event('input'))
                         partElement.setAttribute('onclick', `window.location.href = "${window.location.origin + window.location.pathname + part.slice(2).split('==')[1]}"`)
-                        partElement.setSelectionRange(0, 0)
+                    } if (part.includes('~~')) {
+                        partElement.classList.toggle('strikethrough')
+                        partElement.value = part.replace('~~', '')
+                    } if (part.startsWith('[]') || part.startsWith('[x]')) {
+                        partElement.value = part.replace('[]', '☐').replace('[x]', '☑')
                     }
                     partElement.style.height = "17px"
                     partElement.style.height = (partElement.scrollHeight) + "px"
@@ -209,9 +213,12 @@ async function main() {
                         save()
                     }, 200)
                 }, { once: true })
-            } else if (event.target.value.startsWith('!!')) {
-                event.target.classList.toggle('checkbox')
-                event.target.value = event.target.value.slice(2)
+            } else if (event.target.value.includes('~~')) {
+                event.target.classList.toggle('strikethrough')
+                event.target.value = event.target.value.replace('~~', '')
+                event.target.setSelectionRange(0, 0)
+            } else if (event.target.value.includes('[]') || event.target.value.includes('[x]')) {
+                event.target.value = event.target.value.replace('[]', '☐').replace('[x]', '☑')
                 event.target.setSelectionRange(0, 0)
             } else if (event.target.value.startsWith('##')) {
                 newButton.click()
@@ -304,7 +311,7 @@ async function main() {
                     noteElement.querySelectorAll('input, textarea').forEach(partElement => {
                         if (partElement.classList.contains('link-pending')) noteArray.push('')
                         else if (partElement.classList.contains('link')) noteArray.push('==' + partElement.value + '==#' + partElement.getAttribute('onclick').split('#')[1].split('"')[0])
-                        else if (partElement.classList.contains('checkbox')) noteArray.push('!!' + partElement.value + '!!' + partElement.dataset.checked)
+                        else if (partElement.classList.contains('strikethrough')) noteArray.push('~~' + partElement.value)
                         else noteArray.push(partElement.value)
                     })
                     resultArray.push(noteArray.join('\n'))

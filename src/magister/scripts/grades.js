@@ -3,8 +3,9 @@ popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
     if (document.location.href.split('?')[0].includes('/cijfers')) {
-        gradeCalculator()
+        // gradeCalculator()
         if (document.location.href.split('?')[0].includes('/cijfers/cijferoverzicht')) {
+            gradeCalculator()
             gradeBackup()
             gradeStatistics()
         }
@@ -866,7 +867,9 @@ async function gradeStatistics() {
                 scInsufficient.removeAttribute('data-extra')
             }
 
-            Object.keys(roundedFrequencies).forEach(key => {
+            // I think I was drunk writing this lol
+            let iterable = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            iterable.forEach(key => {
                 let value = roundedFrequencies[key],
                     element = document.getElementById(`st-cf-sc-histogram-${key}`),
                     arr = Object.values(roundedFrequencies),

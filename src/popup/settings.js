@@ -154,11 +154,12 @@ const settingsBuilder = [
         settings: [
             {
                 id: "magister-appbar-week",
-                title: "Weeknummer tonen"
+                title: "Weeknummer tonen",
+                default: true,
             },
             {
                 id: "magister-appbar-zermelo",
-                title: "Link naar Zermelo tonen"
+                title: "Link naar Zermelo tonen",
             },
             {
                 id: "magister-appbar-zermelo-url",
@@ -169,7 +170,7 @@ const settingsBuilder = [
             },
             {
                 id: "magister-appbar-hidePicture",
-                title: "Profielfoto verbergen"
+                title: "Profielfoto verbergen",
             },
         ]
     },
@@ -327,7 +328,33 @@ const settingsBuilder = [
                 id: "magister-subjects",
                 title: "Aangepaste vaknamen",
                 type: "subjects",
-                default: [{ name: "Aardrijkskunde", aliases: "ak" }, { name: "Bedrijfseconomie", aliases: "beco" }, { name: "Beeldende vorming", aliases: "be, bv, kubv" }, { name: "Biologie", aliases: "bi" }, { name: "Cult. en kunstz. vorming", aliases: "ckv" }, { name: "Drama", aliases: "dr, kudr" }, { name: "Duitse taal", aliases: "du, dutl" }, { name: "Economie", aliases: "ec" }, { name: "Engelse taal", aliases: "en, entl" }, { name: "Franse taal", aliases: "fa, fatl" }, { name: "Geschiedenis", aliases: "gs" }, { name: "Kunst algemeen", aliases: "ku, kua" }, { name: "Levensbeschouwing", aliases: "lv" }, { name: "Lichamelijke opvoeding", aliases: "lo" }, { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" }, { name: "Maatschappijleer", aliases: "ma, malv" }, { name: "Maatschappij&shy;wetenschappen", aliases: "maw" }, { name: "Mentor", aliases: "mentoruur, mentoraat" }, { name: "Muziek", aliases: "mu, kumu" }, { name: "Natuurkunde", aliases: "na" }, { name: "Nederlandse taal", aliases: "ne, netl" }, { name: "Scheikunde", aliases: "sk" }, { name: "Spaanse taal", aliases: "sp, sptl" }, { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd" }]
+                default: [
+                    { name: "Aardrijkskunde", aliases: "ak" },
+                    { name: "Bedrijfseconomie", aliases: "beco" },
+                    { name: "Beeldende vorming", aliases: "be, bv, kubv" },
+                    { name: "Biologie", aliases: "bi, bio" },
+                    { name: "Cult. en kunstz. vorming", aliases: "ckv" },
+                    { name: "Drama", aliases: "dr, kudr" },
+                    { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
+                    { name: "Economie", aliases: "ec, eco, econ" },
+                    { name: "Engels", aliases: "en, entl, Engels, English" },
+                    { name: "Frans", aliases: "fa, fatl, Franse, Français" },
+                    { name: "Geschiedenis", aliases: "gs" },
+                    { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
+                    { name: "Kunst algemeen", aliases: "ku, kua" },
+                    { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
+                    { name: "Levensbeschouwing", aliases: "lv" },
+                    { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
+                    { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
+                    { name: "Maatschappijleer", aliases: "ma, malv" },
+                    { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
+                    { name: "Mentor", aliases: "mentoruur, mentoraat" },
+                    { name: "Muziek", aliases: "mu, kumu" },
+                    { name: "Natuurkunde", aliases: "na, nat" },
+                    { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
+                    { name: "Scheikunde", aliases: "sk, sch" },
+                    { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
+                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }]
             }
         ]
     },
