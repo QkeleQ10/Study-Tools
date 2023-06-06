@@ -14,7 +14,7 @@ async function popstate() {
 
 // Page 'Cijfers', calculator
 async function gradeCalculator() {
-    if (!await getSetting('magister-cf-calculator')) return
+    if (!syncedStorage['magister-cf-calculator']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         menuHost = await awaitElement('.menu-host'),
         menuCollapser = await awaitElement('.menu-footer>a'),
@@ -389,7 +389,7 @@ async function formulateGradeAdvice(means, weight, mean) {
 
 // Page 'Cijferoverzicht', backup
 async function gradeBackup() {
-    if (!await getSetting('magister-cf-backup')) return
+    if (!syncedStorage['magister-cf-backup']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
@@ -640,7 +640,7 @@ async function gradeBackup() {
 
 // Page 'Cijferoverzicht', statistics
 async function gradeStatistics() {
-    if (!await getSetting('magister-cf-statistics')) return
+    if (!syncedStorage['magister-cf-statistics']) return
     let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = document.createElement('li'),
         scTabLink = document.createElement('a'),
