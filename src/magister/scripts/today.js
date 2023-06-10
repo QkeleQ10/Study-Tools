@@ -7,7 +7,7 @@ async function popstate() {
 
 // Page 'Vandaag'
 async function today() {
-    if (!await getSetting('magister-vd-overhaul')) return
+    if (!syncedStorage['magister-vd-overhaul']) return
     let mainSection = await awaitElement('section.main'),
         container = document.createElement('div'),
         header = document.createElement('div'),
@@ -23,7 +23,7 @@ async function today() {
     scheduleWrapper.id = 'st-vd-schedule'
     notifcationsWrapper.id = 'st-vd-notifications'
 
-    if (await getSetting('magister-shortcuts-today')) {
+    if (syncedStorage['magister-shortcuts-today']) {
         scheduleWrapper.style.marginBottom = '55px'
         notifcationsWrapper.style.marginBottom = '55px'
     }
@@ -82,7 +82,7 @@ async function todayNotifications(notifcationsWrapper) {
         gradeNotification.innerText = 'Geen nieuwe cijfers'
         gradeNotification.dataset.insignificant = true
     } else {
-        if (await getSetting('magister-vd-grade') === 'partial') {
+        if (syncedStorage['magister-vd-grade'] === 'partial') {
             gradeNotification.innerText = `${Number(moreGrades.innerText)} nieuwe cijfers`
         } else {
             gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
@@ -96,7 +96,7 @@ async function todayNotifications(notifcationsWrapper) {
         gradeNotification.dataset.insignificant = false
     }
 
-    if (await getSetting('magister-vd-grade') !== 'off') {
+    if (syncedStorage['magister-vd-grade'] !== 'off') {
         if (!gradeNotification.parentElement) notifcationsWrapper.append(gradeNotification)
         gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
         gradeNotification.dataset.icon = ''
@@ -291,7 +291,7 @@ async function todaySchedule(scheduleWrapper) {
             })
 
             if (!legacy || title !== 'filler') {
-                parsedTitle = await parseSubject(title, await getSetting('magister-vd-subjects'), await getSetting('magister-subjects'))
+                parsedTitle = await parseSubject(title, syncedStorage['magister-vd-subjects'], syncedStorage['magister-subjects'])
                 elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
                 elementTitleBold.innerText = parsedTitle.subjectName || ''
                 elementTitleNormal2.innerText = parsedTitle.stringAfter || ''

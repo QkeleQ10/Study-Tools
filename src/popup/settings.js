@@ -354,7 +354,8 @@ const settingsBuilder = [
                     { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
                     { name: "Scheikunde", aliases: "sk, sch" },
                     { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
-                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }]
+                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
+                ]
             }
         ]
     },

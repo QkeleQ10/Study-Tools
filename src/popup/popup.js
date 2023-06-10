@@ -15,7 +15,7 @@ async function init() {
     settingsWrapper.innerText = ''
     aside.innerText = ''
 
-    if (chrome?.storage) settings = await getSettings(null, null, true)
+    if (chrome?.storage) settings = await getFromStorageMultiple(null, null, true)
 
     settingsBuilder.forEach(section => {
         settingsWrapper.innerHTML += `<section data-group="${section.group}" data-title="${section.title}" id="${section.id}"><h3>${section.title}</h3></section>`
@@ -249,7 +249,7 @@ async function init() {
             if (element.dataset.version !== 'undefined' && element.dataset.version.localeCompare(settings.openedPopup, undefined, { numeric: true, sensitivity: 'base' }) === 1) element.classList.add('new')
         })
     }
-    setSetting('openedPopup', chrome?.runtime?.getManifest()?.version)
+    saveToStorage('openedPopup', chrome?.runtime?.getManifest()?.version)
     updateConditionals()
 
     updateColor({ h: settings['magister-css-hue'], s: settings['magister-css-saturation'], l: settings['magister-css-luminance'] }, true)
@@ -262,7 +262,7 @@ async function init() {
     setInterval(async () => {
         if (new Date().getTime() - diffTimestamp < 300) return
         if (Object.keys(diff).length === 0) return
-        await setSettings(diff, 'sync')
+        await saveToStorageMultiple(diff, 'sync')
         diff = {}
         diffTimestamp = 0
         document.querySelectorAll('[data-saved="not-saved"]').forEach(e => e.setAttribute('data-saved', 'saved'))
@@ -442,7 +442,7 @@ function pushSetting(key, value, element) {
     diffTimestamp = new Date().getTime()
 }
 
-function getSettings(array, location, all) {
+function getFromStorageMultiple(array, location, all) {
     return new Promise((resolve, reject) => {
         chrome.storage[location ? location : 'sync'].get(all ? null : array.map(e => [e]), (result) => {
             result ? resolve(result) : reject(Error('None found'))
@@ -450,13 +450,13 @@ function getSettings(array, location, all) {
     })
 }
 
-function setSetting(key, value, location) {
+function saveToStorage(key, value, location) {
     return new Promise((resolve, reject) => {
         chrome.storage[location ? location : 'sync'].set({ [key]: value }, resolve())
     })
 }
 
-function setSettings(object, location) {
+function saveToStorageMultiple(object, location) {
     return new Promise((resolve, reject) => {
         chrome.storage[location ? location : 'sync'].set(object, resolve())
     })

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', applyStyles)
 
+
 async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
     return new Promise((resolve, reject) => {
         let hue, saturation, luminance
@@ -33,10 +34,12 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 }
 
 async function applyStyles() {
-    let hueWish = await getSetting('magister-css-hue'),
-        saturationWish = await getSetting('magister-css-saturation'),
-        luminanceWish = await getSetting('magister-css-luminance'),
-        borderRadius = await getSetting('magister-css-border-radius')
+    if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+
+    let hueWish = syncedStorage['magister-css-hue'],
+        saturationWish = syncedStorage['magister-css-saturation'],
+        luminanceWish = syncedStorage['magister-css-luminance'],
+        borderRadius = syncedStorage['magister-css-border-radius']
 
     if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
         hueWish = 266, saturationWish = 51, luminanceWish = 41
@@ -121,14 +124,14 @@ async function applyStyles() {
         color: #000 !important;
     }`,
         rootVars = `${lightThemeCss}
-${await getSetting('magister-css-theme') === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
-${await getSetting('magister-css-theme') !== 'light' ? darkThemeCss : ''}
-${await getSetting('magister-css-dark-invert') ? invertCss : ''}
-${await getSetting('magister-css-theme') === 'auto' ? '}' : ''}`
+${syncedStorage['magister-css-theme'] === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
+${syncedStorage['magister-css-theme'] !== 'light' ? darkThemeCss : ''}
+${syncedStorage['magister-css-dark-invert'] ? invertCss : ''}
+${syncedStorage['magister-css-theme'] === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
-    if (await getSetting('magister-css-experimental')) {
+    if (syncedStorage['magister-css-experimental']) {
         createStyle(`.block h3,
 .block h4 {
     border-bottom: var(--st-border)
@@ -865,7 +868,7 @@ h3:active> .icon-up-arrow:before {
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
 
-    if (await getSetting('magister-vd-overhaul')) {
+    if (syncedStorage['magister-vd-overhaul']) {
         createStyle(`
 #vandaag-container .main .content-container {
     display: none !important;
@@ -877,7 +880,7 @@ h3:active> .icon-up-arrow:before {
 `, 'study-tools-vd-overhaul')
     }
 
-    if (await getSetting('magister-sw-display') === 'grid') {
+    if (syncedStorage['magister-sw-display'] === 'grid') {
         createStyle(`
 #studiewijzer-container aside,
 #studiewijzer-container .content-container,
@@ -894,11 +897,11 @@ h3:active> .icon-up-arrow:before {
 }`, 'study-tools-sw-grid')
     }
 
-    if (await getSetting('magister-cf-failred')) {
+    if (syncedStorage['magister-cf-failred']) {
         createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
     }
 
-    if (await getSetting('magister-appbar-hidePicture')) {
+    if (syncedStorage['magister-appbar-hidePicture']) {
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-appbar-hidePicture')
     }
 }

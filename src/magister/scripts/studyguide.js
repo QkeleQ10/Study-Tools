@@ -12,14 +12,14 @@ async function popstate() {
 
 // Page 'Studiewijzers
 async function studyguideList() {
-    if (await getSetting('magister-sw-display') === 'off') return
+    if (syncedStorage['magister-sw-display'] === 'off') return
     const gridContainer = await awaitElement('section.main')
     renderStudyguideList(gridContainer)
 }
 
 // Page 'Studiewijzer
 async function studyguideIndividual() {
-    if (await getSetting('magister-sw-thisWeek')) {
+    if (syncedStorage['magister-sw-thisWeek']) {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
@@ -41,15 +41,15 @@ async function studyguideIndividual() {
         })
     }
 
-    if (await getSetting('magister-sw-display') === 'off') return
+    if (syncedStorage['magister-sw-display'] === 'off') return
     const gridContainer = await awaitElement('div.full-height.widget')
     renderStudyguideList(gridContainer, true)
 }
 
 async function renderStudyguideList(gridContainer, compact) {
-    const settingGrid = (await getSetting('magister-sw-display') === 'grid'),
-        settingShowPeriod = await getSetting('magister-sw-period'),
-        settingSubjects = await getSetting('magister-subjects'),
+    const settingGrid = (syncedStorage['magister-sw-display'] === 'grid'),
+        settingShowPeriod = syncedStorage['magister-sw-period'],
+        settingSubjects = syncedStorage['magister-subjects'],
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),

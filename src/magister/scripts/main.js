@@ -7,12 +7,12 @@ main()
 async function main() {
     let appbar = await awaitElement('.appbar'),
         logos = await awaitElement('img.logo-expanded, img.logo-collapsed', true),
-        key = await getSetting('magister-overlay-hotkey') || 'S',
+        key = syncedStorage['magister-overlay-hotkey'] || 'S',
         keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
 
-    subjects = await getSetting('magister-subjects')
+    subjects = syncedStorage['magister-subjects']
 
-    if (await getSetting('magister-appbar-zermelo')) {
+    if (syncedStorage['magister-appbar-zermelo']) {
         const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
             spacer = await awaitElement('.appbar>.spacer'),
             zermeloA = document.createElement('a'),
@@ -24,7 +24,7 @@ async function main() {
         appbarZermelo.id = 'st-appbar-zermelo'
         appbarZermelo.append(zermeloA)
         zermeloA.classList.add('zermelo-menu')
-        zermeloA.setAttribute('href', `https://${await getSetting('magister-appbar-zermelo-url') || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
+        zermeloA.setAttribute('href', `https://${syncedStorage['magister-appbar-zermelo-url'] || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
         zermeloA.setAttribute('target', '_blank')
         zermeloA.append(zermeloImg)
         zermeloImg.setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png')
@@ -34,7 +34,7 @@ async function main() {
         zermeloSpan.innerText = "Zermelo"
     }
 
-    if (await getSetting('magister-appbar-week')) {
+    if (syncedStorage['magister-appbar-week']) {
         let appbarMetrics = document.getElementById('st-appbar-metrics'),
             appbarWeek = document.getElementById('st-appbar-week') || document.createElement('div')
         if (!appbarMetrics) {
@@ -53,13 +53,13 @@ async function main() {
     userMenuLink.addEventListener('click', async () => {
         let logoutLink = await awaitElement('.user-menu ul li:nth-child(3) a')
         logoutLink.addEventListener('click', async () => {
-            await setSetting('force-logout', new Date().getTime(), 'local')
+            await saveToStorage('force-logout', new Date().getTime(), 'local')
         })
     })
 
     if (Math.random() < 0.003) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 
-    if (await getSetting('magister-shortcuts')) {
+    if (syncedStorage['magister-shortcuts']) {
         let shortcutsWrapper = document.createElement('div'),
             sElem = document.createElement('span'),
             todayElem = document.createElement('a'),
@@ -121,22 +121,31 @@ async function main() {
         })
 
         window.addEventListener('popstate', async () => {
-            if (await getSetting('magister-shortcuts-today')) {
+            if (syncedStorage['magister-shortcuts-today']) {
                 if (shortcutsWrapper?.dataset.open === 'force') shortcutsWrapper.dataset.open = false
                 if (document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
             }
         })
 
-        if (await getSetting('magister-shortcuts-today') && document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
+        if (syncedStorage['magister-shortcuts-today'] && document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
         else shortcutsWrapper.dataset.open = false
     }
 
-    if (await getSetting('magister-notes-beta2')) {
-        let notes = await getSetting('st-notes'),
+    if (syncedStorage['magister-notes-beta2']) {
+        let notes = syncedStorage['st-notes'],
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
             pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '0'.` }),
             newButton = element('a', 'st-notes-new', notesWrapper, { title: "Nieuwe notitie" }),
             saveTimeout
+
+        if (notes[0].length > 2) {
+            setTimeout(() => {
+                notesWrapper.dataset.open = true
+                setTimeout(() => {
+                    if (notesWrapper.dataset.open === 'true') notesWrapper.dataset.open = false
+                }, 1000)
+            }, 100)
+        }
 
         if (notes.length < 1) notes = ['\n']
 
@@ -304,7 +313,6 @@ async function main() {
             clearTimeout(saveTimeout)
 
             saveTimeout = setTimeout(() => {
-                console.log('save started')
                 let resultArray = []
                 notesWrapper.querySelectorAll('div').forEach(noteElement => {
                     let noteArray = []
@@ -316,8 +324,7 @@ async function main() {
                     })
                     resultArray.push(noteArray.join('\n'))
                 })
-                setSetting('st-notes', resultArray)
-                console.log('save succes', resultArray)
+                saveToStorage('st-notes', resultArray)
             }, 2000)
         }
 
@@ -393,7 +400,7 @@ function getWeekNumber() {
 }
 
 async function getPeriodNumber(w = getWeekNumber()) {
-    const settingPeriods = await getSetting('magister-periods')
+    const settingPeriods = syncedStorage['magister-periods']
     let periodNumber = 0
 
     settingPeriods.split(',').forEach((e, i, arr) => {
@@ -426,7 +433,7 @@ function parseSubject(string, enabled, subjects) {
 
 async function msToPixels(ms) {
     return new Promise(async (resolve, reject) => {
-        let settingAgendaHeight = await getSetting('magister-vd-agendaHeight') || 1
+        let settingAgendaHeight = syncedStorage['magister-vd-agendaHeight'] || 1
         resolve(0.000025 * settingAgendaHeight * ms)
     })
 }

@@ -1,9 +1,9 @@
 login()
 
 async function login() {
-    if (await getSetting('magisterLogin-method') === 'off') return
+    if (syncedStorage['magisterLogin-method'] === 'off') return
 
-    const forceLogoutTimestamp = await getSetting('force-logout', 'local'),
+    const forceLogoutTimestamp = await getFromStorage('force-logout', 'local'),
         footer = document.querySelector('.bottom')
 
     footer.style.translate = '0 -2rem'
@@ -13,14 +13,14 @@ async function login() {
     footer.innerText = "Automatisch inloggen is ingeschakeld. Je kunt de instellingen aanpassen via de extensie van Study Tools."
 
     let usernameField = await awaitElement('#username'),
-        username = await getSetting('magisterLogin-username')
+        username = syncedStorage['magisterLogin-username']
     usernameField.value = username
     usernameField.dispatchEvent(new Event('input'))
 
     let usernameSubmit = await awaitElement('#username_submit')
     usernameSubmit.click()
 
-    let password = await getSetting('magisterLogin-password'),
+    let password = syncedStorage['magisterLogin-password'],
         passwordField = await awaitElement('#rswp_password')
     passwordField.value = password
     passwordField.dispatchEvent(new Event('input'))

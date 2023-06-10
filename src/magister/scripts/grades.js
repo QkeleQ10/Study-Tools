@@ -14,7 +14,7 @@ async function popstate() {
 
 // Page 'Cijfers', calculator
 async function gradeCalculator() {
-    if (!await getSetting('magister-cf-calculator')) return
+    if (!syncedStorage['magister-cf-calculator']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         menuHost = await awaitElement('.menu-host'),
         menuCollapser = await awaitElement('.menu-footer>a'),
@@ -389,7 +389,7 @@ async function formulateGradeAdvice(means, weight, mean) {
 
 // Page 'Cijferoverzicht', backup
 async function gradeBackup() {
-    if (!await getSetting('magister-cf-backup')) return
+    if (!syncedStorage['magister-cf-backup']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
@@ -452,7 +452,7 @@ async function gradeBackup() {
                 })
         }
 
-        let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify(list))))}`,
+        let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify({ date: new Date(), list: list }))))}`,
             a = document.createElement("a")
         a.download = `Cijferlijst ${document.querySelector('#idWeergave form>div:nth-child(1) span.k-input').innerText} ${(new Date).toLocaleString()}`;
         a.href = uri
@@ -482,7 +482,8 @@ async function gradeBackup() {
 
         let reader = new FileReader()
         reader.onload = async event => {
-            list = JSON.parse(event.target.result)
+            let json = JSON.parse(event.target.result)
+            list = json.list
             gradesContainer.innerText = ''
             let div1 = document.createElement('div')
             setAttributes(div1, { id: 'cijferoverzichtgrid', 'data-role': 'grid', class: 'cijfers-k-grid ng-isolate-scope k-grid k-widget', style: 'height: 100%' })
@@ -493,7 +494,14 @@ async function gradeBackup() {
             let table = document.createElement('table')
             setAttributes(table, { role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
             div2.append(table)
-            aside.innerText = "Geïmporteerd uit back-up."
+            aside.innerText = "Geïmporteerd uit back-up van " + new Date(json.date).toLocaleString('nl-NL', {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric"
+            })
             aside.id = 'st-cf-bk-aside'
             aside.append(bkIWrapper)
             bkIWrapper.id = 'st-cf-bk-i-wrapper'
@@ -640,7 +648,7 @@ async function gradeBackup() {
 
 // Page 'Cijferoverzicht', statistics
 async function gradeStatistics() {
-    if (!await getSetting('magister-cf-statistics')) return
+    if (!syncedStorage['magister-cf-statistics']) return
     let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = document.createElement('li'),
         scTabLink = document.createElement('a'),

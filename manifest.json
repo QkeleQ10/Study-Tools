@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "2.6.3",
+    "version": "2.6.4",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -33,6 +33,9 @@
             "js": [
                 "src/util.js",
                 "src/popup/settings.js"
+            ],
+            "css": [
+                "src/util.css"
             ],
             "run_at": "document_start"
         },

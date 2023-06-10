@@ -6,7 +6,7 @@ async function popstate() {
 }
 
 async function gamification() {
-    if (!await getSetting('magister-gamification-beta')) return
+    if (!syncedStorage['magister-gamification-beta']) return
 
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],
@@ -43,8 +43,8 @@ async function gamification() {
 
     async function calculateScore() {
         let response = await chrome.runtime.sendMessage(['token', 'userId']),
-            token = response?.token || await getSetting('token', 'local'),
-            userId = response?.userId || await getSetting('user-id', 'local')
+            token = response?.token || await getFromStorage('token', 'local'),
+            userId = response?.userId || await getFromStorage('user-id', 'local')
         console.info("Received user token and user ID from service worker.")
 
         // Fetch all years and info related.
@@ -161,8 +161,8 @@ async function gamification() {
     }
 
     async function displayScore(points) {
-        // let points = await getSetting('points'),
-        // pointsBefore = await getSetting('points-before'),
+        // let points = syncedStorage['points'],
+        // pointsBefore = syncedStorage['points-before'],
         // pointsDiff = points.total - pointsBefore.total,
         level = Math.floor(Math.sqrt(points.total + 9) - 3)
         // levelBefore = Math.floor(Math.sqrt(pointsBefore.total + 9) - 3),
@@ -200,7 +200,7 @@ async function gamification() {
         //         }
         //     })
         // }
-        // setSetting('points-before', points)
+        // saveToStorage('points-before', points)
 
         if (Number.isNaN(level)) level = 0
         levelElem.dataset.level = level + 1

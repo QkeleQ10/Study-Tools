@@ -1,54 +1,26 @@
-let settings = {}
+let syncedStorage = {},
+    schoolName = window.location.href.includes('magister') ? window.location.hostname.split('.')[0] : undefined
 
 window.addEventListener('DOMContentLoaded', async () => {
-    if (chrome?.storage) settings = await getSettings(null, null, true)
+    if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
     const snackbarWrapper = document.createElement('div')
     snackbarWrapper.id = 'st-snackbars'
     document.body.append(snackbarWrapper)
-    createStyle(`
-#st-snackbars {
-    position: absolute; bottom: 0; left: 0; padding: 0 32px; width: 464px; display: flex; flex-direction: column-reverse; opacity: 0; background: linear-gradient(18deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%); transition: background 500ms, opacity 500ms, padding 500ms;
-}
-#st-snackbars:has(div.open) {
-    padding: 32px; 
-    opacity: 1;
-    background: radial-gradient(at bottom left, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 70%);
-    z-index: 99999999;
-}
-#st-snackbars>div {
-    display: flex; justify-content: space-between; gap: 6px; min-height: 40px; max-height: 220px; translate: 0 150%; opacity: 0; line-height: 16px; background-color: #111; color: #fff; padding: 14px 20px; margin-top: 16px; border-radius: 8px; font: 16px 'Segoe UI', system-ui; border: 1px solid #222; box-shadow: 0 0 16px 0 rgba(0,0,0,1); transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
-}
-#st-snackbars>div.open {
-    translate: 0; opacity: 1;
-}
-#st-snackbars>div:not(.open) {
-    max-height: 0;
-    min-height: 0;
-    padding-block: 0;
-    margin-block: 0;
-    overflow: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: translate 500ms cubic-bezier(.75, 0, 1, 1), opacity 500ms cubic-bezier(.75, 0, 1, 1), max-height 500ms cubic-bezier(.75, 0, 1, 1), min-height 500ms cubic-bezier(.75, 0, 1, 1), padding 500ms cubic-bezier(.75, 0, 1, 1), margin 500ms cubic-bezier(.75, 0, 1, 1), line-height 500ms cubic-bezier(.75, 0, 1, 1);
-}
-#st-snackbars>div>a {
-    min-width: fit-content; text-transform: uppercase; font-weight: bold; cursor: pointer;
-}
-    `, 'st-snackbar')
 
     checkUpdates()
     checkDefaults()
+    checkAnnouncements()
 
     setTimeout(() => {
-        setSetting('usedExtension', chrome.runtime.getManifest().version, 'local')
+        saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
     }, 500)
 })
 
 async function checkUpdates(override) {
-    let beta = settings['beta']
+    let beta = syncedStorage['beta']
     if (override) beta = false
-    if (!settings['updates']) return
+    if (!syncedStorage['updates']) return
     fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/manifest.json`)
         .then(async response => {
             if (response.ok) {
@@ -62,13 +34,13 @@ async function checkUpdates(override) {
             if (!override) checkUpdates(true)
         })
 
-    if (settings['update-notes']) {
+    if (syncedStorage['update-notes']) {
         fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
             .then(async response => {
                 if (response.ok) {
                     let data = await response.json()
                     for (const key in data) {
-                        if (Object.hasOwnProperty.call(data, key) && key > await getSetting('usedExtension', 'local')) {
+                        if (Object.hasOwnProperty.call(data, key) && key > await getFromStorage('usedExtension', 'local')) {
                             showSnackbar(`Nieuw in ${key}:\n${data[key]}`, 10000)
                         }
                     }
@@ -77,20 +49,37 @@ async function checkUpdates(override) {
     }
 }
 
+async function checkAnnouncements() {
+    let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
+    if (response.ok) {
+        let data = await response.json()
+        for (const key in data) {
+            if (Object.hasOwnProperty.call(data, key)) {
+                let value = data[key]
+                if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
+                if (value.allowedSchools && !value.allowedSchools.some(school => school === schoolName)) return
+                if (value.dateStart && (new Date(value.dateStart) > new Date())) return
+                if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
+                showSnackbar(value.body, value.duration || 10000, value.buttons)
+            }
+        }
+    }
+}
+
 async function checkDefaults() {
     settingsBuilder.forEach(section => {
         section.settings.forEach(setting => {
-            if (typeof settings[setting.id] === 'undefined' && setting.default) { setSetting(setting.id, setting.default) }
+            if (typeof syncedStorage[setting.id] === 'undefined' && setting.default) { saveToStorage(setting.id, setting.default) }
         })
     })
     let colorSettings = ['magister-css-hue', 'magister-css-saturation', 'magister-css-luminance'], colorDefaults = [207, 95, 55]
     colorSettings.forEach((setting, index) => {
-        if (typeof settings[setting] === 'undefined') {
-            setSetting(setting, colorDefaults[index])
+        if (typeof syncedStorage[setting] === 'undefined') {
+            saveToStorage(setting, colorDefaults[index])
         }
     })
 
-    if (!await getSetting('usedExtension', 'local'))
+    if (!await getFromStorage('usedExtension', 'local'))
         showSnackbar("Vernieuw de pagina zodat Study Tools in werking kan treden.", 121000, [{ innerText: "vernieuwen", onclick: 'window.location.reload()' }])
 }
 
@@ -128,7 +117,7 @@ function awaitElement(querySelector, all, duration) {
     })
 }
 
-function getSetting(key, location) {
+function getFromStorage(key, location) {
     return new Promise((resolve, reject) => {
         chrome.storage[location ? location : 'sync'].get([key], (result) => {
             let value = Object.values(result)[0]
@@ -137,7 +126,7 @@ function getSetting(key, location) {
     })
 }
 
-function getSettings(array, location, all) {
+function getFromStorageMultiple(array, location, all) {
     return new Promise((resolve, reject) => {
         chrome.storage[location ? location : 'sync'].get(all ? null : array.map(e => [e]), (result) => {
             result ? resolve(result) : reject(Error('None found'))
@@ -145,15 +134,9 @@ function getSettings(array, location, all) {
     })
 }
 
-function setSetting(key, value, location) {
+function saveToStorage(key, value, location) {
     return new Promise((resolve, reject) => {
         chrome.storage[location ? location : 'sync'].set({ [key]: value }, resolve())
-    })
-}
-
-function setSettings(object, location) {
-    return new Promise((resolve, reject) => {
-        chrome.storage[location ? location : 'sync'].set(object, resolve())
     })
 }
 
