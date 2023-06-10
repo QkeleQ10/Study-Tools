@@ -1,4 +1,5 @@
-let syncedStorage = {}
+let syncedStorage = {},
+    schoolName = window.location.href.includes('magister') ? window.location.hostname.split('.')[0] : undefined
 
 window.addEventListener('DOMContentLoaded', async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
@@ -9,6 +10,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     checkUpdates()
     checkDefaults()
+    checkAnnouncements()
 
     setTimeout(() => {
         saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
@@ -47,19 +49,22 @@ async function checkUpdates(override) {
     }
 }
 
-// async function checkAnnouncements() {
-//     fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/dev/announcements.json`)
-//         .then(async response => {
-//             if (response.ok) {
-//                 let data = await response.json()
-//                 for (const key in data) {
-//                     if (Object.hasOwnProperty.call(data, key)) {
-//                         showSnackbar(`Aankondiging:\n${data[key]}`, 10000)
-//                     }
-//                 }
-//             } else console.warn("Error requesting Study Tools updates", response)
-//         })
-// }
+async function checkAnnouncements() {
+    let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
+    if (response.ok) {
+        let data = await response.json()
+        for (const key in data) {
+            if (Object.hasOwnProperty.call(data, key)) {
+                let value = data[key]
+                if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
+                if (value.allowedSchools && !value.allowedSchools.some(school => school === schoolName)) return
+                if (value.dateStart && (new Date(value.dateStart) > new Date())) return
+                if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
+                showSnackbar(value.body, value.duration || 10000, value.buttons)
+            }
+        }
+    }
+}
 
 async function checkDefaults() {
     settingsBuilder.forEach(section => {
