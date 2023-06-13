@@ -13,11 +13,11 @@ async function gamification() {
         ['absences', "Ongeoorloofde absenties", "Absenties in ", "Je verliest punten per ongeoorloofde absentie."],
         ['assignmentsEarly', "Opdrachten op tijd ingeleverd", "Opdrachten in ", "Je verdient punten per op tijd ingeleverde opdracht en extra punten per dag te vroeg. Latere leerjaren hebben meer impact op je score."]
         // ['assignmentsLate', "Opdrachten te laat ingeleverd", "Opdrachten in ", "Voor elke dag dat je een opdracht te laat inlevert, kun je 2 punten verliezen."]
-    ]
-    mainContainer = await awaitElement('section.main'),
+    ],
+        mainContainer = await awaitElement('section.main'),
         photo = await awaitElement("#user-menu > figure > img"),
-        notifications = await awaitElement('#st-vd-notifications'),
-        levelElem = element('button', 'st-level', mainContainer),
+        // notifications = await awaitElement('#st-vd-notifications'),
+        levelElem = element('button', 'st-level', mainContainer, {'data-level': '...'}),
         progressElem = element('div', 'st-progress', levelElem),
         progressFilled = element('div', 'st-progress-filled', progressElem),
         gmOverlay = element('dialog', 'st-gm', document.body, { class: 'st-overlay' }),
@@ -28,7 +28,7 @@ async function gamification() {
         gmCard = element('div', 'st-gm-card', gmWrap),
         gmCardTitle = element('span', 'st-gm-card-title', gmCard, { class: 'st-title', innerText: photo.alt }),
         gmCardSubtitle = element('span', 'st-gm-card-subtitle', gmCard, { class: 'st-subtitle', innerText: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) }),
-        gmCardLevel = element('div', 'st-gm-card-level', gmCard),
+        gmCardLevel = element('div', 'st-gm-card-level', gmCard, {innerText: "..."}),
         gmCardProgress = element('div', 'st-gm-card-progress', gmCard),
         gmCardProgressFilled = element('div', 'st-gm-card-progress-filled', gmCardProgress),
         gmBreakdown = element('div', 'st-gm-breakdown', gmWrap)
