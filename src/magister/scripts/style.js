@@ -67,6 +67,7 @@ async function applyStyles() {
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
+    --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 150;
@@ -95,6 +96,7 @@ async function applyStyles() {
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
+    --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 10;

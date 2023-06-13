@@ -652,7 +652,7 @@ async function gradeStatistics() {
     let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = document.createElement('li'),
         scTabLink = document.createElement('a'),
-        scContainer = document.createElement('div'),
+        scContainer = element('div', 'st-cf-sc', document.body, { style: 'display: none;', class: 'not-ready' }),
         scFilterContainer = document.createElement('div'),
         scYearFilterWrapper = document.createElement('div'),
         scRowFilterWrapper = document.createElement('div'),
@@ -666,6 +666,7 @@ async function gradeStatistics() {
         scNum = document.createElement('div'),
         scMean = document.createElement('div'),
         scMedian = document.createElement('div'),
+        scStDev = element('div', undefined, undefined, {'data-description': "Standaardafwijking", class: 'st-metric'}),
         scMin = document.createElement('div'),
         scMax = document.createElement('div'),
         scSufficient = document.createElement('div'),
@@ -682,9 +683,7 @@ async function gradeStatistics() {
     scTab.classList.add('asideTrigger')
     scTab.append(scTabLink)
     scTabLink.innerText = "Statistieken"
-    document.body.append(scContainer, scInteractionPreventer, scBkCommunication)
-    scContainer.id = 'st-cf-sc'
-    scContainer.style.display = 'none'
+    document.body.append(scInteractionPreventer, scBkCommunication)
     scContainer.append(scAveragesContainer, scGradesContainer, scFilterContainer)
     scFilterContainer.id = 'st-cf-sc-filter-container'
     scFilterContainer.append(scYearFilterWrapper, scRowFilterWrapper)
@@ -745,11 +744,17 @@ async function gradeStatistics() {
         years = new Set()
         grades = {}
         setTimeout(async () => {
-
             grades = await gatherGradesForYear(grades)
+            scContainer.classList.remove('not-ready')
             await displayStatistics(grades)
         }, 200);
     })
+
+    scTab.addEventListener('click', async event => {
+        grades = await gatherGradesForYear(grades)
+        scContainer.classList.remove('not-ready')
+        await displayStatistics(grades)
+    }, { once: true })
 
     document.querySelector('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span').click()
     document.querySelector('#cijferSoortSelect_listbox > li:nth-child(1)').click()
@@ -776,9 +781,6 @@ async function gradeStatistics() {
     })
     yearSelect.click()
 
-    grades = await gatherGradesForYear(grades)
-    await displayStatistics(grades)
-
     async function gatherGradesForYear(grades = {}, index = 0) {
         return new Promise(async (resolve, reject) => {
             scTab.dataset.loading = true
@@ -791,17 +793,19 @@ async function gradeStatistics() {
             }
 
             setTimeout(async () => {
-                let gradeElements = await awaitElement('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true)
-                gradeElements.forEach(grade => {
-                    let result = Number(grade.innerText.replace(',', '.').replace('', '')),
-                        id = grade.id,
-                        subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText
-                    if (!isNaN(result)) {
-                        if (!grades[index]) grades[index] = {}
-                        if (!grades[index][subject]) grades[index][subject] = {}
-                        grades[index][subject][id] = result
-                    }
-                })
+                let gradeElements = await awaitElement('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true, 2000)
+                if (gradeElements?.[0]) {
+                    gradeElements.forEach(grade => {
+                        let result = Number(grade.innerText.replace(',', '.').replace('', '')),
+                            id = grade.id,
+                            subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText
+                        if (!isNaN(result)) {
+                            if (!grades[index]) grades[index] = {}
+                            if (!grades[index][subject]) grades[index][subject] = {}
+                            grades[index][subject][id] = result
+                        }
+                    })
+                }
                 resolve(grades)
                 scInteractionPreventer.id = ''
             }, index < 1 ? 0 : 500)
@@ -829,6 +833,7 @@ async function gradeStatistics() {
 
             if (results.length < 1) {
                 scContainer.classList.add('empty')
+                scTab.dataset.loading = false
                 return
             } else scContainer.classList.remove('empty')
 
@@ -844,6 +849,8 @@ async function gradeStatistics() {
             scMedian.dataset.description = "Mediaan"
             scMedian.classList.add('st-metric')
             scMedian.innerText = median(results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
+            scStDev.innerText = standardDeviation(results).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
             scMin.dataset.description = "Laagste cijfer"
             scMin.classList.add('st-metric')
@@ -893,6 +900,7 @@ async function gradeStatistics() {
                 element.style.maxHeight = `${value / max * 100}%`
                 element.style.minHeight = `${value / max * 100}%`
             })
+
             scTab.dataset.loading = false
             resolve()
         })

@@ -57,7 +57,7 @@ async function main() {
         })
     })
 
-    if (Math.random() < 0.003) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
+    if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 
     if (syncedStorage['magister-shortcuts']) {
         let shortcutsWrapper = document.createElement('div'),
@@ -455,6 +455,13 @@ function median(valueArray = []) {
     if (values.length % 2) return values[half]
     return (values[half - 1] + values[half]) / 2.0
 }
+
+function standardDeviation(valueArray = []) {
+    let n = valueArray.length,
+        mean = valueArray.reduce((a, b) => a + b) / n
+    return Math.sqrt(valueArray.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
+}
+
 
 function weightedPossibleMeans(valueArray, weightArray, newWeight) {
     let means = [],

@@ -52,8 +52,8 @@ async function today() {
             }
         }
     })
-    if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van StudyTools!")
-    if (Math.random() < 0.005) showSnackbar("Welkom op het Magister dat Iddink niet kon creëren :)")
+    if (Math.random() < 0.01) showSnackbar("Welkom terug, " + (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0] + "!")
+    if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van Study Tools 💚")
 
     setTimeout(() => header.dataset.transition = true, 2000)
     setTimeout(() => {

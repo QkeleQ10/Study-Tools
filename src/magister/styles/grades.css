@@ -377,12 +377,20 @@
 }
 
 #st-cf-sc.empty>#st-cf-sc-averages-container,
-#st-cf-sc.empty>#st-cf-sc-grades-container {
+#st-cf-sc.empty>#st-cf-sc-grades-container,
+#st-cf-sc.not-ready>#st-cf-sc-averages-container,
+#st-cf-sc.not-ready>#st-cf-sc-grades-container {
     visibility: hidden;
 }
 
 #st-cf-sc.empty:after {
     content: 'Er zijn geen cijfers die voldoen aan de criteria.';
+    position: absolute;
+    top: 40px;
+}
+
+#st-cf-sc.not-ready:after {
+    content: 'Cijfers worden verzameld. Een ogenblik geduld...';
     position: absolute;
     top: 40px;
 }
@@ -475,13 +483,13 @@
 #st-cf-sc-grades-container:before {
     position: absolute;
     top: 0;
-    content: 'Histogram (afgerond op helen)\A';
+    content: 'Histogram (afgeronde behaalde cijfers)\A';
     white-space: pre-wrap;
     font: 12px var(--st-font-family-secondary);
 }
 
 #st-cf-sc-grades-container>div {
-    background: var(--st-highlight-ok);
+    background: var(--st-accent-ok);
     height: 100px;
     width: 100%;
     border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
@@ -493,7 +501,7 @@
 }
 
 #st-cf-sc-grades-container>div:nth-child(-n+5) {
-    background: var(--st-highlight-warn);
+    background: var(--st-accent-warn);
 }
 
 #st-cf-sc-grades-container>div:before {
