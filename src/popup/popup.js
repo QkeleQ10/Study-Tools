@@ -45,7 +45,7 @@ async function init() {
                 labelElement
 
             switch (setting.type) {
-                case 'text':
+                case 'text': {
                     sectionWrapper.innerHTML += `<label class="has-text ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
@@ -54,8 +54,9 @@ async function init() {
                         if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
+                }
 
-                case 'key':
+                case 'key': {
                     sectionWrapper.innerHTML += `<label class="has-key ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" class="input-key" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
@@ -76,8 +77,9 @@ async function init() {
                         if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
+                }
 
-                case 'slider':
+                case 'slider': {
                     sectionWrapper.innerHTML += `<label class="has-slider ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
@@ -89,8 +91,9 @@ async function init() {
                         if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
+                }
 
-                case 'select':
+                case 'select': {
                     sectionWrapper.innerHTML += `<label class="has-select ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse" data-value="${value}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
@@ -114,8 +117,9 @@ async function init() {
                         }
                     }, 50)
                     break
+                }
 
-                case 'color-picker':
+                case 'color-picker': {
                     sectionWrapper.innerHTML += `
 <label class="has-color-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}">
     <h4>${setting.title}</h4>
@@ -175,8 +179,52 @@ async function init() {
                         })
                     }, 50)
                     break
+                }
 
-                case 'subjects':
+                case 'image-picker': {
+                    sectionWrapper.innerHTML += `<label class="has-image-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div><img width=32 height=32 src="${value}"><input type="file" accept="image/*" name="${setting.title}" id="${setting.id}" value="${value}"></div></label>`
+
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement
+                        // inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
+                        // if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        // Listen for changes in the input
+                        inputElement.addEventListener('change', (event) => {
+                            const file = event.target.files[0]
+
+                            if (file) {
+                                const reader = new FileReader()
+
+                                reader.onload = function () {
+                                    const image = new Image()
+
+                                    image.onload = function () {
+                                        const canvas = document.createElement('canvas')
+                                        const ctx = canvas.getContext('2d')
+
+                                        canvas.width = 32
+                                        canvas.height = 32
+
+                                        ctx.drawImage(image, 0, 0, 32, 32)
+
+                                        const dataURL = canvas.toDataURL('image/webp', 0.6)
+
+                                        console.log(dataURL)
+                                        pushSetting(setting.id, dataURL, inputElement)
+                                    }
+
+                                    image.src = reader.result
+                                }
+
+                                reader.readAsDataURL(file)
+                            }
+                        })
+                    }, 50)
+                    break
+                }
+
+                case 'subjects': {
                     sectionWrapper.innerHTML += `<label role="listitem" for="${setting.id}" class="large ${setting.class}">${setting.title}<div class="grid-subjects"><h5>Weergavenaam</h5><h5>Aliassen</h5></div><div id="${setting.id}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
@@ -191,8 +239,9 @@ async function init() {
                         updateSubjects()
                     }, 50)
                     break
+                }
 
-                default:
+                default: {
                     sectionWrapper.innerHTML += `<label class="has-checkbox ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
@@ -203,6 +252,7 @@ async function init() {
                         if (typeof settings[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
                     }, 50)
                     break
+                }
             }
         })
     })
