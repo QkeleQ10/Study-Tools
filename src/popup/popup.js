@@ -50,8 +50,8 @@ async function init() {
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
-                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
-                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, labelElement))
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
                 }
@@ -72,9 +72,9 @@ async function init() {
                             if (e.key === 'Control') keyDisplay = 'Ctrl'
                             if (e.key === ' ') keyDisplay = 'Spatie'
                             inputElement.value = keyDisplay
-                            pushSetting(setting.id, e.key, inputElement)
+                            pushSetting(setting.id, e.key, labelElement)
                         })
-                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
                 }
@@ -85,10 +85,10 @@ async function init() {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
                         inputElement.addEventListener('input', () => {
-                            pushSetting(setting.id, inputElement.value, inputElement)
+                            pushSetting(setting.id, inputElement.value, labelElement)
                             labelElement.querySelector('.current-value').innerText = String(inputElement.value).replace('.', ',')
                         })
-                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
                 }
@@ -108,12 +108,12 @@ async function init() {
                                 inputElement.querySelectorAll('[data-value][data-selected]').forEach(e => e.dataset.selected = false)
                                 optionElement.dataset.selected = true
                                 inputElement.dataset.value = optionElement.dataset.value
-                                pushSetting(setting.id, optionElement.dataset.value, inputElement)
+                                pushSetting(setting.id, optionElement.dataset.value, labelElement)
                             })
                         })
                         if (!settings[setting.id]) {
                             inputElement.dataset.value = setting.default
-                            pushSetting(setting.id, setting.default, inputElement)
+                            pushSetting(setting.id, setting.default, labelElement)
                         }
                     }, 50)
                     break
@@ -182,41 +182,37 @@ async function init() {
                 }
 
                 case 'image-picker': {
-                    sectionWrapper.innerHTML += `<label class="has-image-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div><img width=32 height=32 src="${value}"><input type="file" accept="image/*" name="${setting.title}" id="${setting.id}" value="${value}"></div></label>`
+                    sectionWrapper.innerHTML += `<label class="has-image-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div><img width=32 height=32 src="${value}"><div><input type="file" accept="image/*" name="${setting.title}" id="${setting.id}"><h5>Gebruik nu Ctrl+V om een foto te plakken of</h5><button>Afbeelding van schijf...</button></div></div></label>`
 
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
-                        labelElement = inputElement.parentElement
-                        // inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
-                        // if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
-                        // Listen for changes in the input
-                        inputElement.addEventListener('change', (event) => {
-                            const file = event.target.files[0]
-
+                        labelElement = inputElement.parentElement.parentElement.parentElement
+                        inputElement.nextElementSibling.nextElementSibling.addEventListener('click', () => { inputElement.click() })
+                        window.addEventListener('paste', e => {
+                            console.log(labelElement.getBoundingClientRect().y)
+                            if (labelElement.getBoundingClientRect().y >= 35 && labelElement.getBoundingClientRect().y <= 540) {
+                                inputElement.files = e.clipboardData.files
+                                inputElement.dispatchEvent(new Event('change'))
+                            }
+                        })
+                        inputElement.addEventListener('change', () => {
+                            const file = inputElement.files[0]
                             if (file) {
                                 const reader = new FileReader()
-
                                 reader.onload = function () {
                                     const image = new Image()
-
                                     image.onload = function () {
                                         const canvas = document.createElement('canvas')
                                         const ctx = canvas.getContext('2d')
-
                                         canvas.width = 32
                                         canvas.height = 32
-
                                         ctx.drawImage(image, 0, 0, 32, 32)
-
                                         const dataURL = canvas.toDataURL('image/webp', 0.6)
-
-                                        console.log(dataURL)
-                                        pushSetting(setting.id, dataURL, inputElement)
+                                        inputElement.parentElement.previousElementSibling.src = dataURL
+                                        pushSetting(setting.id, dataURL, labelElement)
                                     }
-
                                     image.src = reader.result
                                 }
-
                                 reader.readAsDataURL(file)
                             }
                         })
@@ -247,9 +243,9 @@ async function init() {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
                         inputElement.addEventListener('input', () => {
-                            pushSetting(setting.id, inputElement.checked, inputElement)
+                            pushSetting(setting.id, inputElement.checked, labelElement)
                         })
-                        if (typeof settings[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (typeof settings[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
                 }
@@ -350,7 +346,7 @@ function updateSubjects(event) {
         }
 
     })
-    pushSetting(parent.id, subjectValues, parent)
+    pushSetting(parent.id, subjectValues, parent.parentElement)
 }
 
 function updateColor(color, noSave) {
@@ -414,9 +410,9 @@ function updateColor(color, noSave) {
     luminanceSlider.parentElement.querySelector('.current-value').innerText = color.l
 
     if (!noSave) {
-        pushSetting('magister-css-hue', color.h, colorPicker.firstElementChild)
-        pushSetting('magister-css-saturation', color.s, colorPicker.firstElementChild)
-        pushSetting('magister-css-luminance', color.l, colorPicker.firstElementChild)
+        pushSetting('magister-css-hue', color.h, colorPicker)
+        pushSetting('magister-css-saturation', color.s, colorPicker)
+        pushSetting('magister-css-luminance', color.l, colorPicker)
     }
 
     document.querySelector(':root').style.setProperty(`--hue`, color.h)
@@ -456,7 +452,14 @@ function updateConditionals() {
         })
 
         if (matched === requirements.length) element.classList.remove('collapse')
-        else element.classList.add('collapse')
+        else {
+            element.classList.add('collapse')
+            if (element.classList.contains('has-image-picker')) {
+                element.querySelector('input').value = ''
+                element.querySelector('img').src = ''
+                saveToStorage('magister-picture-source', '0')
+            }
+        }
     })
 }
 
@@ -485,8 +488,8 @@ function pushSetting(key, value, element) {
     if (!chrome?.storage) return
     updateConditionals()
     if (element) {
-        element.parentElement.setAttribute('data-saved', 'not-saved')
-        element.parentElement.classList.remove('new')
+        element.setAttribute('data-saved', 'not-saved')
+        element.classList.remove('new')
     }
     diff[key] = value
     diffTimestamp = new Date().getTime()

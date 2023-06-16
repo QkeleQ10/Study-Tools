@@ -189,7 +189,7 @@ const settingsBuilder = [
                 ],
             },
             {
-                id: 'magister-picture-resource',
+                id: 'magister-picture-source',
                 title: "Aangepaste profielfoto",
                 type: 'image-picker',
                 require: 'magister-picture===custom',

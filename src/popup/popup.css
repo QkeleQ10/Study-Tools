@@ -335,6 +335,12 @@ label.has-color-picker {
     grid-template-rows: auto;
 }
 
+label.has-image-picker {
+    grid-template:
+        'title' auto 'input' auto / 1fr;
+    cursor: pointer;
+}
+
 label.has-slider {
     max-height: 50px;
     grid-template:
@@ -553,21 +559,23 @@ input[type=range]:active::-webkit-slider-thumb {
 }
 
 label:hover .select.collapse>*[data-selected=true],
-.select>button:hover {
+.select>button:hover, label.has-image-picker:hover button {
     scale: 1.02;
     box-shadow: 0px 5px 10px -8px var(--shadow);
 }
 
 label:active .select.collapse>*[data-selected=true],
-.select>button:active {
+.select>button:active, label.has-image-picker:active button {
     scale: .98;
     box-shadow: 0px 3px 5px -4px var(--shadow);
 }
 
-input[type=text].input-key {
+input[type=text].input-key,
+label.has-image-picker button {
     border-radius: 7px;
     cursor: pointer;
     outline: solid 1px var(--outline) !important;
+    background: var(--background);
     border: none !important;
     padding: 4px 1px;
     max-width: 75px;
@@ -626,6 +634,53 @@ input[type=text]:active,
 input[type=email]:active,
 input[type=password]:active {
     scale: 0.97;
+}
+
+label.has-image-picker>div:last-child {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    align-items: center;
+    overflow: visible;
+}
+
+label.has-image-picker input {
+    display: none;
+}
+
+label.has-image-picker>div>div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: visible;
+    padding: 10px;
+    margin: -10px;
+}
+
+label.has-image-picker button {
+    width: 100%;
+    max-width: none;
+    box-shadow: 0px 4px 8px -8px var(--shadow);
+    font-size: 12px;
+}
+
+label.has-image-picker img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0px transparent;
+    outline: 2px solid var(--outline);
+}
+
+label.has-image-picker img:after {
+    display: block;
+    content: 'image_not_supported';
+    font: 20px 'material-icons';
+    width: 32px;
+    height: 32px;
+    background: var(--backgroundIntense);
+    color: var(--textIntense);
+    padding: 6px;
+    translate: 0 -32px;
 }
 
 #quick-colors {
