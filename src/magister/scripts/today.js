@@ -33,26 +33,27 @@ async function today() {
 
     const date = new Date(),
         weekday = date.toLocaleString('nl-NL', { weekday: 'long' }),
+        firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0],
         greetings = [
-            [22, 'Goedenavond.', 'Goedenavond!', 'Goedenavond, nachtuil.', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
-            [18, 'Goedenavond.', 'Goedenavond!', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
-            [12, 'Goedemiddag.', 'Goedemiddag!', `Fijne ${weekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
-            [6, 'Goedemorgen.', 'Goedemorgen!', 'Goeiemorgen.', 'Goeiemorgen!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
-            [0, 'Goedemorgen.', 'Goedemorgen!', 'Goeiemorgen.', 'Goeiemorgen!', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
+            [22, 'Goedenavond#', 'Goedenavond, nachtuil.', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
+            [18, 'Goedenavond#', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
+            [12, 'Goedemiddag#', `Fijne ${weekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
+            [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
+            [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
         ],
         hour = date.getHours()
     greetings.forEach(e => {
         if (hour >= e[0]) {
             e.shift()
-            e.push('Hallo.', 'Hallo!')
+            e.push('Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`)
             if (!headerText.innerText) {
-                let greeting = e[Math.floor(Math.random() * e.length)]
+                let punctuation = Math.random() < 0.5 ? '.' : '!',
+                    greeting = e[Math.floor(Math.random() * e.length)].replace('#', punctuation)
                 headerText.innerText = greeting.slice(0, -1)
                 headerText.dataset.lastLetter = greeting.slice(-1)
             }
         }
     })
-    if (Math.random() < 0.01) showSnackbar("Welkom terug, " + (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0] + "!")
     if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van Study Tools 💚")
 
     setTimeout(() => header.dataset.transition = true, 2000)

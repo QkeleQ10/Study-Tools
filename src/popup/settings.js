@@ -169,8 +169,30 @@ const settingsBuilder = [
                 require: "magister-appbar-zermelo",
             },
             {
-                id: "magister-appbar-hidePicture",
-                title: "Profielfoto verbergen",
+                id: 'magister-picture',
+                title: "Profielfoto",
+                type: 'select',
+                default: 'hide',
+                options: [
+                    {
+                        value: "show",
+                        title: "Originele profielfoto"
+                    },
+                    {
+                        value: "custom",
+                        title: "Aangepaste profielfoto"
+                    },
+                    {
+                        value: "hide",
+                        title: "Geen profielfoto"
+                    },
+                ],
+            },
+            {
+                id: 'magister-picture-source',
+                title: "Aangepaste profielfoto",
+                type: 'image-picker',
+                require: 'magister-picture===custom',
             },
         ]
     },

@@ -45,17 +45,18 @@ async function init() {
                 labelElement
 
             switch (setting.type) {
-                case 'text':
+                case 'text': {
                     sectionWrapper.innerHTML += `<label class="has-text ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
-                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, inputElement))
-                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        inputElement.addEventListener('input', () => pushSetting(setting.id, inputElement.value, labelElement))
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
+                }
 
-                case 'key':
+                case 'key': {
                     sectionWrapper.innerHTML += `<label class="has-key ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="${setting.fieldType || 'text'}" class="input-key" name="${setting.title}" id="${setting.id}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
@@ -71,26 +72,28 @@ async function init() {
                             if (e.key === 'Control') keyDisplay = 'Ctrl'
                             if (e.key === ' ') keyDisplay = 'Spatie'
                             inputElement.value = keyDisplay
-                            pushSetting(setting.id, e.key, inputElement)
+                            pushSetting(setting.id, e.key, labelElement)
                         })
-                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
+                }
 
-                case 'slider':
+                case 'slider': {
                     sectionWrapper.innerHTML += `<label class="has-slider ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><h4>${setting.title}</h4><span class="default-value">${setting.defaultFormatted || setting.default}</span><span><span class="current-value">${String(value).replace('.', ',')}</span>${setting.suffix}</span><input type="range" name="${setting.title}" id="${setting.id}" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}"></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
                         inputElement.addEventListener('input', () => {
-                            pushSetting(setting.id, inputElement.value, inputElement)
+                            pushSetting(setting.id, inputElement.value, labelElement)
                             labelElement.querySelector('.current-value').innerText = String(inputElement.value).replace('.', ',')
                         })
-                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (!settings[setting.id] && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
+                }
 
-                case 'select':
+                case 'select': {
                     sectionWrapper.innerHTML += `<label class="has-select ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div id="${setting.id}" class="select collapse" data-value="${value}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
@@ -105,17 +108,18 @@ async function init() {
                                 inputElement.querySelectorAll('[data-value][data-selected]').forEach(e => e.dataset.selected = false)
                                 optionElement.dataset.selected = true
                                 inputElement.dataset.value = optionElement.dataset.value
-                                pushSetting(setting.id, optionElement.dataset.value, inputElement)
+                                pushSetting(setting.id, optionElement.dataset.value, labelElement)
                             })
                         })
                         if (!settings[setting.id]) {
                             inputElement.dataset.value = setting.default
-                            pushSetting(setting.id, setting.default, inputElement)
+                            pushSetting(setting.id, setting.default, labelElement)
                         }
                     }, 50)
                     break
+                }
 
-                case 'color-picker':
+                case 'color-picker': {
                     sectionWrapper.innerHTML += `
 <label class="has-color-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}">
     <h4>${setting.title}</h4>
@@ -175,8 +179,48 @@ async function init() {
                         })
                     }, 50)
                     break
+                }
 
-                case 'subjects':
+                case 'image-picker': {
+                    sectionWrapper.innerHTML += `<label class="has-image-picker ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><div><img width=32 height=32 src="${value}"><div><input type="file" accept="image/*" name="${setting.title}" id="${setting.id}"><h5>Gebruik nu Ctrl+V om een foto te plakken of</h5><button>Afbeelding van schijf...</button></div></div></label>`
+
+                    setTimeout(() => {
+                        inputElement = document.getElementById(setting.id)
+                        labelElement = inputElement.parentElement.parentElement.parentElement
+                        inputElement.nextElementSibling.nextElementSibling.addEventListener('click', () => { inputElement.click() })
+                        window.addEventListener('paste', e => {
+                            console.log(labelElement.getBoundingClientRect().y)
+                            if (labelElement.getBoundingClientRect().y >= 35 && labelElement.getBoundingClientRect().y <= 540) {
+                                inputElement.files = e.clipboardData.files
+                                inputElement.dispatchEvent(new Event('change'))
+                            }
+                        })
+                        inputElement.addEventListener('change', () => {
+                            const file = inputElement.files[0]
+                            if (file) {
+                                const reader = new FileReader()
+                                reader.onload = function () {
+                                    const image = new Image()
+                                    image.onload = function () {
+                                        const canvas = document.createElement('canvas')
+                                        const ctx = canvas.getContext('2d')
+                                        canvas.width = 32
+                                        canvas.height = 32
+                                        ctx.drawImage(image, 0, 0, 32, 32)
+                                        const dataURL = canvas.toDataURL('image/webp', 0.6)
+                                        inputElement.parentElement.previousElementSibling.src = dataURL
+                                        pushSetting(setting.id, dataURL, labelElement)
+                                    }
+                                    image.src = reader.result
+                                }
+                                reader.readAsDataURL(file)
+                            }
+                        })
+                    }, 50)
+                    break
+                }
+
+                case 'subjects': {
                     sectionWrapper.innerHTML += `<label role="listitem" for="${setting.id}" class="large ${setting.class}">${setting.title}<div class="grid-subjects"><h5>Weergavenaam</h5><h5>Aliassen</h5></div><div id="${setting.id}"></div></label>`
                     inputElement = document.getElementById(setting.id)
                     labelElement = inputElement.parentElement
@@ -191,18 +235,20 @@ async function init() {
                         updateSubjects()
                     }, 50)
                     break
+                }
 
-                default:
+                default: {
                     sectionWrapper.innerHTML += `<label class="has-checkbox ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
                         inputElement.addEventListener('input', () => {
-                            pushSetting(setting.id, inputElement.checked, inputElement)
+                            pushSetting(setting.id, inputElement.checked, labelElement)
                         })
-                        if (typeof settings[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, inputElement)
+                        if (typeof settings[setting.id] === 'undefined' && setting.default) pushSetting(setting.id, setting.default, labelElement)
                     }, 50)
                     break
+                }
             }
         })
     })
@@ -300,7 +346,7 @@ function updateSubjects(event) {
         }
 
     })
-    pushSetting(parent.id, subjectValues, parent)
+    pushSetting(parent.id, subjectValues, parent.parentElement)
 }
 
 function updateColor(color, noSave) {
@@ -364,9 +410,9 @@ function updateColor(color, noSave) {
     luminanceSlider.parentElement.querySelector('.current-value').innerText = color.l
 
     if (!noSave) {
-        pushSetting('magister-css-hue', color.h, colorPicker.firstElementChild)
-        pushSetting('magister-css-saturation', color.s, colorPicker.firstElementChild)
-        pushSetting('magister-css-luminance', color.l, colorPicker.firstElementChild)
+        pushSetting('magister-css-hue', color.h, colorPicker)
+        pushSetting('magister-css-saturation', color.s, colorPicker)
+        pushSetting('magister-css-luminance', color.l, colorPicker)
     }
 
     document.querySelector(':root').style.setProperty(`--hue`, color.h)
@@ -406,7 +452,14 @@ function updateConditionals() {
         })
 
         if (matched === requirements.length) element.classList.remove('collapse')
-        else element.classList.add('collapse')
+        else {
+            element.classList.add('collapse')
+            if (element.classList.contains('has-image-picker')) {
+                element.querySelector('input').value = ''
+                element.querySelector('img').src = ''
+                saveToStorage('magister-picture-source', '0')
+            }
+        }
     })
 }
 
@@ -435,8 +488,8 @@ function pushSetting(key, value, element) {
     if (!chrome?.storage) return
     updateConditionals()
     if (element) {
-        element.parentElement.setAttribute('data-saved', 'not-saved')
-        element.parentElement.classList.remove('new')
+        element.setAttribute('data-saved', 'not-saved')
+        element.classList.remove('new')
     }
     diff[key] = value
     diffTimestamp = new Date().getTime()
