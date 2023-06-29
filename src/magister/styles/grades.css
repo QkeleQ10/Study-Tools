@@ -310,6 +310,25 @@
     animation: none;
 }
 
+#st-cf-bk-mode-dialog {
+    display: flex;
+    flex-direction: column;
+}
+
+#st-cf-bk-mode-dialog>div {
+    display: grid;
+    grid-template:
+        'a b' auto
+        'c d' auto
+        / 1fr 1fr;
+    gap: 16px 32px;
+    margin: 32px 64px;
+}
+
+#st-cf-bk-mode-dialog>div>p {
+    font: 16px var(--st-font-family-secondary);
+}
+
 #st-cf-bk-busy-ad {
     position: absolute;
     width: 294px;
