@@ -447,7 +447,7 @@ async function gradeBackup() {
             title = element('span', 'st-opts-t', modal, { class: 'st-title', innerText: "Kies een back-upmethode" }),
             wrapper = element('div', 'st-opts', modal),
             opt1desc = element('p', 'st-opt1-a', wrapper, { innerText: "Deze manier is erg langzaam, maar gegevens zoals de weegfactoren en kolomnamen worden vrijwel altijd correct opgeslagen." }),
-            opt2desc = element('p', 'st-opt2-a', wrapper, { innerText: "Deze manier is erg langzaam, maar gegevens zoals de weegfactoren en kolomnamen worden vrijwel altijd correct opgeslagen." }),
+            opt2desc = element('p', 'st-opt2-a', wrapper, { innerText: "Deze manier is snel, maar alleen de cijfers zelf zijn gegarandeerd correct. Van de rest van de gegevens klopt ongeveer precies helemaal niets." }),
             opt1 = element('button', 'st-opt1-b', wrapper, { class: 'st-button', innerText: 'Nauwkeurig', 'data-icon': '' }),
             opt2 = element('button', 'st-opt2-b', wrapper, { class: 'st-button', innerText: 'Snel', 'data-icon': '' })
         modal.showModal()
