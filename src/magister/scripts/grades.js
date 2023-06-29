@@ -393,6 +393,7 @@ async function gradeBackup() {
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
+        gradeResult, gradeWeight, gradeColumn, gradeTitle,
         bkExport = document.createElement('button'),
         bkImport = document.createElement('label'),
         bkImportInput = document.createElement('input'),
@@ -405,7 +406,20 @@ async function gradeBackup() {
         bkIColumn = document.createElement('div'),
         bkITitle = document.createElement('div'),
         list = [],
-        num = 0
+        num = 0,
+        timeoutOffset = 0
+
+    gradeDetails.childNodes.forEach(element => {
+        if (element.innerText === 'Beoordeling') {
+            gradeResult = element.nextElementSibling
+        } else if (element.innerText === 'Weging') {
+            gradeWeight = element.nextElementSibling
+        } else if (element.innerText === 'Kolomnaam') {
+            gradeColumn = element.nextElementSibling
+        } else if (element.innerText === 'Omschrijving') {
+            gradeTitle = element.nextElementSibling
+        }
+    })
 
     document.body.append(bkExport, bkImport, bkBusyAd)
     bkExport.classList.add('st-button')
@@ -429,6 +443,25 @@ async function gradeBackup() {
     bkBusyAdLink.target = '_blank'
 
     bkExport.addEventListener('click', async () => {
+        let modal = element('dialog', 'st-cf-bk-mode-dialog', document.body, { class: 'st-overlay' }),
+            title = element('span', 'st-opts-t', modal, { class: 'st-title', innerText: "Kies een back-upmethode" }),
+            wrapper = element('div', 'st-opts', modal),
+            opt1desc = element('p', 'st-opt1-a', wrapper, { innerText: "Deze manier is erg langzaam, maar gegevens zoals de weegfactoren en kolomnamen worden vrijwel altijd correct opgeslagen." }),
+            opt2desc = element('p', 'st-opt2-a', wrapper, { innerText: "Deze manier is erg langzaam, maar gegevens zoals de weegfactoren en kolomnamen worden vrijwel altijd correct opgeslagen." }),
+            opt1 = element('button', 'st-opt1-b', wrapper, { class: 'st-button', innerText: 'Nauwkeurig', 'data-icon': '' }),
+            opt2 = element('button', 'st-opt2-b', wrapper, { class: 'st-button', innerText: 'Snel', 'data-icon': '' })
+        modal.showModal()
+        let userChoice = await new Promise((resolve, reject) => {
+            opt1.addEventListener('click', () => {
+                resolve('accurate')
+            }, { once: true })
+            opt2.addEventListener('click', () => {
+                resolve('fast')
+            }, { once: true })
+        })
+        modal.close()
+        timeoutOffset = userChoice === 'accurate' ? 100 : -30
+
         bkExport.disabled = true
         bkExport.dataset.busy = true
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
@@ -558,22 +591,18 @@ async function gradeBackup() {
             }
             if (!td.innerText || td.innerText.trim().length < 1) return resolve({ className: td.firstElementChild?.className, type: 'filler' })
             if (td.firstElementChild?.classList.contains('text')) return resolve({ className: td.firstElementChild?.className, type: 'rowheader', title: td.innerText })
+
             td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
             td.dispatchEvent(new Event('pointerup', { bubbles: true }))
-            setTimeout(() => {
-                gradeDetails.childNodes.forEach(element => {
-                    if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
-                        result = element.nextElementSibling.innerText
-                    } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
-                        weight = element.nextElementSibling.innerText
-                    } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
-                        column = element.nextElementSibling.innerText
-                    } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
-                        title = element.nextElementSibling.innerText
-                    }
-                })
+
+            setTimeout(async () => {
+                result = gradeResult.innerText
+                weight = gradeWeight.innerText
+                column = gradeColumn.innerText
+                title = gradeTitle.innerText
                 return resolve({ className: td.firstElementChild?.className, result, weight, column, type: 'grade', title })
-            }, timeout)
+            }, timeout + timeoutOffset)
+
         })
     }
 
@@ -666,7 +695,7 @@ async function gradeStatistics() {
         scNum = document.createElement('div'),
         scMean = document.createElement('div'),
         scMedian = document.createElement('div'),
-        scStDev = element('div', undefined, undefined, {'data-description': "Standaardafwijking", class: 'st-metric'}),
+        scStDev = element('div', undefined, undefined, { 'data-description': "Standaardafwijking", class: 'st-metric' }),
         scMin = document.createElement('div'),
         scMax = document.createElement('div'),
         scSufficient = document.createElement('div'),
