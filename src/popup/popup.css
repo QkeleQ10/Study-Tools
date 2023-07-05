@@ -559,13 +559,15 @@ input[type=range]:active::-webkit-slider-thumb {
 }
 
 label:hover .select.collapse>*[data-selected=true],
-.select>button:hover, label.has-image-picker:hover button {
+.select>button:hover,
+label.has-image-picker:hover button {
     scale: 1.02;
     box-shadow: 0px 5px 10px -8px var(--shadow);
 }
 
 label:active .select.collapse>*[data-selected=true],
-.select>button:active, label.has-image-picker:active button {
+.select>button:active,
+label.has-image-picker:active button {
     scale: .98;
     box-shadow: 0px 3px 5px -4px var(--shadow);
 }
@@ -941,6 +943,10 @@ input#magister-css-luminance {
 }
 
 @-moz-document url-prefix() {
+    label.nofirefox {
+        display: none;
+    }
+
     input[type="checkbox"]:checked:after {
         font-size: 20px;
     }

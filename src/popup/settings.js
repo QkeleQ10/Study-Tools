@@ -329,7 +329,7 @@ const settingsBuilder = [
                 title: "Gamificatie",
                 subtitle: "Op de pagina 'Vandaag' kun je jouw punten bekijken. Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
                 default: false,
-                class: 'beta',
+                class: 'beta nofirefox',
                 require: "beta-options magister-css-experimental",
             },
         ]

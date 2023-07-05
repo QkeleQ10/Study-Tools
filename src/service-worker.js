@@ -19,9 +19,23 @@ async function init() {
     }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
 }
 
-chrome.runtime.onMessage.addListener(
-    (request, sender, sendResponse) => {
-        sendResponse({ token, userId })
-        console.info("Sent user token and user ID to content script.")
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    switch (request.action) {
+        case 'getTokenAndId':
+            sendResponse({ token, userId })
+            console.info("Sent user token and user ID to content script.")
+            return true
+
+        case 'waitForRequestCompleted':
+            chrome.webRequest.onCompleted.addListener((details) => {
+                sendResponse({ status: 'completed', details: details })
+            }, { urls: ['*://*.magister.net/api/personen/*/aanmeldingen/*/cijfers/extracijferkolominfo/*'] })
+            setTimeout(() => {
+                sendResponse({ status: 'timeout' })
+            }, 5000)
+            return true
+
+        default:
+            break;
     }
-)
+})

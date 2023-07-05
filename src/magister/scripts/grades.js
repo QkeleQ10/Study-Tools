@@ -443,6 +443,8 @@ async function gradeBackup() {
     bkBusyAdLink.target = '_blank'
 
     bkExport.addEventListener('click', async () => {
+        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) return showSnackbar("Cijferexport wordt niet ondersteund op Firefox. Probeer het op een andere browser, zoals Microsoft Edge of Google Chrome.")
+
         let modal = element('dialog', 'st-cf-bk-mode-dialog', document.body, { class: 'st-overlay' }),
             title = element('span', 'st-opts-t', modal, { class: 'st-title', innerText: "Kies een back-upmethode" }),
             wrapper = element('div', 'st-opts', modal),
@@ -460,7 +462,7 @@ async function gradeBackup() {
             }, { once: true })
         })
         modal.close()
-        timeoutOffset = userChoice === 'accurate' ? 100 : -30
+        timeoutOffset = userChoice === 'accurate' ? 100 : -20
 
         bkExport.disabled = true
         bkExport.dataset.busy = true
@@ -594,6 +596,9 @@ async function gradeBackup() {
 
             td.dispatchEvent(new Event('pointerdown', { bubbles: true }))
             td.dispatchEvent(new Event('pointerup', { bubbles: true }))
+
+            let requestResult = await chrome.runtime.sendMessage({ action: 'waitForRequestCompleted' })
+            if (requestResult.status === 'timeout') showSnackbar("Time-out: de service worker gaf geen terugkoppeling.", 2000)
 
             setTimeout(async () => {
                 result = gradeResult.innerText
