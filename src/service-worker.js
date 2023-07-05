@@ -1,5 +1,6 @@
 let token,
-    userId
+    userId,
+    signOnId
 
 init()
 async function init() {
@@ -21,9 +22,9 @@ async function init() {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
-        case 'getTokenAndId':
+        case 'getCredentials':
             sendResponse({ token, userId })
-            console.info("Sent user token and user ID to content script.")
+            console.info("Sent user token, user ID and sign-on ID to content script.")
             return true
 
         case 'waitForRequestCompleted':

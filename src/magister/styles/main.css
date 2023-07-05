@@ -13,6 +13,7 @@ div.loading-overlay {
     max-width: none;
     max-height: none;
     background: var(--st-background-overlay);
+    color: var(--st-foreground-primary);
     margin: 0;
     padding: 32px 24px 16px 24px;
     border: none;
@@ -70,6 +71,7 @@ span.st-title:after {
 
 span.st-subtitle {
     font: 14px var(--st-font-family-secondary) !important;
+    color: var(--st-foreground-primary);
 }
 
 #st-snackbars:has(div.open) {
