@@ -388,6 +388,7 @@ async function formulateGradeAdvice(means, weight, mean) {
 }
 
 // Page 'Cijferoverzicht', backup
+// This needs a rework!!
 async function gradeBackup() {
     if (!syncedStorage['magister-cf-backup']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
@@ -422,7 +423,7 @@ async function gradeBackup() {
     document.body.append(bkExport, bkImport, bkBusyAd)
     bkExport.classList.add('st-button')
     bkExport.id = 'st-cf-bk-export'
-    bkExport.innerText = "Exporteren"
+    bkExport.innerText = "Exporteren (bèta)"
     bkExport.dataset.icon = ''
     bkImport.classList.add('st-button')
     bkImport.id = 'st-cf-bk-import'
@@ -450,11 +451,6 @@ async function gradeBackup() {
         bkExport.dataset.busy = true
         bkBusyAd.style.display = 'grid'
         list = []
-        let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
-            array = [...nodeList],
-            message = `Cijfers verzamelen en toevoegen aan back-upbestand... Er zijn ${array.length} items om te controleren. ${array.length > 250 ? "Dit kan even duren." : ''}`
-
-        showSnackbar(message, 8000)
 
         let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
             token = response?.token || await getFromStorage('token', 'local'),
@@ -462,8 +458,10 @@ async function gradeBackup() {
         console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
         const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } })
-        if (yearsRes.status >= 400 && yearsRes.status < 600) return showSnackbar("Fout " + yearsRes.status)
+        if (yearsRes.status >= 400 && yearsRes.status < 600) return showSnackbar("Fout " + yearsRes.status + ". Vernieuw de pagina en probeer het opnieuw.")
         const yearsArray = (await yearsRes.json()).items
+
+        document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
 
         let modal = element('dialog', 'st-cf-bk-year-dialog', document.body, { class: 'st-overlay' }),
             title = element('span', 'st-opts-t', modal, { class: 'st-title', innerText: "Leerjaar kiezen" }),
@@ -473,15 +471,24 @@ async function gradeBackup() {
             modal.showModal()
             yearsArray.forEach((year, i) => {
                 const opt = element('button', `st-opt-${year.id}`, wrapper, { class: 'st-button', innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
-                opt.addEventListener('click', () => { resolve(year) }, { once: true })
+                opt.addEventListener('click', () => { resolve({ ...year, i }) }, { once: true })
             })
         }),
             yearId = year.id
         modal.close()
 
-        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${yearId}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`, { headers: { Authorization: token } })
+        let yearElement = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${year.i + 1})`)
+        yearElement.click()
+
+        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${yearId}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
         if (gradesRes.status >= 400 && gradesRes.status < 600) return showSnackbar("Fout " + gradesRes.status)
-        const gradesArray = (await gradesRes.json()).Items
+        const gradesJson = await gradesRes.json()
+        const gradesArray = gradesJson.Items
+
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
+            array = [...nodeList]
 
         list = await Promise.all(array.map(async (td, i) => {
             return new Promise(async (resolve, reject) => {
@@ -500,8 +507,9 @@ async function gradeBackup() {
                     })
                 } else {
                     let columnComponents = td.firstElementChild?.id.replace(/(\w+)\1+/g, '$1').split('_'),
-                        columnName = columnComponents[0] + columnComponents[1].padStart(3, '0'),
-                        gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
+                        columnName = columnComponents[0] + columnComponents[1].padStart(3, '0')
+
+                    let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
 
                     let result = gradeBasis.CijferStr
 
@@ -524,6 +532,7 @@ async function gradeBackup() {
             a = document.createElement("a")
         a.download = `Cijferlijst ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`;
         a.href = uri
+        a.type = 'application/json'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
