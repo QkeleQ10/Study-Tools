@@ -304,7 +304,7 @@ label.beta:before {
     position: absolute;
 }
 
-label.has-checkbox {
+label.has-switch {
     grid-template: 'title input' / 1fr 40px;
     cursor: pointer;
 }
@@ -387,7 +387,7 @@ label>input {
     grid-area: input;
 }
 
-input[type="checkbox"] {
+input[type="switch"] {
     appearance: none;
     width: 40px;
     height: 24px;
@@ -399,7 +399,7 @@ input[type="checkbox"] {
     box-shadow: 0px 6px 16px -8px var(--shadow);
 }
 
-input[type="checkbox"]:after {
+input[type="switch"]:after {
     display: block;
     content: 'close';
     font-family: 'material-icons';
@@ -413,7 +413,7 @@ input[type="checkbox"]:after {
     transition: translate 400ms cubic-bezier(0.34, 1.56, 0.64, 1), scale 200ms;
 }
 
-input[type="checkbox"]:checked:after {
+input[type="switch"]:checked:after {
     background: var(--color);
     color: #fff;
     content: 'done';
@@ -423,17 +423,17 @@ input[type="checkbox"]:checked:after {
     vertical-align: middle;
 }
 
-label:hover input[type="checkbox"] {
+label:hover input[type="switch"] {
     scale: 1.1;
     box-shadow: 0px 8px 20px -8px var(--shadow);
 }
 
-label:active input[type="checkbox"] {
+label:active input[type="switch"] {
     scale: .9;
     box-shadow: 0px 3px 8px -4px var(--shadowActive);
 }
 
-label:active input[type="checkbox"]:after {
+label:active input[type="switch"]:after {
     scale: .65;
 }
 
@@ -947,7 +947,7 @@ input#magister-css-luminance {
         display: none;
     }
 
-    input[type="checkbox"]:checked:after {
+    input[type="switch"]:checked:after {
         font-size: 20px;
     }
 

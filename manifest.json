@@ -32,7 +32,7 @@
             ],
             "js": [
                 "src/util.js",
-                "src/popup/settings.js"
+                "src/popup/dist/settings.js"
             ],
             "css": [
                 "src/util.css"
@@ -97,12 +97,12 @@
             "300": "icons/300.png",
             "512": "icons/512.png"
         },
-        "default_popup": "src/popup/popup.html",
+        "default_popup": "src/popup/dist/index.html",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
-    "options_page": "src/popup/popup.html",
+    "options_page": "src/popup/dist/index.html",
     "options_ui": {
-        "page": "src/popup/popup.html",
+        "page": "src/popup/dist/index.html",
         "open_in_tab": true
     },
     "permissions": [

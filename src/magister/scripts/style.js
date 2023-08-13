@@ -156,7 +156,7 @@ html {
 .k-widget,
 body,
 div.loading-overlay,
-input[type=checkbox]+label span,
+input[type=switch]+label span,
 .agenda-lesdashboard .lesvak-prev-next .content-auto .list li:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto .list a:hover,
 .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.prev:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.next:hover {
     background: var(--st-background-primary) !important
@@ -345,7 +345,7 @@ form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
 .projects li.selected, .projects li:hover,
 .studiewijzer-onderdeel div.content ul>li,
 table.table-grid-layout,
-input[type=checkbox]+label span, 
+input[type=switch]+label span, 
 .collapsed-menu .popup-menu,
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,

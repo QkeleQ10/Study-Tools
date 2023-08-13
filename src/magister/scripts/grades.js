@@ -815,7 +815,7 @@ async function gradeStatistics() {
         scYearFilterWrapper.append(input, label)
         label.innerText = year.innerText
         label.setAttribute('for', `st-cf-sc-year-${index}`)
-        setAttributes(input, { type: 'checkbox', id: `st-cf-sc-year-${index}` })
+        setAttributes(input, { type: 'switch', id: `st-cf-sc-year-${index}` })
         if (index === 0) input.checked = true
         input.addEventListener('input', async () => {
             if (!grades[index]) {

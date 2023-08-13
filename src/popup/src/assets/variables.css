@@ -1,0 +1,52 @@
+:root {
+    --palette-primary-hue: 207;
+    --palette-primary-saturation: 95%;
+    --palette-primary-luminance: 55%;
+
+    --palette-secondary-hue: calc(var(--palette-primary-hue) + 30);
+    --palette-secondary-saturation: 50%;
+
+    --palette-neutral-hue: var(--palette-primary-hue);
+    --palette-neutral-saturation: 30%;
+
+    --palette-neutral-variant-hue: var(--palette-neutral-hue);
+    --palette-neutral-variant-saturation: 30%;
+
+    --color-primary: hsl(var(--palette-primary-hue) var(--palette-primary-saturation) 40%);
+    --color-on-primary: hsl(var(--palette-primary-hue) var(--palette-primary-saturation) 100%);
+    --color-on-primary-container: hsl(var(--palette-primary-hue) var(--palette-primary-saturation) 10%);
+    --color-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 90%);
+    --color-on-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 10%);
+    --color-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 98%);
+    --color-surface-container: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 94%);
+    --color-surface-container-highest: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 90%);
+    --color-on-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 10%);
+    --color-on-surface-variant: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 30%);
+    --color-outline: hsl(var(--palette-neutral-variant-hue) var(--palette-neutral-variant-saturation) 50%);
+
+    --typescale-title-large: 400 22px/28px 'Noto Sans', sans-serif;
+    --typescale-label-large: 500 14px/20px 'Noto Sans', sans-serif;
+    --typescale-label-medium: 500 12px/16px 'Noto Sans', sans-serif;
+
+    --mg-blue: hsl(207, 95%, 55%);
+    --mg-orange: hsl(30, 100%, 51%);
+    --mg-alt-green: hsl(161deg, 51%, 41%);
+    --mg-alt-yellow: hsl(40deg, 51%, 41%);
+    --mg-alt-red: hsl(360deg, 51%, 41%);
+    --mg-alt-pink: hsl(331deg, 51%, 41%);
+    --mg-alt-purple: hsl(266deg, 51%, 41%);
+}
+
+:root[theme=dark] {
+    --color-primary: hsl(var(--palette-primary-hue) var(--palette-primary-saturation) 80%);
+    --color-on-primary: hsl(var(--palette-primary-hue) var(--palette-primary-saturation) 20%);
+    --color-on-primary-container: hsl(var(--palette-primary-hue) var(--palette-primary-saturation) 90%);
+    --color-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 30%);
+    --color-on-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 90%);
+    --color-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 6%);
+    --color-surface-container: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 12%);
+    --color-surface-container-highest: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 22%);
+    --color-on-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 90%);
+    --color-on-surface-variant: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 80%);
+    --color-outline: hsl(var(--palette-neutral-variant-hue) var(--palette-neutral-variant-saturation) 60%);
+}
