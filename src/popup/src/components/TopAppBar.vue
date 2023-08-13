@@ -8,28 +8,30 @@
 </template>
 
 <style>
-header#top-app-bar {
+#top-app-bar {
     position: fixed;
     width: 100%;
+    box-sizing: border-box;
     background-color: var(--color-surface);
     height: 64px;
     padding-inline: 16px;
     display: flex;
     align-items: center;
+    z-index: 9999;
     transition: background-color 200ms;
 }
 
-header#top-app-bar[data-scrolled=true] {
+#top-app-bar[data-scrolled=true] {
     background-color: var(--color-surface-container);
 }
 
-h1#app-heading {
+#app-heading {
     font: var(--typescale-title-large);
     color: var(--color-on-surface);
     margin: 0;
 }
 
-h1#app-heading:after {
+#app-heading:after {
     content: '.';
     color: var(--mg-orange);
 }

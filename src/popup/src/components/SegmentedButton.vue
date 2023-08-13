@@ -1,7 +1,7 @@
 <script setup>
+/* eslint-disable */
 import Icon from './Icon.vue';
 
-/* eslint-disable */
 import { computed } from 'vue'
 
 const props = defineProps(['modelValue', 'id', 'options'])
@@ -19,23 +19,26 @@ const value = computed({
 
 <template>
     <div class="setting segmented-button">
-        <label :for="id">
-            <div>
-                <h3 class="setting-title">
-                    <slot name="title"></slot>
-                </h3>
-                <span class="setting-subtitle">
-                    <slot name="subtitle"></slot>
-                </span>
-                <div class="button-wrapper">
-                    <button v-for="option in options" class="button-segment" @click="value = option.value"
-                        :data-state="option.value === value">
-                        <Icon class="button-segment-icon" v-if="option.icon">{{ option.icon }}</Icon>
-                        <span class="button-segment-text">{{ option.title }}</span>
-                    </button>
+        <h3 class="setting-title">
+            <slot name="title"></slot>
+        </h3>
+        <span class="setting-subtitle">
+            <slot name="subtitle"></slot>
+        </span>
+        <div class="button-wrapper">
+            <button v-for="option in options" class="button-segment" @click="value = option.value"
+                :data-state="option.value === value" :data-has-icon="!!option.icon">
+                <div class="button-segment-icon-wrapper">
+                    <Transition name="icon">
+                        <Icon key="selected" v-if="option.value === value" class="button-segment-icon selected">check
+                        </Icon>
+                        <Icon key="icon" v-else-if="option.icon" class="button-segment-icon">{{ option.icon }}
+                        </Icon>
+                    </Transition>
                 </div>
-            </div>
-        </label>
+                <span class="button-segment-text">{{ option.title }}</span>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -43,12 +46,14 @@ const value = computed({
 .button-wrapper {
     display: flex;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .button-segment {
-    display: flex;
+    display: grid;
     align-items: center;
     justify-content: center;
+    grid-template-columns: 0px auto;
     gap: 8px;
     flex: 1 1 0px;
     height: 40px;
@@ -59,7 +64,7 @@ const value = computed({
     border-right: none;
     cursor: pointer;
     background-color: transparent;
-    transition: background-color 200ms;
+    transition: background-color 200ms, grid-template-columns 200ms;
 }
 
 .button-segment:first-of-type {
@@ -77,7 +82,21 @@ const value = computed({
     background-color: var(--color-secondary-container);
 }
 
+.button-segment[data-has-icon=true],
+.button-segment:has(.button-segment-icon:not(.icon-leave-active)) {
+    grid-template-columns: 18px auto;
+}
+
+.button-segment-icon-wrapper {
+    position: relative;
+    width: 18px;
+    height: 18px;
+}
+
 .button-segment-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
     font-size: 18px;
     scale: 1.2;
     color: var(--color-on-surface);
@@ -96,5 +115,16 @@ const value = computed({
 
 .button-segment[data-state=true] .button-segment-text {
     color: var(--color-on-secondary-container);
+}
+
+.icon-enter-active,
+.icon-leave-active {
+    transition: opacity 100ms, font-variation-settings 200ms;
+}
+
+.icon-enter-from,
+.icon-leave-to {
+    opacity: 0;
+    font-variation-settings: 'wght' 0;
 }
 </style>

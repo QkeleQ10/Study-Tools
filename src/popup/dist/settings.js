@@ -1,6 +1,6 @@
 export default [
     {
-        id: "section-magister-color",
+        id: "appearance",
         group: "Magister",
         title: "Thema",
         settings: [
@@ -36,7 +36,7 @@ export default [
                 ]
             },
             {
-                id: "color-picker",
+                id: "color",
                 title: "Accentkleur",
                 version: "2.3.4",
                 type: "ColorPicker",
@@ -65,7 +65,7 @@ export default [
         ]
     },
     {
-        id: "section-magister-login",
+        id: "login",
         group: "Magister",
         title: "Inloggen",
         wizard: "Kies de manier van inloggen op je school om automatisch inloggen in te schakelen.",
@@ -73,16 +73,17 @@ export default [
             {
                 id: "magisterLogin-method",
                 title: "Automatisch inloggen",
+                subtitle: "Log automatisch in met je Microsoft-account of met een Magister-wachtwoord.",
                 type: "SegmentedButton",
                 default: "microsoft",
                 options: [
                     {
                         value: "microsoft",
-                        title: "Met een Microsoft-account"
+                        title: "Microsoft"
                     },
                     {
                         value: "password",
-                        title: "Met een Magister-wachtwoord",
+                        title: "Wachtwoord",
                     },
                     {
                         value: "off",
@@ -179,15 +180,18 @@ export default [
                 options: [
                     {
                         value: "show",
-                        title: "Originele profielfoto"
+                        title: "Schoolfoto",
+                        icon: "photo_camera_front"
                     },
                     {
                         value: "custom",
-                        title: "Aangepaste profielfoto"
+                        title: "Aangepast",
+                        icon: "add_photo_alternate"
                     },
                     {
                         value: "hide",
-                        title: "Geen profielfoto"
+                        title: "Verbergen",
+                        icon: "visibility_off"
                     },
                 ],
             },
@@ -206,7 +210,7 @@ export default [
         settings: [
             {
                 id: "magister-vd-overhaul",
-                title: "Verbeterde pagina 'Vandaag'",
+                title: "Verbeterd startscherm",
                 default: true,
                 require: "magister-css-experimental",
             },
@@ -230,22 +234,26 @@ export default [
             },
             {
                 id: "magister-vd-grade",
-                title: "Weergave laatste cijfers",
+                title: "Laatste cijfer op startscherm",
+                subtitle: "Toon het laatste cijfer op het startscherm, laat alleen zien hoeveel nieuwe cijfers er zijn of toon helemaal niets.",
                 type: "SegmentedButton",
                 default: "full",
                 require: "magister-css-experimental magister-vd-overhaul",
                 options: [
                     {
                         value: "full",
-                        title: "Volledig (cijfer weergeven)"
+                        title: "Volledig",
+                        icon: "star"
                     },
                     {
                         value: "partial",
-                        title: "Gedeeltelijk (cijfer verbergen)"
+                        title: "Aantal",
+                        icon: "app_badging"
                     },
                     {
                         value: "off",
-                        title: "Uit"
+                        title: "Verbergen",
+                        icon: "visibility_off"
                     },
                 ]
             },
@@ -289,22 +297,25 @@ export default [
         settings: [
             {
                 id: "magister-sw-display",
-                title: "Weergave studiewijzers",
+                title: "Studiewijzers ordenen",
                 type: "SegmentedButton",
                 require: "magister-css-experimental",
                 default: "grid",
                 options: [
                     {
                         value: "grid",
-                        title: "Geordend raster"
+                        title: "Raster",
+                        icon: "grid_view"
                     },
                     {
                         value: "list",
-                        title: "Geordende lijst"
+                        title: "Lijst",
+                        icon: "sort"
                     },
                     {
                         value: "off",
-                        title: "Origineel"
+                        title: "Uit",
+                        icon: "block"
                     },
                 ]
             },
@@ -338,7 +349,7 @@ export default [
         ]
     },
     {
-        id: "section-magister-values",
+        id: "data",
         group: "Magister",
         title: "Globale waarden",
         settings: [
@@ -385,7 +396,7 @@ export default [
         ]
     },
     {
-        id: "section-dev",
+        id: "about",
         group: "Study Tools",
         title: "Opties",
         settings: [

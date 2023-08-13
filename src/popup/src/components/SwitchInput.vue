@@ -1,7 +1,7 @@
 <script setup>
+/* eslint-disable */
 import Icon from './Icon.vue';
 
-/* eslint-disable */
 import { computed } from 'vue'
 
 const props = defineProps(['modelValue', 'id'])

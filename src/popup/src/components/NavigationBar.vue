@@ -1,7 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+/* eslint-disable */
+import { ref } from 'vue'
 
-import Icon from './Icon.vue';
+import Icon from './Icon.vue'
+
+defineProps(['modelValue'])
+defineEmits(['update:modelValue'])
 
 const tabs = [
     {
@@ -30,15 +34,13 @@ const tabs = [
         icon: 'info'
     }
 ]
-
-let selectedTab = ref('appearance')
 </script>
 
 <template>
     <div id="navigation-bar">
-        <div v-for="item in tabs" :key="item.id" class="navigation-item" @click="selectedTab = item.id" :active="item.id === selectedTab">
-            <div class="navigation-item-icon-wrapper" :active="item.id === selectedTab">
-                <Icon :filled="item.id === selectedTab">{{ item.icon }}</Icon>
+        <div v-for="item in tabs" :key="item.id" class="navigation-item" @click="$emit('update:modelValue', item.id)" :active="item.id === modelValue">
+            <div class="navigation-item-icon-wrapper" :active="item.id === modelValue">
+                <Icon :filled="item.id === modelValue">{{ item.icon }}</Icon>
             </div>
             <span>{{ item.name }}</span>
         </div>
@@ -50,13 +52,14 @@ let selectedTab = ref('appearance')
     position: fixed;
     bottom: 0;
     width: 100%;
-    /* height: 80px; */
+    box-sizing: border-box;
     padding-top: 12px;
     padding-bottom: 16px;
     display: flex;
     align-items: center;
     justify-content: stretch;
     gap: 8px;
+    z-index: 9999;
     background-color: var(--color-surface-container);
 }
 
