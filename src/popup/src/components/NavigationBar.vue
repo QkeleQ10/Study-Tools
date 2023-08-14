@@ -19,14 +19,14 @@ const tabs = [
         icon: 'key'
     },
     {
-        id: 'functions',
-        name: 'Functies',
-        icon: 'widgets'
+        id: 'enhancements',
+        name: 'Verbeteringen',
+        icon: 'handyman'
     },
     {
-        id: 'data',
-        name: 'Waarden',
-        icon: 'dataset'
+        id: 'overlay',
+        name: 'Overlay',
+        icon: 'layers'
     },
     {
         id: 'about',

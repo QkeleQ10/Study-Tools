@@ -4,7 +4,7 @@ import Icon from './Icon.vue';
 
 import { computed } from 'vue'
 
-const props = defineProps(['modelValue', 'id', 'options'])
+const props = defineProps(['modelValue', 'id', 'setting'])
 const emit = defineEmits(['update:modelValue'])
 
 const value = computed({
@@ -26,7 +26,7 @@ const value = computed({
             <slot name="subtitle"></slot>
         </span>
         <div class="button-wrapper">
-            <button v-for="option in options" class="button-segment" @click="value = option.value"
+            <button v-for="option in setting.options" class="button-segment" @click="value = option.value"
                 :data-state="option.value === value" :data-has-icon="!!option.icon">
                 <div class="button-segment-icon-wrapper">
                     <Transition name="icon">

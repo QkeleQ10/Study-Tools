@@ -6,8 +6,7 @@ export function useSyncedStorage() {
     let syncedStorage = ref({})
 
     onMounted(async () => {
-        if (!chrome) return
-        syncedStorage.value = await chrome.storage.sync.get()
+        if (chrome?.storage?.sync) syncedStorage.value = await chrome.storage.sync.get()
     })
 
     return syncedStorage

@@ -1,15 +1,14 @@
 export default [
     {
         id: "appearance",
-        group: "Magister",
-        title: "Thema",
         settings: [
-            {
-                id: "magister-css-experimental",
-                title: "Verbeteringen aan uiterlijk",
-                subtitle: "Veel functies van Study Tools werken mogelijk niet goed als dit is uitgeschakeld.",
-                default: true,
-            },
+            // THIS ONE NEEDS TO BE INVERTED AND PLACED UNDER DEV OPTIONS!
+            // {
+            //     id: "magister-css-experimental",
+            //     title: "Verbeteringen aan uiterlijk",
+            //     subtitle: "Veel functies van Study Tools werken mogelijk niet goed als dit is uitgeschakeld.",
+            //     default: true,
+            // },
             {
                 id: "magister-css-theme",
                 title: "Kleurenthema",
@@ -55,19 +54,58 @@ export default [
                 step: 1,
                 require: "magister-css-experimental",
             },
+            // DEV OPTION?
+            // {
+            //     id: "magister-css-dark-invert",
+            //     title: "Inhoud donker maken",
+            //     subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
+            //     default: true,
+            //     require: "magister-css-experimental",
+            // },
             {
-                id: "magister-css-dark-invert",
-                title: "Inhoud donker maken",
-                subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
+                id: "magister-appbar-week",
+                title: "Weeknummer in zijbalk",
                 default: true,
-                require: "magister-css-experimental",
+            },
+            {
+                id: 'magister-picture',
+                title: "Profielfoto",
+                type: "SegmentedButton",
+                default: 'hide',
+                options: [
+                    {
+                        value: "show",
+                        title: "Schoolfoto",
+                        icon: "photo_camera_front"
+                    },
+                    {
+                        value: "custom",
+                        title: "Aangepast",
+                        icon: "add_photo_alternate"
+                    },
+                    {
+                        value: "hide",
+                        title: "Verbergen",
+                        icon: "visibility_off"
+                    },
+                ],
+            },
+            {
+                id: 'magister-picture-source',
+                title: "Aangepaste profielfoto",
+                type: "ImageInput",
+                require: 'magister-picture===custom',
+            },
+            {
+                id: "magister-cf-failred",
+                title: "Onvoldoendes rood kleuren",
+                subtitle: "Alleen in het cijferoverzicht.",
+                default: true,
             },
         ]
     },
     {
         id: "login",
-        group: "Magister",
-        title: "Inloggen",
         wizard: "Kies de manier van inloggen op je school om automatisch inloggen in te schakelen.",
         settings: [
             {
@@ -115,9 +153,161 @@ export default [
         ]
     },
     {
-        id: "section-magister-overlay",
-        group: "Magister",
-        title: "Overlay",
+        id: "enhancements",
+        settings: [
+            {
+                id: "magister-vd-overhaul",
+                title: "Verbeterd startscherm",
+                default: true,
+                require: "magister-css-experimental",
+            },
+            {
+                id: "magister-vd-agendaHeight",
+                title: "Hoogte agenda",
+                type: "SlideInput",
+                default: 1,
+                defaultFormatted: "1,0×",
+                suffix: "×",
+                min: 0.5,
+                max: 2.5,
+                step: 0.1,
+                require: "magister-css-experimental magister-vd-overhaul",
+            },
+            // TURN THIS INTO A SEGMENTEDBUTTON
+            // {
+            //     id: "magister-vd-subjects",
+            //     title: "Aangepaste vaknamen",
+            //     default: true,
+            //     require: "magister-css-experimental magister-vd-overhaul",
+            // },
+            // {
+            //     id: "magister-vd-subjects",
+            //     title: "Vaknotatie in agenda",
+            //     type: "SegmentedButton",
+            //     default: "true",
+            //     require: "magister-css-experimental magister-vd-overhaul",
+            //     options: [
+            //         {
+            //             value: "custom",
+            //             title: "Vaknamen",
+            //             icon: "notes"
+            //         },
+            //         {
+            //             value: "default",
+            //             title: "Vakafkortingen",
+            //             icon: "short_text"
+            //         },
+            //     ],
+            // },
+            {
+                id: "magister-vd-grade",
+                title: "Laatste cijfer op startscherm",
+                subtitle: "Toon het laatste cijfer op het startscherm, laat alleen zien hoeveel nieuwe cijfers er zijn of toon helemaal niets.",
+                type: "SegmentedButton",
+                default: "full",
+                require: "magister-css-experimental magister-vd-overhaul",
+                options: [
+                    {
+                        value: "full",
+                        title: "Volledig",
+                        icon: "star"
+                    },
+                    {
+                        value: "partial",
+                        title: "Aantal",
+                        icon: "app_badging"
+                    },
+                    {
+                        value: "off",
+                        title: "Verbergen",
+                        icon: "visibility_off"
+                    },
+                ]
+            },
+            {
+                id: "magister-cf-calculator",
+                title: "Cijfercalculator",
+                subtitle: "Een handige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-cf-statistics",
+                title: "Cijferstatistieken",
+                subtitle: "Verscheidene statistieken en grafiekjes bij je cijfers, met handige filters. Te vinden onder het nieuwe tabblad in de zijbalk van het cijferoverzicht.",
+                default: true,
+            },
+            // ADD A LINK TO THE WEBSITE!
+            {
+                id: "magister-cf-backup",
+                title: "Cijferback-up",
+                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren. Gebruik met de knop rechtsboven in het cijferoverzicht.",
+                default: true,
+            },
+            {
+                id: "magister-sw-display",
+                title: "Studiewijzers ordenen",
+                type: "SegmentedButton",
+                require: "magister-css-experimental",
+                default: "grid",
+                options: [
+                    {
+                        value: "grid",
+                        title: "Raster",
+                        icon: "grid_view"
+                    },
+                    {
+                        value: "list",
+                        title: "Lijst",
+                        icon: "sort"
+                    },
+                    {
+                        value: "off",
+                        title: "Uit",
+                        icon: "block"
+                    },
+                ]
+            },
+            {
+                id: "magister-sw-period",
+                title: "Periodenummers bij studiewijzers",
+                subtitle: "In plaats van de naam van de studiewijzer.",
+                default: true,
+                require: "magister-css-experimental magister-sw-display===grid",
+            },
+            // MAKE THIS A SEGMENTEDBUTTON
+            // {
+            //     id: "magister-sw-thisWeek",
+            //     title: "Naar huidige week in studiewijzer",
+            //     default: true,
+            // },
+            // {
+            //     id: "magister-sw-thisWeek",
+            //     title: "Huidige week in studiewijzer",
+            //     type: "SegmentedButton",
+            //     require: "magister-css-experimental",
+            //     default: "focus",
+            //     options: [
+            //         {
+            //             value: "focus",
+            //             title: "Scrollen",
+            //             icon: "bolt"
+            //         },
+            //         {
+            //             value: "highlight",
+            //             title: "Markeren",
+            //             icon: "ink_highlighter"
+            //         },
+            //         {
+            //             value: "off",
+            //             title: "Uit",
+            //             icon: "block"
+            //         },
+            //     ]
+            // },
+        ]
+    },
+    {
+        id: "overlay",
         settings: [
             {
                 id: 'magister-overlay-hotkey',
@@ -148,196 +338,8 @@ export default [
                 default: false,
                 class: 'beta',
                 require: "beta-options magister-overlay-hotkey? magister-css-experimental",
-            }
-        ]
-    },
-    {
-        id: "section-magister-sidebar",
-        group: "Magister",
-        title: "Menubalk",
-        settings: [
-            {
-                id: "magister-appbar-week",
-                title: "Weeknummer tonen",
-                default: true,
             },
-            {
-                id: "magister-appbar-zermelo",
-                title: "Link naar Zermelo tonen",
-            },
-            {
-                id: "magister-appbar-zermelo-url",
-                title: "Webadres Zermelo",
-                subtitle: "Bijvoorbeeld 'school.zportal.nl/app'. Dit hoeft alleen ingevuld te worden als er problemen optreden.",
-                type: "TextInput",
-                require: "magister-appbar-zermelo",
-            },
-            {
-                id: 'magister-picture',
-                title: "Profielfoto",
-                type: "SegmentedButton",
-                default: 'hide',
-                options: [
-                    {
-                        value: "show",
-                        title: "Schoolfoto",
-                        icon: "photo_camera_front"
-                    },
-                    {
-                        value: "custom",
-                        title: "Aangepast",
-                        icon: "add_photo_alternate"
-                    },
-                    {
-                        value: "hide",
-                        title: "Verbergen",
-                        icon: "visibility_off"
-                    },
-                ],
-            },
-            {
-                id: 'magister-picture-source',
-                title: "Aangepaste profielfoto",
-                type: "ImageInput",
-                require: 'magister-picture===custom',
-            },
-        ]
-    },
-    {
-        id: "section-magister-today",
-        group: "Magister",
-        title: "Vandaag",
-        settings: [
-            {
-                id: "magister-vd-overhaul",
-                title: "Verbeterd startscherm",
-                default: true,
-                require: "magister-css-experimental",
-            },
-            {
-                id: "magister-vd-agendaHeight",
-                title: "Hoogte agenda-items",
-                type: "SlideInput",
-                default: 1,
-                defaultFormatted: "1,0×",
-                suffix: "×",
-                min: 0.5,
-                max: 2.5,
-                step: 0.1,
-                require: "magister-css-experimental magister-vd-overhaul",
-            },
-            {
-                id: "magister-vd-subjects",
-                title: "Aangepaste vaknamen",
-                default: true,
-                require: "magister-css-experimental magister-vd-overhaul",
-            },
-            {
-                id: "magister-vd-grade",
-                title: "Laatste cijfer op startscherm",
-                subtitle: "Toon het laatste cijfer op het startscherm, laat alleen zien hoeveel nieuwe cijfers er zijn of toon helemaal niets.",
-                type: "SegmentedButton",
-                default: "full",
-                require: "magister-css-experimental magister-vd-overhaul",
-                options: [
-                    {
-                        value: "full",
-                        title: "Volledig",
-                        icon: "star"
-                    },
-                    {
-                        value: "partial",
-                        title: "Aantal",
-                        icon: "app_badging"
-                    },
-                    {
-                        value: "off",
-                        title: "Verbergen",
-                        icon: "visibility_off"
-                    },
-                ]
-            },
-        ]
-    },
-    {
-        id: "section-magister-grades",
-        group: "Magister",
-        title: "Cijfers",
-        settings: [
-            {
-                id: "magister-cf-calculator",
-                title: "Cijfercalculator",
-                subtitle: "Een handige cijfercalculator met grafieken. Je kunt cijfers uit je cijferlijst toevoegen of aangepaste cijfers invoeren. Open met de knop rechtsboven in het cijferoverzicht.",
-                default: true,
-            },
-            {
-                id: "magister-cf-statistics",
-                title: "Cijferstatistieken",
-                subtitle: "[Experimenteel] Verscheidene statistieken en grafiekjes bij je cijfers, met handige filters. Te vinden onder het nieuwe tabblad in de zijbalk van het cijferoverzicht.",
-                default: true,
-            },
-            {
-                id: "magister-cf-backup",
-                title: "Cijferback-up",
-                subtitle: "Biedt de optie om je cijferoverzicht te exporteren en op een later moment weer te importeren. Gebruik met de knop rechtsboven in het cijferoverzicht.",
-                default: true,
-            },
-            {
-                id: "magister-cf-failred",
-                title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht.",
-                default: true,
-            }
-        ]
-    },
-    {
-        id: "section-magister-studiewijzers",
-        group: "Magister",
-        title: "Studiewijzers",
-        settings: [
-            {
-                id: "magister-sw-display",
-                title: "Studiewijzers ordenen",
-                type: "SegmentedButton",
-                require: "magister-css-experimental",
-                default: "grid",
-                options: [
-                    {
-                        value: "grid",
-                        title: "Raster",
-                        icon: "grid_view"
-                    },
-                    {
-                        value: "list",
-                        title: "Lijst",
-                        icon: "sort"
-                    },
-                    {
-                        value: "off",
-                        title: "Uit",
-                        icon: "block"
-                    },
-                ]
-            },
-            {
-                id: "magister-sw-period",
-                title: "Periodenummers tonen",
-                subtitle: "In plaats van de naam van de studiewijzer.",
-                default: true,
-                require: "magister-css-experimental magister-sw-display===grid",
-            },
-            {
-                id: "magister-sw-thisWeek",
-                title: "Naar huidige week scrollen",
-                default: true,
-            }
-        ]
-    },
-    {
-        id: "section-magister-gamification-beta",
-        group: "Magister",
-        title: "Gamificatie",
-        settings: [
+            // INCORPORATE INTO THE OVERLAY
             {
                 id: "magister-gamification-beta",
                 title: "Gamificatie",
@@ -353,52 +355,51 @@ export default [
         group: "Magister",
         title: "Globale waarden",
         settings: [
-            {
-                id: "magister-periods",
-                title: "Beginweken perioden",
-                subtitle: "Het eerste weeknummer van elke periode, gescheiden door komma's.",
-                type: "TextInput",
-                default: "30, 47, 9",
-            },
-            {
-                id: "magister-subjects",
-                title: "Aangepaste vaknamen",
-                type: "subjects",
-                default: [
-                    { name: "Aardrijkskunde", aliases: "ak" },
-                    { name: "Bedrijfseconomie", aliases: "beco" },
-                    { name: "Beeldende vorming", aliases: "be, bv, kubv" },
-                    { name: "Biologie", aliases: "bi, bio" },
-                    { name: "Cult. en kunstz. vorming", aliases: "ckv" },
-                    { name: "Drama", aliases: "dr, kudr" },
-                    { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
-                    { name: "Economie", aliases: "ec, eco, econ" },
-                    { name: "Engels", aliases: "en, entl, Engels, English" },
-                    { name: "Frans", aliases: "fa, fatl, Franse, Français" },
-                    { name: "Geschiedenis", aliases: "gs" },
-                    { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
-                    { name: "Kunst algemeen", aliases: "ku, kua" },
-                    { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
-                    { name: "Levensbeschouwing", aliases: "lv" },
-                    { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
-                    { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
-                    { name: "Maatschappijleer", aliases: "ma, malv" },
-                    { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
-                    { name: "Mentor", aliases: "mentoruur, mentoraat" },
-                    { name: "Muziek", aliases: "mu, kumu" },
-                    { name: "Natuurkunde", aliases: "na, nat" },
-                    { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
-                    { name: "Scheikunde", aliases: "sk, sch" },
-                    { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
-                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
-                ]
-            }
+            // MAKE THESE AVAILABLE WHEREVER NECESSARY
+            // {
+            //     id: "magister-periods",
+            //     title: "Beginweken perioden",
+            //     subtitle: "Het eerste weeknummer van elke periode, gescheiden door komma's.",
+            //     type: "TextInput",
+            //     default: "30, 47, 9",
+            // },
+            // {
+            //     id: "magister-subjects",
+            //     title: "Aangepaste vaknamen",
+            //     type: "subjects",
+            //     default: [
+            //         { name: "Aardrijkskunde", aliases: "ak" },
+            //         { name: "Bedrijfseconomie", aliases: "beco" },
+            //         { name: "Beeldende vorming", aliases: "be, bv, kubv" },
+            //         { name: "Biologie", aliases: "bi, bio" },
+            //         { name: "Cult. en kunstz. vorming", aliases: "ckv" },
+            //         { name: "Drama", aliases: "dr, kudr" },
+            //         { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
+            //         { name: "Economie", aliases: "ec, eco, econ" },
+            //         { name: "Engels", aliases: "en, entl, Engels, English" },
+            //         { name: "Frans", aliases: "fa, fatl, Franse, Français" },
+            //         { name: "Geschiedenis", aliases: "gs" },
+            //         { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
+            //         { name: "Kunst algemeen", aliases: "ku, kua" },
+            //         { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
+            //         { name: "Levensbeschouwing", aliases: "lv" },
+            //         { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
+            //         { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
+            //         { name: "Maatschappijleer", aliases: "ma, malv" },
+            //         { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
+            //         { name: "Mentor", aliases: "mentoruur, mentoraat" },
+            //         { name: "Muziek", aliases: "mu, kumu" },
+            //         { name: "Natuurkunde", aliases: "na, nat" },
+            //         { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
+            //         { name: "Scheikunde", aliases: "sk, sch" },
+            //         { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
+            //         { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
+            //     ]
+            // }
         ]
     },
     {
         id: "about",
-        group: "Study Tools",
-        title: "Opties",
         settings: [
             {
                 id: "updates",

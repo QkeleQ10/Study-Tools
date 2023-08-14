@@ -27,11 +27,11 @@ const value = computed({
                 <span class="setting-subtitle">
                     <slot name="subtitle"></slot>
                 </span>
-                <div class="switch-track" :data-state="value">
+                <!-- <div class="switch-track" :data-state="value">
                     <div class="switch-thumb" :data-state="value">
                         <Icon class="switch-icon" :data-state="value">check</Icon>
                     </div>
-                </div>
+                </div> -->
             </div>
             <input type="range" :id="id" v-model="value">
         </label>
