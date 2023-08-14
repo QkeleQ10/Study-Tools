@@ -49,8 +49,8 @@ const tabs = [
 
 <style>
 #navigation-bar {
-    position: fixed;
-    bottom: 0;
+    /* position: fixed;
+    bottom: 0; */
     width: 100%;
     box-sizing: border-box;
     padding-top: 12px;

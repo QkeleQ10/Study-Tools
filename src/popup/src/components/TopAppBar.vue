@@ -9,7 +9,7 @@
 
 <style>
 #top-app-bar {
-    position: fixed;
+    /* position: fixed; */
     width: 100%;
     box-sizing: border-box;
     background-color: var(--color-surface);

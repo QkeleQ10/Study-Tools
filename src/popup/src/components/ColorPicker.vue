@@ -68,47 +68,47 @@ function colorsEqual(color1, color2) {
 }
 
 .swatch[data-state=true],
-.color-input[data-state=true] .box {
+.color-input.user[data-state=true] .box {
     border-radius: 50% !important;
 }
 
 .swatch:hover,
 .swatch:focus-visible,
-.color-input:hover .box,
-.color-input:focus-visible .box,
-.color-input .box.active {
+.color-input.user:hover .box,
+.color-input.user:focus-visible .box,
+.color-input.user .box.active {
     border-radius: 12px;
 }
 
-.color-input .box .inner {
-    border-radius: 0 !important;
+.color-input.user .box .inner {
+    border-radius: 0;
 }
 
-.color-input,
-.color-input .box {
+.color-input.user,
+.color-input.user .box {
     width: 100%;
     height: 100%;
 }
 
-.color-input .box {
+.color-input.user .box {
     border-radius: 0;
     transition: border-radius 200ms;
 }
 
-.color-input .box.active .inner {
+.color-input.user .box.active .inner {
     transform: none;
 }
 
-.color-input .picker-popup {
-    position: fixed !important;
+.color-input.user .picker-popup {
+    position: fixed;
     top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
+    bottom: 0;
+    left: 0;
     padding: 24px;
     border-radius: 28px 28px 0 0;
     margin: 0;
     z-index: 10001;
-    box-shadow: none !important;
+    box-shadow: none;
     background-color: var(--color-surface-container-low);
 }
 
@@ -130,7 +130,7 @@ function colorsEqual(color1, color2) {
     opacity: .3;
 }
 
-/* .color-input .picker-popup:before {
+/* .color-input.user .picker-popup:before {
     content: '';
     display: block;
     margin-block: 22px;
