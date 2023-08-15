@@ -22,24 +22,22 @@ const value = computed({
 </script>
 
 <template>
-    <div class="setting switch">
-        <label :for="id" ref="label" :class="{tall: height > 46}">
-            <div>
-                <h3 class="setting-title">
-                    <slot name="title"></slot>
-                </h3>
-                <span class="setting-subtitle">
-                    <slot name="subtitle"></slot>
-                </span>
+    <label class="setting switch" :for="id" ref="label" :class="{ tall: height > 70 }">
+        <div>
+            <h3 class="setting-title">
+                <slot name="title"></slot>
+            </h3>
+            <span class="setting-subtitle">
+                <slot name="subtitle"></slot>
+            </span>
+        </div>
+        <div class="switch-track" :data-state="value">
+            <div class="switch-thumb" :data-state="value">
+                <Icon class="switch-icon" :data-state="value">check</Icon>
             </div>
-            <div class="switch-track" :data-state="value">
-                <div class="switch-thumb" :data-state="value">
-                    <Icon class="switch-icon" :data-state="value">check</Icon>
-                </div>
-            </div>
-            <input type="checkbox" :id="id" v-model="value">
-        </label>
-    </div>
+        </div>
+        <input type="checkbox" :id="id" v-model="value">
+    </label>
 </template>
 
 <style>
@@ -48,14 +46,15 @@ const value = computed({
     initial-value: 16px;
 }
 
-.setting.switch>label {
+.setting.switch {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 16px;
     align-items: center;
+    cursor: pointer;
 }
 
-.setting.switch>label.tall {
+.setting.switch.tall {
     align-items: start;
 }
 

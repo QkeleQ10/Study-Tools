@@ -19,12 +19,14 @@ const value = computed({
 
 <template>
     <div class="setting segmented-button">
-        <h3 class="setting-title">
-            <slot name="title"></slot>
-        </h3>
-        <span class="setting-subtitle">
-            <slot name="subtitle"></slot>
-        </span>
+        <div>
+            <h3 class="setting-title">
+                <slot name="title"></slot>
+            </h3>
+            <span class="setting-subtitle">
+                <slot name="subtitle"></slot>
+            </span>
+        </div>
         <div class="button-wrapper">
             <button v-for="option in setting.options" class="button-segment" @click="value = option.value"
                 :data-state="option.value === value" :data-has-icon="!!option.icon">
@@ -43,6 +45,12 @@ const value = computed({
 </template>
 
 <style>
+.setting.segmented-button {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 6px;
+}
+
 .button-wrapper {
     display: flex;
     width: 100%;

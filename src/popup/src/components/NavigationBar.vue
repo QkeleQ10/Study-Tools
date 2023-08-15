@@ -49,8 +49,6 @@ const tabs = [
 
 <style>
 #navigation-bar {
-    /* position: fixed;
-    bottom: 0; */
     width: 100%;
     box-sizing: border-box;
     padding-top: 12px;
@@ -61,6 +59,7 @@ const tabs = [
     gap: 8px;
     z-index: 9999;
     background-color: var(--color-surface-container);
+    transition: background-color 200ms;
 }
 
 .navigation-item {

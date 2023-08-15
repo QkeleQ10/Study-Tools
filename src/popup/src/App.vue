@@ -19,6 +19,35 @@ const syncedStorage = useSyncedStorage()
 const optionTypes = { SwitchInput, SegmentedButton, SlideInput, ColorPicker }
 
 let selectedCategory = ref('appearance')
+
+function shouldShowSetting(setting) {
+    let outcome = true
+    if (setting?.conditions) {
+        setting.conditions.forEach(condition => {
+            const value = syncedStorage.value[condition.settingId]
+            switch (condition.operator) {
+                case 'equal':
+                    if (value !== condition.value) {
+                        outcome = false
+                    }
+                    break
+
+                case 'not equal':
+                    if (value === condition.value) {
+                        outcome = false
+                    }
+                    break
+
+                case 'defined':
+                    if (!value) {
+                        outcome = false
+                    }
+                    break
+            }
+        })
+    }
+    return outcome
+}
 </script>
 
 <template>
@@ -26,7 +55,8 @@ let selectedCategory = ref('appearance')
     <main id="main" ref="main">
         <TransitionGroup tag="div" id="options-container" mode="out-in">
             <div v-for="category in settings" v-show="category.id === selectedCategory" :key="category.id">
-                <component v-for="setting in category.settings" :key="setting.id" :setting="setting"
+                <component v-for="setting in category.settings" v-show="shouldShowSetting(setting)"
+                    :class="{ visible: shouldShowSetting(setting) }" :key="setting.id" :setting="setting"
                     :is="optionTypes[setting.type || 'SwitchInput']" :id="setting.id" v-model="syncedStorage[setting.id]">
                     <template #title>{{ setting.title }}</template>
                     <template #subtitle>{{ setting.subtitle }}</template>
@@ -60,7 +90,8 @@ body {
 
 main {
     height: 100%;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #options-container {
@@ -74,16 +105,17 @@ main {
     padding-block: 12px;
     background-color: var(--color-surface);
     border-bottom: 1px solid var(--color-surface-variant);
+    transition: background-color 200ms;
 }
 
-.setting:last-of-type {
+.setting.visible:not(:has(~ .setting.visible)) {
     border-bottom: none;
 }
 
 .setting-title {
     margin: 0;
     color: var(--color-on-surface);
-    font: var(--typescale-body-large); 
+    font: var(--typescale-body-large);
 }
 
 .setting-subtitle {
@@ -128,5 +160,26 @@ main {
 .bottom-sheet[active=true] {
     pointer-events: all;
     translate: 0;
+}
+
+.bottom-sheet-action {
+    height: 56px;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 16px;
+    padding-block: 8px;
+    padding-left: 16px;
+    padding-right: 24px;
+    font: var(--typescale-body-large);
+    color: var(--color-on-surface);
+    background-color: transparent;
+    border: none;
+}
+
+.bottom-sheet-action .icon {
+    color: var(--color-on-surface-variant);
+    font-size: 24px;
 }
 </style>

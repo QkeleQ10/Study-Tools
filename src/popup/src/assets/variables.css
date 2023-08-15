@@ -26,6 +26,7 @@
     --color-on-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 10%);
     --color-on-surface-variant: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 30%);
     --color-outline: hsl(var(--palette-neutral-variant-hue) var(--palette-neutral-variant-saturation) 50%);
+    --color-outline-variant: hsl(var(--palette-neutral-variant-hue) var(--palette-neutral-variant-saturation) 80%);
     --color-scrim: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 0%);
 
     --typescale-headline-small: 400 24px/32px 'Noto Sans', sans-serif;
@@ -42,6 +43,8 @@
     --mg-alt-red: hsl(360deg, 51%, 41%);
     --mg-alt-pink: hsl(331deg, 51%, 41%);
     --mg-alt-purple: hsl(266deg, 51%, 41%);
+
+    color-scheme: only light;
 }
 
 :root[theme~=dark] {
@@ -59,5 +62,8 @@
     --color-on-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 90%);
     --color-on-surface-variant: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 80%);
     --color-outline: hsl(var(--palette-neutral-variant-hue) var(--palette-neutral-variant-saturation) 60%);
+    --color-outline-variant: hsl(var(--palette-neutral-variant-hue) var(--palette-neutral-variant-saturation) 30%);
     --color-scrim: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 0%);
+
+    color-scheme: only dark;
 }

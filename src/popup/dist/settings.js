@@ -10,7 +10,7 @@ export default [
             //     default: true,
             // },
             {
-                id: "magister-css-theme",
+                id: "theme",
                 title: "Kleurenthema",
                 type: "SegmentedButton",
                 wizard: "Kies in welk kleurenthema Magister moet worden weergegeven.",
