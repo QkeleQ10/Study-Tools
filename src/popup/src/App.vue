@@ -73,6 +73,23 @@ main {
     padding-right: 24px;
     padding-block: 12px;
     background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-surface-variant);
+}
+
+.setting:last-of-type {
+    border-bottom: none;
+}
+
+.setting-title {
+    margin: 0;
+    color: var(--color-on-surface);
+    font: var(--typescale-body-large); 
+}
+
+.setting-subtitle {
+    margin: 0;
+    color: var(--color-on-surface-variant);
+    font: var(--typescale-body-medium);
 }
 
 .scrim {

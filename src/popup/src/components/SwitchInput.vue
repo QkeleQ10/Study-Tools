@@ -1,11 +1,15 @@
 <script setup>
 /* eslint-disable */
-import Icon from './Icon.vue';
+import { ref, computed } from 'vue'
+import { useElementSize } from '@vueuse/core'
 
-import { computed } from 'vue'
+import Icon from './Icon.vue'
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
+
+const label = ref(null)
+const { width, height } = useElementSize(label)
 
 const value = computed({
     get() {
@@ -19,7 +23,7 @@ const value = computed({
 
 <template>
     <div class="setting switch">
-        <label :for="id">
+        <label :for="id" ref="label" :class="{tall: height > 46}">
             <div>
                 <h3 class="setting-title">
                     <slot name="title"></slot>
@@ -27,10 +31,10 @@ const value = computed({
                 <span class="setting-subtitle">
                     <slot name="subtitle"></slot>
                 </span>
-                <div class="switch-track" :data-state="value">
-                    <div class="switch-thumb" :data-state="value">
-                        <Icon class="switch-icon" :data-state="value">check</Icon>
-                    </div>
+            </div>
+            <div class="switch-track" :data-state="value">
+                <div class="switch-thumb" :data-state="value">
+                    <Icon class="switch-icon" :data-state="value">check</Icon>
                 </div>
             </div>
             <input type="checkbox" :id="id" v-model="value">
@@ -42,6 +46,17 @@ const value = computed({
 @property --thumb-size {
     syntax: "<length>";
     initial-value: 16px;
+}
+
+.setting.switch>label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+}
+
+.setting.switch>label.tall {
+    align-items: start;
 }
 
 .switch-track {

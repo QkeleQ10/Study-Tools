@@ -312,7 +312,7 @@ export default [
             {
                 id: 'magister-overlay-hotkey',
                 title: "Activatietoets",
-                subtitle: "De toets waarmee de overlay opgeroepen kan worden.",
+                subtitle: "Deze toets activeert de overlay en sneltoetsen.",
                 type: "KeybindInput",
                 default: "S",
                 require: "magister-css-experimental",
@@ -327,14 +327,13 @@ export default [
             {
                 id: 'magister-shortcuts-today',
                 title: "Snellere sneltoetsen",
-                subtitle: "Op de pagina 'Vandaag' zijn sneltoetsen bruikbaar zonder dat je de activatietoets ingedrukt hoeft te houden.",
+                subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
                 default: true,
                 require: "magister-overlay-hotkey? magister-shortcuts magister-css-experimental",
             },
             {
                 id: 'magister-notes-beta2',
-                title: "Notities",
-                subtitle: "Houd de activatietoets ingedrukt om notities weer te geven. Druk op '0' op je toetsenbord om vast te zetten.",
+                title: "Notitieblok",
                 default: false,
                 class: 'beta',
                 require: "beta-options magister-overlay-hotkey? magister-css-experimental",
@@ -343,7 +342,7 @@ export default [
             {
                 id: "magister-gamification-beta",
                 title: "Gamificatie",
-                subtitle: "Op de pagina 'Vandaag' kun je jouw punten bekijken. Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
+                subtitle: "Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
                 default: false,
                 class: 'beta nofirefox',
                 require: "beta-options magister-css-experimental",
@@ -410,7 +409,7 @@ export default [
             {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
-                subtitle: "Een korte melding over de nieuwste update wordt weergegeven als er een nieuwe beschikbaar of onlangs geïnstalleerd is.",
+                subtitle: "Af en toe een korte melding over de nieuwste updates weergeven.",
                 default: true,
             },
             {
@@ -423,7 +422,7 @@ export default [
             {
                 id: "beta",
                 title: "Bètaversies aanbieden",
-                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten. Je hebt altijd de keuze om de versie niet te installeren.",
+                subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten.",
                 devOnly: true,
                 class: 'beta',
                 require: "beta-options updates",

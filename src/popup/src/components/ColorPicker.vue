@@ -42,7 +42,6 @@ function colorsEqual(color1, color2) {
             <slot name="title"></slot>
         </h3>
         <span class="setting-subtitle">
-            {{ value }}
             <slot name="subtitle"></slot>
         </span>
         <!--should the swatches have their own bottom-sheet for colour consistency?-->
