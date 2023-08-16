@@ -77,6 +77,6 @@ function formatValue(val) {
 
 .vue-slider-dot-tooltip-text {
     font: var(--typescale-label-medium);
-    font-size: auto;
+    color: var(--color-on-primary);
 }
 </style>

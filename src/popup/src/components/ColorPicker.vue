@@ -21,6 +21,7 @@ const swatches = [
     { h: 290, s: 41, l: 41 }, // purple
     { h: 240, s: 41, l: 41 }, // indigo
 ]
+const supportsEyeDropper = window.EyeDropper
 
 let pickerOpen = ref(false)
 
@@ -35,6 +36,17 @@ const value = computed({
 
 function colorsEqual(color1, color2) {
     return Math.abs(color1.h - color2.h) < 1 && Math.abs(color1.s - color2.s) < 1 && Math.abs(color1.l - color2.l) < 1
+}
+
+function eyeDropper() {
+    const eyeDropper = new EyeDropper()
+    pickerOpen.value = false
+
+    eyeDropper
+        .open()
+        .then((result) => {
+            value.value = result.sRGBHex
+        })
 }
 </script>
 
@@ -67,7 +79,7 @@ function colorsEqual(color1, color2) {
                 <span>Aangepaste kleur</span>
                 <ColorPicker is-widget picker-type="chrome" disable-history disable-alpha lang="En"
                     v-model:pure-color="value" />
-                <button class="bottom-sheet-action">
+                <button class="bottom-sheet-action" v-if="supportsEyeDropper" @click="eyeDropper">
                     <Icon>colorize</Icon>
                     <span>Pipet</span>
                 </button>

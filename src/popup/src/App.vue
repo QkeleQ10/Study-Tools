@@ -20,11 +20,14 @@ const optionTypes = { SwitchInput, SegmentedButton, SlideInput, ColorPicker }
 
 let selectedCategory = ref('appearance')
 
+setAllSettings()
+
 function shouldShowSetting(setting) {
     let outcome = true
     if (setting?.conditions) {
         setting.conditions.forEach(condition => {
-            const value = syncedStorage.value[condition.settingId]
+            let value
+            if (condition.settingId) value = syncedStorage.value[condition.settingId]
             switch (condition.operator) {
                 case 'equal':
                     if (value !== condition.value) {
@@ -48,21 +51,33 @@ function shouldShowSetting(setting) {
     }
     return outcome
 }
+
+function setAllSettings(forceReset) {
+    settings.forEach(category => {
+        category.settings.forEach(setting => {
+            if (forceReset || !syncedStorage.value[setting.id] || typeof syncedStorage.value[setting.id] === 'undefined') {
+                // Set the setting to the default if it's currently undefined or if it's being forcibly reset
+                syncedStorage.value[setting.id] = setting.default
+            }
+        })
+    })
+}
 </script>
 
 <template>
-    <TopAppBar :data-scrolled="y > 16" />
+    <TopAppBar :scrolled="y > 16" @reset-settings="setAllSettings(true)" />
     <main id="main" ref="main">
-        <TransitionGroup tag="div" id="options-container" mode="out-in">
-            <div v-for="category in settings" v-show="category.id === selectedCategory" :key="category.id">
+        <div id="options-container" mode="out-in">
+            <TransitionGroup tag="div" name="list" v-for="category in settings" v-show="category.id === selectedCategory"
+                :key="category.id">
                 <component v-for="setting in category.settings" v-show="shouldShowSetting(setting)"
                     :class="{ visible: shouldShowSetting(setting) }" :key="setting.id" :setting="setting"
                     :is="optionTypes[setting.type || 'SwitchInput']" :id="setting.id" v-model="syncedStorage[setting.id]">
                     <template #title>{{ setting.title }}</template>
                     <template #subtitle>{{ setting.subtitle }}</template>
                 </component>
-            </div>
-        </TransitionGroup>
+            </TransitionGroup>
+        </div>
     </main>
     <NavigationBar v-model="selectedCategory" />
 </template>
@@ -109,7 +124,7 @@ main {
 }
 
 .setting.visible:not(:has(~ .setting.visible)) {
-    border-bottom: none;
+    border-bottom-color: transparent;
 }
 
 .setting-title {
@@ -181,5 +196,41 @@ main {
 .bottom-sheet-action .icon {
     color: var(--color-on-surface-variant);
     font-size: 24px;
+}
+
+.icon-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    width: 40px;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.icon-button .icon {
+    font-size: 24px;
+    color: var(--color-on-surface-variant);
+    font-variation-settings: 'FILL' 0;
+    transition: font-variation-settings 200ms;
+}
+
+.icon-button[data-state=true] .icon {
+    color: var(--color-primary);
+    font-variation-settings: 'FILL' 1;
+}
+
+.list-enter-active,
+.list-leave-active {
+    transition: all 200ms ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+    opacity: 0;
+    border-bottom: none;
+    transform: translateX(-30px);
 }
 </style>

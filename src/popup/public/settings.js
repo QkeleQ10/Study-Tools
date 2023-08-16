@@ -36,8 +36,8 @@ export default [
             {
                 id: "color",
                 title: "Accentkleur",
-                version: "2.3.4",
                 type: "ColorPicker",
+                default: { h: 207, s: 95, l: 55 },
                 wizard: "Wil je een alternatieve accentkleur kiezen?",
             },
             {
@@ -347,21 +347,21 @@ export default [
                 id: 'magister-notes-beta2',
                 title: "Notitieblok",
                 default: false,
-                class: 'beta',
                 conditions: [
                     { settingId: 'magister-overlay-hotkey', operator: 'defined' },
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
             // INCORPORATE INTO THE OVERLAY
+            // BROWSER NOT EQUAL OPERATOR
             {
                 id: "magister-gamification-beta",
                 title: "Gamificatie",
                 subtitle: "Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
                 default: false,
-                class: 'beta nofirefox',
                 conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
+                    { settingId: 'beta-options', operator: 'equal', value: true },
+                    { operator: 'browser not equal', value: 'firefox' }
                 ],
             },
         ]
@@ -418,12 +418,6 @@ export default [
         id: "about",
         settings: [
             {
-                id: "updates",
-                title: "Updates aanbieden",
-                subtitle: "Melding bij nieuwe versie.",
-                devOnly: true,
-            },
-            {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
                 subtitle: "Af en toe een korte melding over de nieuwste updates weergeven.",
@@ -433,15 +427,20 @@ export default [
                 id: "beta-options",
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
-                class: 'beta',
                 default: false,
+            },
+            {
+                id: "updates",
+                title: "Updates aanbieden",
+                subtitle: "Melding bij nieuwe versie.",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
             {
                 id: "beta",
                 title: "Bètaversies aanbieden",
                 subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten.",
-                devOnly: true,
-                class: 'beta',
                 conditions: [
                     { settingId: 'updates', operator: 'equal', value: true },
                     { settingId: 'beta-options', operator: 'equal', value: true }

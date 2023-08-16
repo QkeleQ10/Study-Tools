@@ -11,10 +11,9 @@ export default [
             // },
             {
                 id: "theme",
-                title: "Kleurenthema",
+                title: "Kleurenschema",
                 type: "SegmentedButton",
                 wizard: "Kies in welk kleurenthema Magister moet worden weergegeven.",
-                require: "magister-css-experimental",
                 default: "auto",
                 options: [
                     {
@@ -37,22 +36,20 @@ export default [
             {
                 id: "color",
                 title: "Accentkleur",
-                version: "2.3.4",
                 type: "ColorPicker",
+                default: { h: 207, s: 95, l: 55 },
                 wizard: "Wil je een alternatieve accentkleur kiezen?",
-                require: "magister-css-experimental",
             },
             {
                 id: "magister-css-border-radius",
                 title: "Afgeronde hoeken",
                 type: "SlideInput",
                 default: 8,
-                defaultFormatted: "8px",
-                suffix: "px",
+                format: "px",
+                decimals: 0,
                 min: 0,
                 max: 20,
                 step: 1,
-                require: "magister-css-experimental",
             },
             // DEV OPTION?
             // {
@@ -60,7 +57,6 @@ export default [
             //     title: "Inhoud donker maken",
             //     subtitle: "[Experimenteel] Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
             //     default: true,
-            //     require: "magister-css-experimental",
             // },
             {
                 id: "magister-appbar-week",
@@ -94,7 +90,9 @@ export default [
                 id: 'magister-picture-source',
                 title: "Aangepaste profielfoto",
                 type: "ImageInput",
-                require: 'magister-picture===custom',
+                conditions: [
+                    { settingId: 'magister-picture', operator: 'equal', value: 'custom' }
+                ],
             },
             {
                 id: "magister-cf-failred",
@@ -133,7 +131,9 @@ export default [
                 id: "magisterLogin-username",
                 title: "Gebruikersnaam",
                 type: "TextInput",
-                require: "magisterLogin-method!==off",
+                conditions: [
+                    { settingId: 'magisterLogin-method', operator: 'not equal', value: 'off' }
+                ],
             },
             {
                 id: "magisterLogin-email",
@@ -141,14 +141,18 @@ export default [
                 subtitle: "Van het Microsoft-account dat moet worden gekozen.",
                 type: "TextInput",
                 fieldType: "email",
-                require: "magisterLogin-method===microsoft",
+                conditions: [
+                    { settingId: 'magisterLogin-method', operator: 'equal', value: 'microsoft' }
+                ],
             },
             {
                 id: "magisterLogin-password",
                 title: "Wachtwoord",
                 type: "TextInput",
                 fieldType: "password",
-                require: "magisterLogin-method===password",
+                conditions: [
+                    { settingId: 'magisterLogin-method', operator: 'equal', value: 'password' }
+                ],
             },
         ]
     },
@@ -159,33 +163,35 @@ export default [
                 id: "magister-vd-overhaul",
                 title: "Verbeterd startscherm",
                 default: true,
-                require: "magister-css-experimental",
             },
             {
                 id: "magister-vd-agendaHeight",
                 title: "Hoogte agenda",
                 type: "SlideInput",
                 default: 1,
-                defaultFormatted: "1,0×",
-                suffix: "×",
+                format: "percent",
+                decimals: 0,
                 min: 0.5,
                 max: 2.5,
                 step: 0.1,
-                require: "magister-css-experimental magister-vd-overhaul",
+                conditions: [
+                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
+                ],
             },
             // TURN THIS INTO A SEGMENTEDBUTTON
             // {
             //     id: "magister-vd-subjects",
             //     title: "Aangepaste vaknamen",
             //     default: true,
-            //     require: "magister-css-experimental magister-vd-overhaul",
             // },
             // {
             //     id: "magister-vd-subjects",
             //     title: "Vaknotatie in agenda",
             //     type: "SegmentedButton",
             //     default: "true",
-            //     require: "magister-css-experimental magister-vd-overhaul",
+            // conditions: [
+            //     { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
+            // ],
             //     options: [
             //         {
             //             value: "custom",
@@ -205,7 +211,9 @@ export default [
                 subtitle: "Toon het laatste cijfer op het startscherm, laat alleen zien hoeveel nieuwe cijfers er zijn of toon helemaal niets.",
                 type: "SegmentedButton",
                 default: "full",
-                require: "magister-css-experimental magister-vd-overhaul",
+                conditions: [
+                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
+                ],
                 options: [
                     {
                         value: "full",
@@ -247,7 +255,6 @@ export default [
                 id: "magister-sw-display",
                 title: "Studiewijzers ordenen",
                 type: "SegmentedButton",
-                require: "magister-css-experimental",
                 default: "grid",
                 options: [
                     {
@@ -272,7 +279,9 @@ export default [
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
-                require: "magister-css-experimental magister-sw-display===grid",
+                conditions: [
+                    { settingId: 'magister-sw-display', operator: 'equal', value: 'grid' }
+                ],
             },
             // MAKE THIS A SEGMENTEDBUTTON
             // {
@@ -284,7 +293,6 @@ export default [
             //     id: "magister-sw-thisWeek",
             //     title: "Huidige week in studiewijzer",
             //     type: "SegmentedButton",
-            //     require: "magister-css-experimental",
             //     default: "focus",
             //     options: [
             //         {
@@ -315,37 +323,46 @@ export default [
                 subtitle: "Deze toets activeert de overlay en sneltoetsen.",
                 type: "KeybindInput",
                 default: "S",
-                require: "magister-css-experimental",
             },
             {
                 id: 'magister-shortcuts',
                 title: "Sneltoetsen",
                 subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
                 default: true,
-                require: "magister-overlay-hotkey? magister-css-experimental",
+                conditions: [
+                    { settingId: 'magister-overlay-hotkey', operator: 'defined' }
+                ],
             },
             {
                 id: 'magister-shortcuts-today',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
                 default: true,
-                require: "magister-overlay-hotkey? magister-shortcuts magister-css-experimental",
+                conditions: [
+                    { settingId: 'magister-overlay-hotkey', operator: 'defined' },
+                    { settingId: 'magister-shortcuts', operator: 'equal', value: true }
+                ],
             },
             {
                 id: 'magister-notes-beta2',
                 title: "Notitieblok",
                 default: false,
-                class: 'beta',
-                require: "beta-options magister-overlay-hotkey? magister-css-experimental",
+                conditions: [
+                    { settingId: 'magister-overlay-hotkey', operator: 'defined' },
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
             // INCORPORATE INTO THE OVERLAY
+            // BROWSER NOT EQUAL OPERATOR
             {
                 id: "magister-gamification-beta",
                 title: "Gamificatie",
                 subtitle: "Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
                 default: false,
-                class: 'beta nofirefox',
-                require: "beta-options magister-css-experimental",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true },
+                    { operator: 'browser not equal', value: 'firefox' }
+                ],
             },
         ]
     },
@@ -401,12 +418,6 @@ export default [
         id: "about",
         settings: [
             {
-                id: "updates",
-                title: "Updates aanbieden",
-                subtitle: "Melding bij nieuwe versie.",
-                devOnly: true,
-            },
-            {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
                 subtitle: "Af en toe een korte melding over de nieuwste updates weergeven.",
@@ -416,16 +427,24 @@ export default [
                 id: "beta-options",
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
-                class: 'beta',
                 default: false,
+            },
+            {
+                id: "updates",
+                title: "Updates aanbieden",
+                subtitle: "Melding bij nieuwe versie.",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
             {
                 id: "beta",
                 title: "Bètaversies aanbieden",
                 subtitle: "Melding bij nieuwe bètaversie. Bevat de laatste bugfixes, maar kan ook nieuwe bugs bevatten.",
-                devOnly: true,
-                class: 'beta',
-                require: "beta-options updates",
+                conditions: [
+                    { settingId: 'updates', operator: 'equal', value: true },
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
         ]
     },
