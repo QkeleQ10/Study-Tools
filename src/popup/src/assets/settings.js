@@ -321,7 +321,7 @@ export default [
                 id: 'magister-overlay-hotkey',
                 title: "Activatietoets",
                 subtitle: "Deze toets activeert de overlay en sneltoetsen.",
-                type: "KeybindInput",
+                type: "KeyPicker",
                 default: "S",
             },
             {

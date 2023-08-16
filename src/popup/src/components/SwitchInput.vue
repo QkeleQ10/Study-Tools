@@ -1,6 +1,5 @@
 <script setup>
-/* eslint-disable */
-import { ref, computed } from 'vue'
+import { ref, computed, defineProps, defineEmits } from 'vue'
 import { useElementSize } from '@vueuse/core'
 
 import Icon from './Icon.vue'
@@ -9,7 +8,7 @@ const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
 
 const label = ref(null)
-const { width, height } = useElementSize(label)
+const { height } = useElementSize(label)
 
 const value = computed({
     get() {

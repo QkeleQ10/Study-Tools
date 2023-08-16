@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useScroll } from '@vueuse/core'
 import { useSyncedStorage } from './composables/syncedStorage.js'
 
-import settings from '../public/settings.js'
+import settings from './assets/settings.js'
 
 import TopAppBar from './components/TopAppBar.vue'
 import NavigationBar from './components/NavigationBar.vue'
@@ -11,16 +11,18 @@ import SwitchInput from './components/SwitchInput.vue'
 import SegmentedButton from './components/SegmentedButton.vue'
 import SlideInput from './components/SlideInput.vue'
 import ColorPicker from './components/ColorPicker.vue'
+import KeyPicker from './components/KeyPicker.vue'
+import About from './components/About.vue'
 
 const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, SlideInput, ColorPicker }
+const optionTypes = { SwitchInput, SegmentedButton, SlideInput, ColorPicker, KeyPicker }
 
 let selectedCategory = ref('appearance')
 
-setAllSettings()
+// setAllSettings()
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -52,24 +54,22 @@ function shouldShowSetting(setting) {
     return outcome
 }
 
-function setAllSettings(forceReset) {
+function resetSettingDefaults() {
     settings.forEach(category => {
         category.settings.forEach(setting => {
-            if (forceReset || !syncedStorage.value[setting.id] || typeof syncedStorage.value[setting.id] === 'undefined') {
-                // Set the setting to the default if it's currently undefined or if it's being forcibly reset
-                syncedStorage.value[setting.id] = setting.default
-            }
+            syncedStorage.value[setting.id] = setting.default
         })
     })
 }
 </script>
 
 <template>
-    <TopAppBar :scrolled="y > 16" @reset-settings="setAllSettings(true)" />
+    <TopAppBar :scrolled="y > 16" @reset-settings="resetSettingDefaults" />
     <main id="main" ref="main">
         <div id="options-container" mode="out-in">
             <TransitionGroup tag="div" name="list" v-for="category in settings" v-show="category.id === selectedCategory"
                 :key="category.id">
+                <About v-show="selectedCategory === 'about'" key="about" />
                 <component v-for="setting in category.settings" v-show="shouldShowSetting(setting)"
                     :class="{ visible: shouldShowSetting(setting) }" :key="setting.id" :setting="setting"
                     :is="optionTypes[setting.type || 'SwitchInput']" :id="setting.id" v-model="syncedStorage[setting.id]">
@@ -157,47 +157,6 @@ main {
     opacity: .3;
 }
 
-.bottom-sheet {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    pointer-events: none;
-    translate: 0 100vh;
-    padding: 24px;
-    border-radius: 28px 28px 0 0;
-    z-index: 10001;
-    background-color: var(--color-surface-container-low);
-    transition: translate 200ms;
-}
-
-.bottom-sheet[active=true] {
-    pointer-events: all;
-    translate: 0;
-}
-
-.bottom-sheet-action {
-    height: 56px;
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 16px;
-    padding-block: 8px;
-    padding-left: 16px;
-    padding-right: 24px;
-    font: var(--typescale-body-large);
-    color: var(--color-on-surface);
-    background-color: transparent;
-    border: none;
-}
-
-.bottom-sheet-action .icon {
-    color: var(--color-on-surface-variant);
-    font-size: 24px;
-}
-
 .icon-button {
     display: flex;
     justify-content: center;
@@ -234,3 +193,4 @@ main {
     transform: translateX(-30px);
 }
 </style>
+./assets/settings.js

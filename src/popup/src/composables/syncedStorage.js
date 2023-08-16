@@ -1,22 +1,36 @@
 /* eslint-disable */
-
 import { ref, onMounted, watchEffect } from 'vue'
+
+import settings from '../assets/settings.js'
 
 export function useSyncedStorage() {
     let syncedStorage = ref({})
 
     onMounted(() => {
-        if (chrome?.storage?.sync)
+        if (chrome?.storage?.sync) {
             chrome.storage.sync.get()
                 .then(value => {
                     syncedStorage.value = value
-                    refreshTheme()
+
+                    // Set all undefined settings to their default values
+                    settings.forEach(category => {
+                        category.settings.forEach(setting => {
+                            if (!syncedStorage.value[setting.id] || typeof syncedStorage.value[setting.id] === 'undefined') {
+                                syncedStorage.value[setting.id] = setting.default
+                            }
+                        })
+                    })
                 })
+            
+            // Store the current version number
+            syncedStorage.value['openedPopup'] = chrome?.runtime?.getManifest()?.version
+        }
     })
 
     watchEffect(() => {
-        if (chrome?.storage?.sync)
+        if (chrome?.storage?.sync) {
             chrome.storage.sync.set(syncedStorage.value)
+        }
         refreshTheme()
     })
 

@@ -49,7 +49,7 @@ const closeDialog = () => {
 	border-radius: 28px;
 	z-index: 10001;
 	background-color: var(--color-surface-container-high);
-	transition: transform 200ms, opacity 200ms;
+	transition: transform 200ms, opacity 200ms, background-color 200ms;
 }
 
 .dialog[active=true] {

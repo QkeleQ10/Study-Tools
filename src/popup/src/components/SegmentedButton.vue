@@ -1,8 +1,7 @@
 <script setup>
-/* eslint-disable */
 import Icon from './Icon.vue';
 
-import { computed } from 'vue'
+import { computed, defineProps, defineEmits } from 'vue'
 
 const props = defineProps(['modelValue', 'id', 'setting'])
 const emit = defineEmits(['update:modelValue'])
@@ -28,7 +27,7 @@ const value = computed({
             </span>
         </div>
         <div class="button-wrapper">
-            <button v-for="option in setting.options" class="button-segment" @click="value = option.value"
+            <button v-for="option in setting.options" :key="option.value" class="button-segment" @click="value = option.value"
                 :data-state="option.value === value" :data-has-icon="!!option.icon">
                 <div class="button-segment-icon-wrapper">
                     <Transition name="icon">

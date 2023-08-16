@@ -1,6 +1,5 @@
 <script setup>
-/* eslint-disable */
-import { ref } from 'vue'
+import { defineProps, defineEmits } from 'vue'
 
 import Icon from './Icon.vue'
 
