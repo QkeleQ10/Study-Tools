@@ -32,7 +32,7 @@
             ],
             "js": [
                 "src/util.js",
-                "src/popup/dist/settings.js"
+                "src/popup/src/assets/settings.js"
             ],
             "css": [
                 "src/util.css"
