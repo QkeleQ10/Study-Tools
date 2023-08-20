@@ -104,7 +104,7 @@ const value = computed({
     transition: background-color 200ms, color 200ms, outline-color 200ms;
 }
 
-.text-input:hover {
+.text-input:enabled:hover {
     outline-color: var(--color-on-surface);
 }
 

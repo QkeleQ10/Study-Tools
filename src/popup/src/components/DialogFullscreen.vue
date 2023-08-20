@@ -16,7 +16,7 @@ const { y } = useScroll(content)
 </script>
 
 <template>
-	<div class="fullscreen-dialog" :active="props.active">
+	<div class="fullscreen-dialog" :active="props.active" :tabindex="props.active ? 0 : -1">
 		<div class="fullscreen-dialog-header" :scrolled="y > 16">
 			<button class="fullscreen-dialog-close" @click="closeDialog">
 				<Icon>close</Icon>
@@ -83,6 +83,9 @@ const { y } = useScroll(content)
 	overflow-x: hidden;
 	padding-inline: 24px;
 	padding-block: 4px;
+    padding-bottom: 24px;
+	color: var(--color-on-surface-variant);
+	font: var(--typescale-body-medium);
 }
 
 .fullscreen-dialog-close {

@@ -16,53 +16,31 @@ const value = computed({
 })
 
 let pickerOpen = ref(false)
-let selected = ref(false)
-
-function promptKey() {
-    pickerOpen.value = true
-    document.addEventListener('keydown', e => {
-        if (!pickerOpen.value) return
-        value.value = e.key
-        selected.value = true
-        setTimeout(() => {
-            pickerOpen.value = false
-            selected.value = false
-        }, 1000)
-    }, { once: true })
-}
-
-function formatKey(string) {
-    if (!string) return string
-    if (string === ' ') return "Spatie"
-    return string.charAt(0).toUpperCase() + string.slice(1)
-}
-
 </script>
 
 <template>
-    <div class="setting key-picker" ref="label">
-        <div class="key-picker-click-layer" @click="promptKey">
+    <div class="setting image-input" ref="label">
+        <div class="image-input-click-layer" @click="pickerOpen = true">
             <div>
                 <h3 class="setting-title">
                     <slot name="title"></slot>
                 </h3>
                 <span class="setting-subtitle">
-                    <slot name="subtitle"></slot> ({{ formatKey(value) }})
+                    <slot name="subtitle"></slot>
                 </span>
             </div>
             <Icon>chevron_right</Icon>
         </div>
         <BottomSheet v-model:active="pickerOpen" :handle=true>
             <template #content>
-                <span class="supporting-text">Druk op een toets</span>
-                <span class="key-picker-selected" :class="{ selected: selected }">{{ formatKey(value) }}</span>
+                {{ value }}
             </template>
         </BottomSheet>
     </div>
 </template>
 
 <style>
-.key-picker-click-layer {
+.image-input-click-layer {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -75,7 +53,7 @@ function formatKey(string) {
     cursor: pointer;
 }
 
-.key-picker-selected {
+.image-input-selected {
     display: inline-block;
     width: auto;
     color: var(--color-on-surface);
@@ -84,7 +62,7 @@ function formatKey(string) {
     transition: opacity 200ms;
 }
 
-.key-picker-selected.selected {
+.image-input-selected.selected {
     opacity: 1;
     animation: lockInKey 200ms 2 alternate;
 }

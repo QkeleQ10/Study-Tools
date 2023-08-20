@@ -89,6 +89,7 @@ export default [
             {
                 id: 'magister-picture-source',
                 title: "Aangepaste profielfoto",
+                subtitle: "Upload je eigen profielfoto.",
                 type: "ImageInput",
                 conditions: [
                     { settingId: 'magister-picture', operator: 'equal', value: 'custom' }
@@ -189,7 +190,6 @@ export default [
             //     title: "Vaknotatie in agenda",
             //     type: "SegmentedButton",
             //     default: "true",
-            //     chips: ["SubjectEditor"],
             //     conditions: [
             //         { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
             //     ],
@@ -206,6 +206,40 @@ export default [
             //         },
             //     ],
             // },
+            {
+                id: "subjects",
+                title: "Vaknamen bewerken",
+                subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
+                type: "SubjectEditor",
+                default: [
+                    { name: "Aardrijkskunde", aliases: "ak" },
+                    { name: "Bedrijfseconomie", aliases: "beco" },
+                    { name: "Beeldende vorming", aliases: "be, bv, kubv" },
+                    { name: "Biologie", aliases: "bi, bio" },
+                    { name: "Cult. en kunstz. vorming", aliases: "ckv" },
+                    { name: "Drama", aliases: "dr, kudr" },
+                    { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
+                    { name: "Economie", aliases: "ec, eco, econ" },
+                    { name: "Engels", aliases: "en, entl, Engels, English" },
+                    { name: "Frans", aliases: "fa, fatl, Franse, Français" },
+                    { name: "Geschiedenis", aliases: "gs" },
+                    { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
+                    { name: "Kunst algemeen", aliases: "ku, kua" },
+                    { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
+                    { name: "Levensbeschouwing", aliases: "lv" },
+                    { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
+                    { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
+                    { name: "Maatschappijleer", aliases: "ma, malv" },
+                    { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
+                    { name: "Mentor", aliases: "mentoruur, mentoraat" },
+                    { name: "Muziek", aliases: "mu, kumu" },
+                    { name: "Natuurkunde", aliases: "na, nat" },
+                    { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
+                    { name: "Scheikunde", aliases: "sk, sch" },
+                    { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
+                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
+                ]
+            },
             {
                 id: "magister-vd-grade",
                 title: "Laatste cijfer op startscherm",
@@ -258,7 +292,6 @@ export default [
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vaknaam en periodenummer.",
                 type: "SegmentedButton",
                 default: "grid",
-                chips: ["SubjectEditor", "PeriodEditor"],
                 options: [
                     {
                         value: "grid",
@@ -276,6 +309,48 @@ export default [
                         icon: "block"
                     },
                 ]
+            },
+            {
+                id: "subjects",
+                title: "Vaknamen bewerken",
+                subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
+                type: "SubjectEditor",
+                default: [
+                    { name: "Aardrijkskunde", aliases: "ak" },
+                    { name: "Bedrijfseconomie", aliases: "beco" },
+                    { name: "Beeldende vorming", aliases: "be, bv, kubv" },
+                    { name: "Biologie", aliases: "bi, bio" },
+                    { name: "Cult. en kunstz. vorming", aliases: "ckv" },
+                    { name: "Drama", aliases: "dr, kudr" },
+                    { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
+                    { name: "Economie", aliases: "ec, eco, econ" },
+                    { name: "Engels", aliases: "en, entl, Engels, English" },
+                    { name: "Frans", aliases: "fa, fatl, Franse, Français" },
+                    { name: "Geschiedenis", aliases: "gs" },
+                    { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
+                    { name: "Kunst algemeen", aliases: "ku, kua" },
+                    { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
+                    { name: "Levensbeschouwing", aliases: "lv" },
+                    { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
+                    { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
+                    { name: "Maatschappijleer", aliases: "ma, malv" },
+                    { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
+                    { name: "Mentor", aliases: "mentoruur, mentoraat" },
+                    { name: "Muziek", aliases: "mu, kumu" },
+                    { name: "Natuurkunde", aliases: "na, nat" },
+                    { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
+                    { name: "Scheikunde", aliases: "sk, sch" },
+                    { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
+                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
+                ]
+            },
+            // Now an array instead of a string!
+            {
+                id: "periods",
+                title: "Perioden bewerken",
+                subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
+                type: "PeriodEditor",
+                default: [30, 47, 9],
             },
             {
                 id: "magister-sw-period",
@@ -367,54 +442,6 @@ export default [
                     { operator: 'browser not equal', value: 'firefox' }
                 ],
             },
-        ]
-    },
-    {
-        id: "data",
-        group: "Magister",
-        title: "Globale waarden",
-        settings: [
-            // MAKE THESE AVAILABLE WHEREVER NECESSARY
-            // {
-            //     id: "magister-periods",
-            //     title: "Beginweken perioden",
-            //     subtitle: "Het eerste weeknummer van elke periode, gescheiden door komma's.",
-            //     type: "TextInput",
-            //     default: "30, 47, 9",
-            // },
-            // {
-            //     id: "magister-subjects",
-            //     title: "Aangepaste vaknamen",
-            //     type: "subjects",
-            //     default: [
-            //         { name: "Aardrijkskunde", aliases: "ak" },
-            //         { name: "Bedrijfseconomie", aliases: "beco" },
-            //         { name: "Beeldende vorming", aliases: "be, bv, kubv" },
-            //         { name: "Biologie", aliases: "bi, bio" },
-            //         { name: "Cult. en kunstz. vorming", aliases: "ckv" },
-            //         { name: "Drama", aliases: "dr, kudr" },
-            //         { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
-            //         { name: "Economie", aliases: "ec, eco, econ" },
-            //         { name: "Engels", aliases: "en, entl, Engels, English" },
-            //         { name: "Frans", aliases: "fa, fatl, Franse, Français" },
-            //         { name: "Geschiedenis", aliases: "gs" },
-            //         { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
-            //         { name: "Kunst algemeen", aliases: "ku, kua" },
-            //         { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
-            //         { name: "Levensbeschouwing", aliases: "lv" },
-            //         { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
-            //         { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
-            //         { name: "Maatschappijleer", aliases: "ma, malv" },
-            //         { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
-            //         { name: "Mentor", aliases: "mentoruur, mentoraat" },
-            //         { name: "Muziek", aliases: "mu, kumu" },
-            //         { name: "Natuurkunde", aliases: "na, nat" },
-            //         { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
-            //         { name: "Scheikunde", aliases: "sk, sch" },
-            //         { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
-            //         { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
-            //     ]
-            // }
         ]
     },
     {

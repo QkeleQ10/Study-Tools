@@ -13,14 +13,16 @@ import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
 import ColorPicker from './components/ColorPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
+import ImageInput from './components/ImageInput.vue'
 import SubjectEditor from './components/SubjectEditor.vue'
+import PeriodEditor from './components/PeriodEditor.vue'
 import About from './components/About.vue'
 
 const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, KeyPicker, SubjectEditor }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, KeyPicker, ImageInput, SubjectEditor, PeriodEditor }
 
 let selectedCategory = ref('appearance')
 
@@ -77,9 +79,6 @@ function resetSettingDefaults() {
                         <template #title>{{ setting.title }}</template>
                         <template #subtitle>{{ setting.subtitle }}</template>
                     </component>
-                    <div class="chips-wrapper">
-                        <component v-for="chip in setting.chips" :is="optionTypes[chip]" :key="chip"></component>
-                    </div>
                 </div>
             </TransitionGroup>
         </div>
@@ -120,8 +119,19 @@ main {
     flex-direction: column;
 }
 
-.setting-wrapper:has(~ .setting-wrapper.visible) {
-    border-bottom: 1px solid var(--color-surface-variant);
+.setting-wrapper~.setting-wrapper.visible:not(:has(.inline-setting)) {
+    border-top: 1px solid var(--color-surface-variant);
+}
+
+.setting-wrapper:has(.inline-setting) {
+    display: inline-block;
+    margin-left: 16px;
+    margin-top: -4px;
+    margin-bottom: 12px;
+}
+
+.setting-wrapper:has(.inline-setting)~.setting-wrapper:has(.inline-setting) {
+    margin-left: 8px;
 }
 
 .setting {
@@ -142,13 +152,6 @@ main {
     margin: 0;
     color: var(--color-on-surface-variant);
     font: var(--typescale-body-medium);
-}
-
-.chips-wrapper {
-    display: flex;
-    gap: 8px;
-    padding-left: 16px;
-    margin-bottom: 12px;
 }
 
 .scrim {
@@ -202,10 +205,6 @@ main {
     transition-delay: 200ms;
     animation: delayShow 200ms normal forwards step-end;
 }
-
-/* .list-leave-active {
-        position: absolute;
-    } */
 
 .list-enter-from,
 .list-leave-to {

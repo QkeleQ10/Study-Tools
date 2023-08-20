@@ -13,6 +13,7 @@ const value = computed({
         return props.modelValue
     },
     set(value) {
+        console.log(value)
         emit('update:modelValue', value)
     }
 })
@@ -35,7 +36,7 @@ function editArray(i, newVal) {
 <template>
     <div class="inline-setting">
         <Chip @click="showDialog = true">
-            <template #icon>edit_note</template>
+            <template #icon>edit_calendar</template>
             <template #label>
                 <slot name="title"></slot>
             </template>
@@ -47,18 +48,15 @@ function editArray(i, newVal) {
             <template #content>
                 <slot name="subtitle"></slot>
                 <br><br>
-                <div class="subject-example">
-                    <span>Weergavenaam vak</span>
-                    <span>Aliassen</span>
-                </div>
-                <TransitionGroup name="editor" tag="ul" class="subjects-list">
-                    <li v-for="(subject, i) in value" :key="subject.name" class="subject-wrapper">
-                        <input class="text-input" type="input" :value="value[i].name"
-                            @input="editArray(i, { name: $event.target.value, aliases: value[i].aliases })" placeholder=" "
-                            autocomplete="off" spellcheck="false">
-                        <input class="text-input" type="input" :value="value[i].aliases"
-                            @input="editArray(i, { name: value[i].name, aliases: $event.target.value })" placeholder=" "
-                            autocomplete="off" spellcheck="false">
+                <TransitionGroup name="editor" tag="ul" class="periods-list">
+                    <li v-for="(period, i) in value" :key="i + 1" class="period-wrapper">
+                        <span class="period-index">Periode {{ i + 1 }}</span>
+                        <span class="period-interfix">week</span>
+                        <input class="text-input" type="number" :value="value[i]"
+                            @input="editArray(i, Number($event.target.value))" placeholder=" " autocomplete="off" min="1"
+                            max="52">
+                        <span class="period-interfix">tot</span>
+                        <span class="period-end">{{ value[(i + 1) % value.length] || '?' }}</span>
                         <button class="period-remove" @click="removeFromArray(i)">
                             <Icon>delete</Icon>
                         </button>
@@ -66,14 +64,14 @@ function editArray(i, newVal) {
                 </TransitionGroup>
             </template>
             <template #buttons>
-                <button @click="value = [...value, { name: '', aliases: '' }]">Toevoegen</button>
+                <button @click="value = [...value, undefined]">Toevoegen</button>
             </template>
         </DialogFullscreen>
     </div>
 </template>
 
 <style>
-.subjects-list {
+.periods-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -82,23 +80,40 @@ function editArray(i, newVal) {
     margin: 0;
 }
 
-.subject-wrapper,
-.subject-example {
+.period-wrapper {
     display: grid;
-    grid-template-columns: 4fr 3fr auto;
     align-items: center;
+    grid-template-columns: 2fr auto auto auto auto auto;
     gap: 8px;
 }
 
-.subject-example {
-    margin-bottom: 8px;
-    translate: 16px;
+.period-index {
+    font: var(--typescale-body-large);
+}
+
+.period-interfix {
     font: var(--typescale-label-medium);
 }
 
-.subject-wrapper .text-input {
-    width: 100%;
+.period-end {
+    width: 50px;
+    font: var(--typescale-body-large);
+}
+
+.period-wrapper .text-input {
+    width: 75px;
     box-sizing: border-box;
+}
+
+.period-remove {
+    background-color: transparent;
+    border: none;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 12px;
+    cursor: pointer;
 }
 
 .editor-enter-active,
