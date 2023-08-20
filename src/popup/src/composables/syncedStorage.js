@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, onMounted, watchEffect } from 'vue'
 
-import settings from '../assets/settings.js'
+import settings from '../../../popup/public/settings.js'
 
 export function useSyncedStorage() {
     let syncedStorage = ref({})
@@ -30,6 +30,13 @@ export function useSyncedStorage() {
     watchEffect(() => {
         if (chrome?.storage?.sync) {
             chrome.storage.sync.set(syncedStorage.value)
+        }
+        if (chrome?.tabs) {
+                chrome.tabs.query({}, (tabs) => {
+                    tabs.forEach((tab) => {
+                        chrome.tabs.sendMessage(tab.id, { type: 'styles-updated' })
+                    })
+                })
         }
         refreshTheme()
     })

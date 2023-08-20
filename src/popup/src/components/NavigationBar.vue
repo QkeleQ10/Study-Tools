@@ -36,14 +36,14 @@ const tabs = [
 </script>
 
 <template>
-    <div id="navigation-bar">
-        <div v-for="item in tabs" :key="item.id" class="navigation-item" @click="$emit('update:modelValue', item.id)" :active="item.id === modelValue">
+    <nav id="navigation-bar">
+        <button v-for="item in tabs" :key="item.id" class="navigation-item" @click="$emit('update:modelValue', item.id)" :active="item.id === modelValue">
             <div class="navigation-item-icon-wrapper" :active="item.id === modelValue">
                 <Icon :filled="item.id === modelValue">{{ item.icon }}</Icon>
             </div>
             <span>{{ item.name }}</span>
-        </div>
-    </div>
+        </button>
+    </nav>
 </template>
 
 <style>
@@ -71,6 +71,8 @@ const tabs = [
     min-width: 48px;
     color: var(--color-on-surface);
     font: var(--typescale-label-medium);
+    border: none;
+    background-color: transparent;
     cursor: pointer;
 }
 

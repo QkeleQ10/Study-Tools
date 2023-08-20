@@ -41,7 +41,7 @@ export default [
                 wizard: "Wil je een alternatieve accentkleur kiezen?",
             },
             {
-                id: "magister-css-border-radius",
+                id: "shape",
                 title: "Afgeronde hoeken",
                 type: "SlideInput",
                 default: 8,

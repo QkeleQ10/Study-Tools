@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "2.6.6.1",
+    "version": "3.0.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -32,7 +32,7 @@
             ],
             "js": [
                 "src/util.js",
-                "src/popup/src/assets/settings.js"
+                "src/popup/dist/settings.js"
             ],
             "css": [
                 "src/util.css"
@@ -106,6 +106,8 @@
         "open_in_tab": true
     },
     "permissions": [
+        "tabs",
+        "activeTab",
         "storage",
         "webRequest"
     ],

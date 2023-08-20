@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', applyStyles)
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'styles-updated') {
+        applyStyles()
+    }
+})
 
 async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
     return new Promise((resolve, reject) => {
@@ -36,10 +41,10 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 async function applyStyles() {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
-    let hueWish = syncedStorage['magister-css-hue'],
-        saturationWish = syncedStorage['magister-css-saturation'],
-        luminanceWish = syncedStorage['magister-css-luminance'],
-        borderRadius = syncedStorage['magister-css-border-radius']
+    let hueWish = syncedStorage.color.h,
+        saturationWish = syncedStorage.color.s,
+        luminanceWish = syncedStorage.color.l,
+        borderRadius = syncedStorage.shape
 
     if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
         hueWish = 266, saturationWish = 51, luminanceWish = 41
@@ -126,14 +131,14 @@ async function applyStyles() {
         color: #000 !important;
     }`,
         rootVars = `${lightThemeCss}
-${syncedStorage['magister-css-theme'] === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
-${syncedStorage['magister-css-theme'] !== 'light' ? darkThemeCss : ''}
+${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
+${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
 ${syncedStorage['magister-css-dark-invert'] ? invertCss : ''}
-${syncedStorage['magister-css-theme'] === 'auto' ? '}' : ''}`
+${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
-    if (syncedStorage['magister-css-experimental']) {
+    // if (syncedStorage['magister-css-experimental']) {
         createStyle(`.block h3,
 .block h4 {
     border-bottom: var(--st-border)
@@ -689,7 +694,8 @@ dna-button[variant=primary] {
     --background: var(--st-accent-primary);
 }
 
-dna-breadcrumbs > dna-breadcrumb > a {
+dna-breadcrumbs > dna-breadcrumb > a,
+.podium header h1 {
     --color: var(--st-foreground-accent) !important;
 }
 
@@ -865,10 +871,10 @@ h3:active> .icon-up-arrow:before {
 #studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
     max-width: calc(100vw - 469px);
 }
-`, 'study-tools-experimental')
-    }
+`, 'study-tools')
+    // }
 
-    if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
+    if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
     if (syncedStorage['magister-vd-overhaul']) {
         createStyle(`

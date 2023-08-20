@@ -3,26 +3,26 @@ import { ref } from 'vue'
 import { useScroll } from '@vueuse/core'
 import { useSyncedStorage } from './composables/syncedStorage.js'
 
-import settings from './assets/settings.js'
+import settings from '../public/settings.js'
 
 import TopAppBar from './components/TopAppBar.vue'
 import NavigationBar from './components/NavigationBar.vue'
 import SwitchInput from './components/SwitchInput.vue'
 import SegmentedButton from './components/SegmentedButton.vue'
+import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
 import ColorPicker from './components/ColorPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
+import SubjectEditor from './components/SubjectEditor.vue'
 import About from './components/About.vue'
 
 const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, SlideInput, ColorPicker, KeyPicker }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, KeyPicker, SubjectEditor }
 
 let selectedCategory = ref('appearance')
-
-// setAllSettings()
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -67,15 +67,20 @@ function resetSettingDefaults() {
     <TopAppBar :scrolled="y > 16" @reset-settings="resetSettingDefaults" />
     <main id="main" ref="main">
         <div id="options-container" mode="out-in">
-            <TransitionGroup tag="div" name="list" v-for="category in settings" v-show="category.id === selectedCategory"
-                :key="category.id">
+            <TransitionGroup tag="div" name="list" mode="out-in" v-for="category in settings"
+                v-show="category.id === selectedCategory" :key="category.id">
                 <About v-show="selectedCategory === 'about'" key="about" />
-                <component v-for="setting in category.settings" v-show="shouldShowSetting(setting)"
-                    :class="{ visible: shouldShowSetting(setting) }" :key="setting.id" :setting="setting"
-                    :is="optionTypes[setting.type || 'SwitchInput']" :id="setting.id" v-model="syncedStorage[setting.id]">
-                    <template #title>{{ setting.title }}</template>
-                    <template #subtitle>{{ setting.subtitle }}</template>
-                </component>
+                <div class="setting-wrapper" :class="{ visible: shouldShowSetting(setting) }"
+                    v-for="setting in category.settings" v-show="shouldShowSetting(setting)" :key="setting.id">
+                    <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting" :id="setting.id"
+                        v-model="syncedStorage[setting.id]">
+                        <template #title>{{ setting.title }}</template>
+                        <template #subtitle>{{ setting.subtitle }}</template>
+                    </component>
+                    <div class="chips-wrapper">
+                        <component v-for="chip in setting.chips" :is="optionTypes[chip]" :key="chip"></component>
+                    </div>
+                </div>
             </TransitionGroup>
         </div>
     </main>
@@ -91,6 +96,7 @@ body {
     width: 450px;
     height: 600px;
     margin: 0;
+    overflow: hidden;
     background-color: var(--color-surface);
 }
 
@@ -114,17 +120,16 @@ main {
     flex-direction: column;
 }
 
+.setting-wrapper:has(~ .setting-wrapper.visible) {
+    border-bottom: 1px solid var(--color-surface-variant);
+}
+
 .setting {
     padding-left: 16px;
     padding-right: 24px;
     padding-block: 12px;
     background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-surface-variant);
     transition: background-color 200ms;
-}
-
-.setting.visible:not(:has(~ .setting.visible)) {
-    border-bottom-color: transparent;
 }
 
 .setting-title {
@@ -137,6 +142,13 @@ main {
     margin: 0;
     color: var(--color-on-surface-variant);
     font: var(--typescale-body-medium);
+}
+
+.chips-wrapper {
+    display: flex;
+    gap: 8px;
+    padding-left: 16px;
+    margin-bottom: 12px;
 }
 
 .scrim {
@@ -186,11 +198,29 @@ main {
     transition: all 200ms ease;
 }
 
+.list-enter-active {
+    transition-delay: 200ms;
+    animation: delayShow 200ms normal forwards step-end;
+}
+
+/* .list-leave-active {
+        position: absolute;
+    } */
+
 .list-enter-from,
 .list-leave-to {
     opacity: 0;
     border-bottom: none;
     transform: translateX(-30px);
 }
+
+@keyframes delayShow {
+    0% {
+        position: absolute;
+    }
+
+    100% {
+        position: static;
+    }
+}
 </style>
-./assets/settings.js
