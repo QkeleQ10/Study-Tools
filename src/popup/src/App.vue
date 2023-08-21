@@ -70,6 +70,10 @@ function resetSettingDefaults() {
     })
 }
 
+function scrollToTop(change) {
+    main.value.scrollTo({ top: 0, left: 0, behavior: change ? 'instant' : 'smooth' })
+}
+
 function openInNewTab(url) {
     window.open(url, '_blank', 'noreferrer')
 }
@@ -97,7 +101,7 @@ function openInNewTab(url) {
             </TransitionGroup>
         </div>
     </main>
-    <NavigationBar v-model="selectedCategory" />
+    <NavigationBar v-model="selectedCategory" @scroll-to-top="scrollToTop" />
 </template>
 
 <style>
@@ -111,6 +115,7 @@ body {
     margin: 0;
     overflow: hidden;
     background-color: var(--color-surface);
+    transition: background-color 200ms;
 }
 
 #app {

@@ -10,7 +10,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const value = computed({
     get() {
-        return props.modelValue
+        return typeof props.modelValue === 'object' ? Object.values(props.modelValue) : props.modelValue
     },
     set(value) {
         console.log(value)

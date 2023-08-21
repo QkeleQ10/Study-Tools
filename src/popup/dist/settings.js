@@ -168,7 +168,7 @@ export default [
                 decimals: 0,
                 min: 0.5,
                 max: 2.5,
-                step: 0.1,
+                step: 0.01,
                 conditions: [
                     { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
                 ],

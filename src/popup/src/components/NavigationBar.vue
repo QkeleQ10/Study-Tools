@@ -1,10 +1,19 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { computed, defineProps, defineEmits } from 'vue'
 
 import Icon from './Icon.vue'
 
-defineProps(['modelValue'])
-defineEmits(['update:modelValue'])
+const props = defineProps(['modelValue'])
+const emit = defineEmits(['update:modelValue', 'scrollToTop'])
+
+const value = computed({
+    get() {
+        return props.modelValue
+    },
+    set(value) {
+        emit('update:modelValue', value)
+    }
+})
 
 const tabs = [
     {
@@ -33,13 +42,20 @@ const tabs = [
         icon: 'info'
     }
 ]
+
+function navClick(id) {
+    let change = (value.value !== id)
+    value.value = id
+    emit('scrollToTop', change)
+}
 </script>
 
 <template>
     <nav id="navigation-bar">
-        <button v-for="item in tabs" :key="item.id" class="navigation-item" @click="$emit('update:modelValue', item.id)" :active="item.id === modelValue">
-            <div class="navigation-item-icon-wrapper" :active="item.id === modelValue">
-                <Icon :filled="item.id === modelValue">{{ item.icon }}</Icon>
+        <button v-for="item in tabs" :key="item.id" class="navigation-item" @click="navClick(item.id)"
+            :active="item.id === value">
+            <div class="navigation-item-icon-wrapper" :active="item.id === value">
+                <Icon :filled="item.id === value">{{ item.icon }}</Icon>
             </div>
             <span>{{ item.name }}</span>
         </button>

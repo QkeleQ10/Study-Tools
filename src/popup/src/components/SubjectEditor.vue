@@ -10,7 +10,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const value = computed({
     get() {
-        return props.modelValue
+        return typeof props.modelValue === 'object' ? Object.values(props.modelValue) : props.modelValue
     },
     set(value) {
         emit('update:modelValue', value)
@@ -52,7 +52,7 @@ function editArray(i, newVal) {
                     <span>Aliassen</span>
                 </div>
                 <TransitionGroup name="editor" tag="ul" class="subjects-list">
-                    <li v-for="(subject, i) in value" :key="subject.name" class="subject-wrapper">
+                    <li v-for="(subject, i) in value" :key="i" class="subject-wrapper">
                         <input class="text-input" type="input" :value="value[i].name"
                             @input="editArray(i, { name: $event.target.value, aliases: value[i].aliases })" placeholder=" "
                             autocomplete="off" spellcheck="false">

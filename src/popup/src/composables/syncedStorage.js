@@ -21,7 +21,7 @@ export function useSyncedStorage() {
                         })
                     })
                 })
-            
+
             // Store the current version number
             syncedStorage.value['openedPopup'] = chrome?.runtime?.getManifest()?.version
         }
@@ -32,11 +32,13 @@ export function useSyncedStorage() {
             chrome.storage.sync.set(syncedStorage.value)
         }
         if (chrome?.tabs) {
-                chrome.tabs.query({}, (tabs) => {
-                    tabs.forEach((tab) => {
-                        chrome.tabs.sendMessage(tab.id, { type: 'styles-updated' })
-                    })
+            chrome.tabs.query({}, (tabs) => {
+                if (!tabs) return
+                tabs.forEach((tab) => {
+                    if (!tab) return
+                    chrome.tabs.sendMessage(tab.id, { type: 'styles-updated' })
                 })
+            })
         }
         refreshTheme()
     })
