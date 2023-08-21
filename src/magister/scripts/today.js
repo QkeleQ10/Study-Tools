@@ -292,7 +292,7 @@ async function todaySchedule(scheduleWrapper) {
             })
 
             if (!legacy || title !== 'filler') {
-                parsedTitle = await parseSubject(title, syncedStorage['magister-vd-subjects'], syncedStorage['magister-subjects'])
+                parsedTitle = await parseSubject(title, syncedStorage['vd-subjects-display'] === 'custom', syncedStorage['magister-subjects'])
                 elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
                 elementTitleBold.innerText = parsedTitle.subjectName || ''
                 elementTitleNormal2.innerText = parsedTitle.stringAfter || ''

@@ -19,7 +19,7 @@ async function studyguideList() {
 
 // Page 'Studiewijzer
 async function studyguideIndividual() {
-    if (syncedStorage['magister-sw-thisWeek']) {
+    if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
@@ -35,8 +35,10 @@ async function studyguideIndividual() {
                     li = top.parentElement.parentElement
                 li.classList.add('st-current-sw')
                 top.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")
-                bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                title.click()
+                if (syncedStorage['sw-current-week-behavior'] === 'focus') {
+                    bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    title.click()
+                }
             }
         })
     }

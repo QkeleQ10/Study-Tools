@@ -131,7 +131,7 @@ async function main() {
         else shortcutsWrapper.dataset.open = false
     }
 
-    if (syncedStorage['magister-notes-beta2']) {
+    if (syncedStorage['notes-enabled']) {
         let notes = syncedStorage['st-notes'],
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
             pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '0'.` }),
@@ -400,10 +400,10 @@ function getWeekNumber() {
 }
 
 async function getPeriodNumber(w = getWeekNumber()) {
-    const settingPeriods = syncedStorage['magister-periods']
+    const settingPeriods = syncedStorage['periods']
     let periodNumber = 0
 
-    settingPeriods.split(',').forEach((e, i, arr) => {
+    settingPeriods.forEach((e, i, arr) => {
         let startWeek = Number(e),
             endWeek = Number(arr[i + 1]) || Number(arr[0])
         if (endWeek < startWeek && (w >= startWeek || w < endWeek)) periodNumber = i + 1

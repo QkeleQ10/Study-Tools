@@ -63,8 +63,9 @@ const closeBottomSheet = () => {
 .bottom-sheet-action {
     height: 56px;
     width: 100%;
-    display: flex;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    justify-content: start;
     align-items: center;
     gap: 16px;
     padding-block: 8px;
@@ -74,6 +75,7 @@ const closeBottomSheet = () => {
     color: var(--color-on-surface);
     background-color: transparent;
     border: none;
+    text-align: left;
     cursor: pointer;
 }
 

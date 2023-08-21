@@ -17,6 +17,7 @@ import ImageInput from './components/ImageInput.vue'
 import SubjectEditor from './components/SubjectEditor.vue'
 import PeriodEditor from './components/PeriodEditor.vue'
 import About from './components/About.vue'
+import Chip from './components/Chip.vue'
 
 const main = ref(null)
 const { y } = useScroll(main)
@@ -25,6 +26,11 @@ const syncedStorage = useSyncedStorage()
 const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, KeyPicker, ImageInput, SubjectEditor, PeriodEditor }
 
 let selectedCategory = ref('appearance')
+let transitionName = ref('')
+
+setTimeout(() => {
+    transitionName.value = 'list'
+}, 200)
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -63,15 +69,19 @@ function resetSettingDefaults() {
         })
     })
 }
+
+function openInNewTab(url) {
+    window.open(url, '_blank', 'noreferrer')
+}
 </script>
 
 <template>
     <TopAppBar :scrolled="y > 16" @reset-settings="resetSettingDefaults" />
     <main id="main" ref="main">
-        <div id="options-container" mode="out-in">
-            <TransitionGroup tag="div" name="list" mode="out-in" v-for="category in settings"
+        <div id="options-container">
+            <About v-show="selectedCategory === 'about'" key="about" />
+            <TransitionGroup tag="div" :name="transitionName" mode="out-in" v-for="category in settings"
                 v-show="category.id === selectedCategory" :key="category.id">
-                <About v-show="selectedCategory === 'about'" key="about" />
                 <div class="setting-wrapper" :class="{ visible: shouldShowSetting(setting) }"
                     v-for="setting in category.settings" v-show="shouldShowSetting(setting)" :key="setting.id">
                     <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting" :id="setting.id"
@@ -79,6 +89,10 @@ function resetSettingDefaults() {
                         <template #title>{{ setting.title }}</template>
                         <template #subtitle>{{ setting.subtitle }}</template>
                     </component>
+                    <Chip v-for="link in setting.links" :key="link.label" @click="openInNewTab(link.href)">
+                        <template #icon>{{ link.icon }}</template>
+                        <template #label>{{ link.label }}</template>
+                    </Chip>
                 </div>
             </TransitionGroup>
         </div>
@@ -126,12 +140,13 @@ main {
 .setting-wrapper:has(.inline-setting) {
     display: inline-block;
     margin-left: 16px;
-    margin-top: -4px;
-    margin-bottom: 12px;
+    margin-right: -8px;
+    margin-bottom: 16px;
 }
 
-.setting-wrapper:has(.inline-setting)~.setting-wrapper:has(.inline-setting) {
-    margin-left: 8px;
+.setting-wrapper>.chip {
+    margin-left: 16px;
+    margin-bottom: 16px;
 }
 
 .setting {
@@ -194,6 +209,20 @@ main {
 .icon-button[data-state=true] .icon {
     color: var(--color-primary);
     font-variation-settings: 'FILL' 1;
+}
+
+.keybind {
+    display: inline-block;
+    height: 24px;
+    min-width: 24px;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    margin-left: 4px;
+    background-color: var(--color-surface-container-highest);
+    color: var(--color-on-surface-variant);
+    border-radius: 6px;
+    font: var(--typescale-body-small);
+    text-align: center;
 }
 
 .list-enter-active,

@@ -138,7 +138,7 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
-    // if (syncedStorage['magister-css-experimental']) {
+    if (!syncedStorage['disable-css']) {
         createStyle(`.block h3,
 .block h4 {
     border-bottom: var(--st-border)
@@ -872,7 +872,7 @@ h3:active> .icon-up-arrow:before {
     max-width: calc(100vw - 469px);
 }
 `, 'study-tools')
-    // }
+    }
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
