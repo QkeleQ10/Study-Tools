@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', applyStyles)
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'styles-updated') {
+        applyStyles()
+    }
+})
 
 async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
     return new Promise((resolve, reject) => {
@@ -36,10 +41,10 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 async function applyStyles() {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
-    let hueWish = syncedStorage['magister-css-hue'],
-        saturationWish = syncedStorage['magister-css-saturation'],
-        luminanceWish = syncedStorage['magister-css-luminance'],
-        borderRadius = syncedStorage['magister-css-border-radius']
+    let hueWish = syncedStorage.color.h,
+        saturationWish = syncedStorage.color.s,
+        luminanceWish = syncedStorage.color.l,
+        borderRadius = syncedStorage.shape
 
     if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
         hueWish = 266, saturationWish = 51, luminanceWish = 41
@@ -105,35 +110,24 @@ async function applyStyles() {
     color-scheme: dark;
 }`,
         invertCss = `
-    .user-content, .content-auto.background-white {
-        filter: invert(1) hue-rotate(180deg);
-    }
+#studiewijzer-detail-container .clearfix.user-content {
+    background-color: var(--st-background-primary);
+    color: var(--st-foreground-primary);
+}
 
-    .user-content ul, .user-content font, .user-content span, .user-content p, .block .content .user-content p, #opdracht-detail .list li.onecol p {
-        color: #000;
-    }
-    
-    .user-content iframe:not(:fullscreen), .user-content img {
-        filter: invert(1) hue-rotate(180deg);
-    }
-    
-    .content-auto.background-white {
-        background: #fff !important;
-        color: #000 !important;
-    }
-    
-    .content-auto.background-white .comment * {
-        color: #000 !important;
-    }`,
+#studiewijzer-detail-container .clearfix.user-content * {
+    color: var(--st-foreground-primary);
+}
+        `,
         rootVars = `${lightThemeCss}
-${syncedStorage['magister-css-theme'] === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
-${syncedStorage['magister-css-theme'] !== 'light' ? darkThemeCss : ''}
+${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
+${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
 ${syncedStorage['magister-css-dark-invert'] ? invertCss : ''}
-${syncedStorage['magister-css-theme'] === 'auto' ? '}' : ''}`
+${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
-    if (syncedStorage['magister-css-experimental']) {
+    if (!syncedStorage['disable-css']) {
         createStyle(`.block h3,
 .block h4 {
     border-bottom: var(--st-border)
@@ -156,7 +150,7 @@ html {
 .k-widget,
 body,
 div.loading-overlay,
-input[type=checkbox]+label span,
+input[type=switch]+label span,
 .agenda-lesdashboard .lesvak-prev-next .content-auto .list li:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto .list a:hover,
 .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.prev:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.next:hover {
     background: var(--st-background-primary) !important
@@ -195,7 +189,8 @@ input[type=checkbox]+label span,
 .k-list-container .k-item.k-state-focused.k-state-selected,
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
-.k-calendar .k-header .k-state-hover {
+.k-calendar .k-header .k-state-hover,
+.column-container li.selected, .column-container li.checked {
     background: var(--st-highlight-primary) !important;
     background-color: var(--st-highlight-primary) !important
 }
@@ -305,7 +300,7 @@ aside .tabs li.active {
 table.table-grid-layout tr:hover,
 .k-grid-header,
 #cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
-.wizzard div.sheet div.grid-col div.ngHeaderContainer, div.ngHeaderCell {
+.wizzard div.sheet div.grid-col div.ngHeaderContainer, div.ngHeaderCell, .column-container h3, #bronnen-container .bronnen-quota-label {
     background-color: var(--st-background-secondary) !important;
     box-shadow: none !important
 }
@@ -320,12 +315,12 @@ form input[type=text], form input[type=password], form input[type=search], form 
 .k-editor .k-content,
 .k-editable-area,
 .k-list-container, html body .k-popup.k-list-container .k-item,
-.k-calendar thead th, .k-calendar .k-header * {
+.k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label {
     background-color: var(--st-background-secondary) !important;
     color: var(--st-foreground-primary)
 }
 
-table,
+table:not(.clearfix.user-content table),
 table.table-grid-layout td,
 .ngGrid {
     background: var(--st-background-primary) !important;
@@ -345,7 +340,7 @@ form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
 .projects li.selected, .projects li:hover,
 .studiewijzer-onderdeel div.content ul>li,
 table.table-grid-layout,
-input[type=checkbox]+label span, 
+input[type=switch]+label span, 
 .collapsed-menu .popup-menu,
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
@@ -515,13 +510,15 @@ span.nrblock {
 .appbar>div>a,
 a.appbar-button,
 .menu-host {
-    background: var(--st-accent-primary)
+    background: var(--st-accent-primary);
+    transition: background 200ms;
 }
 
 .appbar-host,
 .main-menu>li.active>a,
 .main-menu>li>a:hover {
     background: var(--st-accent-secondary);
+    transition: background 200ms;
 }
 
 aside, aside .block,
@@ -560,7 +557,7 @@ aside, aside .block,
     user-select: none;
 }
 
-.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht {
+.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
     background-color: var(--st-background-secondary) !important;
 }
 
@@ -689,7 +686,8 @@ dna-button[variant=primary] {
     --background: var(--st-accent-primary);
 }
 
-dna-breadcrumbs > dna-breadcrumb > a {
+dna-breadcrumbs > dna-breadcrumb > a,
+.podium header h1 {
     --color: var(--st-foreground-accent) !important;
 }
 
@@ -701,6 +699,10 @@ dna-button:not([variant=primary], [fill=clear]) {
 
 dna-button:hover {
     filter: brightness(var(--st-hover-brightness));
+}
+
+dna-card-title.ng-binding, dna-card-title, .content.content-auto.background-white, .opdrachten-details-row, .gegevens-container, .empty-message, .label, .capitalize.ng-binding, .examen-cijfer.ng-binding {
+    color: var(--st-foreground-primary);
 }
 
 .overdue,.overdue *{color:grey!important}
@@ -865,10 +867,10 @@ h3:active> .icon-up-arrow:before {
 #studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
     max-width: calc(100vw - 469px);
 }
-`, 'study-tools-experimental')
+`, 'study-tools')
     }
 
-    if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`)
+    if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
     if (syncedStorage['magister-vd-overhaul']) {
         createStyle(`

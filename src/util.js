@@ -9,7 +9,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.body.append(snackbarWrapper)
 
     checkUpdates()
-    checkDefaults()
+    // checkDefaults()
     checkAnnouncements()
 
     setTimeout(() => {
@@ -66,22 +66,24 @@ async function checkAnnouncements() {
     }
 }
 
-async function checkDefaults() {
-    settingsBuilder.forEach(section => {
-        section.settings.forEach(setting => {
-            if (typeof syncedStorage[setting.id] === 'undefined' && setting.default) { saveToStorage(setting.id, setting.default) }
-        })
-    })
-    let colorSettings = ['magister-css-hue', 'magister-css-saturation', 'magister-css-luminance'], colorDefaults = [207, 95, 55]
-    colorSettings.forEach((setting, index) => {
-        if (typeof syncedStorage[setting] === 'undefined') {
-            saveToStorage(setting, colorDefaults[index])
-        }
-    })
 
-    if (!await getFromStorage('usedExtension', 'local'))
-        showSnackbar("Vernieuw de pagina zodat Study Tools in werking kan treden.", 121000, [{ innerText: "vernieuwen", onclick: 'window.location.reload()' }])
-}
+// RE-IMPLEMENT!
+// async function checkDefaults() {
+//     settingsBuilder.forEach(section => {
+//         section.settings.forEach(setting => {
+//             if (typeof syncedStorage[setting.id] === 'undefined' && setting.default) { saveToStorage(setting.id, setting.default) }
+//         })
+//     })
+//     let colorSettings = ['magister-css-hue', 'magister-css-saturation', 'magister-css-luminance'], colorDefaults = [207, 95, 55]
+//     colorSettings.forEach((setting, index) => {
+//         if (typeof syncedStorage[setting] === 'undefined') {
+//             saveToStorage(setting, colorDefaults[index])
+//         }
+//     })
+
+//     if (!await getFromStorage('usedExtension', 'local'))
+//         showSnackbar("Vernieuw de pagina zodat Study Tools in werking kan treden.", 121000, [{ innerText: "vernieuwen", onclick: 'window.location.reload()' }])
+// }
 
 function setIntervalImmediately(func, interval) {
     func()
@@ -94,6 +96,8 @@ function element(tagName, id, parent, attributes) {
         elem = document.createElement(tagName)
         if (id) elem.id = id
         if (parent) parent.append(elem)
+        if (attributes) setAttributes(elem, attributes)
+    } else {
         if (attributes) setAttributes(elem, attributes)
     }
     return elem

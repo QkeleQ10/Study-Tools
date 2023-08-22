@@ -13,6 +13,7 @@ div.loading-overlay {
     max-width: none;
     max-height: none;
     background: var(--st-background-overlay);
+    color: var(--st-foreground-primary);
     margin: 0;
     padding: 32px 24px 16px 24px;
     border: none;
@@ -70,6 +71,7 @@ span.st-title:after {
 
 span.st-subtitle {
     font: 14px var(--st-font-family-secondary) !important;
+    color: var(--st-foreground-primary);
 }
 
 #st-snackbars:has(div.open) {
@@ -328,73 +330,38 @@ span.st-subtitle {
     animation: fadeIn 200ms;
 }
 
-#st-shortcuts {
-    position: fixed;
-    bottom: -150px;
-    /* left: 16px; */
-    left: auto;
-    right: 16px;
-    width: max-content;
-    margin-inline: auto;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    background: var(--st-background-primary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
-    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    z-index: 9999999;
-    transition: bottom 500ms cubic-bezier(.75, 0, 1, 1), box-shadow 200ms;
+.menu-container,
+.main-menu li a {
+    overflow: visible !important;
 }
 
-#st-shortcuts>span {
-    font: 16px var(--st-font-family-primary);
-    background-color: var(--st-highlight-primary);
-    padding: 12px 2px 12px 12px;
-    height: 30px;
-    max-width: 80px;
-    border-radius: var(--st-border-radius) 0 0 var(--st-border-radius);
-    transition: max-width 500ms, padding 500ms;
-}
-
-#st-shortcuts>* {
-    max-width: 200px;
-    height: 30px;
-    padding: 12px 8px;
-    box-sizing: content-box;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-#st-shortcuts>.st-keyboard-hint:after {
-    translate: 12px 12px;
-}
-
-#st-shortcuts[data-open=true],
-#st-shortcuts[data-open=force],
-#st-shortcuts:hover {
-    bottom: 16px;
-    z-index: 10000000;
-    transition: bottom 200ms cubic-bezier(0, 0, .25, 1), box-shadow 200ms;
-}
-
-#st-shortcuts[data-open=force] {
-    box-shadow: none;
-}
-
-#st-shortcuts[data-open=force]>a:first-of-type,
-#st-shortcuts[data-open=force]>span,
-#st-shortcuts[data-open=false]:not(:hover)>span {
-    max-width: 0;
-    padding-inline: 0;
-}
-
-#st-shortcuts:hover:after {
-    content: "Of druk op een getal op je toetsenbord.";
+.st-shortcut-inline {
+    --transition-delay: 0ms;
+    --reverse-transition-delay: 0ms;
     position: absolute;
-    bottom: -16px;
-    font: 11px var(--st-font-family-secondary);
-    color: var(--st-foreground-insignificant);
+    top: -2px;
+    left: -2px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--st-border-radius) / 2);
+    background: var(--st-contrast-accent);
+    color: #888;
+    font: 14px var(--st-font-family-secondary);
+    border: 1px solid #e7e7e7;
+    scale: 0;
+    transition: scale 100ms var(--reverse-transition-delay);
+}
+
+li.children .st-shortcut-inline {
+    left: -25px;
+}
+
+ul.main-menu[data-shortcuts="true"] .st-shortcut-inline {
+    scale: 1;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay);
 }
 
 #st-notes {

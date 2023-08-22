@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "2.6.6",
+    "version": "3.0.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -31,8 +31,7 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "src/util.js",
-                "src/popup/settings.js"
+                "src/util.js"
             ],
             "css": [
                 "src/util.css"
@@ -97,15 +96,17 @@
             "300": "icons/300.png",
             "512": "icons/512.png"
         },
-        "default_popup": "src/popup/popup.html",
+        "default_popup": "src/popup/dist/index.html",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
-    "options_page": "src/popup/popup.html",
+    "options_page": "src/popup/dist/index.html",
     "options_ui": {
-        "page": "src/popup/popup.html",
+        "page": "src/popup/dist/index.html",
         "open_in_tab": true
     },
     "permissions": [
+        "tabs",
+        "activeTab",
         "storage",
         "webRequest"
     ],

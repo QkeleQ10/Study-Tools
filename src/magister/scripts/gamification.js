@@ -7,6 +7,7 @@ async function popstate() {
 
 async function gamification() {
     if (!syncedStorage['magister-gamification-beta']) return
+    if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) return console.error("Gamification is not supported on Firefox due to a lack of service worker support.")
 
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],
@@ -17,7 +18,7 @@ async function gamification() {
         mainContainer = await awaitElement('section.main'),
         photo = await awaitElement("#user-menu > figure > img"),
         // notifications = await awaitElement('#st-vd-notifications'),
-        levelElem = element('button', 'st-level', mainContainer, {'data-level': '...'}),
+        levelElem = element('button', 'st-level', mainContainer, { 'data-level': '...' }),
         progressElem = element('div', 'st-progress', levelElem),
         progressFilled = element('div', 'st-progress-filled', progressElem),
         gmOverlay = element('dialog', 'st-gm', document.body, { class: 'st-overlay' }),
@@ -28,7 +29,7 @@ async function gamification() {
         gmCard = element('div', 'st-gm-card', gmWrap),
         gmCardTitle = element('span', 'st-gm-card-title', gmCard, { class: 'st-title', innerText: photo.alt }),
         gmCardSubtitle = element('span', 'st-gm-card-subtitle', gmCard, { class: 'st-subtitle', innerText: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) }),
-        gmCardLevel = element('div', 'st-gm-card-level', gmCard, {innerText: "..."}),
+        gmCardLevel = element('div', 'st-gm-card-level', gmCard, { innerText: "..." }),
         gmCardProgress = element('div', 'st-gm-card-progress', gmCard),
         gmCardProgressFilled = element('div', 'st-gm-card-progress-filled', gmCardProgress),
         gmBreakdown = element('div', 'st-gm-breakdown', gmWrap)
@@ -42,10 +43,10 @@ async function gamification() {
     calculateScore()
 
     async function calculateScore() {
-        let response = await chrome.runtime.sendMessage(['token', 'userId']),
+        let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
             token = response?.token || await getFromStorage('token', 'local'),
             userId = response?.userId || await getFromStorage('user-id', 'local')
-        console.info("Received user token and user ID from service worker.")
+        console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
         // Fetch all years and info related.
         const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),

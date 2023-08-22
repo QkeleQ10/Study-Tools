@@ -19,7 +19,7 @@ async function studyguideList() {
 
 // Page 'Studiewijzer
 async function studyguideIndividual() {
-    if (syncedStorage['magister-sw-thisWeek']) {
+    if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
@@ -35,8 +35,10 @@ async function studyguideIndividual() {
                     li = top.parentElement.parentElement
                 li.classList.add('st-current-sw')
                 top.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")
-                bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                title.click()
+                if (syncedStorage['sw-current-week-behavior'] === 'focus') {
+                    bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    title.click()
+                }
             }
         })
     }
@@ -49,7 +51,8 @@ async function studyguideIndividual() {
 async function renderStudyguideList(gridContainer, compact) {
     const settingGrid = (syncedStorage['magister-sw-display'] === 'grid'),
         settingShowPeriod = syncedStorage['magister-sw-period'],
-        settingSubjects = syncedStorage['magister-subjects'],
+        settingSubjects = syncedStorage['subjects'],
+        subjectsArray = typeof settingSubjects === 'object' ? Object.values(settingSubjects) : settingSubjects,
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),
@@ -73,7 +76,7 @@ async function renderStudyguideList(gridContainer, compact) {
             priority,
             periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
-        settingSubjects.forEach(subjectEntry => {
+        subjectsArray.forEach(subjectEntry => {
             testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
             testArray.forEach(testString => {
                 if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name

@@ -329,6 +329,14 @@
     font: 16px var(--st-font-family-secondary);
 }
 
+.st-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    width: max-content;
+}
+
 #st-cf-bk-busy-ad {
     position: absolute;
     width: 294px;

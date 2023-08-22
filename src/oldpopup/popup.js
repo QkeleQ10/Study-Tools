@@ -238,7 +238,7 @@ async function init() {
                 }
 
                 default: {
-                    sectionWrapper.innerHTML += `<label class="has-checkbox ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="checkbox" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
+                    sectionWrapper.innerHTML += `<label class="has-switch ${setting.class}" role="listitem" for="${setting.id}" ${setting.require ? `data-require="${setting.require}"` : ''} data-version="${setting.version}"><div class="title"><h4>${setting.title}</h4><h5>${setting.subtitle || ''}</h5></div><input type="switch" name="${setting.title}" id="${setting.id}" ${value ? 'checked' : ''}></label>`
                     setTimeout(() => {
                         inputElement = document.getElementById(setting.id)
                         labelElement = inputElement.parentElement
