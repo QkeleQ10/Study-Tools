@@ -15,23 +15,11 @@ jobs:
 
       - name: Exclude Unwanted Files
         run: |
-          # Create a temporary directory
-          mkdir temp_release
-          
-          # Copy everything except /src/popup/src to the temporary directory
-          rsync -av --progress --exclude='src/popup/src' ./ temp_release/
-          
           # Zip the contents of the temporary directory
-          zip -r release.zip temp_release/
-          
-          # Move the ZIP file to the repository root
-          mv release.zip ./zip
-          
-          # Clean up
-          rm -rf temp_release
+          zip -r release.zip -x src/popup/src
 
       - name: Create Release
         uses: actions/upload-artifact@v3
         with:
           name: release
-          path: ./zip
+          path: release.zip
