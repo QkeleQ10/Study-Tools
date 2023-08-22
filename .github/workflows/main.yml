@@ -37,8 +37,6 @@ jobs:
           
           # Clean up
           rm -rf temp_release
-          
-        working-directory: src # Set the working directory to the src folder
 
       - name: Create Release
         uses: actions/upload-artifact@v3
