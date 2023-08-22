@@ -31,8 +31,7 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "src/util.js",
-                "src/popup/dist/settings.js"
+                "src/util.js"
             ],
             "css": [
                 "src/util.css"

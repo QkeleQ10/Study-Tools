@@ -15,7 +15,7 @@ export function useSyncedStorage() {
                     // Set all undefined settings to their default values
                     settings.forEach(category => {
                         category.settings.forEach(setting => {
-                            if (!syncedStorage.value[setting.id] || typeof syncedStorage.value[setting.id] === 'undefined') {
+                            if (typeof syncedStorage.value[setting.id] === 'undefined') {
                                 syncedStorage.value[setting.id] = setting.default
                             }
                         })

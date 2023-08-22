@@ -110,26 +110,15 @@ async function applyStyles() {
     color-scheme: dark;
 }`,
         invertCss = `
-    .user-content, .content-auto.background-white {
-        filter: invert(1) hue-rotate(180deg);
-    }
+#studiewijzer-detail-container .clearfix.user-content {
+    background-color: var(--st-background-primary);
+    color: var(--st-foreground-primary);
+}
 
-    .user-content ul, .user-content font, .user-content span, .user-content p, .block .content .user-content p, #opdracht-detail .list li.onecol p {
-        color: #000;
-    }
-    
-    .user-content iframe:not(:fullscreen), .user-content img {
-        filter: invert(1) hue-rotate(180deg);
-    }
-    
-    .content-auto.background-white {
-        background: #fff !important;
-        color: #000 !important;
-    }
-    
-    .content-auto.background-white .comment * {
-        color: #000 !important;
-    }`,
+#studiewijzer-detail-container .clearfix.user-content * {
+    color: var(--st-foreground-primary);
+}
+        `,
         rootVars = `${lightThemeCss}
 ${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
 ${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
@@ -200,7 +189,8 @@ input[type=switch]+label span,
 .k-list-container .k-item.k-state-focused.k-state-selected,
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
-.k-calendar .k-header .k-state-hover {
+.k-calendar .k-header .k-state-hover,
+.column-container li.selected, .column-container li.checked {
     background: var(--st-highlight-primary) !important;
     background-color: var(--st-highlight-primary) !important
 }
@@ -310,7 +300,7 @@ aside .tabs li.active {
 table.table-grid-layout tr:hover,
 .k-grid-header,
 #cijfers-container aside .widget .cijfer-berekend tr, form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
-.wizzard div.sheet div.grid-col div.ngHeaderContainer, div.ngHeaderCell {
+.wizzard div.sheet div.grid-col div.ngHeaderContainer, div.ngHeaderCell, .column-container h3, #bronnen-container .bronnen-quota-label {
     background-color: var(--st-background-secondary) !important;
     box-shadow: none !important
 }
@@ -325,12 +315,12 @@ form input[type=text], form input[type=password], form input[type=search], form 
 .k-editor .k-content,
 .k-editable-area,
 .k-list-container, html body .k-popup.k-list-container .k-item,
-.k-calendar thead th, .k-calendar .k-header * {
+.k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label {
     background-color: var(--st-background-secondary) !important;
     color: var(--st-foreground-primary)
 }
 
-table,
+table:not(.clearfix.user-content table),
 table.table-grid-layout td,
 .ngGrid {
     background: var(--st-background-primary) !important;
@@ -520,13 +510,15 @@ span.nrblock {
 .appbar>div>a,
 a.appbar-button,
 .menu-host {
-    background: var(--st-accent-primary)
+    background: var(--st-accent-primary);
+    transition: background 200ms;
 }
 
 .appbar-host,
 .main-menu>li.active>a,
 .main-menu>li>a:hover {
     background: var(--st-accent-secondary);
+    transition: background 200ms;
 }
 
 aside, aside .block,
@@ -565,7 +557,7 @@ aside, aside .block,
     user-select: none;
 }
 
-.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht {
+.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
     background-color: var(--st-background-secondary) !important;
 }
 
@@ -707,6 +699,10 @@ dna-button:not([variant=primary], [fill=clear]) {
 
 dna-button:hover {
     filter: brightness(var(--st-hover-brightness));
+}
+
+dna-card-title.ng-binding, dna-card-title, .content.content-auto.background-white, .opdrachten-details-row, .gegevens-container, .empty-message, .label, .capitalize.ng-binding, .examen-cijfer.ng-binding {
+    color: var(--st-foreground-primary);
 }
 
 .overdue,.overdue *{color:grey!important}

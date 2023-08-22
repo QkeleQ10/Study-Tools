@@ -41,7 +41,8 @@ function formatValue(val) {
             </span>
         </div>
         <VueSlider :min="setting.min" :max="setting.max" :interval="setting.step" :duration="0.2"
-            :tooltip-formatter="val => formatValue(val)" :tooltip-style="{}" v-model="value" />
+            :tooltip-formatter="val => formatValue(val)" :tooltip-style="{}" v-model.lazy="value" />
+            <!-- Implement debounce to circumvent rate limit -->
     </div>
 </template>
 

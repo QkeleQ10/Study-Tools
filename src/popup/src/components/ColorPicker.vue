@@ -72,11 +72,11 @@ function eyeDropper() {
                 <Icon>palette</Icon>
             </button>
         </div>
-        <BottomSheet v-model:active="pickerOpen" :handle="true">
+        <BottomSheet v-model:active.lazy="pickerOpen" :handle="true">
             <template #content>
                 <span class="supporting-text">Kleur kiezen</span>
                 <ColorPicker is-widget picker-type="chrome" disable-history disable-alpha lang="En"
-                    v-model:pure-color="value" />
+                    v-model:pure-color.lazy="value" />
                 <button class="bottom-sheet-action" v-if="supportsEyeDropper" @click="eyeDropper">
                     <Icon>colorize</Icon>
                     <span>Pipet</span>

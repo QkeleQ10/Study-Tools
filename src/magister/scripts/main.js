@@ -10,7 +10,7 @@ async function main() {
         key = syncedStorage['magister-overlay-hotkey'] || 'S',
         keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
 
-    subjects = syncedStorage['magister-subjects']
+    subjects = syncedStorage['subjects']
 
     if (syncedStorage['magister-appbar-zermelo']) {
         const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
@@ -60,81 +60,84 @@ async function main() {
     if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 
     if (syncedStorage['magister-shortcuts']) {
-        let shortcutsWrapper = document.createElement('div'),
-            sElem = document.createElement('span'),
-            todayElem = document.createElement('a'),
-            agendaElem = document.createElement('a'),
-            gradesElem = document.createElement('a'),
-            studyguideElem = document.createElement('a'),
-            booksElem = document.createElement('a')
+        const shortcutKeys = [
+            { key: '`', code: 'Backquote' },
+            { key: '1', code: 'Digit1' },
+            { key: '2', code: 'Digit2' },
+            { key: '3', code: 'Digit3' },
+            { key: '4', code: 'Digit4' },
+            { key: '5', code: 'Digit5' },
+            { key: '6', code: 'Digit6' },
+            { key: '7', code: 'Digit7' },
+            { key: '8', code: 'Digit8' },
+            { key: '9', code: 'Digit9' },
+            { key: '0', code: 'Digit0' },
+            { key: '-', code: 'Minus' },
+            { key: '=', code: 'Equal' },
+            { key: '[', code: 'BracketLeft' },
+            { key: ']', code: 'BracketRight' },
+        ],
+            shortcutsOnMainPage = syncedStorage['magister-shortcuts-today'],
+            mainMenu = document.querySelector('ul.main-menu')
 
-        if (key === 'Control') keyDisplay = 'Ctrl'
-        if (key === ' ') keyDisplay = 'Spatie'
+        createShortcutHints()
+        setTimeout(() => {
+            createShortcutHints()
+            if (shortcutsOnMainPage && document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = true
+        }, 600)
+        setTimeout(() => {
+            createShortcutHints()
+            if (shortcutsOnMainPage && document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = true
+        }, 1200)
 
-        document.body.append(shortcutsWrapper)
-        shortcutsWrapper.id = 'st-shortcuts'
-        shortcutsWrapper.append(sElem, todayElem, agendaElem, gradesElem, studyguideElem, booksElem)
+        function createShortcutHints() {
+            document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
 
-        setAttributes(sElem, { class: 'small st-keyboard-hint', 'data-hint': keyDisplay })
+            document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a').forEach((menuItem, i, a) => {
+                let title = (menuItem.querySelector('span.caption') || menuItem).innerText
 
-        setAttributes(todayElem, { class: 'small st-keyboard-hint', 'data-hint': '1', 'data-hint-secondary': '!', href: '#/vandaag' })
-        todayElem.innerText = "Vandaag"
-
-        setAttributes(agendaElem, { class: 'small st-keyboard-hint', 'data-hint': '2', 'data-hint-secondary': '@', href: '#/agenda' })
-        agendaElem.innerText = "Agenda"
-
-        setAttributes(gradesElem, { class: 'small st-keyboard-hint', 'data-hint': '3', 'data-hint-secondary': '#', href: '#/cijfers' })
-        gradesElem.innerText = "Cijfers"
-
-        setAttributes(studyguideElem, { class: 'small st-keyboard-hint', 'data-hint': '4', 'data-hint-secondary': '$', href: '#/elo/studiewijzer' })
-        studyguideElem.innerText = "Studiewijzers"
-
-        setAttributes(booksElem, { class: 'small st-keyboard-hint', 'data-hint': '5', 'data-hint-secondary': '%', href: '#/leermiddelen' })
-        booksElem.innerText = "Leermiddelen"
+                let shortcutHint = element('div', `st-shortcut-${title}`, menuItem, { class: 'st-shortcut-inline', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
+            })
+        }
 
         addEventListener('keydown', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
-            if (shortcutsWrapper.dataset.open === 'false' && e.key.toLowerCase() === key.toLowerCase()) {
+            if (e.key.toLowerCase() === key.toLowerCase()) {
                 e.preventDefault()
-                shortcutsWrapper.dataset.open = true
+                mainMenu.dataset.shortcuts = true
+
+                document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
             }
-            shortcutsWrapper.querySelectorAll('a').forEach(shortcut => {
-                let primary = shortcut.dataset.hint,
-                    secondary = shortcut.dataset.hintSecondary
-                if ((e.key === primary || e.key === secondary) && window.getComputedStyle(shortcutsWrapper).getPropertyValue('z-index') === '10000000') {
-                    shortcut.click()
-                    shortcut.classList.add('clicked')
-                    setTimeout(() => {
-                        shortcut.classList.remove('clicked')
-                    }, 1500)
-                }
-            })
+            if (mainMenu.dataset.shortcuts === 'true') {
+                let matchingKey = shortcutKeys.find(key => key.code === e.code)
+
+                if (!matchingKey) return
+                let targetElement = document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a')?.[shortcutKeys.indexOf(matchingKey)]
+                if (targetElement) targetElement.click()
+
+                document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
+            }
         })
 
         addEventListener('keyup', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
-            if (shortcutsWrapper.dataset.open === 'true' && e.key.toLowerCase() === key.toLowerCase()) {
-                setTimeout(() => {
-                    if (shortcutsWrapper.dataset.open === 'true') shortcutsWrapper.dataset.open = false
-                }, 1000)
+            if (e.key.toLowerCase() === key.toLowerCase()) {
+                if (!shortcutsOnMainPage || !document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = false
             }
         })
 
         window.addEventListener('popstate', async () => {
             if (syncedStorage['magister-shortcuts-today']) {
-                if (shortcutsWrapper?.dataset.open === 'force') shortcutsWrapper.dataset.open = false
-                if (document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
+                if (document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = true
+                else mainMenu.dataset.shortcuts = false
             }
         })
-
-        if (syncedStorage['magister-shortcuts-today'] && document.location.hash.includes('#/vandaag')) shortcutsWrapper.dataset.open = 'force'
-        else shortcutsWrapper.dataset.open = false
     }
 
     if (syncedStorage['notes-enabled']) {
-        let notes = syncedStorage['st-notes'],
+        let notes = syncedStorage['st-notes'] || ['\n'],
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
-            pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '0'.` }),
+            pinButton = element('a', 'st-notes-pin', notesWrapper, { title: `Vastmaken/losmaken\nOf druk op de toetsen '${keyDisplay}' en '\\'.` }),
             newButton = element('a', 'st-notes-new', notesWrapper, { title: "Nieuwe notitie" }),
             saveTimeout
 
@@ -366,7 +369,7 @@ async function main() {
                 event.preventDefault()
                 notesWrapper.dataset.open = true
             }
-            if ((event.key === '0' || event.key === ')') && window.getComputedStyle(notesWrapper).getPropertyValue('z-index') === '10000000') {
+            if ((event.code === 'Backslash') && window.getComputedStyle(notesWrapper).getPropertyValue('z-index') === '10000000') {
                 pinButton.click()
             }
         })
@@ -400,10 +403,11 @@ function getWeekNumber() {
 }
 
 async function getPeriodNumber(w = getWeekNumber()) {
-    const settingPeriods = syncedStorage['periods']
+    const settingPeriods = syncedStorage['periods'],
+        periodsArray = typeof settingPeriods === 'object' ? Object.values(settingPeriods) : settingPeriods
     let periodNumber = 0
 
-    settingPeriods.forEach((e, i, arr) => {
+    periodsArray.forEach((e, i, arr) => {
         let startWeek = Number(e),
             endWeek = Number(arr[i + 1]) || Number(arr[0])
         if (endWeek < startWeek && (w >= startWeek || w < endWeek)) periodNumber = i + 1

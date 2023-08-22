@@ -51,7 +51,8 @@ async function studyguideIndividual() {
 async function renderStudyguideList(gridContainer, compact) {
     const settingGrid = (syncedStorage['magister-sw-display'] === 'grid'),
         settingShowPeriod = syncedStorage['magister-sw-period'],
-        settingSubjects = syncedStorage['magister-subjects'],
+        settingSubjects = syncedStorage['subjects'],
+        subjectsArray = typeof settingSubjects === 'object' ? Object.values(settingSubjects) : settingSubjects,
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),
@@ -75,7 +76,7 @@ async function renderStudyguideList(gridContainer, compact) {
             priority,
             periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
-        settingSubjects.forEach(subjectEntry => {
+        subjectsArray.forEach(subjectEntry => {
             testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
             testArray.forEach(testString => {
                 if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name

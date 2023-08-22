@@ -23,11 +23,6 @@ async function today() {
     scheduleWrapper.id = 'st-vd-schedule'
     notifcationsWrapper.id = 'st-vd-notifications'
 
-    if (syncedStorage['magister-shortcuts-today']) {
-        scheduleWrapper.style.marginBottom = '55px'
-        notifcationsWrapper.style.marginBottom = '55px'
-    }
-
     todayNotifications(notifcationsWrapper)
     todaySchedule(scheduleWrapper)
 
@@ -292,7 +287,7 @@ async function todaySchedule(scheduleWrapper) {
             })
 
             if (!legacy || title !== 'filler') {
-                parsedTitle = await parseSubject(title, syncedStorage['vd-subjects-display'] === 'custom', syncedStorage['magister-subjects'])
+                parsedTitle = await parseSubject(title, syncedStorage['vd-subjects-display'] === 'custom', syncedStorage['subjects'])
                 elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
                 elementTitleBold.innerText = parsedTitle.subjectName || ''
                 elementTitleNormal2.innerText = parsedTitle.stringAfter || ''

@@ -4,11 +4,14 @@ let token,
 
 init()
 async function init() {
-    if (!Object.values(await chrome.storage.sync.get('magister-gamification-beta'))[0]) return
+    console.info("Service worker running!")
+
+    if (!Object.values(await chrome.storage.sync.get('magister-gamification-beta'))[0] && !Object.values(await chrome.storage.sync.get('magister-cf-backup'))[0]) return
 
     console.info("Some enabled features require making HTTP requests. Intercepting HTTP request information...")
 
     chrome.webRequest.onSendHeaders.addListener(async e => {
+        console.log(e)
         Object.values(e.requestHeaders).forEach(async obj => {
             if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
         })

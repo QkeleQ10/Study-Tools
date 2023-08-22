@@ -16,7 +16,7 @@ const value = computed({
 
 <template>
     <label class="setting text" :for="id">
-        <input class="text-input" :type="setting.fieldType || 'input'" :id="id" v-model="value" placeholder=" " autocomplete="off">
+        <input class="text-input" :type="setting.fieldType || 'input'" :id="id" v-model.lazy="value" placeholder=" " autocomplete="off">
         <div class="border-cutout">
             <slot name="title"></slot>
         </div>
