@@ -15,7 +15,7 @@ jobs:
 
       - name: Zip Files
         run: |
-          zip -r release.zip ./ -x "src/popup/src/*"
+          zip -r release.zip ./ -x "src/popup/src/*" ".git/*" ".github/*"
 
       - name: Create Release
         uses: actions/upload-artifact@v3
