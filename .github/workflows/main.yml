@@ -33,7 +33,7 @@ jobs:
           zip -r release.zip temp_release/
           
           # Move the ZIP file to the repository root
-          mv release.zip $GITHUB_WORKSPACE/release.zip
+          mv release.zip ./zip
           
           # Clean up
           rm -rf temp_release
