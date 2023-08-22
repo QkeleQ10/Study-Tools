@@ -21,9 +21,6 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build
-        run: npm run build # Add your build command if necessary
-
       - name: Exclude Unwanted Files
         run: |
           # Create a temporary directory
