@@ -41,7 +41,7 @@ jobs:
         working-directory: src # Set the working directory to the src folder
 
       - name: Create Release
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: release
-          path: $GITHUB_WORKSPACE/release.zip
+          path: output/
