@@ -406,7 +406,8 @@ export default [
                     { settingId: 'magister-overlay-hotkey', operator: 'defined' },
                     { settingId: 'magister-shortcuts', operator: 'equal', value: true }
                 ],
-            },
+            }, 
+            // 'sidebar-expand-all' to automatically expand every sidebar item
             {
                 id: 'notes-enabled',
                 title: "Notitieblok",

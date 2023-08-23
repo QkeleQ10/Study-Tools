@@ -91,17 +91,17 @@ async function main() {
         }, 1200)
 
         function createShortcutHints() {
-            document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
+            if (syncedStorage['sidebar-expand-all']) document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
 
             document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a').forEach((menuItem, i, a) => {
-                let title = (menuItem.querySelector('span.caption') || menuItem).innerText
+                let title = menuItem.querySelector('span.caption')?.innerText || menuItem.firstChild.nodeValue
 
                 let shortcutHint = element('div', `st-shortcut-${title}`, menuItem, { class: 'st-shortcut-inline', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
 
                 if (shortcutHint.closest('li.children')) {
                     let parent = shortcutHint.closest('li.children')
                     let childIndex = Array.prototype.indexOf.call(parent.querySelector('ul').children, shortcutHint.parentElement.parentElement)
-                    let shortcutHintParent = element('div', `st-shortcut-parent-${title}`, parent.firstElementChild, { class: 'st-shortcut-inline st-shortcut-inline-collapsed-only', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms; left: ${(childIndex * 12) - 2}px` })
+                    let shortcutHintParent = element('div', `st-shortcut-parent-${title}`, parent.firstElementChild, { class: 'st-shortcut-inline st-shortcut-inline-collapsed-only', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms; --child-index: ${childIndex}` })
                 }
             })
         }
@@ -111,17 +111,16 @@ async function main() {
             if (e.key.toLowerCase() === key.toLowerCase()) {
                 e.preventDefault()
                 mainMenu.dataset.shortcuts = true
-
-                document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
             }
             if (mainMenu.dataset.shortcuts === 'true') {
                 let matchingKey = shortcutKeys.find(key => key.code === e.code)
-
                 if (!matchingKey) return
-                let targetElement = document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a')?.[shortcutKeys.indexOf(matchingKey)]
-                if (targetElement) targetElement.click()
 
-                document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
+                let targetElement = document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a')?.[shortcutKeys.indexOf(matchingKey)]
+                if (targetElement) {
+                    e.preventDefault()
+                    targetElement.click()
+                }
             }
         })
 
@@ -395,8 +394,10 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-overlay').forEach(e => e.close())
-    document.querySelectorAll('.st-button, .st-overlay, [id^="st-cf"], .k-animation-container').forEach(e => e.remove())
+    document.querySelectorAll('.st-button, .st-overlay, [id^="st-cf"], .k-animation-container').forEach(e => {
+        if (e.close()) e.close()
+        e.remove()
+    })
 }
 
 function getWeekNumber() {

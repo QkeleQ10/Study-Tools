@@ -360,7 +360,7 @@ span.st-subtitle {
     transition: scale 100ms var(--reverse-transition-delay), opacity 200ms;
 }
 
-li.children .st-shortcut-inline {
+li.children .submenu .st-shortcut-inline {
     left: -25px;
 }
 
@@ -371,15 +371,25 @@ ul.main-menu[data-shortcuts="true"] .st-shortcut-inline {
 }
 
 .st-shortcut-inline-collapsed-only {
+    --child-index: 0;
+    left: calc(var(--child-index) * 12px - 2px);
     scale: 0 !important;
     opacity: 0 !important;
-    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms !important;
+    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms, left 200ms !important;
 }
 
-.menu-host.collapsed-menu ul.main-menu[data-shortcuts="true"] .st-shortcut-inline-collapsed-only {
+.menu-host.collapsed-menu ul.main-menu[data-shortcuts="true"] li.children .st-shortcut-inline-collapsed-only {
+    left: calc(var(--child-index) * 12px - 2px);
     scale: 1 !important;
     opacity: .6 !important;
-    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms !important;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
+}
+
+ul.main-menu[data-shortcuts="true"] li.children:not(.expanded) .st-shortcut-inline-collapsed-only {
+    left: calc(var(--child-index) * 24px - 2px);
+    scale: 1 !important;
+    opacity: .6 !important;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
 }
 
 #st-notes {
