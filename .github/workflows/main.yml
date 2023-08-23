@@ -11,11 +11,11 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Zip Files
         run: |
-          zip -r release.zip ./ -x "src/popup/src/*" ".git/*" ".github/*"
+          zip -r release.zip ./* -x "src/popup/src/*" "src/popup/public/*" "src/popup/*.*" ".git/*" ".github/*"
 
       - name: Create Release
         uses: actions/upload-artifact@v3
