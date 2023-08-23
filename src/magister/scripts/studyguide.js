@@ -51,8 +51,7 @@ async function studyguideIndividual() {
 async function renderStudyguideList(gridContainer, compact) {
     const settingGrid = (syncedStorage['magister-sw-display'] === 'grid'),
         settingShowPeriod = syncedStorage['magister-sw-period'],
-        settingSubjects = syncedStorage['subjects'],
-        subjectsArray = typeof settingSubjects === 'object' ? Object.values(settingSubjects) : settingSubjects,
+        subjectsArray = Object.values(syncedStorage['subjects']),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),

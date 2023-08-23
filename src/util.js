@@ -67,7 +67,7 @@ async function checkAnnouncements() {
 }
 
 
-// RE-IMPLEMENT!
+// RE-IMPLEMENT IN SERVICE WORKER?
 // async function checkDefaults() {
 //     settingsBuilder.forEach(section => {
 //         section.settings.forEach(setting => {

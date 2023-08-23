@@ -330,7 +330,11 @@ span.st-subtitle {
     animation: fadeIn 200ms;
 }
 
-.menu-container,
+.menu-container {
+    padding-top: 2px;
+    margin-top: -2px;
+}
+
 .main-menu li a {
     overflow: visible !important;
 }
@@ -352,7 +356,8 @@ span.st-subtitle {
     font: 14px var(--st-font-family-secondary);
     border: 1px solid #e7e7e7;
     scale: 0;
-    transition: scale 100ms var(--reverse-transition-delay);
+    opacity: 0;
+    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms;
 }
 
 li.children .st-shortcut-inline {
@@ -361,7 +366,20 @@ li.children .st-shortcut-inline {
 
 ul.main-menu[data-shortcuts="true"] .st-shortcut-inline {
     scale: 1;
-    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay);
+    opacity: .6;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms;
+}
+
+.st-shortcut-inline-collapsed-only {
+    scale: 0 !important;
+    opacity: 0 !important;
+    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms !important;
+}
+
+.menu-host.collapsed-menu ul.main-menu[data-shortcuts="true"] .st-shortcut-inline-collapsed-only {
+    scale: 1 !important;
+    opacity: .6 !important;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms !important;
 }
 
 #st-notes {

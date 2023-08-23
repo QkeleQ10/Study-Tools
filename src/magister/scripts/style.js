@@ -1,10 +1,5 @@
 document.addEventListener('DOMContentLoaded', applyStyles)
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'styles-updated') {
-        applyStyles()
-    }
-})
+chrome.storage.sync.onChanged.addListener(applyStyles)
 
 async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
     return new Promise((resolve, reject) => {

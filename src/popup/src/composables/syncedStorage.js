@@ -31,15 +31,6 @@ export function useSyncedStorage() {
         if (chrome?.storage?.sync) {
             chrome.storage.sync.set(syncedStorage.value)
         }
-        if (chrome?.tabs) {
-            chrome.tabs.query({}, (tabs) => {
-                if (!tabs) return
-                tabs.forEach((tab) => {
-                    if (!tab) return
-                    chrome.tabs.sendMessage(tab.id, { type: 'styles-updated' })
-                })
-            })
-        }
         refreshTheme()
     })
 

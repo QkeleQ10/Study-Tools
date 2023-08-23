@@ -97,6 +97,12 @@ async function main() {
                 let title = (menuItem.querySelector('span.caption') || menuItem).innerText
 
                 let shortcutHint = element('div', `st-shortcut-${title}`, menuItem, { class: 'st-shortcut-inline', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
+
+                if (shortcutHint.closest('li.children')) {
+                    let parent = shortcutHint.closest('li.children')
+                    let childIndex = Array.prototype.indexOf.call(parent.querySelector('ul').children, shortcutHint.parentElement.parentElement)
+                    let shortcutHintParent = element('div', `st-shortcut-parent-${title}`, parent.firstElementChild, { class: 'st-shortcut-inline st-shortcut-inline-collapsed-only', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms; left: ${(childIndex * 12) - 2}px` })
+                }
             })
         }
 
@@ -403,8 +409,7 @@ function getWeekNumber() {
 }
 
 async function getPeriodNumber(w = getWeekNumber()) {
-    const settingPeriods = syncedStorage['periods'],
-        periodsArray = typeof settingPeriods === 'object' ? Object.values(settingPeriods) : settingPeriods
+    const periodsArray = Object.values(syncedStorage['periods'])
     let periodNumber = 0
 
     periodsArray.forEach((e, i, arr) => {
