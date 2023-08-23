@@ -15,11 +15,12 @@
         "300": "icons/300.png",
         "512": "icons/512.png"
     },
-    "minimum_chrome_version": "102",
-    "background": {
-        "service_worker": "src/service-worker.js",
-        "type": "module"
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "studytools@qkeleq10.dev"
+        }
     },
+    "minimum_chrome_version": "102",
     "content_scripts": [
         {
             "matches": [
