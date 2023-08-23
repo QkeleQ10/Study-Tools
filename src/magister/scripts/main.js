@@ -59,8 +59,8 @@ async function main() {
 
     if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 
-    if (syncedStorage['magister-shortcuts']) {
-        const shortcutKeys = [
+    if (syncedStorage['hotkeys-enabled']) {
+        const hotkeyList = [
             { key: '`', code: 'Backquote' },
             { key: '1', code: 'Digit1' },
             { key: '2', code: 'Digit2' },
@@ -77,31 +77,31 @@ async function main() {
             { key: '[', code: 'BracketLeft' },
             { key: ']', code: 'BracketRight' },
         ],
-            shortcutsOnMainPage = syncedStorage['magister-shortcuts-today'],
+            hotkeysOnToday = syncedStorage['hotkeys-today'],
             mainMenu = document.querySelector('ul.main-menu')
 
-        createShortcutHints()
+        createHotkeyLabels()
         setTimeout(() => {
-            createShortcutHints()
-            if (shortcutsOnMainPage && document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = true
+            createHotkeyLabels()
+            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
         }, 600)
         setTimeout(() => {
-            createShortcutHints()
-            if (shortcutsOnMainPage && document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = true
+            createHotkeyLabels()
+            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
         }, 1200)
 
-        function createShortcutHints() {
+        function createHotkeyLabels() {
             if (syncedStorage['sidebar-expand-all']) document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
 
             document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a').forEach((menuItem, i, a) => {
                 let title = menuItem.querySelector('span.caption')?.innerText || menuItem.firstChild.nodeValue
 
-                let shortcutHint = element('div', `st-shortcut-${title}`, menuItem, { class: 'st-shortcut-inline', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
+                let hotkeyLabel = element('div', `st-hotkey-label-${title}`, menuItem, { class: 'st-hotkey-label', innerText: hotkeyList[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
 
-                if (shortcutHint.closest('li.children')) {
-                    let parent = shortcutHint.closest('li.children')
-                    let childIndex = Array.prototype.indexOf.call(parent.querySelector('ul').children, shortcutHint.parentElement.parentElement)
-                    let shortcutHintParent = element('div', `st-shortcut-parent-${title}`, parent.firstElementChild, { class: 'st-shortcut-inline st-shortcut-inline-collapsed-only', innerText: shortcutKeys[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms; --child-index: ${childIndex}` })
+                if (hotkeyLabel.closest('li.children')) {
+                    let parent = hotkeyLabel.closest('li.children')
+                    let childIndex = Array.prototype.indexOf.call(parent.querySelector('ul').children, hotkeyLabel.parentElement.parentElement)
+                    let hotkeyLabelParent = element('div', `st-hotkey-label-parent-${title}`, parent.firstElementChild, { class: 'st-hotkey-label st-hotkey-label-collapsed-only', innerText: hotkeyList[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms; --child-index: ${childIndex}` })
                 }
             })
         }
@@ -110,13 +110,13 @@ async function main() {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
                 e.preventDefault()
-                mainMenu.dataset.shortcuts = true
+                mainMenu.dataset.hotkeysVisible = true
             }
-            if (mainMenu.dataset.shortcuts === 'true') {
-                let matchingKey = shortcutKeys.find(key => key.code === e.code)
+            if (mainMenu.dataset.hotkeysVisible === 'true') {
+                let matchingKey = hotkeyList.find(key => key.code === e.code)
                 if (!matchingKey) return
 
-                let targetElement = document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a')?.[shortcutKeys.indexOf(matchingKey)]
+                let targetElement = document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a')?.[hotkeyList.indexOf(matchingKey)]
                 if (targetElement) {
                     e.preventDefault()
                     targetElement.click()
@@ -127,14 +127,14 @@ async function main() {
         addEventListener('keyup', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
-                if (!shortcutsOnMainPage || !document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = false
+                if (!hotkeysOnToday || !document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = false
             }
         })
 
         window.addEventListener('popstate', async () => {
-            if (syncedStorage['magister-shortcuts-today']) {
-                if (document.location.hash.includes('#/vandaag')) mainMenu.dataset.shortcuts = true
-                else mainMenu.dataset.shortcuts = false
+            if (syncedStorage['hotkeys-today']) {
+                if (document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
+                else mainMenu.dataset.hotkeysVisible = false
             }
         })
     }

@@ -1,3 +1,49 @@
+const subjects = {
+    id: "subjects",
+    title: "Vaknamen bewerken",
+    subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
+    type: "SubjectEditor",
+    conditions: [
+        { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
+    ],
+    default: [
+        { name: "Aardrijkskunde", aliases: "ak" },
+        { name: "Bedrijfseconomie", aliases: "beco" },
+        { name: "Beeldende vorming", aliases: "be, bv, kubv" },
+        { name: "Biologie", aliases: "bi, bio" },
+        { name: "Cult. en kunstz. vorming", aliases: "ckv" },
+        { name: "Drama", aliases: "dr, kudr" },
+        { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
+        { name: "Economie", aliases: "ec, eco, econ" },
+        { name: "Engels", aliases: "en, entl, Engels, English" },
+        { name: "Frans", aliases: "fa, fatl, Franse, Français" },
+        { name: "Geschiedenis", aliases: "gs" },
+        { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
+        { name: "Kunst algemeen", aliases: "ku, kua" },
+        { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
+        { name: "Levensbeschouwing", aliases: "lv" },
+        { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
+        { name: "Loopbaan­oriëntatie en -begeleiding", aliases: "lob" },
+        { name: "Maatschappijleer", aliases: "ma, malv" },
+        { name: "Maatschappij­wetenschappen", aliases: "maw" },
+        { name: "Mentor", aliases: "mentoruur, mentoraat" },
+        { name: "Muziek", aliases: "mu, kumu" },
+        { name: "Natuurkunde", aliases: "na, nat" },
+        { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
+        { name: "Scheikunde", aliases: "sk, sch" },
+        { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
+        { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
+    ]
+}
+
+const periods = {
+    id: "periods",
+    title: "Perioden bewerken",
+    subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
+    type: "PeriodEditor",
+    default: [30, 47, 9],
+}
+
 export default [
     {
         id: "appearance",
@@ -194,43 +240,7 @@ export default [
                     },
                 ],
             },
-            {
-                id: "subjects",
-                title: "Vaknamen bewerken",
-                subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
-                type: "SubjectEditor",
-                conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-                ],
-                default: [
-                    { name: "Aardrijkskunde", aliases: "ak" },
-                    { name: "Bedrijfseconomie", aliases: "beco" },
-                    { name: "Beeldende vorming", aliases: "be, bv, kubv" },
-                    { name: "Biologie", aliases: "bi, bio" },
-                    { name: "Cult. en kunstz. vorming", aliases: "ckv" },
-                    { name: "Drama", aliases: "dr, kudr" },
-                    { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
-                    { name: "Economie", aliases: "ec, eco, econ" },
-                    { name: "Engels", aliases: "en, entl, Engels, English" },
-                    { name: "Frans", aliases: "fa, fatl, Franse, Français" },
-                    { name: "Geschiedenis", aliases: "gs" },
-                    { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
-                    { name: "Kunst algemeen", aliases: "ku, kua" },
-                    { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
-                    { name: "Levensbeschouwing", aliases: "lv" },
-                    { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
-                    { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
-                    { name: "Maatschappijleer", aliases: "ma, malv" },
-                    { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
-                    { name: "Mentor", aliases: "mentoruur, mentoraat" },
-                    { name: "Muziek", aliases: "mu, kumu" },
-                    { name: "Natuurkunde", aliases: "na, nat" },
-                    { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
-                    { name: "Scheikunde", aliases: "sk, sch" },
-                    { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
-                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
-                ]
-            },
+            subjects,
             {
                 id: "magister-vd-grade",
                 title: "Laatste cijfer op startscherm",
@@ -303,47 +313,8 @@ export default [
                     },
                 ]
             },
-            {
-                id: "subjects",
-                title: "Vaknamen bewerken",
-                subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
-                type: "SubjectEditor",
-                default: [
-                    { name: "Aardrijkskunde", aliases: "ak" },
-                    { name: "Bedrijfseconomie", aliases: "beco" },
-                    { name: "Beeldende vorming", aliases: "be, bv, kubv" },
-                    { name: "Biologie", aliases: "bi, bio" },
-                    { name: "Cult. en kunstz. vorming", aliases: "ckv" },
-                    { name: "Drama", aliases: "dr, kudr" },
-                    { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
-                    { name: "Economie", aliases: "ec, eco, econ" },
-                    { name: "Engels", aliases: "en, entl, Engels, English" },
-                    { name: "Frans", aliases: "fa, fatl, Franse, Français" },
-                    { name: "Geschiedenis", aliases: "gs" },
-                    { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
-                    { name: "Kunst algemeen", aliases: "ku, kua" },
-                    { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
-                    { name: "Levensbeschouwing", aliases: "lv" },
-                    { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
-                    { name: "Loopbaan&shy;ori\xebntatie en -begeleiding", aliases: "lob" },
-                    { name: "Maatschappijleer", aliases: "ma, malv" },
-                    { name: "Maatschappij&shy;wetenschappen", aliases: "maw" },
-                    { name: "Mentor", aliases: "mentoruur, mentoraat" },
-                    { name: "Muziek", aliases: "mu, kumu" },
-                    { name: "Natuurkunde", aliases: "na, nat" },
-                    { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
-                    { name: "Scheikunde", aliases: "sk, sch" },
-                    { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
-                    { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
-                ]
-            },
-            {
-                id: "periods",
-                title: "Perioden bewerken",
-                subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
-                type: "PeriodEditor",
-                default: [30, 47, 9],
-            },
+            subjects,
+            periods,
             {
                 id: "magister-sw-period",
                 title: "Periodenummers bij studiewijzers",
@@ -389,7 +360,7 @@ export default [
                 default: "S",
             },
             {
-                id: 'magister-shortcuts',
+                id: 'hotkeys-enabled',
                 title: "Sneltoetsen",
                 subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
                 default: true,
@@ -398,15 +369,16 @@ export default [
                 ],
             },
             {
-                id: 'magister-shortcuts-today',
+                id: 'hotkeys-today',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
                 default: true,
                 conditions: [
                     { settingId: 'magister-overlay-hotkey', operator: 'defined' },
-                    { settingId: 'magister-shortcuts', operator: 'equal', value: true }
+                    { settingId: 'hotkeys-enabled', operator: 'equal', value: true }
                 ],
             },
+            // 'sidebar-expand-all' to automatically expand every sidebar item
             {
                 id: 'notes-enabled',
                 title: "Notitieblok",
