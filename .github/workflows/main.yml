@@ -1,4 +1,4 @@
-name: Create Release
+name: Create releases
 
 on:
   push:
@@ -10,15 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Zip Files
+      - name: Compress Chromium build
         run: |
-          zip -r release.zip ./* -x "src/popup/src/*" "src/popup/public/*" "src/popup/*.*" ".git/*" ".github/*"
+          zip -r chromium.zip ./* -x "src/popup/src/*" "src/popup/public/*" "src/popup/*.*" ".git/*" ".github/*" "manifest-firefox.json"
 
-      - name: Create Release
+      - name: Compress Firefox build
+        run: |
+          mv manifest.json manifest-chromium.json
+          mv manifest-firefox.json manifest.json
+          zip -r firefox.zip ./* -x "src/popup/src/*" "src/popup/public/*" "src/popup/*.*" ".git/*" ".github/*" "manifest.json"
+          mv manifest.json manifest-firefox.json
+          mv manifest-chromium.json manifest.json
+
+      - name: Upload as artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: release
-          path: release.zip
+          name: Releases
+          path: |
+            chromium.zip
+            firefox.zip
