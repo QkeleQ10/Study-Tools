@@ -209,11 +209,11 @@ export default [
                 id: "magister-vd-agendaHeight",
                 title: "Hoogte agenda",
                 type: "SlideInput",
-                default: 1,
+                default: 1.00,
                 format: "percent",
                 decimals: 0,
-                min: 0.5,
-                max: 2.5,
+                min: 0.50,
+                max: 2.50,
                 step: 0.01,
                 conditions: [
                     { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }

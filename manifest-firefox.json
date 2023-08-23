@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -20,7 +20,6 @@
             "id": "studytools@qkeleq10.dev"
         }
     },
-    "minimum_chrome_version": "102",
     "content_scripts": [
         {
             "matches": [
@@ -96,7 +95,6 @@
         "default_popup": "src/popup/dist/index.html",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
-    "options_page": "src/popup/dist/index.html",
     "options_ui": {
         "page": "src/popup/dist/index.html",
         "open_in_tab": true

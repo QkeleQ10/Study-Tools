@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { ref, onMounted, watchEffect } from 'vue'
+import { ref, onMounted, watchEffect, isProxy, toRaw } from 'vue'
 
 import settings from '../../../popup/public/settings.js'
 
@@ -28,8 +28,13 @@ export function useSyncedStorage() {
     })
 
     watchEffect(() => {
+        console.log('watcheffect!')
         if (chrome?.storage?.sync) {
-            chrome.storage.sync.set(syncedStorage.value)
+            let toStore = {...syncedStorage.value}
+            console.log(toStore)
+            if (isProxy(toStore)) toStore = toRaw(toStore)
+            console.log(toStore)
+            chrome.storage.sync.set(toStore)
         }
         refreshTheme()
     })
