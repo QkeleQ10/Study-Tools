@@ -21,7 +21,7 @@ jobs:
         run: |
           mv manifest.json manifest-chromium.json
           mv manifest-firefox.json manifest.json
-          zip -r firefox.zip ./* -x "src/popup/src/*" "src/popup/public/*" "src/popup/*.*" ".git/*" ".github/*" "manifest-chromium.json" "chromium.zip
+          zip -r firefox.zip ./* -x "src/popup/src/*" "src/popup/public/*" "src/popup/*.*" ".git/*" ".github/*" "manifest-chromium.json" "chromium.zip"
           mv manifest.json manifest-firefox.json
           mv manifest-chromium.json manifest.json
 
