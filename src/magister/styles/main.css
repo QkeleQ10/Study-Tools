@@ -339,7 +339,7 @@ span.st-subtitle {
     overflow: visible !important;
 }
 
-.st-shortcut-inline {
+.st-hotkey-label {
     --transition-delay: 0ms;
     --reverse-transition-delay: 0ms;
     position: absolute;
@@ -360,26 +360,36 @@ span.st-subtitle {
     transition: scale 100ms var(--reverse-transition-delay), opacity 200ms;
 }
 
-li.children .st-shortcut-inline {
+li.children .submenu .st-hotkey-label {
     left: -25px;
 }
 
-ul.main-menu[data-shortcuts="true"] .st-shortcut-inline {
+ul.main-menu[data-hotkeys-visible="true"] .st-hotkey-label {
     scale: 1;
     opacity: .6;
     transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms;
 }
 
-.st-shortcut-inline-collapsed-only {
+.st-hotkey-label-collapsed-only {
+    --child-index: 0;
+    left: calc(var(--child-index) * 12px - 2px);
     scale: 0 !important;
     opacity: 0 !important;
-    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms !important;
+    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms, left 200ms !important;
 }
 
-.menu-host.collapsed-menu ul.main-menu[data-shortcuts="true"] .st-shortcut-inline-collapsed-only {
+.menu-host.collapsed-menu ul.main-menu[data-hotkeys-visible="true"] li.children .st-hotkey-label-collapsed-only {
+    left: calc(var(--child-index) * 12px - 2px);
     scale: 1 !important;
     opacity: .6 !important;
-    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms !important;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
+}
+
+ul.main-menu[data-hotkeys-visible="true"] li.children:not(.expanded) .st-hotkey-label-collapsed-only {
+    left: calc(var(--child-index) * 24px - 2px);
+    scale: 1 !important;
+    opacity: .6 !important;
+    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
 }
 
 #st-notes {

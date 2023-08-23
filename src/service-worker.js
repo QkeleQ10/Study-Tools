@@ -11,7 +11,6 @@ async function init() {
     console.info("Some enabled features require making HTTP requests. Intercepting HTTP request information...")
 
     chrome.webRequest.onSendHeaders.addListener(async e => {
-        console.log(e)
         Object.values(e.requestHeaders).forEach(async obj => {
             if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
         })
