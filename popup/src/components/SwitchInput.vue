@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, defineProps, defineEmits } from 'vue'
-import { useElementSize } from '@vueuse/core'
+import { useElementSize, useFocus } from '@vueuse/core'
 
 import Icon from './Icon.vue'
 
@@ -9,6 +9,9 @@ const emit = defineEmits(['update:modelValue'])
 
 const label = ref(null)
 const { height } = useElementSize(label)
+
+const input = ref(null)
+const { focused } = useFocus(input)
 
 const value = computed({
     get() {
@@ -21,7 +24,7 @@ const value = computed({
 </script>
 
 <template>
-    <label class="setting switch" :for="id" ref="label" :class="{ tall: height > 70 }">
+    <label class="setting switch" :for="id" ref="label" :class="{ tall: height > 70, focused: focused }">
         <div>
             <h3 class="setting-title">
                 <slot name="title"></slot>
@@ -35,7 +38,7 @@ const value = computed({
                 <Icon class="switch-icon" :data-state="value">check</Icon>
             </div>
         </div>
-        <input type="checkbox" :id="id" v-model="value">
+        <input type="checkbox" :id="id" ref="input" v-model="value">
     </label>
 </template>
 
@@ -81,7 +84,7 @@ const value = computed({
 
 label:hover .switch-track,
 label:focus-visible .switch-track,
-label:has(:focus-visible) .switch-track,
+label.focused .switch-track,
 .switch-track:active {
     --thumb-size: 28px;
 }

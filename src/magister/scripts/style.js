@@ -368,7 +368,6 @@ html body .k-popup.k-list-container .k-item,
     left: -5px;
 }
 
-ul:not(.main-menu)>li:has(a):not(:has(.content)):hover,
 .k-dropdown-wrap.k-state-hover,
 .k-scheduler .k-event:hover,
 .sm-grid.k-grid .k-grid-content tr:hover,

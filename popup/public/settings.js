@@ -3,6 +3,7 @@ const subjects = {
     title: "Vaknamen bewerken",
     subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
     type: "SubjectEditor",
+    inline: true,
     conditions: [
         { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
     ],
@@ -41,6 +42,7 @@ const periods = {
     title: "Perioden bewerken",
     subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
     type: "PeriodEditor",
+    inline: true,
     default: [30, 47, 9],
 }
 

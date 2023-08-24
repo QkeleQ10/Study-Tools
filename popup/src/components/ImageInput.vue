@@ -18,6 +18,8 @@ const value = computed({
 const RESOLUTION = 56
 const QUALITY = 0.3
 
+let isFirefox = window.navigator.userAgent.match(/Firefox\/([0-9]+)\./gi)
+
 const input = ref(null)
 
 let pickerOpen = ref(false)
@@ -93,14 +95,11 @@ function imageChanged() {
                     <span class="keybind">V</span>
                 </div>
                 <input type="file" :id="id" ref="input" accept="image/*" @change="imageChanged">
-                <!-- <button class="bottom-sheet-action" @click="input.click()">
-                    <Icon>content_paste</Icon>
-                    <span>Plakken</span>
-                </button> -->
-                <button class="bottom-sheet-action" @click="input.click()">
+                <button class="bottom-sheet-action" v-if="!isFirefox" @click="input.click()">
                     <Icon>drive_folder_upload</Icon>
                     <span>Afbeelding uploaden</span>
                 </button>
+                <span class="supporting-text" v-else>Jouw browser ondersteunt het uploaden van afbeeldingen niet. Je kunt wel een afbeelding plakken.</span>
             </template>
         </BottomSheet>
     </div>

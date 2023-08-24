@@ -72,7 +72,7 @@ function eyeDropper() {
                 <Icon>palette</Icon>
             </button>
         </div>
-        <BottomSheet v-model:active.lazy="pickerOpen" :handle="true">
+        <BottomSheet v-model:active="pickerOpen" :handle="true">
             <template #content>
                 <span class="supporting-text">Kleur kiezen</span>
                 <ColorPicker is-widget picker-type="chrome" disable-history disable-alpha lang="En"
@@ -81,10 +81,7 @@ function eyeDropper() {
                     <Icon>colorize</Icon>
                     <span>Pipet</span>
                 </button>
-                <!-- <button class="bottom-sheet-action" @click="pickerOpen = false">
-                    <Icon>close</Icon>
-                    <span>Sluiten</span>
-                </button> -->
+                <span class="supporting-text" v-else>Jouw browser ondersteunt de pipetfunctie niet. Kies een kleur via de kleurenkiezer.</span>
             </template>
         </BottomSheet>
     </div>

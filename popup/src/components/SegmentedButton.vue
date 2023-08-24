@@ -90,7 +90,7 @@ const value = computed({
 }
 
 .button-segment[data-has-icon=true],
-.button-segment:has(.button-segment-icon:not(.icon-leave-active)) {
+.button-segment[data-state=true] {
     grid-template-columns: 18px auto;
 }
 

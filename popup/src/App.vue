@@ -86,7 +86,7 @@ function openInNewTab(url) {
             <About v-show="selectedCategory === 'about'" key="about" />
             <TransitionGroup tag="div" :name="transitionName" mode="out-in" v-for="category in settings"
                 v-show="category.id === selectedCategory" :key="category.id">
-                <div class="setting-wrapper" :class="{ visible: shouldShowSetting(setting) }"
+                <div class="setting-wrapper" :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
                     v-for="setting in category.settings" v-show="shouldShowSetting(setting)" :key="setting.id">
                     <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting" :id="setting.id"
                         v-model="syncedStorage[setting.id]">
@@ -138,15 +138,16 @@ main {
     flex-direction: column;
 }
 
-.setting-wrapper~.setting-wrapper.visible:not(:has(.inline-setting)) {
+.setting-wrapper~.setting-wrapper.visible {
     border-top: 1px solid var(--color-surface-variant);
 }
 
-.setting-wrapper:has(.inline-setting) {
+.setting-wrapper.inline {
     display: inline-block;
     margin-left: 16px;
     margin-right: -8px;
     margin-bottom: 16px;
+    border-top: none !important;
 }
 
 .setting-wrapper>.chip {

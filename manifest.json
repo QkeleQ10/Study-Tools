@@ -92,12 +92,12 @@
             "300": "icons/300.png",
             "512": "icons/512.png"
         },
-        "default_popup": "src/popup/dist/index.html",
+        "default_popup": "popup/dist/index.html",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
-    "options_page": "src/popup/dist/index.html",
+    "options_page": "popup/dist/index.html",
     "options_ui": {
-        "page": "src/popup/dist/index.html",
+        "page": "popup/dist/index.html",
         "open_in_tab": true
     },
     "permissions": [

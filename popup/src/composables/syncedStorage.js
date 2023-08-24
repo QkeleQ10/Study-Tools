@@ -3,12 +3,14 @@ import { ref, onMounted, watchEffect, isProxy, toRaw } from 'vue'
 
 import settings from '../../../popup/public/settings.js'
 
+const browser = window.browser || window.chrome
+
 export function useSyncedStorage() {
     let syncedStorage = ref({})
 
     onMounted(() => {
-        if (chrome?.storage?.sync) {
-            chrome.storage.sync.get()
+        if (browser?.storage?.sync) {
+            browser.storage.sync.get()
                 .then(value => {
                     syncedStorage.value = value
 
@@ -23,18 +25,17 @@ export function useSyncedStorage() {
                 })
 
             // Store the current version number
-            syncedStorage.value['openedPopup'] = chrome?.runtime?.getManifest()?.version
+            syncedStorage.value['openedPopup'] = browser?.runtime?.getManifest()?.version
         }
     })
 
     watchEffect(() => {
-        console.log('watcheffect!')
-        if (chrome?.storage?.sync) {
+        if (browser?.storage?.sync) {
             let toStore = {...syncedStorage.value}
             console.log(toStore)
             if (isProxy(toStore)) toStore = toRaw(toStore)
             console.log(toStore)
-            chrome.storage.sync.set(toStore)
+            browser.storage.sync.set(toStore)
         }
         refreshTheme()
     })

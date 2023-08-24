@@ -1,5 +1,6 @@
 <script setup>
-import { computed, defineProps, defineEmits } from 'vue'
+import { ref, computed, defineProps, defineEmits } from 'vue'
+import { useFocus } from '@vueuse/core'
 
 const props = defineProps(['modelValue', 'id', 'setting'])
 const emit = defineEmits(['update:modelValue'])
@@ -12,11 +13,19 @@ const value = computed({
         emit('update:modelValue', value)
     }
 })
+
+const input = ref(null)
+const { focused } = useFocus(input)
+
+const filled = computed(() => {
+    return value?.value?.length > 0
+})
 </script>
 
 <template>
-    <label class="setting text" :for="id">
-        <input class="text-input" :type="setting.fieldType || 'input'" :id="id" v-model.lazy="value" placeholder=" " autocomplete="off">
+    <label class="setting text" :for="id" :class="{ focused: focused, filled: filled }">
+        <input class="text-input" :type="setting.fieldType || 'input'" :id="id" ref="input" v-model.lazy="value"
+            placeholder=" " autocomplete="off">
         <div class="border-cutout">
             <slot name="title"></slot>
         </div>
@@ -47,18 +56,18 @@ const value = computed({
     transition: color 200ms, top 200ms, font 200ms;
 }
 
-.setting.text:has(.text-input:focus) .setting-title,
-.setting.text:has(.text-input:not(:placeholder-shown)) .setting-title {
+.setting.text.focused .setting-title,
+.setting.text.filled .setting-title {
     top: 4px;
     font-size: 12px;
     line-height: 16px;
 }
 
-.setting.text:has(.text-input:focus) .setting-title {
+.setting.text.focused .setting-title {
     color: var(--color-on-surface);
 }
 
-.setting.text:has(.text-input:focus) .setting-title {
+.setting.text.focused .setting-title {
     color: var(--color-primary);
 }
 
@@ -78,8 +87,8 @@ const value = computed({
     transition: background-color 200ms, scale 200ms;
 }
 
-.setting.text:has(.text-input:focus) .border-cutout,
-.setting.text:has(.text-input:not(:placeholder-shown)) .border-cutout {
+.setting.text.focused .border-cutout,
+.setting.text.filled .border-cutout {
     scale: 1;
 }
 
