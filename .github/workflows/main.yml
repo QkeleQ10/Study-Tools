@@ -15,13 +15,13 @@ jobs:
 
       - name: Compress Chromium build
         run: |
-          zip -r chromium.zip ./* -x "popup/src/*" "popup/public/*" "popup/*.*" ".git/*" ".github/*" "manifest-firefox.json"
+          zip -r chromium.zip _locales icons popup/dist src manifest.json updates.json
 
       - name: Compress Firefox build
         run: |
           mv manifest.json manifest-chromium.json
           mv manifest-firefox.json manifest.json
-          zip -r firefox.zip ./* -x "popup/src/*" "popup/public/*" "popup/*.*" ".git/*" ".github/*" "manifest-chromium.json" "chromium.zip"
+          zip -r firefox.zip _locales icons popup/dist src manifest.json updates.json
           mv manifest.json manifest-firefox.json
           mv manifest-chromium.json manifest.json
 
