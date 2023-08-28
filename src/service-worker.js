@@ -6,7 +6,7 @@ init()
 async function init() {
     console.info("Service worker running!")
 
-    if (!Object.values(await chrome.storage.sync.get('magister-gamification-beta'))[0] && !Object.values(await chrome.storage.sync.get('magister-cf-backup'))[0]) return
+    // SHOULD CHECK AND SET DEFAULT SETTINGS. POTENTIAL ISSUE= import '' from ''
 
     console.info("Some enabled features require making HTTP requests. Intercepting HTTP request information...")
 

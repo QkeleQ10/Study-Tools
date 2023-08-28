@@ -394,8 +394,8 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-button, .st-overlay, [id^="st-cf"], .k-animation-container').forEach(e => {
-        if (e.close()) e.close()
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, .st-overlay, [id^="st-cf"], .k-animation-container').forEach(e => {
+        if (e.tagName === 'DIALOG') e.close()
         e.remove()
     })
 }

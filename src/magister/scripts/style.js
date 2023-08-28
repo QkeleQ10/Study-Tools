@@ -62,7 +62,7 @@ async function applyStyles() {
     --st-foreground-primary: #333333;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
-    --st-border-color: #e7e7e7;
+    --st-border-color: #ededed;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
@@ -91,7 +91,7 @@ async function applyStyles() {
     --st-foreground-primary: #fff;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
-    --st-border-color: #333;
+    --st-border-color: #2e2e2e;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
@@ -878,8 +878,12 @@ h3:active> .icon-up-arrow:before {
 `, 'study-tools-vd-overhaul')
     }
 
-    if (syncedStorage['magister-sw-display'] === 'grid') {
+    if (syncedStorage['sw-enabled']) {
         createStyle(`
+#studiewijzer-container section.main {
+    padding-top: 120px;
+}
+
 #studiewijzer-container aside,
 #studiewijzer-container .content-container,
 #studiewijzer-detail-container .widget.full-height .block {

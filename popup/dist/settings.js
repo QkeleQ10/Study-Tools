@@ -3,6 +3,7 @@ const subjects = {
     title: "Vaknamen bewerken",
     subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
     type: "SubjectEditor",
+    inline: true,
     conditions: [
         { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
     ],
@@ -41,6 +42,7 @@ const periods = {
     title: "Perioden bewerken",
     subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
     type: "PeriodEditor",
+    inline: true,
     default: [30, 47, 9],
 }
 
@@ -290,38 +292,33 @@ export default [
                 ]
             },
             {
-                id: "magister-sw-display",
+                id: "sw-enabled",
                 title: "Studiewijzers ordenen",
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vaknaam en periodenummer.",
-                type: "SegmentedButton",
-                default: "grid",
-                options: [
-                    {
-                        value: "grid",
-                        title: "Raster",
-                        icon: "grid_view"
-                    },
-                    {
-                        value: "list",
-                        title: "Lijst",
-                        icon: "sort"
-                    },
-                    {
-                        value: "off",
-                        title: "Uit",
-                        icon: "block"
-                    },
-                ]
+                default: true,
             },
             subjects,
             periods,
+            {
+                id: "sw-cols",
+                title: "Aantal kolommen",
+                type: "SlideInput",
+                default: 3,
+                decimals: 0,
+                min: 1,
+                max: 5,
+                step: 1,
+                conditions: [
+                    { settingId: 'sw-enabled', operator: 'equal', value: true }
+                ],
+            },
             {
                 id: "magister-sw-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
                 conditions: [
-                    { settingId: 'magister-sw-display', operator: 'equal', value: 'grid' }
+                    { settingId: 'sw-enabled', operator: 'equal', value: true }
                 ],
             },
             {
@@ -378,7 +375,6 @@ export default [
                     { settingId: 'hotkeys-enabled', operator: 'equal', value: true }
                 ],
             },
-            // 'sidebar-expand-all' to automatically expand every sidebar item
             {
                 id: 'notes-enabled',
                 title: "Notitieblok",
