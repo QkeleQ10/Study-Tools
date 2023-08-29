@@ -102,6 +102,10 @@ async function studyguideIndividual() {
 }
 
 async function renderStudyguideList(gridContainer, compact) {
+    if (!syncedStorage['sw-enabled']) return
+
+    console.log(`Commencing render`)
+
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
 
     const swEnabled = syncedStorage['sw-enabled'],
@@ -111,24 +115,16 @@ async function renderStudyguideList(gridContainer, compact) {
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
-        gridWrapper = document.createElement('div'),
-        col1 = document.createElement('div'),
-        cols = [col1]
+        gridWrapper = element('div', 'st-sw-container', gridContainer)
 
-    if (swEnabled) {
-        document.querySelectorAll('#st-sw-container').forEach(e => e.remove())
-        gridContainer.appendChild(gridWrapper)
-        gridWrapper.id = 'st-sw-container'
-        gridWrapper.appendChild(col1)
-        col1.id = 'st-sw-col-1'
-        col1.classList.add('st-sw-col')
-        
-        for (let i = 2; i <= Number(settingCols); i++) {
-            cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
-        }
+    let cols = [],
+        object = {}
+
+    for (let i = 1; i <= Number(settingCols); i++) {
+        cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
     }
 
-    let object = {}
+    console.log(`Rendering study guides to element:`, gridContainer, gridWrapper, cols)
 
     originalItems.forEach(elem => {
         let title = elem.firstElementChild.firstElementChild.innerText,
@@ -157,6 +153,8 @@ async function renderStudyguideList(gridContainer, compact) {
         if (!object[subject]) object[subject] = []
         object[subject].push({ elem, title, period, priority })
     })
+
+    console.log(object)
 
     Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
         let items = object[subject]

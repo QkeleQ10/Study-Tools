@@ -18,7 +18,7 @@
 
 #sw-search {
     position: absolute;
-    top: 35px;
+    top: 40px;
     right: 28px;
     z-index: 99999;
 }
@@ -47,7 +47,7 @@
 
 #sw-show-hidden-items-label {
     position: absolute;
-    top: 80px;
+    top: 85px;
     right: 28px;
     z-index: 99999;
 }
@@ -99,6 +99,7 @@
     padding-block: var(--padding-block);
     font: 600 16px/22px var(--st-font-family-secondary);
     background-color: var(--st-highlight-primary);
+    color: var(--st-foreground-primary);
 }
 
 .st-sw-subject-headline {
@@ -164,8 +165,9 @@
 }
 
 #st-sw-container button:hover,
-#st-sw-container button:focus {
-    filter: brightness(var(--st-hover-brightness))
+#st-sw-container button:focus,
+#st-sw-container button.st-sw-selected {
+    filter: brightness(var(--st-hover-brightness));
 }
 
 .st-current-sw>div>div>footer.endlink,

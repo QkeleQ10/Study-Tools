@@ -881,7 +881,7 @@ h3:active> .icon-up-arrow:before {
     if (syncedStorage['sw-enabled']) {
         createStyle(`
 #studiewijzer-container section.main {
-    padding-top: 120px;
+    padding-top: 125px;
 }
 
 #studiewijzer-container aside,
