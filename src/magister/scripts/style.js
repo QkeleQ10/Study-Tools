@@ -861,6 +861,117 @@ h3:active> .icon-up-arrow:before {
 #studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
     max-width: calc(100vw - 469px);
 }
+
+.kwt-widget table {
+    display: block;
+}
+
+.kwt-widget tbody {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1px;
+    min-width: 100%;
+    width: 100%;
+    max-width: 100%;
+    background-color: var(--st-border-color);
+}
+
+.kwt-widget thead {
+    display: none;
+}
+
+.kwt-widget tbody>tr {
+    display: grid;
+    grid-template:
+        'check title title' auto
+        'check teacher classroom' auto
+        'check description description' auto
+        / 40px auto 1fr;
+    padding-block: 4px;
+    background-color: var(--st-background-primary);
+    color: var(--st-foreground-primary);
+}
+
+.kwt-widget tr td {
+    display: inline;
+    width: auto;
+    height: auto;
+    padding-right: 0 !important;
+    border: none !important;
+    line-height: normal;
+    background-color: transparent !important;
+}
+
+.kwt-widget tr td:first-child {
+    position: relative;
+    grid-area: check;
+}
+
+.kwt-widget tr td:first-child:after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 16px;
+    font-family: 'Font Awesome 5 Pro';
+    font-size: 18px;
+    line-height: 100%;
+    font-style: normal;
+}
+
+.kwt-widget  tr td:first-child .icon-oke {
+    display: none;
+}
+
+.kwt-widget tr:has(.icon-oke) {
+    order: 1;
+    background-color: var(--st-highlight-primary) !important;
+}
+
+.kwt-widget tr td:first-child:has(.icon-oke):after {
+    content: '';
+}
+
+.kwt-widget tr td:first-child .disabled-message {
+    font-size: 0;
+}
+
+.kwt-widget tr.disabled td:first-child .disabled-message:after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 11px;
+    font-family: 'Font Awesome 5 Pro';
+    font-size: 18px;
+    line-height: 100%;
+    z-index: 2;
+}
+
+.kwt-widget tr td:nth-child(2) {
+    grid-area: classroom;
+}
+
+.kwt-widget tr td:nth-child(2):before {
+    content: '(';
+}
+
+.kwt-widget tr td:nth-child(2):after {
+    content: ')';
+}
+
+.kwt-widget tr td:nth-child(3) {
+    grid-area: title;
+    font: var(--st-font-primary);
+    font-size: 14px;
+    line-height: normal;
+}
+
+.kwt-widget tr td:nth-child(4) {
+    grid-area: teacher;
+}
+
+.kwt-widget tr td:nth-child(5) {
+    grid-area: description;
+}
 `, 'study-tools')
     }
 

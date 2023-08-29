@@ -15,14 +15,14 @@ async function studyguideList() {
     if (!syncedStorage['sw-enabled']) return
 
     const gridContainer = await awaitElement('section.main')
-    renderStudyguideList(gridContainer)
+    renderStudyguideList()
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
     let searchBar = element('input', 'sw-search', document.body, { class: "st-input", placeholder: "Studiewijzers zoeken" })
     // searchBar.focus()
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
-            document.querySelector('.st-sw-subject:not(.hidden) > .st-sw-item:not(.hidden)').click()
+            document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
         }
     })
     searchBar.addEventListener('input', validateItems)
@@ -32,12 +32,18 @@ async function studyguideList() {
     showHiddenItemsInput.addEventListener('input', validateItems)
 
     function validateItems() {
+        let cols = gridContainer.querySelectorAll('.st-sw-col')
         gridContainer.querySelectorAll('.st-sw-item, .st-sw-item-default').forEach(studyguide => {
             let query = searchBar.value.toLowerCase()
-            let matches = (studyguide.dataset.title.toLowerCase().includes(query) || studyguide.parentElement.dataset.subject.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
+            let matches = (studyguide.dataset.title.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
 
             if (matches) studyguide.classList.remove('hidden')
             else studyguide.classList.add('hidden')
+        })
+        let visibleSubjects = gridContainer.querySelectorAll('.st-sw-subject:has(button:not(.hidden))')
+        let visibleSubjectsArray = [...visibleSubjects]
+        visibleSubjectsArray.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
+            cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
         })
     }
 
@@ -74,8 +80,7 @@ async function studyguideIndividual() {
 
     if (!syncedStorage['sw-enabled']) return
 
-    const gridContainer = await awaitElement('div.full-height.widget')
-    renderStudyguideList(gridContainer, true)
+    renderStudyguideList()
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
     let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
@@ -101,15 +106,22 @@ async function studyguideIndividual() {
     })
 }
 
-async function renderStudyguideList(gridContainer, compact) {
+async function renderStudyguideList() {
     if (!syncedStorage['sw-enabled']) return
+
+    let mainSection = document.querySelector('section.main'),
+        widget = document.querySelector('div.full-height.widget'),
+        gridContainer = mainSection
+
+    if (widget) {
+        gridContainer = widget
+    }
 
     console.log(`Commencing render`)
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
 
-    const swEnabled = syncedStorage['sw-enabled'],
-        settingCols = syncedStorage['sw-cols'],
+    const settingCols = syncedStorage['sw-cols'],
         settingShowPeriod = syncedStorage['magister-sw-period'],
         subjectsArray = Object.values(syncedStorage['subjects']),
         currentPeriod = await getPeriodNumber(),
@@ -157,16 +169,9 @@ async function renderStudyguideList(gridContainer, compact) {
     console.log(object)
 
     Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
-        console.log(subject, i, Math.floor((i / a.length) * Number(settingCols)))
         let items = object[subject]
 
         let subjectTile = element('div', `st-sw-subject-${subject}`, cols[Math.floor((i / a.length) * Number(settingCols))], { class: 'st-sw-subject', 'data-subject': subject })
-        if (compact) {
-            subjectTile.dataset.compact = true
-            gridWrapper.dataset.compact = true
-        }
-
-        console.log(subjectTile)
 
         if (items.length > 1) {
             let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
@@ -177,7 +182,7 @@ async function renderStudyguideList(gridContainer, compact) {
                 let periodText = `Periode ${item.period}`
                 if (item.period < 1) periodText = "Geen periode"
 
-                let itemButton = element('button', `st-sw-item-${item.title}`, itemsWrapper, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title } : { innerText: data.title, class: 'st-sw-item' })
+                let itemButton = element('button', `st-sw-item-${item.title}`, itemsWrapper, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': periodText })
                 itemButton.addEventListener('click', () => {
                     for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
                         if (e.textContent.includes(item.title)) e.click()
@@ -204,7 +209,7 @@ async function renderStudyguideList(gridContainer, compact) {
             let periodText = `Periode ${item.period}`
             if (item.period < 1) periodText = "Geen periode"
 
-            let defaultItemDescription = element('span', `st-sw-item-${item.title}-desc`, defaultItemButton, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title } : { innerText: item.title, class: 'st-sw-item-default-desc' })
+            let defaultItemDescription = element('span', `st-sw-item-${item.title}-desc`, defaultItemButton, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': periodText })
 
             if (hiddenStudyguides.includes(item.title)) defaultItemButton.classList.add('hidden-item', 'hidden')
 
@@ -214,4 +219,12 @@ async function renderStudyguideList(gridContainer, compact) {
             }
         }
     })
+
+    mainSection = await awaitElement('section.main')
+    widget = await awaitElement('div.full-height.widget')
+    if (widget) {
+        widget.appendChild(gridWrapper)
+    } else {
+        mainSection.appendChild(gridWrapper)
+    }
 }

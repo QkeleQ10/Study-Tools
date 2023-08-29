@@ -369,7 +369,7 @@ export default [
                 id: 'hotkeys-today',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
-                default: true,
+                default: false,
                 conditions: [
                     { settingId: 'magister-overlay-hotkey', operator: 'defined' },
                     { settingId: 'hotkeys-enabled', operator: 'equal', value: true }
