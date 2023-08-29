@@ -157,15 +157,18 @@ async function renderStudyguideList(gridContainer, compact) {
     console.log(object)
 
     Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
+        console.log(subject, i, Math.floor((i / a.length) * Number(settingCols)))
         let items = object[subject]
 
-        let subjectTile = element('div', `st-sw-subject-${subject}`, cols[Math.floor((i / (a.length - 1)) * Number(settingCols))], { class: 'st-sw-subject', 'data-subject': subject })
+        let subjectTile = element('div', `st-sw-subject-${subject}`, cols[Math.floor((i / a.length) * Number(settingCols))], { class: 'st-sw-subject', 'data-subject': subject })
         if (compact) {
             subjectTile.dataset.compact = true
             gridWrapper.dataset.compact = true
         }
 
-        if (items.length > 1 && swEnabled) {
+        console.log(subjectTile)
+
+        if (items.length > 1) {
             let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
             let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
             for (let i = 0; i < items.length; i++) {
