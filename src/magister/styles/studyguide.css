@@ -53,6 +53,10 @@
     z-index: 99999;
 }
 
+#sw-show-hidden-items-label[data-disabled=true] {
+    opacity: .5;
+}
+
 .st-sw-subject {
     flex: 1 0 50%;
     box-sizing: border-box;

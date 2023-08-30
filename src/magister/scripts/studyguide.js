@@ -27,7 +27,7 @@ async function studyguideList() {
     })
     searchBar.addEventListener('input', validateItems)
 
-    let showHiddenItemsLabel = element('label', 'sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen studiewijzers weergeven" })
+    let showHiddenItemsLabel = element('label', 'sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
     let showHiddenItemsInput = element('input', 'sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
     showHiddenItemsInput.addEventListener('input', validateItems)
 
