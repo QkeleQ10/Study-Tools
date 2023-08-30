@@ -17,7 +17,7 @@
     width: 100%;
 }
 
-#sw-search {
+#st-sw-search {
     position: absolute;
     top: 40px;
     right: 28px;
@@ -39,21 +39,21 @@
     margin-right: 8px;
 }
 
-#sw-hide-item {
+#st-sw-item-hider {
     position: absolute;
     top: 73px;
     right: 154px;
     z-index: 99999;
 }
 
-#sw-show-hidden-items-label {
+#st-sw-show-hidden-items-label {
     position: absolute;
     top: 85px;
     right: 28px;
     z-index: 99999;
 }
 
-#sw-show-hidden-items-label[data-disabled=true] {
+#st-sw-show-hidden-items-label[data-disabled=true] {
     opacity: .5;
 }
 

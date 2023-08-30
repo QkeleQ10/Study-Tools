@@ -18,7 +18,7 @@ async function studyguideList() {
     renderStudyguideList()
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
-    let searchBar = element('input', 'sw-search', document.body, { class: "st-input", placeholder: "Studiewijzers zoeken" })
+    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: "Studiewijzers zoeken" })
     // searchBar.focus()
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
@@ -27,8 +27,8 @@ async function studyguideList() {
     })
     searchBar.addEventListener('input', validateItems)
 
-    let showHiddenItemsLabel = element('label', 'sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
-    let showHiddenItemsInput = element('input', 'sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
+    let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
+    let showHiddenItemsInput = element('input', 'st-sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
     showHiddenItemsInput.addEventListener('input', validateItems)
 
     function validateItems() {
@@ -85,7 +85,7 @@ async function studyguideIndividual() {
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
     let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
     let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
-    let hideItemButton = element('button', 'sw-hide-item', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
+    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
     hideItemButton.addEventListener('click', () => {
         if (!studyguideIsHidden) {
             studyguideIsHidden = true
@@ -116,7 +116,7 @@ async function renderStudyguideList() {
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
 
     const settingCols = syncedStorage['sw-cols'],
-        settingShowPeriod = syncedStorage['magister-sw-period'],
+        settingShowPeriod = syncedStorage['sw-period'],
         subjectsArray = Object.values(syncedStorage['subjects']),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
@@ -210,11 +210,14 @@ async function renderStudyguideList() {
         }
     })
 
-    mainSection = await awaitElement('section.main')
-    widget = await awaitElement('div.full-height.widget')
-    if (widget) {
-        widget.appendChild(gridWrapper)
-    } else {
-        mainSection.appendChild(gridWrapper)
+    if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
+        mainSection = await awaitElement('section.main')
+        widget = document.querySelector('div.full-height.widget')
+        gridContainer = widget || mainSection
+        gridContainer.appendChild(gridWrapper)
+        console.info("Element re-appended.")
+    }
+    if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
+        gridWrapper.remove()
     }
 }

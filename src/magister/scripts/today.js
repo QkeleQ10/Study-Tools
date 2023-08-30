@@ -62,8 +62,15 @@ async function today() {
         headerText.dataset.lastLetter = '.'
         header.removeAttribute('data-transition')
 
-        mainSection = await awaitElement('section.main')
-        mainSection.append(header, container)
+        if (!header?.parentElement || !container?.parentElement || !document.body.contains(mainSection)) {
+            mainSection = await awaitElement('section.main')
+            mainSection.append(header, container)
+            console.info("Element re-appended.")
+        }
+        if (!document.location.href.split('?')[0].endsWith('/vandaag') && (header || container)) {
+            header.remove()
+            container.remove()
+        }
     }, 2500)
 }
 

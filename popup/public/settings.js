@@ -93,7 +93,7 @@ export default [
                 step: 1,
             },
             {
-                id: "magister-css-dark-invert",
+                id: "darken-content",
                 title: "Inhoud donker maken",
                 subtitle: "Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
                 conditions: [
@@ -133,6 +133,7 @@ export default [
                 id: 'magister-picture-source',
                 title: "Profielfoto kiezen",
                 type: "ImageInput",
+                default: null,
                 conditions: [
                     { settingId: 'magister-picture', operator: 'equal', value: 'custom' }
                 ],
@@ -174,6 +175,7 @@ export default [
                 id: "magisterLogin-username",
                 title: "Gebruikersnaam",
                 type: "TextInput",
+                default: '',
                 conditions: [
                     { settingId: 'magisterLogin-method', operator: 'not equal', value: 'off' }
                 ],
@@ -184,6 +186,7 @@ export default [
                 subtitle: "Van het Microsoft-account dat moet worden gekozen.",
                 type: "TextInput",
                 fieldType: "email",
+                default: '',
                 conditions: [
                     { settingId: 'magisterLogin-method', operator: 'equal', value: 'microsoft' }
                 ],
@@ -193,6 +196,7 @@ export default [
                 title: "Wachtwoord",
                 type: "TextInput",
                 fieldType: "password",
+                default: '',
                 conditions: [
                     { settingId: 'magisterLogin-method', operator: 'equal', value: 'password' }
                 ],
@@ -313,7 +317,7 @@ export default [
                 ],
             },
             {
-                id: "magister-sw-period",
+                id: "sw-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
@@ -413,22 +417,6 @@ export default [
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
                 default: false,
-            },
-            {
-                id: "updates",
-                title: "Melding bij beschikbare update",
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "beta",
-                title: "Melding bij beschikbare bèta-update",
-                subtitle: "Bèta-builds bevatten de laatste bugfixes, maar kunnen ook nieuwe bugs bevatten.",
-                conditions: [
-                    { settingId: 'updates', operator: 'equal', value: true },
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
             },
             {
                 id: "disable-css",

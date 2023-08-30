@@ -117,7 +117,7 @@ async function applyStyles() {
         rootVars = `${lightThemeCss}
 ${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
 ${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
-${syncedStorage['magister-css-dark-invert'] ? invertCss : ''}
+${syncedStorage['darken-content'] ? invertCss : ''}
 ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
@@ -581,7 +581,7 @@ aside, aside .block,
     translate: -90px -30px;
     background: #0000ff;
     padding: 16px;
-    z-index: 99999;
+    z-index: 99999998;
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
