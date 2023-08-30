@@ -77,7 +77,7 @@ async function main() {
             { key: '[', code: 'BracketLeft' },
             { key: ']', code: 'BracketRight' },
         ],
-            hotkeysOnToday = syncedStorage['hotkeys-today'],
+            hotkeysOnToday = syncedStorage['hotkeys-quick'],
             mainMenu = document.querySelector('ul.main-menu')
 
         createHotkeyLabels()
@@ -132,7 +132,7 @@ async function main() {
         })
 
         window.addEventListener('popstate', async () => {
-            if (syncedStorage['hotkeys-today']) {
+            if (syncedStorage['hotkeys-quick']) {
                 if (document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
                 else mainMenu.dataset.hotkeysVisible = false
             }

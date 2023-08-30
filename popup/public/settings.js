@@ -370,7 +370,7 @@ export default [
                 ],
             },
             {
-                id: 'hotkeys-today',
+                id: 'hotkeys-quick',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
                 default: false,

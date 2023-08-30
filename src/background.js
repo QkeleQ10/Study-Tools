@@ -21,7 +21,7 @@ async function init() {
         chrome.storage.local.set({ 'user-token': token })
         chrome.storage.local.set({ 'user-id': userId })
         console.info("Intercepted user token and user ID.")
-    }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
+    }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders'])
 
     console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + ["rooster op startpagina", "puntensysteem"].join(', '), "font-size: .8em")
 }

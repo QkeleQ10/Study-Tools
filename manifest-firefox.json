@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.0.3.1",
+    "version": "3.0.3.2",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -19,6 +19,12 @@
         "gecko": {
             "id": "studytools@qkeleq10.dev"
         }
+    },
+    "background": {
+        "scripts": [
+            "src/background.js"
+        ],
+        "type": "module"
     },
     "content_scripts": [
         {
