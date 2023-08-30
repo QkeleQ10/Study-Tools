@@ -111,13 +111,7 @@ async function renderStudyguideList() {
 
     let mainSection = document.querySelector('section.main'),
         widget = document.querySelector('div.full-height.widget'),
-        gridContainer = mainSection
-
-    if (widget) {
-        gridContainer = widget
-    }
-
-    console.log(`Commencing render`)
+        gridContainer = widget || mainSection
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
 
@@ -135,8 +129,6 @@ async function renderStudyguideList() {
     for (let i = 1; i <= Number(settingCols); i++) {
         cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
     }
-
-    console.log(`Rendering study guides to element:`, gridContainer, gridWrapper, cols)
 
     originalItems.forEach(elem => {
         let title = elem.firstElementChild.firstElementChild.innerText,
@@ -165,8 +157,6 @@ async function renderStudyguideList() {
         if (!object[subject]) object[subject] = []
         object[subject].push({ elem, title, period, priority })
     })
-
-    console.log(object)
 
     Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
         let items = object[subject]

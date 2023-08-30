@@ -7,7 +7,6 @@ async function popstate() {
 
 // Page 'Vandaag'
 async function today() {
-    console.log(`Rendering today`)
     if (!syncedStorage['magister-vd-overhaul']) return
     let mainSection = await awaitElement('section.main'),
         container = document.createElement('div'),
@@ -52,18 +51,23 @@ async function today() {
     })
     if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van Study Tools 💚")
 
+    mainSection = await awaitElement('section.main')
+    mainSection.append(header, container)
+
     setTimeout(() => header.dataset.transition = true, 2000)
-    setTimeout(() => {
+    setTimeout(async () => {
         todayNotifications(notifcationsWrapper)
 
         headerText.innerText = date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         headerText.dataset.lastLetter = '.'
         header.removeAttribute('data-transition')
+
+        mainSection = await awaitElement('section.main')
+        mainSection.append(header, container)
     }, 2500)
 }
 
 async function todayNotifications(notifcationsWrapper) {
-    console.log(`Rendering today notifications`)
     let lastGrade = await awaitElement('.block.grade-widget span.cijfer'),
         lastGradeDescription = await awaitElement('.block.grade-widget span.omschrijving'),
         moreGrades = await awaitElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
@@ -148,7 +152,6 @@ async function todayNotifications(notifcationsWrapper) {
 
 // TODO: Gather using the API rather than scraping
 async function todaySchedule(scheduleWrapper) {
-    console.log(`Rendering today schedule`)
     let scheduleTodayContainer = document.createElement('ul'),
         scheduleTomorrowContainer = document.createElement('ul'),
         scheduleButtonWrapper = document.createElement('div'),
