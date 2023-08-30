@@ -62,7 +62,7 @@ async function applyStyles() {
     --st-foreground-primary: #333333;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
-    --st-border-color: #e7e7e7;
+    --st-border-color: #ededed;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
@@ -91,7 +91,7 @@ async function applyStyles() {
     --st-foreground-primary: #fff;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
-    --st-border-color: #333;
+    --st-border-color: #2e2e2e;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${borderRadius}px;
     --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
@@ -117,7 +117,7 @@ async function applyStyles() {
         rootVars = `${lightThemeCss}
 ${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
 ${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
-${syncedStorage['magister-css-dark-invert'] ? invertCss : ''}
+${syncedStorage['darken-content'] ? invertCss : ''}
 ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
@@ -581,7 +581,7 @@ aside, aside .block,
     translate: -90px -30px;
     background: #0000ff;
     padding: 16px;
-    z-index: 99999;
+    z-index: 99999998;
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
@@ -861,6 +861,117 @@ h3:active> .icon-up-arrow:before {
 #studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
     max-width: calc(100vw - 469px);
 }
+
+.kwt-widget table {
+    display: block;
+}
+
+.kwt-widget tbody {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1px;
+    min-width: 100%;
+    width: 100%;
+    max-width: 100%;
+    background-color: var(--st-border-color);
+}
+
+.kwt-widget thead {
+    display: none;
+}
+
+.kwt-widget tbody>tr {
+    display: grid;
+    grid-template:
+        'check title title' auto
+        'check teacher classroom' auto
+        'check description description' auto
+        / 40px auto 1fr;
+    padding-block: 4px;
+    background-color: var(--st-background-primary);
+    color: var(--st-foreground-primary);
+}
+
+.kwt-widget tr td {
+    display: inline;
+    width: auto;
+    height: auto;
+    padding-right: 0 !important;
+    border: none !important;
+    line-height: normal;
+    background-color: transparent !important;
+}
+
+.kwt-widget tr td:first-child {
+    position: relative;
+    grid-area: check;
+}
+
+.kwt-widget tr td:first-child:after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 16px;
+    font-family: 'Font Awesome 5 Pro';
+    font-size: 18px;
+    line-height: 100%;
+    font-style: normal;
+}
+
+.kwt-widget  tr td:first-child .icon-oke {
+    display: none;
+}
+
+.kwt-widget tr:has(.icon-oke) {
+    order: 1;
+    background-color: var(--st-highlight-primary) !important;
+}
+
+.kwt-widget tr td:first-child:has(.icon-oke):after {
+    content: '';
+}
+
+.kwt-widget tr td:first-child .disabled-message {
+    font-size: 0;
+}
+
+.kwt-widget tr.disabled td:first-child .disabled-message:after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 11px;
+    font-family: 'Font Awesome 5 Pro';
+    font-size: 18px;
+    line-height: 100%;
+    z-index: 2;
+}
+
+.kwt-widget tr td:nth-child(2) {
+    grid-area: classroom;
+}
+
+.kwt-widget tr td:nth-child(2):before {
+    content: '(';
+}
+
+.kwt-widget tr td:nth-child(2):after {
+    content: ')';
+}
+
+.kwt-widget tr td:nth-child(3) {
+    grid-area: title;
+    font: var(--st-font-primary);
+    font-size: 14px;
+    line-height: normal;
+}
+
+.kwt-widget tr td:nth-child(4) {
+    grid-area: teacher;
+}
+
+.kwt-widget tr td:nth-child(5) {
+    grid-area: description;
+}
 `, 'study-tools')
     }
 
@@ -878,8 +989,12 @@ h3:active> .icon-up-arrow:before {
 `, 'study-tools-vd-overhaul')
     }
 
-    if (syncedStorage['magister-sw-display'] === 'grid') {
+    if (syncedStorage['sw-enabled']) {
         createStyle(`
+#studiewijzer-container section.main {
+    padding-top: 125px;
+}
+
 #studiewijzer-container aside,
 #studiewijzer-container .content-container,
 #studiewijzer-detail-container .widget.full-height .block {

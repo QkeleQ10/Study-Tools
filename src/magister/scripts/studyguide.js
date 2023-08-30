@@ -12,9 +12,44 @@ async function popstate() {
 
 // Page 'Studiewijzers
 async function studyguideList() {
-    if (syncedStorage['magister-sw-display'] === 'off') return
+    if (!syncedStorage['sw-enabled']) return
+
     const gridContainer = await awaitElement('section.main')
-    renderStudyguideList(gridContainer)
+    renderStudyguideList()
+
+    let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: "Studiewijzers zoeken" })
+    // searchBar.focus()
+    searchBar.addEventListener('keyup', e => {
+        if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
+            document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
+        }
+    })
+    searchBar.addEventListener('input', validateItems)
+
+    let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
+    let showHiddenItemsInput = element('input', 'st-sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
+    showHiddenItemsInput.addEventListener('input', validateItems)
+
+    function validateItems() {
+        let cols = gridContainer.querySelectorAll('.st-sw-col')
+        gridContainer.querySelectorAll('.st-sw-item, .st-sw-item-default').forEach(studyguide => {
+            let query = searchBar.value.toLowerCase()
+            let matches = (studyguide.dataset.title.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
+
+            if (matches) studyguide.classList.remove('hidden')
+            else studyguide.classList.add('hidden')
+        })
+        let visibleSubjects = gridContainer.querySelectorAll('.st-sw-subject:has(button:not(.hidden))')
+        let visibleSubjectsArray = [...visibleSubjects]
+        visibleSubjectsArray.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
+            cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
+        })
+    }
+
+    setTimeout(validateItems, 200)
+    setTimeout(validateItems, 600)
+    setTimeout(validateItems, 1200)
 }
 
 // Page 'Studiewijzer
@@ -43,32 +78,59 @@ async function studyguideIndividual() {
         })
     }
 
-    if (syncedStorage['magister-sw-display'] === 'off') return
-    const gridContainer = await awaitElement('div.full-height.widget')
-    renderStudyguideList(gridContainer, true)
+    if (!syncedStorage['sw-enabled']) return
+
+    renderStudyguideList()
+
+    let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+    let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
+    let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
+    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
+    hideItemButton.addEventListener('click', () => {
+        if (!studyguideIsHidden) {
+            studyguideIsHidden = true
+            hideItemButton.dataset.icon = ''
+            hideItemButton.title = "Studiewijzer niet langer verbergen"
+            hiddenStudyguides.push(studyguideTitle)
+            showSnackbar(`Studiewijzer '${studyguideTitle}' verborgen`)
+            document.querySelector('.st-sw-selected').classList.add('hidden-item')
+        } else {
+            studyguideIsHidden = false
+            hideItemButton.dataset.icon = ''
+            hideItemButton.title = "Studiewijzer verbergen"
+            hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
+            showSnackbar(`Studiewijzer '${studyguideTitle}' niet langer verborgen`)
+            document.querySelector('.st-sw-selected').classList.remove('hidden-item')
+        }
+        saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
+    })
 }
 
-async function renderStudyguideList(gridContainer, compact) {
-    const settingGrid = (syncedStorage['magister-sw-display'] === 'grid'),
-        settingShowPeriod = syncedStorage['magister-sw-period'],
+async function renderStudyguideList() {
+    if (!syncedStorage['sw-enabled']) return
+
+    let mainSection = document.querySelector('section.main'),
+        widget = document.querySelector('div.full-height.widget'),
+        gridContainer = widget || mainSection
+
+    let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+
+    const settingCols = syncedStorage['sw-cols'],
+        settingShowPeriod = syncedStorage['sw-period'],
         subjectsArray = Object.values(syncedStorage['subjects']),
         currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-        originalList = await awaitElement('.studiewijzer-list > ul, .content.projects > ul'),
         originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
-        originalItemsArray = [...originalItems],
-        gridWrapper = document.createElement('div'),
-        grid = document.createElement('div')
+        gridWrapper = element('div', 'st-sw-container', gridContainer)
 
-    if (settingGrid) {
-        document.querySelectorAll('#st-sw-container').forEach(e => e.remove())
-        gridContainer.appendChild(gridWrapper)
-        gridWrapper.id = 'st-sw-container'
-        gridWrapper.appendChild(grid)
-        grid.id = 'st-sw-grid'
+    let cols = [],
+        object = {}
+
+    for (let i = 1; i <= Number(settingCols); i++) {
+        cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
     }
 
-    let mappedArray = originalItemsArray.map(elem => {
+    originalItems.forEach(elem => {
         let title = elem.firstElementChild.firstElementChild.innerText,
             subject = "Geen vak",
             period = 0,
@@ -92,58 +154,70 @@ async function renderStudyguideList(gridContainer, compact) {
         else if (period > 0) priority = 0
         else priority = 1
 
-        return { elem, title, period, subject, priority }
+        if (!object[subject]) object[subject] = []
+        object[subject].push({ elem, title, period, priority })
     })
-        .sort((a, b) => settingGrid ? (a.subject.localeCompare(b.subject) || a.period - b.period) : (b.priority - a.priority || a.subject.localeCompare(b.subject)))
 
-    mappedArray.forEach(async ({ elem, title, period, subject, priority }, i) => {
-        if (settingGrid) {
-            let itemButton = document.createElement('button'),
-                subjectTile = document.querySelector(`div[data-subject='${subject}']`)
-            if (!subjectTile) {
-                subjectTile = document.createElement('div')
-                grid.appendChild(subjectTile)
-                subjectTile.classList.add('st-sw-subject')
-                subjectTile.dataset.subject = subject
-                const defaultItemButton = document.createElement('button')
-                defaultItemButton.innerText = subject
-                subjectTile.appendChild(defaultItemButton)
-                defaultItemButton.setAttribute('onclick', 'this.parentElement.lastElementChild.click()')
-                if (compact) subjectTile.classList.add('st-sw-compact')
+    Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
+        let items = object[subject]
+
+        let subjectTile = element('div', `st-sw-subject-${subject}`, cols[Math.floor((i / a.length) * Number(settingCols))], { class: 'st-sw-subject', 'data-subject': subject })
+
+        if (items.length > 1) {
+            let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
+            let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
+            for (let i = 0; i < items.length; i++) {
+                const item = items.sort((a, b) => b.priority - a.priority)[i]
+
+                let periodText = `Periode ${item.period}`
+                if (item.period < 1) periodText = "Geen periode"
+
+                let itemButton = element('button', `st-sw-item-${item.title}`, itemsWrapper, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': periodText })
+                itemButton.addEventListener('click', () => {
+                    for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
+                        if (e.textContent.includes(item.title)) e.click()
+                    }
+                })
+
+                if (hiddenStudyguides.includes(item.title)) itemButton.classList.add('hidden-item', 'hidden')
+
+                if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
+                    itemButton.classList.add('st-sw-selected')
+                    itemButton.classList.remove('hidden')
+                }
             }
-            if (settingShowPeriod) {
-                itemButton.innerText = period ? `periode ${period} ` : "geen periode"
-                itemButton.dataset.title = title
-            } else {
-                itemButton.innerText = title
-                itemButton.style.fontSize = '11px'
-                itemButton.style.minHeight = '2rem'
-            }
-            itemButton.classList.add(`st-sw-${priority}`)
-            if (viewTitle && viewTitle.toLowerCase() === title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) itemButton.classList.add(`st-sw-selected`)
-            itemButton.setAttribute('onclick', `
-            for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
-                if (e.textContent.includes("${title}")) e.click()
-            }`)
-            subjectTile.appendChild(itemButton)
-        } else {
-            originalList.appendChild(elem)
-            elem.firstElementChild.lastElementChild.innerText = subject
-            switch (priority) {
-                case 2:
-                    elem.classList.add('st-current')
-                    elem.setAttribute('title', "Deze studiewijzer is actueel.")
-                    break
+        } else if (items[0]) {
+            let item = items[0]
 
-                case 1:
-                    elem.setAttribute('title', "Er kon geen periodenummer worden gedetecteerd.")
-                    break
+            let defaultItemButton = element('button', `st-sw-item-${item.title}`, subjectTile, { innerText: subject, class: 'st-sw-item-default', 'data-title': item.title })
+            defaultItemButton.addEventListener('click', () => {
+                for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
+                    if (e.textContent.includes(item.title)) e.click()
+                }
+            })
 
-                default:
-                    elem.classList.add('st-obsolete')
-                    elem.setAttribute('title', `Deze studiewijzer is van periode ${period}.`)
-                    break
+            let periodText = `Periode ${item.period}`
+            if (item.period < 1) periodText = "Geen periode"
+
+            let defaultItemDescription = element('span', `st-sw-item-${item.title}-desc`, defaultItemButton, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': periodText })
+
+            if (hiddenStudyguides.includes(item.title)) defaultItemButton.classList.add('hidden-item', 'hidden')
+
+            if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
+                defaultItemButton.classList.add('st-sw-selected')
+                defaultItemButton.classList.remove('hidden')
             }
         }
     })
+
+    if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
+        mainSection = await awaitElement('section.main')
+        widget = document.querySelector('div.full-height.widget')
+        gridContainer = widget || mainSection
+        gridContainer.appendChild(gridWrapper)
+        console.info("Element re-appended.")
+    }
+    if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
+        gridWrapper.remove()
+    }
 }

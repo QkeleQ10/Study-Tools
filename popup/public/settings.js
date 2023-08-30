@@ -9,30 +9,30 @@ const subjects = {
     ],
     default: [
         { name: "Aardrijkskunde", aliases: "ak" },
-        { name: "Bedrijfseconomie", aliases: "beco" },
-        { name: "Beeldende vorming", aliases: "be, bv, kubv" },
-        { name: "Biologie", aliases: "bi, bio" },
+        { name: "Bedrijfseconomie", aliases: "beco, bec" },
+        { name: "Beeldende vorming", aliases: "kubv, be, bv" },
+        { name: "Biologie", aliases: "bio, bi" },
         { name: "Cult. en kunstz. vorming", aliases: "ckv" },
-        { name: "Drama", aliases: "dr, kudr" },
-        { name: "Duits", aliases: "du, dutl, Duitse, Deutsch" },
-        { name: "Economie", aliases: "ec, eco, econ" },
-        { name: "Engels", aliases: "en, entl, Engels, English" },
-        { name: "Frans", aliases: "fa, fatl, Franse, Français" },
+        { name: "Drama", aliases: "kudr, dr" },
+        { name: "Duits", aliases: "dutl, du, Duitse, Deutsch" },
+        { name: "Economie", aliases: "eco, ec, econ" },
+        { name: "Engels", aliases: "entl, en, Engels, English" },
+        { name: "Frans", aliases: "fatl, fa, Franse, Français" },
         { name: "Geschiedenis", aliases: "gs" },
-        { name: "Grieks", aliases: "gtc, gr, grtl, Griekse" },
+        { name: "Grieks", aliases: "gtc, gr, grkc, grtl, Griekse" },
         { name: "Kunst algemeen", aliases: "ku, kua" },
-        { name: "Latijn", aliases: "ltc, la, latl, Latijnse" },
+        { name: "Latijn", aliases: "ltc, la, lakc, latl, Latijnse" },
         { name: "Levensbeschouwing", aliases: "lv" },
         { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
         { name: "Loopbaan­oriëntatie en -begeleiding", aliases: "lob" },
         { name: "Maatschappijleer", aliases: "ma, malv" },
         { name: "Maatschappij­wetenschappen", aliases: "maw" },
         { name: "Mentor", aliases: "mentoruur, mentoraat" },
-        { name: "Muziek", aliases: "mu, kumu" },
-        { name: "Natuurkunde", aliases: "na, nat" },
-        { name: "Nederlands", aliases: "ne, netl, Nederlandse" },
+        { name: "Muziek", aliases: "kumu, mu" },
+        { name: "Natuurkunde", aliases: "nat, na" },
+        { name: "Nederlands", aliases: "netl, ne, Nederlandse" },
         { name: "Scheikunde", aliases: "sk, sch" },
-        { name: "Spaans", aliases: "sp, sptl, Spaanse, Español" },
+        { name: "Spaans", aliases: "sptl, sp, Spaanse, Español" },
         { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
     ]
 }
@@ -93,7 +93,7 @@ export default [
                 step: 1,
             },
             {
-                id: "magister-css-dark-invert",
+                id: "darken-content",
                 title: "Inhoud donker maken",
                 subtitle: "Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
                 conditions: [
@@ -133,6 +133,7 @@ export default [
                 id: 'magister-picture-source',
                 title: "Profielfoto kiezen",
                 type: "ImageInput",
+                default: null,
                 conditions: [
                     { settingId: 'magister-picture', operator: 'equal', value: 'custom' }
                 ],
@@ -174,6 +175,7 @@ export default [
                 id: "magisterLogin-username",
                 title: "Gebruikersnaam",
                 type: "TextInput",
+                default: '',
                 conditions: [
                     { settingId: 'magisterLogin-method', operator: 'not equal', value: 'off' }
                 ],
@@ -184,6 +186,7 @@ export default [
                 subtitle: "Van het Microsoft-account dat moet worden gekozen.",
                 type: "TextInput",
                 fieldType: "email",
+                default: '',
                 conditions: [
                     { settingId: 'magisterLogin-method', operator: 'equal', value: 'microsoft' }
                 ],
@@ -193,6 +196,7 @@ export default [
                 title: "Wachtwoord",
                 type: "TextInput",
                 fieldType: "password",
+                default: '',
                 conditions: [
                     { settingId: 'magisterLogin-method', operator: 'equal', value: 'password' }
                 ],
@@ -292,38 +296,33 @@ export default [
                 ]
             },
             {
-                id: "magister-sw-display",
+                id: "sw-enabled",
                 title: "Studiewijzers ordenen",
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vaknaam en periodenummer.",
-                type: "SegmentedButton",
-                default: "grid",
-                options: [
-                    {
-                        value: "grid",
-                        title: "Raster",
-                        icon: "grid_view"
-                    },
-                    {
-                        value: "list",
-                        title: "Lijst",
-                        icon: "sort"
-                    },
-                    {
-                        value: "off",
-                        title: "Uit",
-                        icon: "block"
-                    },
-                ]
+                default: true,
             },
             subjects,
             periods,
             {
-                id: "magister-sw-period",
+                id: "sw-cols",
+                title: "Aantal kolommen",
+                type: "SlideInput",
+                default: 3,
+                decimals: 0,
+                min: 1,
+                max: 5,
+                step: 1,
+                conditions: [
+                    { settingId: 'sw-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "sw-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
                 conditions: [
-                    { settingId: 'magister-sw-display', operator: 'equal', value: 'grid' }
+                    { settingId: 'sw-enabled', operator: 'equal', value: true }
                 ],
             },
             {
@@ -371,16 +370,15 @@ export default [
                 ],
             },
             {
-                id: 'hotkeys-today',
+                id: 'hotkeys-quick',
                 title: "Snellere sneltoetsen",
                 subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
-                default: true,
+                default: false,
                 conditions: [
                     { settingId: 'magister-overlay-hotkey', operator: 'defined' },
                     { settingId: 'hotkeys-enabled', operator: 'equal', value: true }
                 ],
             },
-            // 'sidebar-expand-all' to automatically expand every sidebar item
             {
                 id: 'notes-enabled',
                 title: "Notitieblok",
@@ -419,22 +417,6 @@ export default [
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
                 default: false,
-            },
-            {
-                id: "updates",
-                title: "Melding bij beschikbare update",
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "beta",
-                title: "Melding bij beschikbare bèta-update",
-                subtitle: "Bèta-builds bevatten de laatste bugfixes, maar kunnen ook nieuwe bugs bevatten.",
-                conditions: [
-                    { settingId: 'updates', operator: 'equal', value: true },
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
             },
             {
                 id: "disable-css",

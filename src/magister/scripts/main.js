@@ -77,7 +77,7 @@ async function main() {
             { key: '[', code: 'BracketLeft' },
             { key: ']', code: 'BracketRight' },
         ],
-            hotkeysOnToday = syncedStorage['hotkeys-today'],
+            hotkeysOnToday = syncedStorage['hotkeys-quick'],
             mainMenu = document.querySelector('ul.main-menu')
 
         createHotkeyLabels()
@@ -132,7 +132,7 @@ async function main() {
         })
 
         window.addEventListener('popstate', async () => {
-            if (syncedStorage['hotkeys-today']) {
+            if (syncedStorage['hotkeys-quick']) {
                 if (document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
                 else mainMenu.dataset.hotkeysVisible = false
             }
@@ -394,8 +394,8 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-button, .st-overlay, [id^="st-cf"], .k-animation-container').forEach(e => {
-        if (e.close()) e.close()
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, .st-overlay, [id^="st-cf"], [id^="st-vd"] [id^="st-sw"], .k-animation-container').forEach(e => {
+        if (e.tagName === 'DIALOG') e.close()
         e.remove()
     })
 }

@@ -25,16 +25,14 @@ export function useSyncedStorage() {
                 })
 
             // Store the current version number
-            syncedStorage.value['openedPopup'] = browser?.runtime?.getManifest()?.version
+            syncedStorage.value['v'] = browser?.runtime?.getManifest()?.version
         }
     })
 
     watchEffect(() => {
         if (browser?.storage?.sync) {
             let toStore = {...syncedStorage.value}
-            console.log(toStore)
             if (isProxy(toStore)) toStore = toRaw(toStore)
-            console.log(toStore)
             browser.storage.sync.set(toStore)
         }
         refreshTheme()

@@ -13,7 +13,6 @@ const value = computed({
         return typeof props.modelValue === 'object' ? Object.values(props.modelValue) : props.modelValue
     },
     set(value) {
-        console.log(value)
         emit('update:modelValue', value)
     }
 })

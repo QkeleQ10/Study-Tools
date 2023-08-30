@@ -51,13 +51,26 @@ async function today() {
     })
     if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van Study Tools 💚")
 
+    mainSection = await awaitElement('section.main')
+    mainSection.append(header, container)
+
     setTimeout(() => header.dataset.transition = true, 2000)
-    setTimeout(() => {
+    setTimeout(async () => {
         todayNotifications(notifcationsWrapper)
 
         headerText.innerText = date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         headerText.dataset.lastLetter = '.'
         header.removeAttribute('data-transition')
+
+        if (!header?.parentElement || !container?.parentElement || !document.body.contains(mainSection)) {
+            mainSection = await awaitElement('section.main')
+            mainSection.append(header, container)
+            console.info("Element re-appended.")
+        }
+        if (!document.location.href.split('?')[0].endsWith('/vandaag') && (header || container)) {
+            header.remove()
+            container.remove()
+        }
     }, 2500)
 }
 
@@ -105,8 +118,8 @@ async function todayNotifications(notifcationsWrapper) {
                 description = e.firstElementChild.innerText.replace(`${amount} `, ''),
                 href = e.firstElementChild.href
 
-            if (description === 'activiteiten waarop nog ingeschreven moet of kan worden') description = 'activiteiten'
-            if (description === 'activiteit waarop nog ingeschreven moet of kan worden') description = 'activiteit'
+            if (description === 'activiteiten waarop nog ingeschreven moet of kan worden') description = 'inschrijfmogelijkheden'
+            if (description === 'activiteit waarop nog ingeschreven moet of kan worden') description = 'inschrijfmogelijkheid'
 
             let element = document.querySelector(`li[data-description="${description}"]`) || document.createElement('li')
 
@@ -132,7 +145,7 @@ async function todayNotifications(notifcationsWrapper) {
                     element.dataset.icon = ''
                 } else if (description.includes('beoordeeld')) {
                     element.dataset.icon = ''
-                } else if (description.includes('activiteit')) {
+                } else if (description.includes('inschrijf')) {
                     element.dataset.icon = ''
                 } else if (description.includes('logboek')) {
                     element.dataset.icon = ''
@@ -285,6 +298,11 @@ async function todaySchedule(scheduleWrapper) {
                     }
                 }
             })
+
+            if (title.includes('amablok')) {
+                elementWrapper.dataset.notChosen = true
+                title = "Amadeusblok (niet ingeschreven)"
+            }
 
             if (!legacy || title !== 'filler') {
                 let subjects = Object.values(syncedStorage['subjects'])

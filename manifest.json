@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.0.2.1",
+    "version": "3.0.3.2",
     "default_locale": "nl",
     "icons": {
         "16": "icons/16.png",
@@ -45,7 +45,8 @@
                 "src/magister/styles/main.css",
                 "src/magister/styles/gamification.css",
                 "src/magister/styles/today.css",
-                "src/magister/styles/grades.css"
+                "src/magister/styles/grades.css",
+                "src/magister/styles/studyguide.css"
             ],
             "run_at": "document_start"
         },

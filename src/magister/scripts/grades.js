@@ -2,13 +2,10 @@
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    if (document.location.href.split('?')[0].includes('/cijfers')) {
-        // gradeCalculator()
-        if (document.location.href.split('?')[0].includes('/cijfers/cijferoverzicht')) {
-            gradeCalculator()
-            gradeBackup()
-            gradeStatistics()
-        }
+    if (document.location.href.includes('cijferoverzicht')) {
+        gradeCalculator()
+        gradeBackup()
+        gradeStatistics()
     }
 }
 
@@ -442,7 +439,7 @@ async function gradeBackup() {
     bkBusyAdLink.target = '_blank'
 
     bkExport.addEventListener('click', async () => {
-        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) return showSnackbar("Cijferexport wordt niet ondersteund op Firefox. Probeer het op een andere browser, zoals Microsoft Edge of Google Chrome.")
+        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) showSnackbar("Cijferexport werkt mogelijk minder goed op Firefox. Probeer het op een andere browser, zoals Microsoft Edge of Google Chrome.", 10000)
 
         document.querySelector("#idWeergave > div > div:nth-child(2) > div > div > form > div > div > span").click()
         document.querySelector("#kolomweergave_listbox > li:nth-child(2)").click()

@@ -175,6 +175,10 @@
     transition: color 200ms, filter 200ms, transform 200ms, opacity 500ms 500ms !important;
 }
 
+#st-vd-schedule>ul>li[data-not-chosen] {
+    opacity: .6;
+}
+
 #st-vd-schedule>ul>li[data-filler] {
     background: none;
     outline: none;
