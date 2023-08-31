@@ -51,7 +51,8 @@
                 "src/magister/styles/main.css",
                 "src/magister/styles/gamification.css",
                 "src/magister/styles/today.css",
-                "src/magister/styles/grades.css"
+                "src/magister/styles/grades.css",
+                "src/magister/styles/studyguide.css"
             ],
             "run_at": "document_start"
         },
