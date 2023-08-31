@@ -40,8 +40,8 @@ async function studyguideList() {
             if (matches) studyguide.classList.remove('hidden')
             else studyguide.classList.add('hidden')
         })
-        let visibleSubjects = gridContainer.querySelectorAll('.st-sw-subject:has(button:not(.hidden))')
-        let visibleSubjectsArray = [...visibleSubjects]
+        let visibleSubjects = gridContainer.querySelectorAll('.st-sw-subject')
+        let visibleSubjectsArray = [...visibleSubjects].filter(element => element.querySelector('button:not(.hidden)'))
         visibleSubjectsArray.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
             cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
         })

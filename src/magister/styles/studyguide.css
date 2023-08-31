@@ -60,15 +60,15 @@
 .st-sw-subject {
     flex: 1 0 50%;
     box-sizing: border-box;
-    display: none;
+    display: flex;
     flex-direction: column;
     border-radius: var(--st-border-radius);
     border: var(--st-border);
     overflow: hidden;
 }
 
-.st-sw-subject:has(button:not(.hidden)) {
-    display: flex;
+.st-sw-subject:not(:has(button:not(.hidden))) {
+    display: none;
 }
 
 .st-sw-items-wrapper {
