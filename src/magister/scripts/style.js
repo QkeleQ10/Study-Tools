@@ -103,6 +103,10 @@ async function applyStyles() {
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.4;
     color-scheme: dark;
+}
+
+* {
+    color-scheme: dark;
 }`,
         invertCss = `
 #studiewijzer-detail-container .clearfix.user-content {
@@ -112,6 +116,10 @@ async function applyStyles() {
 
 #studiewijzer-detail-container .clearfix.user-content * {
     color: var(--st-foreground-primary);
+}
+
+.view>iframe, .view>.container>iframe {
+    filter: invert(1) hue-rotate(180deg);
 }
         `,
         rootVars = `${lightThemeCss}
@@ -655,6 +663,27 @@ aside .tabs:not(.st-cf-sc-override) li.active:after {
   width: calc(100% - 24px);
   height: 3px;
   translate: -50%;
+}
+
+.menu-footer>a>i {
+    margin-right: 0;
+    padding: 0;
+    width: 18px;
+}
+
+.menu-footer>a {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding-left: 22px;
+    transition: background-color 200ms;
+}
+
+.menu-footer>a:hover {
+    background-color: var(--st-accent-secondary);
 }
 
 dna-card-title.disabled {

@@ -1,7 +1,5 @@
 let subjects
 
-//TODO: Sticky notes
-
 // Run when the extension and page are loaded
 main()
 async function main() {
@@ -12,41 +10,33 @@ async function main() {
 
     subjects = syncedStorage['subjects']
 
-    if (syncedStorage['magister-appbar-zermelo']) {
-        const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
-            spacer = await awaitElement('.appbar>.spacer'),
-            zermeloA = document.createElement('a'),
-            zermeloImg = document.createElement('img'),
-            zermeloSpan = document.createElement('span')
-        appbarZermelo.innerText = ''
-        spacer.after(appbarZermelo)
-        appbarZermelo.classList.add('menu-button')
-        appbarZermelo.id = 'st-appbar-zermelo'
-        appbarZermelo.append(zermeloA)
-        zermeloA.classList.add('zermelo-menu')
-        zermeloA.setAttribute('href', `https://${syncedStorage['magister-appbar-zermelo-url'] || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
-        zermeloA.setAttribute('target', '_blank')
-        zermeloA.append(zermeloImg)
-        zermeloImg.setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png')
-        zermeloImg.setAttribute('width', '36')
-        zermeloImg.style.borderRadius = '100%'
-        zermeloA.append(zermeloSpan)
-        zermeloSpan.innerText = "Zermelo"
-    }
+    // if (syncedStorage['magister-appbar-zermelo']) {
+    //     const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
+    //         spacer = await awaitElement('.appbar>.spacer'),
+    //         zermeloA = document.createElement('a'),
+    //         zermeloImg = document.createElement('img'),
+    //         zermeloSpan = document.createElement('span')
+    //     appbarZermelo.innerText = ''
+    //     spacer.after(appbarZermelo)
+    //     appbarZermelo.classList.add('menu-button')
+    //     appbarZermelo.id = 'st-appbar-zermelo'
+    //     appbarZermelo.append(zermeloA)
+    //     zermeloA.classList.add('zermelo-menu')
+    //     zermeloA.setAttribute('href', `https://${syncedStorage['magister-appbar-zermelo-url'] || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
+    //     zermeloA.setAttribute('target', '_blank')
+    //     zermeloA.append(zermeloImg)
+    //     zermeloImg.setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png')
+    //     zermeloImg.setAttribute('width', '36')
+    //     zermeloImg.style.borderRadius = '100%'
+    //     zermeloA.append(zermeloSpan)
+    //     zermeloSpan.innerText = "Zermelo"
+    // }
 
     if (syncedStorage['magister-appbar-week']) {
-        let appbarMetrics = document.getElementById('st-appbar-metrics'),
-            appbarWeek = document.getElementById('st-appbar-week') || document.createElement('div')
-        if (!appbarMetrics) {
-            appbarMetrics = document.createElement('div')
-            appbarMetrics.id = 'st-appbar-metrics'
-            appbar.prepend(appbarMetrics)
-        }
-        appbarMetrics.prepend(appbarWeek)
-        appbarWeek.id = 'st-appbar-week'
-        appbarWeek.classList.add('st-metric')
-        appbarWeek.dataset.description = 'Week'
-        appbarWeek.innerText = getWeekNumber()
+        let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
+        if (appbar.querySelector('.spacer')) appbar.querySelector('.spacer').before(appbarMetrics)
+        else appbar.prepend(appbarMetrics)
+        let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: getWeekNumber() })
     }
 
     let userMenuLink = await awaitElement('#user-menu')
@@ -80,20 +70,24 @@ async function main() {
             hotkeysOnToday = syncedStorage['hotkeys-quick'],
             mainMenu = document.querySelector('ul.main-menu')
 
-        createHotkeyLabels()
         setTimeout(() => {
-            createHotkeyLabels()
-            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
+            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) {
+                createHotkeyLabels()
+                mainMenu.dataset.hotkeysVisible = true
+            }
         }, 600)
         setTimeout(() => {
-            createHotkeyLabels()
-            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
+            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) {
+                createHotkeyLabels()
+                mainMenu.dataset.hotkeysVisible = true
+            }
         }, 1200)
 
         function createHotkeyLabels() {
             if (syncedStorage['sidebar-expand-all']) document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
 
             document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a').forEach((menuItem, i, a) => {
+                if (i >= hotkeyList.length) return
                 let title = menuItem.querySelector('span.caption')?.innerText || menuItem.firstChild.nodeValue
 
                 let hotkeyLabel = element('div', `st-hotkey-label-${title}`, menuItem, { class: 'st-hotkey-label', innerText: hotkeyList[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
@@ -110,6 +104,7 @@ async function main() {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
                 e.preventDefault()
+                createHotkeyLabels()
                 mainMenu.dataset.hotkeysVisible = true
             }
             if (mainMenu.dataset.hotkeysVisible === 'true') {

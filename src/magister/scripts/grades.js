@@ -392,10 +392,10 @@ async function gradeBackup() {
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
         gradeResult, gradeWeight, gradeColumn, gradeTitle,
-        bkExport = document.createElement('button'),
-        bkImport = document.createElement('label'),
-        bkImportInput = document.createElement('input'),
-        bkBusyAd = document.createElement('div'),
+        bkExport = element('button', 'st-cf-bk-export', document.body, { class: 'st-button', 'data-icon': '', innerText: "Exporteren" }),
+        bkImport = element('label', 'st-cf-bk-import', document.body, { class: 'st-button', 'data-icon': '', innerText: "Importeren" }),
+        bkImportInput = element('input', 'st-cf-bk-import-input', bkImport, { type: 'file', accept: '.json', style: 'display:none' }),
+        bkBusyAd = document.createElement('div'), // TODO turn this into a fullscreen modal with additional info and links!
         bkBusyAdBody = document.createElement('p'),
         bkBusyAdLink = document.createElement('a'),
         bkIWrapper = document.createElement('div'),
@@ -417,19 +417,7 @@ async function gradeBackup() {
         }
     })
 
-    document.body.append(bkExport, bkImport, bkBusyAd)
-    bkExport.classList.add('st-button')
-    bkExport.id = 'st-cf-bk-export'
-    bkExport.innerText = "Exporteren (bèta)"
-    bkExport.dataset.icon = ''
-    bkImport.classList.add('st-button')
-    bkImport.id = 'st-cf-bk-import'
-    bkImport.innerText = "Importeren"
-    bkImport.dataset.icon = ''
-    bkImport.append(bkImportInput)
-    bkImportInput.type = 'file'
-    bkImportInput.accept = '.json'
-    bkImportInput.style.display = 'none'
+    document.body.append(bkBusyAd)
     bkBusyAd.id = 'st-cf-bk-busy-ad'
     bkBusyAd.style.display = 'none'
     bkBusyAd.append(bkBusyAdBody, bkBusyAdLink)
@@ -455,7 +443,14 @@ async function gradeBackup() {
         console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
         const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } })
-        if (yearsRes.status >= 400 && yearsRes.status < 600) return showSnackbar("Fout " + yearsRes.status + ". Vernieuw de pagina en probeer het opnieuw.")
+
+        if (yearsRes.status >= 400 && yearsRes.status < 600) {
+            showSnackbar("Fout " + yearsRes.status + ". Vernieuw de pagina en probeer het opnieuw.")
+            setTimeout(async () => {
+                yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } })
+            }, 500) // TODO does this work?
+            return
+        }
         const yearsArray = (await yearsRes.json()).items
 
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
@@ -508,7 +503,7 @@ async function gradeBackup() {
 
                     let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
 
-                    let result = gradeBasis.CijferStr
+                    let result = gradeBasis.CijferStr || gradeBasis.Cijfer
 
                     const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${yearId}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: token } })
                     if (extraRes.status >= 400 && extraRes.status < 600) return showSnackbar("Fout " + extraRes.status)
@@ -869,6 +864,7 @@ async function gradeStatistics() {
                     if (document.querySelector("#st-cf-sc-row-filter-include").classList.contains('secondary') && document.querySelector("#st-cf-sc-row-filter").value && document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
                     let subjectObject = yearObject[subjectKey]
                     Object.values(subjectObject).forEach(result => {
+                        if (result > 10) return
                         results.push(result)
                         roundedFrequencies[Math.round(result)]++
                     })
