@@ -1,4 +1,4 @@
-let subjects
+// let subjects
 
 // Run when the extension and page are loaded
 main()
@@ -8,7 +8,20 @@ async function main() {
         key = syncedStorage['magister-overlay-hotkey'] || 'S',
         keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
 
-    subjects = syncedStorage['subjects']
+    // subjects = syncedStorage['subjects']
+
+    let shortcuts = Object.values(syncedStorage.shortcuts),
+        spacer = await awaitElement('.appbar>.spacer')
+
+    shortcuts.forEach((shortcut, i) => {
+        let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
+        url = url.replace('$SCHOOLNAAM', window.location.hostname.split('.')[0])
+        let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
+            shortcutA = element('a', `st-shortcut-${i}-a`, shortcutDiv, { href: url, target: '_blank' }),
+            shortcutI = element('i', `st-shortcut-${i}-i`, shortcutA, { class: 'st-shortcut-icon', innerText: shortcut.icon }),
+            shortcutSpan = element('span', `st-shortcut-${i}-span`, shortcutA, { innerText: url.replace('https://', '') })
+        if (spacer) spacer.after(shortcutDiv)
+    })
 
     // if (syncedStorage['magister-appbar-zermelo']) {
     //     const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
@@ -34,7 +47,7 @@ async function main() {
 
     if (syncedStorage['magister-appbar-week']) {
         let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
-        if (appbar.querySelector('.spacer')) appbar.querySelector('.spacer').before(appbarMetrics)
+        if (spacer) spacer.before(appbarMetrics)
         else appbar.prepend(appbarMetrics)
         let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: getWeekNumber() })
     }

@@ -55,6 +55,10 @@ div.loading-overlay {
     cursor: pointer;
 }
 
+.st-shortcut-icon {
+    font: 20px 'Font Awesome 5 Pro';
+}
+
 span.st-title {
     display: block;
     color: var(--st-foreground-accent);
@@ -177,8 +181,12 @@ span.st-subtitle {
     padding: 6px;
     background: var(--st-background-secondary);
     color: var(--st-foreground-primary);
-    border: 2px solid var(--st-accent-primary);
+    border: var(--st-border);
     border-radius: var(--st-border-radius);
+}
+
+.st-input:focus {
+    border: 1px solid var(--st-accent-primary);
 }
 
 .st-checkbox-label {
@@ -189,24 +197,24 @@ span.st-subtitle {
 }
 
 .st-checkbox-label:before {
+    --size: 24px;
     content: ' ';
     display: inline-block;
-    width: 18px;
-    height: 18px;
+    width: var(--size);
+    height: var(--size);
     position: absolute;
-    left: -28px;
-    padding: 2px;
-    outline: 2px solid var(--st-accent-primary);
-    outline-offset: -2px;
-    color: var(--st-contrast-accent);
-    font-family: 'Font Awesome 5 Pro';
-    font-weight: 500;
-    font-size: 14px;
-    border-radius: calc(var(--st-border-radius) / 2);
+    left: -32px;
+    top: -3px;
+    padding-top: 4px;
+    font: 16px 'Font Awesome 5 Pro';
+    text-align: center;
+    color: var(--st-foreground-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
 }
 
 .st-checkbox-label:has(.st-checkbox-input:checked):before {
-    background-color: var(--st-accent-primary);
+    background-color: var(--st-highlight-primary);
     content: '';
 }
 
@@ -249,6 +257,51 @@ span.st-subtitle {
     content: attr(data-description) '\A';
     white-space: pre-wrap;
     font: 12px var(--st-font-family-secondary);
+}
+
+.st-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    width: max-content;
+}
+
+.st-tile {
+    position: relative;
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    padding: 32px;
+}
+
+.st-section-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--st-foreground-primary);
+    font: 700 20px/2rem var(--st-font-family-primary);
+    margin-bottom: 26px;
+}
+
+.st-section-title[data-icon]:before {
+    content: attr(data-icon);
+    font: 20px 'Font Awesome 5 Pro';
+    color: var(--st-foreground-accent);
+}
+
+.st-section-title[data-description]:after {
+    content: attr(data-description);
+    font: 14px var(--st-font-family-secondary);
+    text-align: center;
+    white-space: pre;
+}
+
+.st-tip {
+    display: inline-block;
+    font: 12px var(--st-font-family-secondary);
+    color: var(--st-foreground-insignificant);
 }
 
 #st-cf-sc-tab.active:after {

@@ -277,91 +277,41 @@
     right: 253px;
 }
 
-#st-cf-bk-export,
-#st-cf-bk-import {
+#st-cf-bk {
     position: absolute;
     top: 35px;
     right: 200px;
-    background-image: linear-gradient(to right, var(--st-accent-primary) 50%, var(--st-accent-secondary) 50%);
-    background-size: 200% 100%;
-    background-position: 0 0;
-    transition: background-position 200ms linear, transform 200ms, filter 200ms, translate 200ms;
 }
 
-#st-cf-bk-export {
-    right: 347px;
-}
-
-#st-cf-bk-export[data-busy],
-#st-cf-bk-import[data-busy] {
-    opacity: 1;
-    pointer-events: none;
-}
-
-#st-cf-bk-export[data-busy]:before,
-#st-cf-bk-import[data-busy]:before {
-    content: '';
-    animation: rotation 1s infinite linear;
-}
-
-#st-cf-bk-export[data-done]:before,
-#st-cf-bk-import[data-done]:before {
-    content: '';
-    animation: none;
-}
-
-#st-cf-bk-mode-dialog {
-    display: flex;
-    flex-direction: column;
-}
-
-#st-cf-bk-mode-dialog>div {
-    display: grid;
-    grid-template:
-        'a b' auto
-        'c d' auto
-        / 1fr 1fr;
-    gap: 16px 32px;
-    margin: 32px 64px;
-}
-
-#st-cf-bk-mode-dialog>div>p {
-    font: 16px var(--st-font-family-secondary);
-}
-
-.st-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px;
-    width: max-content;
-}
-
-#st-cf-bk-busy-ad {
+#st-cf-bk-modal-close {
     position: absolute;
-    width: 294px;
-    bottom: 24px;
-    top: 154px;
-    right: 16px;
-    padding: 12px;
-    place-content: center;
-    background: var(--st-linear-gradient-study-tools);
-    border-radius: var(--st-border-radius);
-    z-index: 999;
+    top: 35px;
+    right: 28px;
 }
 
-#st-cf-bk-busy-ad>* {
-    font: 16px var(--st-font-family-secondary);
-    color: #fff;
+#st-cf-bk-modal {
+    padding-block: 64px;
+    padding-inline: 56px;
 }
 
-#st-cf-bk-busy-ad>a {
-    text-decoration: underline;
-    transition: filter 200ms;
+#st-cf-bk-modal-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: auto;
+    width: max-content;
+    translate: -50% -50%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 64px;
 }
 
-#st-cf-bk-busy-ad>a:hover {
-    filter: brightness(var(--st-hover-brightness));
+#st-cf-bk-modal-wrapper .st-tile {
+    width: 100%;
+}
+
+#st-cf-bk-modal-wrapper .st-list>button {
+    text-align: left;
 }
 
 #st-cf-bk-aside {
