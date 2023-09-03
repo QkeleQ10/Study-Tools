@@ -42,8 +42,8 @@ const { y } = useScroll(content)
 	width: 100%;
 	max-width: none;
 	height: 100%;
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-rows: auto 1fr;
 	transform: scale(.9) translateY(10%);
 	border-radius: 28px;
 	opacity: 0;

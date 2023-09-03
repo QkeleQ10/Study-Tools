@@ -3,7 +3,7 @@ import { ref, computed, defineProps, defineEmits } from 'vue'
 
 import BottomSheet from './BottomSheet.vue'
 
-const props = defineProps(['modelValue', 'id'])
+const props = defineProps(['modelValue', 'id', 'allowClear'])
 const emit = defineEmits(['update:modelValue', 'input'])
 const value = computed({
     get() {
@@ -31,6 +31,15 @@ function promptKey() {
     }, { once: true })
 }
 
+function clearKey() {
+    value.value = ''
+    selected.value = true
+    setTimeout(() => {
+        pickerOpen.value = false
+        selected.value = false
+    }, 500)
+}
+
 function formatKey(string) {
     if (!string) return string
     if (string === ' ') return "Spatie"
@@ -41,11 +50,12 @@ function formatKey(string) {
 
 <template>
     <div class="key-input">
-        <button @click="promptKey">{{ formatKey(value) }}</button>
+        <button @click="promptKey">{{ formatKey(value) || '⋯' }}</button>
         <BottomSheet v-model:active="pickerOpen" :handle=true>
             <template #content>
                 <span class="supporting-text">Druk op een toets</span>
-                <span class="key-picker-selected" :class="{ selected: selected }">{{ formatKey(value) }}</span>
+                <span class="key-picker-selected" :class="{ selected: selected }">{{ formatKey(value) || "Geen geselecteerd" }}</span>
+                <button class="button text key-picker-clear" v-if="allowClear" @click="clearKey">Wissen</button>
             </template>
         </BottomSheet>
     </div>
@@ -62,7 +72,12 @@ function formatKey(string) {
     font: var(--typescale-body-large);
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
     transition: background-color 200ms, color 200ms, outline-color 200ms;
+}
+
+.key-input>button:hover {
+    outline-color: var(--color-on-surface);
 }
 
 .key-picker-selected {
@@ -77,6 +92,12 @@ function formatKey(string) {
 .key-picker-selected.selected {
     opacity: 1;
     animation: lockInKey 200ms 2 alternate;
+}
+
+.key-picker-clear {
+    position: absolute;
+    right: 32px;
+    bottom: 48px;
 }
 
 @keyframes lockInKey {

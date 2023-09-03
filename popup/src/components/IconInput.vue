@@ -84,8 +84,12 @@ function setIcon(icon) {
     background-color: transparent;
     font: 20px "Font Awesome 5 Free";
     overflow: hidden;
-    text-overflow: ellipsis;
+    cursor: pointer;
     transition: background-color 200ms, color 200ms, outline-color 200ms;
+}
+
+.icon-input>button:hover {
+    outline-color: var(--color-on-surface);
 }
 
 .icon-picker-all {

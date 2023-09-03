@@ -10,11 +10,10 @@ async function popstate() {
     else if (href.includes('/studiewijzer')) studyguideList()
 }
 
-// Page 'Studiewijzers
+// Page 'Studiewijzers'
 async function studyguideList() {
     if (!syncedStorage['sw-enabled']) return
 
-    const gridContainer = await awaitElement('section.main')
     renderStudyguideList()
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
@@ -32,7 +31,10 @@ async function studyguideList() {
     showHiddenItemsInput.addEventListener('input', validateItems)
 
     function validateItems() {
-        let cols = gridContainer.querySelectorAll('.st-sw-col')
+        let gridContainer = document.querySelector('#st-sw-container')
+        let cols = document.querySelectorAll('#st-sw-container .st-sw-col')
+        if (!gridContainer || !cols?.[0]) return
+
         gridContainer.querySelectorAll('.st-sw-item, .st-sw-item-default').forEach(studyguide => {
             let query = searchBar.value.toLowerCase()
             let matches = (studyguide.dataset.title.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
@@ -40,19 +42,21 @@ async function studyguideList() {
             if (matches) studyguide.classList.remove('hidden')
             else studyguide.classList.add('hidden')
         })
-        let visibleSubjects = gridContainer.querySelectorAll('.st-sw-subject')
-        let visibleSubjectsArray = [...visibleSubjects].filter(element => element.querySelector('button:not(.hidden)'))
-        visibleSubjectsArray.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
+
+        let subjectTiles = gridContainer.querySelectorAll('.st-sw-subject')
+        let visibleSubjectTiles = [...subjectTiles].filter(element => element.querySelector('button:not(.hidden)'))
+        visibleSubjectTiles.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
             cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
         })
     }
 
+    // TODO: This can definitely be more elegant
     setTimeout(validateItems, 200)
     setTimeout(validateItems, 600)
     setTimeout(validateItems, 1200)
 }
 
-// Page 'Studiewijzer
+// Page 'Studiewijzer'
 async function studyguideIndividual() {
     if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
@@ -106,12 +110,13 @@ async function studyguideIndividual() {
     })
 }
 
+// Render studyguide list
 async function renderStudyguideList() {
     if (!syncedStorage['sw-enabled']) return
 
-    let mainSection = document.querySelector('section.main'),
+    let mainView = document.querySelector('div.view'),
         widget = document.querySelector('div.full-height.widget'),
-        gridContainer = widget || mainSection
+        gridContainer = widget || mainView
 
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
 
@@ -211,11 +216,10 @@ async function renderStudyguideList() {
     })
 
     if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
-        mainSection = await awaitElement('section.main')
+        mainView = await awaitElement('div.view')
         widget = document.querySelector('div.full-height.widget')
-        gridContainer = widget || mainSection
+        gridContainer = widget || mainView
         gridContainer.appendChild(gridWrapper)
-        console.info("Element re-appended.")
     }
     if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
         gridWrapper.remove()

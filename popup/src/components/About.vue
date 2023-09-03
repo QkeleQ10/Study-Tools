@@ -1,8 +1,11 @@
 <script setup>
 import { ref } from 'vue'
+import { useManifest } from '@/composables/chrome.js'
 
 import Icon from './Icon.vue'
 import Dialog from './Dialog.vue'
+
+const { manifest } = useManifest()
 
 const disclaimerOpen = ref(false)
 
@@ -14,7 +17,11 @@ function openInNewTab(url) {
 <template>
     <div id="about">
         <h4 id="about-hero">Ontwikkeld door Quinten Althues</h4>
-        <p id="about-description">Bedankt voor het gebruiken van Study Tools!</p>
+        <p id="about-description">
+            Bedankt voor het gebruiken van Study Tools!
+            <br>
+            Versie: {{ manifest.version || "onbekend" }}
+        </p>
         <div id="about-buttons">
             <button class="button" @click="openInNewTab('https://qkeleq10.github.io/studytools')">
                 <Icon>open_in_new</Icon><span>Website</span>
@@ -27,13 +34,16 @@ function openInNewTab(url) {
                 <Icon>feedback</Icon><span>Feedback</span>
             </button>
         </div>
-        <button class="button text" @click="disclaimerOpen = true">Privacy- en update-informatie</button>
+        <button class="button text" @click="disclaimerOpen = true">Versie-informatie en privacystatement</button>
         <Dialog v-model:active="disclaimerOpen">
             <template #icon>info</template>
             <template #headline>Informatie</template>
-            <template #text>Deze extensie slaat gegevens over je identiteit, je accounts en je instellingen op in de
-                browser. Afhankelijk van je browserinstellingen worden ze al dan niet opgeslagen in de cloud.<br><br>De
-                ontwikkelaar aanvaardt geen aansprakelijkheid voor schade (zoals gelekte wachtwoorden) door
+            <template #text>
+                <b>Versie: {{ manifest.version || "onbekend" }}</b>
+                <br><br>
+                Deze extensie slaat gegevens over je identiteit, je accounts en je instellingen op in de
+                browser. Afhankelijk van je browserinstellingen worden ze al dan niet opgeslagen in de cloud.<br><br>
+                De ontwikkelaar aanvaardt geen aansprakelijkheid voor schade (zoals gelekte wachtwoorden) door
                 beveiligingsgebreken aan de kant van de gebruiker of de browser (zoals het niet gebruiken van een
                 apparaatwachtwoord).</template>
             <template #buttons>
@@ -72,35 +82,5 @@ function openInNewTab(url) {
     display: flex;
     gap: 8px;
     padding-bottom: 8px;
-}
-
-#about .button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 40px;
-    padding-inline: 24px;
-    border-radius: 20px;
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-    font: var(--typescale-label-large);
-    border: none;
-    cursor: pointer;
-}
-
-#about .button.tonal {
-    background-color: var(--color-secondary-container);
-    color: var(--color-on-secondary-container)
-}
-
-#about .button.text {
-    background-color: transparent;
-    color: var(--color-primary);
-    padding-inline: 12px;
-}
-
-#about .button .icon {
-    font-size: 18px;
-    margin-left: -8px;
 }
 </style>

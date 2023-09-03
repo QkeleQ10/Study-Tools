@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useScroll } from '@vueuse/core'
-import { useSyncedStorage } from './composables/syncedStorage.js'
+import { useSyncedStorage } from './composables/chrome.js'
 
 import settings from '../public/settings.js'
 
@@ -218,6 +218,50 @@ main {
 .icon-button[data-state=true] .icon {
     color: var(--color-primary);
     font-variation-settings: 'FILL' 1;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding-inline: 24px;
+    border-radius: 20px;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font: var(--typescale-label-large);
+    border: none;
+    cursor: pointer;
+}
+
+.button.tonal {
+    background-color: var(--color-secondary-container);
+    color: var(--color-on-secondary-container)
+}
+
+.button.text {
+    background-color: transparent;
+    color: var(--color-primary);
+    padding-inline: 12px;
+}
+
+.button .icon {
+    font-size: 18px;
+    margin-left: -8px;
+}
+
+.element-action {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: var(--color-on-surface-variant);
+    border: none;
+    border-radius: 14px;
+    font-size: 24px;
+    cursor: pointer;
 }
 
 .keybind {

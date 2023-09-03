@@ -31,6 +31,14 @@ function editArray(i, newVal) {
     clone[i] = newVal
     value.value = clone
 }
+
+function moveItem(from, to) {
+    let clone = [...value.value]
+    if (to < 0 || to >= clone.length) return
+    let element = clone.splice(from, 1)[0]
+    clone.splice(to, 0, element)
+    value.value = clone
+}
 </script>
 
 <template>
@@ -59,22 +67,30 @@ function editArray(i, newVal) {
                     <span>Sneltoets</span>
                 </div>
                 <TransitionGroup name="editor" tag="ul" class="shortcuts-list">
-                    <li v-for="(shortcut, i) in value" :key="i" class="shortcut-wrapper">
+                    <li v-for="(shortcut, i) in value" :key="shortcut.icon" class="shortcut-wrapper">
                         <IconInput v-model="value[i].icon"
                             @input="(v) => editArray(i, { icon: v, href: value[i].href, hotkey: value[i].hotkey })" />
                         <input class="text-input" type="input" :value="value[i].href"
                             @input="editArray(i, { icon: value[i].icon, href: $event.target.value, hotkey: value[i].hotkey })"
                             placeholder=" " autocomplete="off" spellcheck="false">
-                        <KeyInput v-model="value[i].hotkey"
+                        <KeyInput v-model="value[i].hotkey" :allowClear="true"
                             @input="(v) => editArray(i, { icon: value[i].icon, href: value[i].href, hotkey: v })" />
-                        <button class="period-remove" @click="removeFromArray(i)">
-                            <Icon>delete</Icon>
-                        </button>
+                        <div class="shortcut-actions">
+                            <button class="element-action" @click="removeFromArray(i)">
+                                <Icon>delete</Icon>
+                            </button>
+                            <button class="element-action" @click="moveItem(i, i - 1)">
+                                <Icon>keyboard_arrow_up</Icon>
+                            </button>
+                            <button class="element-action" @click="moveItem(i, i + 1)">
+                                <Icon>keyboard_arrow_down</Icon>
+                            </button>
+                        </div>
+                        <!--clean up delete button and add drag to change order-->
                     </li>
                 </TransitionGroup>
-            </template>
-            <template #buttons>
-                <button @click="value = [...value, { icon: '', href: '', hotkey: '' }]">Toevoegen</button>
+                <button class="button text" style="margin-top: 16px;"
+                    @click="value = [...value, { icon: '', href: '', hotkey: '' }]">Toevoegen</button>
             </template>
         </DialogFullscreen>
     </div>
@@ -109,14 +125,12 @@ function editArray(i, newVal) {
 .shortcut-wrapper,
 .shortcut-example {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    align-items: center;
+    grid-template-columns: 56px 1fr 56px 52px;
     gap: 8px;
 }
 
 .shortcut-example {
     margin-bottom: 8px;
-    margin-right: 32px;
     translate: 16px;
     font: var(--typescale-label-medium);
 }
@@ -124,6 +138,19 @@ function editArray(i, newVal) {
 .shortcut-wrapper .text-input {
     width: 100%;
     box-sizing: border-box;
+}
+
+.shortcut-actions {
+    display: grid;
+    grid-template:
+        'up delete' 1fr
+        'down delete' 1fr
+        / 1fr 1fr;
+    align-items: center;
+}
+
+.shortcut-actions>button:first-child {
+    grid-area: delete;
 }
 
 .editor-enter-active,

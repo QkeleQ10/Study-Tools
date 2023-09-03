@@ -686,6 +686,10 @@ aside .tabs:not(.st-cf-sc-override) li.active:after {
     background-color: var(--st-accent-secondary);
 }
 
+.collapsed-menu .menu-footer i {
+    transform: scaleX(-1);
+}
+
 dna-card-title.disabled {
     color: var(--st-foreground-primary) !important;
 }
@@ -1020,6 +1024,10 @@ h3:active> .icon-up-arrow:before {
 
     if (syncedStorage['sw-enabled']) {
         createStyle(`
+#studiewijzer-container {
+    height: auto !important;
+}
+
 #studiewijzer-container section.main {
     padding-top: 125px;
 }

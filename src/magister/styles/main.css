@@ -369,7 +369,7 @@ li.children .submenu .st-hotkey-label {
     left: -25px;
 }
 
-ul.main-menu[data-hotkeys-visible="true"] .st-hotkey-label {
+[data-hotkeys-visible="true"] .st-hotkey-label {
     scale: 1;
     opacity: .6;
     transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms;
@@ -383,14 +383,14 @@ ul.main-menu[data-hotkeys-visible="true"] .st-hotkey-label {
     transition: scale 100ms var(--reverse-transition-delay), opacity 200ms, left 200ms !important;
 }
 
-.menu-host.collapsed-menu ul.main-menu[data-hotkeys-visible="true"] li.children .st-hotkey-label-collapsed-only {
+[data-hotkeys-visible="true"] .menu-host.collapsed-menu li.children .st-hotkey-label-collapsed-only {
     left: calc(var(--child-index) * 12px - 2px);
     scale: 1 !important;
     opacity: .6 !important;
     transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
 }
 
-ul.main-menu[data-hotkeys-visible="true"] li.children:not(.expanded) .st-hotkey-label-collapsed-only {
+[data-hotkeys-visible="true"] li.children:not(.expanded) .st-hotkey-label-collapsed-only {
     left: calc(var(--child-index) * 24px - 2px);
     scale: 1 !important;
     opacity: .6 !important;

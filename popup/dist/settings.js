@@ -51,7 +51,7 @@ const shortcuts = {
     title: "Snelkoppelingen zijbalk",
     type: "ShortcutsEditor",
     default: [
-        { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'c' }
+        { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'z' }
     ]
 }
 

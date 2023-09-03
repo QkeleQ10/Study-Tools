@@ -1,17 +1,39 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { ref, watch, defineProps, defineEmits } from 'vue'
 
 const props = defineProps(['active', 'handle'])
 const emit = defineEmits(['update:active'])
 
+const sheetState = ref('hidden')
+
 const closeBottomSheet = () => {
-    emit('update:active', false)
+    sheetState.value = 'hiding'
+    setTimeout(() => {
+        emit('update:active', false)
+        sheetState.value = 'hidden'
+    }, 200)
 }
+
+watch(() => props.active, async (value) => {
+    if (value === true) {
+        sheetState.value = 'showing'
+        setTimeout(() => {
+            sheetState.value = 'shown'
+        }, 300)
+    } else {
+        sheetState.value = 'hiding'
+        setTimeout(() => {
+            emit('update:active', false)
+            sheetState.value = 'hidden'
+        }, 200)
+    }
+})
+
 </script>
 
 <template>
-    <div class="scrim" :active="props.active" @click="closeBottomSheet"></div>
-    <div class="bottom-sheet" :active="props.active">
+    <div class="scrim" :active="sheetState === 'shown' || sheetState === 'showing'" @click="closeBottomSheet"></div>
+    <div class="bottom-sheet" :data-visible="sheetState !== 'hidden'" :data-state="sheetState">
         <div v-if="handle" class="bottom-sheet-handle" @click="closeBottomSheet"></div>
         <slot name="content"></slot>
     </div>
@@ -24,19 +46,36 @@ const closeBottomSheet = () => {
     left: 0;
     width: 100%;
     box-sizing: border-box;
-    pointer-events: none;
-    translate: 0 100vh;
+    translate: 0 24px;
     padding: 24px 24px 48px;
     border-radius: 28px 28px 0 0;
     z-index: 10001;
     background-color: var(--color-surface-container-low);
-    transition: translate 200ms, background-color 200ms;
+    transition: background-color 200ms;
 }
 
-.bottom-sheet[active=true] {
+.bottom-sheet[data-visible=false] {
+    display: none;
+    pointer-events: none;
+}
+
+.bottom-sheet[data-visible=true] {
+    display: initial;
     pointer-events: all;
-    translate: 0 24px;
-    transition: translate 300ms cubic-bezier(.29, 1.3, .64, 1), background-color 200ms;
+}
+
+.bottom-sheet[data-state=showing] {
+    animation-name: bottom-sheet-slide;
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(.29, 1.3, .64, 1);
+    animation-fill-mode: both;
+}
+
+.bottom-sheet[data-state=hiding] {
+    animation-name: bottom-sheet-slide;
+    animation-duration: 200ms;
+    animation-direction: reverse;
+    animation-fill-mode: both;
 }
 
 .bottom-sheet-handle {
@@ -88,5 +127,15 @@ const closeBottomSheet = () => {
     display: block;
     font: var(--typescale-label-medium);
     color: var(--color-on-surface-variant);
+}
+
+@keyframes bottom-sheet-slide {
+    from {
+        translate: 0 100vh;
+    }
+
+    to {
+        translate: 0 24px;
+    }
 }
 </style>
