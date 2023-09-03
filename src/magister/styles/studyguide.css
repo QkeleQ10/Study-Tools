@@ -20,7 +20,7 @@
 #st-sw-search {
     position: absolute;
     top: 40px;
-    right: 28px;
+    right: 32px;
     z-index: 99999;
 }
 
@@ -49,7 +49,7 @@
 #st-sw-show-hidden-items-label {
     position: absolute;
     top: 85px;
-    right: 28px;
+    right: 32px;
     z-index: 99999;
 }
 
@@ -193,8 +193,9 @@
 }
 
 @media (width > 768px) {
-    section.main #st-sw-container {
+    div.view>#st-sw-container {
         flex-direction: row;
         gap: 12px;
+        margin-inline: 24px;
     }
 }

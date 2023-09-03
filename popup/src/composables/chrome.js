@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { ref, onMounted, watchEffect, isProxy, toRaw } from 'vue'
 
-import settings from '../../../popup/public/settings.js'
+import settings from '../../public/settings.js'
 
 const browser = window.browser || window.chrome
 
@@ -31,7 +31,7 @@ export function useSyncedStorage() {
 
     watchEffect(() => {
         if (browser?.storage?.sync) {
-            let toStore = {...syncedStorage.value}
+            let toStore = { ...syncedStorage.value }
             if (isProxy(toStore)) toStore = toRaw(toStore)
             browser.storage.sync.set(toStore)
         }
@@ -51,4 +51,15 @@ export function useSyncedStorage() {
     }
 
     return syncedStorage
+}
+
+export function useManifest() {
+    let manifest = ref({})
+
+    onMounted(() => {
+        if (browser?.runtime?.getManifest)
+            manifest.value = browser.runtime.getManifest()
+    })
+
+    return {manifest}
 }

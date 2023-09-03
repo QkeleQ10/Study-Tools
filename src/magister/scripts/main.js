@@ -1,6 +1,4 @@
-let subjects
-
-//TODO: Sticky notes
+// let subjects
 
 // Run when the extension and page are loaded
 main()
@@ -10,45 +8,37 @@ async function main() {
         key = syncedStorage['magister-overlay-hotkey'] || 'S',
         keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
 
-    subjects = syncedStorage['subjects']
+    // subjects = syncedStorage['subjects']
 
-    if (syncedStorage['magister-appbar-zermelo']) {
-        const appbarZermelo = document.getElementById('st-appbar-zermelo') || document.createElement('div'),
-            spacer = await awaitElement('.appbar>.spacer'),
-            zermeloA = document.createElement('a'),
-            zermeloImg = document.createElement('img'),
-            zermeloSpan = document.createElement('span')
-        appbarZermelo.innerText = ''
-        spacer.after(appbarZermelo)
-        appbarZermelo.classList.add('menu-button')
-        appbarZermelo.id = 'st-appbar-zermelo'
-        appbarZermelo.append(zermeloA)
-        zermeloA.classList.add('zermelo-menu')
-        zermeloA.setAttribute('href', `https://${syncedStorage['magister-appbar-zermelo-url'] || window.location.hostname.split('.')[0] + '.zportal.nl/app'}`)
-        zermeloA.setAttribute('target', '_blank')
-        zermeloA.append(zermeloImg)
-        zermeloImg.setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/QkeleQ10.github.io/main/img/zermelo.png')
-        zermeloImg.setAttribute('width', '36')
-        zermeloImg.style.borderRadius = '100%'
-        zermeloA.append(zermeloSpan)
-        zermeloSpan.innerText = "Zermelo"
-    }
+    let shortcuts = Object.values(syncedStorage.shortcuts),
+        spacer = await awaitElement('.appbar>.spacer')
 
+    // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarMetrics = document.getElementById('st-appbar-metrics'),
-            appbarWeek = document.getElementById('st-appbar-week') || document.createElement('div')
-        if (!appbarMetrics) {
-            appbarMetrics = document.createElement('div')
-            appbarMetrics.id = 'st-appbar-metrics'
-            appbar.prepend(appbarMetrics)
-        }
-        appbarMetrics.prepend(appbarWeek)
-        appbarWeek.id = 'st-appbar-week'
-        appbarWeek.classList.add('st-metric')
-        appbarWeek.dataset.description = 'Week'
-        appbarWeek.innerText = getWeekNumber()
+        let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
+        if (spacer) spacer.before(appbarMetrics)
+        else appbar.prepend(appbarMetrics)
+        let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: getWeekNumber() })
     }
 
+    // Custom shortcuts
+    shortcuts.slice().reverse().forEach((shortcut, i, a) => {
+        let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
+        url = url.replace('$SCHOOLNAAM', window.location.hostname.split('.')[0])
+        let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
+            shortcutA = element('a', `st-shortcut-${i}-a`, shortcutDiv, { href: url, target: '_blank', }),
+            shortcutI = element('i', `st-shortcut-${i}-i`, shortcutA, { class: 'st-shortcut-icon', innerText: shortcut.icon }),
+            shortcutSpan = element('span', `st-shortcut-${i}-span`, shortcutA, { innerText: url.split('.')?.[1] || "Ongeldige URL" })
+
+        if (spacer) spacer.after(shortcutDiv)
+
+        if (syncedStorage['hotkeys-enabled'] && shortcut.hotkey?.length > 0) {
+            shortcutA.dataset.hotkey = shortcut.hotkey.toLowerCase()
+            shortcutHotkey = element('div', `st-shortcut-${i}-hotkey-label`, shortcutA, { class: 'st-hotkey-label', innerText: formatKey(shortcut.hotkey), style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
+        }
+    })
+
+    // Handle forced logout
     let userMenuLink = await awaitElement('#user-menu')
     userMenuLink.addEventListener('click', async () => {
         let logoutLink = await awaitElement('.user-menu ul li:nth-child(3) a')
@@ -57,8 +47,10 @@ async function main() {
         })
     })
 
+    // Easter egg
     if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
 
+    // Hotkeys
     if (syncedStorage['hotkeys-enabled']) {
         const hotkeyList = [
             { key: '`', code: 'Backquote' },
@@ -77,23 +69,26 @@ async function main() {
             { key: '[', code: 'BracketLeft' },
             { key: ']', code: 'BracketRight' },
         ],
-            hotkeysOnToday = syncedStorage['hotkeys-quick'],
-            mainMenu = document.querySelector('ul.main-menu')
+            hotkeysOnToday = syncedStorage['hotkeys-quick']
 
-        createHotkeyLabels()
         setTimeout(() => {
-            createHotkeyLabels()
-            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
+            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) {
+                createHotkeyLabels()
+                document.documentElement.dataset.hotkeysVisible = true
+            }
         }, 600)
         setTimeout(() => {
-            createHotkeyLabels()
-            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
+            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) {
+                createHotkeyLabels()
+                document.documentElement.dataset.hotkeysVisible = true
+            }
         }, 1200)
 
         function createHotkeyLabels() {
             if (syncedStorage['sidebar-expand-all']) document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
 
             document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a').forEach((menuItem, i, a) => {
+                if (i >= hotkeyList.length) return
                 let title = menuItem.querySelector('span.caption')?.innerText || menuItem.firstChild.nodeValue
 
                 let hotkeyLabel = element('div', `st-hotkey-label-${title}`, menuItem, { class: 'st-hotkey-label', innerText: hotkeyList[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
@@ -110,9 +105,18 @@ async function main() {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
                 e.preventDefault()
-                mainMenu.dataset.hotkeysVisible = true
+                createHotkeyLabels()
+                document.documentElement.dataset.hotkeysVisible = true
             }
-            if (mainMenu.dataset.hotkeysVisible === 'true') {
+            if (document.documentElement.dataset.hotkeysVisible === 'true') {
+                let matchingShortcut = document.querySelector(`.menu-button>a[data-hotkey="${e.key.toLowerCase()}"]`)
+                if (matchingShortcut) {
+                    matchingShortcut.click()
+                    if (document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = true
+                    else document.documentElement.dataset.hotkeysVisible = false
+                    return
+                }
+
                 let matchingKey = hotkeyList.find(key => key.code === e.code)
                 if (!matchingKey) return
 
@@ -127,18 +131,19 @@ async function main() {
         addEventListener('keyup', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
-                if (!hotkeysOnToday || !document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = false
+                if (!hotkeysOnToday || !document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = false
             }
         })
 
         window.addEventListener('popstate', async () => {
             if (syncedStorage['hotkeys-quick']) {
-                if (document.location.hash.includes('#/vandaag')) mainMenu.dataset.hotkeysVisible = true
-                else mainMenu.dataset.hotkeysVisible = false
+                if (document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = true
+                else document.documentElement.dataset.hotkeysVisible = false
             }
         })
     }
 
+    // Notes
     if (syncedStorage['notes-enabled']) {
         let notes = syncedStorage['st-notes'] || ['\n'],
             notesWrapper = element('div', 'st-notes', document.body, { 'data-open': false }),
@@ -446,6 +451,12 @@ async function msToPixels(ms) {
         let settingAgendaHeight = syncedStorage['magister-vd-agendaHeight'] || 1
         resolve(0.000025 * settingAgendaHeight * ms)
     })
+}
+
+function formatKey(string) {
+    if (!string) return string
+    if (string === ' ') return "Spatie"
+    return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
 function weightedMean(valueArray = [], weightArray = []) {

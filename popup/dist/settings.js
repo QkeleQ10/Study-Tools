@@ -46,6 +46,15 @@ const periods = {
     default: [30, 47, 9],
 }
 
+const shortcuts = {
+    id: "shortcuts",
+    title: "Snelkoppelingen zijbalk",
+    type: "ShortcutsEditor",
+    default: [
+        { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'z' }
+    ]
+}
+
 export default [
     {
         id: "appearance",
@@ -106,6 +115,7 @@ export default [
                 title: "Weeknummer in zijbalk",
                 default: true,
             },
+            shortcuts,
             {
                 id: 'magister-picture',
                 title: "Profielfoto",

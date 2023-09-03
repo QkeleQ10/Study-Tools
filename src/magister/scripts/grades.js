@@ -390,64 +390,47 @@ async function gradeBackup() {
     if (!syncedStorage['magister-cf-backup']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-        gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl'),
-        gradeResult, gradeWeight, gradeColumn, gradeTitle,
-        bkExport = document.createElement('button'),
-        bkImport = document.createElement('label'),
-        bkImportInput = document.createElement('input'),
-        bkBusyAd = document.createElement('div'),
-        bkBusyAdBody = document.createElement('p'),
-        bkBusyAdLink = document.createElement('a'),
+        bkInvoke = element('button', 'st-cf-bk', document.body, { class: 'st-button', 'data-icon': '', innerText: "Cijferback-up" }),
+        bkModal = element('dialog', 'st-cf-bk-modal', document.body, { class: 'st-overlay' }),
+        bkModalClose = element('button', 'st-cf-bk-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+        bkModalTitle = element('span', 'st-cf-bk-title', bkModal, { class: 'st-title', innerText: "Cijferback-up" }),
+        bkModalSubtitle = element('span', 'st-cf-bk-subtitle', bkModal, { class: 'st-subtitle', innerText: "Exporteer of importeer je cijferlijst zodat je er altijd bij kunt." }),
+        bkModalWrapper = element('div', 'st-cf-bk-modal-wrapper', bkModal),
+        bkModalEx = element('div', 'st-cf-bk-ex', bkModalWrapper, { class: 'st-list st-tile' }),
+        bkModalExListTitle = element('span', 'st-cf-bk-ex-title', bkModalEx, { class: 'st-section-title', 'data-icon': '', innerText: "Exporteren" }),
+        bkModalIm = element('div', 'st-cf-bk-im', bkModalWrapper, { class: 'st-list st-tile' }),
+        bkModalImListTitle = element('span', 'st-cf-bk-im-title', bkModalIm, { class: 'st-section-title', 'data-icon': '', innerText: "Importeren" }),
+        bkModalImExternal = element('button', 'st-cf-bk-im-external', bkModalIm, { class: 'st-button', 'data-icon': '', innerText: "Importeren via website" }),
+        bkModalImExtTip = element('span', 'st-cf-bk-im-ext-tip', bkModalIm, { class: 'st-tip', innerText: "Website speciaal ontwikkeld voor het\nimporteren van cijferback-ups (aanbevolen)\n\n" }),
+        bkModalImMagister = element('label', 'st-cf-bk-import', bkModalIm, { class: 'st-button secondary', 'data-icon': '', innerText: "Importeren in Magister" }),
+        bkModalImMagTip = element('span', 'st-cf-bk-im-mag-tip', bkModalIm, { class: 'st-tip', innerText: "Niet aanbevolen" }),
+        bkImportInput = element('input', 'st-cf-bk-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' }),
         bkIWrapper = document.createElement('div'),
         bkIResult = document.createElement('div'),
         bkIWeight = document.createElement('div'),
         bkIColumn = document.createElement('div'),
         bkITitle = document.createElement('div'),
+        yearsArray = [],
+        busy = false,
         list = []
 
-    gradeDetails.childNodes.forEach(element => {
-        if (element.innerText === 'Beoordeling') {
-            gradeResult = element.nextElementSibling
-        } else if (element.innerText === 'Weging') {
-            gradeWeight = element.nextElementSibling
-        } else if (element.innerText === 'Kolomnaam') {
-            gradeColumn = element.nextElementSibling
-        } else if (element.innerText === 'Omschrijving') {
-            gradeTitle = element.nextElementSibling
+    bkModalClose.addEventListener('click', () => bkModal.close())
+
+    bkInvoke.addEventListener('click', async () => {
+        bkModal.showModal()
+
+        if (bkModalExListTitle.disabled) {
+            bkModalImListTitle.dataset.description = "Upload een andere cijferback-up"
+            return
         }
-    })
 
-    document.body.append(bkExport, bkImport, bkBusyAd)
-    bkExport.classList.add('st-button')
-    bkExport.id = 'st-cf-bk-export'
-    bkExport.innerText = "Exporteren (bèta)"
-    bkExport.dataset.icon = ''
-    bkImport.classList.add('st-button')
-    bkImport.id = 'st-cf-bk-import'
-    bkImport.innerText = "Importeren"
-    bkImport.dataset.icon = ''
-    bkImport.append(bkImportInput)
-    bkImportInput.type = 'file'
-    bkImportInput.accept = '.json'
-    bkImportInput.style.display = 'none'
-    bkBusyAd.id = 'st-cf-bk-busy-ad'
-    bkBusyAd.style.display = 'none'
-    bkBusyAd.append(bkBusyAdBody, bkBusyAdLink)
-    bkBusyAdBody.innerText = "Bedankt voor het gebruiken van Study Tools."
-    bkBusyAdLink.innerText = "Deel de extensie met vrienden!"
-    bkBusyAdLink.href = 'https://qkeleq10.github.io/extensions/studytools'
-    bkBusyAdLink.target = '_blank'
-
-    bkExport.addEventListener('click', async () => {
-        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) showSnackbar("Cijferexport werkt mogelijk minder goed op Firefox. Probeer het op een andere browser, zoals Microsoft Edge of Google Chrome.", 10000)
+        bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
+        bkModalImListTitle.dataset.description = "Upload een eerder geëxporteerde cijferlijst"
 
         document.querySelector("#idWeergave > div > div:nth-child(2) > div > div > form > div > div > span").click()
         document.querySelector("#kolomweergave_listbox > li:nth-child(2)").click()
-
-        bkExport.disabled = true
-        bkExport.dataset.busy = true
-        bkBusyAd.style.display = 'grid'
-        list = []
+        document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
+        if (yearsArray?.length > 0) return
 
         let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
             token = response?.token || await getFromStorage('token', 'local'),
@@ -455,32 +438,49 @@ async function gradeBackup() {
         console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
         const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } })
-        if (yearsRes.status >= 400 && yearsRes.status < 600) return showSnackbar("Fout " + yearsRes.status + ". Vernieuw de pagina en probeer het opnieuw.")
-        const yearsArray = (await yearsRes.json()).items
+        if (yearsRes.status >= 400 && yearsRes.status < 600) {
+            let errorEl = element('span', 'st-cf-bk-ex-error', bkModalEx, { innerText: "Vernieuw de pagina en probeer het opnieuw." })
+            return
+        }
+        yearsArray = (await yearsRes.json()).items
 
-        document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
+        yearsArray.forEach((year, i) => {
+            const button = element('button', `st-cf-bk-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
+            button.addEventListener('click', () => exportGradesForYear({ ...year, i, button }))
+        })
+    })
 
-        let modal = element('dialog', 'st-cf-bk-year-dialog', document.body, { class: 'st-overlay' }),
-            title = element('span', 'st-opts-t', modal, { class: 'st-title', innerText: "Leerjaar kiezen" }),
-            subtitle = element('span', 'st-opts-s', modal, { class: 'st-subtitle', innerText: "Kies een leerjaar waarvoor je je cijferlijst wilt exporteren. Het bovenste jaar is het recentst." }),
-            wrapper = element('div', 'st-opts', modal, { class: 'st-list' })
-        const year = await new Promise((resolve, reject) => {
-            modal.showModal()
-            yearsArray.forEach((year, i) => {
-                const opt = element('button', `st-opt-${year.id}`, wrapper, { class: 'st-button', innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
-                opt.addEventListener('click', () => { resolve({ ...year, i }) }, { once: true })
-            })
-        }),
-            yearId = year.id
-        modal.close()
+    async function exportGradesForYear(year) {
+        if (busy) return
+
+        busy = true
+        bkModalExListTitle.dataset.description = "Schooljaar selecteren..."
+
+        let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
+            token = response?.token || await getFromStorage('token', 'local'),
+            userId = response?.userId || await getFromStorage('user-id', 'local')
+        console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
         let yearElement = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${year.i + 1})`)
         yearElement.click()
 
-        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${yearId}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
-        if (gradesRes.status >= 400 && gradesRes.status < 600) return showSnackbar("Fout " + gradesRes.status)
+        bkModalExListTitle.dataset.description = "Wachten op cijfers..."
+
+        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
+        if (gradesRes.status >= 400 && gradesRes.status < 600) {
+            bkModalExListTitle.dataset.description = `Fout ${gradesRes.status}\nVernieuw de pagina en probeer het opnieuw`
+            bkModalExListTitle.disabled = true
+            if (gradesRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
+            bkModalEx.querySelectorAll(`[id*='st-cf-bk-ex-opt']`).forEach(e => e.remove())
+            return
+        }
         const gradesJson = await gradesRes.json()
         const gradesArray = gradesJson.Items
+
+        if (!gradesArray?.length > 0) {
+            bkModalExListTitle.dataset.description = "Geen cijfers gevonden!"
+            return
+        }
 
         await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -488,6 +488,7 @@ async function gradeBackup() {
             array = [...nodeList]
 
         list = await Promise.all(array.map(async (td, i) => {
+            bkModalExListTitle.dataset.description = `Cijfers verwerken... (${i + 1}/${array.length})`
             return new Promise(async (resolve, reject) => {
                 let type = (!td.innerText || td.innerText.trim().length < 1) ? 'filler' : (td.firstElementChild?.classList.contains('text')) ? 'rowheader' : 'grade',
                     className = td.firstElementChild?.className
@@ -508,10 +509,16 @@ async function gradeBackup() {
 
                     let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
 
-                    let result = gradeBasis.CijferStr
+                    let result = gradeBasis.CijferStr || gradeBasis.Cijfer
 
-                    const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${yearId}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: token } })
-                    if (extraRes.status >= 400 && extraRes.status < 600) return showSnackbar("Fout " + extraRes.status)
+                    const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: token } })
+                    if (extraRes.status >= 400 && extraRes.status < 600) {
+                        bkModalExListTitle.dataset.description = `Fout ${extraRes.status}\nVernieuw de pagina en probeer het opnieuw`
+                        bkModalExListTitle.disabled = true
+                        if (extraRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
+                        bkModalEx.querySelectorAll(`[id*='st-cf-bk-ex-opt']`).forEach(e => e.remove())
+                        return
+                    }
                     const gradeExtra = await extraRes.json()
 
                     let weight = Number(gradeExtra.Weging),
@@ -525,36 +532,39 @@ async function gradeBackup() {
             })
         }))
 
+        bkModalExListTitle.dataset.description = "In bestand opslaan..."
+
         let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify({ date: new Date(), list: list }))))}`,
-            a = document.createElement("a")
-        a.download = `Cijferlijst ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`;
-        a.href = uri
-        a.type = 'application/json'
-        document.body.appendChild(a)
+            a = element('a', 'st-cf-bk-temp', document.body, {
+                download: `Cijferlijst ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`,
+                href: uri,
+                type: 'application/json'
+            })
         a.click()
-        document.body.removeChild(a)
-        delete a
-        bkExport.dataset.done = true
-        showSnackbar("Back-up voltooid! Controleer je downloads.")
-        setTimeout(() => {
-            bkExport.removeAttribute('disabled')
-            bkExport.removeAttribute('style')
-            bkExport.removeAttribute('data-busy')
-            bkExport.removeAttribute('data-done')
-            bkBusyAd.style.display = 'none'
-        }, 5000)
-    })
+        a.remove()
+        bkModalExListTitle.dataset.description = "Controleer je downloads!"
+        busy = false
+        setTimeout(() => bkModal.close(), 2000)
+    }
+
+    bkModalImExternal.addEventListener('click', () => window.open('https://qkeleq10.github.io/studytools/grades', '_blank'))
 
     bkImportInput.addEventListener('change', async event => {
-        bkImport.disabled = true
-        bkImport.dataset.busy = true
-        bkExport.setAttribute('style', 'transform: scaleX(0); translate: 100%; pointer-events: none;')
+        if (busy) return
+
+        busy = true
+        bkModalImListTitle.dataset.description = "Wachten op bestand..."
+
+        bkModalExListTitle.dataset.description = `Vernieuw de pagina om te exporteren`
+        bkModalExListTitle.disabled = true
+        bkModalEx.querySelectorAll(`[id*='st-cf-bk-ex-opt']`).forEach(e => e.remove())
         gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
-        showSnackbar("Cijfers uit back-up extraheren en plaatsen op pagina...", 3000)
         list = []
 
         let reader = new FileReader()
         reader.onload = async event => {
+            bkModalImListTitle.dataset.description = "Cijfers op pagina plaatsen..."
+
             let json = JSON.parse(event.target.result)
             list = json.list
             gradesContainer.innerText = ''
@@ -594,7 +604,7 @@ async function gradeBackup() {
             bkITitle.innerText = "Klik op een cijfer"
 
             for (let i = 0; i < list.length; i++) {
-                bkImport.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
+                bkModalImMagister.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
                 item = list[i]
                 await appendImportedGrade(item, gradesContainer.querySelector('table'), aside)
                     .then(() => {
@@ -610,13 +620,9 @@ async function gradeBackup() {
             }
 
             gradesContainer.removeAttribute('style')
-            bkImport.dataset.done = true
-            setTimeout(() => {
-                bkImport.removeAttribute('disabled')
-                bkImport.setAttribute('style', 'right: 200px;')
-                bkImport.removeAttribute('data-busy')
-                bkImport.removeAttribute('data-done')
-            }, 5000)
+            bkModalImListTitle.dataset.description = "Cijferlijst geüpload!"
+            busy = false
+            setTimeout(() => bkModal.close(), 200)
         }
         reader.readAsText(event.target.files[0])
     })
@@ -869,6 +875,7 @@ async function gradeStatistics() {
                     if (document.querySelector("#st-cf-sc-row-filter-include").classList.contains('secondary') && document.querySelector("#st-cf-sc-row-filter").value && document.querySelector("#st-cf-sc-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
                     let subjectObject = yearObject[subjectKey]
                     Object.values(subjectObject).forEach(result => {
+                        if (result > 10) return
                         results.push(result)
                         roundedFrequencies[Math.round(result)]++
                     })

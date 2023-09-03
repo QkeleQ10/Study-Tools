@@ -56,14 +56,13 @@ function editArray(i, newVal) {
                             max="52">
                         <span class="period-interfix">tot</span>
                         <span class="period-end">{{ value[(i + 1) % value.length] || '?' }}</span>
-                        <button class="period-remove" @click="removeFromArray(i)">
+                        <button class="element-action" @click="removeFromArray(i)">
                             <Icon>delete</Icon>
                         </button>
                     </li>
                 </TransitionGroup>
-            </template>
-            <template #buttons>
-                <button @click="value = [...value, undefined]">Toevoegen</button>
+                <button class="button text" style="margin-top: 16px;"
+                    @click="value = [...value, undefined]">Toevoegen</button>
             </template>
         </DialogFullscreen>
     </div>
@@ -102,17 +101,6 @@ function editArray(i, newVal) {
 .period-wrapper .text-input {
     width: 75px;
     box-sizing: border-box;
-}
-
-.period-remove {
-    background-color: transparent;
-    border: none;
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border-radius: 12px;
-    cursor: pointer;
 }
 
 .editor-enter-active,

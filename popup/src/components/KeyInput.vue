@@ -2,16 +2,16 @@
 import { ref, computed, defineProps, defineEmits } from 'vue'
 
 import BottomSheet from './BottomSheet.vue'
-import Icon from './Icon.vue'
 
-const props = defineProps(['modelValue', 'id'])
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps(['modelValue', 'id', 'allowClear'])
+const emit = defineEmits(['update:modelValue', 'input'])
 const value = computed({
     get() {
         return props.modelValue
     },
     set(value) {
         emit('update:modelValue', value)
+        emit('input', value)
     }
 })
 
@@ -31,6 +31,15 @@ function promptKey() {
     }, { once: true })
 }
 
+function clearKey() {
+    value.value = ''
+    selected.value = true
+    setTimeout(() => {
+        pickerOpen.value = false
+        selected.value = false
+    }, 500)
+}
+
 function formatKey(string) {
     if (!string) return string
     if (string === ' ') return "Spatie"
@@ -40,39 +49,35 @@ function formatKey(string) {
 </script>
 
 <template>
-    <div class="setting key-picker" ref="label">
-        <div class="key-picker-click-layer" @click="promptKey">
-            <div>
-                <h3 class="setting-title">
-                    <slot name="title"></slot>
-                </h3>
-                <span class="setting-subtitle">
-                    <slot name="subtitle"></slot> ({{ formatKey(value) }})
-                </span>
-            </div>
-            <Icon>chevron_right</Icon>
-        </div>
+    <div class="key-input">
+        <button @click="promptKey">{{ formatKey(value) || '⋯' }}</button>
         <BottomSheet v-model:active="pickerOpen" :handle=true>
             <template #content>
                 <span class="supporting-text">Druk op een toets</span>
-                <span class="key-picker-selected" :class="{ selected: selected }">{{ formatKey(value) }}</span>
+                <span class="key-picker-selected" :class="{ selected: selected }">{{ formatKey(value) || "Geen geselecteerd" }}</span>
+                <button class="button text key-picker-clear" v-if="allowClear" @click="clearKey">Wissen</button>
             </template>
         </BottomSheet>
     </div>
 </template>
 
 <style>
-.key-picker-click-layer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-left: -16px;
-    margin-right: -24px;
-    margin-block: -12px;
-    padding-left: 16px;
-    padding-right: 24px;
-    padding-block: 12px;
+.key-input>button {
+    height: 56px;
+    width: 56px;
+    outline: 1px solid var(--color-outline);
+    border: none;
+    border-radius: 4px;
+    background-color: transparent;
+    font: var(--typescale-body-large);
+    overflow: hidden;
+    text-overflow: ellipsis;
     cursor: pointer;
+    transition: background-color 200ms, color 200ms, outline-color 200ms;
+}
+
+.key-input>button:hover {
+    outline-color: var(--color-on-surface);
 }
 
 .key-picker-selected {
@@ -87,6 +92,12 @@ function formatKey(string) {
 .key-picker-selected.selected {
     opacity: 1;
     animation: lockInKey 200ms 2 alternate;
+}
+
+.key-picker-clear {
+    position: absolute;
+    right: 32px;
+    bottom: 48px;
 }
 
 @keyframes lockInKey {

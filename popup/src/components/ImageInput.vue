@@ -53,7 +53,7 @@ function imageChanged() {
             setTimeout(() => {
                 pickerOpen.value = false
                 selected.value = false
-            }, 1000)
+            }, 500)
         }
         reader.readAsDataURL(file)
     }

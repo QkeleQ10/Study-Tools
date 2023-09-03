@@ -59,14 +59,13 @@ function editArray(i, newVal) {
                         <input class="text-input" type="input" :value="value[i].aliases"
                             @input="editArray(i, { name: value[i].name, aliases: $event.target.value })" placeholder=" "
                             autocomplete="off" spellcheck="false">
-                        <button class="period-remove" @click="removeFromArray(i)">
+                        <button class="element-action" @click="removeFromArray(i)">
                             <Icon>delete</Icon>
                         </button>
                     </li>
                 </TransitionGroup>
-            </template>
-            <template #buttons>
-                <button @click="value = [...value, { name: '', aliases: '' }]">Toevoegen</button>
+                <button class="button text" style="margin-top: 16px;"
+                    @click="value = [...value, { name: '', aliases: '' }]">Toevoegen</button>
             </template>
         </DialogFullscreen>
     </div>
