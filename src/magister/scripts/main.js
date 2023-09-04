@@ -28,7 +28,7 @@ async function main() {
         let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
             shortcutA = element('a', `st-shortcut-${i}-a`, shortcutDiv, { href: url, target: '_blank', }),
             shortcutI = element('i', `st-shortcut-${i}-i`, shortcutA, { class: 'st-shortcut-icon', innerText: shortcut.icon }),
-            shortcutSpan = element('span', `st-shortcut-${i}-span`, shortcutA, { innerText: url.split('.')?.[1] || "Ongeldige URL" })
+            shortcutSpan = element('span', `st-shortcut-${i}-span`, shortcutA, { innerText: url.replace('https://', '').split('/')?.[0] || "Ongeldige URL" })
 
         if (spacer) spacer.after(shortcutDiv)
 
@@ -112,8 +112,7 @@ async function main() {
                 let matchingShortcut = document.querySelector(`.menu-button>a[data-hotkey="${e.key.toLowerCase()}"]`)
                 if (matchingShortcut) {
                     matchingShortcut.click()
-                    if (document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = true
-                    else document.documentElement.dataset.hotkeysVisible = false
+                    if (!hotkeysOnToday || !document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = false
                     return
                 }
 

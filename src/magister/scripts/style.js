@@ -125,7 +125,7 @@ async function applyStyles() {
         rootVars = `${lightThemeCss}
 ${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
 ${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
-${syncedStorage['darken-content'] ? invertCss : ''}
+${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertCss : ''}
 ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
@@ -287,7 +287,8 @@ a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout t
 .collapsed-menu .popup-menu h3,
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
-.collapsed-menu .popup-menu ul li a:hover {
+.collapsed-menu .popup-menu ul li a:hover,
+.appbar .popup-menu h3 {
     color: var(--st-foreground-accent);
 }
 
@@ -1004,6 +1005,22 @@ h3:active> .icon-up-arrow:before {
 
 .kwt-widget tr td:nth-child(5) {
     grid-area: description;
+}
+
+.menu-button:has(#help-menu) {
+    overflow: hidden;
+    height: 0;
+    margin-bottom: 0;
+    transition: height 200ms, margin-bottom 200ms;
+}
+
+.appbar:has(.user-menu) .menu-button:has(#help-menu) {
+    height: 36px;
+    margin-bottom: 16px;
+}
+
+.menu-button:has(#help-menu):has(.user-menu) {
+    overflow: visible;
 }
 `, 'study-tools')
     }
