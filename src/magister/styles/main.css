@@ -237,7 +237,8 @@ span.st-subtitle {
 }
 
 #st-appbar-metrics>.st-metric {
-    padding-left: 16px;
+    padding: 0 auto;
+    text-align: center;
 }
 
 .st-metric {
