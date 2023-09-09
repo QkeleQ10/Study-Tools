@@ -118,6 +118,10 @@ async function applyStyles() {
     color: var(--st-foreground-primary);
 }
 
+.block .content.background-white {
+    background-color: var(--st-background-secondary);
+}
+
 .view>iframe, .view>.container>iframe {
     filter: invert(1) hue-rotate(180deg);
 }
@@ -125,7 +129,7 @@ async function applyStyles() {
         rootVars = `${lightThemeCss}
 ${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
 ${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
-${syncedStorage['darken-content'] ? invertCss : ''}
+${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertCss : ''}
 ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
@@ -287,7 +291,8 @@ a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout t
 .collapsed-menu .popup-menu h3,
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
-.collapsed-menu .popup-menu ul li a:hover {
+.collapsed-menu .popup-menu ul li a:hover,
+.appbar .popup-menu h3 {
     color: var(--st-foreground-accent);
 }
 
@@ -364,7 +369,8 @@ html body .k-popup.k-list-container .k-item,
 .bottom_border,
 .k-calendar,
 .k-calendar td.range-select,
-.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected {
+.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
+.attachment-bar, .attachments {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -420,7 +426,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.st-title, .st-subtitle, .st-section-title, .st-tip, .caption, .k-dropdown, .user-content span),
+span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,
@@ -1004,6 +1010,22 @@ h3:active> .icon-up-arrow:before {
 
 .kwt-widget tr td:nth-child(5) {
     grid-area: description;
+}
+
+.menu-button:has(#help-menu) {
+    overflow: hidden;
+    height: 0;
+    margin-bottom: 0;
+    transition: height 200ms, margin-bottom 200ms;
+}
+
+.appbar:has(.user-menu) .menu-button:has(#help-menu) {
+    height: 36px;
+    margin-bottom: 16px;
+}
+
+.menu-button:has(#help-menu):has(.user-menu) {
+    overflow: visible;
 }
 `, 'study-tools')
     }

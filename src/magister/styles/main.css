@@ -24,10 +24,6 @@ div.loading-overlay {
     background: none;
 }
 
-.st-banned.ad.hide {
-    translate: 0 200px;
-}
-
 .st-banner-ad {
     display: flex;
     position: fixed;
@@ -43,37 +39,38 @@ div.loading-overlay {
     color: #fff;
     font: 16px var(--st-font-family-secondary);
     z-index: 9999;
-    transition: translate 500ms;
+    animation: floatUp 200ms both;
 }
 
-.st-banner-ad:after {
+.st-banner-ad.hide {
+    animation: floatDownOut 200ms both;
+}
+
+.st-banner-ad>.st-button {
     padding: 6px 16px;
-    content: "Koppeling delen";
-    white-space: pre-wrap;
     background: #fff;
     color: hsl(209, 36%, 30%);
-    cursor: pointer;
 }
 
 .st-shortcut-icon {
     font: 20px 'Font Awesome 5 Pro';
 }
 
-span.st-title {
+.st-title {
     display: block;
     color: var(--st-foreground-accent);
     font: 700 28px / 2rem arboria, sans-serif;
     margin-bottom: 6px;
 }
 
-span.st-title:after {
+.st-title:after {
     content: ".";
     display: inline-block;
     width: 3px;
     color: #ff8205;
 }
 
-span.st-subtitle {
+.st-subtitle {
     font: 14px var(--st-font-family-secondary) !important;
     color: var(--st-foreground-primary);
 }
@@ -666,6 +663,13 @@ a.st-keyboard-hint.clicked {
 
 @keyframes floatUp {
     from {
+        opacity: 0;
+        translate: 0 200px;
+    }
+}
+
+@keyframes floatDownOut {
+    to {
         opacity: 0;
         translate: 0 200px;
     }

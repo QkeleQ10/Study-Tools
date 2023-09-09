@@ -71,7 +71,7 @@ function moveItem(from, to) {
                         <IconInput v-model="value[i].icon"
                             @input="(v) => editArray(i, { icon: v, href: value[i].href, hotkey: value[i].hotkey })" />
                         <input class="text-input" type="input" :value="value[i].href"
-                            @input="editArray(i, { icon: value[i].icon, href: $event.target.value, hotkey: value[i].hotkey })"
+                            @input="editArray(i, { icon: value[i].icon, href: $event.target.value.replace('https://', ''), hotkey: value[i].hotkey })"
                             placeholder=" " autocomplete="off" spellcheck="false">
                         <KeyInput v-model="value[i].hotkey" :allowClear="true"
                             @input="(v) => editArray(i, { icon: value[i].icon, href: value[i].href, hotkey: v })" />

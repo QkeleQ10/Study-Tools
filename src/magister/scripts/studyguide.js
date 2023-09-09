@@ -25,6 +25,19 @@ async function studyguideList() {
         }
     })
     searchBar.addEventListener('input', validateItems)
+    searchBar.addEventListener('input', e => {
+        let egg = eggs.find(egg => egg.type === 'revealOnInput' && egg.location === 'studyguidesSearch' && egg.input === e.target.value)
+        if (!egg?.output) return
+
+        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
+
+        let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
+        fakeDefaultItemButton.addEventListener('click', () => {
+            showSnackbar(egg.output, 3600000)
+        })
+
+        let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
+    })
 
     let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
     let showHiddenItemsInput = element('input', 'st-sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
@@ -36,6 +49,10 @@ async function studyguideList() {
         if (!gridContainer || !cols?.[0]) return
 
         gridContainer.querySelectorAll('.st-sw-item, .st-sw-item-default').forEach(studyguide => {
+            if (studyguide.id === 'st-sw-fake-item') {
+                studyguide.parentElement.remove()
+                return
+            }
             let query = searchBar.value.toLowerCase()
             let matches = (studyguide.dataset.title.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
 

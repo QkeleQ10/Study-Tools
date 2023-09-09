@@ -151,8 +151,13 @@ async function gradeCalculator() {
 
             let pos = event.target.id === 'st-cf-cl-add-table' ? document.querySelector('.k-state-selected .grade')?.getBoundingClientRect() : clAddCustomResult.getBoundingClientRect(),
                 ghostElement = document.createElement('span')
+            if (!pos) {
+                ghostElement.remove()
+                showSnackbar('Er is geen cijfer geselecteerd.')
+                return
+            }
             setAttributes(ghostElement, { class: 'st-cf-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
-            ghostElement.innerText = document.querySelector('.k-state-selected .grade').lastChild.wholeText
+            ghostElement.innerText = document.querySelector('.k-state-selected .grade')?.lastChild?.wholeText || clAddCustomResult.value
             document.body.append(ghostElement)
 
             setTimeout(() => {
@@ -467,7 +472,7 @@ async function gradeBackup() {
         bkModalExListTitle.dataset.description = "Wachten op cijfers..."
 
         const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
-        if (gradesRes.status >= 400 && gradesRes.status < 600) {
+        if (!gradesRes.ok) {
             bkModalExListTitle.dataset.description = `Fout ${gradesRes.status}\nVernieuw de pagina en probeer het opnieuw`
             bkModalExListTitle.disabled = true
             if (gradesRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
@@ -479,16 +484,18 @@ async function gradeBackup() {
 
         if (!gradesArray?.length > 0) {
             bkModalExListTitle.dataset.description = "Geen cijfers gevonden!"
+            busy = false
             return
         }
 
         await new Promise(resolve => setTimeout(resolve, 1000))
 
+        bkModalExListTitle.dataset.description = `Cijfers verwerken...`
+
         let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
             array = [...nodeList]
 
         list = await Promise.all(array.map(async (td, i) => {
-            bkModalExListTitle.dataset.description = `Cijfers verwerken... (${i + 1}/${array.length})`
             return new Promise(async (resolve, reject) => {
                 let type = (!td.innerText || td.innerText.trim().length < 1) ? 'filler' : (td.firstElementChild?.classList.contains('text')) ? 'rowheader' : 'grade',
                     className = td.firstElementChild?.className
@@ -511,23 +518,36 @@ async function gradeBackup() {
 
                     let result = gradeBasis.CijferStr || gradeBasis.Cijfer
 
-                    const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: token } })
-                    if (extraRes.status >= 400 && extraRes.status < 600) {
-                        bkModalExListTitle.dataset.description = `Fout ${extraRes.status}\nVernieuw de pagina en probeer het opnieuw`
-                        bkModalExListTitle.disabled = true
-                        if (extraRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
-                        bkModalEx.querySelectorAll(`[id*='st-cf-bk-ex-opt']`).forEach(e => e.remove())
-                        return
+                    if (Math.floor(i / 400) * 10000 >= 10000) {
+                        bkModalExListTitle.dataset.description = `10 seconden wachten...`
+                        let secondsRemaining = 10
+                        var interval = setInterval(function () {
+                            if (secondsRemaining <= 1) clearInterval(interval)
+                            bkModalExListTitle.dataset.description = `${secondsRemaining - 1} seconden wachten...`
+                            secondsRemaining--
+                        }, 1000)
+                        setTimeout(() => { bkModalExListTitle.dataset.description = `Cijfers verwerken...` }, 10000)
                     }
-                    const gradeExtra = await extraRes.json()
 
-                    let weight = Number(gradeExtra.Weging),
-                        column = gradeExtra.KolomNaam,
-                        title = gradeExtra.KolomOmschrijving
+                    setTimeout(async () => {
+                        const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: token } })
+                        if (!extraRes.ok) {
+                            bkModalExListTitle.dataset.description = `Fout ${extraRes.status}\nVernieuw de pagina en probeer het opnieuw`
+                            bkModalExListTitle.disabled = true
+                            if (extraRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
+                            bkModalEx.querySelectorAll(`[id*='st-cf-bk-ex-opt']`).forEach(e => e.remove())
+                            return
+                        }
+                        const gradeExtra = await extraRes.json()
 
-                    resolve({
-                        result, weight, column, title, type, className
-                    })
+                        let weight = Number(gradeExtra.Weging),
+                            column = gradeExtra.KolomNaam,
+                            title = gradeExtra.KolomOmschrijving
+
+                        resolve({
+                            result, weight, column, title, type, className
+                        })
+                    }, Math.floor(i / 400) * 10000)
                 }
             })
         }))
