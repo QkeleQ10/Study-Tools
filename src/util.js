@@ -1,4 +1,5 @@
 let syncedStorage = {},
+    eggs = [],
     schoolName = window.location.href.includes('magister') ? window.location.hostname.split('.')[0] : undefined
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -66,24 +67,15 @@ async function checkAnnouncements() {
     }
 }
 
-
-// RE-IMPLEMENT IN SERVICE WORKER?
-// async function checkDefaults() {
-//     settingsBuilder.forEach(section => {
-//         section.settings.forEach(setting => {
-//             if (typeof syncedStorage[setting.id] === 'undefined' && setting.default) { saveToStorage(setting.id, setting.default) }
-//         })
-//     })
-//     let colorSettings = ['magister-css-hue', 'magister-css-saturation', 'magister-css-luminance'], colorDefaults = [207, 95, 55]
-//     colorSettings.forEach((setting, index) => {
-//         if (typeof syncedStorage[setting] === 'undefined') {
-//             saveToStorage(setting, colorDefaults[index])
-//         }
-//     })
-
-//     if (!await getFromStorage('usedExtension', 'local'))
-//         showSnackbar("Vernieuw de pagina zodat Study Tools in werking kan treden.", 121000, [{ innerText: "vernieuwen", onclick: 'window.location.reload()' }])
-// }
+// Output eggs
+fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/eggs.json`)
+    .then(response => {
+        if (!response.ok) return
+        response.json()
+            .then(data => {
+                eggs = data
+            })
+    })
 
 function setIntervalImmediately(func, interval) {
     func()
@@ -159,7 +151,7 @@ async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
     snackbar.innerText = body
     snackbar.addEventListener('dblclick', () => {
         snackbar.classList.remove('open')
-        setTimeout(() => snackbar.remove(), 200)
+        setTimeout(() => snackbar.remove(), 2000)
     })
     buttons.forEach(element => {
         let a = document.createElement('a')

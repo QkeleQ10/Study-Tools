@@ -118,6 +118,10 @@ async function applyStyles() {
     color: var(--st-foreground-primary);
 }
 
+.block .content.background-white {
+    background-color: var(--st-background-secondary);
+}
+
 .view>iframe, .view>.container>iframe {
     filter: invert(1) hue-rotate(180deg);
 }
@@ -365,7 +369,8 @@ html body .k-popup.k-list-container .k-item,
 .bottom_border,
 .k-calendar,
 .k-calendar td.range-select,
-.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected {
+.k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
+.attachment-bar, .attachments {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -421,7 +426,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.st-title, .st-subtitle, .st-section-title, .st-tip, .caption, .k-dropdown, .user-content span),
+span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,
