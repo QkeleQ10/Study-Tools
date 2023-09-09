@@ -9,46 +9,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     snackbarWrapper.id = 'st-snackbars'
     document.body.append(snackbarWrapper)
 
-    checkUpdates()
-    // checkDefaults()
     checkAnnouncements()
 
     setTimeout(() => {
         saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
     }, 500)
 })
-
-async function checkUpdates(override) {
-    let beta = syncedStorage['beta']
-    if (override) beta = false
-    if (!syncedStorage['updates']) return
-    fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/manifest.json`)
-        .then(async response => {
-            if (response.ok) {
-                let data = await response.json()
-                if (data.version > chrome.runtime.getManifest().version) {
-                    showSnackbar(`Nieuwe ${beta ? 'bèta' : ''}versie van Study Tools (${data.version}) beschikbaar.`, 121000, [{ innerText: "installeren", href: 'https://qkeleq10.github.io/extensions/studytools/update', target: 'blank' }])
-                }
-            } else console.warn("Error requesting Study Tools manifest", response)
-        })
-        .catch(() => {
-            if (!override) checkUpdates(true)
-        })
-
-    if (syncedStorage['update-notes']) {
-        fetch(`https://raw.githubusercontent.com/QkeleQ10/Study-Tools/${beta ? 'dev' : 'main'}/updates.json`)
-            .then(async response => {
-                if (response.ok) {
-                    let data = await response.json()
-                    for (const key in data) {
-                        if (Object.hasOwnProperty.call(data, key) && key > await getFromStorage('usedExtension', 'local')) {
-                            showSnackbar(`Nieuw in ${key}:\n${data[key]}`, 10000)
-                        }
-                    }
-                } else console.warn("Error requesting Study Tools updates", response)
-            })
-    }
-}
 
 async function checkAnnouncements() {
     let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
@@ -161,8 +127,10 @@ async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
         a.addEventListener('click', event => event.stopPropagation())
     })
     setTimeout(() => snackbar.classList.add('open'), 50)
-    setTimeout(() => snackbar.classList.remove('open'), duration)
-    setTimeout(() => snackbar.remove(), duration + 2000)
+    if (duration === 0) {
+        setTimeout(() => snackbar.classList.remove('open'), duration)
+        setTimeout(() => snackbar.remove(), duration + 2000)
+    }
 }
 
 function createStyle(content, id = 'st-style') {
