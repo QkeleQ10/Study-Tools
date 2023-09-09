@@ -496,7 +496,6 @@ async function gradeBackup() {
             array = [...nodeList]
 
         list = await Promise.all(array.map(async (td, i) => {
-            bkModalExListTitle.dataset.description = `Cijfers verwerken... (${i + 1}/${array.length})`
             return new Promise(async (resolve, reject) => {
                 let type = (!td.innerText || td.innerText.trim().length < 1) ? 'filler' : (td.firstElementChild?.classList.contains('text')) ? 'rowheader' : 'grade',
                     className = td.firstElementChild?.className
