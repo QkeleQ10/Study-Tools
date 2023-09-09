@@ -234,7 +234,7 @@ div.loading-overlay {
 }
 
 #st-appbar-metrics>.st-metric {
-    padding-left: 16px;
+    text-align: center;
 }
 
 .st-metric {
