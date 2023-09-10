@@ -136,10 +136,13 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     if (!syncedStorage['disable-css']) {
         createStyle(`.block h3,
+.view {
+    position: relative;
+}
+
 .block h4 {
     border-bottom: var(--st-border)
 }
-
 
 .block h4,
 footer.endlink {

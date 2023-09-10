@@ -8,23 +8,15 @@ async function popstate() {
 // Page 'Vandaag'
 async function today() {
     if (!syncedStorage['magister-vd-overhaul']) return
-    let mainSection = await awaitElement('section.main'),
-        container = document.createElement('div'),
-        header = document.createElement('div'),
-        headerText = document.createElement('span'),
-        scheduleWrapper = document.createElement('div'),
-        notifcationsWrapper = document.createElement('div')
-    mainSection.append(header, container)
-    header.id = 'st-vd-header'
-    header.append(headerText)
-    headerText.classList.add('st-title')
-    container.id = 'st-vd'
-    container.append(scheduleWrapper, notifcationsWrapper)
-    scheduleWrapper.id = 'st-vd-schedule'
-    notifcationsWrapper.id = 'st-vd-notifications'
+    let mainView = await awaitElement('div.view:has(#vandaag-container)'),
+        container = element('div', 'st-vd', mainView),
+        header = element('div', 'st-vd-header', container),
+        headerText = element('span', 'st-vd-header-span', header, { class: 'st-title' }),
+        schedule = element('div', 'st-vd-schedule', container),
+        widgets = element('div', 'st-vd-widgets', container)
+    console.log(mainView, container)
 
-    todayNotifications(notifcationsWrapper)
-    todaySchedule(scheduleWrapper)
+    todaySchedule(schedule)
 
     const date = new Date(),
         weekday = date.toLocaleString('nl-NL', { weekday: 'long' }),
@@ -51,26 +43,11 @@ async function today() {
     })
     if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van Study Tools 💚")
 
-    mainSection = await awaitElement('section.main')
-    mainSection.append(header, container)
-
     setTimeout(() => header.dataset.transition = true, 2000)
     setTimeout(async () => {
-        todayNotifications(notifcationsWrapper)
-
         headerText.innerText = date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         headerText.dataset.lastLetter = '.'
         header.removeAttribute('data-transition')
-
-        if (!header?.parentElement || !container?.parentElement || !document.body.contains(mainSection)) {
-            mainSection = await awaitElement('section.main')
-            mainSection.append(header, container)
-            console.info("Element re-appended.")
-        }
-        if (!document.location.href.split('?')[0].endsWith('/vandaag') && (header || container)) {
-            header.remove()
-            container.remove()
-        }
     }, 2500)
 }
 
@@ -157,208 +134,80 @@ async function todayNotifications(notifcationsWrapper) {
     notifcationsWrapper.dataset.ready = true
 }
 
-// TODO: Gather using the API rather than scraping
+// WIDGETS
+// Huiswerk
+// Toetsen
+// Cijfers
+// Opdrachten
+// Evt meldingen en berichten
+// ...
+
 async function todaySchedule(scheduleWrapper) {
-    let scheduleTodayContainer = document.createElement('ul'),
-        scheduleTomorrowContainer = document.createElement('ul'),
-        scheduleButtonWrapper = document.createElement('div'),
-        scheduleLinkWeek = document.createElement('a'),
-        scheduleLinkList = document.createElement('a'),
-        scheduleNowLine = document.createElement('div'),
-        legacy = false
+    const daysToGather = 2
 
-    scheduleWrapper.append(scheduleTodayContainer, scheduleButtonWrapper)
+    let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
+        token = response?.token || await getFromStorage('token', 'local'),
+        userId = response?.userId || await getFromStorage('user-id', 'local'),
+        gatherStart = new Date(),
+        gatherEnd = new Date(gatherStart.getTime() + (86400000 * (daysToGather - 1)))
+    console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
-    if (legacy) {
-        scheduleButtonWrapper.append(scheduleLinkWeek, scheduleLinkList)
-        scheduleLinkWeek.innerText = ''
-        scheduleLinkWeek.classList.add('st-vd-schedule-link')
-        scheduleLinkWeek.title = `Weekoverzicht`
-        scheduleLinkWeek.href = '#/agenda/werkweek'
-        scheduleLinkList.innerText = ''
-        scheduleLinkList.classList.add('st-vd-schedule-link')
-        scheduleLinkList.title = `Afsprakenlijst`
-        scheduleLinkList.href = '#/agenda'
+    const apptsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+    if (!apptsRes.ok) {
+        showSnackbar(`Fout ${apptsRes.status}\nVernieuw de pagina en probeer het opnieuw`)
+        if (apptsRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+        return
     }
+    const apptsJson = await apptsRes.json()
+    const appts = apptsJson.Items
 
-    let agendaTodayElems = await awaitElement('.agenda-list:not(.roosterwijziging)>li:not(.no-data)', true, 4000)
-    renderScheduleList(agendaTodayElems, scheduleTodayContainer)
+    let apptsPerDay = {}
 
-    if (!legacy) {
-        scheduleTodayContainer.append(scheduleNowLine)
-    }
+    // Loop through the appts array and split based on date
+    appts.forEach(item => {
+        const startDate = new Date(item.Start)
+        const year = startDate.getFullYear()
+        const month = startDate.getMonth() + 1
+        const date = startDate.getDate()
 
-    setTimeout(async () => {
-        let agendaTomorrowTitle = await awaitElement('#agendawidgetlistcontainer>h4', 4000),
-            agendaTomorrowElems = await awaitElement('.agenda-list.roosterwijziging>li:not(.no-data)', true, 4000)
-        if (!agendaTomorrowTitle, agendaTomorrowElems) return
-        scheduleWrapper.firstElementChild.after(scheduleTomorrowContainer)
-        scheduleTomorrowContainer.dataset.tomorrow = `Rooster voor ${agendaTomorrowTitle?.innerText?.replace('Wijzigingen voor ', '') || 'morgen'}`
-        renderScheduleList(agendaTomorrowElems, scheduleTomorrowContainer)
-    }, 500)
+        const key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
+        if (!apptsPerDay[key]) {
+            apptsPerDay[key] = []
+        }
 
-    scheduleWrapper.dataset.ready = true
+        apptsPerDay[key].push(item)
+    })
 
-    async function renderScheduleList(agendaElems, container) {
-        let events = [],
-            overlapIndexMap = {},
-            overlapComparisonMap = {},
-            firstStart = new Date().setHours(23, 59, 59, 0),
-            lastEnd = new Date().setHours(0, 0, 0, 0)
+    console.log(apptsPerDay)
 
-        if (agendaElems) agendaElems.forEach((e, i, a) => {
-            let time = e.querySelector('.time')?.innerText?.replace('00:00', '23:59'),
-                title = e.querySelector('.classroom')?.innerText,
-                period = e.querySelector('.nrblock')?.innerText,
-                href = e.querySelector('a')?.href,
-                tooltip = e.querySelector('.agenda-text-icon')?.innerText,
-                tooltipIncomplete = e.querySelector('.agenda-text-icon')?.classList.contains('outline'),
-                start = new Date(),
-                end = new Date(),
-                duration = 0,
-                dateStartNext = new Date()
+    Object.keys(apptsPerDay).forEach(key => {
+        let col = element('div', `st-vd-col-${key}`, scheduleWrapper, { class: 'st-vd-col' })
 
-            if (time) {
-                start.setHours(time.split('-')[0].split(':')[0])
-                start.setMinutes(time.split('-')[0].split(':')[1])
-                start.setSeconds(0)
+        apptsPerDay[key].forEach(item => {
+            let subjectNames = item.Vakken?.map(e => e.Naam) || [item.Omschrijving],
+                teacherNames = item.Docenten?.map(e => e.Naam) || [],
+                locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
+            if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
+            if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
 
-                end.setHours(time.split('-')[1].split(':')[0])
-                end.setMinutes(time.split('-')[1].split(':')[1])
-                end.setSeconds(0)
-
-                duration = end - start - i
-            }
-
-            if (legacy && a[i + 1]) {
-                let timeNext = a[i + 1]?.querySelector('.time')?.innerText
-                if (!timeNext) return
-                dateStartNext.setHours(timeNext.split('-')[0].split(':')[0])
-                dateStartNext.setMinutes(timeNext.split('-')[0].split(':')[1])
-                dateStartNext.setSeconds(0)
-
-                if (dateStartNext - end > 1000) {
-                    time = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')} – ${String(dateStartNext.getHours()).padStart(2, '0')}:${String(dateStartNext.getMinutes()).padStart(2, '0')}`
-                    events.push({ time, title: 'filler', start: end, end: dateStartNext })
-                }
-            }
-
-            events.push({ id: i, title, period, start, end, duration, href, tooltip, tooltipIncomplete })
-
-            overlapIndexMap[i] = 0
-            overlapComparisonMap[i] = new Set()
-
-            if (start <= firstStart) firstStart = start
-            if (end >= lastEnd) lastEnd = end
+            let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving })
+            apptElement.addEventListener('click', () => window.location.hash = `#/agenda/afspraak/${item.Id}`)
+            let apptSubject = element('span', `st-vd-appt-${item.Id}-subject`, apptElement, { class: 'st-vd-appt-subject', innerText: subjectNames.join(', ') })
+            let apptTeacher = element('span', `st-vd-appt-${item.Id}-teacher`, apptElement, { class: 'st-vd-appt-teacher', innerText: teacherNames.join(', ') })
         })
 
-        if (events && !legacy) events.sort((a, b) => b.duration - a.duration)
-        else if (events && legacy) events.sort((a, b) => a.start - b.start)
+    })
 
-        if (events) events.forEach(async ({ id, title, period, start, end, duration, href, tooltip, tooltipIncomplete }, i) => {
-            let elementWrapper = document.createElement('li'),
-                elementTime = document.createElement('span'),
-                elementTitle = document.createElement('span'),
-                elementTitleBold = document.createElement('b'),
-                elementTitleNormal1 = document.createElement('span'),
-                elementTitleNormal2 = document.createElement('span'),
-                elementPeriod = document.createElement('span'),
-                elementTooltip = document.createElement('span'),
-                parsedTitle
+    // STATUSES
+    // Type=13: normaal blok
+    // Type=2: ingeschreven
+    // Type=7: KWT
+    // Type=16: pers planning
+    // Type=1: pers persoonlijk
 
-            container.append(elementWrapper)
+    // InfoType>0: heeft info
 
-            if (!legacy) events.forEach(comparingEvent => {
-                if (Math.abs(comparingEvent.start - end) < 100) {
-                    elementWrapper.classList.add('border-bottom-radius-none')
-                }
-
-                if (Math.abs(comparingEvent.end - start) < 100) {
-                    elementWrapper.classList.add('border-top-radius-none')
-                }
-
-                if (id === comparingEvent.id || overlapComparisonMap[id].has(comparingEvent.id) || overlapComparisonMap[comparingEvent.id].has(id)) return
-                if ((start >= comparingEvent.start && start < comparingEvent.end)) {
-                    if (duration > comparingEvent.duration) {
-                        overlapIndexMap[comparingEvent.id] = overlapIndexMap[id] + 1
-                        overlapComparisonMap[comparingEvent.id].add(id)
-                    }
-                    else {
-                        overlapIndexMap[id] = overlapIndexMap[comparingEvent.id] + 1
-                        overlapComparisonMap[id].add(comparingEvent.id)
-                    }
-                } else if ((end > comparingEvent.start && end <= comparingEvent.end)) {
-                    if (duration > comparingEvent.duration) {
-                        overlapIndexMap[comparingEvent.id] = overlapIndexMap[id] + 1
-                        overlapComparisonMap[comparingEvent.id].add(id)
-                    }
-                    else {
-                        overlapIndexMap[id] = overlapIndexMap[comparingEvent.id] + 1
-                        overlapComparisonMap[id].add(comparingEvent.id)
-                    }
-                }
-            })
-
-            if (title.includes('amablok')) {
-                elementWrapper.dataset.notChosen = true
-                title = "Amadeusblok (niet ingeschreven)"
-            }
-
-            if (!legacy || title !== 'filler') {
-                let subjects = Object.values(syncedStorage['subjects'])
-                parsedTitle = await parseSubject(title, syncedStorage['vd-subjects-display'] === 'custom', subjects)
-                elementTitleNormal1.innerText = parsedTitle.stringBefore || ''
-                elementTitleBold.innerText = parsedTitle.subjectName || ''
-                elementTitleNormal2.innerText = parsedTitle.stringAfter || ''
-            } else if (legacy && title === 'filler') {
-                elementWrapper.dataset.filler = true
-                elementTime.dataset.filler = end - start < 2700000 ? 'pauze' : 'geen les'
-            }
-
-            elementWrapper.append(elementTime, elementTitle, elementPeriod, elementTooltip)
-            elementTime.innerText = start.toLocaleTimeString('nl-NL', { hour: 'numeric', minute: 'numeric' }) + ' – ' + end.toLocaleTimeString('nl-NL', { hour: 'numeric', minute: 'numeric' })
-            elementTitle.append(elementTitleNormal1, elementTitleBold, elementTitleNormal2)
-            elementPeriod.innerText = period || ''
-            elementTooltip.innerText = tooltip || ''
-            elementWrapper.setAttribute('onclick', `window.location.href = '${href}'`)
-            if (tooltipIncomplete) elementTooltip.classList.add('incomplete')
-            elementWrapper.style.height = await msToPixels(duration) + 'px'
-
-            if (!legacy) {
-                elementWrapper.style.position = 'absolute'
-                elementWrapper.style.top = await msToPixels(start - firstStart) + 44 + 'px'
-                elementWrapper.style.left = overlapIndexMap[id] * 15 + '%'
-                elementWrapper.style.width = 'calc(' + (100 - overlapIndexMap[id] * 16) + '% - 14px)'
-                elementWrapper.style.zIndex = overlapIndexMap[id]
-            }
-
-            if (!tooltip) elementTooltip.remove()
-
-            setIntervalImmediately(async () => {
-                let now = new Date()
-                if (now >= start && now <= end) {
-                    elementWrapper.dataset.current = 'true'
-                    if (title !== 'filler') elementPeriod.style.borderBottom = await msToPixels(end - now) + 'px solid var(--st-accent-primary)'
-                } else if (now > end) {
-                    elementWrapper.dataset.past = 'true'
-                    elementWrapper.removeAttribute('data-current')
-                    elementPeriod.removeAttribute('style')
-                } else {
-                    elementWrapper.removeAttribute('data-current')
-                    elementWrapper.removeAttribute('data-past')
-                    elementPeriod.removeAttribute('style')
-                }
-                if (i === 0) {
-                    // scheduleNowLine.style.top = await msToPixels(now - firstStart) + 43 + 'px'
-                }
-            }, 10000)
-
-            if (!legacy && i === 0) {
-                // scheduleNowLine.style.top = await msToPixels(new Date() - firstStart) + 43 + 'px'
-                // scheduleNowLine.id = 'st-vd-schedule-now'
-                scheduleTodayContainer.style.height = await msToPixels(lastEnd - firstStart) + 44 + 'px'
-                scheduleTodayContainer.scroll({ top: await msToPixels(new Date() - firstStart) - (window.innerHeight * 0.5) })
-            }
-        })
-    }
+    // Status=3: huiswerk
+    // Status=2 Type=2: ingeschreven
+    // Status=1 Type=13: standaard
 }

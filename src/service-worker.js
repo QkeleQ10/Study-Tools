@@ -12,7 +12,7 @@ async function init() {
 
     setDefaults()
 
-    chrome.webRequest.onSendHeaders.addListener(async e => {
+    chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
         Object.values(e.requestHeaders).forEach(async obj => {
             if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
         })
@@ -53,8 +53,19 @@ async function setDefaults() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'getCredentials':
-            sendResponse({ token, userId })
-            console.info("Sent user token, user ID and sign-on ID to content script.")
+            chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
+                Object.values(e.requestHeaders).forEach(async obj => {
+                    if (obj.name === 'Authorization' && e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
+                        token = obj.value
+                        userId = e.url.split('/personen/')[1].split('/')[0]
+                        sendResponse({ token, userId })
+                        chrome.storage.local.set({ 'user-token': token })
+                        chrome.storage.local.set({ 'user-id': userId })
+                        console.info("Intercepted user token and user ID.")
+                        console.info("Sent user token, user ID and sign-on ID to content script.")
+                    }
+                })
+            }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
             return true
 
         case 'waitForRequestCompleted':

@@ -1,8 +1,21 @@
-#st-vd-header {
+#st-vd {
     position: absolute;
     top: 0;
     left: 0;
-    height: 85px;
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template:
+        'header header' auto
+        'schedule notifications' 1fr
+        / calc(65% - 25px) 35%;
+    column-gap: 25px;
+    row-gap: 15px;
+    overflow: hidden;
+}
+
+#st-vd-header {
+    grid-area: header;
     width: 100%;
     display: flex;
     padding: 2rem 1.5rem 1rem;
@@ -27,19 +40,7 @@
     text-transform: capitalize;
 }
 
-#st-vd {
-    display: grid;
-    grid-template:
-        'schedule notifications' 1fr
-        / calc(65% - 25px) 35%;
-    column-gap: 25px;
-    row-gap: 15px;
-    position: relative;
-    height: 100%;
-    overflow: hidden;
-}
-
-#st-vd *[onclick] {
+/* #st-vd *[onclick] {
     cursor: pointer;
     transition: color 200ms, filter 200ms, transform 200ms;
 }
@@ -363,11 +364,12 @@
     font: var(--st-font-primary);
     font-size: 24px;
     line-height: 0px;
-}
+} */
 
 @media (max-width:1100px) {
     #st-vd {
         grid-template:
+            'header' auto
             'schedule' 1fr
             'notifications' auto
             / 1fr;
@@ -375,7 +377,7 @@
         row-gap: 20px;
     }
 
-    #st-vd-schedule {
+    /* #st-vd-schedule {
         margin-bottom: 0 !important;
     }
 
@@ -403,5 +405,5 @@
 
     #st-vd-shortcuts>a {
         font-size: 11px;
-    }
+    } */
 }
