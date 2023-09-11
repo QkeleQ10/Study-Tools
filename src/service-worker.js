@@ -1,7 +1,8 @@
 import settings from '../popup/dist/settings.js'
 
 let token,
-    userId
+    userId,
+    date
 
 const settingsToClear = ['openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-subjects', 'version', 'hotkeys-today']
 
@@ -14,13 +15,16 @@ async function init() {
 
     chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
         Object.values(e.requestHeaders).forEach(async obj => {
-            if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
+            if (obj.name === 'Authorization' && e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
+                token = obj.value
+                userId = e.url.split('/personen/')[1].split('/')[0]
+                date = new Date()
+                chrome.storage.local.set({ 'user-token': token })
+                chrome.storage.local.set({ 'user-id': userId })
+                console.info("Intercepted user token and user ID.")
+            }
         })
-        if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/personen/')[1].split('/')[0]
 
-        chrome.storage.local.set({ 'user-token': token })
-        chrome.storage.local.set({ 'user-id': userId })
-        console.info("Intercepted user token and user ID.")
     }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
 
     console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + ["rooster op startpagina", "puntensysteem"].join(', '), "font-size: .8em")
@@ -53,16 +57,22 @@ async function setDefaults() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'getCredentials':
+            console.info("Credentials requested.")
+            if (date && ((new Date()) - date) < 10000) {
+                sendResponse({ token, userId })
+                console.info("Retrieved user token and user ID from cache and sent to content script.")
+                return true
+            }
             chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
                 Object.values(e.requestHeaders).forEach(async obj => {
                     if (obj.name === 'Authorization' && e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
                         token = obj.value
                         userId = e.url.split('/personen/')[1].split('/')[0]
+                        date = new Date()
                         sendResponse({ token, userId })
                         chrome.storage.local.set({ 'user-token': token })
                         chrome.storage.local.set({ 'user-id': userId })
-                        console.info("Intercepted user token and user ID.")
-                        console.info("Sent user token, user ID and sign-on ID to content script.")
+                        console.info("Intercepted user token and user ID and sent to content script.")
                     }
                 })
             }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])

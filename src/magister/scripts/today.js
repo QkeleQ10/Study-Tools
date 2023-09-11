@@ -191,9 +191,10 @@ async function todaySchedule(scheduleWrapper) {
             if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
 
             let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving })
-            apptElement.addEventListener('click', () => window.location.hash = `#/agenda/afspraak/${item.Id}`)
+            apptElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
             let apptSubject = element('span', `st-vd-appt-${item.Id}-subject`, apptElement, { class: 'st-vd-appt-subject', innerText: subjectNames.join(', ') })
             let apptTeacher = element('span', `st-vd-appt-${item.Id}-teacher`, apptElement, { class: 'st-vd-appt-teacher', innerText: teacherNames.join(', ') })
+            let apptLocation = element('span', `st-vd-appt-${item.Id}-location`, apptElement, { class: 'st-vd-appt-location', innerText: locationNames.join(', ') })
         })
 
     })
