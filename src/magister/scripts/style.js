@@ -98,6 +98,10 @@ async function applyStyles() {
     --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
+    --st-chip-info-border: #0565b4;
+    --st-chip-info-background: #022a4b;
+    --st-chip-ok-border: #13c4a3;
+    --st-chip-ok-background: #15363c;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 10;
     --st-shadow-alpha: .7;

@@ -14,7 +14,6 @@ async function today() {
         headerText = element('span', 'st-vd-header-span', header, { class: 'st-title' }),
         schedule = element('div', 'st-vd-schedule', container),
         widgets = element('div', 'st-vd-widgets', container)
-    console.log(mainView, container)
 
     todaySchedule(schedule)
 
@@ -51,89 +50,6 @@ async function today() {
     }, 2500)
 }
 
-async function todayNotifications(notifcationsWrapper) {
-    let lastGrade = await awaitElement('.block.grade-widget span.cijfer'),
-        lastGradeDescription = await awaitElement('.block.grade-widget span.omschrijving'),
-        moreGrades = await awaitElement('.block.grade-widget ul.list.arrow-list > li:nth-child(2) span'),
-        unreadItems = await awaitElement('#notificatie-widget ul>li', true),
-        gradeNotification = document.getElementById('st-vd-grade-notification') || document.createElement('li'),
-        gradeNotificationSpan = document.getElementById('st-vd-grade-notification-span') || document.createElement('span')
-
-    gradeNotification.id = 'st-vd-grade-notification'
-    gradeNotificationSpan.id = 'st-vd-grade-notification-span'
-
-    if (!lastGrade || !lastGradeDescription) return
-
-    if (lastGrade.innerText === '-' || lastGradeDescription.innerText === 'geen cijfers') {
-        gradeNotification.innerText = 'Geen nieuwe cijfers'
-        gradeNotification.dataset.insignificant = true
-    } else {
-        if (syncedStorage['magister-vd-grade'] === 'partial') {
-            gradeNotification.innerText = `${Number(moreGrades.innerText)} nieuwe cijfers`
-        } else {
-            gradeNotification.innerText = `Nieuw cijfer voor ${lastGradeDescription.innerText}: `
-            gradeNotificationSpan.innerText = lastGrade.innerText
-            if (Number(moreGrades.innerText) === 2) {
-                gradeNotification.dataset.additionalInfo = `en nog ${Number(moreGrades.innerText) - 1} ander cijfer`
-            } else if (Number(moreGrades.innerText) > 2) {
-                gradeNotification.dataset.additionalInfo = `en nog ${Number(moreGrades.innerText) - 1} andere cijfers`
-            }
-        }
-        gradeNotification.dataset.insignificant = false
-    }
-
-    if (syncedStorage['magister-vd-grade'] !== 'off') {
-        if (!gradeNotification.parentElement) notifcationsWrapper.append(gradeNotification)
-        gradeNotification.setAttribute('onclick', `window.location.href = '#/cijfers'`)
-        gradeNotification.dataset.icon = ''
-        gradeNotification.append(gradeNotificationSpan)
-    }
-
-    unreadItems.forEach((e, i, a) => {
-        setTimeout(() => {
-            let amount = e.firstElementChild.firstElementChild.innerText,
-                description = e.firstElementChild.innerText.replace(`${amount} `, ''),
-                href = e.firstElementChild.href
-
-            if (description === 'activiteiten waarop nog ingeschreven moet of kan worden') description = 'inschrijfmogelijkheden'
-            if (description === 'activiteit waarop nog ingeschreven moet of kan worden') description = 'inschrijfmogelijkheid'
-
-            let element = document.querySelector(`li[data-description="${description}"]`) || document.createElement('li')
-
-            element.dataset.description = description
-            if (e.firstElementChild.innerText.includes('?') || !description) return element.remove()
-
-            if (description.includes('deadline')) {
-                if (e.firstElementChild.innerText.includes('geen')) return
-                document.querySelector('#st-vd-unread-open-assignments').dataset.additionalInfo = `waarvan ${amount} met naderende deadline`
-            } else {
-                let insertIndex = Array.prototype.indexOf.call(e.parentElement.children, e)
-
-                if (!element.parentElement) notifcationsWrapper.append(element)
-                notifcationsWrapper.insertBefore(element, notifcationsWrapper.children[insertIndex + 2])
-
-                element.innerText = `${amount} ${description}`
-                element.setAttribute('onclick', `window.location.href = '${href}'`)
-
-                if (e.firstElementChild.innerText.includes('geen')) element.dataset.insignificant = true
-                else element.dataset.insignificant = false
-                if (description.includes('openstaand')) {
-                    element.id = 'st-vd-unread-open-assignments'
-                    element.dataset.icon = ''
-                } else if (description.includes('beoordeeld')) {
-                    element.dataset.icon = ''
-                } else if (description.includes('inschrijf')) {
-                    element.dataset.icon = ''
-                } else if (description.includes('logboek')) {
-                    element.dataset.icon = ''
-                }
-            }
-        }, e.firstElementChild.innerText.includes('?') ? 500 : 0)
-    })
-
-    notifcationsWrapper.dataset.ready = true
-}
-
 // WIDGETS
 // Huiswerk
 // Toetsen
@@ -142,8 +58,13 @@ async function todayNotifications(notifcationsWrapper) {
 // Evt meldingen en berichten
 // ...
 
-async function todaySchedule(scheduleWrapper) {
+async function todaySchedule(schedule) {
+    let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
+    let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule)
+
     const daysToGather = 2
+
+    let now = new Date()
 
     let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
         token = response?.token || await getFromStorage('token', 'local'),
@@ -161,9 +82,25 @@ async function todaySchedule(scheduleWrapper) {
     const apptsJson = await apptsRes.json()
     const appts = apptsJson.Items
 
-    let apptsPerDay = {}
+    const agendaStart = appts.reduce((earliestHour, currentItem) => {
+        let currentHour = timeInHours(currentItem.Start)
+        if (!earliestHour || currentHour < earliestHour) { return currentHour - 0.5 }
+        return earliestHour
+    }, null)
+
+    const agendaEnd = appts.reduce((latestHour, currentItem) => {
+        let currentHour = timeInHours(currentItem.Einde)
+        if (!latestHour || currentHour > latestHour) { return currentHour + 0.5 }
+        return latestHour
+    }, null)
+
+    for (let i = agendaStart; i <= agendaEnd; i++) {
+        let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: 'st-vd-tick whole', style: `--relative-start: ${i - agendaStart}` }),
+            halfHourTick = element('div', `st-vd-tick-${i}h30`, scheduleWrapper, { class: 'st-vd-tick half', style: `--relative-start: ${i + 0.5 - agendaStart}` })
+    }
 
     // Loop through the appts array and split based on date
+    let apptsPerDay = {}
     appts.forEach(item => {
         const startDate = new Date(item.Start)
         const year = startDate.getFullYear()
@@ -171,17 +108,22 @@ async function todaySchedule(scheduleWrapper) {
         const date = startDate.getDate()
 
         const key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
-        if (!apptsPerDay[key]) {
-            apptsPerDay[key] = []
-        }
+        if (!apptsPerDay[key]) apptsPerDay[key] = []
 
         apptsPerDay[key].push(item)
     })
-
     console.log(apptsPerDay)
 
     Object.keys(apptsPerDay).forEach(key => {
-        let col = element('div', `st-vd-col-${key}`, scheduleWrapper, { class: 'st-vd-col' })
+        let col = element('div', `st-vd-col-${key}`, scheduleWrapper, {
+            class: 'st-vd-col',
+            'data-today': (key === now.toISOString().split('T')[0])
+        }),
+            colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
+                class: 'st-vd-col-head',
+                'data-today': (key === now.toISOString().split('T')[0]),
+                innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+            })
 
         apptsPerDay[key].forEach(item => {
             let subjectNames = item.Vakken?.map(e => e.Naam) || [item.Omschrijving],
@@ -189,12 +131,27 @@ async function todaySchedule(scheduleWrapper) {
                 locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
             if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
             if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
+            if (teacherNames.length === 1) teacherNames[0] += ` (${item.Docenten[0].Docentcode})`
 
-            let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving })
+            let chips = []
+            if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: item.Afgerond ? 'ok' : 'info' })
+
+            let timeSlots = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
+
+            let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
+
+            let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, style: `--relative-start: ${timeInHours(item.Start) - Math.floor(agendaStart)}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}` })
             apptElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
-            let apptSubject = element('span', `st-vd-appt-${item.Id}-subject`, apptElement, { class: 'st-vd-appt-subject', innerText: subjectNames.join(', ') })
+            let apptTimeSlots = element('div', `st-vd-appt-${item.Id}-time-slots`, apptElement, { class: 'st-vd-appt-time-slots', innerText: timeSlots })
+            let apptSubjectWrapper = element('span', `st-vd-appt-${item.Id}-subject-wrapper`, apptElement, { class: 'st-vd-appt-subject-wrapper' })
+            let apptSubject = element('span', `st-vd-appt-${item.Id}-subject`, apptSubjectWrapper, { class: 'st-vd-appt-subject', innerText: subjectNames.join(', ') })
             let apptTeacher = element('span', `st-vd-appt-${item.Id}-teacher`, apptElement, { class: 'st-vd-appt-teacher', innerText: teacherNames.join(', ') })
-            let apptLocation = element('span', `st-vd-appt-${item.Id}-location`, apptElement, { class: 'st-vd-appt-location', innerText: locationNames.join(', ') })
+            let apptLocation = element('span', `st-vd-appt-${item.Id}-location`, apptSubjectWrapper, { class: 'st-vd-appt-location', innerText: locationNames.join(', ') })
+            let apptTime = element('span', `st-vd-appt-${item.Id}-time`, apptElement, { class: 'st-vd-appt-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+            let apptChipsWrapper = element('div', `st-vd-appt-${item.Id}-labels`, apptElement, { class: 'st-vd-appt-chips' })
+            chips.forEach(chip => {
+                let chipElement = element('span', `st-vd-appt-${item.Id}-label-${chip.name}`, apptElement, { class: `st-vd-appt-chip ${chip.type || 'info'}`, innerText: chip.name })
+            })
         })
 
     })
@@ -211,4 +168,28 @@ async function todaySchedule(scheduleWrapper) {
     // Status=3: huiswerk
     // Status=2 Type=2: ingeschreven
     // Status=1 Type=13: standaard
+}
+
+function timeInHours(input) {
+    let date = new Date(input),
+        currentHour = date.getHours() + (date.getMinutes() / 60)
+    return currentHour
+}
+
+function collidesWith(a, b) {
+    return new Date(a.Einde) > new Date(b.Start) && new Date(a.Start) < new Date(b.Einde)
+}
+
+function checkCollision(eventArr) {
+    for (var i = 0; i < eventArr.length; i++) {
+        eventArr[i].cols = [];
+        eventArr[i].colsBefore = [];
+        for (var j = 0; j < eventArr.length; j++) {
+            if (collidesWith(eventArr[i], eventArr[j])) {
+                eventArr[i].cols.push(j);
+                if (i > j) eventArr[i].colsBefore.push(j); //also list which of the conflicts came before
+            }
+        }
+    }
+    return eventArr;
 }
