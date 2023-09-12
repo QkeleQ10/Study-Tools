@@ -94,9 +94,8 @@ async function todaySchedule(schedule) {
         return latestHour
     }, null)
 
-    for (let i = agendaStart; i <= agendaEnd; i++) {
-        let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: 'st-vd-tick whole', style: `--relative-start: ${i - agendaStart}` }),
-            halfHourTick = element('div', `st-vd-tick-${i}h30`, scheduleWrapper, { class: 'st-vd-tick half', style: `--relative-start: ${i + 0.5 - agendaStart}` })
+    for (let i = agendaStart; i <= agendaEnd; i += 0.5) {
+        let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: `st-vd-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
     }
 
     // Loop through the appts array and split based on date
@@ -125,7 +124,7 @@ async function todaySchedule(schedule) {
                 innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
             })
 
-        apptsPerDay[key].forEach(item => {
+        apptsPerDay[key].forEach((item, i) => {
             let subjectNames = item.Vakken?.map(e => e.Naam) || [item.Omschrijving],
                 teacherNames = item.Docenten?.map(e => e.Naam) || [],
                 locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
@@ -140,7 +139,7 @@ async function todaySchedule(schedule) {
 
             let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
-            let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, style: `--relative-start: ${timeInHours(item.Start) - Math.floor(agendaStart)}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}` })
+            let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}` })
             apptElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
             let apptTimeSlots = element('div', `st-vd-appt-${item.Id}-time-slots`, apptElement, { class: 'st-vd-appt-time-slots', innerText: timeSlots })
             let apptSubjectWrapper = element('span', `st-vd-appt-${item.Id}-subject-wrapper`, apptElement, { class: 'st-vd-appt-subject-wrapper' })
@@ -152,6 +151,11 @@ async function todaySchedule(schedule) {
             chips.forEach(chip => {
                 let chipElement = element('span', `st-vd-appt-${item.Id}-label-${chip.name}`, apptElement, { class: `st-vd-appt-chip ${chip.type || 'info'}`, innerText: chip.name })
             })
+
+            if (i === 0) {
+                apptElement.scrollIntoView(true)
+                scheduleWrapper.scrollBy({top: -2, behavior: 'instant'})
+            }
         })
 
     })
