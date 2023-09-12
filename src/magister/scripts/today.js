@@ -50,115 +50,166 @@ async function today() {
     }, 2500)
 }
 
-// WIDGETS
-// Huiswerk
-// Toetsen
-// Cijfers
-// Opdrachten
-// Evt meldingen en berichten
-// ...
-
+// TODO: prevent overlap
+// TODO: auto update state
 async function todaySchedule(schedule) {
-    let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
-    let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule)
+    const daysToGather = 7
+    const daysToShowSetting = 1
+    const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
 
-    const daysToGather = 2
-
-    let now = new Date()
-
-    let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
-        token = response?.token || await getFromStorage('token', 'local'),
-        userId = response?.userId || await getFromStorage('user-id', 'local'),
+    let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
         gatherStart = new Date(),
         gatherEnd = new Date(gatherStart.getTime() + (86400000 * (daysToGather - 1)))
-    console.info("Received credentials from " + (response ? "service worker." : "stored data."))
 
-    const apptsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
-    if (!apptsRes.ok) {
-        showSnackbar(`Fout ${apptsRes.status}\nVernieuw de pagina en probeer het opnieuw`)
-        if (apptsRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+    const eventsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+    if (!eventsRes.ok) {
+        showSnackbar(`Fout ${eventsRes.status}\nVernieuw de pagina en probeer het opnieuw`)
+        if (eventsRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
         return
     }
-    const apptsJson = await apptsRes.json()
-    const appts = apptsJson.Items
+    const eventsJson = await eventsRes.json()
+    const events = eventsJson.Items
 
-    const agendaStart = appts.reduce((earliestHour, currentItem) => {
-        let currentHour = timeInHours(currentItem.Start)
-        if (!earliestHour || currentHour < earliestHour) { return currentHour - 0.5 }
-        return earliestHour
-    }, null)
+    if (magisterMode) renderSchedule(daysToShowSetting, 'list', 'title-magister')
+    else renderSchedule(daysToShowSetting, 'schedule', 'title-formatted')
 
-    const agendaEnd = appts.reduce((latestHour, currentItem) => {
-        let currentHour = timeInHours(currentItem.Einde)
-        if (!latestHour || currentHour > latestHour) { return currentHour + 0.5 }
-        return latestHour
-    }, null)
+    function renderSchedule(daysToShow, viewMode, titleMode) {
+        schedule.classList.add(viewMode, titleMode)
 
-    for (let i = agendaStart; i <= agendaEnd; i += 0.5) {
-        let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: `st-vd-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
-    }
+        let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
+        let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule)
 
-    // Loop through the appts array and split based on date
-    let apptsPerDay = {}
-    appts.forEach(item => {
-        const startDate = new Date(item.Start)
-        const year = startDate.getFullYear()
-        const month = startDate.getMonth() + 1
-        const date = startDate.getDate()
+        let now = new Date(),
+            itemsHidden = false
 
-        const key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
-        if (!apptsPerDay[key]) apptsPerDay[key] = []
+        // Loop through the events array and split based on date
+        let eventsPerDay = {}
+        events.forEach(item => {
+            const startDate = new Date(item.Start)
+            const year = startDate.getFullYear()
+            const month = startDate.getMonth() + 1
+            const date = startDate.getDate()
 
-        apptsPerDay[key].push(item)
-    })
-    console.log(apptsPerDay)
-
-    Object.keys(apptsPerDay).forEach(key => {
-        let col = element('div', `st-vd-col-${key}`, scheduleWrapper, {
-            class: 'st-vd-col',
-            'data-today': (key === now.toISOString().split('T')[0])
-        }),
-            colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
-                class: 'st-vd-col-head',
-                'data-today': (key === now.toISOString().split('T')[0]),
-                innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
-            })
-
-        apptsPerDay[key].forEach((item, i) => {
-            let subjectNames = item.Vakken?.map(e => e.Naam) || [item.Omschrijving],
-                teacherNames = item.Docenten?.map(e => e.Naam) || [],
-                locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
-            if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
-            if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
-            if (teacherNames.length === 1) teacherNames[0] += ` (${item.Docenten[0].Docentcode})`
-
-            let chips = []
-            if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: item.Afgerond ? 'ok' : 'info' })
-
-            let timeSlots = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
-
-            let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
-
-            let apptElement = element('button', `st-vd-appt-${item.Id}`, col, { class: 'st-vd-appt', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}` })
-            apptElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
-            let apptTimeSlots = element('div', `st-vd-appt-${item.Id}-time-slots`, apptElement, { class: 'st-vd-appt-time-slots', innerText: timeSlots })
-            let apptSubjectWrapper = element('span', `st-vd-appt-${item.Id}-subject-wrapper`, apptElement, { class: 'st-vd-appt-subject-wrapper' })
-            let apptSubject = element('span', `st-vd-appt-${item.Id}-subject`, apptSubjectWrapper, { class: 'st-vd-appt-subject', innerText: subjectNames.join(', ') })
-            let apptTeacher = element('span', `st-vd-appt-${item.Id}-teacher`, apptElement, { class: 'st-vd-appt-teacher', innerText: teacherNames.join(', ') })
-            let apptLocation = element('span', `st-vd-appt-${item.Id}-location`, apptSubjectWrapper, { class: 'st-vd-appt-location', innerText: locationNames.join(', ') })
-            let apptTime = element('span', `st-vd-appt-${item.Id}-time`, apptElement, { class: 'st-vd-appt-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
-            let apptChipsWrapper = element('div', `st-vd-appt-${item.Id}-labels`, apptElement, { class: 'st-vd-appt-chips' })
-            chips.forEach(chip => {
-                let chipElement = element('span', `st-vd-appt-${item.Id}-label-${chip.name}`, apptElement, { class: `st-vd-appt-chip ${chip.type || 'info'}`, innerText: chip.name })
-            })
-
-            if (i === 0) {
-                apptElement.scrollIntoView(true)
-                scheduleWrapper.scrollBy({top: -2, behavior: 'instant'})
-            }
+            const key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
+            if (!eventsPerDay[key] && Object.keys(eventsPerDay).length < daysToShow) eventsPerDay[key] = []
+            if (Object.keys(eventsPerDay).length >= daysToShow) itemsHidden = true
+            if (!eventsPerDay[key]) return
+            eventsPerDay[key].push(item)
+            itemsHidden = false
         })
+        console.log(eventsPerDay)
 
-    })
+        // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
+        // TODO only on shown days
+        const agendaStart = Object.values(eventsPerDay).flat().reduce((earliestHour, currentItem) => {
+            let currentHour = timeInHours(currentItem.Start)
+            if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
+            return earliestHour
+        }, null)
+        const agendaEnd = Object.values(eventsPerDay).flat().reduce((latestHour, currentItem) => {
+            let currentHour = timeInHours(currentItem.Einde)
+            if (!latestHour || currentHour > latestHour) { return Math.ceil(currentHour * 2) / 2 }
+            return latestHour
+        }, null)
+
+        if (timeInHours(now) > agendaEnd && daysToShow === 1) {
+            renderSchedule(daysToShow + 1, viewMode, titleMode)
+            return
+        }
+
+        // Create tick marks for schedule view
+        if (viewMode !== 'list') {
+            for (let i = agendaStart; i <= agendaEnd; i += 0.5) {
+                let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: `st-vd-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
+            }
+            if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd) {
+                let nowMarker = element('div', `st-vd-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
+            }
+        }
+
+        Object.keys(eventsPerDay).forEach((key, i, a) => {
+            // Limit the number of days shown for the list view to 1
+            if (viewMode === 'list' && i > 0) return
+
+            // Create a column for the day
+            let col = element('div', `st-vd-col-${key}`, scheduleWrapper, {
+                class: 'st-vd-col',
+                'data-today': (key === now.toISOString().split('T')[0]),
+                'data-view': viewMode || 'schedule'
+            }),
+                colHead
+            if (viewMode !== 'list' && a.length > 1)
+                colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
+                    class: 'st-vd-col-head',
+                    'data-today': (key === now.toISOString().split('T')[0]),
+                    innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+                })
+
+            // Loop through all events of the day
+            eventsPerDay[key].forEach((item, i) => {
+                let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
+
+                // Render the event element
+                let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}` })
+                if (eventElement.clientHeight < 72 && viewMode !== 'list') eventElement.classList.add('tight')
+                eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+
+                // Parse and array-ify the subjects, the teachers and the locations
+                let subjectNames = item.Vakken?.map((e, i, a) => {
+                    if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
+                    return e.Naam
+                }) || [item.Omschrijving]
+                let teacherNames = item.Docenten?.map((e, i, a) => {
+                    if (a.length === 1 && eventElement.clientHeight >= 72) return e.Naam + ` (${e.Docentcode})`
+                    return e.Naam
+                }) || []
+                let locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
+                if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
+                if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
+
+                // Render the school hour label
+                let schoolHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
+                let eventSchoolHours = element('div', `st-vd-event-${item.Id}-school-hours`, eventElement, { class: 'st-vd-event-school-hours', innerText: schoolHours })
+                if (item.Type === 1) {
+                    eventSchoolHours.classList.add('icon')
+                    eventSchoolHours.innerText = ''
+                }
+                if (item.Type === 16) {
+                    eventSchoolHours.classList.add('icon')
+                    eventSchoolHours.innerText = ''
+                }
+
+                // Render the subject, location and teacher labels
+                if (titleMode === 'title-magister') {
+                    let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventElement, { class: 'st-vd-event-subject', innerText: `${item.Omschrijving} (${item.Lokatie})` })
+                } else {
+                    let eventSubjectWrapper = element('span', `st-vd-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-vd-event-subject-wrapper' })
+                    let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-vd-event-subject', innerText: subjectNames.join(', ') })
+                    let eventLocation = element('span', `st-vd-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-vd-event-location', innerText: locationNames.join(', ') })
+                    let eventTeacher = element('span', `st-vd-event-${item.Id}-teacher`, eventElement, { class: 'st-vd-event-teacher', innerText: teacherNames.join(', ') })
+                }
+
+                // Render the time label
+                let eventTime = element('span', `st-vd-event-${item.Id}-time`, eventElement, { class: 'st-vd-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+
+                // Parse and render any chips
+                let chips = []
+                if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
+                else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'ok' })
+                if (item.Type === 7 && item.Vakken?.[0]) chips.push({ name: "Ingeschreven", type: 'ok' })
+                else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
+
+                let eventChipsWrapper = element('div', `st-vd-event-${item.Id}-labels`, eventElement, { class: 'st-vd-event-chips' })
+                chips.forEach(chip => {
+                    let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-vd-event-chip ${chip.type || 'info'}`, innerText: chip.name })
+                })
+            })
+
+            // TODO: expand button that rerenders with daysToShow = 5. Also collapse button to undo this
+
+            // TODO: gap when days are not successive
+        })
+    }
 
     // STATUSES
     // Type=13: normaal blok
@@ -173,6 +224,18 @@ async function todaySchedule(schedule) {
     // Status=2 Type=2: ingeschreven
     // Status=1 Type=13: standaard
 }
+
+async function todayWidgets(widgets) {
+    
+}
+
+// WIDGETS
+// Huiswerk
+// Toetsen
+// Cijfers
+// Opdrachten
+// Evt meldingen en berichten
+// ...
 
 function timeInHours(input) {
     let date = new Date(input),

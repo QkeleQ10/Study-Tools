@@ -437,10 +437,7 @@ async function gradeBackup() {
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
         if (yearsArray?.length > 0) return
 
-        let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
-            token = response?.token || await getFromStorage('token', 'local'),
-            userId = response?.userId || await getFromStorage('user-id', 'local')
-        console.info("Received credentials from " + (response ? "service worker." : "stored data."))
+        let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' })
 
         const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } })
         if (yearsRes.status >= 400 && yearsRes.status < 600) {
@@ -461,10 +458,7 @@ async function gradeBackup() {
         busy = true
         bkModalExListTitle.dataset.description = "Schooljaar selecteren..."
 
-        let response = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
-            token = response?.token || await getFromStorage('token', 'local'),
-            userId = response?.userId || await getFromStorage('user-id', 'local')
-        console.info("Received credentials from " + (response ? "service worker." : "stored data."))
+        let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' })
 
         let yearElement = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${year.i + 1})`)
         yearElement.click()

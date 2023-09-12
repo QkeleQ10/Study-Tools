@@ -7,9 +7,15 @@
     display: grid;
     grid-template:
         'header header' auto
-        'schedule notifications' 1fr
-        / 65% 35%;
+        'schedule notifications' 1fr;
+    grid-template-columns: 3fr 2fr;
+    z-index: 1000;
     overflow: hidden;
+    transition: grid-template-columns;
+}
+
+#st-vd.schedule-expand {
+    grid-template-columns: 1fr 0fr;
 }
 
 #st-vd-header {
@@ -17,8 +23,7 @@
     width: 100%;
     display: flex;
     padding: 32px 24px 16px;
-    background: var(--st-background-primary);
-    z-index: 1000;
+    background-color: var(--st-background-primary);
     transition: opacity
 }
 
@@ -42,9 +47,11 @@
     display: flex;
     flex-direction: column;
     height: auto;
+    background-color: var(--st-background-primary);
 }
 
 #st-vd-schedule-head {
+    height: 26px;
     display: flex;
     gap: 16px;
     padding-inline: 24px;
@@ -65,14 +72,39 @@
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * 110px);
     left: 0;
-    height: 2px;
+    height: 1px;
     width: 100%;
     background-color: var(--st-foreground-primary);
-    opacity: .02;
+    opacity: .04;
 }
 
 .st-vd-tick.half {
     height: 1px;
+    opacity: .02;
+}
+
+#st-vd-now {
+    --relative-start: 0;
+    position: absolute;
+    top: calc(var(--relative-start) * var(--hour-zoom) * 110px);
+    left: 6px;
+    height: 1px;
+    width: 100%;
+    background-color: var(--st-accent-secondary);
+    opacity: .5;
+}
+
+#st-vd-now:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -11px;
+    height: 0px;
+    width: 0px;
+    display: block;
+    border-top: solid 12px transparent;
+    border-left: solid 12px var(--st-accent-secondary);
+    border-bottom: solid 12px transparent;
 }
 
 .st-vd-col-head {
@@ -90,21 +122,21 @@
     flex-grow: 3;
 }
 
-.st-vd-appt {
+.st-vd-event {
     --relative-start: 0;
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * 110px + 2px);
     height: calc(var(--duration) * var(--hour-zoom) * 110px - 4px);
+    min-height: 48px;
     width: 100%;
     padding: 12px;
     display: grid;
     grid-template:
-        'timeslot subject chips' auto
-        'timeslot teacher chips' auto
-        'timeslot time chips' 1fr
-        / auto 1fr auto;
+        'timeslot subject' auto
+        'timeslot teacher' auto
+        'timeslot time' 1fr
+        / auto 1fr;
     column-gap: 12px;
-    row-gap: 6px;
     background-color: var(--st-background-secondary);
     color: var(--st-foreground-primary);
     border-radius: var(--st-border-radius);
@@ -114,13 +146,40 @@
     cursor: pointer;
 }
 
-.st-vd-appt[data-ongoing=true] {
+.st-vd-event.tight {
+    padding-block: 0;
+    align-content: center;
+    grid-template:
+        'timeslot subject subject' auto
+        'timeslot teacher time' auto
+        / auto auto 1fr;
+}
+
+#st-vd-schedule.title-magister .st-vd-event {
+    grid-template:
+        'timeslot subject' auto
+        'timeslot time' 1fr
+        / auto 1fr;
+}
+
+[data-view=list] .st-vd-event {
+    position: unset;
+    height: 72px;
+    border-radius: 0;
+    border-top-width: 0;
+}
+
+[data-view=list] .st-vd-event:first-child {
+    border-top-width: 1px;
+}
+
+.st-vd-event[data-ongoing=true] {
     background-color: var(--st-highlight-primary);
 }
 
-.st-vd-appt-time-slots {
+.st-vd-event-school-hours {
     grid-area: timeslot;
-    height: 40px;
+    height: 46px;
     aspect-ratio: 1;
     margin-bottom: auto;
     display: flex;
@@ -128,60 +187,67 @@
     justify-content: center;
     background-color: var(--st-highlight-primary);
     border-radius: calc(var(--st-border-radius) / 2);
-    font: 600 16px var(--st-font-family-primary);
+    font: 600 16px/40px var(--st-font-family-primary);
 }
 
-[data-ongoing=true] .st-vd-appt-time-slots {
+.st-vd-event-school-hours.icon {
+    font: 16px 'Font Awesome 5 Pro';
+}
+
+[data-ongoing=true] .st-vd-event-school-hours {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
 }
 
-.st-vd-appt-subject-wrapper {
+.st-vd-event-subject-wrapper {
     grid-area: subject;
     display: flex;
     gap: 4px;
     width: max-content;
 }
 
-.st-vd-appt-subject {
+.st-vd-event-subject {
     display: inline-block;
-    font: 600 16px/22px var(--st-font-family-secondary);
+    font: 600 16px/24px var(--st-font-family-secondary);
 }
 
-.st-vd-appt-subject:first-letter {
-    text-transform: capitalize;
+#st-vd-schedule.title-magister .st-vd-event-subject {
+    font: 600 16px/24px var(--st-font-family-primary);
 }
 
-.st-vd-appt-teacher {
+.st-vd-event-teacher {
     grid-area: teacher;
-    /* font: 500 16px/22px var(--st-font-family-secondary); */
+    font: 500 12px/20px var(--st-font-family-secondary);
 }
 
-.st-vd-appt-location {
+.st-vd-event-location {
     grid-area: location;
-    font: 500 16px/22px var(--st-font-family-secondary);
+    font: 500 16px/24px var(--st-font-family-secondary);
 }
 
-.st-vd-appt-location:not(:empty):before {
+.st-vd-event-location:not(:empty):before {
     content: ' (';
 }
 
-.st-vd-appt-location:not(:empty):after {
+.st-vd-event-location:not(:empty):after {
     content: ')';
 }
 
-.st-vd-appt-time {
+.st-vd-event-time {
     grid-area: time;
+    font: 500 12px/20px var(--st-font-family-secondary);
 }
 
-.st-vd-appt-chips {
-    grid-area: chips;
+.st-vd-event-chips {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
 }
 
-.st-vd-appt-chip {
+.st-vd-event-chip {
     display: inline-block;
     padding-inline: 12px;
     border: 1px solid var(--st-chip-info-border);
@@ -190,7 +256,7 @@
     font: 500 11px/22px var(--st-font-family-secondary);
 }
 
-.st-vd-appt-chip.ok {
+.st-vd-event-chip.ok {
     border-color: var(--st-chip-ok-border);
     background-color: var(--st-chip-ok-background);
 }

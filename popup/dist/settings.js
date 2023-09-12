@@ -222,67 +222,25 @@ export default [
                 default: true,
             },
             {
-                id: "magister-vd-agendaHeight",
-                title: "Hoogte agenda",
-                type: "SlideInput",
-                default: 1.00,
-                format: "percent",
-                decimals: 0,
-                min: 0.50,
-                max: 2.50,
-                step: 0.01,
-                conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "vd-subjects-display",
-                title: "Vaknotatie in agenda",
+                id: "vd-schedule-view",
+                title: "Roosterweergave op startscherm",
                 type: "SegmentedButton",
-                default: "custom",
+                default: "schedule",
                 conditions: [
                     { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
                 ],
                 options: [
                     {
-                        value: "custom",
-                        title: "Vaknamen",
-                        icon: "notes"
+                        value: "schedule",
+                        title: "Agenda",
+                        icon: "calendar_view_day"
                     },
                     {
-                        value: "default",
-                        title: "Vakafkortingen",
-                        icon: "short_text"
+                        value: "list",
+                        title: "Lijst",
+                        icon: "list"
                     },
                 ],
-            },
-            subjects,
-            {
-                id: "magister-vd-grade",
-                title: "Laatste cijfer op startscherm",
-                subtitle: "Toon het laatste cijfer op het startscherm, laat alleen zien hoeveel nieuwe cijfers er zijn of toon helemaal niets.",
-                type: "SegmentedButton",
-                default: "full",
-                conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-                ],
-                options: [
-                    {
-                        value: "full",
-                        title: "Volledig",
-                        icon: "star"
-                    },
-                    {
-                        value: "partial",
-                        title: "Aantal",
-                        icon: "app_badging"
-                    },
-                    {
-                        value: "off",
-                        title: "Verbergen",
-                        icon: "visibility_off"
-                    },
-                ]
             },
             {
                 id: "magister-cf-calculator",

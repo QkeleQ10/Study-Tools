@@ -118,7 +118,7 @@ div.loading-overlay {
 }
 
 .st-button.icon {
-    background: var(--st-background-secondary);
+    background: var(--st-background-primary);
     color: var(--st-foreground-primary);
     width: 32px;
     padding: 0;
