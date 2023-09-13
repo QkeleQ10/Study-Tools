@@ -73,6 +73,9 @@ async function todaySchedule(schedule, widgets) {
     const eventsJson = await eventsRes.json()
     events = eventsJson.Items
 
+    console.log(events)
+
+    // Widgets may now be rendered
     todayWidgets(widgets)
 
     if (magisterMode) renderSchedule(daysToShowSetting, 'list', 'title-magister')
@@ -203,7 +206,7 @@ async function todaySchedule(schedule, widgets) {
                 if (item.Type === 7 && item.Vakken?.[0]) chips.push({ name: "Ingeschreven", type: 'ok' })
                 else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 
-                let eventChipsWrapper = element('div', `st-vd-event-${item.Id}-labels`, eventElement, { class: 'st-vd-event-chips' })
+                let eventChipsWrapper = element('div', `st-vd-event-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
                 chips.forEach(chip => {
                     let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-vd-event-chip ${chip.type || 'info'}`, innerText: chip.name })
                 })
@@ -225,10 +228,11 @@ async function todaySchedule(schedule, widgets) {
     // Type=1: pers persoonlijk
 
     // InfoType>0: heeft info
+    // InfoType=1: huiswerk
 
     // Status=3: huiswerk
-    // Status=2 Type=2: ingeschreven
-    // Status=1 Type=13: standaard
+    // Status=2: ingeschreven?
+    // Status=1: standaard?
 }
 
 async function todayWidgets(widgets) {
@@ -244,8 +248,6 @@ async function todayWidgets(widgets) {
             let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
             let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${eventsWithHomework.length} item${eventsWithHomework.length > 1 ? 's' : ''} in de komende 3 weken` })
 
-            console.log(eventsWithHomework)
-
             eventsWithHomework.forEach(item => {
                 let subjectNames = item.Vakken?.map((e, i, a) => {
                     if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
@@ -253,10 +255,17 @@ async function todayWidgets(widgets) {
                 }) || [item.Omschrijving]
                 if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
 
-                let eventElement = element('div', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-vd-widget-homework-listing' })
-                let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, { class: 'st-vd-widget-homework-listing-date', innerText: new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) })
-                let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-subject`, eventElement, { class: 'st-vd-widget-homework-listing-subject', innerText: subjectNames.join(', ') })
-                let eventContent = element('span', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-vd-widget-homework-listing-subject' })
+                let eventElement = element('button', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
+                eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, {
+                    class: 'st-list-timestamp',
+                    innerText:
+                        Math.abs(new Date(item.Start) - new Date()) < 23 * 60 * 60 * 1000
+                            ? `${getRelativeTimeString(new Date(item.Start))} (lesuur ${item.LesuurVan})`
+                            : new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                })
+                let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
+                let eventContent = element('div', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
                 eventContent.setHTML(item.Inhoud)
             })
         }

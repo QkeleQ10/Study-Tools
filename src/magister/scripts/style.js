@@ -76,7 +76,7 @@ async function applyStyles() {
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 150;
     --st-shadow-alpha: .5;
-    --st-hover-brightness: .8;
+    --st-hover-brightness: .9;
 }`,
         darkThemeCss = `:root {
     --st-font-primary: 600 16px/44px 'arboria', sans-serif;
@@ -109,7 +109,7 @@ async function applyStyles() {
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 10;
     --st-shadow-alpha: .7;
-    --st-hover-brightness: 1.4;
+    --st-hover-brightness: 1.3;
     color-scheme: dark;
 }
 
