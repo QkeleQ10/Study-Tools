@@ -181,7 +181,7 @@ async function todaySchedule(schedule) {
 
                 // Render the subject, location and teacher labels
                 if (titleMode === 'title-magister') {
-                    let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventElement, { class: 'st-vd-event-subject', innerText: `${item.Omschrijving} (${item.Lokatie})` })
+                    let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventElement, { class: 'st-vd-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                 } else {
                     let eventSubjectWrapper = element('span', `st-vd-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-vd-event-subject-wrapper' })
                     let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-vd-event-subject', innerText: subjectNames.join(', ') })
@@ -204,6 +204,8 @@ async function todaySchedule(schedule) {
                     let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-vd-event-chip ${chip.type || 'info'}`, innerText: chip.name })
                 })
             })
+
+            setTimeout(() => document.querySelector('.st-vd-event[data-ongoing=true]')?.scrollIntoView({block: 'center', behavior: 'smooth'}), 50)
 
             // TODO: expand button that rerenders with daysToShow = 5. Also collapse button to undo this
 

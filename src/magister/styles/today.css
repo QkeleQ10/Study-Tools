@@ -51,7 +51,6 @@
 }
 
 #st-vd-schedule-head {
-    height: 26px;
     display: flex;
     gap: 16px;
     padding-inline: 24px;
@@ -70,7 +69,7 @@
 .st-vd-tick {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 110px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
     left: 0;
     height: 1px;
     width: 100%;
@@ -86,10 +85,10 @@
 #st-vd-now {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 110px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
     left: 6px;
-    height: 1px;
-    width: 100%;
+    height: 2px;
+    width: 24px;
     background-color: var(--st-accent-secondary);
     opacity: .5;
 }
@@ -125,8 +124,8 @@
 .st-vd-event {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 110px + 2px);
-    height: calc(var(--duration) * var(--hour-zoom) * 110px - 4px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 100px + 2px);
+    height: calc(var(--duration) * var(--hour-zoom) * 100px - 4px);
     min-height: 48px;
     width: 100%;
     padding: 12px;
@@ -163,7 +162,8 @@
 }
 
 [data-view=list] .st-vd-event {
-    position: unset;
+    position: relative;
+    top: 0;
     height: 72px;
     border-radius: 0;
     border-top-width: 0;
