@@ -6,10 +6,9 @@
     width: 100%;
     display: grid;
     grid-template:
-        'header header' auto
-        'schedule notifications' 1fr;
+        'header widgets' auto
+        'schedule widgets' 1fr;
     grid-template-columns: 3fr 2fr;
-    z-index: 1000;
     overflow: hidden;
     transition: grid-template-columns;
 }
@@ -88,7 +87,7 @@
     top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
     left: 6px;
     height: 2px;
-    width: 24px;
+    width: calc(100% - 30px);
     background-color: var(--st-accent-secondary);
     opacity: .5;
 }
@@ -96,14 +95,13 @@
 #st-vd-now:before {
     content: '';
     position: absolute;
-    left: 0;
-    top: -11px;
-    height: 0px;
-    width: 0px;
+    left: -1px;
+    top: -5px;
+    height: 12px;
+    width: 12px;
     display: block;
-    border-top: solid 12px transparent;
-    border-left: solid 12px var(--st-accent-secondary);
-    border-bottom: solid 12px transparent;
+    background-color: var(--st-accent-secondary);
+    border-radius: 6px;
 }
 
 .st-vd-col-head {
@@ -261,12 +259,56 @@
     background-color: var(--st-chip-ok-background);
 }
 
+#st-vd-widgets {
+    grid-area: widgets;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px;
+    padding-right: 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.st-widget {
+    width: 100%;
+    padding-block: 16px;
+}
+
+.st-widget-title {
+    font-size: 18px;
+    line-height: 24px;
+    margin-bottom: 12px;
+}
+
+#st-vd-widget-grades[data-status=sufficient] {
+    background: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary))
+}
+
 @media (max-width:1100px) {
     #st-vd {
         grid-template:
             'header' auto
             'schedule' 1fr
-            'notifications' auto
+            'widgets' auto
             / 1fr;
     }
+
+    #st-vd-widgets {
+        flex-direction: row;
+        align-items: stretch;
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-height: 200px;
+    }
+
+    .st-widget {
+        display: flex;
+        flex-direction: row;
+    }
+
+        .st-widget-title {
+            text-orientation: sideways;
+        }
 }

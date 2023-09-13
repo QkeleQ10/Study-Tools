@@ -1,3 +1,5 @@
+let events = []
+
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
@@ -15,7 +17,8 @@ async function today() {
         schedule = element('div', 'st-vd-schedule', container),
         widgets = element('div', 'st-vd-widgets', container)
 
-    todaySchedule(schedule)
+    todaySchedule(schedule, widgets)
+    // todayWidgets(widgets)
 
     const date = new Date(),
         weekday = date.toLocaleString('nl-NL', { weekday: 'long' }),
@@ -52,8 +55,8 @@ async function today() {
 
 // TODO: prevent overlap
 // TODO: auto update state
-async function todaySchedule(schedule) {
-    const daysToGather = 7
+async function todaySchedule(schedule, widgets) {
+    const daysToGather = 21
     const daysToShowSetting = 1
     const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
 
@@ -68,7 +71,9 @@ async function todaySchedule(schedule) {
         return
     }
     const eventsJson = await eventsRes.json()
-    const events = eventsJson.Items
+    events = eventsJson.Items
+
+    todayWidgets(widgets)
 
     if (magisterMode) renderSchedule(daysToShowSetting, 'list', 'title-magister')
     else renderSchedule(daysToShowSetting, 'schedule', 'title-formatted')
@@ -97,7 +102,6 @@ async function todaySchedule(schedule) {
             eventsPerDay[key].push(item)
             itemsHidden = false
         })
-        console.log(eventsPerDay)
 
         // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
         // TODO only on shown days
@@ -205,7 +209,7 @@ async function todaySchedule(schedule) {
                 })
             })
 
-            setTimeout(() => document.querySelector('.st-vd-event[data-ongoing=true]')?.scrollIntoView({block: 'center', behavior: 'smooth'}), 50)
+            setTimeout(() => document.querySelector('.st-vd-event[data-ongoing=true]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50)
 
             // TODO: expand button that rerenders with daysToShow = 5. Also collapse button to undo this
 
@@ -228,7 +232,39 @@ async function todaySchedule(schedule) {
 }
 
 async function todayWidgets(widgets) {
-    
+    let selectedWidgets = ['grades', 'homework']
+    let widgetFunctions = {
+        grades: () => {
+            let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
+        },
+        homework: () => {
+            let eventsWithHomework = events.filter(item => item.Inhoud?.length > 0) //&& new Date(item.Einde) < new Date()
+
+            if (eventsWithHomework.length < 1) return
+            let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
+            let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${eventsWithHomework.length} item${eventsWithHomework.length > 1 ? 's' : ''} in de komende 3 weken` })
+
+            console.log(eventsWithHomework)
+
+            eventsWithHomework.forEach(item => {
+                let subjectNames = item.Vakken?.map((e, i, a) => {
+                    if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
+                    return e.Naam
+                }) || [item.Omschrijving]
+                if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
+
+                let eventElement = element('div', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-vd-widget-homework-listing' })
+                let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, { class: 'st-vd-widget-homework-listing-date', innerText: new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) })
+                let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-subject`, eventElement, { class: 'st-vd-widget-homework-listing-subject', innerText: subjectNames.join(', ') })
+                let eventContent = element('span', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-vd-widget-homework-listing-subject' })
+                eventContent.setHTML(item.Inhoud)
+            })
+        }
+    }
+
+    selectedWidgets.forEach(widgetId => {
+        widgetFunctions[widgetId].call()
+    })
 }
 
 // WIDGETS

@@ -1045,9 +1045,9 @@ h3:active> .icon-up-arrow:before {
 
     if (syncedStorage['magister-vd-overhaul']) {
         createStyle(`
-#vandaag-container .main .content-container {
+#vandaag-container .main .content-container, #vandaag-container dna-page-header {
     display: none !important;
-}
+} 
 
 #vandaag-container .main {
     padding-top: 85px !important;
