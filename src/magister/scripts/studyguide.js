@@ -113,14 +113,14 @@ async function studyguideIndividual() {
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
-            showSnackbar(`Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`)
+            showSnackbar(`Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, 4000)
             document.querySelector('.st-sw-selected').classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
-            showSnackbar(`Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`)
+            showSnackbar(`Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, 4000)
             document.querySelector('.st-sw-selected').classList.remove('hidden-item')
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')

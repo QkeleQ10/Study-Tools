@@ -1,4 +1,5 @@
-let events = []
+let events = [],
+    token, userId
 
 // Run at start and when the URL changes
 popstate()
@@ -56,13 +57,16 @@ async function today() {
 // TODO: prevent overlap
 // TODO: auto update state
 async function todaySchedule(schedule, widgets) {
-    const daysToGather = 21
+    const daysToGather = 30
     const daysToShowSetting = 1
     const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
 
-    let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
+    let req = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
         gatherStart = new Date(),
         gatherEnd = new Date(gatherStart.getTime() + (86400000 * (daysToGather - 1)))
+
+    token = req.token
+    userId = req.userId
 
     const eventsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
     if (!eventsRes.ok) {
@@ -202,13 +206,15 @@ async function todaySchedule(schedule, widgets) {
                 // Parse and render any chips
                 let chips = []
                 if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
-                else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'ok' })
+                else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
+                if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
+                else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
                 if (item.Type === 7 && item.Vakken?.[0]) chips.push({ name: "Ingeschreven", type: 'ok' })
                 else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 
                 let eventChipsWrapper = element('div', `st-vd-event-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
                 chips.forEach(chip => {
-                    let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-vd-event-chip ${chip.type || 'info'}`, innerText: chip.name })
+                    let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                 })
             })
 
@@ -229,6 +235,7 @@ async function todaySchedule(schedule, widgets) {
 
     // InfoType>0: heeft info
     // InfoType=1: huiswerk
+    // InfoType=2: proefwerk
 
     // Status=3: huiswerk
     // Status=2: ingeschreven?
@@ -236,17 +243,29 @@ async function todaySchedule(schedule, widgets) {
 }
 
 async function todayWidgets(widgets) {
-    let selectedWidgets = ['grades', 'homework']
+    let now = new Date()
+    let selectedWidgets = ['grades', 'homework', 'messages', 'assignments']
     let widgetFunctions = {
+
+        // WIDGETS
+        // ✅ Huiswerk
+        // Cijfers
+        // ✅ Opdrachten
+        // ✅ Berichten
+        // Evt meldingen
+        // ...
+
         grades: () => {
             let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
+            let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer"})
         },
+
         homework: () => {
-            let eventsWithHomework = events.filter(item => item.Inhoud?.length > 0) //&& new Date(item.Einde) < new Date()
+            let eventsWithHomework = events.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
 
             if (eventsWithHomework.length < 1) return
             let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
-            let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${eventsWithHomework.length} item${eventsWithHomework.length > 1 ? 's' : ''} in de komende 3 weken` })
+            let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${eventsWithHomework.length} item${eventsWithHomework.length > 1 ? 's' : ''} in de komende maand` })
 
             eventsWithHomework.forEach(item => {
                 let subjectNames = item.Vakken?.map((e, i, a) => {
@@ -255,34 +274,129 @@ async function todayWidgets(widgets) {
                 }) || [item.Omschrijving]
                 if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
 
+                let
+                    date = `week ${getWeekNumber(new Date(item.Start))}, ${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                if (getWeekNumber(new Date(item.Start)) === getWeekNumber())
+                    date = `${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                if (new Date(item.Start).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
+                    date = `morgen ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
+                if (new Date(item.Start).toDateString() === new Date().toDateString())
+                    date = `vandaag ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
+
                 let eventElement = element('button', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
                 eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
                 let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, {
                     class: 'st-list-timestamp',
-                    innerText:
-                        Math.abs(new Date(item.Start) - new Date()) < 23 * 60 * 60 * 1000
-                            ? `${getRelativeTimeString(new Date(item.Start))} (lesuur ${item.LesuurVan})`
-                            : new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                    innerText: date
                 })
                 let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
                 let eventContent = element('div', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
                 eventContent.setHTML(item.Inhoud)
+                if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
+
+                let chips = []
+                if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
+                else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
+                if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
+                else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
+
+                let eventChipsWrapper = element('div', `st-vd-widget-homework-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
+                chips.forEach(chip => {
+                    let chipElement = element('span', `st-vd-widget-homework-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                })
+            })
+        },
+
+        messages: async () => {
+            const messagesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
+            if (!messagesRes.ok) {
+                showSnackbar(`Fout ${messagesRes.status}\nVernieuw de pagina en probeer het opnieuw`)
+                if (messagesRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+                return
+            }
+            const messagesJson = await messagesRes.json()
+            const messages = messagesJson.items
+
+            if (messages.length < 1) return
+            let widgetElement = element('div', 'st-vd-widget-messages', widgets, { class: 'st-tile st-widget' })
+            let widgetTitle = element('div', 'st-vd-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${messages.length} ongelezen bericht${messages.length > 1 ? 'en' : ''}` })
+
+            messages.forEach(item => {
+                let messageElement = element('button', `st-vd-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
+                messageElement.addEventListener('click', () => window.location.hash = `#/berichten`)
+                let messageDate = element('span', `st-vd-widget-messages-${item.id}-date`, messageElement, {
+                    class: 'st-list-timestamp',
+                    innerText: new Date(item.verzondenOp).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
+                })
+                let messageSender = element('span', `st-vd-widget-messages-${item.id}-title`, messageElement, { class: 'st-list-title', innerText: item.afzender.naam })
+                let messageSubject = element('div', `st-vd-widget-messages-${item.id}-content`, messageElement, { class: 'st-list-content', innerText: item.onderwerp })
+
+                let chips = []
+                if (item.heeftPrioriteit) chips.push({ name: "Belangrijk", type: 'warn' })
+
+                let messageChipsWrapper = element('div', `st-vd-widget-messages-${item.id}-labels`, messageElement, { class: 'st-chips-wrapper' })
+                chips.forEach(chip => {
+                    let chipElement = element('span', `st-vd-widget-messages-${item.id}-label-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                })
+            })
+        },
+
+        assignments: async () => {
+            const assignmentsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: token } })
+            if (!assignmentsRes.ok) {
+                showSnackbar(`Fout ${assignmentsRes.status}\nVernieuw de pagina en probeer het opnieuw`)
+                if (assignmentsRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+                return
+            }
+            const assignmentsJson = await assignmentsRes.json()
+            const assignments = assignmentsJson.Items
+            console.log(assignments)
+            const filteredAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+
+            if (filteredAssignments.length < 1) return
+            let widgetElement = element('div', 'st-vd-widget-assignments', widgets, { class: 'st-tile st-widget' })
+            let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': `${filteredAssignments.length} openstaande opdracht${filteredAssignments.length > 1 ? 'en' : ''}` })
+
+            filteredAssignments.forEach(item => {
+                let
+                    date = `week ${getWeekNumber(new Date(item.InleverenVoor))}, ${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                if (getWeekNumber(new Date(item.InleverenVoor)) === getWeekNumber())
+                    date = `${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                if (new Date(item.InleverenVoor).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
+                    date = `morgen ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
+                if (new Date(item.InleverenVoor).toDateString() === new Date().toDateString())
+                    date = `vandaag ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
+
+                let assignmentElement = element('button', `st-vd-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
+                assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
+                let assignmentDate = element('span', `st-vd-widget-assignments-${item.Id}-date`, assignmentElement, {
+                    class: 'st-list-timestamp',
+                    innerText: date
+                })
+                let assignmentTitle = element('span', `st-vd-widget-assignments-${item.Id}-title`, assignmentElement, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
+                let assignmentContent = element('div', `st-vd-widget-assignments-${item.Id}-content`, assignmentElement, { class: 'st-list-content' })
+                assignmentContent.setHTML(item.Omschrijving)
+                if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
+
+                let chips = []
+                if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
+                // TODO: allow for Ingeleverd state
+
+                let assignmentChipsWrapper = element('div', `st-vd-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
+                chips.forEach(chip => {
+                    let chipElement = element('span', `st-vd-widget-assignments-${item.id}-label-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                })
             })
         }
+
     }
 
     selectedWidgets.forEach(widgetId => {
         widgetFunctions[widgetId].call()
     })
-}
 
-// WIDGETS
-// Huiswerk
-// Toetsen
-// Cijfers
-// Opdrachten
-// Evt meldingen en berichten
-// ...
+    // TODO: order, possibly using promises and Promise.all()
+}
 
 function timeInHours(input) {
     let date = new Date(input),

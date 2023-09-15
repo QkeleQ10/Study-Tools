@@ -73,6 +73,8 @@ async function applyStyles() {
     --st-chip-info-background: #ffffff;
     --st-chip-ok-border: #19c5a5;
     --st-chip-ok-background: #d0f3ed;
+    --st-chip-warn-border: #a53e52;
+    --st-chip-warn-background: #f7d4d2;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 150;
     --st-shadow-alpha: .5;
@@ -106,6 +108,8 @@ async function applyStyles() {
     --st-chip-info-background: #022a4b;
     --st-chip-ok-border: #13c4a3;
     --st-chip-ok-background: #15363c;
+    --st-chip-warn-border: #953541;
+    --st-chip-warn-background: #2f1623;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
     --st-shadow-value: 10;
     --st-shadow-alpha: .7;
