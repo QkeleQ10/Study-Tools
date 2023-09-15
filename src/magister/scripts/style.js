@@ -76,7 +76,7 @@ async function applyStyles() {
     --st-chip-warn-border: #a53e52;
     --st-chip-warn-background: #f7d4d2;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 150;
+    --st-shadow-value: 210;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .9;
 }`,
@@ -111,7 +111,7 @@ async function applyStyles() {
     --st-chip-warn-border: #953541;
     --st-chip-warn-background: #2f1623;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-shadow-value: 10;
+    --st-shadow-value: 0;
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.3;
     color-scheme: dark;
@@ -1055,6 +1055,10 @@ h3:active> .icon-up-arrow:before {
 
 #vandaag-container .main {
     padding-top: 85px !important;
+}
+
+.container:has(#vandaag-container) {
+    padding-right: 0 !important;
 }
 `, 'study-tools-vd-overhaul')
     }

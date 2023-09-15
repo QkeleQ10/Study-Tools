@@ -149,7 +149,7 @@ div.loading-overlay {
 }
 
 .st-button:hover,
-.st-button:focus {
+.st-button:focus-visible {
     filter: brightness(var(--st-hover-brightness));
 }
 
