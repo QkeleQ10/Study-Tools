@@ -37,15 +37,6 @@ const subjects = {
     ]
 }
 
-const periods = {
-    id: "periods",
-    title: "Perioden bewerken",
-    subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
-    type: "PeriodEditor",
-    inline: true,
-    default: [30, 47, 9],
-}
-
 const shortcuts = {
     id: "shortcuts",
     title: "Snelkoppelingen zijbalk",
@@ -266,11 +257,10 @@ export default [
             {
                 id: "sw-enabled",
                 title: "Studiewijzers ordenen",
-                subtitle: "Studiewijzers zullen worden gegroepeerd op vaknaam en periodenummer.",
+                subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },
             subjects,
-            periods,
             {
                 id: "sw-cols",
                 title: "Aantal kolommen",

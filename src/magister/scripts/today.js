@@ -79,8 +79,6 @@ async function today() {
         const eventsJson = await eventsRes.json()
         events = eventsJson.Items
 
-        console.log(events)
-
         // Widgets may now be rendered
         todayWidgets(widgets)
 
@@ -228,18 +226,23 @@ async function today() {
             })
         }
 
-        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '' })
+        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '' })
         todayExpander.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
                 todayExpander.classList.remove('st-expanded')
-                todayExpander.dataset.icon = ''
+                todayExpander.dataset.icon = ''
                 verifyDisplayMode()
+                schedule.innerText = ''
+                if (magisterMode) renderSchedule(daysToShowSetting, 'list', 'title-magister')
+                else renderSchedule(daysToShowSetting, 'schedule', 'title-formatted')
             } else {
                 schedule.classList.add('st-expanded')
                 todayExpander.classList.add('st-expanded')
-                todayExpander.dataset.icon = ''
-                verifyDisplayMode(true)
+                todayExpander.dataset.icon = ''
+                verifyDisplayMode()
+                if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+                renderSchedule(5, 'schedule', 'title-formatted')
             }
         })
 
@@ -260,6 +263,22 @@ async function today() {
     }
 
     async function todayWidgets() {
+        let widgetsToggler = element('button', 'st-vd-widget-toggler', container, { class: 'st-button icon', innerText: '' })
+        widgetsToggler.addEventListener('click', () => {
+            if (widgets.classList.contains('st-shown')) {
+                widgets.setAttribute('class', 'st-hiding')
+                widgetsToggler.setAttribute('class', 'st-button icon st-hidden')
+                setTimeout(() => {
+                    widgets.setAttribute('class', 'st-hidden')
+                }, 200)
+            } else {
+                widgets.setAttribute('class', 'st-showing')
+                setTimeout(() => {
+                    widgets.setAttribute('class', 'st-shown')
+                    widgetsToggler.setAttribute('class', 'st-button icon st-shown')
+                }, 10)
+            }
+        })
 
         let now = new Date()
         let selectedWidgets = ['grades', 'homework', 'messages', 'assignments']
@@ -271,11 +290,28 @@ async function today() {
             // ✅ Opdrachten
             // ✅ Berichten
             // Evt meldingen
+            // Tellertjes
             // ...
 
-            grades: () => {
+            grades: async () => {
                 let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
                 let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
+
+                const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: token } })
+                if (!gradesRes.ok) {
+                    showSnackbar(`Fout ${gradesRes.status}\nVernieuw de pagina en probeer het opnieuw`)
+                    if (gradesRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+                    return
+                }
+                const gradesJson = await gradesRes.json()
+                const grades = gradesJson.items
+                console.log(grades)
+                const mappedGrades = grades.map(item => item)
+
+                if (true) widgetElement.classList.add('st-unread')
+
+                let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '8,4' })
+                let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, {innerText: 'Aardrijkskunde'})
             },
 
             homework: () => {
@@ -368,12 +404,17 @@ async function today() {
                 }
                 const assignmentsJson = await assignmentsRes.json()
                 const assignments = assignmentsJson.Items
-                console.log(assignments)
                 const filteredAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+
+                let statements = []
+                const openedAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
+                if (openedAssignments.length > 0) statements.push(`${openedAssignments.length} openstaande opdracht${openedAssignments.length > 1 ? 'en' : ''}`)
+                const markedAssignments = assignments.filter(item => item.BeoordeeldOp)
+                if (markedAssignments.length > 0) statements.push(`${markedAssignments.length} beoordeelde opdracht${markedAssignments.length > 1 ? 'en' : ''}`)
 
                 if (filteredAssignments.length < 1) return
                 let widgetElement = element('div', 'st-vd-widget-assignments', widgets, { class: 'st-tile st-widget' })
-                let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': `${filteredAssignments.length} openstaande opdracht${filteredAssignments.length > 1 ? 'en' : ''}` })
+                let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
 
                 filteredAssignments.forEach(item => {
                     let
@@ -416,12 +457,24 @@ async function today() {
         // TODO: order, possibly using promises and Promise.all()
     }
 
-    function verifyDisplayMode(force) {
-        if (window.innerWidth < 1100 || sheet || force) container.classList.add('sheet')
-        else container.classList.remove('sheet')
+    function verifyDisplayMode() {
+        let widgets = document.querySelector('#st-vd-widgets')
+        if (window.innerWidth < 1100 || sheet || document.querySelector('#st-vd-schedule')?.classList.contains('st-expanded')) {
+            container.classList.add('sheet')
+            widgets.setAttribute('class', 'st-shown')
+            setTimeout(() => {
+                widgets.setAttribute('class', 'st-hiding')
+                setTimeout(() => {
+                    widgets.setAttribute('class', 'st-hidden')
+                }, 200)
+            }, 10)
+        }
+        else {
+            container.classList.remove('sheet')
+        }
     }
     verifyDisplayMode()
-    window.addEventListener('resize', verifyDisplayMode)
+    window.addEventListener('resize', () => { verifyDisplayMode() })
 }
 
 function timeInHours(input) {

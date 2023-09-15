@@ -64,8 +64,9 @@
 
 .snackbar-dismiss {
     position: absolute;
-    top: 14px;
+    top: 50%;
     right: 20px;
+    translate: 0 -50%;
     transform: translateX(50px);
     pointer-events: none;
 }

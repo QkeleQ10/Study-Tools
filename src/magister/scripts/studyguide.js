@@ -113,7 +113,6 @@ async function renderStudyguideList() {
     const settingCols = syncedStorage['sw-cols'],
         settingShowPeriod = syncedStorage['sw-period'],
         subjectsArray = Object.values(syncedStorage['subjects']),
-        currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
         gridWrapper = element('div', 'st-sw-container', gridContainer)
@@ -129,7 +128,6 @@ async function renderStudyguideList() {
         let title = elem.firstElementChild.firstElementChild.innerText,
             subject = "Geen vak",
             period = 0,
-            priority,
             periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
         subjectsArray.forEach(subjectEntry => {
@@ -145,12 +143,8 @@ async function renderStudyguideList() {
             if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
         }
 
-        if (period === currentPeriod) priority = 2
-        else if (period > 0) priority = 0
-        else priority = 1
-
         if (!object[subject]) object[subject] = []
-        object[subject].push({ elem, title, period, priority })
+        object[subject].push({ elem, title, period })
     })
 
     let tiles = []
@@ -165,7 +159,7 @@ async function renderStudyguideList() {
             let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
             let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
             for (let i = 0; i < items.length; i++) {
-                const item = items.sort((a, b) => b.priority - a.priority)[i]
+                const item = items.sort((a, b) => a.period - b.period)[i]
 
                 let periodText = `Periode ${item.period}`
                 if (item.period < 1) periodText = "Geen periode"

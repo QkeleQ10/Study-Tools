@@ -404,20 +404,6 @@ function popstate() {
     })
 }
 
-async function getPeriodNumber(w = getWeekNumber()) {
-    const periodsArray = Object.values(syncedStorage['periods'])
-    let periodNumber = 0
-
-    periodsArray.forEach((e, i, arr) => {
-        let startWeek = Number(e),
-            endWeek = Number(arr[i + 1]) || Number(arr[0])
-        if (endWeek < startWeek && (w >= startWeek || w < endWeek)) periodNumber = i + 1
-        else if (w >= startWeek && w < endWeek) periodNumber = i + 1
-    })
-
-    return periodNumber
-}
-
 function parseSubject(string, enabled, subjects) {
     return new Promise(async (resolve, reject) => {
         if (!enabled) resolve({ subjectAlias: '', subjectName: '', stringBefore: string, stringAfter: '', success: false })

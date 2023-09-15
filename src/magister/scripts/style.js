@@ -537,6 +537,10 @@ a.appbar-button,
     transition: background 200ms;
 }
 
+.menu-host {
+    transition: width 200ms, min-width 200ms;
+}
+
 .appbar-host,
 .main-menu>li.active>a,
 .main-menu>li>a:hover {

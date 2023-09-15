@@ -680,6 +680,13 @@ a.st-keyboard-hint.clicked {
     }
 }
 
+@keyframes floatLeft {
+    from {
+        opacity: 0;
+        translate: 200px;
+    }
+}
+
 @keyframes moveX {
     from {
         left: 0;
