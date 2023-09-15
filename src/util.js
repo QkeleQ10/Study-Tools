@@ -140,16 +140,18 @@ async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
         snackbarWrapper = await awaitElement('#st-snackbars')
     snackbarWrapper.append(snackbar)
     snackbar.innerText = body
-    snackbar.addEventListener('dblclick', () => {
-        snackbar.classList.remove('open')
-        setTimeout(() => snackbar.remove(), 2000)
-    })
+
     buttons.forEach(element => {
         let a = document.createElement('a')
         snackbar.append(a)
         setAttributes(a, element)
         if (element.innerText) a.innerText = element.innerText
         a.addEventListener('click', event => event.stopPropagation())
+    })
+    let snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
+    snackbarDismiss.addEventListener('click', () => {
+        snackbar.classList.remove('open')
+        setTimeout(() => snackbar.remove(), 2000)
     })
     setTimeout(() => snackbar.classList.add('open'), 50)
     if (duration === 0) {
