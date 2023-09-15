@@ -35,6 +35,7 @@
     font: 16px 'Segoe UI', system-ui;
     border: 1px solid #222;
     box-shadow: 0 0 16px 0 rgba(0, 0, 0, 1);
+    overflow: hidden;
     transition: translate 200ms, opacity 200ms, max-height 200ms, min-height 200ms, padding 200ms, margin 200ms, line-height 200ms;
 }
 
@@ -59,4 +60,17 @@
     text-transform: uppercase;
     font-weight: bold;
     cursor: pointer;
+}
+
+.snackbar-dismiss {
+    position: absolute;
+    top: 14px;
+    right: 20px;
+    transform: translateX(50px);
+    pointer-events: none;
+}
+
+div:hover>.snackbar-dismiss {
+    transform: none;
+    pointer-events: all;
 }

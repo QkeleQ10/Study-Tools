@@ -118,9 +118,14 @@ div.loading-overlay {
 }
 
 .st-button.icon {
+    display: block;
     background: var(--st-background-primary);
     color: var(--st-foreground-primary);
-    width: 32px;
+    font: 500 18px 'Font Awesome 5 Pro';
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    max-height: 32px;
     padding: 0;
     border-radius: 50%;
 }
