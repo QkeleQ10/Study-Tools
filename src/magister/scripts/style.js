@@ -1046,6 +1046,46 @@ h3:active> .icon-up-arrow:before {
 .menu-button:has(#help-menu):has(.user-menu) {
     overflow: visible;
 }
+
+.challenge-container {
+    color: var(--st-foreground-primary);
+}
+
+.podium .completed-challenge {
+    background-color: var(--st-background-tertiary);
+}
+
+.podium .dna-input-group {
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+}
+
+.podium .dna-input-group:hover {
+    border-color: var(--st-foreground-accent);
+}
+
+.podium .dna-input-group-prefix {
+    color: var(--st-foreground-accent);
+}
+
+.podium h1 {
+    color: var(--st-foreground-accent);
+}
+
+.podium button {
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+    transition: filter 200ms;
+}
+
+.podium button:hover {
+    background-color: var(--st-accent-primary);
+    filter: brightness(var(--st-hover-brightness));
+}
+
+.podium input {
+    color: var(--st-foreground-primary) !important;
+}
 `, 'study-tools')
     }
 

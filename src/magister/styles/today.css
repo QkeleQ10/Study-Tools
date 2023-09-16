@@ -154,6 +154,7 @@
     text-align: start;
     overflow: hidden;
     cursor: pointer;
+    /* animation: floatUp 200ms; */
 }
 
 .st-vd-event.tight {
@@ -329,7 +330,11 @@
 }
 
 #st-vd-widget-grades.st-unread {
-    background: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary));
+    background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary));
+}
+
+#st-vd-widget-grades.st-unread * {
+    color: var(--st-contrast-accent) !important;
 }
 
 #st-vd-widget-grades-last {

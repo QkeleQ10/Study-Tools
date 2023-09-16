@@ -58,6 +58,7 @@ async function today() {
 
     // TODO: prevent overlap
     // TODO: auto update state
+    // TODO: config
     async function todaySchedule() {
         const daysToGather = 30
         const daysToShowSetting = 1
@@ -86,7 +87,20 @@ async function today() {
         else renderSchedule(daysToShowSetting, 'schedule', 'title-formatted')
 
         function renderSchedule(daysToShow, viewMode, titleMode) {
-            schedule.classList.add(viewMode, titleMode)
+            if (viewMode === 'list') {
+                schedule.classList.add('list')
+                schedule.classList.remove('schedule')
+            } else {
+                schedule.classList.remove('list')
+                schedule.classList.add('schedule')
+            }
+            if (titleMode === 'title-magister') {
+                schedule.classList.add('title-magister')
+                schedule.classList.remove('title-formatted')
+            } else {
+                schedule.classList.remove('title-magister')
+                schedule.classList.add('title-formatted')
+            }
 
             let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
             let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule)
@@ -123,7 +137,10 @@ async function today() {
                 return latestHour
             }, null)
 
-            if (timeInHours(now) > agendaEnd && daysToShow === 1) {
+            // Add another column if the day is over
+            if (timeInHours(now) > agendaEnd
+                && daysToShow === daysToShowSetting
+                && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)) {
                 renderSchedule(daysToShow + 1, viewMode, titleMode)
                 return
             }
@@ -149,7 +166,7 @@ async function today() {
                     'data-view': viewMode || 'schedule'
                 }),
                     colHead
-                if (viewMode !== 'list' && a.length > 1)
+                if (viewMode !== 'list' && (a.length > 1 || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`))
                     colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
                         class: 'st-vd-col-head',
                         'data-today': (key === now.toISOString().split('T')[0]),
@@ -209,7 +226,7 @@ async function today() {
                     else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
                     if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
                     else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
-                    if (item.Type === 7 && item.Vakken?.[0]) chips.push({ name: "Ingeschreven", type: 'ok' })
+                    if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
                     else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 
                     let eventChipsWrapper = element('div', `st-vd-event-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
@@ -226,7 +243,8 @@ async function today() {
             })
         }
 
-        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '' })
+        // Allow for 5-day view
+        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '', title: "Vijf dagen weergeven" })
         todayExpander.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
@@ -242,6 +260,7 @@ async function today() {
                 todayExpander.dataset.icon = ''
                 verifyDisplayMode()
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+                schedule.innerText = ''
                 renderSchedule(5, 'schedule', 'title-formatted')
             }
         })
@@ -263,7 +282,7 @@ async function today() {
     }
 
     async function todayWidgets() {
-        let widgetsToggler = element('button', 'st-vd-widget-toggler', container, { class: 'st-button icon', innerText: '' })
+        let widgetsToggler = element('button', 'st-vd-widget-toggler', container, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
             if (widgets.classList.contains('st-shown')) {
                 widgets.setAttribute('class', 'st-hiding')
@@ -284,7 +303,7 @@ async function today() {
         let selectedWidgets = ['grades', 'homework', 'messages', 'assignments']
         let widgetFunctions = {
 
-            // WIDGETS
+            // TODO WIDGETS
             // ✅ Huiswerk
             // Cijfers
             // ✅ Opdrachten
@@ -293,6 +312,7 @@ async function today() {
             // Tellertjes
             // ...
 
+            // TODO: Mark as read (local viewedGrades)
             grades: async () => {
                 let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
                 let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
@@ -311,7 +331,7 @@ async function today() {
                 if (true) widgetElement.classList.add('st-unread')
 
                 let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '8,4' })
-                let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, {innerText: 'Aardrijkskunde'})
+                let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'Aardrijkskunde' })
             },
 
             homework: () => {
