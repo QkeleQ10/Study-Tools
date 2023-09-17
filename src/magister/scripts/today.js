@@ -12,7 +12,7 @@ async function popstate() {
 async function today() {
     const sheet = false
 
-    if (!syncedStorage['magister-vd-overhaul']) return
+    if (!syncedStorage['vd-enabled']) return
     let mainView = await awaitElement('div.view:has(#vandaag-container)'),
         container = element('div', 'st-vd', mainView),
         header = element('div', 'st-vd-header', container),
@@ -61,7 +61,7 @@ async function today() {
     // TODO: config
     async function todaySchedule() {
         const daysToGather = 30
-        const daysToShowSetting = 1
+        const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
         const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
 
         let req = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
@@ -137,10 +137,13 @@ async function today() {
                 return latestHour
             }, null)
 
-            // Add another column if the day is over
-            if (timeInHours(now) > agendaEnd
+            // Add another column if the day is over (given the user has not disabled vd-schedule-extra-day)
+            if (
+                timeInHours(now) > agendaEnd
                 && daysToShow === daysToShowSetting
-                && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)) {
+                && syncedStorage['vd-schedule-extra-day']
+                && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
+            ) {
                 renderSchedule(daysToShow + 1, viewMode, titleMode)
                 return
             }
@@ -152,6 +155,7 @@ async function today() {
                 }
                 if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd) {
                     let nowMarker = element('div', `st-vd-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
+                    nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
                 }
             }
 
@@ -235,8 +239,6 @@ async function today() {
                     })
                 })
 
-                setTimeout(() => document.querySelector('.st-vd-event[data-ongoing=true]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50)
-
                 // TODO: expand button that rerenders with daysToShow = 5. Also collapse button to undo this
 
                 // TODO: gap when days are not successive
@@ -244,7 +246,7 @@ async function today() {
         }
 
         // Allow for 5-day view
-        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '', title: "Vijf dagen weergeven" })
+        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
         todayExpander.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
@@ -313,6 +315,7 @@ async function today() {
             // ...
 
             // TODO: Mark as read (local viewedGrades)
+            // TODO
             grades: async () => {
                 let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
                 let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
@@ -330,8 +333,8 @@ async function today() {
 
                 if (true) widgetElement.classList.add('st-unread')
 
-                let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '8,4' })
-                let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'Aardrijkskunde' })
+                let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '-' })
+                let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
             },
 
             homework: () => {

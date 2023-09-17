@@ -1091,7 +1091,7 @@ h3:active> .icon-up-arrow:before {
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
-    if (syncedStorage['magister-vd-overhaul']) {
+    if (syncedStorage['vd-enabled']) {
         createStyle(`
 #vandaag-container .main .content-container, #vandaag-container dna-page-header {
     display: none !important;

@@ -207,18 +207,20 @@ export default [
     {
         id: "enhancements",
         settings: [
+            // TODO: possibly condense vd-enabled and vd-schedule-view into one: vd-view (off, schedule, list)
             {
-                id: "magister-vd-overhaul",
+                id: "vd-enabled",
                 title: "Verbeterd startscherm",
                 default: true,
             },
+            // TODO: possibly a setting to determine the widgets panel display mode: vd-widgets-view: (split, overlay)
             {
                 id: "vd-schedule-view",
-                title: "Roosterweergave op startscherm",
+                title: "Weergave rooster",
                 type: "SegmentedButton",
                 default: "schedule",
                 conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
+                    { settingId: 'vd-enabled', operator: 'equal', value: true }
                 ],
                 options: [
                     {
@@ -231,6 +233,32 @@ export default [
                         title: "Lijst",
                         icon: "list"
                     },
+                ],
+            },
+            {
+                id: "vd-schedule-days",
+                title: "Aantal dagen weergeven",
+                type: "SlideInput",
+                default: 1,
+                format: " d",
+                decimals: 0,
+                min: 1,
+                max: 5,
+                step: 1,
+                conditions: [
+                    { settingId: 'vd-enabled', operator: 'equal', value: true },
+                    { settingId: 'vd-schedule-view', operator: 'equal', value: 'schedule' }
+                ],
+            },
+            {
+                id: "vd-schedule-extra-day",
+                title: "Extra dag weergeven",
+                subtitle: "Aan het eind van de schooldag alvast de volgende schooldag weergeven.",
+                default: true,
+                conditions: [
+                    { settingId: 'vd-enabled', operator: 'equal', value: true },
+                    { settingId: 'vd-schedule-view', operator: 'equal', value: 'schedule' },
+                    { settingId: 'vd-schedule-days', operator: 'equal', value: 1 }
                 ],
             },
             {
@@ -346,24 +374,12 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
-            // INCORPORATE INTO THE OVERLAY
-            // BROWSER NOT EQUAL OPERATOR
-            // {
-            //     id: "gamification-enabled",
-            //     title: "Gamificatie",
-            //     subtitle: "Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
-            //     default: false,
-            //     conditions: [
-            //         { settingId: 'beta-options', operator: 'equal', value: true },
-            //         { operator: 'browser not equal', value: 'firefox' }
-            //     ],
-            // },
+            // TODO: gamification
         ]
     },
     {
         id: "about",
         settings: [
-            // about!
             {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
@@ -385,6 +401,7 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
+            // TODO: setting to disable color adaptation for dark theme
         ]
     },
 ]

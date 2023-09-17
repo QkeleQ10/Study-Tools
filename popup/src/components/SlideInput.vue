@@ -25,7 +25,7 @@ function formatValue(val) {
             return Number(val).toLocaleString('nl-NL', { style: 'percent', minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 
         default:
-            return Number(val).toLocaleString('nl-NL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + 'px'
+            return Number(val).toLocaleString('nl-NL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + props.setting.format
     }
 }
 </script>
