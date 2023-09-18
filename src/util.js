@@ -1,5 +1,6 @@
 let syncedStorage = {},
     eggs = [],
+    apiCache = {},
     schoolName = window.location.href.includes('magister') ? window.location.hostname.split('.')[0] : undefined
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -59,6 +60,28 @@ function element(tagName, id, parent, attributes) {
         if (attributes) setAttributes(elem, attributes)
     }
     return elem
+}
+
+// Wrapper for fetch().json() with caching
+async function useApi(url, options) {
+    return new Promise(async (resolve, reject) => {
+        // If the cached result is less than 20 seconds old, use it!
+        if (apiCache[url] && (new Date() - apiCache[url].date) < 20000) {
+            resolve(apiCache[url])
+        }
+        else {
+            const res = await fetch(url, options)
+            if (!res.ok) {
+                showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
+                if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+                return reject(res.status)
+            }
+            const json = await res.json()
+            resolve(json)
+            // Cache the result and include the date
+            apiCache[url] = { ...json, date: new Date() }
+        }
+    })
 }
 
 function awaitElement(querySelector, all, duration) {
@@ -162,7 +185,7 @@ async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
         setTimeout(() => snackbar.remove(), 2000)
     })
     setTimeout(() => snackbar.classList.add('open'), 50)
-    if (duration === 0) {
+    if (duration !== 0) {
         setTimeout(() => snackbar.classList.remove('open'), duration)
         setTimeout(() => snackbar.remove(), duration + 2000)
     }

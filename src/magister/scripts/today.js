@@ -73,14 +73,8 @@ async function today() {
         token = req.token
         userId = req.userId
 
-        const eventsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
-        if (!eventsRes.ok) {
-            showSnackbar(`Fout ${eventsRes.status}\nVernieuw de pagina en probeer het opnieuw`)
-            if (eventsRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-            return
-        }
-        const eventsJson = await eventsRes.json()
-        events = eventsJson.Items
+        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+        let events = eventsRes.Items
 
         // Widgets may now be rendered
         todayWidgets(widgets)
@@ -219,6 +213,8 @@ async function today() {
                     let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
                     // Render the event element
+                    // TODO: overlap is still broken!
+                    // TODO: all-day events show up as normal ones.
                     let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
                     if (eventElement.clientHeight < 72 && viewMode !== 'list') eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
@@ -308,6 +304,7 @@ async function today() {
             zoomSetting += .1
             saveToStorage('vd-zoom', zoomSetting, 'local')
             document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+            showSnackbar(`Zoomniveau ${Math.round(zoomSetting * 100)}%`, 2000)
             if (magisterMode) renderSchedule('list', 'title-magister')
             else renderSchedule('schedule', 'title-formatted')
         })
@@ -316,6 +313,7 @@ async function today() {
             zoomSetting -= .1
             saveToStorage('vd-zoom', zoomSetting, 'local')
             document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+            showSnackbar(`Zoomniveau ${Math.round(zoomSetting * 100)}%`, 2000)
             if (magisterMode) renderSchedule('list', 'title-magister')
             else renderSchedule('schedule', 'title-formatted')
         })
@@ -348,7 +346,7 @@ async function today() {
     }
 
     async function todayWidgets() {
-        let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
+        let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
             if (widgets.classList.contains('st-shown')) {
                 widgets.setAttribute('class', 'st-hiding')
@@ -366,7 +364,10 @@ async function today() {
         })
 
         let now = new Date()
-        let selectedWidgets = ['grades', 'homework', 'messages', 'assignments']
+        let gatherStart = now,
+            gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
+
+        let userOrder = ['counters', 'grades', 'homework', 'messages', 'assignments']
         let widgetFunctions = {
 
             // TODO WIDGETS
@@ -380,167 +381,192 @@ async function today() {
 
             // TODO: Mark as read (local viewedGrades)
             // TODO
-            grades: async () => {
-                let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
-                let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
+            counters: async () => {
+                return new Promise(async resolve => {
+                    let widgetElement = element('div', 'st-vd-widget-counters', widgets, { class: 'st-widget' })
 
-                const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: token } })
-                if (!gradesRes.ok) {
-                    showSnackbar(`Fout ${gradesRes.status}\nVernieuw de pagina en probeer het opnieuw`)
-                    if (gradesRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                    return
-                }
-                const gradesJson = await gradesRes.json()
-                const grades = gradesJson.items
-                console.log(grades)
-                const mappedGrades = grades.map(item => item)
+                    const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
+                    const unreadMessages = messagesRes.items
+                    if (unreadMessages.length > 0) {
+                        let messagesMetric = element('div', 'st-vd-widget-counters-messages', widgetElement, { class: 'st-metric', innerText: unreadMessages.length, 'data-description': "Berichten" })
+                    }
 
-                if (true) widgetElement.classList.add('st-unread')
+                    const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+                    const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                    if (homeworkEvents.length > 0) {
+                        let homeworkMetric = element('div', 'st-vd-widget-counters-homework', widgetElement, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" })
+                    }
 
-                let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '-' })
-                let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
+                    const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: token } })
+                    const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
+                    if (dueAssignments.length > 0) {
+                        let homeworkMetric = element('div', 'st-vd-widget-counters-assignments', widgetElement, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" })
+                    }
+
+                    resolve()
+                })
             },
 
-            homework: () => {
-                let eventsWithHomework = events.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+            grades: async () => {
+                return new Promise(async resolve => {
+                    let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
+                    let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
 
-                if (eventsWithHomework.length < 1) return
-                let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
-                let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${eventsWithHomework.length} item${eventsWithHomework.length > 1 ? 's' : ''} in de komende maand` })
+                    const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: token } })
+                    const recentGrades = gradesJson.items.map(item => item)
+                    console.log(recentGrades)
 
-                eventsWithHomework.forEach(item => {
-                    let subjectNames = item.Vakken?.map((e, i, a) => {
-                        if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
-                        return e.Naam
-                    }) || [item.Omschrijving]
-                    if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
+                    if (true) widgetElement.classList.add('st-unread')
 
-                    let
-                        date = `week ${getWeekNumber(new Date(item.Start))}, ${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                    if (getWeekNumber(new Date(item.Start)) === getWeekNumber())
-                        date = `${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                    if (new Date(item.Start).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
-                        date = `morgen ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
-                    if (new Date(item.Start).toDateString() === new Date().toDateString())
-                        date = `vandaag ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
+                    let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '-' })
+                    let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
 
-                    let eventElement = element('button', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
-                    eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
-                    let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, {
-                        class: 'st-list-timestamp',
-                        innerText: date
-                    })
-                    let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
-                    let eventContent = element('div', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
-                    eventContent.setHTML(item.Inhoud)
-                    if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
-
-                    let chips = []
-                    if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
-                    else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
-                    if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
-                    else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
-
-                    let eventChipsWrapper = element('div', `st-vd-widget-homework-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
-                    chips.forEach(chip => {
-                        let chipElement = element('span', `st-vd-widget-homework-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-                    })
+                    resolve(widgetElement)
                 })
             },
 
             messages: async () => {
-                const messagesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
-                if (!messagesRes.ok) {
-                    showSnackbar(`Fout ${messagesRes.status}\nVernieuw de pagina en probeer het opnieuw`)
-                    if (messagesRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                    return
-                }
-                const messagesJson = await messagesRes.json()
-                const messages = messagesJson.items
+                return new Promise(async resolve => {
+                    const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
+                    const unreadMessages = messagesRes.items
 
-                if (messages.length < 1) return
-                let widgetElement = element('div', 'st-vd-widget-messages', widgets, { class: 'st-tile st-widget' })
-                let widgetTitle = element('div', 'st-vd-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${messages.length} ongelezen bericht${messages.length > 1 ? 'en' : ''}` })
+                    if (unreadMessages.length < 1) return resolve()
+                    let widgetElement = element('div', 'st-vd-widget-messages', widgets, { class: 'st-tile st-widget' })
+                    let widgetTitle = element('div', 'st-vd-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${unreadMessages.length} ongelezen bericht${unreadMessages.length > 1 ? 'en' : ''}` })
 
-                messages.forEach(item => {
-                    let messageElement = element('button', `st-vd-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
-                    messageElement.addEventListener('click', () => window.location.hash = `#/berichten`)
-                    let messageDate = element('span', `st-vd-widget-messages-${item.id}-date`, messageElement, {
-                        class: 'st-list-timestamp',
-                        innerText: new Date(item.verzondenOp).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
+                    unreadMessages.forEach(item => {
+                        let messageElement = element('button', `st-vd-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
+                        messageElement.addEventListener('click', () => window.location.hash = `#/berichten`)
+                        let messageDate = element('span', `st-vd-widget-messages-${item.id}-date`, messageElement, {
+                            class: 'st-list-timestamp',
+                            innerText: new Date(item.verzondenOp).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
+                        })
+                        let messageSender = element('span', `st-vd-widget-messages-${item.id}-title`, messageElement, { class: 'st-list-title', innerText: item.afzender.naam })
+                        let messageSubject = element('div', `st-vd-widget-messages-${item.id}-content`, messageElement, { class: 'st-list-content', innerText: item.onderwerp })
+
+                        let chips = []
+                        if (item.heeftPrioriteit) chips.push({ name: "Belangrijk", type: 'warn' })
+
+                        let messageChipsWrapper = element('div', `st-vd-widget-messages-${item.id}-labels`, messageElement, { class: 'st-chips-wrapper' })
+                        chips.forEach(chip => {
+                            let chipElement = element('span', `st-vd-widget-messages-${item.id}-label-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        })
                     })
-                    let messageSender = element('span', `st-vd-widget-messages-${item.id}-title`, messageElement, { class: 'st-list-title', innerText: item.afzender.naam })
-                    let messageSubject = element('div', `st-vd-widget-messages-${item.id}-content`, messageElement, { class: 'st-list-content', innerText: item.onderwerp })
 
-                    let chips = []
-                    if (item.heeftPrioriteit) chips.push({ name: "Belangrijk", type: 'warn' })
+                    resolve(widgetElement)
+                })
+            },
 
-                    let messageChipsWrapper = element('div', `st-vd-widget-messages-${item.id}-labels`, messageElement, { class: 'st-chips-wrapper' })
-                    chips.forEach(chip => {
-                        let chipElement = element('span', `st-vd-widget-messages-${item.id}-label-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+            homework: async () => {
+                return new Promise(async resolve => {
+                    const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+                    const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+
+                    if (homeworkEvents.length < 1) return resolve()
+                    let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
+                    let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} in de komende maand` })
+
+                    homeworkEvents.forEach(item => {
+                        let subjectNames = item.Vakken?.map((e, i, a) => {
+                            if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
+                            return e.Naam
+                        }) || [item.Omschrijving]
+                        if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
+
+                        let
+                            date = `week ${getWeekNumber(new Date(item.Start))}, ${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                        if (getWeekNumber(new Date(item.Start)) === getWeekNumber())
+                            date = `${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                        if (new Date(item.Start).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
+                            date = `morgen ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
+                        if (new Date(item.Start).toDateString() === new Date().toDateString())
+                            date = `vandaag ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
+
+                        let eventElement = element('button', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
+                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                        let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, {
+                            class: 'st-list-timestamp',
+                            innerText: date
+                        })
+                        let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
+                        let eventContent = element('div', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
+                        eventContent.setHTML(item.Inhoud)
+                        if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
+
+                        let chips = []
+                        if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
+                        else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
+                        if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
+                        else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
+
+                        let eventChipsWrapper = element('div', `st-vd-widget-homework-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
+                        chips.forEach(chip => {
+                            let chipElement = element('span', `st-vd-widget-homework-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        })
                     })
+
+                    resolve(widgetElement)
                 })
             },
 
             assignments: async () => {
-                const assignmentsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: token } })
-                if (!assignmentsRes.ok) {
-                    showSnackbar(`Fout ${assignmentsRes.status}\nVernieuw de pagina en probeer het opnieuw`)
-                    if (assignmentsRes.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                    return
-                }
-                const assignmentsJson = await assignmentsRes.json()
-                const assignments = assignmentsJson.Items
-                const filteredAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+                return new Promise(async resolve => {
+                    let statements = []
 
-                let statements = []
-                const openedAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
-                if (openedAssignments.length > 0) statements.push(`${openedAssignments.length} openstaande opdracht${openedAssignments.length > 1 ? 'en' : ''}`)
-                const markedAssignments = assignments.filter(item => item.BeoordeeldOp)
-                if (markedAssignments.length > 0) statements.push(`${markedAssignments.length} beoordeelde opdracht${markedAssignments.length > 1 ? 'en' : ''}`)
+                    const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: token } })
+                    const relevantAssignments = assignmentsRes.Items.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+                    const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
+                    if (dueAssignments.length > 0) statements.push(`${dueAssignments.length} openstaande opdracht${dueAssignments.length > 1 ? 'en' : ''}`)
+                    const markedAssignments = assignmentsRes.Items.filter(item => item.BeoordeeldOp)
+                    if (markedAssignments.length > 0) statements.push(`${markedAssignments.length} beoordeelde opdracht${markedAssignments.length > 1 ? 'en' : ''}`)
 
-                if (filteredAssignments.length < 1) return
-                let widgetElement = element('div', 'st-vd-widget-assignments', widgets, { class: 'st-tile st-widget' })
-                let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
+                    if (relevantAssignments.length < 1) return resolve()
+                    let widgetElement = element('div', 'st-vd-widget-assignments', widgets, { class: 'st-tile st-widget' })
+                    let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
 
-                filteredAssignments.forEach(item => {
-                    let
-                        date = `week ${getWeekNumber(new Date(item.InleverenVoor))}, ${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                    if (getWeekNumber(new Date(item.InleverenVoor)) === getWeekNumber())
-                        date = `${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                    if (new Date(item.InleverenVoor).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
-                        date = `morgen ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
-                    if (new Date(item.InleverenVoor).toDateString() === new Date().toDateString())
-                        date = `vandaag ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
+                    relevantAssignments.forEach(item => {
+                        let
+                            date = `week ${getWeekNumber(new Date(item.InleverenVoor))}, ${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                        if (getWeekNumber(new Date(item.InleverenVoor)) === getWeekNumber())
+                            date = `${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+                        if (new Date(item.InleverenVoor).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
+                            date = `morgen ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
+                        if (new Date(item.InleverenVoor).toDateString() === new Date().toDateString())
+                            date = `vandaag ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
 
-                    let assignmentElement = element('button', `st-vd-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
-                    assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
-                    let assignmentDate = element('span', `st-vd-widget-assignments-${item.Id}-date`, assignmentElement, {
-                        class: 'st-list-timestamp',
-                        innerText: date
+                        let assignmentElement = element('button', `st-vd-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
+                        assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
+                        let assignmentDate = element('span', `st-vd-widget-assignments-${item.Id}-date`, assignmentElement, {
+                            class: 'st-list-timestamp',
+                            innerText: date
+                        })
+                        let assignmentTitle = element('span', `st-vd-widget-assignments-${item.Id}-title`, assignmentElement, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
+                        let assignmentContent = element('div', `st-vd-widget-assignments-${item.Id}-content`, assignmentElement, { class: 'st-list-content' })
+                        assignmentContent.setHTML(item.Omschrijving)
+                        if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
+
+                        let chips = []
+                        if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
+
+                        let assignmentChipsWrapper = element('div', `st-vd-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
+                        chips.forEach(chip => {
+                            let chipElement = element('span', `st-vd-widget-assignments-${item.id}-label-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        })
                     })
-                    let assignmentTitle = element('span', `st-vd-widget-assignments-${item.Id}-title`, assignmentElement, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
-                    let assignmentContent = element('div', `st-vd-widget-assignments-${item.Id}-content`, assignmentElement, { class: 'st-list-content' })
-                    assignmentContent.setHTML(item.Omschrijving)
-                    if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
-                    let chips = []
-                    if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
-
-                    let assignmentChipsWrapper = element('div', `st-vd-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
-                    chips.forEach(chip => {
-                        let chipElement = element('span', `st-vd-widget-assignments-${item.id}-label-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-                    })
+                    resolve(widgetElement)
                 })
-            }
+            },
 
         }
 
-        selectedWidgets.forEach(widgetId => {
-            widgetFunctions[widgetId].call()
-        })
+        // Draw the widgets in the specified order
+        for (const functionName of userOrder) {
+            await widgetFunctions[functionName]()
+        }
 
-        // TODO: check whether widget order is correct. possibly use promises and Promise.all()
+        // Allow for editing
+        let editButton = element('button', 'st-vd-widgets-edit', widgets, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
     }
 
     function verifyDisplayMode() {

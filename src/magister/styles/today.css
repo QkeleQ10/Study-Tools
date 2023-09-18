@@ -1,9 +1,18 @@
-#st-vd button {
+@property --hour-zoom {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 1;
+}
+
+#st-vd button.st-list-item,
+#st-vd button.st-vd-event {
     transition: filter 200ms;
 }
 
-#st-vd button:hover,
-#st-vd button:focus {
+#st-vd button.st-list-item:hover,
+#st-vd button.st-list-item:focus-visible,
+#st-vd button.st-vd-event:hover,
+#st-vd button.st-vd-event:focus-visible {
     filter: brightness(var(--st-hover-brightness));
 }
 
@@ -76,6 +85,7 @@
     padding-inline: 32px;
     height: 100%;
     overflow-y: auto;
+    transition: --hour-zoom 200ms;
 }
 
 .st-vd-tick {
@@ -333,6 +343,16 @@
     font-size: 12px;
 }
 
+#st-vd-widgets-edit {
+    margin-inline: auto;
+}
+
+#st-vd-widget-counters {
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 0;
+}
+
 #st-vd-widget-grades.st-unread {
     background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary));
 }
@@ -417,7 +437,6 @@
     position: fixed;
     top: 32px;
     right: 432px;
-    color: var(--st-foreground-insignificant);
     transition: right 200ms;
 }
 
@@ -429,12 +448,6 @@
     right: 432px;
 }
 
-#st-vd #st-vd-today-expander {
-    rotate: 0;
-    transition: rotate 200ms, box-shadow 200ms, filter 200ms;
-}
-
-
 #st-vd.sheet {
     grid-template:
         'header' auto
@@ -444,36 +457,17 @@
 }
 
 #st-vd.sheet #st-vd-widgets {
-    display: none;
     position: fixed;
     right: 0;
     top: 0;
     height: 100%;
-    translate: 400px;
     backdrop-filter: blur(4px);
     background-color: var(--st-background-transparent);
-    transition: translate 200ms;
+    animation: widgetsOut 200ms both;
 }
 
-#st-vd.sheet #st-vd-widgets.st-showing {
-    display: flex;
-    translate: 400px;
-    z-index: 2;
-    transition: translate 100ms;
-}
-
-#st-vd.sheet #st-vd-widgets.st-shown {
-    display: flex;
-    translate: 0px;
-    z-index: 2;
-    transition: translate 100ms;
-}
-
-#st-vd.sheet #st-vd-widgets.st-hiding {
-    display: flex;
-    translate: 400px;
-    z-index: 2;
-    transition: translate 200ms;
+#st-vd.sheet.sheet-shown #st-vd-widgets {
+    animation: widgetsIn 100ms both;
 }
 
 #st-vd.sheet #st-vd-widget-toggler {
@@ -485,4 +479,34 @@
 #st-vd.sheet.sheet-shown #st-vd-widget-toggler {
     rotate: 180deg;
     transition: rotate 200ms, filter 200ms;
+}
+
+@keyframes widgetsIn {
+    0% {
+        display: none;
+    }
+
+    1% {
+        display: flex;
+        translate: 400px;
+    }
+
+    100% {
+        translate: 0;
+    }
+}
+
+@keyframes widgetsOut {
+    0% {
+        translate: 0;
+    }
+
+    99% {
+        display: flex;
+        translate: 400px;
+    }
+
+    100% {
+        display: none;
+    }
 }

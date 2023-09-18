@@ -385,7 +385,8 @@ html body .k-popup.k-list-container .k-item,
 .k-calendar,
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
-.attachment-bar, .attachments {
+.attachment-bar, .attachments,
+.block h3 {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }

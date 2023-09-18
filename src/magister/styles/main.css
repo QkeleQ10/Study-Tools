@@ -101,7 +101,7 @@ div.loading-overlay {
     color: var(--st-contrast-accent);
     cursor: pointer;
     user-select: none;
-    transition: filter 200ms, transform 200ms, border 200ms, color 200ms;
+    transition: filter 200ms, transform 200ms, border 200ms, color 200ms, background-color 200ms;
 }
 
 .st-button.small {
@@ -119,7 +119,7 @@ div.loading-overlay {
 
 .st-button.icon {
     display: block;
-    background: var(--st-background-primary);
+    background-color: transparent;
     color: var(--st-foreground-primary);
     font: 500 18px 'Font Awesome 5 Pro';
     min-width: 32px;
@@ -128,10 +128,18 @@ div.loading-overlay {
     max-height: 32px;
     padding: 0;
     border-radius: 50%;
+    transition: color 200ms, background-color 200ms, transform 200ms;
 }
 
 .st-button.icon:hover {
     color: var(--st-foreground-accent);
+    filter: none;
+}
+
+.st-button.icon:focus-visible, .st-button.icon:active {
+    background-color: var(--st-highlight-primary);
+    color: var(--st-foreground-accent);
+    filter: none;
 }
 
 .st-button.icon[data-icon]:before {
@@ -359,8 +367,8 @@ div.loading-overlay {
     justify-content: center;
     border-radius: calc(var(--st-border-radius) / 2);
     background: var(--st-contrast-accent);
-    color: #888;
-    font: 14px var(--st-font-family-secondary);
+    color: #777;
+    font: 600 14px var(--st-font-family-secondary);
     border: 1px solid #e7e7e7;
     scale: 0;
     opacity: 0;

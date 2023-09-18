@@ -14,18 +14,21 @@ async function init() {
     setDefaults()
 
     chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
+        if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
+            userId = e.url.split('/personen/')[1].split('/')[0]
+            console.info("Intercepted user ID.")
+        }
         Object.values(e.requestHeaders).forEach(async obj => {
-            if (obj.name === 'Authorization' && e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
+            if (obj.name === 'Authorization') {
                 token = obj.value
-                userId = e.url.split('/personen/')[1].split('/')[0]
                 date = new Date()
-                console.info("Intercepted user token and user ID.")
+                console.info("Intercepted user token.")
             }
         })
 
     }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
 
-    console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + ["rooster op startpagina", "puntensysteem"].join(', '), "font-size: .8em")
+    console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport", "widgets startpagina", "rooster startpagina"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + ["puntensysteem"].join(', '), "font-size: .8em")
 }
 
 async function setDefaults() {
@@ -56,7 +59,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'getCredentials':
             console.info("Credentials requested.")
-            if (date && ((new Date()) - date) < 10000) {
+            if (date && ((new Date()) - date) < 20000) {
                 sendResponse({ token, userId })
                 console.info("Retrieved user token and user ID from cache and sent to content script.")
                 return true
