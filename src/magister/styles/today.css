@@ -98,10 +98,10 @@
     --relative-start: 0;
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
-    left: 6px;
+    left: 12px;
     height: 2px;
     width: calc(100% - 38px);
-    background-color: var(--st-accent-secondary);
+    background-image: linear-gradient(to right, var(--st-accent-secondary) 64px, transparent 128px);
     opacity: .5;
 }
 
@@ -134,11 +134,13 @@
 
 .st-vd-event {
     --relative-start: 0;
+    --cols: 1;
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * 100px + 2px);
-    height: calc(var(--duration) * var(--hour-zoom) * 100px - 4px);
+    height: calc(var(--duration) * var(--hour-zoom) * 100px - 3px);
     min-height: 48px;
-    width: 100%;
+    width: calc(100% / var(--cols));
+    left: calc(100% / var(--cols) * var(--cols-before));
     padding: 12px;
     display: grid;
     grid-template:
@@ -154,7 +156,7 @@
     text-align: start;
     overflow: hidden;
     cursor: pointer;
-    /* animation: floatUp 200ms; */
+    transition: filter 200ms, top 200ms, left 200ms, height 200ms, width 200ms;
 }
 
 .st-vd-event.tight {
@@ -176,7 +178,9 @@
 [data-view=list] .st-vd-event {
     position: relative;
     top: 0;
+    left: 0;
     height: 72px;
+    width: 100%;
     border-radius: 0;
     border-top-width: 0;
 }
@@ -406,21 +410,29 @@
     background: linear-gradient(to bottom, transparent, var(--st-background-secondary));
 }
 
-#st-vd #st-vd-today-expander {
+#st-vd #st-vd-button-wrapper {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 16px;
     position: fixed;
     top: 32px;
+    right: 432px;
+    color: var(--st-foreground-insignificant);
+    transition: right 200ms;
+}
+
+#st-vd.sheet #st-vd-button-wrapper {
     right: 32px;
-    translate: -400px;
+}
+
+#st-vd.sheet.sheet-shown #st-vd-button-wrapper {
+    right: 432px;
+}
+
+#st-vd #st-vd-today-expander {
     rotate: 0;
-    transition: translate 100ms, rotate 200ms, box-shadow 200ms, filter 200ms;
+    transition: rotate 200ms, box-shadow 200ms, filter 200ms;
 }
-
-#st-vd-today-expander.st-expanded {}
-
-#st-vd.sheet #st-vd-today-expander {
-    translate: -48px;
-}
-
 
 
 #st-vd.sheet {
@@ -466,18 +478,11 @@
 
 #st-vd.sheet #st-vd-widget-toggler {
     display: block;
-    position: fixed;
-    top: 32px;
-    right: 32px;
-    translate: 0;
     rotate: 0;
-    transition: translate 100ms, rotate 200ms, border 200ms, box-shadow 200ms, filter 200ms;
+    transition: rotate 200ms, filter 200ms;
 }
 
-#st-vd.sheet #st-vd-widget-toggler.st-shown {
-    translate: -400px;
+#st-vd.sheet.sheet-shown #st-vd-widget-toggler {
     rotate: 180deg;
-    border: var(--st-border);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    transition: translate 200ms, rotate 200ms, box-shadow 200ms, filter 200ms;
+    transition: rotate 200ms, filter 200ms;
 }

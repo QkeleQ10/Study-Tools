@@ -18,7 +18,8 @@ async function today() {
         header = element('div', 'st-vd-header', container),
         headerText = element('span', 'st-vd-header-span', header, { class: 'st-title' }),
         schedule = element('div', 'st-vd-schedule', container),
-        widgets = element('div', 'st-vd-widgets', container)
+        widgets = element('div', 'st-vd-widgets', container),
+        buttonWrapper = element('div', 'st-vd-button-wrapper', container)
 
     todaySchedule(schedule, widgets)
     // todayWidgets(widgets)
@@ -55,14 +56,15 @@ async function today() {
         header.removeAttribute('data-transition')
     }, 2500)
 
-
-    // TODO: prevent overlap
-    // TODO: auto update state
     // TODO: config
     async function todaySchedule() {
         const daysToGather = 30
         const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
+        let daysToShow = daysToShowSetting
         const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
+        let zoomSetting = await getFromStorage('vd-zoom', 'local') || 1
+
+        let interval
 
         let req = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
             gatherStart = new Date(),
@@ -83,10 +85,12 @@ async function today() {
         // Widgets may now be rendered
         todayWidgets(widgets)
 
-        if (magisterMode) renderSchedule(daysToShowSetting, 'list', 'title-magister')
-        else renderSchedule(daysToShowSetting, 'schedule', 'title-formatted')
+        if (magisterMode) renderSchedule('list', 'title-magister')
+        else renderSchedule('schedule', 'title-formatted')
 
-        function renderSchedule(daysToShow, viewMode, titleMode) {
+        function renderSchedule(viewMode, titleMode) {
+            clearInterval(interval)
+
             if (viewMode === 'list') {
                 schedule.classList.add('list')
                 schedule.classList.remove('schedule')
@@ -103,7 +107,7 @@ async function today() {
             }
 
             let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
-            let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule)
+            let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
 
             let now = new Date(),
                 itemsHidden = false
@@ -125,7 +129,6 @@ async function today() {
             })
 
             // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
-            // TODO only on shown days
             const agendaStart = Object.values(eventsPerDay).flat().reduce((earliestHour, currentItem) => {
                 let currentHour = timeInHours(currentItem.Start)
                 if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
@@ -139,12 +142,13 @@ async function today() {
 
             // Add another column if the day is over (given the user has not disabled vd-schedule-extra-day)
             if (
-                timeInHours(now) > agendaEnd
+                timeInHours(now) >= agendaEnd
                 && daysToShow === daysToShowSetting
                 && syncedStorage['vd-schedule-extra-day']
                 && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
             ) {
-                renderSchedule(daysToShow + 1, viewMode, titleMode)
+                daysToShow = daysToShowSetting + 1
+                renderSchedule(viewMode, titleMode)
                 return
             }
 
@@ -156,6 +160,23 @@ async function today() {
                 if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd) {
                     let nowMarker = element('div', `st-vd-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
                     nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                    interval = setInterval(() => {
+                        if (timeInHours(now) >= agendaEnd) {
+                            nowMarker.remove()
+                            clearInterval(interval)
+                        }
+                        if (
+                            timeInHours(now) >= agendaEnd
+                            && daysToShow === daysToShowSetting
+                            && syncedStorage['vd-schedule-extra-day']
+                            && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
+                        ) {
+                            renderSchedule(daysToShow + 1, viewMode, titleMode)
+                            return
+                        }
+                        now = new Date()
+                        nowMarker = element('div', `st-vd-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
+                    }, 30000)
                 }
             }
 
@@ -177,12 +198,28 @@ async function today() {
                         innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
                     })
 
+                let eventArr = checkCollision(eventsPerDay[key])
+
+                function checkCollision(eventArr) {
+                    for (var i = 0; i < eventArr.length; i++) {
+                        eventArr[i].cols = []
+                        eventArr[i].colsBefore = []
+                        for (var j = 0; j < eventArr.length; j++) {
+                            if (collidesWith(eventArr[i], eventArr[j])) {
+                                eventArr[i].cols.push(j)
+                                if (i > j) eventArr[i].colsBefore.push(j)
+                            }
+                        }
+                    }
+                    return eventArr
+                }
+
                 // Loop through all events of the day
-                eventsPerDay[key].forEach((item, i) => {
+                eventArr.forEach((item, i) => {
                     let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
                     // Render the event element
-                    let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}` })
+                    let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
                     if (eventElement.clientHeight < 72 && viewMode !== 'list') eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
@@ -238,15 +275,11 @@ async function today() {
                         let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                     })
                 })
-
-                // TODO: expand button that rerenders with daysToShow = 5. Also collapse button to undo this
-
-                // TODO: gap when days are not successive
             })
         }
 
         // Allow for 5-day view
-        let todayExpander = element('button', 'st-vd-today-expander', container, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
+        let todayExpander = element('button', 'st-vd-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
         todayExpander.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
@@ -254,8 +287,9 @@ async function today() {
                 todayExpander.dataset.icon = ''
                 verifyDisplayMode()
                 schedule.innerText = ''
-                if (magisterMode) renderSchedule(daysToShowSetting, 'list', 'title-magister')
-                else renderSchedule(daysToShowSetting, 'schedule', 'title-formatted')
+                daysToShow = daysToShowSetting
+                if (magisterMode) renderSchedule('list', 'title-magister')
+                else renderSchedule('schedule', 'title-formatted')
             } else {
                 schedule.classList.add('st-expanded')
                 todayExpander.classList.add('st-expanded')
@@ -263,9 +297,39 @@ async function today() {
                 verifyDisplayMode()
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
                 schedule.innerText = ''
-                renderSchedule(5, 'schedule', 'title-formatted')
+                daysToShow = 5
+                renderSchedule('schedule', 'title-formatted')
             }
         })
+
+        // Zoom buttons
+        let todayZoomIn = element('button', 'st-vd-today-zoom-in', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
+        todayZoomIn.addEventListener('click', () => {
+            zoomSetting += .1
+            saveToStorage('vd-zoom', zoomSetting, 'local')
+            document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+            if (magisterMode) renderSchedule('list', 'title-magister')
+            else renderSchedule('schedule', 'title-formatted')
+        })
+        let todayZoomOut = element('button', 'st-vd-today-zoom-out', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
+        todayZoomOut.addEventListener('click', () => {
+            zoomSetting -= .1
+            saveToStorage('vd-zoom', zoomSetting, 'local')
+            document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+            if (magisterMode) renderSchedule('list', 'title-magister')
+            else renderSchedule('schedule', 'title-formatted')
+        })
+
+        setInterval(() => {
+            let events = document.querySelectorAll('.st-vd-event[data-start][data-end]'),
+                now = new Date()
+
+            events.forEach(item => {
+                let ongoing = (new Date(item.dataset.start) < now && new Date(item.dataset.end) > now)
+                if (ongoing) item.dataset.ongoing = true
+                else item.dataset.ongoing = false
+            })
+        }, 30000)
 
         // STATUSES
         // Type=13: normaal blok
@@ -284,11 +348,11 @@ async function today() {
     }
 
     async function todayWidgets() {
-        let widgetsToggler = element('button', 'st-vd-widget-toggler', container, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
+        let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
             if (widgets.classList.contains('st-shown')) {
                 widgets.setAttribute('class', 'st-hiding')
-                widgetsToggler.setAttribute('class', 'st-button icon st-hidden')
+                container.classList.remove('sheet-shown')
                 setTimeout(() => {
                     widgets.setAttribute('class', 'st-hidden')
                 }, 200)
@@ -296,7 +360,7 @@ async function today() {
                 widgets.setAttribute('class', 'st-showing')
                 setTimeout(() => {
                     widgets.setAttribute('class', 'st-shown')
-                    widgetsToggler.setAttribute('class', 'st-button icon st-shown')
+                    container.classList.add('sheet-shown')
                 }, 10)
             }
         })
@@ -462,7 +526,6 @@ async function today() {
 
                     let chips = []
                     if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
-                    // TODO: allow for Ingeleverd state
 
                     let assignmentChipsWrapper = element('div', `st-vd-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
                     chips.forEach(chip => {
@@ -477,12 +540,13 @@ async function today() {
             widgetFunctions[widgetId].call()
         })
 
-        // TODO: order, possibly using promises and Promise.all()
+        // TODO: check whether widget order is correct. possibly use promises and Promise.all()
     }
 
     function verifyDisplayMode() {
         let widgets = document.querySelector('#st-vd-widgets')
         if (window.innerWidth < 1100 || sheet || document.querySelector('#st-vd-schedule')?.classList.contains('st-expanded')) {
+            container.classList.remove('sheet-shown')
             container.classList.add('sheet')
             widgets.setAttribute('class', 'st-shown')
             setTimeout(() => {
