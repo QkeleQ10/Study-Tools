@@ -343,8 +343,32 @@
     font-size: 12px;
 }
 
-#st-vd-widgets-edit, #st-vd-widgets-edit-finish {
+#st-vd-widgets-edit {
+    margin-top: auto;
     margin-inline: auto;
+}
+
+#st-vd-widgets-edit-finish {
+    position: absolute;
+    top: 32px;
+    right: 24px;
+}
+
+#st-vd-widgets-edit-title {
+    display: inline-block;
+    font: 700 18px var(--st-font-family-primary);
+    margin-block: 6px;
+}
+
+#st-vd-widgets-edit-include, #st-vd-widgets-edit-exclude {
+    display: inline-block;
+    font: 700 16px var(--st-font-family-primary);
+    margin-top: 18px;
+    margin-bottom: 12px;
+}
+
+#st-vd-widgets-edit-include {
+    margin-bottom: -4px;
 }
 
 #st-vd-widget-counters {

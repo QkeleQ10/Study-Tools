@@ -398,10 +398,10 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, .st-overlay, [id^="st-cf"], [id^="st-vd"], [id^="st-sw"], .k-animation-container').forEach(e => {
-        if (e.tagName === 'DIALOG') e.close()
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-vd"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
+    document.querySelectorAll('.st-overlay').forEach(e => { e.close() })
 }
 
 function parseSubject(string, enabled, subjects) {

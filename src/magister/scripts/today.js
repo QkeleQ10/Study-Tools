@@ -10,7 +10,11 @@ async function popstate() {
 
 // Page 'Vandaag'
 async function today() {
-    const sheet = false
+    console.log('Requested token')
+    let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+    token = req.token
+    userId = req.userId
+    console.log('Received token')
 
     if (!syncedStorage['vd-enabled']) return
     let mainView = await awaitElement('div.view:has(#vandaag-container)'),
@@ -19,10 +23,11 @@ async function today() {
         headerText = element('span', 'st-vd-header-span', header, { class: 'st-title' }),
         schedule = element('div', 'st-vd-schedule', container),
         widgets = element('div', 'st-vd-widgets', container),
-        buttonWrapper = element('div', 'st-vd-button-wrapper', container)
+        buttonWrapper = element('div', 'st-vd-button-wrapper', container),
+        sheetSetting = false
 
-    todaySchedule(schedule, widgets)
-    // todayWidgets(widgets)
+    todaySchedule()
+    todayWidgets()
 
     const date = new Date(),
         weekday = date.toLocaleString('nl-NL', { weekday: 'long' }),
@@ -56,33 +61,30 @@ async function today() {
         header.removeAttribute('data-transition')
     }, 2500)
 
-    // TODO: config
     async function todaySchedule() {
-        const daysToGather = 30
+        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        token = req.token
+        userId = req.userId
+
         const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
         let daysToShow = daysToShowSetting
+
+        // TODO: add a mutable override to the immutable magisterMode variable.
         const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
         let zoomSetting = await getFromStorage('vd-zoom', 'local') || 1
 
         let interval
 
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' }),
-            gatherStart = new Date(),
-            gatherEnd = new Date(gatherStart.getTime() + (86400000 * (daysToGather - 1)))
-
-        token = req.token
-        userId = req.userId
+        const gatherStart = new Date(),
+            gatherEnd = new Date(gatherStart.getTime() + (86400000 * 29))
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
-        let events = eventsRes.Items
+        const events = eventsRes.Items
 
-        // Widgets may now be rendered
-        todayWidgets(widgets)
-
+        // Start rendering
         if (magisterMode) renderSchedule('list', 'title-magister')
         else renderSchedule('schedule', 'title-formatted')
-
-        function renderSchedule(viewMode, titleMode) {
+        async function renderSchedule(viewMode, titleMode) {
             clearInterval(interval)
 
             if (viewMode === 'list') {
@@ -213,8 +215,8 @@ async function today() {
                     let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
                     // Render the event element
-                    // TODO: overlap is still broken!
-                    // TODO: all-day events show up as normal ones.
+                    // TODO: BUG: overlap is quite broken!
+                    // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
                     let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
                     if (eventElement.clientHeight < 72 && viewMode !== 'list') eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
@@ -318,6 +320,7 @@ async function today() {
             else renderSchedule('schedule', 'title-formatted')
         })
 
+        // Update ongoing events every 30 seconds
         setInterval(() => {
             let events = document.querySelectorAll('.st-vd-event[data-start][data-end]'),
                 now = new Date()
@@ -328,24 +331,13 @@ async function today() {
                 else item.dataset.ongoing = false
             })
         }, 30000)
-
-        // STATUSES
-        // Type=13: normaal blok
-        // Type=2: ingeschreven
-        // Type=7: KWT
-        // Type=16: pers planning
-        // Type=1: pers persoonlijk
-
-        // InfoType>0: heeft info
-        // InfoType=1: huiswerk
-        // InfoType=2: proefwerk
-
-        // Status=3: huiswerk
-        // Status=2: ingeschreven?
-        // Status=1: standaard?
     }
 
     async function todayWidgets() {
+        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        token = req.token
+        userId = req.userId
+
         let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
             if (widgets.classList.contains('st-shown')) {
@@ -367,7 +359,7 @@ async function today() {
         let gatherStart = now,
             gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
-        let userOrder = ['grades', 'homework', 'messages', 'assignments', 'EXCLUDE', 'counters']
+        let widgetsOrder = await getFromStorage('vd-widgets', 'local') || ['grades', 'homework', 'messages', 'assignments', 'EXCLUDE', 'counters']
         let widgetFunctions = {
 
             // TODO WIDGETS
@@ -379,8 +371,7 @@ async function today() {
             // Tellertjes
             // ...
 
-            // TODO: Mark as read (local viewedGrades)
-            // TODO
+            // TODO: Add more counters than just these 3
             counters: {
                 title: "Tellertjes",
                 render: async () => {
@@ -410,8 +401,46 @@ async function today() {
                 }
             },
 
+            // TODO: Include grades
+            // TODO: Mark as read (getFromStorage('viewedGrades', 'local'))
             grades: {
-                title: "Laatste cijfer",
+                title: "Cijfers",
+                options: [
+                    {
+                        title: "Widget weergeven",
+                        key: 'vd-widget-cf-widget',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Altijd",
+                                value: 'always'
+                            },
+                            {
+                                title: "Bij nieuw cijfer",
+                                value: 'new'
+                            }
+                        ]
+                    },
+                    {
+                        title: "Beoordeling weergeven",
+                        key: 'vd-widget-cf-result',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Altijd",
+                                value: 'always'
+                            },
+                            {
+                                title: "Alleen voldoendes",
+                                value: 'sufficient'
+                            },
+                            {
+                                title: "Nooit",
+                                value: 'never'
+                            }
+                        ]
+                    }
+                ],
                 render: async () => {
                     return new Promise(async resolve => {
                         const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: token } })
@@ -432,7 +461,7 @@ async function today() {
             },
 
             messages: {
-                title: "Ongelezen berichten",
+                title: "Berichten",
                 render: async () => {
                     return new Promise(async resolve => {
                         const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
@@ -522,7 +551,7 @@ async function today() {
             },
 
             assignments: {
-                title: "Onvoltooide opdrachten",
+                title: "Opdrachten",
                 render: async () => {
                     return new Promise(async resolve => {
                         let statements = []
@@ -575,11 +604,9 @@ async function today() {
 
         }
 
-        let exclusionIndex = userOrder.findIndex(item => item === 'EXCLUDE')
-        let visibleItems = userOrder.slice(exclusionIndex)
-
-        // Draw the widgets in the specified order
-        for (const functionName of visibleItems) {
+        // Draw the selected widgets in the specified order
+        let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
+        for (const functionName of widgetsShown) {
             await widgetFunctions[functionName].render()
         }
 
@@ -587,17 +614,42 @@ async function today() {
         let editButton = element('button', 'st-vd-widgets-edit', widgets, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
         editButton.addEventListener('click', () => {
             widgets.innerText = ''
+            let editorTitle = element('span', 'st-vd-widgets-edit-title', widgets, { innerText: "Widgets bewerken" })
+            let finishButton = element('button', 'st-vd-widgets-edit-finish', widgets, { class: 'st-button icon', 'data-icon': '', title: "Afronden" })
+            let includedTitle = element('span', 'st-vd-widgets-edit-include', widgets, { innerText: "Weergeven" })
             let sortableList = element('ul', 'st-vd-widgets-edit-wrapper', widgets, { class: 'st-sortable-list' })
-            Object.keys(widgetFunctions).forEach((key, i) => {
-                if (i === 0) {
-                    let includedTitle = element('span', 'st-vd-widgets-edit-include', sortableList, { class: 'st-section-title', innerText: "Weergeven" })
-                }
-                if (i === 3) {
-                    let excludedTitle = element('span', 'st-vd-widgets-edit-exclude', sortableList, { class: 'st-section-title', innerText: "Niet weergeven" })
+
+            widgetsOrder.forEach((key, i) => {
+                if (key === 'EXCLUDE') {
+                    let excludedTitle = element('span', 'st-vd-widgets-edit-exclude', sortableList, { innerText: "Niet weergeven", 'data-value': "EXCLUDE" })
+                    return
                 }
 
                 let widgetName = widgetFunctions[key].title
-                let item = element('li', `st-vd-widgets-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true })
+                let item = element('li', `st-vd-widgets-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'data-value': key })
+
+                if (widgetFunctions[key].options) {
+                    widgetFunctions[key].options.forEach(option => {
+                        let optionWrapper = element('div', `st-vd-widgets-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
+                        let optionTitle = element('label', `st-vd-widgets-edit-${option.key}-title`, optionWrapper, { for: `st-vd-widgets-edit-${option.key}-input`, innerText: option.title })
+                        switch (option.type) {
+                            case 'select':
+                                let optionInput = element('select', `st-vd-widgets-edit-${option.key}-input`, optionWrapper, { name: option.title })
+                                option.choices.forEach(async choice => {
+                                    let optionChoice = element('option', `st-vd-widgets-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
+                                    if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
+                                })
+                                optionInput.addEventListener('change', event => {
+                                    saveToStorage(option.key, event.target.value, 'local')
+                                })
+                                break
+
+                            default:
+                                // TODO: implement other option types
+                                break
+                        }
+                    })
+                }
 
                 item.addEventListener("dragstart", () => {
                     setTimeout(() => item.classList.add("dragging"), 0)
@@ -612,16 +664,16 @@ async function today() {
                 let siblings = [...draggingItem.parentElement.children].filter(child => child !== draggingItem)
 
                 let nextSibling = siblings.find(sibling => event.clientY <= sibling.offsetTop + sibling.offsetHeight / 2)
-                if (nextSibling.id === 'st-vd-widgets-edit-include') nextSibling = nextSibling.nextElementSibling
-                // TODO: cant drop at very end
 
                 sortableList.insertBefore(draggingItem, nextSibling)
+
+                let widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
+                saveToStorage('vd-widgets', widgetsOrder, 'local')
             }
 
             sortableList.addEventListener("dragover", initSortableList)
             sortableList.addEventListener("dragenter", e => e.preventDefault())
 
-            let finishButton = element('button', 'st-vd-widgets-edit-finish', widgets, { class: 'st-button icon', 'data-icon': '', title: "Afronden" })
             finishButton.addEventListener('click', () => {
                 widgets.innerText = ''
                 todayWidgets()
@@ -631,7 +683,7 @@ async function today() {
 
     function verifyDisplayMode() {
         let widgets = document.querySelector('#st-vd-widgets')
-        if (window.innerWidth < 1100 || sheet || document.querySelector('#st-vd-schedule')?.classList.contains('st-expanded')) {
+        if (window.innerWidth < 1100 || sheetSetting || document.querySelector('#st-vd-schedule')?.classList.contains('st-expanded')) {
             container.classList.remove('sheet-shown')
             container.classList.add('sheet')
             widgets.setAttribute('class', 'st-shown')

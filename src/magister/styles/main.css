@@ -241,33 +241,47 @@ div.loading-overlay {
     height: 100%;
 }
 
-.st-sortable-list>.st-section-title {
-    display: inline-block;
-    font: 700 16px var(--st-font-family-primary);
-    margin-top: 18px;
-    margin-bottom: 12px;
-}
-
 .st-sortable-list-item {
-    width: 100%;
     list-style: none;
     display: flex;
-    cursor: move;
-    align-items: center;
-    border-radius: 5px;
-    padding: 12px;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: stretch;
+    position: relative;
+    width: 100%;
     margin-bottom: 10px;
+    padding: 12px;
+    border-radius: var(--st-border-radius);
     background: var(--st-background-secondary);
     border: var(--st-border);
     color: var(--st-foreground-primary);
-    font: 12px var(--st-font-family-secondary);
-    justify-content: space-between;
+    font: 14px var(--st-font-family-secondary);
+    cursor: move;
 }
 
 .st-sortable-list-item:after {
+    position: absolute;
+    top: 12px;
+    right: 12px;
     content: '';
     font: 500 16px "Font Awesome 5 Pro";
     color: var(--st-foreground-insignificant);
+}
+
+.st-sortable-list-item-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font: 12px var(--st-font-family-secondary);
+}
+
+.st-sortable-list-item-option select {
+    width: 135px;
+    padding: 4px 8px;
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: calc(var(--st-border-radius) / 2);
+    font: 12px var(--st-font-family-secondary);
 }
 
 #st-appbar-metrics {

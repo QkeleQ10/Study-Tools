@@ -1,13 +1,7 @@
-// Run at start and when the URL changes
-popstate()
-window.addEventListener('popstate', popstate)
-async function popstate() {
-    if (document.location.href.split('?')[0].endsWith('/vandaag')) gamification()
-}
+gamification()
 
 async function gamification() {
     if (!syncedStorage['magister-gamification-beta']) return
-    if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) return console.error("Gamification is not supported on Firefox due to a lack of service worker support.")
 
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],
@@ -15,10 +9,8 @@ async function gamification() {
         ['assignmentsEarly', "Opdrachten op tijd ingeleverd", "Opdrachten in ", "Je verdient punten per op tijd ingeleverde opdracht en extra punten per dag te vroeg. Latere leerjaren hebben meer impact op je score."]
         // ['assignmentsLate', "Opdrachten te laat ingeleverd", "Opdrachten in ", "Voor elke dag dat je een opdracht te laat inlevert, kun je 2 punten verliezen."]
     ],
-        mainContainer = await awaitElement('section.main'),
         photo = await awaitElement("#user-menu > figure > img"),
-        // notifications = await awaitElement('#st-vd-notifications'),
-        levelElem = element('button', 'st-level', mainContainer, { 'data-level': '...' }),
+        levelElem = element('button', 'st-level', document.body, { 'data-level': '...', title: "Puntensysteem", style: 'display:none;' }),
         progressElem = element('div', 'st-progress', levelElem),
         progressFilled = element('div', 'st-progress-filled', progressElem),
         gmOverlay = element('dialog', 'st-gm', document.body, { class: 'st-overlay' }),
@@ -33,9 +25,6 @@ async function gamification() {
         gmCardProgress = element('div', 'st-gm-card-progress', gmCard),
         gmCardProgressFilled = element('div', 'st-gm-card-progress-filled', gmCardProgress),
         gmBreakdown = element('div', 'st-gm-breakdown', gmWrap)
-    // gmBannerAd = element('div', 'st-gm-ad', gmOverlay, {
-    //     class: 'st-banner-ad', innerText: "Gamificatie (het berekenen van scores en niveaus) is onderdeel van Study Tools voor Magister.", onclick: `window.open('https://qkeleq10.github.io/extensions/studytools', '_blank').focus()`
-    // })
 
     levelElem.addEventListener('click', () => { gmOverlay.showModal() })
     gmClose.addEventListener('click', () => { gmOverlay.close() })
@@ -43,23 +32,25 @@ async function gamification() {
     calculateScore()
 
     async function calculateScore() {
-        let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        let token = req.token
+        let userId = req.userId
 
         // Fetch all years and info related.
-        const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
-            yearsArray = (await yearsRes.json()).items,
+        const yearsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
+            yearsArray = yearsRes.items,
             years = {}
 
         // Loop through each year and gather grades, absences and assignments. Bind them to their respective key in the 'years' object.
         yearsArray.forEach(async year => {
-            const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
-            const gradesJson = (await gradesRes.json()).Items
+            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
+            const gradesJson = gradesRes.Items
 
-            const absencesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: token } }),
-                absencesJson = (await absencesRes.json()).Items
+            const absencesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: token } }),
+                absencesJson = absencesRes.Items
 
-            const assignmentsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: token } }),
-                assignmentsJson = (await assignmentsRes.json()).Items
+            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: token } }),
+                assignmentsJson = assignmentsRes.Items
 
             years[year.id] = { grades: gradesJson, absences: absencesJson, assignments: assignmentsJson, name: year.studie.code }
         })
@@ -77,11 +68,6 @@ async function gamification() {
 
         // Commence calculating the points.
         function calculatePoints(years) {
-            // TODO: Balancing!
-            // TODO: Points are currently allowed to decrease (when absences are added). Should this also occur when the grade mean drops or when assignments are handed in late?
-            // HANDING IN LATE: Currently commented out due to issues. Assignments that are not mandatory would still deduct points.
-            // ABSENCES: Should licit absences (loopbaanbegeleiding, interne activiteit) be rewarded? Currently, only illicit absences are taken into account and deduct points.
-
             let points = {
                 absences: {},
                 grades: {},
@@ -119,6 +105,7 @@ async function gamification() {
 
                 // Assignments can either grant or deduct points
                 years[yearId].assignments.filter(e => e.Afgesloten || e.IngeleverdOp || new Date(e.InleverenVoor) < new Date()).forEach(assignment => {
+                    // TODO: Should assignment point deduction return?
                     // if (new Date(assignment.InleverenVoor) < new Date() && (!assignment.Afgesloten || !assignment.IngeleverdOp)) {
                     //     // Deduct 12 pt if the assignment wasn't handed in even after the due date
                     //     assignmentsLateN++
@@ -159,46 +146,11 @@ async function gamification() {
     }
 
     async function displayScore(points) {
-        // let points = syncedStorage['points'],
-        // pointsBefore = syncedStorage['points-before'],
-        // pointsDiff = points.total - pointsBefore.total,
         level = Math.floor(Math.sqrt(points.total + 9) - 3)
-        // levelBefore = Math.floor(Math.sqrt(pointsBefore.total + 9) - 3),
-        // levelDiff = Math.round(level - levelBefore),
         pointsRequired = 2 * level + 7
         pointsProgress = Math.floor(points.total - (level ** 2 + 6 * level))
-        // notification
 
         if (typeof points?.total === 'undefined') return
-
-        // if (levelDiff > 0) {
-        //     notification = element('li', `st-vd-gamification-notification`, notifications, { innerText: `Niveau gestegen (+${levelDiff} niveau${levelDiff > 1 ? 's' : ''})`, onclick: `document.getElementById('st-gm').showModal()`, 'data-icon': '', 'data-additional-info': '' })
-        //     notifications.prepend(notification)
-        // } else if (levelDiff < 0) {
-        //     notification = element('li', `st-vd-gamification-notification`, notifications, { innerText: `Niveau gezakt (${levelDiff} niveau${levelDiff < -1 ? 's' : ''})`, onclick: `document.getElementById('st-gm').showModal()`, 'data-icon': '', 'data-additional-info': '' })
-        //     notifications.prepend(notification)
-        // } else if (pointsDiff > 0) {
-        //     notification = element('li', `st-vd-gamification-notification`, notifications, { innerText: `Punten verdiend (+${pointsDiff} punten)`, onclick: `document.getElementById('st-gm').showModal()`, 'data-icon': '', 'data-additional-info': '' })
-        //     notifications.prepend(notification)
-        // } else if (pointsDiff < 0) {
-        //     notification = element('li', `st-vd-gamification-notification`, notifications, { innerText: `Punten verloren (${pointsDiff} punten)`, onclick: `document.getElementById('st-gm').showModal()`, 'data-icon': '', 'data-additional-info': '' })
-        //     notifications.prepend(notification)
-        // }
-        // if (pointsDiff > 0 || pointsDiff < 0) {
-        //     Object.keys(points).forEach(key => {
-        //         if (key === 'total') return
-        //         let valueBefore = pointsBefore[key],
-        //             valueAfter = points[key],
-        //             title = categories.find(e => e[0] === key)[1]
-        //         if (!title && points[key].g) title = "Cijfers van " + points[key].g
-        //         if (!title) return
-        //         if (JSON.stringify(valueAfter) !== JSON.stringify(valueBefore)) {
-        //             if (notification.dataset.additionalInfo.length > 1) notification.dataset.additionalInfo += ', '
-        //             notification.dataset.additionalInfo += title
-        //         }
-        //     })
-        // }
-        // saveToStorage('points-before', points)
 
         if (Number.isNaN(level)) level = 0
         levelElem.dataset.level = level + 1
@@ -230,4 +182,20 @@ async function gamification() {
         total.classList.add('total')
         total.dataset.value = points.total.toLocaleString('nl-NL', { maximumFractionDigits: 2 })
     }
+
+    let key = syncedStorage['magister-overlay-hotkey'] || 'S'
+
+    addEventListener('keydown', e => {
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
+        if (e.key.toLowerCase() === key.toLowerCase()) {
+            e.preventDefault()
+            levelElem.style.display = 'flex'
+        }
+    })
+    addEventListener('keyup', e => {
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
+        if (e.key.toLowerCase() === key.toLowerCase()) {
+            levelElem.style.display = 'none'
+        }
+    })
 }

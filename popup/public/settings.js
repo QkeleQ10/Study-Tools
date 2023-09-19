@@ -374,7 +374,6 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
-            // TODO: gamification
         ]
     },
     {
@@ -391,6 +390,14 @@ export default [
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
                 default: false,
+            },
+            {
+                id: 'magister-gamification-beta',
+                title: "Puntensysteem",
+                default: false,
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ]
             },
             {
                 id: "disable-css",
