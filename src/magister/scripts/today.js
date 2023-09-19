@@ -367,7 +367,7 @@ async function today() {
         let gatherStart = now,
             gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
-        let userOrder = ['counters', 'grades', 'homework', 'messages', 'assignments']
+        let userOrder = ['grades', 'homework', 'messages', 'assignments', 'EXCLUDE', 'counters']
         let widgetFunctions = {
 
             // TODO WIDGETS
@@ -414,12 +414,12 @@ async function today() {
                 title: "Laatste cijfer",
                 render: async () => {
                     return new Promise(async resolve => {
-                        let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
-
                         const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: token } })
                         const recentGrades = gradesJson.items.map(item => item)
                         console.log(recentGrades)
+
+                        let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
 
                         if (true) widgetElement.classList.add('st-unread')
 
@@ -575,8 +575,11 @@ async function today() {
 
         }
 
+        let exclusionIndex = userOrder.findIndex(item => item === 'EXCLUDE')
+        let visibleItems = userOrder.slice(exclusionIndex)
+
         // Draw the widgets in the specified order
-        for (const functionName of userOrder) {
+        for (const functionName of visibleItems) {
             await widgetFunctions[functionName].render()
         }
 
@@ -584,14 +587,45 @@ async function today() {
         let editButton = element('button', 'st-vd-widgets-edit', widgets, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
         editButton.addEventListener('click', () => {
             widgets.innerText = ''
-            let widgetEditWrapper = element('div', 'st-vd-widgets-edit-wrapper', widgets)
-            Object.keys(widgetFunctions).forEach(key => {
+            let sortableList = element('ul', 'st-vd-widgets-edit-wrapper', widgets, { class: 'st-sortable-list' })
+            Object.keys(widgetFunctions).forEach((key, i) => {
+                if (i === 0) {
+                    let includedTitle = element('span', 'st-vd-widgets-edit-include', sortableList, { class: 'st-section-title', innerText: "Weergeven" })
+                }
+                if (i === 3) {
+                    let excludedTitle = element('span', 'st-vd-widgets-edit-exclude', sortableList, { class: 'st-section-title', innerText: "Niet weergeven" })
+                }
+
                 let widgetName = widgetFunctions[key].title
-                let widgetElement = element('div', `st-vd-widgets-edit-${key}`, widgetEditWrapper, { class: 'st-list-input-item' })
-                let widgetToggleLabel = element('label', `st-vd-widgets-edit-${key}-label`, widgetElement, { class: "st-checkbox-label", innerText: widgetName, title: "Widget in-/uitschakelen" })
-                let widgetToggleInput = element('input', `st-vd-widgets-edit-${key}-input`, widgetToggleLabel, { type: 'checkbox', checked: userOrder.findIndex(item => item === key), class: "st-checkbox-input" })
-                // help lmao
+                let item = element('li', `st-vd-widgets-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true })
+
+                item.addEventListener("dragstart", () => {
+                    setTimeout(() => item.classList.add("dragging"), 0)
+                })
+                item.addEventListener("dragend", () => item.classList.remove("dragging"))
+
             })
+
+            function initSortableList(event) {
+                event.preventDefault()
+                const draggingItem = document.querySelector(".dragging")
+                let siblings = [...draggingItem.parentElement.children].filter(child => child !== draggingItem)
+
+                let nextSibling = siblings.find(sibling => event.clientY <= sibling.offsetTop + sibling.offsetHeight / 2)
+                if (nextSibling.id === 'st-vd-widgets-edit-include') nextSibling = nextSibling.nextElementSibling
+                // TODO: cant drop at very end
+
+                sortableList.insertBefore(draggingItem, nextSibling)
+            }
+
+            sortableList.addEventListener("dragover", initSortableList)
+            sortableList.addEventListener("dragenter", e => e.preventDefault())
+
+            let finishButton = element('button', 'st-vd-widgets-edit-finish', widgets, { class: 'st-button icon', 'data-icon': '', title: "Afronden" })
+            finishButton.addEventListener('click', () => {
+                widgets.innerText = ''
+                todayWidgets()
+            }, { once: true })
         })
     }
 

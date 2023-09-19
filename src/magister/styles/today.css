@@ -330,7 +330,7 @@
     padding-top: 16px;
     overflow-y: auto;
     overflow-x: hidden;
-    animation: floatUp 200ms;
+    animation: floatLeft 200ms;
 }
 
 .st-widget-title {
@@ -343,7 +343,7 @@
     font-size: 12px;
 }
 
-#st-vd-widgets-edit {
+#st-vd-widgets-edit, #st-vd-widgets-edit-finish {
     margin-inline: auto;
 }
 
@@ -437,6 +437,8 @@
     position: fixed;
     top: 32px;
     right: 432px;
+    background-color: var(--st-background-primary);
+    border-radius: 4px;
     transition: right 200ms;
 }
 

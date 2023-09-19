@@ -136,7 +136,8 @@ div.loading-overlay {
     filter: none;
 }
 
-.st-button.icon:focus-visible, .st-button.icon:active {
+.st-button.icon:focus-visible,
+.st-button.icon:active {
     background-color: var(--st-highlight-primary);
     color: var(--st-foreground-accent);
     filter: none;
@@ -233,6 +234,40 @@ div.loading-overlay {
     visibility: hidden;
     opacity: 0;
     position: absolute;
+}
+
+.st-sortable-list {
+    width: 100%;
+    height: 100%;
+}
+
+.st-sortable-list>.st-section-title {
+    display: inline-block;
+    font: 700 16px var(--st-font-family-primary);
+    margin-top: 18px;
+    margin-bottom: 12px;
+}
+
+.st-sortable-list-item {
+    width: 100%;
+    list-style: none;
+    display: flex;
+    cursor: move;
+    align-items: center;
+    border-radius: 5px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--st-background-secondary);
+    border: var(--st-border);
+    color: var(--st-foreground-primary);
+    font: 12px var(--st-font-family-secondary);
+    justify-content: space-between;
+}
+
+.st-sortable-list-item:after {
+    content: '';
+    font: 500 16px "Font Awesome 5 Pro";
+    color: var(--st-foreground-insignificant);
 }
 
 #st-appbar-metrics {
