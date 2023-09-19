@@ -200,6 +200,7 @@ div.loading-overlay {
 }
 
 .st-checkbox-label {
+    position: relative;
     font-family: var(--st-font-family-secondary);
     font-size: 12px;
     cursor: pointer;
