@@ -392,7 +392,7 @@ export default [
                 default: false,
             },
             {
-                id: 'magister-gamification-beta',
+                id: 'gamification-enabled',
                 title: "Puntensysteem",
                 default: false,
                 conditions: [

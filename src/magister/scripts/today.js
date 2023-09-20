@@ -253,6 +253,7 @@ async function today() {
                     let eventTime = element('span', `st-vd-event-${item.Id}-time`, eventElement, { class: 'st-vd-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
 
                     // Parse and render any chips
+                    // TODO: More InfoTypes
                     let chips = []
                     if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
                     else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
@@ -350,7 +351,8 @@ async function today() {
         let gatherStart = now,
             gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
-        let widgetsOrder = await getFromStorage('vd-widgets', 'local') || ['grades', 'homework', 'messages', 'assignments', 'EXCLUDE', 'counters']
+        let widgetsOrder = await getFromStorage('vd-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE']
+        let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
         let widgetFunctions = {
 
             // TODO WIDGETS
@@ -364,30 +366,47 @@ async function today() {
 
             // TODO: Add more counters than just these 3
             counters: {
-                title: "Tellertjes",
+                title: "Beknopte notificaties",
                 render: async () => {
                     return new Promise(async resolve => {
-                        let widgetElement = element('div', 'st-vd-widget-counters', widgets, { class: 'st-widget' })
+                        let elems = []
 
                         const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: apiUserToken } })
-                        const unreadMessages = messagesRes.items
-                        if (unreadMessages.length > 0) {
-                            let messagesMetric = element('div', 'st-vd-widget-counters-messages', widgetElement, { class: 'st-metric', innerText: unreadMessages.length, 'data-description': "Berichten" })
+                        const unreadMessagesNum = messagesRes.totalCount
+                        if (unreadMessagesNum > 0 && !widgetsShown.includes('messages')) {
+                            elems.push(element('div', 'st-vd-widget-counters-messages', null, { class: 'st-metric', innerText: unreadMessagesNum, 'data-description': "Berichten" }))
                         }
 
                         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
-                        if (homeworkEvents.length > 0) {
-                            let homeworkMetric = element('div', 'st-vd-widget-counters-homework', widgetElement, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" })
+                        if (homeworkEvents.length > 0 && !widgetsShown.includes('homework')) {
+                            elems.push(element('div', 'st-vd-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
                         }
 
                         const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
-                        if (dueAssignments.length > 0) {
-                            let homeworkMetric = element('div', 'st-vd-widget-counters-assignments', widgetElement, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" })
+                        if (dueAssignments.length > 0 && !widgetsShown.includes('assignments')) {
+                            elems.push(element('div', 'st-vd-widget-counters-assignments', null, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" }))
                         }
 
-                        resolve()
+                        const activitiesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/activiteiten?status=NogNietAanEisVoldaan&count=true`, { headers: { Authorization: apiUserToken } })
+                        const activitiesNum = activitiesRes.TotalCount
+                        if (activitiesNum > 0) {
+                            elems.push(element('div', 'st-vd-widget-counters-activities', null, { class: 'st-metric', innerText: activitiesNum, 'data-description': "Activiteiten" }))
+                        }
+
+                        const logsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${apiUserId}/logboeken/count`, { headers: { Authorization: apiUserToken } })
+                        const logsNum = logsRes.count
+                        if (logsNum > 0) {
+                            elems.push(element('div', 'st-vd-widget-counters-logs', null, { class: 'st-metric', innerText: logsNum, 'data-description': "Logboeken" }))
+                        }
+
+                        if (elems.length < 1) return resolve()
+
+                        let widgetElement = element('div', 'st-vd-widget-counters', widgets, { class: 'st-widget' })
+                        widgetElement.append(...elems)
+
+                        resolve(widgetElement)
                     })
                 }
             },
@@ -547,6 +566,7 @@ async function today() {
                             eventContent.setHTML(item.Inhoud)
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
+                            // TODO: More InfoTypes
                             let chips = []
                             if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
                             else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
@@ -619,7 +639,6 @@ async function today() {
         }
 
         // Draw the selected widgets in the specified order
-        let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
         for (const functionName of widgetsShown) {
             await widgetFunctions[functionName].render()
         }

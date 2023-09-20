@@ -245,17 +245,17 @@ div.loading-overlay {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 6px;
     justify-content: stretch;
     position: relative;
     width: 100%;
     margin-bottom: 10px;
-    padding: 12px;
+    padding-inline: 12px;
     border-radius: var(--st-border-radius);
     background: var(--st-background-secondary);
     border: var(--st-border);
     color: var(--st-foreground-primary);
-    font: 14px var(--st-font-family-secondary);
+    font: 14px/40px var(--st-font-family-secondary);
+    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     cursor: move;
 }
 
@@ -269,6 +269,7 @@ div.loading-overlay {
 }
 
 .st-sortable-list-item-option {
+    margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: baseline;

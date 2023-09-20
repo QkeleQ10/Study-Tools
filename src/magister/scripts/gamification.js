@@ -1,7 +1,7 @@
 gamification()
 
 async function gamification() {
-    if (!syncedStorage['magister-gamification-beta']) return
+    if (!syncedStorage['gamification-enabled']) return
 
     let categories = [
         ['grades', "Cijfers", "Cijfers van ", "Hogere cijfers leveren meer punten op. Latere leerjaren hebben meer impact op je score."],

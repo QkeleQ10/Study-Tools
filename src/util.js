@@ -78,8 +78,8 @@ async function useApi(url, options) {
         // If the cached result is less than 20 seconds old, use it!
         if (apiCache[url] && (new Date() - apiCache[url].date) < 20000) {
             resolve(apiCache[url])
-        }
-        else {
+            return
+        } else {
             const res = await fetch(url, options)
             if (!res.ok) {
                 showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
