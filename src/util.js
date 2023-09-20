@@ -1,7 +1,9 @@
 let syncedStorage = {},
-    eggs = [],
-    apiCache = {},
-    schoolName = window.location.href.includes('magister') ? window.location.hostname.split('.')[0] : undefined
+    apiUserId,
+    apiUserToken,
+    apiCache = {}
+
+let eggs = []
 
 window.addEventListener('DOMContentLoaded', async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
@@ -25,7 +27,6 @@ async function checkAnnouncements() {
             if (Object.hasOwnProperty.call(data, key)) {
                 let value = data[key]
                 if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
-                if (value.allowedSchools && !value.allowedSchools.some(school => school === schoolName)) return
                 if (value.dateStart && (new Date(value.dateStart) > new Date())) return
                 if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
                 showSnackbar(value.body, value.duration || 10000, value.buttons)
@@ -60,6 +61,15 @@ function element(tagName, id, parent, attributes) {
         if (attributes) setAttributes(elem, attributes)
     }
     return elem
+}
+
+async function getApiCredentials() {
+    return new Promise(async (resolve, reject) => {
+        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        apiUserId = req.apiUserId
+        apiUserToken = req.apiUserToken
+        resolve({ apiUserId, apiUserToken })
+    })
 }
 
 // Wrapper for fetch().json() with caching

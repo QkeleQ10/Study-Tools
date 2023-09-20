@@ -440,9 +440,9 @@ async function gradeBackup() {
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
         if (yearsArray?.length > 0) return
 
-        let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        await getApiCredentials()
 
-        const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } })
+        const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${apiUserId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: apiUserToken } })
         if (yearsRes.status >= 400 && yearsRes.status < 600) {
             let errorEl = element('span', 'st-cf-bk-ex-error', bkModalEx, { innerText: "Vernieuw de pagina en probeer het opnieuw." })
             return
@@ -461,14 +461,14 @@ async function gradeBackup() {
         busy = true
         bkModalExListTitle.dataset.description = "Schooljaar selecteren..."
 
-        let { token, userId } = await chrome.runtime.sendMessage({ action: 'getCredentials' })
+        await getApiCredentials()
 
         let yearElement = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${year.i + 1})`)
         yearElement.click()
 
         bkModalExListTitle.dataset.description = "Wachten op cijfers..."
 
-        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
+        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: apiUserToken } })
         if (!gradesRes.ok) {
             bkModalExListTitle.dataset.description = `Fout ${gradesRes.status}\nVernieuw de pagina en probeer het opnieuw`
             bkModalExListTitle.disabled = true
@@ -527,7 +527,7 @@ async function gradeBackup() {
                     }
 
                     setTimeout(async () => {
-                        const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: token } })
+                        const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: apiUserToken } })
                         if (!extraRes.ok) {
                             bkModalExListTitle.dataset.description = `Fout ${extraRes.status}\nVernieuw de pagina en probeer het opnieuw`
                             bkModalExListTitle.disabled = true

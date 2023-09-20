@@ -32,24 +32,22 @@ async function gamification() {
     calculateScore()
 
     async function calculateScore() {
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-        let token = req.token
-        let userId = req.userId
+        await getApiCredentials()
 
         // Fetch all years and info related.
-        const yearsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${userId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: token } }),
+        const yearsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${apiUserId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: apiUserToken } }),
             yearsArray = yearsRes.items,
             years = {}
 
         // Loop through each year and gather grades, absences and assignments. Bind them to their respective key in the 'years' object.
         yearsArray.forEach(async year => {
-            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: token } })
+            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: apiUserToken } })
             const gradesJson = gradesRes.Items
 
-            const absencesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: token } }),
+            const absencesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: apiUserToken } }),
                 absencesJson = absencesRes.Items
 
-            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: token } }),
+            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: apiUserToken } }),
                 assignmentsJson = assignmentsRes.Items
 
             years[year.id] = { grades: gradesJson, absences: absencesJson, assignments: assignmentsJson, name: year.studie.code }

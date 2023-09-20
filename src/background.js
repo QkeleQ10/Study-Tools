@@ -1,28 +1,39 @@
 import settings from '../popup/dist/settings.js'
 
-let token,
-    userId,
-    date
+let apiUserId,
+    apiUserToken,
+    apiUserTokenDate
 
-const settingsToClear = ['openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'vd-subjects-display', 'version', 'hotkeys-today']
+const settingsToClear = [
+    'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'vd-subjects-display', 'version', 'hotkeys-today'
+]
 
 init()
 
 async function init() {
+    apiUserId = (await chrome.storage.local.get('user-id'))?.['user-id'] || undefined
+    apiUserToken = (await chrome.storage.local.get('token'))?.['token'] || undefined
+    apiUserTokenDate = (await chrome.storage.local.get('token-date'))?.['token-date'] || undefined
+
     console.info("Service worker running!")
 
     setDefaults()
 
     chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
+        let userIdWas = apiUserId
+        let userTokenWas = apiUserToken
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
-            userId = e.url.split('/personen/')[1].split('/')[0]
-            console.info("Intercepted user ID.")
+            apiUserId = e.url.split('/personen/')[1].split('/')[0]
+            chrome.storage.local.set({ 'user-id': apiUserId })
+            if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
         }
         Object.values(e.requestHeaders).forEach(async obj => {
             if (obj.name === 'Authorization') {
-                token = obj.value
-                date = new Date()
-                console.info("Intercepted user token.")
+                apiUserToken = obj.value
+                apiUserTokenDate = new Date()
+                chrome.storage.local.set({ 'token': apiUserToken })
+                chrome.storage.local.set({ 'token-date': apiUserTokenDate })
+                if (userTokenWas !== apiUserToken) console.info(`User token changed between ${new Date().toLocaleDateString()} and now.`)
             }
         })
 
@@ -58,31 +69,27 @@ async function setDefaults() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'getCredentials':
-            console.info("Credentials requested.")
-            if (date && ((new Date()) - date) < 20000) {
-                sendResponse({ token, userId })
-                console.info("Retrieved user token and user ID from cache and sent to content script.")
-                return true
-            }
-            chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
-                Object.values(e.requestHeaders).forEach(async obj => {
-                    if (obj.name === 'Authorization' && e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
-                        token = obj.value
-                        userId = e.url.split('/personen/')[1].split('/')[0]
-                        date = new Date()
-                        sendResponse({ token, userId })
-                        console.info("Intercepted user token and user ID and sent to content script.")
-                    }
+            console.info(`Credentials requested by ${sender.url}.`)
+            // TODO: verify whether this works. Currently set the max token age to a year
+            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 31556952000 }, 30000)
+                .then(() => {
+                    sendResponse({ apiUserId, apiUserToken })
+                    console.info(`Credentials sent to ${sender.url}.`)
                 })
-            }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
+                .catch(() => {
+                    sendResponse({ status: 'error' })
+                })
             return true
 
         case 'waitForRequestCompleted':
+            console.info(`Request completion notification requested by ${sender.url}.`)
             chrome.webRequest.onCompleted.addListener((details) => {
                 sendResponse({ status: 'completed', details: details })
+                console.info(`Request completion notification sent to ${sender.url}.`)
             }, { urls: ['*://*.magister.net/api/personen/*/aanmeldingen/*/cijfers/extracijferkolominfo/*'] })
             setTimeout(() => {
                 sendResponse({ status: 'timeout' })
+                console.warn(`Request completion notification requested by ${sender.url} has timed out.`)
             }, 5000)
             return true
 
@@ -90,3 +97,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             break;
     }
 })
+
+async function sleepUntil(f, timeoutMs) {
+    return new Promise((resolve, reject) => {
+        const timeWas = new Date()
+        const wait = setInterval(function () {
+            if (f()) {
+                clearInterval(wait)
+                resolve()
+            } else if (new Date() - timeWas > timeoutMs) {
+                clearInterval(wait)
+                reject()
+            }
+        }, 20)
+    })
+}

@@ -315,7 +315,7 @@
 }
 
 #st-vd:not(.sheet) #st-vd-widgets {
-    animation: floatLeft 200ms;
+    animation: floatLeft 200ms both;
 }
 
 #st-vd-widget-toggler {
@@ -330,7 +330,7 @@
     padding-top: 16px;
     overflow-y: auto;
     overflow-x: hidden;
-    animation: floatLeft 200ms;
+    animation: floatLeft 200ms both;
 }
 
 .st-widget-title {

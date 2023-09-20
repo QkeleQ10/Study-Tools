@@ -1,5 +1,4 @@
-let events = [],
-    token, userId
+let events = []
 
 // Run at start and when the URL changes
 popstate()
@@ -10,11 +9,7 @@ async function popstate() {
 
 // Page 'Vandaag'
 async function today() {
-    console.log('Requested token')
-    let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-    token = req.token
-    userId = req.userId
-    console.log('Received token')
+    await getApiCredentials()
 
     if (!syncedStorage['vd-enabled']) return
     let mainView = await awaitElement('div.view:has(#vandaag-container)'),
@@ -62,9 +57,7 @@ async function today() {
     }, 2500)
 
     async function todaySchedule() {
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-        token = req.token
-        userId = req.userId
+        await getApiCredentials()
 
         const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
         let daysToShow = daysToShowSetting
@@ -78,7 +71,7 @@ async function today() {
         const gatherStart = new Date(),
             gatherEnd = new Date(gatherStart.getTime() + (86400000 * 29))
 
-        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: apiUserToken } })
         const events = eventsRes.Items
 
         // Start rendering
@@ -334,9 +327,7 @@ async function today() {
     }
 
     async function todayWidgets() {
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-        token = req.token
-        userId = req.userId
+        await getApiCredentials()
 
         let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
@@ -378,19 +369,19 @@ async function today() {
                     return new Promise(async resolve => {
                         let widgetElement = element('div', 'st-vd-widget-counters', widgets, { class: 'st-widget' })
 
-                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
+                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: apiUserToken } })
                         const unreadMessages = messagesRes.items
                         if (unreadMessages.length > 0) {
                             let messagesMetric = element('div', 'st-vd-widget-counters-messages', widgetElement, { class: 'st-metric', innerText: unreadMessages.length, 'data-description': "Berichten" })
                         }
 
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                         if (homeworkEvents.length > 0) {
                             let homeworkMetric = element('div', 'st-vd-widget-counters-homework', widgetElement, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" })
                         }
 
-                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: token } })
+                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                         if (dueAssignments.length > 0) {
                             let homeworkMetric = element('div', 'st-vd-widget-counters-assignments', widgetElement, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" })
@@ -443,7 +434,7 @@ async function today() {
                 ],
                 render: async () => {
                     return new Promise(async resolve => {
-                        const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: token } })
+                        const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: apiUserToken } })
                         const recentGrades = gradesJson.items.map(item => item)
                         console.log(recentGrades)
 
@@ -464,7 +455,7 @@ async function today() {
                 title: "Berichten",
                 render: async () => {
                     return new Promise(async resolve => {
-                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: token } })
+                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: apiUserToken } })
                         const unreadMessages = messagesRes.items
 
                         if (unreadMessages.length < 1) return resolve()
@@ -497,10 +488,33 @@ async function today() {
 
             homework: {
                 title: "Huiswerk",
+                options: [
+                    {
+                        title: "Afgeronde items tonen",
+                        key: 'vd-widget-hw-filter',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Alleen onvoltooid",
+                                value: 'incomplete'
+                            },
+                            {
+                                title: "Alles",
+                                value: 'all'
+                            }
+                        ]
+                    }
+                ],
                 render: async () => {
                     return new Promise(async resolve => {
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: token } })
-                        const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                        const filterOption = await getFromStorage('vd-widget-hw-filter', 'local') || 'incomplete'
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: apiUserToken } })
+                        const homeworkEvents = eventsRes.Items.filter(item => {
+                            if (filterOption === 'incomplete')
+                                return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
+                            else
+                                return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                        })
 
                         if (homeworkEvents.length < 1) return resolve()
                         let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
@@ -556,7 +570,7 @@ async function today() {
                     return new Promise(async resolve => {
                         let statements = []
 
-                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${userId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: token } })
+                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const relevantAssignments = assignmentsRes.Items.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
                         const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                         if (dueAssignments.length > 0) statements.push(`${dueAssignments.length} openstaande opdracht${dueAssignments.length > 1 ? 'en' : ''}`)
