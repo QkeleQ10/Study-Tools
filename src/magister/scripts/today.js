@@ -12,14 +12,24 @@ async function today() {
     await getApiCredentials()
 
     if (!syncedStorage['vd-enabled']) return
-    let mainView = await awaitElement('div.view:has(#vandaag-container)'),
-        container = element('div', 'st-vd', mainView),
+    let sheetSetting = await getFromStorage('vd-sheet', 'local') ?? false,
+        zoomSetting = await getFromStorage('vd-zoom', 'local') || 1,
+        teacherNamesSetting = await getFromStorage('teacher-names', 'local') || {},
+        mainView = await awaitElement('div.view:has(#vandaag-container)'),
+        container = element('div', 'st-vd', mainView, { class: sheetSetting ? 'sheet' : '' }),
         header = element('div', 'st-vd-header', container),
         headerText = element('span', 'st-vd-header-span', header, { class: 'st-title' }),
         schedule = element('div', 'st-vd-schedule', container),
         widgets = element('div', 'st-vd-widgets', container),
-        buttonWrapper = element('div', 'st-vd-button-wrapper', container),
-        sheetSetting = false
+        buttonWrapper = element('div', 'st-vd-button-wrapper', container)
+
+    let renderSchedule
+
+    const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
+    let daysToShow = daysToShowSetting
+
+    const magisterModeSetting = syncedStorage['vd-schedule-view'] === 'list'
+    let magisterMode = magisterModeSetting
 
     todaySchedule()
     todayWidgets()
@@ -59,13 +69,6 @@ async function today() {
     async function todaySchedule() {
         await getApiCredentials()
 
-        const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
-        let daysToShow = daysToShowSetting
-
-        // TODO: add a mutable override to the immutable magisterMode variable.
-        const magisterMode = syncedStorage['vd-schedule-view'] === 'list'
-        let zoomSetting = await getFromStorage('vd-zoom', 'local') || 1
-
         let interval
 
         const gatherStart = new Date(),
@@ -75,25 +78,11 @@ async function today() {
         const events = eventsRes.Items
 
         // Start rendering
-        if (magisterMode) renderSchedule('list', 'title-magister')
-        else renderSchedule('schedule', 'title-formatted')
-        async function renderSchedule(viewMode, titleMode) {
+        renderSchedule = async () => {
             clearInterval(interval)
 
-            if (viewMode === 'list') {
-                schedule.classList.add('list')
-                schedule.classList.remove('schedule')
-            } else {
-                schedule.classList.remove('list')
-                schedule.classList.add('schedule')
-            }
-            if (titleMode === 'title-magister') {
-                schedule.classList.add('title-magister')
-                schedule.classList.remove('title-formatted')
-            } else {
-                schedule.classList.remove('title-magister')
-                schedule.classList.add('title-formatted')
-            }
+            if (magisterMode) schedule.classList.add('magister-mode')
+            else schedule.classList.remove('magister-mode')
 
             let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
             let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
@@ -137,12 +126,12 @@ async function today() {
                 && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
             ) {
                 daysToShow = daysToShowSetting + 1
-                renderSchedule(viewMode, titleMode)
+                renderSchedule()
                 return
             }
 
             // Create tick marks for schedule view
-            if (viewMode !== 'list') {
+            if (!magisterMode) {
                 for (let i = agendaStart; i <= agendaEnd; i += 0.5) {
                     let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: `st-vd-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
                 }
@@ -160,7 +149,8 @@ async function today() {
                             && syncedStorage['vd-schedule-extra-day']
                             && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
                         ) {
-                            renderSchedule(daysToShow + 1, viewMode, titleMode)
+                            daysToShow = daysToShowSetting + 1
+                            renderSchedule()
                             return
                         }
                         now = new Date()
@@ -171,16 +161,16 @@ async function today() {
 
             Object.keys(eventsPerDay).forEach((key, i, a) => {
                 // Limit the number of days shown for the list view to 1
-                if (viewMode === 'list' && i > 0) return
+                if (magisterMode && i > 0) return
 
                 // Create a column for the day
                 let col = element('div', `st-vd-col-${key}`, scheduleWrapper, {
                     class: 'st-vd-col',
                     'data-today': (key === now.toISOString().split('T')[0]),
-                    'data-view': viewMode || 'schedule'
+                    'data-magister-mode': magisterMode
                 }),
                     colHead
-                if (viewMode !== 'list' && (a.length > 1 || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`))
+                if (!magisterMode && (a.length > 1 || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`))
                     colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
                         class: 'st-vd-col-head',
                         'data-today': (key === now.toISOString().split('T')[0]),
@@ -211,17 +201,18 @@ async function today() {
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
                     let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
-                    if (eventElement.clientHeight < 72 && viewMode !== 'list') eventElement.classList.add('tight')
+                    if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
                     // Parse and array-ify the subjects, the teachers and the locations
+                    // TODO: Allow users to set custom teacher names
                     let subjectNames = item.Vakken?.map((e, i, a) => {
                         if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
                         return e.Naam
                     }) || [item.Omschrijving]
                     let teacherNames = item.Docenten?.map((e, i, a) => {
-                        if (a.length === 1 && eventElement.clientHeight >= 72) return e.Naam + ` (${e.Docentcode})`
-                        return e.Naam
+                        if (a.length === 1 && eventElement.clientHeight >= 72) return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
+                        return teacherNamesSetting[e.Docentcode] || e.Naam
                     }) || []
                     let locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
                     if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
@@ -240,7 +231,7 @@ async function today() {
                     }
 
                     // Render the subject, location and teacher labels
-                    if (titleMode === 'title-magister') {
+                    if (magisterMode) {
                         let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventElement, { class: 'st-vd-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
                         let eventSubjectWrapper = element('span', `st-vd-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-vd-event-subject-wrapper' })
@@ -270,6 +261,8 @@ async function today() {
             })
         }
 
+        renderSchedule()
+
         // Allow for 5-day view
         let todayExpander = element('button', 'st-vd-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
         todayExpander.addEventListener('click', () => {
@@ -280,8 +273,8 @@ async function today() {
                 verifyDisplayMode()
                 schedule.innerText = ''
                 daysToShow = daysToShowSetting
-                if (magisterMode) renderSchedule('list', 'title-magister')
-                else renderSchedule('schedule', 'title-formatted')
+                magisterMode = magisterModeSetting
+                renderSchedule()
             } else {
                 schedule.classList.add('st-expanded')
                 todayExpander.classList.add('st-expanded')
@@ -290,28 +283,9 @@ async function today() {
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
                 schedule.innerText = ''
                 daysToShow = 5
-                renderSchedule('schedule', 'title-formatted')
+                magisterMode = false
+                renderSchedule()
             }
-        })
-
-        // Zoom buttons
-        let todayZoomIn = element('button', 'st-vd-today-zoom-in', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
-        todayZoomIn.addEventListener('click', () => {
-            zoomSetting += .1
-            saveToStorage('vd-zoom', zoomSetting, 'local')
-            document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
-            showSnackbar(`Zoomniveau ${Math.round(zoomSetting * 100)}%`, 2000)
-            if (magisterMode) renderSchedule('list', 'title-magister')
-            else renderSchedule('schedule', 'title-formatted')
-        })
-        let todayZoomOut = element('button', 'st-vd-today-zoom-out', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
-        todayZoomOut.addEventListener('click', () => {
-            zoomSetting -= .1
-            saveToStorage('vd-zoom', zoomSetting, 'local')
-            document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
-            showSnackbar(`Zoomniveau ${Math.round(zoomSetting * 100)}%`, 2000)
-            if (magisterMode) renderSchedule('list', 'title-magister')
-            else renderSchedule('schedule', 'title-formatted')
         })
 
         // Update ongoing events every 30 seconds
@@ -328,23 +302,14 @@ async function today() {
     }
 
     async function todayWidgets() {
+        let widgetsProgress = element('div', 'st-vd-widget-progress', widgets, { class: 'st-progress-bar' })
+        let widgetsProgressValue = element('div', 'st-vd-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
+
         await getApiCredentials()
 
         let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
-            if (widgets.classList.contains('st-shown')) {
-                widgets.setAttribute('class', 'st-hiding')
-                container.classList.remove('sheet-shown')
-                setTimeout(() => {
-                    widgets.setAttribute('class', 'st-hidden')
-                }, 200)
-            } else {
-                widgets.setAttribute('class', 'st-showing')
-                setTimeout(() => {
-                    widgets.setAttribute('class', 'st-shown')
-                    container.classList.add('sheet-shown')
-                }, 10)
-            }
+            container.classList.toggle('sheet-shown')
         })
 
         let now = new Date()
@@ -643,33 +608,76 @@ async function today() {
             await widgetFunctions[functionName].render()
         }
 
+        widgetsProgress.remove()
+
         // Allow for editing
-        let editButton = element('button', 'st-vd-widgets-edit', widgets, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
+        let editButton = element('button', 'st-vd-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Weergave" })
         editButton.addEventListener('click', () => {
+            container.classList.add('editing')
             widgets.innerText = ''
-            let editorTitle = element('span', 'st-vd-widgets-edit-title', widgets, { innerText: "Widgets bewerken" })
-            let finishButton = element('button', 'st-vd-widgets-edit-finish', widgets, { class: 'st-button icon', 'data-icon': '', title: "Afronden" })
-            let includedTitle = element('span', 'st-vd-widgets-edit-include', widgets, { innerText: "Weergeven" })
-            let sortableList = element('ul', 'st-vd-widgets-edit-wrapper', widgets, { class: 'st-sortable-list' })
+
+            let editLayoutTitle = element('span', 'st-vd-edit-layout-heading', widgets, { innerText: "Indeling bewerken" })
+
+            // Zoom buttons
+            // TODO: refactor
+            let zoomWrapper = element('div', 'st-vd-edit-zoom', widgets)
+            let zoomIn = element('button', 'st-vd-edit-zoom-in', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
+            let zoomReset = element('button', 'st-vd-edit-zoom-reset', zoomWrapper, { class: 'st-button tertiary', innerText: `Roosterschaal: ${Math.round(zoomSetting * 100)}%` })
+            let zoomOut = element('button', 'st-vd-edit-zoom-out', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
+            zoomIn.addEventListener('click', () => {
+                zoomSetting += .1
+                effectuateZoom()
+            })
+            zoomReset.addEventListener('click', () => {
+                zoomSetting = 1
+                effectuateZoom()
+            })
+            zoomOut.addEventListener('click', () => {
+                zoomSetting -= .1
+                effectuateZoom()
+            })
+            function effectuateZoom() {
+                zoomReset.innerText = `Roosterschaal: ${Math.round(zoomSetting * 100)}%`
+                saveToStorage('vd-zoom', zoomSetting, 'local')
+                document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+                renderSchedule()
+            }
+
+            // View mode checkbox
+            let sheetModeLabel = element('label', 'st-vd-edit-sheet-label', widgets, { class: 'st-checkbox-label', innerText: "Widgets naast rooster weergeven" })
+            let sheetModeInput = element('input', 'st-vd-edit-sheet-input', sheetModeLabel, { type: 'checkbox', class: 'st-checkbox-input' })
+            if (!sheetSetting) sheetModeInput.checked = true
+            sheetModeInput.addEventListener('change', event => {
+                sheetSetting = !event.target.checked
+                saveToStorage('vd-sheet', sheetSetting, 'local')
+                verifyDisplayMode()
+                container.classList.add('sheet-shown')
+            })
+
+            let divider = element('div', 'st-vd-edit-divider', widgets, { class: 'st-divider' })
+
+            let editWidgetsHeading = element('span', 'st-vd-edit-widgets-heading', widgets, { innerText: "Widgets bewerken" })
+            let includedWidgetsHeading = element('span', 'st-vd-edit-include', widgets, { innerText: "Weergegeven widgets" })
+            let sortableList = element('ul', 'st-vd-edit-wrapper', widgets, { class: 'st-sortable-list' })
 
             widgetsOrder.forEach((key, i) => {
                 if (key === 'EXCLUDE') {
-                    let excludedTitle = element('span', 'st-vd-widgets-edit-exclude', sortableList, { innerText: "Niet weergeven", 'data-value': "EXCLUDE" })
+                    let excludedWidgetsHeading = element('span', 'st-vd-edit-exclude', sortableList, { innerText: "Verborgen widgets", 'data-value': "EXCLUDE" })
                     return
                 }
 
                 let widgetName = widgetFunctions[key].title
-                let item = element('li', `st-vd-widgets-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'data-value': key })
+                let item = element('li', `st-vd-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'data-value': key })
 
                 if (widgetFunctions[key].options) {
                     widgetFunctions[key].options.forEach(option => {
-                        let optionWrapper = element('div', `st-vd-widgets-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
-                        let optionTitle = element('label', `st-vd-widgets-edit-${option.key}-title`, optionWrapper, { for: `st-vd-widgets-edit-${option.key}-input`, innerText: option.title })
+                        let optionWrapper = element('div', `st-vd-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
+                        let optionTitle = element('label', `st-vd-edit-${option.key}-title`, optionWrapper, { for: `st-vd-edit-${option.key}-input`, innerText: option.title })
                         switch (option.type) {
                             case 'select':
-                                let optionInput = element('select', `st-vd-widgets-edit-${option.key}-input`, optionWrapper, { name: option.title })
+                                let optionInput = element('select', `st-vd-edit-${option.key}-input`, optionWrapper, { name: option.title })
                                 option.choices.forEach(async choice => {
-                                    let optionChoice = element('option', `st-vd-widgets-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
+                                    let optionChoice = element('option', `st-vd-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
                                     if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
                                 })
                                 optionInput.addEventListener('change', event => {
@@ -707,7 +715,10 @@ async function today() {
             sortableList.addEventListener("dragover", initSortableList)
             sortableList.addEventListener("dragenter", e => e.preventDefault())
 
+            // Finish button
+            let finishButton = element('button', 'st-vd-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Voltooien" })
             finishButton.addEventListener('click', () => {
+                container.classList.remove('editing')
                 widgets.innerText = ''
                 todayWidgets()
             }, { once: true })
@@ -719,13 +730,6 @@ async function today() {
         if (window.innerWidth < 1100 || sheetSetting || document.querySelector('#st-vd-schedule')?.classList.contains('st-expanded')) {
             container.classList.remove('sheet-shown')
             container.classList.add('sheet')
-            widgets.setAttribute('class', 'st-shown')
-            setTimeout(() => {
-                widgets.setAttribute('class', 'st-hiding')
-                setTimeout(() => {
-                    widgets.setAttribute('class', 'st-hidden')
-                }, 200)
-            }, 10)
         }
         else {
             container.classList.remove('sheet')

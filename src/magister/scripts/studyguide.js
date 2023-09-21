@@ -231,8 +231,15 @@ function appendStudyguidesToList() {
             studyguide.parentElement.remove()
             return
         }
-        let query = searchBar.value.toLowerCase()
-        let matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject?.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
+
+        let matches
+
+        if (searchBar && showHiddenItemsInput) {
+            let query = searchBar.value.toLowerCase()
+            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject?.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
+        } else {
+            matches = !hiddenStudyguides.includes(studyguide.dataset.title)
+        }
 
         if (matches) studyguide.classList.remove('hidden')
         else studyguide.classList.add('hidden')

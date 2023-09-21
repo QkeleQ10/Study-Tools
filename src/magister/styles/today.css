@@ -178,14 +178,14 @@
         / 40px max-content max-content;
 }
 
-#st-vd-schedule.title-magister .st-vd-event {
+#st-vd-schedule.magister-mode .st-vd-event {
     grid-template:
         'timeslot subject' auto
         'timeslot time' 1fr
         / 40px 1fr;
 }
 
-[data-view=list] .st-vd-event {
+[data-magister-mode=true] .st-vd-event {
     position: relative;
     top: 0;
     left: 0;
@@ -195,7 +195,7 @@
     border-top-width: 0;
 }
 
-[data-view=list] .st-vd-event:first-child {
+[data-magister-mode=true] .st-vd-event:first-child {
     border-top-width: 1px;
 }
 
@@ -237,7 +237,7 @@
     font: 600 16px/24px var(--st-font-family-secondary);
 }
 
-#st-vd-schedule.title-magister .st-vd-event-subject {
+#st-vd-schedule.magister-mode .st-vd-event-subject {
     font: 600 16px/24px var(--st-font-family-primary);
 }
 
@@ -318,6 +318,13 @@
     animation: floatLeft 200ms both;
 }
 
+#st-vd-widget-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
 #st-vd-widget-toggler {
     display: none;
 }
@@ -343,32 +350,44 @@
     font-size: 12px;
 }
 
-#st-vd-widgets-edit {
+#st-vd-edit,
+#st-vd-edit-finish {
     margin-top: auto;
     margin-inline: auto;
 }
 
-#st-vd-widgets-edit-finish {
-    position: absolute;
-    top: 32px;
-    right: 24px;
-}
-
-#st-vd-widgets-edit-title {
+#st-vd-edit-widgets-heading,
+#st-vd-edit-layout-heading {
     display: inline-block;
     font: 700 18px var(--st-font-family-primary);
     margin-block: 6px;
 }
 
-#st-vd-widgets-edit-include, #st-vd-widgets-edit-exclude {
+#st-vd-edit-divider {
+    margin-inline: -16px;
+    width: calc(100% + 24px);
+    min-height: 1px;
+}
+
+#st-vd-edit-include,
+#st-vd-edit-exclude {
     display: inline-block;
     font: 700 16px var(--st-font-family-primary);
     margin-top: 18px;
     margin-bottom: 12px;
 }
 
-#st-vd-widgets-edit-include {
+#st-vd-edit-include {
     margin-bottom: -4px;
+}
+
+#st-vd-edit-zoom {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
 }
 
 #st-vd-widget-counters {
@@ -486,9 +505,12 @@
     position: fixed;
     right: 0;
     top: 0;
-    height: 100%;
-    backdrop-filter: blur(4px);
+    bottom: 0;
+    margin: 8px;
+    border-radius: var(--st-border-radius);
+    border: var(--st-border);
     background-color: var(--st-background-transparent);
+    backdrop-filter: blur(4px);
     animation: widgetsOut 200ms both;
 }
 
