@@ -48,7 +48,8 @@ async function main() {
     })
 
     // Easter egg
-    if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
+    if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
+    if (Math.random() < 0.008) setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo-magister-white.svg'), 2000)
 
     // Hotkeys
     if (syncedStorage['hotkeys-enabled']) {
