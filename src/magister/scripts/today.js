@@ -9,7 +9,6 @@ async function popstate() {
 
 // Page 'Vandaag'
 async function today() {
-    getApiCredentials()
 
     if (!syncedStorage['vd-enabled']) return
     let sheetSetting = await getFromStorage('vd-sheet', 'local') ?? false,
@@ -67,7 +66,7 @@ async function today() {
     }, 2500)
 
     async function todaySchedule() {
-        getApiCredentials()
+        await getApiCredentials()
 
         let interval
 
@@ -334,7 +333,7 @@ async function today() {
         let widgetsProgress = element('div', 'st-vd-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-vd-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
 
-        getApiCredentials()
+        await getApiCredentials()
 
         let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
