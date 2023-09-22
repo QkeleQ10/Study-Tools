@@ -366,8 +366,19 @@ export default [
                 ],
             },
             {
+                id: 'gamification-enabled',
+                title: "Puntensysteem",
+                subtitle: "Bètafunctie: werkt soms, heeft negatieve bijwerkingen.",
+                default: false,
+                conditions: [
+                    { settingId: 'magister-overlay-hotkey', operator: 'defined' },
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ]
+            },
+            {
                 id: 'notes-enabled',
                 title: "Notitieblok",
+                subtitle: "Bètafunctie: werkt niet, notities worden niet opgeslagen.",
                 default: false,
                 conditions: [
                     { settingId: 'magister-overlay-hotkey', operator: 'defined' },
@@ -390,14 +401,6 @@ export default [
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
                 default: false,
-            },
-            {
-                id: 'gamification-enabled',
-                title: "Puntensysteem",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ]
             },
             {
                 id: "disable-css",

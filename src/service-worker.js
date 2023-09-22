@@ -70,8 +70,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'getCredentials':
             console.info(`Credentials requested by ${sender.url}.`)
-            // TODO: verify whether this works. Currently set the max token age to a year
-            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 31556952000 }, 30000)
+            // TODO: this sucks
+            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 180000 }, 1000)
                 .then(() => {
                     sendResponse({ apiUserId, apiUserToken })
                     console.info(`Credentials sent to ${sender.url}.`)

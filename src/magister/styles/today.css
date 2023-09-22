@@ -132,6 +132,10 @@
     font: 600 12px/26px var(--st-font-family-secondary);
 }
 
+.st-vd-col-head:first-letter {
+    text-transform: capitalize;
+}
+
 .st-vd-col {
     position: relative;
     flex: 3 1 0px;
@@ -246,6 +250,18 @@
     font: 500 12px/20px var(--st-font-family-secondary);
 }
 
+#st-vd .st-vd-event-teacher-edit {
+    display: none;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background-color: var(--st-highlight-primary);
+}
+
+#st-vd.editing .st-vd-event-teacher-edit {
+    display: block;
+}
+
 .st-vd-event-location {
     grid-area: location;
     font: 500 16px/24px var(--st-font-family-secondary);
@@ -357,10 +373,11 @@
 }
 
 #st-vd-edit-widgets-heading,
-#st-vd-edit-layout-heading {
-    display: inline-block;
-    font: 700 18px var(--st-font-family-primary);
-    margin-block: 6px;
+#st-vd-edit-layout-heading,
+#st-vd-edit-teachers-heading {
+    margin-block: 0;
+    text-align: left;
+    max-width: 100%;
 }
 
 #st-vd-edit-divider {
@@ -373,12 +390,12 @@
 #st-vd-edit-exclude {
     display: inline-block;
     font: 700 16px var(--st-font-family-primary);
-    margin-top: 18px;
-    margin-bottom: 12px;
+    margin-bottom: -4px;
 }
 
-#st-vd-edit-include {
-    margin-bottom: -4px;
+#st-vd-edit-exclude {
+    margin-top: 18px;
+    margin-bottom: 12px;
 }
 
 #st-vd-edit-zoom {

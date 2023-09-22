@@ -716,6 +716,10 @@ aside .tabs:not(.st-cf-sc-override) li.active:after {
     transform: scaleX(-1);
 }
 
+.menu-host .logo a .logo-expanded {
+    margin-left: 0;
+}
+
 dna-card-title.disabled {
     color: var(--st-foreground-primary) !important;
 }

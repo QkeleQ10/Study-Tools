@@ -248,7 +248,20 @@ div.loading-overlay {
     width: 100%;
     height: 1px;
     margin-block: 8px;
-    background-color: var(--st-border-color);
+    border-top: 1px solid var(--st-border-color);
+}
+
+.st-divider.vertical {
+    height: 100%;
+    width: 1px;
+    margin-inline: 8px;
+    margin-block: 0;
+    border-left: 1px solid var(--st-border-color);
+    border-top: none;
+}
+
+.st-divider.thick {
+    border-width: 3px;
 }
 
 .st-sortable-list {

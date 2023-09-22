@@ -9,7 +9,7 @@ async function popstate() {
 
 // Page 'Vandaag'
 async function today() {
-    await getApiCredentials()
+    getApiCredentials()
 
     if (!syncedStorage['vd-enabled']) return
     let sheetSetting = await getFromStorage('vd-sheet', 'local') ?? false,
@@ -67,7 +67,7 @@ async function today() {
     }, 2500)
 
     async function todaySchedule() {
-        await getApiCredentials()
+        getApiCredentials()
 
         let interval
 
@@ -84,8 +84,11 @@ async function today() {
             if (magisterMode) schedule.classList.add('magister-mode')
             else schedule.classList.remove('magister-mode')
 
+            schedule.innerText = ''
+
             let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
             let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
+
 
             let now = new Date(),
                 itemsHidden = false
@@ -170,12 +173,21 @@ async function today() {
                     'data-magister-mode': magisterMode
                 }),
                     colHead
-                if (!magisterMode && (a.length > 1 || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`))
+                if ((!magisterMode && a.length > 1) || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`) {
                     colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
                         class: 'st-vd-col-head',
                         'data-today': (key === now.toISOString().split('T')[0]),
                         innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
                     })
+                }
+
+                // Add a divider line if the days are more than a day apart
+                if (a[i + 1] && Math.abs(new Date(key) - new Date(a[i + 1])) > 86400000) {
+                    let colDivider = element('div', `st-vd-col-${key}-divider`, scheduleWrapper, { class: 'st-divider vertical thick' })
+                    if (colHead) {
+                        let colHeadDivider = element('div', `st-vd-col-${key}-head-divider`, scheduleHead, { class: 'st-divider vertical thick' })
+                    }
+                }
 
                 let eventArr = checkCollision(eventsPerDay[key])
 
@@ -205,14 +217,12 @@ async function today() {
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
                     // Parse and array-ify the subjects, the teachers and the locations
-                    // TODO: Allow users to set custom teacher names
                     let subjectNames = item.Vakken?.map((e, i, a) => {
                         if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
                         return e.Naam
                     }) || [item.Omschrijving]
                     let teacherNames = item.Docenten?.map((e, i, a) => {
-                        if (a.length === 1 && eventElement.clientHeight >= 72) return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
-                        return teacherNamesSetting[e.Docentcode] || e.Naam
+                        return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
                     }) || []
                     let locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
                     if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
@@ -238,6 +248,11 @@ async function today() {
                         let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-vd-event-subject', innerText: subjectNames.join(', ') })
                         let eventLocation = element('span', `st-vd-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-vd-event-location', innerText: locationNames.join(', ') })
                         let eventTeacher = element('span', `st-vd-event-${item.Id}-teacher`, eventElement, { class: 'st-vd-event-teacher', innerText: teacherNames.join(', ') })
+                        if (item.Docenten[0]) {
+                            let eventTeacherEdit = element('button', `st-vd-event-${item.Id}-teacher-edit`, eventElement, { class: 'st-vd-event-teacher-edit st-button icon', 'data-icon': '', title: `Bijnaam van ${item.Docenten[0].Naam} aanpassen`, 'data-teacher-name': item.Docenten[0].Naam, 'data-teacher-code': item.Docenten[0].Docentcode })
+                            eventTeacherEdit.removeEventListener('click', editTeacherName)
+                            eventTeacherEdit.addEventListener('click', editTeacherName)
+                        }
                     }
 
                     // Render the time label
@@ -259,6 +274,20 @@ async function today() {
                     })
                 })
             })
+
+            function editTeacherName(event) {
+                let teacherName = event.target.dataset.teacherName
+                let teacherCode = event.target.dataset.teacherCode
+                event.stopPropagation()
+                let newName = prompt(`Bijnaam invoeren voor ${teacherName} (${teacherCode})`, teacherNamesSetting[teacherCode] || '')
+                if (newName?.length > 0) {
+                    teacherNamesSetting[teacherCode] = newName
+                } else if (teacherNamesSetting[teacherCode]) {
+                    delete teacherNamesSetting[teacherCode]
+                }
+                saveToStorage('teacher-names', teacherNamesSetting, 'local')
+                renderSchedule()
+            }
         }
 
         renderSchedule()
@@ -305,11 +334,12 @@ async function today() {
         let widgetsProgress = element('div', 'st-vd-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-vd-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
 
-        await getApiCredentials()
+        getApiCredentials()
 
         let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
-            container.classList.toggle('sheet-shown')
+            if (container.classList.contains('sheet-shown')) container.classList.remove('sheet-shown')
+            else container.classList.add('sheet-shown')
         })
 
         let now = new Date()
@@ -320,7 +350,6 @@ async function today() {
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
         let widgetFunctions = {
 
-            // TODO WIDGETS
             // ✅ Huiswerk
             // Cijfers
             // ✅ Opdrachten
@@ -368,7 +397,7 @@ async function today() {
 
                         if (elems.length < 1) return resolve()
 
-                        let widgetElement = element('div', 'st-vd-widget-counters', widgets, { class: 'st-widget' })
+                        let widgetElement = element('div', 'st-vd-widget-counters', null, { class: 'st-widget' })
                         widgetElement.append(...elems)
 
                         resolve(widgetElement)
@@ -377,7 +406,6 @@ async function today() {
             },
 
             // TODO: Include grades
-            // TODO: Mark as read (getFromStorage('viewedGrades', 'local'))
             grades: {
                 title: "Cijfers",
                 options: [
@@ -418,14 +446,18 @@ async function today() {
                 ],
                 render: async () => {
                     return new Promise(async resolve => {
+                        let lastReadDate = await getFromStorage('viewedGrades', 'local')
+
                         const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/cijfers/laatste?top=12&skip=0`, { headers: { Authorization: apiUserToken } })
                         const recentGrades = gradesJson.items.map(item => item)
                         console.log(recentGrades)
 
-                        let widgetElement = element('div', 'st-vd-widget-grades', widgets, { class: 'st-tile st-widget' })
+                        if (recentGrades.length < 1) return resolve()
+
+                        let widgetElement = element('div', 'st-vd-widget-grades', null, { class: 'st-tile st-widget' })
                         let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
 
-                        if (true) widgetElement.classList.add('st-unread')
+                        if (new Date() > lastReadDate) widgetElement.classList.add('st-unread')
 
                         let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '-' })
                         let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
@@ -443,7 +475,7 @@ async function today() {
                         const unreadMessages = messagesRes.items
 
                         if (unreadMessages.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-vd-widget-messages', widgets, { class: 'st-tile st-widget' })
+                        let widgetElement = element('div', 'st-vd-widget-messages', null, { class: 'st-tile st-widget' })
                         let widgetTitle = element('div', 'st-vd-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${unreadMessages.length} ongelezen bericht${unreadMessages.length > 1 ? 'en' : ''}` })
 
                         unreadMessages.forEach(item => {
@@ -501,7 +533,7 @@ async function today() {
                         })
 
                         if (homeworkEvents.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-vd-widget-homework', widgets, { class: 'st-tile st-widget' })
+                        let widgetElement = element('div', 'st-vd-widget-homework', null, { class: 'st-tile st-widget' })
                         let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} in de komende maand` })
 
                         homeworkEvents.forEach(item => {
@@ -563,7 +595,7 @@ async function today() {
                         if (markedAssignments.length > 0) statements.push(`${markedAssignments.length} beoordeelde opdracht${markedAssignments.length > 1 ? 'en' : ''}`)
 
                         if (relevantAssignments.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-vd-widget-assignments', widgets, { class: 'st-tile st-widget' })
+                        let widgetElement = element('div', 'st-vd-widget-assignments', null, { class: 'st-tile st-widget' })
                         let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
 
                         relevantAssignments.forEach(item => {
@@ -605,21 +637,22 @@ async function today() {
 
         // Draw the selected widgets in the specified order
         for (const functionName of widgetsShown) {
-            await widgetFunctions[functionName].render()
+            let widgetElement = await widgetFunctions[functionName].render()
+            if (widgetElement) widgets.append(widgetElement)
         }
 
         widgetsProgress.remove()
 
         // Allow for editing
-        let editButton = element('button', 'st-vd-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Weergave" })
+        let editButton = element('button', 'st-vd-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Bewerken" })
         editButton.addEventListener('click', () => {
             container.classList.add('editing')
+            widgets.scrollTop = 0
             widgets.innerText = ''
 
-            let editLayoutTitle = element('span', 'st-vd-edit-layout-heading', widgets, { innerText: "Indeling bewerken" })
+            let editLayoutTitle = element('span', 'st-vd-edit-layout-heading', widgets, { class: 'st-section-title', innerText: "Indeling" })
 
             // Zoom buttons
-            // TODO: refactor
             let zoomWrapper = element('div', 'st-vd-edit-zoom', widgets)
             let zoomIn = element('button', 'st-vd-edit-zoom-in', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
             let zoomReset = element('button', 'st-vd-edit-zoom-reset', zoomWrapper, { class: 'st-button tertiary', innerText: `Roosterschaal: ${Math.round(zoomSetting * 100)}%` })
@@ -654,12 +687,12 @@ async function today() {
                 container.classList.add('sheet-shown')
             })
 
-            let divider = element('div', 'st-vd-edit-divider', widgets, { class: 'st-divider' })
+            let divider1 = element('div', 'st-vd-edit-divider1', widgets, { class: 'st-divider' })
 
-            let editWidgetsHeading = element('span', 'st-vd-edit-widgets-heading', widgets, { innerText: "Widgets bewerken" })
+            // Widgets editor
+            let editWidgetsHeading = element('span', 'st-vd-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
             let includedWidgetsHeading = element('span', 'st-vd-edit-include', widgets, { innerText: "Weergegeven widgets" })
             let sortableList = element('ul', 'st-vd-edit-wrapper', widgets, { class: 'st-sortable-list' })
-
             widgetsOrder.forEach((key, i) => {
                 if (key === 'EXCLUDE') {
                     let excludedWidgetsHeading = element('span', 'st-vd-edit-exclude', sortableList, { innerText: "Verborgen widgets", 'data-value': "EXCLUDE" })
@@ -686,7 +719,7 @@ async function today() {
                                 break
 
                             default:
-                                // TODO: implement other option types
+                                // TODO: implement other option types as necessary
                                 break
                         }
                     })
@@ -698,7 +731,6 @@ async function today() {
                 item.addEventListener("dragend", () => item.classList.remove("dragging"))
 
             })
-
             function initSortableList(event) {
                 event.preventDefault()
                 const draggingItem = document.querySelector(".dragging")
@@ -711,7 +743,6 @@ async function today() {
                 let widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
                 saveToStorage('vd-widgets', widgetsOrder, 'local')
             }
-
             sortableList.addEventListener("dragover", initSortableList)
             sortableList.addEventListener("dragenter", e => e.preventDefault())
 
@@ -719,6 +750,7 @@ async function today() {
             let finishButton = element('button', 'st-vd-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Voltooien" })
             finishButton.addEventListener('click', () => {
                 container.classList.remove('editing')
+                widgets.scrollTop = 0
                 widgets.innerText = ''
                 todayWidgets()
             }, { once: true })

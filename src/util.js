@@ -64,6 +64,8 @@ function element(tagName, id, parent, attributes) {
 }
 
 async function getApiCredentials() {
+    apiUserId = await getFromStorage('user-id', 'local')
+    apiUserToken = await getFromStorage('token', 'local')
     return new Promise(async (resolve, reject) => {
         let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
         apiUserId = req.apiUserId
