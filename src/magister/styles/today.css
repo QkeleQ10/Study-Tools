@@ -258,6 +258,11 @@
     background-color: var(--st-highlight-primary);
 }
 
+#st-vd .tight .st-vd-event-teacher-edit {
+    top: 50%;
+    translate: 0 -50%;
+}
+
 #st-vd.editing .st-vd-event-teacher-edit {
     display: block;
 }
@@ -366,7 +371,13 @@
     font-size: 12px;
 }
 
-#st-vd-edit,
+#st-vd.editing .st-widget,
+#st-vd.editing #st-vd-start-edit,
+#st-vd:not(.editing) *[id^='st-vd-edit'] {
+    display: none;
+}
+
+#st-vd-start-edit,
 #st-vd-edit-finish {
     margin-top: auto;
     margin-inline: auto;

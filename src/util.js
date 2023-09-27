@@ -63,6 +63,7 @@ function element(tagName, id, parent, attributes) {
         if (attributes) setAttributes(elem, attributes)
     } else {
         if (attributes) setAttributes(elem, attributes)
+        if (parent) parent.append(elem)
     }
     return elem
 }

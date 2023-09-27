@@ -631,23 +631,13 @@ async function today() {
                     })
                 }
             },
-
         }
-
-        // Draw the selected widgets in the specified order
-        for (const functionName of widgetsShown) {
-            let widgetElement = await widgetFunctions[functionName].render()
-            if (widgetElement) widgets.append(widgetElement)
-        }
-
-        widgetsProgress.remove()
 
         // Allow for editing
-        let editButton = element('button', 'st-vd-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Bewerken" })
+        let editButton = element('button', 'st-vd-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Bewerken" })
         editButton.addEventListener('click', () => {
             container.classList.add('editing')
             widgets.scrollTop = 0
-            widgets.innerText = ''
 
             let editLayoutTitle = element('span', 'st-vd-edit-layout-heading', widgets, { class: 'st-section-title', innerText: "Indeling" })
 
@@ -754,6 +744,15 @@ async function today() {
                 todayWidgets()
             }, { once: true })
         })
+
+        // Draw the selected widgets in the specified order
+        for (const functionName of widgetsShown) {
+            let widgetElement = await widgetFunctions[functionName].render()
+            if (widgetElement) widgets.append(widgetElement)
+            element('button', 'st-vd-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Bewerken" })
+        }
+
+        widgetsProgress.remove()
     }
 
     function verifyDisplayMode() {

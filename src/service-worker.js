@@ -77,7 +77,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     console.info(`Credentials sent to ${sender.url}.`)
                 })
                 .catch(() => {
-                    sendResponse({ status: 'error' })
+                    sendResponse({ apiUserId, apiUserToken, error: "May be too old." })
+                    console.warn(`Possibly outdated credentials sent to ${sender.url}.`)
                 })
             return true
 
