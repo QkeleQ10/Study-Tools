@@ -25,6 +25,7 @@ async function main() {
     shortcuts.slice().reverse().forEach((shortcut, i, a) => {
         let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
         url = url.replace('$SCHOOLNAAM', window.location.hostname.split('.')[0])
+        saveToStorage('schoolName', window.location.hostname.split('.')[0], 'local')
         let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
             shortcutA = element('a', `st-shortcut-${i}-a`, shortcutDiv, { href: url, target: '_blank', }),
             shortcutI = element('i', `st-shortcut-${i}-i`, shortcutA, { class: 'st-shortcut-icon', innerText: shortcut.icon }),

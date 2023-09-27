@@ -21,18 +21,22 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 async function checkAnnouncements() {
     let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
-    if (response.ok) {
-        let data = await response.json()
-        for (const key in data) {
-            if (Object.hasOwnProperty.call(data, key)) {
-                let value = data[key]
-                if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
-                if (value.dateStart && (new Date(value.dateStart) > new Date())) return
-                if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
-                showSnackbar(value.body, value.duration || 10000, value.buttons)
-            }
-        }
-    }
+    if (!response.ok) return
+    let data = await response.json()
+
+    Object.keys(data).forEach(async key => {
+        let value = data[key]
+
+        if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
+        if (value.onlyForSchools && !value.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) return
+        if (value.dateStart && (new Date(value.dateStart) > new Date())) return
+        if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
+        if (value.onlyOnWeekdays && !value.onlyOnWeekdays.includes(new Date().getDay())) return
+        if (value.onlyBeforeTime && (new Date(`${new Date().toDateString()} ${value.onlyOnWeekdays}`) < new Date())) return
+        if (value.onlyAfterTime && (new Date(`${new Date().toDateString()} ${value.onlyAfterTime}`) > new Date())) return
+
+        showSnackbar(value.body, value.duration || 10000, value.buttons)
+    })
 }
 
 // Output eggs
@@ -189,7 +193,13 @@ async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
         snackbar.append(a)
         setAttributes(a, element)
         if (element.innerText) a.innerText = element.innerText
-        a.addEventListener('click', event => event.stopPropagation())
+        if (element.clickSelector) {
+            a.addEventListener('click', event => {
+                document.querySelector(element.clickSelector)?.click()
+                event.stopPropagation()
+            })
+        }
+        else a.addEventListener('click', event => event.stopPropagation())
     })
     let snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
     snackbarDismiss.addEventListener('click', () => {

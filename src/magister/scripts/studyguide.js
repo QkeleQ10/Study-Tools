@@ -238,7 +238,7 @@ function appendStudyguidesToList() {
             let query = searchBar.value.toLowerCase()
             matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject?.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
         } else {
-            matches = !hiddenStudyguides.includes(studyguide.dataset.title)
+            matches = (!hiddenStudyguides.includes(studyguide.dataset.title))
         }
 
         if (matches) studyguide.classList.remove('hidden')
