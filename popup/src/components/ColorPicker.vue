@@ -27,7 +27,17 @@ const swatches = [
     { h: 341, s: 61, l: 41 }, // pink
     { h: 290, s: 41, l: 41 }, // purple
     { h: 240, s: 41, l: 41 }, // indigo
-]
+],
+    swatchNames = [
+        "Azuurblauw",
+        "Zeegroen",
+        "Mosgroen",
+        "Oranjegeel",
+        "Bloedrood",
+        "Rozerood",
+        "Lavendelpaars",
+        "Bosbespaars"
+    ]
 const supportsEyeDropper = window.EyeDropper
 
 let pickerOpen = ref(false)
@@ -61,13 +71,14 @@ function eyeDropper() {
         </div>
         <!--should the swatches have their own bottom-sheet for colour consistency?-->
         <div class="swatches-wrapper">
-            <button v-for="(swatch, i) in swatches" :key="i" class="swatch" :style="{ '--h': swatch.h, '--s': swatch.s, '--l': swatch.l }"
+            <button v-for="(swatch, i) in swatches" :key="i" class="swatch"
+                :style="{ '--h': swatch.h, '--s': swatch.s, '--l': swatch.l }" :title="swatchNames[i]"
                 @click="value = swatch" :data-state="colorsEqual(value, swatch)">
                 <Transition name="swatch-check">
                     <Icon v-if="colorsEqual(value, swatch)">check</Icon>
                 </Transition>
             </button>
-            <button class="custom-swatch" :style="{ '--h': value.h, '--s': value.s, '--l': value.l }"
+            <button class="custom-swatch" :style="{ '--h': value.h, '--s': value.s, '--l': value.l }" title="Eigen kleur"
                 @click="pickerOpen = !pickerOpen" :data-state="swatches.every(swatch => !colorsEqual(value, swatch))">
                 <Icon>palette</Icon>
             </button>
@@ -81,7 +92,8 @@ function eyeDropper() {
                     <Icon>colorize</Icon>
                     <span>Pipet</span>
                 </button>
-                <span class="supporting-text" v-else>Jouw browser ondersteunt de pipetfunctie niet. Kies een kleur via de kleurenkiezer.</span>
+                <span class="supporting-text" v-else>Jouw browser ondersteunt de pipetfunctie niet. Kies een kleur via de
+                    kleurenkiezer.</span>
             </template>
         </BottomSheet>
     </div>
@@ -108,8 +120,9 @@ function eyeDropper() {
     transition: border-radius 200ms, flex-grow 200ms, background-color 200ms;
 }
 
-.swatch,
+.setting.color-picker .swatch,
 .custom-swatch[data-state=true] {
+    color: #fff;
     background-color: hsl(var(--h) calc(var(--s) * 1%) calc(var(--l) * 1%));
 }
 

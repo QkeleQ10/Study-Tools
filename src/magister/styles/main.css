@@ -429,12 +429,12 @@ div.loading-overlay {
     translate: -50%;
 }
 
-#st-vd-schedule>ul>li:hover {
+#st-start-schedule>ul>li:hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
 
-#st-vd-schedule>ul>li[data-current] {
+#st-start-schedule>ul>li[data-current] {
     background: var(--st-highlight-primary)
 }
 

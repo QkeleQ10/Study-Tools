@@ -4,9 +4,6 @@ const subjects = {
     subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
     type: "SubjectEditor",
     inline: true,
-    conditions: [
-        { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-    ],
     default: [
         { name: "Aardrijkskunde", aliases: "ak" },
         { name: "Bedrijfseconomie", aliases: "beco, bec" },
@@ -82,6 +79,12 @@ export default [
                 wizard: "Wil je een alternatieve accentkleur kiezen?",
             },
             {
+                id: "decoration",
+                title: "Decoratie",
+                type: "DecorationPicker",
+                default: 'none',
+            },
+            {
                 id: "shape",
                 title: "Afgeronde hoeken",
                 type: "SlideInput",
@@ -149,12 +152,12 @@ export default [
     },
     {
         id: "login",
-        wizard: "Kies de manier van inloggen op je school om automatisch inloggen in te schakelen.",
         settings: [
             {
                 id: "magisterLogin-method",
                 title: "Automatisch inloggen",
                 subtitle: "Log automatisch in met je Microsoft-account of met een Magister-wachtwoord.",
+                wizard: "Kies de manier van inloggen op je school om automatisch inloggen in te schakelen.",
                 type: "SegmentedButton",
                 default: "microsoft",
                 options: [
@@ -207,20 +210,20 @@ export default [
     {
         id: "enhancements",
         settings: [
-            // TODO: possibly condense vd-enabled and vd-schedule-view into one: vd-view (off, schedule, list)
             {
-                id: "vd-enabled",
-                title: "Verbeterd startscherm",
+                id: "start-enabled",
+                title: "Pagina Start",
+                subtitle: "De pagina 'Vandaag' is nu 'Start'. Daarin zie je je rooster en gepersonaliseerde widgets. Aanvullende opties op Magister zelf.",
                 default: true,
             },
-            // TODO: possibly a setting to determine the widgets panel display mode: vd-widgets-view: (split, overlay)
+            // TODO: possibly move these settings to the actual Start page
             {
-                id: "vd-schedule-view",
-                title: "Weergave rooster",
+                id: "start-schedule-view",
+                title: "Rooster in Start",
                 type: "SegmentedButton",
                 default: "schedule",
                 conditions: [
-                    { settingId: 'vd-enabled', operator: 'equal', value: true }
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
                 ],
                 options: [
                     {
@@ -236,8 +239,8 @@ export default [
                 ],
             },
             {
-                id: "vd-schedule-days",
-                title: "Aantal dagen weergeven",
+                id: "start-schedule-days",
+                title: "Aantal dagen weergeven in Start",
                 type: "SlideInput",
                 default: 1,
                 format: " d",
@@ -246,19 +249,19 @@ export default [
                 max: 5,
                 step: 1,
                 conditions: [
-                    { settingId: 'vd-enabled', operator: 'equal', value: true },
-                    { settingId: 'vd-schedule-view', operator: 'equal', value: 'schedule' }
+                    { settingId: 'start-enabled', operator: 'equal', value: true },
+                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' }
                 ],
             },
             {
-                id: "vd-schedule-extra-day",
-                title: "Extra dag weergeven",
+                id: "start-schedule-extra-day",
+                title: "Extra dag weergeven in Start",
                 subtitle: "Aan het eind van de schooldag alvast de volgende schooldag weergeven.",
                 default: true,
                 conditions: [
-                    { settingId: 'vd-enabled', operator: 'equal', value: true },
-                    { settingId: 'vd-schedule-view', operator: 'equal', value: 'schedule' },
-                    { settingId: 'vd-schedule-days', operator: 'equal', value: 1 }
+                    { settingId: 'start-enabled', operator: 'equal', value: true },
+                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' },
+                    { settingId: 'start-schedule-days', operator: 'equal', value: 1 }
                 ],
             },
             {

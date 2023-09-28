@@ -10,24 +10,24 @@ async function popstate() {
 // Page 'Vandaag'
 async function today() {
 
-    if (!syncedStorage['vd-enabled']) return
-    let sheetSetting = await getFromStorage('vd-sheet', 'local') ?? false,
-        zoomSetting = await getFromStorage('vd-zoom', 'local') || 1,
+    if (!syncedStorage['start-enabled']) return
+    let sheetSetting = await getFromStorage('start-sheet', 'local') ?? false,
+        zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
         teacherNamesSetting = await getFromStorage('teacher-names', 'local') || {},
         mainView = await awaitElement('div.view:has(#vandaag-container)'),
-        container = element('div', 'st-vd', mainView, { class: sheetSetting ? 'sheet' : '' }),
-        header = element('div', 'st-vd-header', container),
-        headerText = element('span', 'st-vd-header-span', header, { class: 'st-title' }),
-        schedule = element('div', 'st-vd-schedule', container),
-        widgets = element('div', 'st-vd-widgets', container),
-        buttonWrapper = element('div', 'st-vd-button-wrapper', container)
+        container = element('div', 'st-start', mainView, { class: sheetSetting ? 'sheet' : '' }),
+        header = element('div', 'st-start-header', container),
+        headerText = element('span', 'st-start-header-span', header, { class: 'st-title' }),
+        schedule = element('div', 'st-start-schedule', container),
+        widgets = element('div', 'st-start-widgets', container),
+        buttonWrapper = element('div', 'st-start-button-wrapper', container)
 
     let renderSchedule
 
-    const daysToShowSetting = syncedStorage['vd-schedule-days'] || 1
+    const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
     let daysToShow = daysToShowSetting
 
-    const magisterModeSetting = syncedStorage['vd-schedule-view'] === 'list'
+    const magisterModeSetting = syncedStorage['start-schedule-view'] === 'list'
     let magisterMode = magisterModeSetting
 
     todaySchedule()
@@ -85,8 +85,8 @@ async function today() {
 
             schedule.innerText = ''
 
-            let scheduleHead = element('div', `st-vd-schedule-head`, schedule)
-            let scheduleWrapper = element('div', 'st-vd-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
+            let scheduleHead = element('div', `st-start-schedule-head`, schedule)
+            let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
 
 
             let now = new Date(),
@@ -120,11 +120,11 @@ async function today() {
                 return latestHour
             }, null)
 
-            // Add another column if the day is over (given the user has not disabled vd-schedule-extra-day)
+            // Add another column if the day is over (given the user has not disabled start-schedule-extra-day)
             if (
                 timeInHours(now) >= agendaEnd
                 && daysToShow === daysToShowSetting
-                && syncedStorage['vd-schedule-extra-day']
+                && syncedStorage['start-schedule-extra-day']
                 && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
             ) {
                 daysToShow = daysToShowSetting + 1
@@ -135,10 +135,10 @@ async function today() {
             // Create tick marks for schedule view
             if (!magisterMode) {
                 for (let i = agendaStart; i <= agendaEnd; i += 0.5) {
-                    let hourTick = element('div', `st-vd-tick-${i}h`, scheduleWrapper, { class: `st-vd-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
+                    let hourTick = element('div', `st-start-tick-${i}h`, scheduleWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
                 }
-                if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd) {
-                    let nowMarker = element('div', `st-vd-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
+                if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)) {
+                    let nowMarker = element('div', `st-start-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
                     nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
                     interval = setInterval(() => {
                         if (timeInHours(now) >= agendaEnd) {
@@ -148,7 +148,7 @@ async function today() {
                         if (
                             timeInHours(now) >= agendaEnd
                             && daysToShow === daysToShowSetting
-                            && syncedStorage['vd-schedule-extra-day']
+                            && syncedStorage['start-schedule-extra-day']
                             && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
                         ) {
                             daysToShow = daysToShowSetting + 1
@@ -156,7 +156,7 @@ async function today() {
                             return
                         }
                         now = new Date()
-                        nowMarker = element('div', `st-vd-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
+                        nowMarker = element('div', `st-start-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
                     }, 30000)
                 }
             }
@@ -166,15 +166,15 @@ async function today() {
                 if (magisterMode && i > 0) return
 
                 // Create a column for the day
-                let col = element('div', `st-vd-col-${key}`, scheduleWrapper, {
-                    class: 'st-vd-col',
+                let col = element('div', `st-start-col-${key}`, scheduleWrapper, {
+                    class: 'st-start-col',
                     'data-today': (key === now.toISOString().split('T')[0]),
                     'data-magister-mode': magisterMode
                 }),
                     colHead
                 if ((!magisterMode && a.length > 1) || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`) {
-                    colHead = element('div', `st-vd-col-${key}-head`, scheduleHead, {
-                        class: 'st-vd-col-head',
+                    colHead = element('div', `st-start-col-${key}-head`, scheduleHead, {
+                        class: 'st-start-col-head',
                         'data-today': (key === now.toISOString().split('T')[0]),
                         innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
                     })
@@ -182,9 +182,9 @@ async function today() {
 
                 // Add a divider line if the days are more than a day apart
                 if (a[i + 1] && Math.abs(new Date(key) - new Date(a[i + 1])) > 86400000) {
-                    let colDivider = element('div', `st-vd-col-${key}-divider`, scheduleWrapper, { class: 'st-divider vertical thick' })
+                    let colDivider = element('div', `st-start-col-${key}-divider`, scheduleWrapper, { class: 'st-divider vertical thick' })
                     if (colHead) {
-                        let colHeadDivider = element('div', `st-vd-col-${key}-head-divider`, scheduleHead, { class: 'st-divider vertical thick' })
+                        let colHeadDivider = element('div', `st-start-col-${key}-head-divider`, scheduleHead, { class: 'st-divider vertical thick' })
                     }
                 }
 
@@ -211,7 +211,7 @@ async function today() {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-vd-event-${item.Id}`, col, { class: 'st-vd-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
+                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
                     if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
@@ -229,7 +229,7 @@ async function today() {
 
                     // Render the school hour label
                     let schoolHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
-                    let eventSchoolHours = element('div', `st-vd-event-${item.Id}-school-hours`, eventElement, { class: 'st-vd-event-school-hours', innerText: schoolHours })
+                    let eventSchoolHours = element('div', `st-start-event-${item.Id}-school-hours`, eventElement, { class: 'st-start-event-school-hours', innerText: schoolHours })
                     if (item.Type === 1) {
                         eventSchoolHours.classList.add('icon')
                         eventSchoolHours.innerText = ''
@@ -241,21 +241,21 @@ async function today() {
 
                     // Render the subject, location and teacher labels
                     if (magisterMode) {
-                        let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventElement, { class: 'st-vd-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
+                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
-                        let eventSubjectWrapper = element('span', `st-vd-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-vd-event-subject-wrapper' })
-                        let eventSubject = element('span', `st-vd-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-vd-event-subject', innerText: subjectNames.join(', ') })
-                        let eventLocation = element('span', `st-vd-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-vd-event-location', innerText: locationNames.join(', ') })
-                        let eventTeacher = element('span', `st-vd-event-${item.Id}-teacher`, eventElement, { class: 'st-vd-event-teacher', innerText: teacherNames.join(', ') })
+                        let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject-wrapper' })
+                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-start-event-subject', innerText: subjectNames.join(', ') })
+                        let eventLocation = element('span', `st-start-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-start-event-location', innerText: locationNames.join(', ') })
+                        let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, eventElement, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
                         if (item.Docenten[0]) {
-                            let eventTeacherEdit = element('button', `st-vd-event-${item.Id}-teacher-edit`, eventElement, { class: 'st-vd-event-teacher-edit st-button icon', 'data-icon': '', title: `Bijnaam van ${item.Docenten[0].Naam} aanpassen`, 'data-teacher-name': item.Docenten[0].Naam, 'data-teacher-code': item.Docenten[0].Docentcode })
+                            let eventTeacherEdit = element('button', `st-start-event-${item.Id}-teacher-edit`, eventElement, { class: 'st-start-event-teacher-edit st-button icon', 'data-icon': '', title: `Bijnaam van ${item.Docenten[0].Naam} aanpassen`, 'data-teacher-name': item.Docenten[0].Naam, 'data-teacher-code': item.Docenten[0].Docentcode })
                             eventTeacherEdit.removeEventListener('click', editTeacherName)
                             eventTeacherEdit.addEventListener('click', editTeacherName)
                         }
                     }
 
                     // Render the time label
-                    let eventTime = element('span', `st-vd-event-${item.Id}-time`, eventElement, { class: 'st-vd-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+                    let eventTime = element('span', `st-start-event-${item.Id}-time`, eventElement, { class: 'st-start-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
 
                     // Parse and render any chips
                     // TODO: More InfoTypes
@@ -267,9 +267,9 @@ async function today() {
                     if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
                     else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 
-                    let eventChipsWrapper = element('div', `st-vd-event-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
+                    let eventChipsWrapper = element('div', `st-start-event-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
                     chips.forEach(chip => {
-                        let chipElement = element('span', `st-vd-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        let chipElement = element('span', `st-start-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                     })
                 })
             })
@@ -292,7 +292,7 @@ async function today() {
         renderSchedule()
 
         // Allow for 5-day view
-        let todayExpander = element('button', 'st-vd-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
+        let todayExpander = element('button', 'st-start-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
         todayExpander.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
@@ -318,7 +318,7 @@ async function today() {
 
         // Update ongoing events every 30 seconds
         setInterval(() => {
-            let events = document.querySelectorAll('.st-vd-event[data-start][data-end]'),
+            let events = document.querySelectorAll('.st-start-event[data-start][data-end]'),
                 now = new Date()
 
             events.forEach(item => {
@@ -330,12 +330,13 @@ async function today() {
     }
 
     async function todayWidgets() {
-        let widgetsProgress = element('div', 'st-vd-widget-progress', widgets, { class: 'st-progress-bar' })
-        let widgetsProgressValue = element('div', 'st-vd-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
+        let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
+        let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
+        let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
 
         await getApiCredentials()
 
-        let widgetsToggler = element('button', 'st-vd-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
+        let widgetsToggler = element('button', 'st-start-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
             if (container.classList.contains('sheet-shown')) container.classList.remove('sheet-shown')
             else container.classList.add('sheet-shown')
@@ -345,7 +346,7 @@ async function today() {
         let gatherStart = now,
             gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
-        let widgetsOrder = await getFromStorage('vd-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE']
+        let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
         let widgetFunctions = {
 
@@ -357,46 +358,53 @@ async function today() {
             // Tellertjes
             // ...
 
-            // TODO: Add more counters than just these 3
             counters: {
                 title: "Beknopte notificaties",
                 render: async () => {
                     return new Promise(async resolve => {
                         let elems = []
 
+                        widgetsProgressText.innerText = `Cijfers ophalen...`
+                        // TODO: Grades
+
+                        widgetsProgressText.innerText = `Berichten ophalen...`
                         const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, { headers: { Authorization: apiUserToken } })
                         const unreadMessagesNum = messagesRes.totalCount
                         if (unreadMessagesNum > 0 && !widgetsShown.includes('messages')) {
-                            elems.push(element('div', 'st-vd-widget-counters-messages', null, { class: 'st-metric', innerText: unreadMessagesNum, 'data-description': "Berichten" }))
+                            elems.push(element('div', 'st-start-widget-counters-messages', null, { class: 'st-metric', innerText: unreadMessagesNum, 'data-description': "Berichten" }))
                         }
 
+                        widgetsProgressText.innerText = `Huiswerk ophalen...`
                         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                         if (homeworkEvents.length > 0 && !widgetsShown.includes('homework')) {
-                            elems.push(element('div', 'st-vd-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
+                            elems.push(element('div', 'st-start-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
                         }
 
+                        widgetsProgressText.innerText = `Opdrachten ophalen...`
                         const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                         if (dueAssignments.length > 0 && !widgetsShown.includes('assignments')) {
-                            elems.push(element('div', 'st-vd-widget-counters-assignments', null, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" }))
+                            elems.push(element('div', 'st-start-widget-counters-assignments', null, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" }))
                         }
 
+                        widgetsProgressText.innerText = `Activiteiten ophalen...`
                         const activitiesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/activiteiten?status=NogNietAanEisVoldaan&count=true`, { headers: { Authorization: apiUserToken } })
                         const activitiesNum = activitiesRes.TotalCount
                         if (activitiesNum > 0) {
-                            elems.push(element('div', 'st-vd-widget-counters-activities', null, { class: 'st-metric', innerText: activitiesNum, 'data-description': "Activiteiten" }))
+                            elems.push(element('div', 'st-start-widget-counters-activities', null, { class: 'st-metric', innerText: activitiesNum, 'data-description': "Activiteiten" }))
                         }
 
+                        widgetsProgressText.innerText = `Logboeken ophalen...`
                         const logsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${apiUserId}/logboeken/count`, { headers: { Authorization: apiUserToken } })
                         const logsNum = logsRes.count
                         if (logsNum > 0) {
-                            elems.push(element('div', 'st-vd-widget-counters-logs', null, { class: 'st-metric', innerText: logsNum, 'data-description': "Logboeken" }))
+                            elems.push(element('div', 'st-start-widget-counters-logs', null, { class: 'st-metric', innerText: logsNum, 'data-description': "Logboeken" }))
                         }
 
                         if (elems.length < 1) return resolve()
 
-                        let widgetElement = element('div', 'st-vd-widget-counters', null, { class: 'st-widget' })
+                        let widgetElement = element('div', 'st-start-widget-counters', null, { class: 'st-widget' })
                         widgetElement.append(...elems)
 
                         resolve(widgetElement)
@@ -410,7 +418,7 @@ async function today() {
                 options: [
                     {
                         title: "Widget weergeven",
-                        key: 'vd-widget-cf-widget',
+                        key: 'start-widget-cf-widget',
                         type: 'select',
                         choices: [
                             {
@@ -425,7 +433,7 @@ async function today() {
                     },
                     {
                         title: "Beoordeling weergeven",
-                        key: 'vd-widget-cf-result',
+                        key: 'start-widget-cf-result',
                         type: 'select',
                         choices: [
                             {
@@ -453,13 +461,13 @@ async function today() {
 
                         if (recentGrades.length < 1) return resolve()
 
-                        let widgetElement = element('div', 'st-vd-widget-grades', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-vd-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
+                        let widgetElement = element('div', 'st-start-widget-grades', null, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
 
                         if (new Date() > lastReadDate) widgetElement.classList.add('st-unread')
 
-                        let lastGrade = element('span', 'st-vd-widget-grades-last', widgetElement, { innerText: '-' })
-                        let lastGradeSubject = element('span', 'st-vd-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
+                        let lastGrade = element('span', 'st-start-widget-grades-last', widgetElement, { innerText: '-' })
+                        let lastGradeSubject = element('span', 'st-start-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
 
                         resolve(widgetElement)
                     })
@@ -474,25 +482,25 @@ async function today() {
                         const unreadMessages = messagesRes.items
 
                         if (unreadMessages.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-vd-widget-messages', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-vd-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${unreadMessages.length} ongelezen bericht${unreadMessages.length > 1 ? 'en' : ''}` })
+                        let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('div', 'st-start-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${unreadMessages.length} ongelezen bericht${unreadMessages.length > 1 ? 'en' : ''}` })
 
                         unreadMessages.forEach(item => {
-                            let messageElement = element('button', `st-vd-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
+                            let messageElement = element('button', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
                             messageElement.addEventListener('click', () => window.location.hash = `#/berichten`)
-                            let messageDate = element('span', `st-vd-widget-messages-${item.id}-date`, messageElement, {
+                            let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, messageElement, {
                                 class: 'st-list-timestamp',
                                 innerText: new Date(item.verzondenOp).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
                             })
-                            let messageSender = element('span', `st-vd-widget-messages-${item.id}-title`, messageElement, { class: 'st-list-title', innerText: item.afzender.naam })
-                            let messageSubject = element('div', `st-vd-widget-messages-${item.id}-content`, messageElement, { class: 'st-list-content', innerText: item.onderwerp })
+                            let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, messageElement, { class: 'st-list-title', innerText: item.afzender.naam })
+                            let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, messageElement, { class: 'st-list-content', innerText: item.onderwerp })
 
                             let chips = []
                             if (item.heeftPrioriteit) chips.push({ name: "Belangrijk", type: 'warn' })
 
-                            let messageChipsWrapper = element('div', `st-vd-widget-messages-${item.id}-labels`, messageElement, { class: 'st-chips-wrapper' })
+                            let messageChipsWrapper = element('div', `st-start-widget-messages-${item.id}-labels`, messageElement, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
-                                let chipElement = element('span', `st-vd-widget-messages-${item.id}-label-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                                let chipElement = element('span', `st-start-widget-messages-${item.id}-label-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                             })
                         })
 
@@ -506,7 +514,7 @@ async function today() {
                 options: [
                     {
                         title: "Afgeronde items tonen",
-                        key: 'vd-widget-hw-filter',
+                        key: 'start-widget-hw-filter',
                         type: 'select',
                         choices: [
                             {
@@ -522,7 +530,7 @@ async function today() {
                 ],
                 render: async () => {
                     return new Promise(async resolve => {
-                        const filterOption = await getFromStorage('vd-widget-hw-filter', 'local') || 'incomplete'
+                        const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
                         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`, { headers: { Authorization: apiUserToken } })
                         const homeworkEvents = eventsRes.Items.filter(item => {
                             if (filterOption === 'incomplete')
@@ -532,8 +540,8 @@ async function today() {
                         })
 
                         if (homeworkEvents.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-vd-widget-homework', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-vd-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} in de komende maand` })
+                        let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} in de komende maand` })
 
                         homeworkEvents.forEach(item => {
                             let subjectNames = item.Vakken?.map((e, i, a) => {
@@ -551,14 +559,14 @@ async function today() {
                             if (new Date(item.Start).toDateString() === new Date().toDateString())
                                 date = `vandaag ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
 
-                            let eventElement = element('button', `st-vd-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
+                            let eventElement = element('button', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
                             eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
-                            let eventDate = element('span', `st-vd-widget-homework-${item.Id}-date`, eventElement, {
+                            let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, eventElement, {
                                 class: 'st-list-timestamp',
                                 innerText: date
                             })
-                            let eventSubject = element('span', `st-vd-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
-                            let eventContent = element('div', `st-vd-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
+                            let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
+                            let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
                             eventContent.setHTML(item.Inhoud)
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
@@ -569,9 +577,9 @@ async function today() {
                             if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
                             else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
 
-                            let eventChipsWrapper = element('div', `st-vd-widget-homework-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
+                            let eventChipsWrapper = element('div', `st-start-widget-homework-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
-                                let chipElement = element('span', `st-vd-widget-homework-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                                let chipElement = element('span', `st-start-widget-homework-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                             })
                         })
 
@@ -594,8 +602,8 @@ async function today() {
                         if (markedAssignments.length > 0) statements.push(`${markedAssignments.length} beoordeelde opdracht${markedAssignments.length > 1 ? 'en' : ''}`)
 
                         if (relevantAssignments.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-vd-widget-assignments', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-vd-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
+                        let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('div', 'st-start-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
 
                         relevantAssignments.forEach(item => {
                             let
@@ -607,23 +615,23 @@ async function today() {
                             if (new Date(item.InleverenVoor).toDateString() === new Date().toDateString())
                                 date = `vandaag ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
 
-                            let assignmentElement = element('button', `st-vd-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
+                            let assignmentElement = element('button', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
                             assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
-                            let assignmentDate = element('span', `st-vd-widget-assignments-${item.Id}-date`, assignmentElement, {
+                            let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, assignmentElement, {
                                 class: 'st-list-timestamp',
                                 innerText: date
                             })
-                            let assignmentTitle = element('span', `st-vd-widget-assignments-${item.Id}-title`, assignmentElement, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
-                            let assignmentContent = element('div', `st-vd-widget-assignments-${item.Id}-content`, assignmentElement, { class: 'st-list-content' })
+                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, assignmentElement, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
+                            let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, assignmentElement, { class: 'st-list-content' })
                             assignmentContent.setHTML(item.Omschrijving)
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
                             if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
 
-                            let assignmentChipsWrapper = element('div', `st-vd-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
+                            let assignmentChipsWrapper = element('div', `st-start-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
-                                let chipElement = element('span', `st-vd-widget-assignments-${item.id}-label-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                                let chipElement = element('span', `st-start-widget-assignments-${item.id}-label-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                             })
                         })
 
@@ -634,18 +642,18 @@ async function today() {
         }
 
         // Allow for editing
-        let editButton = element('button', 'st-vd-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Bewerken" })
+        let editButton = element('button', 'st-start-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Pagina Start bewerken" })
         editButton.addEventListener('click', () => {
             container.classList.add('editing')
             widgets.scrollTop = 0
 
-            let editLayoutTitle = element('span', 'st-vd-edit-layout-heading', widgets, { class: 'st-section-title', innerText: "Indeling" })
+            let editLayoutTitle = element('span', 'st-start-edit-layout-heading', widgets, { class: 'st-section-title', innerText: "Indeling" })
 
             // Zoom buttons
-            let zoomWrapper = element('div', 'st-vd-edit-zoom', widgets)
-            let zoomIn = element('button', 'st-vd-edit-zoom-in', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
-            let zoomReset = element('button', 'st-vd-edit-zoom-reset', zoomWrapper, { class: 'st-button tertiary', innerText: `Roosterschaal: ${Math.round(zoomSetting * 100)}%` })
-            let zoomOut = element('button', 'st-vd-edit-zoom-out', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
+            let zoomWrapper = element('div', 'st-start-edit-zoom', widgets)
+            let zoomIn = element('button', 'st-start-edit-zoom-in', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
+            let zoomReset = element('button', 'st-start-edit-zoom-reset', zoomWrapper, { class: 'st-button tertiary', innerText: `Roosterschaal: ${Math.round(zoomSetting * 100)}%` })
+            let zoomOut = element('button', 'st-start-edit-zoom-out', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
             zoomIn.addEventListener('click', () => {
                 zoomSetting += .1
                 effectuateZoom()
@@ -660,46 +668,46 @@ async function today() {
             })
             function effectuateZoom() {
                 zoomReset.innerText = `Roosterschaal: ${Math.round(zoomSetting * 100)}%`
-                saveToStorage('vd-zoom', zoomSetting, 'local')
-                document.querySelector('#st-vd-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+                saveToStorage('start-zoom', zoomSetting, 'local')
+                document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
                 renderSchedule()
             }
 
             // View mode checkbox
-            let sheetModeLabel = element('label', 'st-vd-edit-sheet-label', widgets, { class: 'st-checkbox-label', innerText: "Widgets naast rooster weergeven" })
-            let sheetModeInput = element('input', 'st-vd-edit-sheet-input', sheetModeLabel, { type: 'checkbox', class: 'st-checkbox-input' })
+            let sheetModeLabel = element('label', 'st-start-edit-sheet-label', widgets, { class: 'st-checkbox-label', innerText: "Widgets naast rooster weergeven" })
+            let sheetModeInput = element('input', 'st-start-edit-sheet-input', sheetModeLabel, { type: 'checkbox', class: 'st-checkbox-input' })
             if (!sheetSetting) sheetModeInput.checked = true
             sheetModeInput.addEventListener('change', event => {
                 sheetSetting = !event.target.checked
-                saveToStorage('vd-sheet', sheetSetting, 'local')
+                saveToStorage('start-sheet', sheetSetting, 'local')
                 verifyDisplayMode()
                 container.classList.add('sheet-shown')
             })
 
-            let divider1 = element('div', 'st-vd-edit-divider1', widgets, { class: 'st-divider' })
+            let divider1 = element('div', 'st-start-edit-divider1', widgets, { class: 'st-divider' })
 
             // Widgets editor
-            let editWidgetsHeading = element('span', 'st-vd-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
-            let includedWidgetsHeading = element('span', 'st-vd-edit-include', widgets, { innerText: "Weergegeven widgets" })
-            let sortableList = element('ul', 'st-vd-edit-wrapper', widgets, { class: 'st-sortable-list' })
+            let editWidgetsHeading = element('span', 'st-start-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
+            let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Weergegeven widgets" })
+            let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
             widgetsOrder.forEach((key, i) => {
                 if (key === 'EXCLUDE') {
-                    let excludedWidgetsHeading = element('span', 'st-vd-edit-exclude', sortableList, { innerText: "Verborgen widgets", 'data-value': "EXCLUDE" })
+                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Verborgen widgets", 'data-value': "EXCLUDE" })
                     return
                 }
 
                 let widgetName = widgetFunctions[key].title
-                let item = element('li', `st-vd-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'data-value': key })
+                let item = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'data-value': key })
 
                 if (widgetFunctions[key].options) {
                     widgetFunctions[key].options.forEach(option => {
-                        let optionWrapper = element('div', `st-vd-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
-                        let optionTitle = element('label', `st-vd-edit-${option.key}-title`, optionWrapper, { for: `st-vd-edit-${option.key}-input`, innerText: option.title })
+                        let optionWrapper = element('div', `st-start-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
+                        let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
                         switch (option.type) {
                             case 'select':
-                                let optionInput = element('select', `st-vd-edit-${option.key}-input`, optionWrapper, { name: option.title })
+                                let optionInput = element('select', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title })
                                 option.choices.forEach(async choice => {
-                                    let optionChoice = element('option', `st-vd-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
+                                    let optionChoice = element('option', `st-start-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
                                     if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
                                 })
                                 optionInput.addEventListener('change', event => {
@@ -730,13 +738,13 @@ async function today() {
                 sortableList.insertBefore(draggingItem, nextSibling)
 
                 let widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
-                saveToStorage('vd-widgets', widgetsOrder, 'local')
+                saveToStorage('start-widgets', widgetsOrder, 'local')
             }
             sortableList.addEventListener("dragover", initSortableList)
             sortableList.addEventListener("dragenter", e => e.preventDefault())
 
             // Finish button
-            let finishButton = element('button', 'st-vd-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Voltooien" })
+            let finishButton = element('button', 'st-start-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Voltooien" })
             finishButton.addEventListener('click', () => {
                 container.classList.remove('editing')
                 widgets.scrollTop = 0
@@ -747,17 +755,19 @@ async function today() {
 
         // Draw the selected widgets in the specified order
         for (const functionName of widgetsShown) {
+            widgetsProgressText.innerText = `Widget '${widgetFunctions[functionName].title}' laden...`
             let widgetElement = await widgetFunctions[functionName].render()
             if (widgetElement) widgets.append(widgetElement)
-            element('button', 'st-vd-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Bewerken" })
+            widgets.append(editButton)
         }
 
         widgetsProgress.remove()
+        widgetsProgressText.remove()
     }
 
     function verifyDisplayMode() {
-        let widgets = document.querySelector('#st-vd-widgets')
-        if (window.innerWidth < 1100 || sheetSetting || document.querySelector('#st-vd-schedule')?.classList.contains('st-expanded')) {
+        let widgets = document.querySelector('#st-start-widgets')
+        if (window.innerWidth < 1100 || sheetSetting || document.querySelector('#st-start-schedule')?.classList.contains('st-expanded')) {
             container.classList.remove('sheet-shown')
             container.classList.add('sheet')
         }

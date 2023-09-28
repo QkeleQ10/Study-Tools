@@ -263,7 +263,7 @@
     color: var(--st-accent-warn);
 }
 
-#st-vd-notifications>#st-vd-gamification-notification {
+#st-start-notifications>#st-start-gamification-notification {
     color: var(--st-contrast-accent) !important;
     background: linear-gradient(45deg, var(--st-accent-primary), var(--st-accent-secondary));
 }

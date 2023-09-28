@@ -89,9 +89,11 @@ async function useApi(url, options) {
         } else {
             const res = await fetch(url, options)
             if (!res.ok) {
-                showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
                 if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                return reject(res.status)
+                else if (!apiCache[url]) showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
+                else showSnackbar(`Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
+                if (apiCache[url]) return resolve(apiCache[url])
+                else return reject(res.status)
             }
             const json = await res.json()
             resolve(json)

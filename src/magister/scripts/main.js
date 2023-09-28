@@ -12,6 +12,12 @@ async function main() {
 
     let shortcuts = Object.values(syncedStorage.shortcuts),
         spacer = await awaitElement('.appbar>.spacer')
+    
+    // Change Vandaag to Start in appbar
+    if (syncedStorage['start-enabled']) {
+        let vandaagText = await awaitElement('a#menu-vandaag span')
+        vandaagText.innerText = "Start"
+    }
 
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
@@ -400,7 +406,7 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-vd"], [id^="st-sw"], .k-animation-container').forEach(e => {
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
     document.querySelectorAll('.st-overlay').forEach(e => { e.close() })
@@ -421,13 +427,6 @@ function parseSubject(string, enabled, subjects) {
             })
         })
         resolve({ subjectAlias: '', subjectName: '', stringBefore: string, stringAfter: '', success: false })
-    })
-}
-
-async function msToPixels(ms) {
-    return new Promise(async (resolve, reject) => {
-        let settingAgendaHeight = syncedStorage['magister-vd-agendaHeight'] || 1
-        resolve(0.000025 * settingAgendaHeight * ms)
     })
 }
 

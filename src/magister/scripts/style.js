@@ -76,6 +76,8 @@ async function applyStyles() {
     --st-chip-warn-border: #a53e52;
     --st-chip-warn-background: #f7d4d2;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
+    --st-decoration-fill: #dddddd11;
+    --st-decoration-fill-intense: #dddddd2a;
     --st-shadow-value: 210;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .9;
@@ -100,8 +102,8 @@ async function applyStyles() {
     --st-border-color: #2e2e2e;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${borderRadius}px;
-    --st-accent-primary: ${await shiftedHslColor(207, 63, 25, hueWish, saturationWish, luminanceWish)};
-    --st-accent-secondary: ${await shiftedHslColor(207, 63, 17, hueWish, saturationWish, luminanceWish)};
+    --st-accent-primary: ${await shiftedHslColor(207, 73, 30, hueWish, saturationWish, luminanceWish)};
+    --st-accent-secondary: ${await shiftedHslColor(207, 73, 22, hueWish, saturationWish, luminanceWish)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-chip-info-border: #0565b4;
@@ -111,6 +113,8 @@ async function applyStyles() {
     --st-chip-warn-border: #953541;
     --st-chip-warn-background: #2f1623;
     --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
+    --st-decoration-fill: #77777711;
+    --st-decoration-fill-intense: #77777730;
     --st-shadow-value: 0;
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.3;
@@ -145,6 +149,39 @@ ${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertC
 ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
+
+    // Menu bar decorations
+    let decorationCss
+    switch (syncedStorage['decoration']) {
+        case 'waves':
+            decorationCss = 'background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) 25px ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );'
+            break;
+        
+        case 'zig-zag':
+            decorationCss = 'background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: 25px 0, 25px 0, 0 0, 0 0; background-size: 50px 50px; background-repeat: repeat;'
+            break;
+
+        case 'polka-dot-big':
+            decorationCss = 'background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, 52px 52px; background-size: 104px 104px;'
+            break;
+
+        case 'polka-dot-small':
+            decorationCss = 'background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, 26px 26px; background-size: 52px 52px;'
+            break;
+
+        case 'stripes-big':
+            decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 30px, var(--st-decoration-fill) 30px, var(--st-decoration-fill) 60px);'
+            break;
+
+        case 'stripes-small':
+            decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--st-decoration-fill) 10px, var(--st-decoration-fill) 20px);'
+            break;
+
+        default:
+            decorationCss = ''
+            break;
+    }
+    createStyle(`.menu-host {${decorationCss}}`, 'study-tools-menu-decoration')
 
     if (!syncedStorage['disable-css']) {
         createStyle(`.block h3,
@@ -534,12 +571,8 @@ span.nrblock {
 .appbar>div>a,
 a.appbar-button,
 .menu-host {
-    background: var(--st-accent-primary);
-    transition: background 200ms;
-}
-
-.menu-host {
-    transition: width 200ms, min-width 200ms;
+    background-color: var(--st-accent-primary);
+    transition: background-color 200ms, width 200ms, min-width 200ms;
 }
 
 .appbar-host,
@@ -1096,7 +1129,7 @@ h3:active> .icon-up-arrow:before {
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
-    if (syncedStorage['vd-enabled']) {
+    if (syncedStorage['start-enabled']) {
         createStyle(`
 #vandaag-container .main .content-container, #vandaag-container dna-page-header {
     display: none !important;
@@ -1109,7 +1142,7 @@ h3:active> .icon-up-arrow:before {
 .container:has(#vandaag-container) {
     padding-right: 0 !important;
 }
-`, 'study-tools-vd-overhaul')
+`, 'study-tools-start-overhaul')
     }
 
     if (syncedStorage['sw-enabled']) {
