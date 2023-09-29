@@ -1125,6 +1125,8 @@ h3:active> .icon-up-arrow:before {
     color: var(--st-foreground-primary) !important;
 }
 `, 'study-tools')
+    } else {
+        createStyle('', 'study-tools')
     }
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
