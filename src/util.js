@@ -86,20 +86,51 @@ async function useApi(url, options) {
         if (apiCache[url] && (new Date() - apiCache[url].date) < 20000) {
             resolve(apiCache[url])
             return
-        } else {
-            const res = await fetch(url, options)
-            if (!res.ok) {
-                if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                else if (!apiCache[url]) showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
-                else showSnackbar(`Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
-                if (apiCache[url]) return resolve(apiCache[url])
-                else return reject(res.status)
+        }
+
+        // Otherwise, start a new request.
+        await getApiCredentials()
+
+        const res = await fetch(url.replace('$USERID', apiUserId), { headers: { Authorization: apiUserToken }, ...options })
+
+        // Catch any errors
+        if (!res.ok) {
+            if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+            else {
+                // If it's not a ratelimit, retry one more time.
+                showSnackbar(`Fout ${res.status}`, 1000)
+
+                await getApiCredentials()
+
+                const res = await fetch(url.replace('$USERID', apiUserId), { headers: { Authorization: apiUserToken }, ...options })
+                if (!res.ok) {
+                    if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+                    else {
+                        if (apiCache[url]) {
+                            showSnackbar(`Fout ${res.status}\nGegevens zijn mogelijk verouders`)
+                            return resolve(apiCache[url])
+                        }
+                        else {
+                            showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
+                            return reject(res.status)
+                        }
+                    }
+                } else {
+                    const json = await res.json()
+                    resolve(json)
+                    // Cache the result and include the date
+                    apiCache[url] = { ...json, date: new Date() }
+                }
             }
+
+            // Continue if no errors
+        } else {
             const json = await res.json()
             resolve(json)
             // Cache the result and include the date
             apiCache[url] = { ...json, date: new Date() }
         }
+
     })
 }
 
