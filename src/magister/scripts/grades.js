@@ -3,7 +3,7 @@ popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
     if (document.location.href.includes('cijfers')) {
-        saveToStorage('viewedGrades', new Date(), 'local')
+        await saveToStorage('viewedGrades', new Date().getTime(), 'local')
     }
     if (document.location.href.includes('cijferoverzicht')) {
         gradeCalculator()

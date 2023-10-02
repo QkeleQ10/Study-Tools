@@ -361,7 +361,14 @@ async function today() {
                         let elems = []
 
                         widgetsProgressText.innerText = `Cijfers ophalen...`
-                        // TODO: Grades
+                        let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
+                        let lastViewDate = new Date(lastViewMs)
+                        if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
+                        const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
+                        const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate).length
+                        if (unreadGradesNum > 0 && !widgetsShown.includes('grades')) {
+                            elems.push(element('div', 'st-start-widget-counters-grades', null, { class: 'st-metric', innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum, 'data-description': "Cijfers" }))
+                        }
 
                         widgetsProgressText.innerText = `Berichten ophalen...`
                         const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
@@ -449,21 +456,67 @@ async function today() {
                 ],
                 render: async () => {
                     return new Promise(async resolve => {
-                        let lastReadDate = await getFromStorage('viewedGrades', 'local')
+                        let viewWidget = await getFromStorage('start-widget-cf-widget', 'local') || 'always'
+                        let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
+                        let hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
+                        let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
+                        let lastViewDate = new Date(lastViewMs)
+                        if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
                         const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                        const recentGrades = gradesJson.items.map(item => item)
-                        console.log(recentGrades)
+                        const recentGrades = gradesJson.items.map(item => {
+                            return {
+                                ...item,
+                                date: new Date(item.ingevoerdOp),
+                                unread: new Date(item.ingevoerdOp) > lastViewDate,
+                                hidden: (hiddenItems.includes(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
+                            }
+                        })
 
-                        if (recentGrades.length < 1) return resolve()
+                        if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
-                        let widgetElement = element('div', 'st-start-widget-grades', null, { class: 'st-tile st-widget' })
+                        let widgetElement = element('button', 'st-start-widget-grades', null, { class: 'st-tile st-widget' })
+                        widgetElement.addEventListener('click', () => {
+                            window.location.hash = '#/cijfers'
+                        })
                         let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
 
-                        if (new Date() > lastReadDate) widgetElement.classList.add('st-unread')
+                        let mostRecentItem = recentGrades[0]
+                        if (mostRecentItem.unread) widgetElement.classList.add('st-unread')
 
-                        let lastGrade = element('span', 'st-start-widget-grades-last', widgetElement, { innerText: '-' })
-                        let lastGradeSubject = element('span', 'st-start-widget-grades-last-subject', widgetElement, { innerText: 'nepcijfer' })
+                        let lastGrade = element('span', 'st-start-widget-grades-last', widgetElement, { innerText: mostRecentItem.waarde })
+                        if (mostRecentItem.hidden) lastGrade.style.display = 'none'
+                        let lastGradeSubj = element('span', 'st-start-widget-grades-last-subj', widgetElement, { innerText: mostRecentItem.vak.omschrijving.charAt(0).toUpperCase() + mostRecentItem.vak.omschrijving.slice(1) })
+                        let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: mostRecentItem.weegfactor > 0 && mostRecentItem.teltMee ? `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor}×)` : mostRecentItem.omschrijving })
+                        let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { innerText: mostRecentItem.unread ? getRelativeTimeString(new Date(mostRecentItem.date)) : mostRecentItem.date.toLocaleDateString('nl-NL', { month: 'long', day: 'numeric' }) })
+                        let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
+                        lastGradeHide.addEventListener('click', (event) => {
+                            event.stopPropagation()
+                            if (lastGrade.style.display === 'none') {
+                                lastGradeHide.dataset.icon = ''
+                                lastGrade.style.display = 'block'
+                                hiddenItems = hiddenItems.filter(item => item !== mostRecentItem.kolomId)
+                                saveToStorage('hiddenGrades', hiddenItems, 'local')
+                            } else {
+                                lastGradeHide.dataset.icon = ''
+                                lastGrade.style.display = 'none'
+                                hiddenItems.push(mostRecentItem.kolomId)
+                                saveToStorage('hiddenGrades', hiddenItems, 'local')
+                            }
+                        })
+
+                        let moreUnreadItems = recentGrades.filter(item => item.unread)
+                        moreUnreadItems.shift()
+
+                        widgetTitle.innerText = moreUnreadItems.length > 0 ? "Laatste cijfers" : "Laatste cijfer"
+
+                        if (moreUnreadItems.length === 1) {
+                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].item.vak.code}` })
+                        } else if (moreUnreadItems.length > 10) {
+                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${[...new Set(moreUnreadItems.map(item => item.vak.code))].join(', ').replace(/, ([^,]*)$/, ' en $1')}` })
+                        } else if (moreUnreadItems.length > 1) {
+                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog ${moreUnreadItems.length} cijfers voor ${[...new Set(moreUnreadItems.map(item => item.vak.code))].join(', ').replace(/, ([^,]*)$/, ' en $1')}` })
+                        }
 
                         resolve(widgetElement)
                     })
@@ -666,7 +719,6 @@ async function today() {
                 zoomReset.innerText = `Roosterschaal: ${Math.round(zoomSetting * 100)}%`
                 saveToStorage('start-zoom', zoomSetting, 'local')
                 document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
-                renderSchedule()
             }
 
             // View mode checkbox
@@ -746,6 +798,7 @@ async function today() {
                 widgets.scrollTop = 0
                 widgets.innerText = ''
                 todayWidgets()
+                renderSchedule()
             }, { once: true })
         })
 

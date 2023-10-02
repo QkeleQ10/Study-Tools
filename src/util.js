@@ -116,7 +116,7 @@ async function useApi(url, options) {
                     }
                 } else {
                     const json = await res.json()
-                    resolve(json)
+                    resolve({ ...json, date: new Date() })
                     // Cache the result and include the date
                     apiCache[url] = { ...json, date: new Date() }
                 }

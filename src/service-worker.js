@@ -27,17 +27,16 @@ async function init() {
             chrome.storage.local.set({ 'user-id': apiUserId })
             if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
         }
-        Object.values(e.requestHeaders).forEach(async obj => {
-            if (obj.name === 'Authorization') {
-                apiUserToken = obj.value
-                apiUserTokenDate = new Date()
-                chrome.storage.local.set({ 'token': apiUserToken })
-                chrome.storage.local.set({ 'token-date': apiUserTokenDate })
-                if (userTokenWas !== apiUserToken) console.info(`User token changed between ${new Date().toLocaleDateString()} and now.`)
-            }
-        })
+        let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')
+        if (authObject) {
+            apiUserToken = authObject.value
+            apiUserTokenDate = new Date()
+            chrome.storage.local.set({ 'token': apiUserToken })
+            chrome.storage.local.set({ 'token-date': apiUserTokenDate })
+            if (userTokenWas !== apiUserToken) console.info(`User token changed between ${new Date().toLocaleDateString()} and now.`)
+        }
 
-    }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders', 'extraHeaders'])
+    }, { urls: ['*://*.magister.net/*'] }, ['requestHeaders', 'extraHeaders'])
 
     console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport", "widgets startpagina", "rooster startpagina", "puntensysteem"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + [].join(', '), "font-size: .8em")
 }
@@ -71,7 +70,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case 'getCredentials':
             console.info(`Credentials requested by ${sender.url}.`)
             // TODO: this sucks
-            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 180000 }, 1000)
+            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 300000 }, 2000)
                 .then(() => {
                     sendResponse({ apiUserId, apiUserToken })
                     console.info(`Credentials sent to ${sender.url}.`)

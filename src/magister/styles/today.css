@@ -439,25 +439,79 @@
     padding-top: 0;
 }
 
+#st-start-widget-grades {
+    cursor: pointer;
+    transition: filter 200ms;
+}
+
+#st-start-widget-grades:hover,
+#st-start-widget-grades:focus-visible {
+    filter: brightness(var(--st-hover-brightness));
+}
+
 #st-start-widget-grades.st-unread {
     background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary));
 }
 
 #st-start-widget-grades.st-unread * {
-    color: var(--st-contrast-accent) !important;
+    color: var(--st-contrast-accent);
 }
 
 #st-start-widget-grades-last {
     display: block;
     font: 500 28px/42px var(--st-font-family-primary);
     text-align: center;
+    padding-inline: 32px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
-#st-start-widget-grades-last-subject {
+#st-start-widget-grades-last-subj,
+#st-start-widget-grades-last-date,
+#st-start-widget-grades-last-info {
     display: block;
-    font: 600 12px/22px var(--st-font-family-secondary);
+    font: 500 11px/16px var(--st-font-family-secondary);
     text-align: center;
+    padding-inline: 32px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+#st-start-widget-grades-last-subj {
+    font: 600 12px/22px var(--st-font-family-secondary);
+}
+
+#st-start-widget-grades-last-date {
     margin-bottom: 28px;
+}
+
+#st-start-widget-grades-more {
+    display: block;
+    width: 100%;
+    padding-inline: 16px;
+    text-align: center;
+    background-color: var(--st-accent-secondary);
+    font: 600 12px/44px var(--st-font-family-secondary);
+    margin-top: -8px;
+    border-top: var(--st-border);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+#st-start-widget-grades-last-hide {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    opacity: 0;
+    transition: opacity 200ms, filter 200ms, transform 200ms, background-color 200ms, color 200ms;
+}
+
+#st-start-widget-grades:hover #st-start-widget-grades-last-hide,
+#st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide {
+    opacity: 1;
 }
 
 .st-list-item {
