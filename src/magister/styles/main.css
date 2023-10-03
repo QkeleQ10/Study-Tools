@@ -190,6 +190,34 @@ div.loading-overlay {
     opacity: .5;
 }
 
+.st-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 400px;
+    background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    font: 14px/18px var(--st-font-family-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    padding: 24px;
+    overflow: visible;
+    animation: floatDown 200ms;
+}
+
+.st-dialog-dismiss {
+    position: absolute;
+    top: 0;
+    right: -40px;
+    background-color: var(--st-background-secondary) !important;
+}
+
+.st-dialog-buttons {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
 .st-input {
     width: 200px;
     height: 32px;

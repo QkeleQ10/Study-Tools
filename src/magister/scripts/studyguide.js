@@ -28,14 +28,14 @@ async function studyguideList() {
     })
     searchBar.addEventListener('input', appendStudyguidesToList)
     searchBar.addEventListener('input', e => {
-        let egg = eggs.find(egg => egg.type === 'revealOnInput' && egg.location === 'studyguidesSearch' && egg.input === e.target.value)
+        let egg = eggs.find(egg => egg.location === 'studyguidesSearch' && egg.input === e.target.value)
         if (!egg?.output) return
 
         let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
 
         let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
         fakeDefaultItemButton.addEventListener('click', () => {
-            showSnackbar(egg.output, 3600000)
+            notify(egg.type || 'snackbar', egg.output, null, 3600000)
         })
 
         let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
@@ -86,14 +86,14 @@ async function studyguideIndividual() {
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
-            showSnackbar(`Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, 4000)
+            notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 4000)
             document.querySelector('.st-sw-selected').classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
-            showSnackbar(`Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, 4000)
+            notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 4000)
             document.querySelector('.st-sw-selected').classList.remove('hidden-item')
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')

@@ -35,7 +35,7 @@ async function checkAnnouncements() {
         if (value.onlyBeforeTime && (new Date(`${new Date().toDateString()} ${value.onlyOnWeekdays}`) < new Date())) return
         if (value.onlyAfterTime && (new Date(`${new Date().toDateString()} ${value.onlyAfterTime}`) > new Date())) return
 
-        showSnackbar(value.body, value.duration || 10000, value.buttons)
+        notify(value.type || 'snackbar', value.body, value.buttons, value.duration || 10000)
     })
 }
 
@@ -94,23 +94,23 @@ async function useApi(url, options) {
 
         // Catch any errors
         if (!res.ok) {
-            if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+            if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
             else {
                 // If it's not a ratelimit, retry one more time.
-                showSnackbar(`Fout ${res.status}`, 1000)
+                notify('snackbar', `Fout ${res.status}`, null, 1000)
 
                 await getApiCredentials()
 
                 const res = await fetch(url.replace('$USERID', apiUserId), { headers: { Authorization: apiUserToken }, ...options })
                 if (!res.ok) {
-                    if (res.status === 429) showSnackbar(`Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
+                    if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
                     else {
                         if (apiCache[url]) {
-                            showSnackbar(`Fout ${res.status}\nGegevens zijn mogelijk verouders`)
+                            notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouders`)
                             return resolve(apiCache[url])
                         }
                         else {
-                            showSnackbar(`Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
+                            notify('snackbar', `Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
                             return reject(res.status)
                         }
                     }
@@ -215,35 +215,69 @@ function getWeekNumber(d = new Date()) {
     return weekNo
 }
 
-async function showSnackbar(body = 'Snackbar', duration = 4000, buttons = []) {
-    const snackbar = document.createElement('div'),
-        snackbarWrapper = await awaitElement('#st-snackbars')
-    snackbarWrapper.append(snackbar)
-    snackbar.innerText = body
+async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
+    switch (type) {
+        case 'snackbar':
+            const snackbar = document.createElement('div'),
+                snackbarWrapper = await awaitElement('#st-snackbars')
+            snackbarWrapper.append(snackbar)
+            snackbar.innerText = body
 
-    buttons.forEach(element => {
-        let a = document.createElement('a')
-        snackbar.append(a)
-        setAttributes(a, element)
-        if (element.innerText) a.innerText = element.innerText
-        if (element.clickSelector) {
-            a.addEventListener('click', event => {
-                document.querySelector(element.clickSelector)?.click()
-                event.stopPropagation()
+            buttons.forEach(element => {
+                let a = document.createElement('a')
+                snackbar.append(a)
+                setAttributes(a, element)
+                if (element.innerText) a.innerText = element.innerText
+                if (element.clickSelector) {
+                    a.addEventListener('click', event => {
+                        document.querySelector(element.clickSelector)?.click()
+                        event.stopPropagation()
+                    })
+                }
+                else a.addEventListener('click', event => event.stopPropagation())
             })
-        }
-        else a.addEventListener('click', event => event.stopPropagation())
-    })
-    let snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
-    snackbarDismiss.addEventListener('click', () => {
-        snackbar.classList.remove('open')
-        setTimeout(() => snackbar.remove(), 2000)
-    })
-    setTimeout(() => snackbar.classList.add('open'), 50)
-    if (duration !== 0) {
-        setTimeout(() => snackbar.classList.remove('open'), duration)
-        setTimeout(() => snackbar.remove(), duration + 2000)
+            const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
+            snackbarDismiss.addEventListener('click', () => {
+                snackbar.classList.remove('open')
+                setTimeout(() => snackbar.remove(), 2000)
+            })
+            setTimeout(() => snackbar.classList.add('open'), 50)
+            if (duration !== 0) {
+                setTimeout(() => snackbar.classList.remove('open'), duration)
+                setTimeout(() => snackbar.remove(), duration + 2000)
+            }
+            break;
+
+        case 'dialog':
+            const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
+            dialog.showModal()
+
+            if (buttons?.length > 0) {
+                const buttonsWrapper = element('div', null, dialog, { class: 'st-dialog-buttons' })
+                buttons.forEach(item => {
+                    const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
+                    if (item.innerText) button.innerText = item.innerText
+                    if (item.clickSelector) {
+                        button.addEventListener('click', event => {
+                            document.querySelector(item.clickSelector)?.click()
+                            event.stopPropagation()
+                        })
+                    }
+                    else button.addEventListener('click', event => event.stopPropagation())
+                })
+            }
+
+            const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '' })
+            dialogDismiss.addEventListener('click', () => {
+                dialog.close()
+                dialog.remove()
+            })
+            break;
+
+        default:
+            break;
     }
+
 }
 
 function createStyle(content, id = 'st-style') {

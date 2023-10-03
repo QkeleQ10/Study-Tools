@@ -56,7 +56,7 @@ async function today() {
             }
         }
     })
-    if (Math.random() < 0.01) showSnackbar("Bedankt voor het gebruiken van Study Tools 💚")
+    if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
 
     setTimeout(() => header.dataset.transition = true, 2000)
     setTimeout(async () => {

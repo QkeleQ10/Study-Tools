@@ -156,7 +156,7 @@ async function gradeCalculator() {
                 ghostElement = document.createElement('span')
             if (!pos) {
                 ghostElement.remove()
-                showSnackbar('Er is geen cijfer geselecteerd.')
+                notify('snackbar', 'Er is geen cijfer geselecteerd.')
                 return
             }
             setAttributes(ghostElement, { class: 'st-cf-ghost', style: `top: ${pos.top}px; right: ${window.innerWidth - pos.right}px;` })
@@ -166,12 +166,12 @@ async function gradeCalculator() {
             setTimeout(() => {
                 if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
                     ghostElement.remove()
-                    showSnackbar('Dat cijfer kan niet worden toegevoegd aan de berekening.')
+                    notify('snackbar', 'Dat cijfer kan niet worden toegevoegd aan de berekening.')
                     return
                 }
                 if (weight <= 0) {
                     ghostElement.remove()
-                    showSnackbar('Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+                    notify('snackbar', 'Dat cijfer telt niet mee en is niet toegevoegd aan de berekening.')
                     return
                 }
 

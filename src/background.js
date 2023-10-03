@@ -67,6 +67,10 @@ async function setDefaults() {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
+        case 'popstateDetected':
+            console.info("Popstate detected, service worker revived for 30 seconds.")
+            break
+
         case 'getCredentials':
             console.info(`Credentials requested by ${sender.url}.`)
             // TODO: this sucks
@@ -94,7 +98,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true
 
         default:
-            break;
+            break
     }
 })
 

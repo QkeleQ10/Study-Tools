@@ -12,7 +12,7 @@ async function main() {
 
     let shortcuts = Object.values(syncedStorage.shortcuts),
         spacer = await awaitElement('.appbar>.spacer')
-    
+
     // Change Vandaag to Start in appbar
     if (syncedStorage['start-enabled']) {
         let vandaagText = await awaitElement('a#menu-vandaag span')
@@ -56,7 +56,7 @@ async function main() {
 
     // Easter egg
     if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
-    if (Math.random() < 0.008) setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo-magister-white.svg'), 2000)
+    if (Math.random() < 0.008) setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg'), 2000)
 
     // Hotkeys
     if (syncedStorage['hotkeys-enabled']) {
@@ -406,6 +406,8 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
+    chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
+
     document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
