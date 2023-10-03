@@ -608,6 +608,7 @@
     border: var(--st-border);
     background-color: var(--st-background-transparent);
     backdrop-filter: blur(4px);
+    z-index: 100;
     animation: widgetsOut 200ms both;
 }
 
