@@ -259,9 +259,12 @@
 #st-start .st-start-event-teacher-edit {
     display: none;
     position: absolute;
-    top: 16px;
-    left: 16px;
-    background-color: var(--st-highlight-primary);
+    top: 12px;
+    left: 12px;
+    min-width: 40px;
+    min-height: 40px;
+    background-color: var(--st-accent-primary);
+    border-radius: calc(var(--st-border-radius) / 2);
 }
 
 #st-start .tight .st-start-event-teacher-edit {
@@ -271,6 +274,7 @@
 
 #st-start.editing .st-start-event-teacher-edit {
     display: block;
+    animation: popIn 300ms cubic-bezier(0.5, 1.8, 1, 1);
 }
 
 .st-start-event-location {
@@ -292,12 +296,17 @@
 }
 
 .st-chips-wrapper {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
+    gap: 8px;
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    max-height: 100%;
+    margin: -12px;
+    padding: 12px;
+    background-image: radial-gradient(ellipse at 100%, var(--st-background-secondary) 50%, transparent 100%);
 }
 
 .st-chip {

@@ -209,7 +209,7 @@ async function today() {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};` })
+                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
@@ -475,7 +475,7 @@ async function today() {
 
                         if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
-                        let widgetElement = element('button', 'st-start-widget-grades', null, { class: 'st-tile st-widget' })
+                        let widgetElement = element('button', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken" })
                         widgetElement.addEventListener('click', () => {
                             window.location.hash = '#/cijfers'
                         })
@@ -830,7 +830,7 @@ async function today() {
             sortableList.addEventListener('dragenter', e => e.preventDefault())
 
             // Finish button
-            let finishButton = element('button', 'st-start-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Voltooien" })
+            let finishButton = element('button', 'st-start-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Bewerken voltooien", title: "Terugkeren naar widgetpaneel. Wijzigingen zijn al opgeslagen." })
             finishButton.addEventListener('click', () => {
                 container.classList.remove('editing')
                 widgets.scrollTop = 0

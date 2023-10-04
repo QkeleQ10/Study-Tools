@@ -841,6 +841,12 @@ a.st-keyboard-hint.clicked {
     }
 }
 
+@keyframes popIn {
+    from {
+        scale: 0
+    }
+}
+
 @keyframes floatDownOut {
     to {
         opacity: 0;
