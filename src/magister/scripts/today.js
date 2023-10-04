@@ -736,16 +736,20 @@ async function today() {
 
             // Widgets editor
             let editWidgetsHeading = element('span', 'st-start-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
-            let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Weergegeven widgets" })
+            let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Geselecteerde widgets" })
             let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
+
+            let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
             widgetsOrder.forEach((key, i) => {
-                if (key === 'EXCLUDE') {
-                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Verborgen widgets", 'data-value': "EXCLUDE" })
+                if (i === exclusionIndex) {
+                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Beschikbare widgets", 'data-value': "EXCLUDE" })
                     return
                 }
 
                 let widgetName = widgetFunctions[key].title
-                let item = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'data-value': key })
+                let item = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'aria-roledescription': "Sleepbaar item. Gebruik spatie om op te tillen.", 'data-value': key })
+
+                if (i > exclusionIndex) item.classList.add('excluded')
 
                 if (widgetFunctions[key].options) {
                     widgetFunctions[key].options.forEach(option => {
@@ -770,26 +774,60 @@ async function today() {
                     })
                 }
 
-                item.addEventListener("dragstart", () => {
-                    setTimeout(() => item.classList.add("dragging"), 0)
+                item.addEventListener('dragstart', event => {
+                    setTimeout(() => {
+                        item.classList.add('dragging')
+                    }, 0)
+
+                    let dragGhost = item.cloneNode(true)
+                    dragGhost.classList.add('st-sortable-list-ghost')
+                    dragGhost.classList.remove('dragging')
+                    dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
+                    document.body.append(dragGhost)
                 })
-                item.addEventListener("dragend", () => item.classList.remove("dragging"))
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging')
+                    item.classList.add('dragging-return')
+                    document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
+                        e.classList.add('returning')
+                        e.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px;`)
+                        setTimeout(() => {
+                            e.remove()
+                            item.classList.remove('dragging-return')
+                        }, 200)
+                    })
+                })
 
             })
-            function initSortableList(event) {
+            sortableList.addEventListener('dragover', (event) => {
                 event.preventDefault()
-                const draggingItem = document.querySelector(".dragging")
+
+                const draggingItem = document.querySelector('.dragging')
+
+                const draggingGhost = document.querySelector('.st-sortable-list-ghost')
+                draggingGhost.style.translate = `${event.clientX}px ${event.clientY}px`
+
                 let siblings = [...draggingItem.parentElement.children].filter(child => child !== draggingItem)
 
-                let nextSibling = siblings.find(sibling => event.clientY <= sibling.offsetTop + sibling.offsetHeight / 2)
+                let nextSibling = siblings.find(sibling => {
+                    return (event.clientY) <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
+                })
 
                 sortableList.insertBefore(draggingItem, nextSibling)
 
                 let widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
                 saveToStorage('start-widgets', widgetsOrder, 'local')
-            }
-            sortableList.addEventListener("dragover", initSortableList)
-            sortableList.addEventListener("dragenter", e => e.preventDefault())
+
+                if (Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('.dragging')) > Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('#st-start-edit-exclude'))) {
+                    draggingGhost.classList.add('excluded')
+                    draggingItem.classList.add('excluded')
+                }
+                else {
+                    draggingGhost.classList.remove('excluded')
+                    draggingItem.classList.remove('excluded')
+                }
+            })
+            sortableList.addEventListener('dragenter', e => e.preventDefault())
 
             // Finish button
             let finishButton = element('button', 'st-start-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Voltooien" })

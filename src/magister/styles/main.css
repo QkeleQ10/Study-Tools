@@ -311,7 +311,6 @@ div.loading-overlay {
     border: var(--st-border);
     color: var(--st-foreground-primary);
     font: 14px/40px var(--st-font-family-secondary);
-    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     cursor: move;
 }
 
@@ -339,6 +338,29 @@ div.loading-overlay {
     border: var(--st-border);
     border-radius: calc(var(--st-border-radius) / 2);
     font: 12px var(--st-font-family-secondary);
+}
+
+.st-sortable-list-item.dragging,
+.st-sortable-list-item.dragging-return {
+    opacity: 0 !important;
+}
+
+.st-sortable-list-item.excluded {
+    opacity: .75;
+}
+
+.st-sortable-list-ghost {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 10000000;
+    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    animation: fadeIn 200ms;
+}
+
+.st-sortable-list-ghost.returning {
+    transition-property: top, left, transform, translate;
+    transition-duration: 200ms;
 }
 
 .st-progress-bar {
