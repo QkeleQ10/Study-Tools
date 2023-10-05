@@ -437,6 +437,13 @@ div.loading-overlay {
     width: max-content;
 }
 
+.st-list-row {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 8px;
+    width: 100%;
+}
+
 .st-tile {
     position: relative;
     background-color: var(--st-background-secondary);
@@ -847,6 +854,13 @@ a.st-keyboard-hint.clicked {
     }
 }
 
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        scale: .75;
+    }
+}
+
 @keyframes floatDownOut {
     to {
         opacity: 0;
@@ -857,7 +871,7 @@ a.st-keyboard-hint.clicked {
 @keyframes floatLeft {
     from {
         opacity: 0;
-        translate: 200px;
+        translate: 150px;
     }
 }
 

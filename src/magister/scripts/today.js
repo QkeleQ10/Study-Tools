@@ -237,14 +237,14 @@ async function today() {
                         eventSchoolHours.innerText = ''
                     }
 
-                    // Render the subject, location and teacher labels
+                    // Render the subject and location label
                     if (magisterMode) {
                         let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
                         let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject-wrapper' })
                         let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-start-event-subject', innerText: subjectNames.join(', ') })
                         let eventLocation = element('span', `st-start-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-start-event-location', innerText: locationNames.join(', ') })
-                        let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, eventElement, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
+                        // Add a teacher edit button
                         if (item.Docenten[0]) {
                             let eventTeacherEdit = element('button', `st-start-event-${item.Id}-teacher-edit`, eventElement, { class: 'st-start-event-teacher-edit st-button icon', 'data-icon': '', title: `Bijnaam van ${item.Docenten[0].Naam} aanpassen`, 'data-teacher-name': item.Docenten[0].Naam, 'data-teacher-code': item.Docenten[0].Docentcode })
                             eventTeacherEdit.removeEventListener('click', editTeacherName)
@@ -252,8 +252,15 @@ async function today() {
                         }
                     }
 
+                    let row = element('div', `st-start-event-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
+
+                    // Render the teacher label
+                    if (!magisterMode && item.Docenten[0]) {
+                        let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, row, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
+                    }
+
                     // Render the time label
-                    let eventTime = element('span', `st-start-event-${item.Id}-time`, eventElement, { class: 'st-start-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
 
                     // Parse and render any chips
                     // TODO: More InfoTypes
@@ -265,9 +272,9 @@ async function today() {
                     if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
                     else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 
-                    let eventChipsWrapper = element('div', `st-start-event-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
+                    let eventChipsWrapper = element('div', `st-start-event-${item.Id}-chips`, eventElement, { class: 'st-chips-wrapper' })
                     chips.forEach(chip => {
-                        let chipElement = element('span', `st-start-event-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        let chipElement = element('span', `st-start-event-${item.Id}-chip-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                     })
                 })
             })
@@ -345,14 +352,6 @@ async function today() {
         let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
         let widgetFunctions = {
-
-            // ✅ Huiswerk
-            // Cijfers
-            // ✅ Opdrachten
-            // ✅ Berichten
-            // Evt meldingen
-            // Tellertjes
-            // ...
 
             counters: {
                 title: "Beknopte notificaties",
@@ -537,19 +536,23 @@ async function today() {
                         unreadMessages.forEach(item => {
                             let messageElement = element('button', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
                             messageElement.addEventListener('click', () => window.location.hash = `#/berichten`)
-                            let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, messageElement, {
+
+                            let row1 = element('span', `st-start-widget-messages-${item.id}-row1`, messageElement, { class: 'st-list-row' })
+                            let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-list-title', innerText: item.afzender.naam })
+                            let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, row1, {
                                 class: 'st-list-timestamp',
                                 innerText: new Date(item.verzondenOp).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
                             })
-                            let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, messageElement, { class: 'st-list-title', innerText: item.afzender.naam })
-                            let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, messageElement, { class: 'st-list-content', innerText: item.onderwerp })
+
+                            let row2 = element('span', `st-start-widget-messages-${item.id}-row2`, messageElement, { class: 'st-list-row' })
+                            let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, row2, { class: 'st-list-content', innerText: item.onderwerp })
 
                             let chips = []
                             if (item.heeftPrioriteit) chips.push({ name: "Belangrijk", type: 'warn' })
 
-                            let messageChipsWrapper = element('div', `st-start-widget-messages-${item.id}-labels`, messageElement, { class: 'st-chips-wrapper' })
+                            let messageChipsWrapper = element('div', `st-start-widget-messages-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
-                                let chipElement = element('span', `st-start-widget-messages-${item.id}-label-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                                let chipElement = element('span', `st-start-widget-messages-${item.id}-chip-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                             })
                         })
 
@@ -610,12 +613,16 @@ async function today() {
 
                             let eventElement = element('button', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
                             eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
-                            let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, eventElement, {
+
+                            let row1 = element('span', `st-start-widget-homework-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
+                            let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-list-title', innerText: subjectNames.join(', ') })
+                            let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
                                 innerText: date
                             })
-                            let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, eventElement, { class: 'st-list-title', innerText: subjectNames.join(', ') })
-                            let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, eventElement, { class: 'st-list-content' })
+
+                            let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-list-row' })
+                            let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, row2, { class: 'st-list-content' })
                             eventContent.setHTML(item.Inhoud)
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
@@ -626,9 +633,9 @@ async function today() {
                             if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
                             else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
 
-                            let eventChipsWrapper = element('div', `st-start-widget-homework-${item.Id}-labels`, eventElement, { class: 'st-chips-wrapper' })
+                            let eventChipsWrapper = element('div', `st-start-widget-homework-${item.Id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
-                                let chipElement = element('span', `st-start-widget-homework-${item.Id}-label-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                                let chipElement = element('span', `st-start-widget-homework-${item.Id}-chip-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                             })
                         })
 
@@ -666,21 +673,25 @@ async function today() {
 
                             let assignmentElement = element('button', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
                             assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
-                            let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, assignmentElement, {
+
+                            let row1 = element('span', `st-start-widget-assignments-${item.Id}-row1`, assignmentElement, { class: 'st-list-row' })
+                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
+                            let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
                                 innerText: date
                             })
-                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, assignmentElement, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
-                            let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, assignmentElement, { class: 'st-list-content' })
+
+                            let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })
+                            let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-list-content' })
                             assignmentContent.setHTML(item.Omschrijving)
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
                             if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
 
-                            let assignmentChipsWrapper = element('div', `st-start-widget-assignments-${item.id}-labels`, assignmentElement, { class: 'st-chips-wrapper' })
+                            let assignmentChipsWrapper = element('div', `st-start-widget-assignments-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
-                                let chipElement = element('span', `st-start-widget-assignments-${item.id}-label-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                                let chipElement = element('span', `st-start-widget-assignments-${item.id}-chip-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                             })
                         })
 
@@ -722,7 +733,7 @@ async function today() {
             }
 
             // View mode checkbox
-            let sheetModeLabel = element('label', 'st-start-edit-sheet-label', widgets, { class: 'st-checkbox-label', innerText: "Widgets naast rooster weergeven" })
+            let sheetModeLabel = element('label', 'st-start-edit-sheet-chip', widgets, { class: 'st-checkbox-chip', innerText: "Widgets naast rooster weergeven" })
             let sheetModeInput = element('input', 'st-start-edit-sheet-input', sheetModeLabel, { type: 'checkbox', class: 'st-checkbox-input' })
             if (!sheetSetting) sheetModeInput.checked = true
             sheetModeInput.addEventListener('change', event => {
@@ -853,7 +864,6 @@ async function today() {
     }
 
     function verifyDisplayMode() {
-        let widgets = document.querySelector('#st-start-widgets')
         if (window.innerWidth < 1100 || sheetSetting || document.querySelector('#st-start-schedule')?.classList.contains('st-expanded')) {
             container.classList.remove('sheet-shown')
             container.classList.add('sheet')

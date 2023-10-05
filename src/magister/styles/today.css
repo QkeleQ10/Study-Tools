@@ -165,8 +165,8 @@
     display: grid;
     grid-template:
         'timeslot subject' auto
-        'timeslot teacher' auto
-        'timeslot time' 1fr
+        'timeslot details' auto
+        '. .' 1fr
         / 40px 1fr;
     column-gap: 12px;
     background-color: var(--background-color);
@@ -183,9 +183,6 @@
 .st-start-event.tight {
     padding-block: 0;
     align-content: center;
-    grid-template:
-        "timeslot subject subject subject" auto
-        "timeslot teacher time ." auto / 40px max-content max-content 1fr;
 }
 
 #st-start-schedule.magister-mode .st-start-event {
@@ -225,6 +222,7 @@
     border-radius: calc(var(--st-border-radius) / 2);
     font: 600 16px/40px var(--st-font-family-primary);
     transition: background-color 200ms, color 200ms;
+    animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1) both;
 }
 
 .st-start-event-school-hours.icon {
@@ -237,8 +235,7 @@
 }
 
 #st-start.editing .st-start-event-school-hours {
-    background-color: var(--st-highlight-primary);
-    color: var(--st-foreground-primary);
+    animation: fadeIn 200ms reverse both;
 }
 
 .st-start-event-subject-wrapper {
@@ -297,6 +294,18 @@
     content: ')';
 }
 
+.st-start-event .st-list-row {
+    grid-area: details;
+    flex-direction: column;
+    justify-content: flex-start;
+    column-gap: 12px;
+    row-gap: 0;
+}
+
+.st-start-event.tight .st-list-row {
+    flex-direction: row;
+}
+
 .st-start-event-time {
     grid-area: time;
     font: 500 12px/20px var(--st-font-family-secondary);
@@ -307,12 +316,16 @@
     flex-direction: column;
     flex-wrap: wrap;
     gap: 8px;
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
+    margin-top: auto;
     max-height: calc(100% - 24px);
     background-color: var(--background-color);
     box-shadow: 0 0 12px 12px var(--background-color);
+}
+
+.st-start-event .st-chips-wrapper {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
 }
 
 .st-chips-wrapper:empty {
@@ -392,7 +405,7 @@
     padding-top: 16px;
     overflow-y: auto;
     overflow-x: hidden;
-    animation: floatLeft 200ms both;
+    animation: floatLeft 200ms both, expandIn 400ms cubic-bezier(0.5, 1.2, .8, 1) both;
 }
 
 .st-widget-title {
@@ -568,26 +581,13 @@
 }
 
 .st-list-timestamp {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    max-width: 40%;
     text-align: end;
+    z-index: 2;
 }
 
 .st-list-content {
     max-height: 30px;
     overflow: hidden;
-}
-
-.st-list-content.overflow:before {
-    content: '';
-    width: 100%;
-    height: 35px;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    background: linear-gradient(to bottom, transparent, var(--st-background-secondary));
 }
 
 #st-start #st-start-button-wrapper {

@@ -182,6 +182,7 @@ function setAttributes(elem, attributes) {
     }
 }
 
+// TODO: Write something actually nice for this...
 function getRelativeTimeString(date) {
     // Allow dates or times to be passed
     const timeMs = typeof date === "number" ? date : date.getTime();

@@ -43,7 +43,7 @@ function moveItem(from, to) {
 
 <template>
     <div class="setting">
-        <div class="shortcuts-editor-click-layer" @click="showDialog = true">
+        <button class="shortcuts-editor-click-layer" @click="showDialog = true">
             <div>
                 <h3 class="setting-title">
                     <slot name="title"></slot>
@@ -53,7 +53,7 @@ function moveItem(from, to) {
                 </span>
             </div>
             <Icon>chevron_right</Icon>
-        </div>
+        </button>
         <DialogFullscreen fullscreen v-model:active="showDialog">
             <template #headline>
                 <slot name="title"></slot>
@@ -107,9 +107,13 @@ function moveItem(from, to) {
     margin-block: -12px;
     padding-left: 16px;
     padding-right: 24px;
-    padding-block: 12px;
+    padding-block: 0;
     min-height: 56px;
-    box-sizing: border-box;
+    box-sizing: content-box;
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
     cursor: pointer;
 }
 

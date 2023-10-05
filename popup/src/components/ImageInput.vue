@@ -62,7 +62,7 @@ function imageChanged() {
 
 <template>
     <div class="setting image-input" ref="label">
-        <div class="image-input-click-layer" @click="promptImage">
+        <button class="image-input-click-layer" @click="promptImage">
             <img v-if="value" class="image-input-avatar" :class="{ selected: selected }" :src="value" width=40 height=40>
             <div v-else class="image-input-avatar">
                 <Icon>add_photo_alternate</Icon>
@@ -76,7 +76,7 @@ function imageChanged() {
                 </span>
             </div>
             <Icon>chevron_right</Icon>
-        </div>
+        </button>
         <BottomSheet v-model:active="pickerOpen" :handle=true>
             <template #content>
                 <span class="supporting-text">Gekozen afbeelding</span>
@@ -99,7 +99,8 @@ function imageChanged() {
                     <Icon>drive_folder_upload</Icon>
                     <span>Afbeelding uploaden</span>
                 </button>
-                <span class="supporting-text" v-else>Jouw browser ondersteunt het uploaden van afbeeldingen niet. Je kunt wel een afbeelding plakken.</span>
+                <span class="supporting-text" v-else>Jouw browser ondersteunt het uploaden van afbeeldingen niet. Je kunt
+                    wel een afbeelding plakken.</span>
             </template>
         </BottomSheet>
     </div>
@@ -116,7 +117,13 @@ function imageChanged() {
     margin-block: -12px;
     padding-left: 16px;
     padding-right: 24px;
-    padding-block: 12px;
+    padding-block: 0;
+    min-height: 56px;
+    box-sizing: content-box;
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
     cursor: pointer;
 }
 

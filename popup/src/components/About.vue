@@ -1,13 +1,21 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, defineEmits } from 'vue'
 import { useManifest } from '@/composables/chrome.js'
 
 import Icon from './Icon.vue'
 import Dialog from './Dialog.vue'
 
+const emit = defineEmits(['resetSettings'])
+
 const { manifest } = useManifest()
 
 const disclaimerOpen = ref(false)
+const resetDialogActive = ref(false)
+
+function resetSettings() {
+    emit('resetSettings')
+    resetDialogActive.value = false
+}
 
 function openInNewTab(url) {
     window.open(url, '_blank', 'noreferrer')
@@ -42,14 +50,29 @@ function openInNewTab(url) {
                 <b>Versie: {{ manifest.version || "onbekend" }}</b>
                 <br><br>
                 Deze extensie slaat gegevens over je identiteit, je accounts en je instellingen op in de
-                browser. Afhankelijk van je browserinstellingen worden ze al dan niet opgeslagen in de cloud.<br><br>
-                De ontwikkelaar aanvaardt geen aansprakelijkheid voor schade (zoals gelekte wachtwoorden) door
-                beveiligingsgebreken aan de kant van de gebruiker of de browser (zoals het niet gebruiken van een
-                apparaatwachtwoord).</template>
+                browser. Afhankelijk van je browserinstellingen worden ze al dan niet opgeslagen in de cloud. Er wordt nooit
+                informatie doorgestuurd naar de ontwikkelaar of naar derden.</template>
             <template #buttons>
                 <button
                     @click="openInNewTab('https://github.com/QkeleQ10/Study-Tools/blob/dev/updates.json')">Updatelogboek</button>
                 <button @click="disclaimerOpen = false">Annuleren</button>
+            </template>
+        </Dialog>
+        <button id="about-reset" @click="resetDialogActive = true">
+            <div>
+                <h3 class="setting-title">
+                    Voorkeuren wissen
+                </h3>
+            </div>
+            <Icon>chevron_right</Icon>
+        </button>
+        <Dialog v-model:active="resetDialogActive">
+            <template #icon>restart_alt</template>
+            <template #headline>Voorkeuren wissen?</template>
+            <template #text>Hiermee stel je alle instellingen van Study Tools in op de standaardwaarden.</template>
+            <template #buttons>
+                <button @click="resetDialogActive = false">Annuleren</button>
+                <button @click=resetSettings>Wissen</button>
             </template>
         </Dialog>
     </div>
@@ -57,12 +80,10 @@ function openInNewTab(url) {
 
 <style>
 #about {
-    padding-left: 16px;
-    padding-right: 24px;
-    padding-block: 12px;
+    margin-inline: 16px;
+    padding-top: 12px;
     color: var(--color-on-surface);
     font: var(--typescale-body-large);
-    border-bottom: 1px solid var(--color-outline-variant);
 }
 
 #about-hero {
@@ -82,5 +103,20 @@ function openInNewTab(url) {
     display: flex;
     gap: 8px;
     padding-bottom: 8px;
+}
+
+#about-reset {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 56px;
+    margin-top: 12px;
+    padding-block: 12px;
+    padding-inline: 0;
+    background-color: transparent;
+    border: none;
+    border-block: 1px solid var(--color-surface-variant);
+    cursor: pointer;
 }
 </style>

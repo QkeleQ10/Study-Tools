@@ -32,8 +32,10 @@ watch(() => props.active, async (value) => {
 </script>
 
 <template>
-    <div class="scrim" :active="sheetState === 'shown' || sheetState === 'showing'" @click="closeBottomSheet"></div>
-    <div class="bottom-sheet" :data-visible="sheetState !== 'hidden'" :data-state="sheetState">
+    <div v-if="sheetState !== 'hidden'" class="scrim" :active="sheetState === 'shown' || sheetState === 'showing'"
+        @click="closeBottomSheet"></div>
+    <div v-if="sheetState !== 'hidden'" class="bottom-sheet" :data-visible="sheetState !== 'hidden'"
+        :data-state="sheetState">
         <div v-if="handle" class="bottom-sheet-handle" @click="closeBottomSheet"></div>
         <slot name="content"></slot>
     </div>

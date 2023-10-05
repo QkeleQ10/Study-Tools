@@ -54,7 +54,8 @@ function formatValue(val) {
 }
 
 .vue-slider {
-    width: 100% !important;
+    width: calc(100% - 16px) !important;
+    padding-inline: 8px !important;
     overflow: visible !important;
 }
 

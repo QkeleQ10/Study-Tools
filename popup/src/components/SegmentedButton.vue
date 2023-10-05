@@ -27,8 +27,8 @@ const value = computed({
             </span>
         </div>
         <div class="button-wrapper">
-            <button v-for="option in setting.options" :key="option.value" class="button-segment" @click="value = option.value"
-                :data-state="option.value === value" :data-has-icon="!!option.icon">
+            <button v-for="option in setting.options" :key="option.value" class="button-segment"
+                @click="value = option.value" :data-state="option.value === value" :data-has-icon="!!option.icon">
                 <div class="button-segment-icon-wrapper">
                     <Transition name="icon">
                         <Icon key="selected" v-if="option.value === value" class="button-segment-icon selected">check
@@ -38,6 +38,7 @@ const value = computed({
                     </Transition>
                 </div>
                 <span class="button-segment-text">{{ option.title }}</span>
+                <div class="button-segment-state-layer"></div>
             </button>
         </div>
     </div>
@@ -57,6 +58,7 @@ const value = computed({
 }
 
 .button-segment {
+    position: relative;
     display: grid;
     align-items: center;
     justify-content: center;
@@ -67,10 +69,12 @@ const value = computed({
     min-width: 48px;
     padding-inline: 12px;
     margin-block: 4px;
+    background-color: transparent;
     border: 1px solid var(--color-outline);
     border-right: none;
+    outline: none;
     cursor: pointer;
-    background-color: transparent;
+    overflow: hidden;
     transition: background-color 200ms, grid-template-columns 200ms;
 }
 
@@ -122,6 +126,33 @@ const value = computed({
 
 .button-segment[data-state=true] .button-segment-text {
     color: var(--color-on-secondary-container);
+}
+
+.button-segment-state-layer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--color-on-surface);
+    opacity: 0;
+    transition: opacity 200ms;
+}
+
+.button-segment[data-state=true] .button-segment-state-layer {
+    background-color: var(--color-on-secondary-container);
+}
+
+.button-segment:hover .button-segment-state-layer {
+    opacity: 0.08;
+}
+
+.button-segment:focus-visible .button-segment-state-layer {
+    opacity: 0.12;
+}
+
+.button-segment:active .button-segment-state-layer {
+    opacity: 0.12;
 }
 
 .icon-enter-active,
