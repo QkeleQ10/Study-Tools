@@ -137,7 +137,7 @@ async function today() {
                 }
                 if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)) {
                     let nowMarker = element('div', `st-start-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
-                    nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                    nowMarker.scrollIntoView({ block: 'center', behavior: 'instant' })
                     interval = setInterval(() => {
                         if (timeInHours(now) >= agendaEnd) {
                             nowMarker.remove()
