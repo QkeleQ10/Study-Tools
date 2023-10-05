@@ -74,7 +74,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case 'getCredentials':
             console.info(`Credentials requested by ${sender.url}.`)
             // TODO: this sucks
-            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 300000 }, 2000)
+            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 300000 }, 1500)
                 .then(() => {
                     sendResponse({ apiUserId, apiUserToken })
                     console.info(`Credentials sent to ${sender.url}.`)

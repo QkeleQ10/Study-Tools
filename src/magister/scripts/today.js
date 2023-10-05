@@ -359,35 +359,43 @@ async function today() {
                     return new Promise(async resolve => {
                         let elems = []
 
-                        widgetsProgressText.innerText = `Cijfers ophalen...`
-                        let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
-                        let lastViewDate = new Date(lastViewMs)
-                        if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
-                        const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                        const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate).length
-                        if (unreadGradesNum > 0 && !widgetsShown.includes('grades')) {
-                            elems.push(element('div', 'st-start-widget-counters-grades', null, { class: 'st-metric', innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum, 'data-description': "Cijfers" }))
+                        if (!widgetsShown.includes('grades')) {
+                            widgetsProgressText.innerText = `Cijfers ophalen...`
+                            let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
+                            let lastViewDate = new Date(lastViewMs)
+                            if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
+                            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
+                            const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate).length
+                            if (unreadGradesNum > 0) {
+                                elems.push(element('div', 'st-start-widget-counters-grades', null, { class: 'st-metric', innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum, 'data-description': "Cijfers" }))
+                            }
                         }
 
-                        widgetsProgressText.innerText = `Berichten ophalen...`
-                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
-                        const unreadMessagesNum = messagesRes.totalCount
-                        if (unreadMessagesNum > 0 && !widgetsShown.includes('messages')) {
-                            elems.push(element('div', 'st-start-widget-counters-messages', null, { class: 'st-metric', innerText: unreadMessagesNum, 'data-description': "Berichten" }))
+                        if (!widgetsShown.includes('messages')) {
+                            widgetsProgressText.innerText = `Berichten ophalen...`
+                            const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
+                            const unreadMessagesNum = messagesRes.totalCount
+                            if (unreadMessagesNum > 0) {
+                                elems.push(element('div', 'st-start-widget-counters-messages', null, { class: 'st-metric', innerText: unreadMessagesNum, 'data-description': "Berichten" }))
+                            }
                         }
 
-                        widgetsProgressText.innerText = `Huiswerk ophalen...`
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
-                        const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
-                        if (homeworkEvents.length > 0 && !widgetsShown.includes('homework')) {
-                            elems.push(element('div', 'st-start-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
+                        if (!widgetsShown.includes('homework')) {
+                            widgetsProgressText.innerText = `Huiswerk ophalen...`
+                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
+                            const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                            if (homeworkEvents.length > 0) {
+                                elems.push(element('div', 'st-start-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
+                            }
                         }
 
-                        widgetsProgressText.innerText = `Opdrachten ophalen...`
-                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
-                        const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
-                        if (dueAssignments.length > 0 && !widgetsShown.includes('assignments')) {
-                            elems.push(element('div', 'st-start-widget-counters-assignments', null, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" }))
+                        if (!widgetsShown.includes('assignments')) {
+                            widgetsProgressText.innerText = `Opdrachten ophalen...`
+                            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
+                            const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
+                            if (dueAssignments.length > 0) {
+                                elems.push(element('div', 'st-start-widget-counters-assignments', null, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" }))
+                            }
                         }
 
                         widgetsProgressText.innerText = `Activiteiten ophalen...`
@@ -414,7 +422,6 @@ async function today() {
                 }
             },
 
-            // TODO: Include grades
             grades: {
                 title: "Cijfers",
                 options: [
