@@ -149,6 +149,7 @@ const value = computed({
 
 .button-segment:focus-visible .button-segment-state-layer {
     opacity: 0.12;
+    transition-duration: 0ms;
 }
 
 .button-segment:active .button-segment-state-layer {

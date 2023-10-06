@@ -163,6 +163,7 @@ function navClick(id) {
 
 .navigation-item:focus-visible .navigation-item-state-layer {
     opacity: 0.12;
+    transition-duration: 0ms;
 }
 
 .navigation-item:active .navigation-item-state-layer {
