@@ -1,7 +1,7 @@
 login()
 
 async function login() {
-    if (!syncedStorage['magisterLogin-enabked']) return
+    if (!syncedStorage['magisterLogin-enabled']) return
 
     const forceLogoutTimestamp = await getFromStorage('force-logout', 'local'),
         footer = document.querySelector('.bottom')

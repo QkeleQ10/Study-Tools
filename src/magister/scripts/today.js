@@ -209,7 +209,7 @@ async function today() {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
+                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
                     if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
                     eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
@@ -754,13 +754,14 @@ async function today() {
 
             // Widgets editor
             let editWidgetsHeading = element('span', 'st-start-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
-            let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Geselecteerde widgets" })
+            let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Ingeschakelde widgets" })
+            let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', widgets, { innerText: "Widgets worden alleen getoond wanneer ze op dat moment relevant zijn." })
             let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
 
             let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
             widgetsOrder.forEach((key, i) => {
                 if (i === exclusionIndex) {
-                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Beschikbare widgets", 'data-value': "EXCLUDE" })
+                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Uitgeschakelde widgets", 'data-value': "EXCLUDE" })
                     return
                 }
 
@@ -817,6 +818,7 @@ async function today() {
                 })
 
             })
+            let excludedWidgetsDesc = element('span', 'st-start-edit-exclude-desc', widgets, { innerText: "Sleep widgets hierheen om ze uit te schakelen." })
             sortableList.addEventListener('dragover', (event) => {
                 event.preventDefault()
 

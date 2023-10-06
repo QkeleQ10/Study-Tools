@@ -304,6 +304,7 @@
 
 .st-start-event.tight .st-list-row {
     flex-direction: row;
+    width: max-content;
 }
 
 .st-start-event-time {
@@ -454,6 +455,10 @@
 #st-start-edit-exclude {
     margin-top: 18px;
     margin-bottom: 12px;
+}
+
+#st-start-edit-exclude-desc {
+    translate: 0 -32px;
 }
 
 #st-start-edit-zoom {
