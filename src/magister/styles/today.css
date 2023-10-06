@@ -188,7 +188,7 @@
 #st-start-schedule.magister-mode .st-start-event {
     grid-template:
         'timeslot subject' auto
-        'timeslot time' 1fr
+        'timeslot details' 1fr
         / 40px 1fr;
 }
 
