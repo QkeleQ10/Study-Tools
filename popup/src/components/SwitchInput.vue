@@ -53,6 +53,7 @@ const value = computed({
     grid-template-columns: 1fr auto;
     gap: 16px;
     align-items: center;
+    /* padding-right: 10px; */
     cursor: pointer;
 }
 

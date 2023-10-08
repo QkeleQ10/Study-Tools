@@ -4,9 +4,6 @@ const subjects = {
     subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
     type: "SubjectEditor",
     inline: true,
-    conditions: [
-        { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-    ],
     default: [
         { name: "Aardrijkskunde", aliases: "ak" },
         { name: "Bedrijfseconomie", aliases: "beco, bec" },
@@ -35,15 +32,6 @@ const subjects = {
         { name: "Spaans", aliases: "sptl, sp, Spaanse, Español" },
         { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
     ]
-}
-
-const periods = {
-    id: "periods",
-    title: "Perioden bewerken",
-    subtitle: "Dit wordt gebruikt om de huidige periode te bepalen en om studiewijzers te groeperen.",
-    type: "PeriodEditor",
-    inline: true,
-    default: [30, 47, 9],
 }
 
 const shortcuts = {
@@ -91,6 +79,13 @@ export default [
                 wizard: "Wil je een alternatieve accentkleur kiezen?",
             },
             {
+                id: "decoration",
+                title: "Decoratie",
+                subtitle: "Wordt weergegeven in de zijbalk.",
+                type: "DecorationPicker",
+                default: 'none',
+            },
+            {
                 id: "shape",
                 title: "Afgeronde hoeken",
                 type: "SlideInput",
@@ -110,6 +105,42 @@ export default [
                 ],
                 default: true,
             },
+        ]
+    },
+    {
+        id: "login",
+        settings: [
+            {
+                id: "magisterLogin-enabled",
+                title: "Automatisch inloggen",
+                default: true
+            },
+            {
+                id: "magisterLogin-username",
+                title: "Gebruikersnaam",
+                subtitle: "Je gebruikersnaam wordt vanzelf ingevoerd.",
+                type: "TextInput",
+                default: '',
+                conditions: [
+                    { settingId: 'magisterLogin-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "magisterLogin-email",
+                title: "Microsoft-account",
+                subtitle: "Vul het e-mailadres in van je Microsoft-schoolaccount—als je school gebruikmaakt van Single Sign On via Microsoft. Dit account wordt tijdens het inloggen aangeklikt.",
+                type: "TextInput",
+                fieldType: "email",
+                default: '',
+                conditions: [
+                    { settingId: 'magisterLogin-enabled', operator: 'equal', value: true }
+                ],
+            },
+        ]
+    },
+    {
+        id: "sidebar",
+        settings: [
             {
                 id: "magister-appbar-week",
                 title: "Weeknummer in zijbalk",
@@ -145,145 +176,99 @@ export default [
                 type: "ImageInput",
                 default: null,
                 conditions: [
-                    { settingId: 'magister-picture', operator: 'equal', value: 'custom' }
+                    { settingId: 'magister-picture', operator: 'equal', value: 'custom' },
+                ],
+            },
+
+            {
+                id: 'hotkeys-enabled',
+                title: "Sneltoetsen",
+                subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
+                default: true,
+            },
+            {
+                id: 'magister-overlay-hotkey',
+                title: "Activatietoets sneltoetsen",
+                subtitle: "Deze toets activeert de sneltoetsen.",
+                type: "KeyPicker",
+                default: "S",
+                conditions: [
+                    { settingId: 'hotkeys-enabled', operator: 'equal', value: true },
                 ],
             },
             {
-                id: "magister-cf-failred",
-                title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht.",
-                default: true,
+                id: 'hotkeys-quick',
+                title: "Snellere sneltoetsen",
+                subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
+                default: false,
+                conditions: [
+                    { settingId: 'hotkeys-enabled', operator: 'equal', value: true },
+                ],
             },
         ]
     },
     {
-        id: "login",
-        wizard: "Kies de manier van inloggen op je school om automatisch inloggen in te schakelen.",
+        id: "start",
         settings: [
             {
-                id: "magisterLogin-method",
-                title: "Automatisch inloggen",
-                subtitle: "Log automatisch in met je Microsoft-account of met een Magister-wachtwoord.",
+                id: "start-enabled",
+                title: "Pagina Start",
+                subtitle: "De pagina 'Vandaag' is nu 'Start'. Daarin zie je je rooster en gepersonaliseerde widgets. Aanvullende opties op Magister zelf.",
+                default: true,
+            },
+            // TODO: possibly move these settings to the actual Start page
+            {
+                id: "start-schedule-view",
+                title: "Rooster in Start",
                 type: "SegmentedButton",
-                default: "microsoft",
+                default: "schedule",
+                conditions: [
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
+                ],
                 options: [
                     {
-                        value: "microsoft",
-                        title: "Microsoft"
+                        value: "schedule",
+                        title: "Agenda",
+                        icon: "calendar_view_day"
                     },
                     {
-                        value: "password",
-                        title: "Wachtwoord",
+                        value: "list",
+                        title: "Lijst",
+                        icon: "list"
                     },
-                    {
-                        value: "off",
-                        title: "Uit",
-                    },
-                ]
-            },
-            {
-                id: "magisterLogin-username",
-                title: "Gebruikersnaam",
-                type: "TextInput",
-                default: '',
-                conditions: [
-                    { settingId: 'magisterLogin-method', operator: 'not equal', value: 'off' }
                 ],
             },
             {
-                id: "magisterLogin-email",
-                title: "E-mailadres",
-                subtitle: "Van het Microsoft-account dat moet worden gekozen.",
-                type: "TextInput",
-                fieldType: "email",
-                default: '',
-                conditions: [
-                    { settingId: 'magisterLogin-method', operator: 'equal', value: 'microsoft' }
-                ],
-            },
-            {
-                id: "magisterLogin-password",
-                title: "Wachtwoord",
-                type: "TextInput",
-                fieldType: "password",
-                default: '',
-                conditions: [
-                    { settingId: 'magisterLogin-method', operator: 'equal', value: 'password' }
-                ],
-            },
-        ]
-    },
-    {
-        id: "enhancements",
-        settings: [
-            {
-                id: "magister-vd-overhaul",
-                title: "Verbeterd startscherm",
-                default: true,
-            },
-            {
-                id: "magister-vd-agendaHeight",
-                title: "Hoogte agenda",
+                id: "start-schedule-days",
+                title: "Aantal dagen weergeven in Start",
                 type: "SlideInput",
-                default: 1.00,
-                format: "percent",
+                default: 1,
+                format: " d",
                 decimals: 0,
-                min: 0.50,
-                max: 2.50,
-                step: 0.01,
+                min: 1,
+                max: 5,
+                step: 1,
                 conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
+                    { settingId: 'start-enabled', operator: 'equal', value: true },
+                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' }
                 ],
             },
             {
-                id: "vd-subjects-display",
-                title: "Vaknotatie in agenda",
-                type: "SegmentedButton",
-                default: "custom",
+                id: "start-schedule-extra-day",
+                title: "Extra dag weergeven in Start",
+                subtitle: "Aan het eind van de schooldag alvast de volgende schooldag weergeven.",
+                default: true,
                 conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-                ],
-                options: [
-                    {
-                        value: "custom",
-                        title: "Vaknamen",
-                        icon: "notes"
-                    },
-                    {
-                        value: "default",
-                        title: "Vakafkortingen",
-                        icon: "short_text"
-                    },
+                    { settingId: 'start-enabled', operator: 'equal', value: true },
+                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' },
+                    { settingId: 'start-schedule-days', operator: 'equal', value: 1 }
                 ],
             },
-            subjects,
-            {
-                id: "magister-vd-grade",
-                title: "Laatste cijfer op startscherm",
-                subtitle: "Toon het laatste cijfer op het startscherm, laat alleen zien hoeveel nieuwe cijfers er zijn of toon helemaal niets.",
-                type: "SegmentedButton",
-                default: "full",
-                conditions: [
-                    { settingId: 'magister-vd-overhaul', operator: 'equal', value: true }
-                ],
-                options: [
-                    {
-                        value: "full",
-                        title: "Volledig",
-                        icon: "star"
-                    },
-                    {
-                        value: "partial",
-                        title: "Aantal",
-                        icon: "app_badging"
-                    },
-                    {
-                        value: "off",
-                        title: "Verbergen",
-                        icon: "visibility_off"
-                    },
-                ]
-            },
+        ]
+    },
+    {
+        id: "grades",
+        settings: [
             {
                 id: "magister-cf-calculator",
                 title: "Cijfercalculator",
@@ -306,13 +291,23 @@ export default [
                 ]
             },
             {
+                id: "magister-cf-failred",
+                title: "Onvoldoendes rood kleuren",
+                subtitle: "Alleen in het cijferoverzicht.",
+                default: true,
+            },
+        ]
+    },
+    {
+        id: "studyguide",
+        settings: [
+            {
                 id: "sw-enabled",
                 title: "Studiewijzers ordenen",
-                subtitle: "Studiewijzers zullen worden gegroepeerd op vaknaam en periodenummer.",
+                subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },
             subjects,
-            periods,
             {
                 id: "sw-cols",
                 title: "Aantal kolommen",
@@ -361,61 +356,8 @@ export default [
         ]
     },
     {
-        id: "overlay",
-        settings: [
-            {
-                id: 'magister-overlay-hotkey',
-                title: "Activatietoets",
-                subtitle: "Deze toets activeert de overlay en sneltoetsen.",
-                type: "KeyPicker",
-                default: "S",
-            },
-            {
-                id: 'hotkeys-enabled',
-                title: "Sneltoetsen",
-                subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
-                default: true,
-                conditions: [
-                    { settingId: 'magister-overlay-hotkey', operator: 'defined' }
-                ],
-            },
-            {
-                id: 'hotkeys-quick',
-                title: "Snellere sneltoetsen",
-                subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
-                default: false,
-                conditions: [
-                    { settingId: 'magister-overlay-hotkey', operator: 'defined' },
-                    { settingId: 'hotkeys-enabled', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: 'notes-enabled',
-                title: "Notitieblok",
-                default: false,
-                conditions: [
-                    { settingId: 'magister-overlay-hotkey', operator: 'defined' },
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            // INCORPORATE INTO THE OVERLAY
-            // BROWSER NOT EQUAL OPERATOR
-            // {
-            //     id: "gamification-enabled",
-            //     title: "Gamificatie",
-            //     subtitle: "Punten worden toegekend op basis van je prestaties. Lees meer in het scoremenu.",
-            //     default: false,
-            //     conditions: [
-            //         { settingId: 'beta-options', operator: 'equal', value: true },
-            //         { operator: 'browser not equal', value: 'firefox' }
-            //     ],
-            // },
-        ]
-    },
-    {
         id: "about",
         settings: [
-            // about!
             {
                 id: "update-notes",
                 title: "Update-informatie weergeven",
@@ -429,6 +371,24 @@ export default [
                 default: false,
             },
             {
+                id: 'gamification-enabled',
+                title: "Puntensysteem",
+                subtitle: "Oproepen met de activatietoets voor de sneltoetsen.",
+                default: false,
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ]
+            },
+            {
+                id: 'notes-enabled',
+                title: "Notitieblok",
+                subtitle: "Oproepen met de activatietoets voor de sneltoetsen.",
+                default: false,
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+            },
+            {
                 id: "disable-css",
                 title: "Algemene CSS-modificaties uitschakelen",
                 subtitle: "Veel functies van Study Tools werken mogelijk niet.",
@@ -437,6 +397,7 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
+            // TODO: setting to disable color adaptation for dark theme
         ]
     },
 ]

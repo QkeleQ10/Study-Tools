@@ -5,17 +5,16 @@ import { useSyncedStorage } from './composables/chrome.js'
 
 import settings from '../public/settings.js'
 
-import TopAppBar from './components/TopAppBar.vue'
-import NavigationBar from './components/NavigationBar.vue'
+import NavigationRail from './components/NavigationRail.vue'
 import SwitchInput from './components/SwitchInput.vue'
 import SegmentedButton from './components/SegmentedButton.vue'
 import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
 import ColorPicker from './components/ColorPicker.vue'
+import DecorationPicker from './components/DecorationPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import SubjectEditor from './components/SubjectEditor.vue'
-import PeriodEditor from './components/PeriodEditor.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
 import About from './components/About.vue'
 import Chip from './components/Chip.vue'
@@ -24,7 +23,7 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, KeyPicker, ImageInput, SubjectEditor, PeriodEditor, ShortcutsEditor }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, DecorationPicker, KeyPicker, ImageInput, SubjectEditor, ShortcutsEditor }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')
@@ -81,28 +80,38 @@ function openInNewTab(url) {
 </script>
 
 <template>
-    <TopAppBar :scrolled="y > 16" @reset-settings="resetSettingDefaults" />
-    <main id="main" ref="main">
-        <div id="options-container">
-            <About v-show="selectedCategory === 'about'" key="about" />
-            <TransitionGroup tag="div" :name="transitionName" mode="out-in" v-for="category in settings"
-                v-show="category.id === selectedCategory" :key="category.id">
-                <div class="setting-wrapper" :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
-                    v-for="setting in category.settings" v-show="shouldShowSetting(setting)" :key="setting.id">
-                    <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting" :id="setting.id"
-                        v-model="syncedStorage[setting.id]">
-                        <template #title>{{ setting.title }}</template>
-                        <template #subtitle>{{ setting.subtitle }}</template>
-                    </component>
-                    <Chip v-for="link in setting.links" :key="link.label" @click="openInNewTab(link.href)">
-                        <template #icon>{{ link.icon }}</template>
-                        <template #label>{{ link.label }}</template>
-                    </Chip>
-                </div>
-            </TransitionGroup>
-        </div>
-    </main>
-    <NavigationBar v-model="selectedCategory" @scroll-to-top="scrollToTop" />
+    <div id="app-wrapper">
+        <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" :data-scrolled="y > 16" />
+        <main id="main" ref="main">
+            <div id="options-container">
+                <TransitionGroup name="fade">
+                    <template v-for="category in settings">
+                        <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
+                            <TransitionGroup :name="transitionName">
+                                <About v-if="category.id === 'about'" key="about" @reset-settings="resetSettingDefaults" />
+                                <template v-for="setting in category.settings">
+                                    <div class="setting-wrapper"
+                                        :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
+                                        v-if="shouldShowSetting(setting)" :key="setting.id">
+                                        <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
+                                            :id="setting.id" v-model="syncedStorage[setting.id]">
+                                            <template #title>{{ setting.title }}</template>
+                                            <template #subtitle>{{ setting.subtitle }}</template>
+                                        </component>
+                                        <Chip v-for="link in setting.links" :key="link.label"
+                                            @click="openInNewTab(link.href)">
+                                            <template #icon>{{ link.icon }}</template>
+                                            <template #label>{{ link.label }}</template>
+                                        </Chip>
+                                    </div>
+                                </template>
+                            </TransitionGroup>
+                        </div>
+                    </template>
+                </TransitionGroup>
+            </div>
+        </main>
+    </div>
 </template>
 
 <style>
@@ -111,7 +120,7 @@ function openInNewTab(url) {
 
 
 body {
-    width: 450px;
+    width: 530px;
     height: 600px;
     margin: 0;
     overflow: hidden;
@@ -122,10 +131,19 @@ body {
 #app {
     width: 100%;
     height: 100%;
+}
+
+#app-wrapper {
+    width: 100%;
+    height: 100%;
     display: grid;
-    grid-auto-rows: 64px auto 80px;
+    grid-template:
+        /* 'rail header' 64px */
+        'rail content' auto
+        / 80px 450px;
     overflow: hidden;
     font-family: 'Noto Sans', sans-serif;
+    transition: background-color 200ms;
 }
 
 main {
@@ -137,6 +155,15 @@ main {
 #options-container {
     display: flex;
     flex-direction: column;
+    padding-top: 16px;
+}
+
+.options-category {
+    width: 450px;
+}
+
+.setting-wrapper {
+    margin-inline: 16px;
 }
 
 .setting-wrapper~.setting-wrapper.visible {
@@ -152,13 +179,10 @@ main {
 }
 
 .setting-wrapper>.chip {
-    margin-left: 16px;
     margin-bottom: 16px;
 }
 
 .setting {
-    padding-left: 16px;
-    padding-right: 24px;
     padding-block: 12px;
     min-height: 56px;
     box-sizing: border-box;
@@ -276,6 +300,21 @@ main {
     border-radius: 6px;
     font: var(--typescale-body-small);
     text-align: center;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 100ms ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.fade-leave,
+.fade-leave-active {
+    position: absolute;
 }
 
 .list-enter-active,

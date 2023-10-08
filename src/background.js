@@ -1,29 +1,44 @@
 import settings from '../popup/dist/settings.js'
 
-let token,
-    userId
+let apiUserId,
+    apiUserToken,
+    apiUserTokenDate
 
-const settingsToClear = ['openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-subjects', 'version', 'hotkeys-today']
+const settingsToClear = [
+    'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'vd-enabled', 'vd-subjects-display', 'version', 'hotkeys-today'
+]
 
 init()
 
 async function init() {
+    apiUserId = (await chrome.storage.local.get('user-id'))?.['user-id'] || undefined
+    apiUserToken = (await chrome.storage.local.get('token'))?.['token'] || undefined
+    apiUserTokenDate = (await chrome.storage.local.get('token-date'))?.['token-date'] || undefined
+
     console.info("Service worker running!")
 
     setDefaults()
 
-    chrome.webRequest.onSendHeaders.addListener(async e => {
-        Object.values(e.requestHeaders).forEach(async obj => {
-            if (obj.name === 'Authorization' && token !== obj.value) token = obj.value
-        })
-        if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) userId = e.url.split('/personen/')[1].split('/')[0]
+    chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
+        let userIdWas = apiUserId
+        let userTokenWas = apiUserToken
+        if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
+            apiUserId = e.url.split('/personen/')[1].split('/')[0]
+            chrome.storage.local.set({ 'user-id': apiUserId })
+            if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
+        }
+        let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')
+        if (authObject) {
+            apiUserToken = authObject.value
+            apiUserTokenDate = new Date()
+            chrome.storage.local.set({ 'token': apiUserToken })
+            chrome.storage.local.set({ 'token-date': apiUserTokenDate })
+            if (userTokenWas !== apiUserToken) console.info(`User token changed between ${new Date().toLocaleDateString()} and now.`)
+        }
 
-        chrome.storage.local.set({ 'user-token': token })
-        chrome.storage.local.set({ 'user-id': userId })
-        console.info("Intercepted user token and user ID.")
-    }, { urls: ['*://*.magister.net/api/m6/personen/*/*', '*://*.magister.net/api/personen/*/*', '*://*.magister.net/api/leerlingen/*/*'] }, ['requestHeaders'])
+    }, { urls: ['*://*.magister.net/*'] }, ['requestHeaders', 'extraHeaders'])
 
-    console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + ["rooster op startpagina", "puntensysteem"].join(', '), "font-size: .8em")
+    console.info("Intercepting HTTP request information to extract token and userId...%c\n\nVrees niet, dit is alleen nodig zodat de extensie API-verzoeken kan maken naar Magister. Deze gegevens blijven op je apparaat. Dit wordt momenteel alleen gebruikt voor de volgende onderdelen:\n" + ["cijferexport", "widgets startpagina", "rooster startpagina", "puntensysteem"].join(', ') + "\n\nen in de toekomst eventueel ook voor:\n" + [].join(', '), "font-size: .8em")
 }
 
 async function setDefaults() {
@@ -52,21 +67,52 @@ async function setDefaults() {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
+        case 'popstateDetected':
+            console.info("Popstate detected, service worker revived for 30 seconds.")
+            break
+
         case 'getCredentials':
-            sendResponse({ token, userId })
-            console.info("Sent user token, user ID and sign-on ID to content script.")
+            console.info(`Credentials requested by ${sender.url}.`)
+            // TODO: this sucks
+            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 300000 }, 1500)
+                .then(() => {
+                    sendResponse({ apiUserId, apiUserToken })
+                    console.info(`Credentials sent to ${sender.url}.`)
+                })
+                .catch(() => {
+                    sendResponse({ apiUserId, apiUserToken, error: "May be too old." })
+                    console.warn(`Possibly outdated credentials sent to ${sender.url}.`)
+                })
             return true
 
         case 'waitForRequestCompleted':
+            console.info(`Request completion notification requested by ${sender.url}.`)
             chrome.webRequest.onCompleted.addListener((details) => {
                 sendResponse({ status: 'completed', details: details })
+                console.info(`Request completion notification sent to ${sender.url}.`)
             }, { urls: ['*://*.magister.net/api/personen/*/aanmeldingen/*/cijfers/extracijferkolominfo/*'] })
             setTimeout(() => {
                 sendResponse({ status: 'timeout' })
+                console.warn(`Request completion notification requested by ${sender.url} has timed out.`)
             }, 5000)
             return true
 
         default:
-            break;
+            break
     }
 })
+
+async function sleepUntil(f, timeoutMs) {
+    return new Promise((resolve, reject) => {
+        const timeWas = new Date()
+        const wait = setInterval(function () {
+            if (f()) {
+                clearInterval(wait)
+                resolve()
+            } else if (new Date() - timeWas > timeoutMs) {
+                clearInterval(wait)
+                reject()
+            }
+        }, 20)
+    })
+}

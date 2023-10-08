@@ -96,8 +96,7 @@ function setIcon(icon) {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    /* margin-top: 16px; */
-    max-height: 60vh;
+    max-height: 80vh;
     overflow-y: auto;
     padding-inline: 24px;
     margin-inline: -24px;
@@ -105,11 +104,10 @@ function setIcon(icon) {
 }
 
 .icon-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     height: auto;
-    row-gap: 4px;
-    justify-items: center;
+    gap: 4px;
 }
 
 .icon-picker-option {

@@ -12,7 +12,7 @@ const closeDialog = () => {
 </script>
 
 <template>
-	<div class="scrim" :active="props.active" @click="closeDialog"></div>
+	<div class="scrim" :active="props.active" @click="closeDialog"></div> <!-- v-if="props.active" -->
 	<div class="dialog" :active="props.active">
 		<Icon class="dialog-icon">
 			<slot name="icon"></slot>

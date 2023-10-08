@@ -1,7 +1,7 @@
 login()
 
 async function login() {
-    if (syncedStorage['magisterLogin-method'] === 'off') return
+    if (!syncedStorage['magisterLogin-enabled']) return
 
     const forceLogoutTimestamp = await getFromStorage('force-logout', 'local'),
         footer = document.querySelector('.bottom')
@@ -20,11 +20,6 @@ async function login() {
     let usernameSubmit = await awaitElement('#username_submit')
     usernameSubmit.click()
 
-    let password = syncedStorage['magisterLogin-password'],
-        passwordField = await awaitElement('#rswp_password')
-    passwordField.value = password
-    passwordField.dispatchEvent(new Event('input'))
-
-    let passwordSubmit = await awaitElement('#rswp_submit')
-    passwordSubmit.click()
+    let passwordField = await awaitElement('#rswp_password')
+    if (passwordField) notify('snackbar', "Om privacyredenen ondersteunt Study Tools niet langer het inloggen met een wachtwoord. Vul je wachtwoord zelf in.")
 }

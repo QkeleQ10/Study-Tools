@@ -1,3 +1,5 @@
+let hiddenStudyguides = []
+
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
@@ -16,7 +18,7 @@ async function studyguideList() {
 
     renderStudyguideList()
 
-    let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+    hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
     let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: "Studiewijzers zoeken" })
     // searchBar.focus()
     searchBar.addEventListener('keyup', e => {
@@ -24,16 +26,16 @@ async function studyguideList() {
             document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
         }
     })
-    searchBar.addEventListener('input', validateItems)
+    searchBar.addEventListener('input', appendStudyguidesToList)
     searchBar.addEventListener('input', e => {
-        let egg = eggs.find(egg => egg.type === 'revealOnInput' && egg.location === 'studyguidesSearch' && egg.input === e.target.value)
+        let egg = eggs.find(egg => egg.location === 'studyguidesSearch' && egg.input === e.target.value)
         if (!egg?.output) return
 
         let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
 
         let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
         fakeDefaultItemButton.addEventListener('click', () => {
-            showSnackbar(egg.output, 3600000)
+            notify(egg.type || 'snackbar', egg.output, null, 3600000)
         })
 
         let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
@@ -41,36 +43,7 @@ async function studyguideList() {
 
     let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
     let showHiddenItemsInput = element('input', 'st-sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
-    showHiddenItemsInput.addEventListener('input', validateItems)
-
-    function validateItems() {
-        let gridContainer = document.querySelector('#st-sw-container')
-        let cols = document.querySelectorAll('#st-sw-container .st-sw-col')
-        if (!gridContainer || !cols?.[0]) return
-
-        gridContainer.querySelectorAll('.st-sw-item, .st-sw-item-default').forEach(studyguide => {
-            if (studyguide.id === 'st-sw-fake-item') {
-                studyguide.parentElement.remove()
-                return
-            }
-            let query = searchBar.value.toLowerCase()
-            let matches = (studyguide.dataset.title.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
-
-            if (matches) studyguide.classList.remove('hidden')
-            else studyguide.classList.add('hidden')
-        })
-
-        let subjectTiles = gridContainer.querySelectorAll('.st-sw-subject')
-        let visibleSubjectTiles = [...subjectTiles].filter(element => element.querySelector('button:not(.hidden)'))
-        visibleSubjectTiles.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
-            cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
-        })
-    }
-
-    // TODO: This can definitely be more elegant
-    setTimeout(validateItems, 200)
-    setTimeout(validateItems, 600)
-    setTimeout(validateItems, 1200)
+    showHiddenItemsInput.addEventListener('input', appendStudyguidesToList)
 }
 
 // Page 'Studiewijzer'
@@ -113,14 +86,14 @@ async function studyguideIndividual() {
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
-            showSnackbar(`Studiewijzer '${studyguideTitle}' verborgen`)
+            notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 4000)
             document.querySelector('.st-sw-selected').classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
-            showSnackbar(`Studiewijzer '${studyguideTitle}' niet langer verborgen`)
+            notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 4000)
             document.querySelector('.st-sw-selected').classList.remove('hidden-item')
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
@@ -140,7 +113,6 @@ async function renderStudyguideList() {
     const settingCols = syncedStorage['sw-cols'],
         settingShowPeriod = syncedStorage['sw-period'],
         subjectsArray = Object.values(syncedStorage['subjects']),
-        currentPeriod = await getPeriodNumber(),
         viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
         originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
         gridWrapper = element('div', 'st-sw-container', gridContainer)
@@ -156,7 +128,6 @@ async function renderStudyguideList() {
         let title = elem.firstElementChild.firstElementChild.innerText,
             subject = "Geen vak",
             period = 0,
-            priority,
             periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
         subjectsArray.forEach(subjectEntry => {
@@ -172,24 +143,23 @@ async function renderStudyguideList() {
             if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
         }
 
-        if (period === currentPeriod) priority = 2
-        else if (period > 0) priority = 0
-        else priority = 1
-
         if (!object[subject]) object[subject] = []
-        object[subject].push({ elem, title, period, priority })
+        object[subject].push({ elem, title, period })
     })
+
+    let tiles = []
+    let tempTilesHolder = element('div', 'st-sw-tiles-holder', document.body, { style: 'display: none;' })
 
     Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
         let items = object[subject]
 
-        let subjectTile = element('div', `st-sw-subject-${subject}`, cols[Math.floor((i / a.length) * Number(settingCols))], { class: 'st-sw-subject', 'data-subject': subject })
+        let subjectTile = element('div', `st-sw-subject-${subject}`, tempTilesHolder, { class: 'st-sw-subject', 'data-subject': subject }) //cols[Math.floor((i / a.length) * Number(settingCols))]
 
         if (items.length > 1) {
             let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
             let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
             for (let i = 0; i < items.length; i++) {
-                const item = items.sort((a, b) => b.priority - a.priority)[i]
+                const item = items.sort((a, b) => a.period - b.period)[i]
 
                 let periodText = `Periode ${item.period}`
                 if (item.period < 1) periodText = "Geen periode"
@@ -241,4 +211,45 @@ async function renderStudyguideList() {
     if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
         gridWrapper.remove()
     }
+
+    appendStudyguidesToList(tiles)
+}
+
+// Append the study guides to the list
+function appendStudyguidesToList() {
+    let tiles = document.querySelectorAll('.st-sw-subject')
+    let items = document.querySelectorAll('.st-sw-item, .st-sw-item-default')
+    let searchBar = document.querySelector('#st-sw-search')
+    let showHiddenItemsInput = document.querySelector('#st-sw-show-hidden-items')
+    let gridContainer = document.querySelector('#st-sw-container')
+    let cols = document.querySelectorAll('#st-sw-container .st-sw-col')
+    if (!gridContainer || !cols?.[0]) return
+
+    // First, define which study guide items should be shown.
+    items.forEach(studyguide => {
+        if (studyguide.id === 'st-sw-fake-item') {
+            studyguide.parentElement.remove()
+            return
+        }
+
+        let matches
+
+        if (searchBar && showHiddenItemsInput) {
+            let query = searchBar.value.toLowerCase()
+            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject?.toLowerCase().includes(query)) && (!hiddenStudyguides.includes(studyguide.dataset.title) || showHiddenItemsInput.checked)
+        } else {
+            matches = (!hiddenStudyguides.includes(studyguide.dataset.title))
+        }
+
+        if (matches) studyguide.classList.remove('hidden')
+        else studyguide.classList.add('hidden')
+    })
+
+    // Next, define which subject tiles have visible children.
+    let visibleSubjectTiles = [...tiles].filter(element => element.querySelector('button:not(.hidden)'))
+
+    // Finally, sort the subject tiles and equally distribute them across columns.
+    visibleSubjectTiles.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
+        cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
+    })
 }

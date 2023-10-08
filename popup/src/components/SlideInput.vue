@@ -25,7 +25,7 @@ function formatValue(val) {
             return Number(val).toLocaleString('nl-NL', { style: 'percent', minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 
         default:
-            return Number(val).toLocaleString('nl-NL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + 'px'
+            return Number(val).toLocaleString('nl-NL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + props.setting.format
     }
 }
 </script>
@@ -54,7 +54,8 @@ function formatValue(val) {
 }
 
 .vue-slider {
-    width: 100% !important;
+    width: calc(100% - 16px) !important;
+    padding-inline: 8px !important;
     overflow: visible !important;
 }
 

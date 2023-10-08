@@ -67,6 +67,7 @@ const props = defineProps(['type'])
 
 .chip:focus-visible .chip-state-layer {
     opacity: 12%;
+    transition-duration: 0ms;
 }
 
 .chip:active .chip-state-layer {

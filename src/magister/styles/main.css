@@ -101,7 +101,7 @@ div.loading-overlay {
     color: var(--st-contrast-accent);
     cursor: pointer;
     user-select: none;
-    transition: filter 200ms, transform 200ms, border 200ms, color 200ms;
+    transition: filter 200ms, transform 200ms, border 200ms, color 200ms, background-color 200ms;
 }
 
 .st-button.small {
@@ -117,16 +117,36 @@ div.loading-overlay {
     outline-offset: -2px;
 }
 
-.st-button.icon {
+.st-button.tertiary {
     background: var(--st-background-secondary);
+    color: var(--st-foreground-insignificant);
+    outline: none;
+}
+
+.st-button.icon {
+    display: block;
+    background-color: transparent;
     color: var(--st-foreground-primary);
-    width: 32px;
+    font: 500 18px 'Font Awesome 5 Pro';
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    max-height: 32px;
     padding: 0;
     border-radius: 50%;
+    transition: color 200ms, background-color 200ms, transform 200ms;
 }
 
 .st-button.icon:hover {
     color: var(--st-foreground-accent);
+    filter: none;
+}
+
+.st-button.icon:focus-visible,
+.st-button.icon:active {
+    background-color: var(--st-highlight-primary);
+    color: var(--st-foreground-accent);
+    filter: none;
 }
 
 .st-button.icon[data-icon]:before {
@@ -144,7 +164,7 @@ div.loading-overlay {
 }
 
 .st-button:hover,
-.st-button:focus {
+.st-button:focus-visible {
     filter: brightness(var(--st-hover-brightness));
 }
 
@@ -170,6 +190,34 @@ div.loading-overlay {
     opacity: .5;
 }
 
+.st-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 400px;
+    background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    font: 14px/18px var(--st-font-family-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    padding: 24px;
+    overflow: visible;
+    animation: floatDown 200ms;
+}
+
+.st-dialog-dismiss {
+    position: absolute;
+    top: 0;
+    right: -40px;
+    background-color: var(--st-background-secondary) !important;
+}
+
+.st-dialog-buttons {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
 .st-input {
     width: 200px;
     height: 32px;
@@ -187,6 +235,9 @@ div.loading-overlay {
 }
 
 .st-checkbox-label {
+    position: relative;
+    margin-left: 32px;
+    margin-block: 4px;
     font-family: var(--st-font-family-secondary);
     font-size: 12px;
     cursor: pointer;
@@ -219,6 +270,128 @@ div.loading-overlay {
     visibility: hidden;
     opacity: 0;
     position: absolute;
+}
+
+.st-divider {
+    width: 100%;
+    height: 1px;
+    margin-block: 8px;
+    border-top: 1px solid var(--st-border-color);
+}
+
+.st-divider.vertical {
+    height: 100%;
+    width: 1px;
+    margin-inline: 8px;
+    margin-block: 0;
+    border-left: 1px solid var(--st-border-color);
+    border-top: none;
+}
+
+.st-divider.thick {
+    border-width: 3px;
+}
+
+.st-sortable-list {
+    width: 100%;
+    padding-bottom: 16px;
+}
+
+.st-sortable-list-item {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
+    padding-inline: 12px;
+    border-radius: var(--st-border-radius);
+    background: var(--st-background-secondary);
+    border: var(--st-border);
+    color: var(--st-foreground-primary);
+    font: 14px/40px var(--st-font-family-secondary);
+    cursor: move;
+}
+
+.st-sortable-list-item:after {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    content: '';
+    font: 500 16px "Font Awesome 5 Pro";
+    color: var(--st-foreground-insignificant);
+}
+
+.st-sortable-list-item-option {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font: 12px var(--st-font-family-secondary);
+}
+
+.st-sortable-list-item-option select {
+    width: 135px;
+    padding: 4px 8px;
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: calc(var(--st-border-radius) / 2);
+    font: 12px var(--st-font-family-secondary);
+}
+
+.st-sortable-list-item.dragging,
+.st-sortable-list-item.dragging-return {
+    opacity: 0 !important;
+}
+
+.st-sortable-list-item.excluded {
+    opacity: .75;
+}
+
+.st-sortable-list-ghost {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 10000000;
+    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    animation: fadeIn 200ms;
+}
+
+.st-sortable-list-ghost.returning {
+    transition-property: top, left, transform, translate;
+    transition-duration: 200ms;
+}
+
+.st-progress-bar {
+    height: 4px;
+    background-color: var(--st-background-tertiary);
+    width: 100%;
+    overflow: hidden;
+    border-radius: min(var(--st-border-radius), 2px);
+}
+
+.st-progress-bar-value.indeterminate {
+    width: 100%;
+    height: 100%;
+    border-radius: min(var(--st-border-radius), 2px);
+    background-color: var(--st-accent-primary);
+    animation: indeterminateAnimation 1s infinite linear;
+    transform-origin: 0% 50%;
+}
+
+@keyframes indeterminateAnimation {
+    0% {
+        transform: translateX(0) scaleX(0);
+    }
+
+    30% {
+        transform: translateX(0) scaleX(0.4);
+    }
+
+    100% {
+        transform: translateX(100%) scaleX(0.6);
+    }
 }
 
 #st-appbar-metrics {
@@ -264,6 +437,13 @@ div.loading-overlay {
     width: max-content;
 }
 
+.st-list-row {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 8px;
+    width: 100%;
+}
+
 .st-tile {
     position: relative;
     background-color: var(--st-background-secondary);
@@ -307,12 +487,12 @@ div.loading-overlay {
     translate: -50%;
 }
 
-#st-vd-schedule>ul>li:hover {
+#st-start-schedule>ul>li:hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
 
-#st-vd-schedule>ul>li[data-current] {
+#st-start-schedule>ul>li[data-current] {
     background: var(--st-highlight-primary)
 }
 
@@ -354,8 +534,8 @@ div.loading-overlay {
     justify-content: center;
     border-radius: calc(var(--st-border-radius) / 2);
     background: var(--st-contrast-accent);
-    color: #888;
-    font: 14px var(--st-font-family-secondary);
+    color: #777;
+    font: 600 14px var(--st-font-family-secondary);
     border: 1px solid #e7e7e7;
     scale: 0;
     opacity: 0;
@@ -668,10 +848,30 @@ a.st-keyboard-hint.clicked {
     }
 }
 
+@keyframes popIn {
+    from {
+        scale: 0
+    }
+}
+
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        scale: .75;
+    }
+}
+
 @keyframes floatDownOut {
     to {
         opacity: 0;
         translate: 0 200px;
+    }
+}
+
+@keyframes floatLeft {
+    from {
+        opacity: 0;
+        translate: 150px;
     }
 }
 

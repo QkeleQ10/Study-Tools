@@ -1,10 +1,9 @@
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue';
+import { ref, defineEmits } from 'vue';
 
 import Icon from './Icon.vue';
 import Dialog from './Dialog.vue'
 
-const props = defineProps(['scrolled'])
 const emit = defineEmits(['resetSettings'])
 
 const resetDialogActive = ref(false)
@@ -16,7 +15,7 @@ function resetSettings() {
 </script>
 
 <template>
-    <header id="top-app-bar" :data-scrolled="props.scrolled">
+    <header id="top-app-bar">
         <h1 id="app-heading">Study Tools</h1>
         <div id="top-app-bar-buttons">
             <button class="icon-button" @click="resetDialogActive = true">
@@ -47,10 +46,6 @@ function resetSettings() {
     align-items: center;
     z-index: 9999;
     transition: background-color 200ms;
-}
-
-#top-app-bar[data-scrolled=true] {
-    background-color: var(--color-surface-container);
 }
 
 #app-heading {

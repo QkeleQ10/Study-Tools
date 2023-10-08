@@ -13,6 +13,12 @@ async function main() {
     let shortcuts = Object.values(syncedStorage.shortcuts),
         spacer = await awaitElement('.appbar>.spacer')
 
+    // Change Vandaag to Start in appbar
+    if (syncedStorage['start-enabled']) {
+        let vandaagText = await awaitElement('a#menu-vandaag span')
+        vandaagText.innerText = "Start"
+    }
+
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
         let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
@@ -25,6 +31,7 @@ async function main() {
     shortcuts.slice().reverse().forEach((shortcut, i, a) => {
         let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
         url = url.replace('$SCHOOLNAAM', window.location.hostname.split('.')[0])
+        saveToStorage('schoolName', window.location.hostname.split('.')[0], 'local')
         let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
             shortcutA = element('a', `st-shortcut-${i}-a`, shortcutDiv, { href: url, target: '_blank', }),
             shortcutI = element('i', `st-shortcut-${i}-i`, shortcutA, { class: 'st-shortcut-icon', innerText: shortcut.icon }),
@@ -48,7 +55,8 @@ async function main() {
     })
 
     // Easter egg
-    if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 5000)
+    if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
+    if (Math.random() < 0.008) setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg'), 2000)
 
     // Hotkeys
     if (syncedStorage['hotkeys-enabled']) {
@@ -398,33 +406,12 @@ async function main() {
 popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
-    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, .st-overlay, [id^="st-cf"], [id^="st-vd"] [id^="st-sw"], .k-animation-container').forEach(e => {
-        if (e.tagName === 'DIALOG') e.close()
+    chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
+
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
-}
-
-function getWeekNumber() {
-    let d = new Date()
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)),
-        weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
-    return weekNo
-}
-
-async function getPeriodNumber(w = getWeekNumber()) {
-    const periodsArray = Object.values(syncedStorage['periods'])
-    let periodNumber = 0
-
-    periodsArray.forEach((e, i, arr) => {
-        let startWeek = Number(e),
-            endWeek = Number(arr[i + 1]) || Number(arr[0])
-        if (endWeek < startWeek && (w >= startWeek || w < endWeek)) periodNumber = i + 1
-        else if (w >= startWeek && w < endWeek) periodNumber = i + 1
-    })
-
-    return periodNumber
+    document.querySelectorAll('.st-overlay').forEach(e => { e.close() })
 }
 
 function parseSubject(string, enabled, subjects) {
@@ -442,13 +429,6 @@ function parseSubject(string, enabled, subjects) {
             })
         })
         resolve({ subjectAlias: '', subjectName: '', stringBefore: string, stringAfter: '', success: false })
-    })
-}
-
-async function msToPixels(ms) {
-    return new Promise(async (resolve, reject) => {
-        let settingAgendaHeight = syncedStorage['magister-vd-agendaHeight'] || 1
-        resolve(0.000025 * settingAgendaHeight * ms)
     })
 }
 

@@ -48,7 +48,7 @@ const filled = computed(() => {
 
 .setting.text .setting-title {
     position: absolute;
-    left: 32px;
+    left: 16px;
     top: 28px;
     color: var(--color-on-surface-variant);
     font: var(--typescale-body-large);
@@ -74,7 +74,7 @@ const filled = computed(() => {
 .setting.text .border-cutout {
     position: absolute;
     top: 6px;
-    left: 28px;
+    left: 12px;
     font: var(--typescale-body-large);
     font-size: 12px;
     line-height: 16px;

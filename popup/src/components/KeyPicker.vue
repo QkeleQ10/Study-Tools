@@ -41,7 +41,7 @@ function formatKey(string) {
 
 <template>
     <div class="setting key-picker" ref="label">
-        <div class="key-picker-click-layer" @click="promptKey">
+        <button class="key-picker-click-layer" @click="promptKey">
             <div>
                 <h3 class="setting-title">
                     <slot name="title"></slot>
@@ -51,7 +51,7 @@ function formatKey(string) {
                 </span>
             </div>
             <Icon>chevron_right</Icon>
-        </div>
+        </button>
         <BottomSheet v-model:active="pickerOpen" :handle=true>
             <template #content>
                 <span class="supporting-text">Druk op een toets</span>
@@ -71,7 +71,13 @@ function formatKey(string) {
     margin-block: -12px;
     padding-left: 16px;
     padding-right: 24px;
-    padding-block: 12px;
+    padding-block: 0;
+    min-height: 56px;
+    box-sizing: content-box;
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
     cursor: pointer;
 }
 

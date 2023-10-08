@@ -5,10 +5,10 @@
 }
 
 #st-level {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 16px;
-    z-index: 1002;
+    z-index: 100000;
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -263,7 +263,7 @@
     color: var(--st-accent-warn);
 }
 
-#st-vd-notifications>#st-vd-gamification-notification {
+#st-start-notifications>#st-start-gamification-notification {
     color: var(--st-contrast-accent) !important;
     background: linear-gradient(45deg, var(--st-accent-primary), var(--st-accent-secondary));
 }
