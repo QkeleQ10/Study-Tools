@@ -105,8 +105,9 @@ async function useApi(url, options) {
                 if (!res.ok) {
                     if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
                     else {
+                        notify('snackbar', "Er is iets misgegaan. Deze update is nog gloednieuw en het kan zijn dat het me niet is gelukt om alle foutjes eruit te halen. Geef me alsjeblieft even een seintje!", { innerText: "e-mail", href: 'mailto:quinten@althues.nl' }, 36000000)
                         if (apiCache[url]) {
-                            notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouders`)
+                            notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
                             return resolve(apiCache[url])
                         }
                         else {
