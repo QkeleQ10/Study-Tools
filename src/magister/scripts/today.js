@@ -74,6 +74,8 @@ async function today() {
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
         const events = eventsRes.Items
 
+console.log(events.filter(e=>e.Status===5)) // TODO: STATUS 5 IS UITVAL!GY*!M!MN! ! !  ! ! ! ! !!! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !! 
+
         // Start rendering
         renderSchedule = async () => {
             clearInterval(interval)
