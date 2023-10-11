@@ -183,6 +183,12 @@
 .st-start-event.tight {
     padding-block: 0;
     align-content: center;
+    grid-template:
+        '. .' 1fr
+        'timeslot subject' auto
+        'timeslot details' auto
+        '. .' 1fr
+        / 40px 1fr;
 }
 
 #st-start-schedule.magister-mode .st-start-event {
@@ -236,6 +242,22 @@
 
 #st-start.editing .st-start-event-school-hours {
     animation: fadeIn 200ms reverse both;
+}
+
+.st-start-event-cancelled {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 5px;
+    background-color: var(--st-accent-warn);
+    opacity: 1 !important;
+}
+
+.st-start-event.cancelled .st-start-event-school-hours,
+.st-start-event.cancelled .st-start-event-subject-wrapper,
+.st-start-event.cancelled .st-list-row {
+    opacity: .75;
 }
 
 .st-start-event-subject-wrapper {
@@ -316,6 +338,7 @@
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
+    align-items: flex-end;
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);

@@ -58,6 +58,25 @@ async function today() {
     })
     if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
 
+    // Birthday party mode!
+    let accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`)
+    if (`${date.getMonth() + 1}-${date.getDate()}` === accountInfo.Persoon.Geboortedatum.slice(5)) {
+        createStyle(`
+.menu-host, .appbar-host {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" style="font-size: 24px;"><text y="22">🎉</text></svg>'), auto;
+    animation: rainbow 5s linear 0s 3, red-accent 500ms 15s both;
+}
+
+@keyframes red-accent {
+    from {
+        --st-accent-primary: hsl(0, 50%, 60%);
+        --st-accent-secondary: hsl(0, 50%, 55%);
+    }
+}
+`, 'st-party-mode')
+        notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+    }
+
     setTimeout(() => header.dataset.transition = true, 2000)
     setTimeout(async () => {
         headerText.innerText = date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -73,8 +92,6 @@ async function today() {
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
         const events = eventsRes.Items
-
-console.log(events.filter(e=>e.Status===5)) // TODO: STATUS 5 IS UITVAL!GY*!M!MN! ! !  ! ! ! ! !!! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !! 
 
         // Start rendering
         renderSchedule = async () => {
@@ -239,6 +256,12 @@ console.log(events.filter(e=>e.Status===5)) // TODO: STATUS 5 IS UITVAL!GY*!M!MN
                         eventSchoolHours.innerText = ''
                     }
 
+                    // Cancelled label
+                    if (item.Status === 5) {
+                        eventElement.classList.add('cancelled')
+                        element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
+                    }
+
                     // Render the subject and location label
                     if (magisterMode) {
                         let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
@@ -266,13 +289,7 @@ console.log(events.filter(e=>e.Status===5)) // TODO: STATUS 5 IS UITVAL!GY*!M!MN
 
                     // Parse and render any chips
                     // TODO: More InfoTypes
-                    let chips = []
-                    if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
-                    else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
-                    if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
-                    else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
-                    if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
-                    else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
+                    let chips = eventChips(item)
 
                     let eventChipsWrapper = element('div', `st-start-event-${item.Id}-chips`, eventElement, { class: 'st-chips-wrapper' })
                     chips.forEach(chip => {
@@ -636,11 +653,7 @@ console.log(events.filter(e=>e.Status===5)) // TODO: STATUS 5 IS UITVAL!GY*!M!MN
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
                             // TODO: More InfoTypes
-                            let chips = []
-                            if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
-                            else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
-                            if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
-                            else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
+                            let chips = eventChips(item)
 
                             let eventChipsWrapper = element('div', `st-start-widget-homework-${item.Id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
@@ -909,4 +922,18 @@ function checkCollision(eventArr) {
         }
     }
     return eventArr;
+}
+
+function eventChips(item) {
+    let chips = []
+
+    if (item.Status === 5) chips.push({ name: "Vervallen", type: 'warn' })
+    if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
+    else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
+    if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
+    else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
+    if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
+    else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
+
+    return chips
 }

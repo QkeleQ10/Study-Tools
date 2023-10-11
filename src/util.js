@@ -225,7 +225,7 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
             snackbarWrapper.append(snackbar)
             snackbar.innerText = body
 
-            buttons.forEach(element => {
+            if (buttons?.length > 0) buttons.forEach(element => {
                 let a = document.createElement('a')
                 snackbar.append(a)
                 setAttributes(a, element)
