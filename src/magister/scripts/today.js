@@ -374,6 +374,13 @@ async function today() {
 
             counters: {
                 title: "Beknopte notificaties",
+                options: [
+                    {
+                        title: "Tellertjes die overige informatie (activiteiten, logboeken, etc.) weergeven indien beschikbaar.",
+                        key: 'start-widget-misc-widget',
+                        type: 'description'
+                    }
+                ],
                 render: async () => {
                     return new Promise(async resolve => {
                         let elems = []
@@ -771,7 +778,7 @@ async function today() {
             // Widgets editor
             let editWidgetsHeading = element('span', 'st-start-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
             let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Ingeschakelde widgets" })
-            let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', widgets, { innerText: "Widgets worden alleen getoond wanneer ze op dat moment relevant zijn." })
+            let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', widgets, { innerText: "Deze widgets worden vanzelf getoond wanneer van toepassing." })
             let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
 
             let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
@@ -800,6 +807,10 @@ async function today() {
                                 optionInput.addEventListener('change', event => {
                                     saveToStorage(option.key, event.target.value, 'local')
                                 })
+                                break
+
+                            case 'description':
+                                let optionText = element('span', `st-start-edit-${option.key}-text`, optionWrapper, { name: option.title })
                                 break
 
                             default:
