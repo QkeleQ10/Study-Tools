@@ -95,7 +95,7 @@
 .st-start-tick {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 115px);
     left: 0;
     height: 1px;
     width: 100%;
@@ -111,7 +111,7 @@
 #st-start-now {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 115px);
     left: 12px;
     height: 2px;
     width: calc(100% - 38px);
@@ -156,8 +156,8 @@
     --cols: 1;
     --background-color: var(--st-background-secondary);
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 100px + 2px);
-    height: calc(var(--duration) * var(--hour-zoom) * 100px - 3px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 115px + 2px);
+    height: calc(var(--duration) * var(--hour-zoom) * 115px - 3px);
     min-height: 48px;
     width: calc(100% / var(--cols));
     left: calc(100% / var(--cols) * var(--cols-before));
@@ -184,10 +184,8 @@
     padding-block: 0;
     align-content: center;
     grid-template:
-        '. .' 1fr
         'timeslot subject' auto
         'timeslot details' auto
-        '. .' 1fr
         / 40px 1fr;
 }
 
@@ -221,14 +219,19 @@
     height: 40px;
     width: 40px;
     margin-bottom: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-align: center;
     background-color: var(--st-highlight-primary);
     border-radius: calc(var(--st-border-radius) / 2);
     font: 600 16px/40px var(--st-font-family-primary);
+    z-index: 2;
     transition: background-color 200ms, color 200ms;
     animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1) both;
+}
+
+.st-start-event.tight .st-start-event-school-hours {
+    position: absolute;
+    top: 50%;
+    translate: 0px -50%;
 }
 
 .st-start-event-school-hours.icon {
@@ -301,6 +304,11 @@
 #st-start.editing .st-start-event-teacher-edit {
     display: block;
     animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1);
+}
+
+#st-start.editing-done .st-start-event-teacher-edit {
+    display: block;
+    animation: fadeIn 200ms reverse both;
 }
 
 .st-start-event-location {

@@ -724,9 +724,10 @@ async function today() {
         }
 
         // Allow for editing
-        let editButton = element('button', 'st-start-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Pagina Start bewerken" })
+        let editButton = element('button', 'st-start-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Pagina Start bewerken", title: "Het uiterlijk van deze pagina bewerken\nWijzig de agendaweergave, de widgetopties, docentennamen en meer." })
         editButton.addEventListener('click', () => {
             container.classList.add('editing')
+            container.classList.remove('editing-done')
             widgets.scrollTop = 0
 
             let editLayoutTitle = element('span', 'st-start-edit-layout-heading', widgets, { class: 'st-section-title', innerText: "Indeling" })
@@ -755,7 +756,7 @@ async function today() {
             }
 
             // View mode checkbox
-            let sheetModeLabel = element('label', 'st-start-edit-sheet-chip', widgets, { class: 'st-checkbox-chip', innerText: "Widgets naast rooster weergeven" })
+            let sheetModeLabel = element('label', 'st-start-edit-sheet-chip', widgets, { class: 'st-checkbox-label', innerText: "Widgets naast rooster weergeven" })
             let sheetModeInput = element('input', 'st-start-edit-sheet-input', sheetModeLabel, { type: 'checkbox', class: 'st-checkbox-input' })
             if (!sheetSetting) sheetModeInput.checked = true
             sheetModeInput.addEventListener('change', event => {
@@ -867,6 +868,7 @@ async function today() {
             // Finish button
             let finishButton = element('button', 'st-start-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Bewerken voltooien", title: "Terugkeren naar widgetpaneel. Wijzigingen zijn al opgeslagen." })
             finishButton.addEventListener('click', () => {
+                container.classList.add('editing-done')
                 container.classList.remove('editing')
                 widgets.scrollTop = 0
                 widgets.innerText = ''

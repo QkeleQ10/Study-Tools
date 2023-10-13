@@ -825,11 +825,17 @@ a.st-keyboard-hint.clicked {
 
 @keyframes fadeIn {
     0% {
+        display: none;
+    }
+
+    1% {
+        display: unset;
         opacity: 0;
         border-radius: 0;
     }
 
     100% {
+        pointer-events: all;
         opacity: 1;
     }
 }
@@ -849,8 +855,13 @@ a.st-keyboard-hint.clicked {
 }
 
 @keyframes popIn {
-    from {
-        scale: 0
+    0% {
+        display: none;
+    }
+
+    1% {
+        display: unset;
+        scale: 0;
     }
 }
 
