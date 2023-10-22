@@ -234,7 +234,6 @@ input[type=switch]+label span,
     color: #000
 }
 
-.agenda-text-icon,
 .k-scheduler-weekview .k-scheduler-table .k-today,
 .k-scheduler-workWeekview .k-scheduler-table .k-today,
 .ng-scope td.vrijstelling,
@@ -260,18 +259,19 @@ input[type=switch]+label span,
 }
 
 .agenda-text-icon, .text-icon, .agenda-text-icon.outline[icon-type=information] {
-    background-color: var(--st-highlight-warn) !important;
-    border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) / 2);
-    color: var(--st-foreground-primary) !important;
-}
-
-.text-icon[icon-type=information], .agenda-text-icon[icon-type=information] {
-    background: var(--st-highlight-info) !important;
+    display: inline-block;
+    padding-inline: 12px !important;
+    height: auto;
+    border: 1px solid var(--st-chip-info-border);
+    border-radius: 12px;
+    background-color: var(--st-chip-info-background);
+    color: var(--st-foreground-primary);
+    font: 500 11px/22px var(--st-font-family-secondary);
 }
 
 .agenda-text-icon[icon-type=ok] {
-    background: var(--st-highlight-ok) !important
+    border-color: var(--st-chip-ok-border);
+    background-color: var(--st-chip-ok-background);
 }
 
 #studiewijzer-detail-container .content>ul.sources,
@@ -344,7 +344,8 @@ a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout t
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
 .collapsed-menu .popup-menu ul li a:hover,
-.appbar .popup-menu h3 {
+.appbar .popup-menu h3,
+.card .content .content-title {
     color: var(--st-foreground-accent);
 }
 
@@ -1174,6 +1175,8 @@ h3:active> .icon-up-arrow:before {
 
     if (syncedStorage['magister-cf-failred']) {
         createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
+    } else {
+        createStyle('', 'study-tools-cf-failred')
     }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {

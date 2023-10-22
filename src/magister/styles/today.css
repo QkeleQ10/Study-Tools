@@ -95,7 +95,7 @@
 .st-start-tick {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 115px);
     left: 0;
     height: 1px;
     width: 100%;
@@ -111,7 +111,7 @@
 #st-start-now {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 100px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 115px);
     left: 12px;
     height: 2px;
     width: calc(100% - 38px);
@@ -156,8 +156,8 @@
     --cols: 1;
     --background-color: var(--st-background-secondary);
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 100px + 2px);
-    height: calc(var(--duration) * var(--hour-zoom) * 100px - 3px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * 115px + 2px);
+    height: calc(var(--duration) * var(--hour-zoom) * 115px - 3px);
     min-height: 48px;
     width: calc(100% / var(--cols));
     left: calc(100% / var(--cols) * var(--cols-before));
@@ -183,6 +183,10 @@
 .st-start-event.tight {
     padding-block: 0;
     align-content: center;
+    grid-template:
+        'timeslot subject' auto
+        'timeslot details' auto
+        / 40px 1fr;
 }
 
 #st-start-schedule.magister-mode .st-start-event {
@@ -214,15 +218,22 @@
     grid-area: timeslot;
     height: 40px;
     width: 40px;
-    margin-bottom: auto;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     background-color: var(--st-highlight-primary);
     border-radius: calc(var(--st-border-radius) / 2);
     font: 600 16px/40px var(--st-font-family-primary);
+    z-index: 2;
     transition: background-color 200ms, color 200ms;
     animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1) both;
+}
+
+#st-start .tight .st-start-event-school-hours,
+#st-start .tight .st-start-event-teacher-edit {
+    position: absolute;
+    top: 50%;
+    translate: 0px -50%;
 }
 
 .st-start-event-school-hours.icon {
@@ -236,6 +247,22 @@
 
 #st-start.editing .st-start-event-school-hours {
     animation: fadeIn 200ms reverse both;
+}
+
+.st-start-event-cancelled {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 5px;
+    background-color: var(--st-accent-warn);
+    opacity: 1 !important;
+}
+
+.st-start-event.cancelled .st-start-event-school-hours,
+.st-start-event.cancelled .st-start-event-subject-wrapper,
+.st-start-event.cancelled .st-list-row {
+    opacity: .75;
 }
 
 .st-start-event-subject-wrapper {
@@ -281,6 +308,11 @@
     animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1);
 }
 
+#st-start.editing-done .st-start-event-teacher-edit {
+    display: block;
+    animation: fadeIn 200ms reverse both;
+}
+
 .st-start-event-location {
     grid-area: location;
     font: 500 16px/24px var(--st-font-family-secondary);
@@ -312,51 +344,7 @@
     font: 500 12px/20px var(--st-font-family-secondary);
 }
 
-.st-chips-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: auto;
-    max-height: calc(100% - 24px);
-    background-color: var(--background-color);
-    box-shadow: 0 0 12px 12px var(--background-color);
-}
 
-.st-start-event .st-chips-wrapper {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-}
-
-.st-chips-wrapper:empty {
-    display: none;
-}
-
-.st-chip {
-    display: inline-block;
-    padding-inline: 12px;
-    border: 1px solid var(--st-chip-info-border);
-    border-radius: 12px;
-    background-color: var(--st-chip-info-background);
-    font: 500 11px/22px var(--st-font-family-secondary);
-}
-
-.st-chip.ok {
-    border-color: var(--st-chip-ok-border);
-    background-color: var(--st-chip-ok-background);
-}
-
-.st-chip.warn {
-    border-color: var(--st-chip-warn-border);
-    background-color: var(--st-chip-warn-background);
-}
-
-.st-chip.exam {
-    border-color: var(--st-chip-info-border);
-    background-color: var(--st-chip-info-border);
-    color: #fff;
-}
 
 #st-start-widgets {
     grid-area: widgets;
