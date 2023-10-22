@@ -1,20 +1,19 @@
 let events = []
 
 // Run at start and when the URL changes
-popstate()
-window.addEventListener('popstate', popstate)
-async function popstate() {
+if (document.location.href.split('?')[0].endsWith('/vandaag')) today()
+window.addEventListener('popstate', () => {
     if (document.location.href.split('?')[0].endsWith('/vandaag')) today()
-}
+})
 
 // Page 'Vandaag'
 async function today() {
-
     if (!syncedStorage['start-enabled']) return
+
     let sheetSetting = await getFromStorage('start-sheet', 'local') ?? false,
         zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
         teacherNamesSetting = await getFromStorage('teacher-names', 'local') || {},
-        mainView = await awaitElement('div.view:has(#vandaag-container)'),
+        mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { class: sheetSetting ? 'sheet' : '' }),
         header = element('div', 'st-start-header', container),
         headerText = element('span', 'st-start-header-span', header, { class: 'st-title' }),
@@ -33,34 +32,51 @@ async function today() {
     todaySchedule()
     todayWidgets()
 
-    const date = new Date(),
-        weekday = date.toLocaleString('nl-NL', { weekday: 'long' }),
-        firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0],
-        greetings = [
-            [22, 'Goedenavond#', 'Goedenavond, nachtuil.', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
-            [18, 'Goedenavond#', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
-            [12, 'Goedemiddag#', `Fijne ${weekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
-            [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
-            [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
-        ],
-        hour = date.getHours()
-    greetings.forEach(e => {
+    const now = new Date(),
+        hour = now.getHours(),
+        weekday = now.toLocaleString('nl-NL', { weekday: 'long' }),
+        firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
+
+    // Greeting system
+    const greetingsByHour = [
+        [22, 'Goedenavond#', 'Goedenavond, nachtuil.', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
+        [18, 'Goedenavond#', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
+        [12, 'Goedemiddag#', `Fijne ${weekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
+        [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
+        [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
+    ],
+        greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Namaste!', 'G\'day!', 'Aloha!', 'Ciao!', 'Γεια!', 'Привіт!', '你好！', '今日は!', 'Olá!', 'Saluton!', `Hey, ${firstName}#`]
+
+    let possibleGreetings = []
+    for (let i = 0; i < greetingsByHour.length; i++) {
+        const e = greetingsByHour[i]
         if (hour >= e[0]) {
             e.shift()
-            e.push('Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`)
-            if (!headerText.innerText) {
-                let punctuation = Math.random() < 0.5 ? '.' : '!',
-                    greeting = e[Math.floor(Math.random() * e.length)].replace('#', punctuation)
-                headerText.innerText = greeting.slice(0, -1)
-                headerText.dataset.lastLetter = greeting.slice(-1)
-            }
+            possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
+            break
         }
-    })
-    if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
+    }
+    possibleGreetings.push(...greetingsGeneric)
+    const punctuation = Math.random() < 0.7 ? '.' : '!',
+        greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation)
+    headerText.innerText = greeting.slice(0, -1)
+    headerText.dataset.lastLetter = greeting.slice(-1)
+    setTimeout(() => header.dataset.transition = true, 2000)
+    setTimeout(async () => {
+        headerText.innerText = now.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        headerText.dataset.lastLetter = '.'
+        header.removeAttribute('data-transition')
+    }, 2500)
 
     // Birthday party mode!
-    let accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`)
-    if (`${date.getMonth() + 1}-${date.getDate()}` === accountInfo.Persoon.Geboortedatum.slice(5)) {
+    let accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`),
+        birthday = new Date(accountInfo.Persoon.Geboortedatum)
+    birthday.setYear(now.getFullYear())
+    if (
+        (birthday.setHours(0, 0, 0, 0) === now.setHours(0, 0, 0, 0)) ||
+        (now.getDay() === 5 && birthday.getDate() === now.getDate() + 1) ||
+        (now.getDay() === 1 && birthday.getDate() === now.getDate() - 1)
+    ) {
         createStyle(`
 .menu-host, .appbar-host {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" style="font-size: 24px;"><text y="22">🎉</text></svg>'), auto;
@@ -74,15 +90,16 @@ async function today() {
     }
 }
 `, 'st-party-mode')
-        notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+        if (birthday.getDate() === now.getDate() + 1)
+            notify('snackbar', `Alvast van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+        else if (birthday.getDate() === now.getDate() - 1)
+            notify('snackbar', `Nog van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+        else
+            notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
     }
 
-    setTimeout(() => header.dataset.transition = true, 2000)
-    setTimeout(async () => {
-        headerText.innerText = date.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-        headerText.dataset.lastLetter = '.'
-        header.removeAttribute('data-transition')
-    }, 2500)
+    // Random thank you
+    if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
 
     async function todaySchedule() {
         let interval
@@ -208,17 +225,17 @@ async function today() {
                 let eventArr = checkCollision(eventsPerDay[key])
 
                 function checkCollision(eventArr) {
+                    let eventArrOut = []
                     for (var i = 0; i < eventArr.length; i++) {
-                        eventArr[i].cols = []
-                        eventArr[i].colsBefore = []
+                        eventArrOut[i] = { ...eventArr[i], cols: [], colsBefore: [] }
                         for (var j = 0; j < eventArr.length; j++) {
                             if (collidesWith(eventArr[i], eventArr[j])) {
-                                eventArr[i].cols.push(j)
-                                if (i > j) eventArr[i].colsBefore.push(j)
+                                eventArrOut[i].cols.push(j)
+                                if (i > j) eventArrOut[i].colsBefore.push(j)
                             }
                         }
                     }
-                    return eventArr
+                    return eventArrOut
                 }
 
                 // Loop through all events of the day
@@ -656,7 +673,7 @@ async function today() {
 
                             let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-list-row' })
                             let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, row2, { class: 'st-list-content' })
-                            eventContent.setHTML(item.Inhoud)
+                            eventContent.innerHTML = item.Inhoud // eventContent.setHTML(item.Inhoud)
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
                             // TODO: More InfoTypes
@@ -712,7 +729,7 @@ async function today() {
 
                             let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })
                             let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-list-content' })
-                            assignmentContent.setHTML(item.Omschrijving)
+                            assignmentContent.innerHTML = item.Omschrijving //assignmentContent.setHTML(item.Omschrijving)
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
@@ -944,7 +961,7 @@ function eventChips(item) {
     if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
     else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
     if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
-    else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'exam' })
+    else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'important' })
     if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
     else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 

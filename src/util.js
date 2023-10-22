@@ -5,8 +5,12 @@ let syncedStorage = {},
 
 let eggs = []
 
-window.addEventListener('DOMContentLoaded', async () => {
+prepareStorage()
+async function prepareStorage() {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
 
     const snackbarWrapper = document.createElement('div')
     snackbarWrapper.id = 'st-snackbars'

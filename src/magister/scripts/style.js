@@ -234,7 +234,6 @@ input[type=switch]+label span,
     color: #000
 }
 
-.agenda-text-icon,
 .k-scheduler-weekview .k-scheduler-table .k-today,
 .k-scheduler-workWeekview .k-scheduler-table .k-today,
 .ng-scope td.vrijstelling,
@@ -260,18 +259,19 @@ input[type=switch]+label span,
 }
 
 .agenda-text-icon, .text-icon, .agenda-text-icon.outline[icon-type=information] {
-    background-color: var(--st-highlight-warn) !important;
-    border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) / 2);
-    color: var(--st-foreground-primary) !important;
-}
-
-.text-icon[icon-type=information], .agenda-text-icon[icon-type=information] {
-    background: var(--st-highlight-info) !important;
+    display: inline-block;
+    padding-inline: 12px !important;
+    height: auto;
+    border: 1px solid var(--st-chip-info-border);
+    border-radius: 12px;
+    background-color: var(--st-chip-info-background);
+    color: var(--st-foreground-primary);
+    font: 500 11px/22px var(--st-font-family-secondary);
 }
 
 .agenda-text-icon[icon-type=ok] {
-    background: var(--st-highlight-ok) !important
+    border-color: var(--st-chip-ok-border);
+    background-color: var(--st-chip-ok-background);
 }
 
 #studiewijzer-detail-container .content>ul.sources,
@@ -1141,9 +1141,9 @@ h3:active> .icon-up-arrow:before {
     padding-top: 85px !important;
 }
 
-.container:has(#vandaag-container) {
-    padding-right: 0 !important;
-}
+/* .container:has(#vandaag-container) {
+       padding-right: 0 !important;
+   } */
 `, 'study-tools-start-overhaul')
     }
 
