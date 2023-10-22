@@ -156,7 +156,7 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
         case 'waves':
             decorationCss = 'background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) 25px ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );'
             break;
-
+        
         case 'zig-zag':
             decorationCss = 'background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: 25px 0, 25px 0, 0 0, 0 0; background-size: 50px 50px; background-repeat: repeat;'
             break;
@@ -1141,9 +1141,9 @@ h3:active> .icon-up-arrow:before {
     padding-top: 85px !important;
 }
 
-/* .container:has(#vandaag-container) {
-       padding-right: 0 !important;
-   } */
+.container:has(#vandaag-container) {
+    padding-right: 0 !important;
+}
 `, 'study-tools-start-overhaul')
     }
 
