@@ -229,18 +229,9 @@
     animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1) both;
 }
 
-.st-start-event.tight .st-start-event-school-hours {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    min-width: 40px;
-    min-height: 40px;
-    background-color: var(--st-accent-primary);
-    color: var(--st-contrast-accent) !important;
-    border-radius: calc(var(--st-border-radius) / 2);
-}
-
+#st-start .tight .st-start-event-school-hours,
 #st-start .tight .st-start-event-teacher-edit {
+    position: absolute;
     top: 50%;
     translate: 0px -50%;
 }

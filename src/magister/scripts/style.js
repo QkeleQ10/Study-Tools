@@ -344,7 +344,8 @@ a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout t
 .collapsed-menu #faux-label,
 .appbar .menu-button>a:hover>span,
 .collapsed-menu .popup-menu ul li a:hover,
-.appbar .popup-menu h3 {
+.appbar .popup-menu h3,
+.card .content .content-title {
     color: var(--st-foreground-accent);
 }
 
