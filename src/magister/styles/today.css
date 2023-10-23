@@ -344,8 +344,6 @@
     font: 500 12px/20px var(--st-font-family-secondary);
 }
 
-
-
 #st-start-widgets {
     grid-area: widgets;
     display: flex;
@@ -537,6 +535,20 @@
 #st-start-widget-grades:hover #st-start-widget-grades-last-hide,
 #st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide {
     opacity: 1;
+}
+
+#st-start-widget-digital-clock-time {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+#st-start-widget-digital-clock-time>* {
+    display: inline-block;
+    width: 16.7px;
+    font: 500 28px/42px var(--st-font-family-primary);
+    text-align: center;
+    overflow: hidden;
 }
 
 .st-list-item {

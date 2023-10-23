@@ -385,8 +385,9 @@ async function today() {
         let gatherStart = now,
             gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
-        let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE']
+        let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
+
         let widgetFunctions = {
 
             counters: {
@@ -745,6 +746,27 @@ async function today() {
                     })
                 }
             },
+
+            digitalClock: {
+                title: "Digitale klok",
+                render: () => {
+                    return new Promise(async resolve => {
+                        let widgetElement = element('div', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget' }),
+                            timeText = element('div', 'st-start-widget-digital-clock-time', widgetElement)
+
+                        setIntervalImmediately(() => {
+                            now = new Date()
+                            let timeString = now.toLocaleTimeString('nl-NL')
+                            timeText.innerText = ''
+                            timeString.split('').forEach((char, i) => {
+                                let charElement = element('span', `st-start-widget-digital-clock-time-${i}`, timeText, { innerText: char, style: char === ':' ? 'width: 7.2px' : '' })
+                            })
+                        }, 1000)
+
+                        resolve(widgetElement)
+                    })
+                }
+            }
         }
 
         // Allow for editing
@@ -797,6 +819,10 @@ async function today() {
             let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Ingeschakelde widgets" })
             let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', widgets, { innerText: "Deze widgets worden vanzelf getoond wanneer van toepassing." })
             let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
+
+            Object.keys(widgetFunctions).forEach(key => {
+                if (!widgetsOrder.find(e => e === key)) widgetsOrder.push(key)
+            })
 
             let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
             widgetsOrder.forEach((key, i) => {
