@@ -29,15 +29,6 @@ async function main() {
         let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: getWeekNumber() })
     }
 
-    // Progress indicator
-    if (syncedStorage['magister-appbar-week']) {
-        let appbarProgress = element('div', 'st-appbar-progress', appbarMetrics, { class: 'st-metric', 'data-description': "Voltooid", innerText: '3,7%' })
-
-        setIntervalImmediately(() => {
-            
-        }, 10000)
-    }
-
     // Custom shortcuts
     shortcuts.slice().reverse().forEach((shortcut, i, a) => {
         let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
