@@ -4,6 +4,12 @@
     initial-value: 1;
 }
 
+@property --progress {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+}
+
 #st-start button.st-list-item,
 #st-start button.st-start-event {
     transition: filter 200ms;
@@ -540,7 +546,7 @@
 #st-start-widget-digital-clock-time {
     display: flex;
     justify-content: center;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
 
 #st-start-widget-digital-clock-time>* {
@@ -549,6 +555,30 @@
     font: 500 28px/42px var(--st-font-family-primary);
     text-align: center;
     overflow: hidden;
+}
+
+#st-start-widget-digital-clock-progress-bar {
+    --progress: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: calc(var(--progress) * 100%);
+    height: 3px;
+    background-color: var(--st-accent-primary);
+    transition: --progress 200ms;
+}
+
+#st-start-widget-digital-clock-progress-label {
+    --progress: 0;
+    position: absolute;
+    bottom: 6px;
+    left: calc(var(--progress) * calc(100% - 40px));
+    width: 40px;
+    height: auto;
+    font: 500 11px/16px var(--st-font-family-secondary);
+    text-align: center;
+    color: var(--st-foreground-insignificant);
+    transition: --progress 200ms;
 }
 
 .st-list-item {
