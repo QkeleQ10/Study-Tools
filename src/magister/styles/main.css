@@ -249,7 +249,11 @@ div.loading-overlay {
     border-radius: var(--st-border-radius);
     padding: 24px;
     overflow: visible;
-    animation: floatDown 200ms;
+    animation: floatDown 300ms;
+}
+
+.st-dialog::backdrop {
+    backdrop-filter: blur(3px);
 }
 
 .st-dialog-dismiss {

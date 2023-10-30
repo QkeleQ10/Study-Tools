@@ -19,11 +19,13 @@ async function main() {
         vandaagText.innerText = "Start"
     }
 
+    // Appbar metrics
+    let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
+    if (spacer) spacer.before(appbarMetrics)
+    else appbar.prepend(appbarMetrics)
+
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
-        if (spacer) spacer.before(appbarMetrics)
-        else appbar.prepend(appbarMetrics)
         let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: getWeekNumber() })
     }
 

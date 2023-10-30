@@ -45,7 +45,7 @@ async function today() {
         [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
         [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
     ],
-        greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Namaste!', 'G\'day!', 'Aloha!', 'Ciao!', 'Γεια!', 'Привіт!', '你好！', '今日は!', 'Olá!', 'Saluton!', `Hey, ${firstName}#`]
+        greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Namaste!', 'G\'day!', 'Aloha!', 'Ciao!', 'Γεια!', 'Привіт!', '你好！', '今日は!', 'Olá!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', `Hey, ${firstName}#`]
 
     let possibleGreetings = []
     for (let i = 0; i < greetingsByHour.length; i++) {
@@ -107,7 +107,7 @@ async function today() {
         const gatherStart = new Date(),
             gatherEnd = new Date(gatherStart.getTime() + (86400000 * 29))
 
-        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
+        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
         const events = eventsRes.Items
 
         // Start rendering
@@ -247,7 +247,12 @@ async function today() {
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
                     let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
                     if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
-                    eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                    let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
+                    if (egg && egg.type === 'dialog') {
+                        eventElement.addEventListener('click', () => notify('dialog', egg.output))
+                    } else {
+                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                    }
 
                     // Parse and array-ify the subjects, the teachers and the locations
                     let subjectNames = item.Vakken?.map((e, i, a) => {
@@ -377,16 +382,20 @@ async function today() {
 
         let widgetsToggler = element('button', 'st-start-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
-            if (container.classList.contains('sheet-shown')) container.classList.remove('sheet-shown')
-            else container.classList.add('sheet-shown')
+            container.classList.toggle('sheet-shown')
         })
+
+
+        verifyDisplayMode()
+        window.addEventListener('resize', () => { verifyDisplayMode() })
 
         let now = new Date()
         let gatherStart = now,
             gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
-        let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE']
+        let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
+
         let widgetFunctions = {
 
             counters: {
@@ -425,7 +434,7 @@ async function today() {
 
                         if (!widgetsShown.includes('homework')) {
                             widgetsProgressText.innerText = `Huiswerk ophalen...`
-                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
+                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                             const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                             if (homeworkEvents.length > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
@@ -633,7 +642,7 @@ async function today() {
                 render: async () => {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.getFullYear()}-${gatherStart.getMonth() + 1}-${gatherStart.getDate()}&tot=${gatherEnd.getFullYear()}-${gatherEnd.getMonth() + 1}-${gatherEnd.getDate()}`)
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                         const homeworkEvents = eventsRes.Items.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
@@ -745,6 +754,48 @@ async function today() {
                     })
                 }
             },
+
+            digitalClock: {
+                title: "Digitale klok",
+                render: () => {
+                    return new Promise(async resolve => {
+                        let widgetElement = element('div', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget' }),
+                            timeText = element('div', 'st-start-widget-digital-clock-time', widgetElement),
+                            timeProgressBar = element('div', 'st-start-widget-digital-clock-progress-bar', widgetElement, { style: `--progress: 0` }),
+                            timeProgressLabel = element('div', 'st-start-widget-digital-clock-progress-label', widgetElement, { style: `--progress: 0`, innerText: `0%` })
+
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
+                        const events = eventsRes.Items.filter(e => e.Einde.startsWith(`${gatherStart.toISOString().substring(0, 10)}`))
+
+                        // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
+                        const agendaStart = Object.values(events).reduce((earliestHour, currentItem) => {
+                            let currentHour = new Date(currentItem.Start)
+                            if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
+                            return earliestHour
+                        }, null)
+                        const agendaEnd = Object.values(events).reduce((latestHour, currentItem) => {
+                            let currentHour = new Date(currentItem.Einde)
+                            if (!latestHour || currentHour > latestHour) { return Math.ceil(currentHour * 2) / 2 }
+                            return latestHour
+                        }, null)
+
+                        setIntervalImmediately(() => {
+                            now = new Date()
+                            let timeString = now.toLocaleTimeString('nl-NL')
+                            timeText.innerText = ''
+                            timeString.split('').forEach((char, i) => {
+                                let charElement = element('span', `st-start-widget-digital-clock-time-${i}`, timeText, { innerText: char, style: char === ':' ? 'width: 7.2px' : '' })
+                            })
+                            let progress = (now - agendaStart) / (agendaEnd - agendaStart)
+                            timeProgressBar.setAttribute('style', `--progress: ${progress}`)
+                            timeProgressLabel.setAttribute('style', `--progress: ${progress}`)
+                            timeProgressLabel.innerText = `${progress.toLocaleString('nl-NL', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
+                        }, 1000)
+
+                        resolve(widgetElement)
+                    })
+                }
+            }
         }
 
         // Allow for editing
@@ -797,6 +848,10 @@ async function today() {
             let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Ingeschakelde widgets" })
             let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', widgets, { innerText: "Deze widgets worden vanzelf getoond wanneer van toepassing." })
             let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
+
+            Object.keys(widgetFunctions).forEach(key => {
+                if (!widgetsOrder.find(e => e === key)) widgetsOrder.push(key)
+            })
 
             let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
             widgetsOrder.forEach((key, i) => {
@@ -926,8 +981,6 @@ async function today() {
             container.classList.remove('sheet')
         }
     }
-    verifyDisplayMode()
-    window.addEventListener('resize', () => { verifyDisplayMode() })
 }
 
 function timeInHours(input) {
