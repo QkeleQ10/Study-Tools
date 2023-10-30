@@ -344,7 +344,7 @@ async function renderGradeChart(resultsList, weightsList, weight = 1, mean, clCa
         clCanvasHlHorizontal.dataset.average = means[0][index].toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         clCanvasHlHorizontal.dataset.veryHigh = (means[0][index] > 9.2)
 
-        if (means[0][index] > 5.49) clFutureDesc.style.color = 'var(--st-foreground-primary)'
+        if (means[0][index] >= 5.495) clFutureDesc.style.color = 'var(--st-foreground-primary)'
         else clFutureDesc.style.color = 'var(--st-accent-warn)'
 
         if (means[0][index].toFixed(2) > mean.toFixed(2))
@@ -371,7 +371,7 @@ async function formulateGradeAdvice(means, weight, mean) {
         for (let i = 0; i < means[0].length; i++) {
             let meanH = means[0][i],
                 gradeH = means[1][i] || 1.0
-            if (meanH > 5.49) {
+            if (meanH >= 5.495) {
                 color = 'var(--st-foreground-primary)'
                 text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
                 if (gradeH <= 1.0) {
