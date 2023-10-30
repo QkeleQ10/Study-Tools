@@ -247,7 +247,12 @@ async function today() {
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
                     let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
                     if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
-                    eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                    let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
+                    if (egg && egg.type === 'dialog') {
+                        eventElement.addEventListener('click', () => notify('dialog', egg.output))
+                    } else {
+                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                    }
 
                     // Parse and array-ify the subjects, the teachers and the locations
                     let subjectNames = item.Vakken?.map((e, i, a) => {
@@ -429,7 +434,7 @@ async function today() {
 
                         if (!widgetsShown.includes('homework')) {
                             widgetsProgressText.innerText = `Huiswerk ophalen...`
-                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10) }`)
+                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                             const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                             if (homeworkEvents.length > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
@@ -637,7 +642,7 @@ async function today() {
                 render: async () => {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10) }`)
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                         const homeworkEvents = eventsRes.Items.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
