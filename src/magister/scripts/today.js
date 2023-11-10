@@ -104,8 +104,14 @@ async function today() {
     async function todaySchedule() {
         let interval
 
-        const gatherStart = new Date(),
-            gatherEnd = new Date(gatherStart.getTime() + (86400000 * 29))
+        let now = new Date()
+
+        const currentDay = now.getDay()
+        const gatherStart = new Date(now)
+        gatherStart.setDate(now.getDate() - (currentDay - 1))
+
+        const gatherEnd = new Date(now)
+        gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
         const events = eventsRes.Items
@@ -123,11 +129,18 @@ async function today() {
             let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
 
 
-            let now = new Date(),
-                itemsHidden = false
+            now = new Date()
 
             // Loop through the events array and split based on date
             let eventsPerDay = {}
+            for (let day = gatherStart; day <= gatherEnd; day.setDate(day.getDate() + 1)) {
+                const year = day.getFullYear(),
+                    month = day.getMonth() + 1,
+                    date = day.getDate(),
+                    key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
+                eventsPerDay[key] = []
+            }
+
             events.forEach(item => {
                 const startDate = new Date(item.Start)
                 const year = startDate.getFullYear()
@@ -135,11 +148,11 @@ async function today() {
                 const date = startDate.getDate()
 
                 const key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
-                if (!eventsPerDay[key] && Object.keys(eventsPerDay).length < daysToShow) eventsPerDay[key] = []
-                if (Object.keys(eventsPerDay).length >= daysToShow) itemsHidden = true
-                if (!eventsPerDay[key]) return
+                // if (!eventsPerDay[key] && Object.keys(eventsPerDay).length < daysToShow) eventsPerDay[key] = []
+                // if (Object.keys(eventsPerDay).length >= daysToShow) itemsHidden = true
+                // if (!eventsPerDay[key]) return
                 eventsPerDay[key].push(item)
-                itemsHidden = false
+                // itemsHidden = false
             })
 
             // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
@@ -390,8 +403,18 @@ async function today() {
         window.addEventListener('resize', () => { verifyDisplayMode() })
 
         let now = new Date()
-        let gatherStart = now,
-            gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
+
+        const currentDay = now.getDay()
+        const gatherStart = new Date(now)
+        gatherStart.setDate(now.getDate() - (currentDay - 1))
+
+        const gatherEnd = new Date(now)
+        gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
+
+        console.log(gatherStart, gatherEnd)
+
+        // const gatherStart = now,
+        //     gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
         let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
@@ -652,7 +675,7 @@ async function today() {
 
                         if (homeworkEvents.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} in de komende maand` })
+                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} binnenkort` })
 
                         homeworkEvents.forEach(item => {
                             let subjectNames = item.Vakken?.map((e, i, a) => {
