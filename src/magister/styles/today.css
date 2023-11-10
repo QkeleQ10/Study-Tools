@@ -1,4 +1,16 @@
+@property --px-per-hour {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 100px;
+}
+
 @property --hour-zoom {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 1;
+}
+
+@property --font-zoom {
     syntax: "<number>";
     inherits: true;
     initial-value: 1;
@@ -63,9 +75,11 @@
 }
 
 #st-start-schedule {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: auto;
+    overflow-y: auto;
     background-color: var(--st-background-primary);
     transition: background-color 200ms;
 }
@@ -88,20 +102,26 @@
 }
 
 #st-start-schedule-wrapper {
+    position: absolute;
     --hour-zoom: 1;
-    position: relative;
     display: flex;
-    gap: 16px;
-    padding-inline: 32px;
-    height: 100%;
-    overflow-y: auto;
+    padding-inline: 24px;
+    height: calc(24 * var(--hour-zoom) * var(--px-per-hour));
+    width: 100%;
     transition: --hour-zoom 200ms;
+}
+
+#st-start-ticks-wrapper {
+    position: absolute;
+    --hour-zoom: 1;
+    height: calc(24 * var(--hour-zoom) * var(--px-per-hour));
+    width: 100%;
 }
 
 .st-start-tick {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 115px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour));
     left: 0;
     height: 1px;
     width: 100%;
@@ -117,9 +137,9 @@
 #st-start-now {
     --relative-start: 0;
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 115px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour));
     left: 12px;
-    height: 2px;
+    height: 1px;
     width: calc(100% - 38px);
     background-image: linear-gradient(to right, var(--st-accent-secondary) 64px, transparent 128px);
     opacity: .5;
@@ -138,8 +158,33 @@
     border-radius: 6px;
 }
 
+.st-start-col {
+    position: relative;
+    flex: 2 1 0px;
+    height: calc(24 * var(--hour-zoom) * var(--px-per-hour));
+    padding-inline: 8px;
+}
+
+.st-start-col~.st-start-col {
+    border-left: var(--st-border);
+}
+
+.st-start-col[data-irrelevant=true] {
+    flex-basis: 10%;
+}
+
+.st-start-col[data-today=true] {
+    flex-basis: 21%;
+}
+
+.st-start-col[data-tomorrow=true] {
+    flex-basis: 18%;
+}
+
 .st-start-col-head {
-    flex: 3 1 0px;
+    position: sticky;
+    top: 0;
+    width: 100%;
     font: 600 12px/26px var(--st-font-family-secondary);
 }
 
@@ -147,34 +192,24 @@
     text-transform: capitalize;
 }
 
-.st-start-col {
-    position: relative;
-    flex: 3 1 0px;
-}
-
-.st-start-col[data-today=true],
-.st-start-col-head[data-today=true] {
-    flex-grow: 4;
-}
-
 .st-start-event {
+    --font-size-modifier: 1;
     --relative-start: 0;
     --cols: 1;
     --background-color: var(--st-background-secondary);
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * 115px + 2px);
-    height: calc(var(--duration) * var(--hour-zoom) * 115px - 3px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour) + 2px);
+    height: calc(var(--duration) * var(--hour-zoom) * var(--px-per-hour) - 3px);
     min-height: 48px;
     width: calc(100% / var(--cols));
     left: calc(100% / var(--cols) * var(--cols-before));
-    padding: 12px;
+    padding: 8px 12px;
     display: grid;
     grid-template:
         'timeslot subject' auto
         'timeslot details' auto
         '. .' 1fr
-        / 40px 1fr;
-    column-gap: 12px;
+        / auto 1fr;
     background-color: var(--background-color);
     color: var(--st-foreground-primary);
     border-radius: var(--st-border-radius);
@@ -182,24 +217,41 @@
     text-align: start;
     overflow: hidden;
     cursor: pointer;
-    z-index: 1;
+    container-type: size;
     transition: filter 200ms, top 200ms, left 200ms, height 200ms, width 200ms;
 }
 
-.st-start-event.tight {
-    padding-block: 0;
-    align-content: center;
+.week-view .st-start-event {
+    --font-size-modifier: 0.9;
     grid-template:
         'timeslot subject' auto
-        'timeslot details' auto
-        / 40px 1fr;
+        '. details' auto
+        / auto 1fr;
+    align-content: flex-start;
+}
+
+@container (height < 64px) {
+    .st-start-event>* {
+        transform: translateY(-12px);
+    }
+
+    .st-start-event .st-list-row {
+        flex-direction: row;
+        width: max-content;
+    }
+}
+
+@container (width < 180px) {
+    #st-start-schedule .st-start-event .st-start-event-school-hours {
+        display: none;
+    }
 }
 
 #st-start-schedule.magister-mode .st-start-event {
     grid-template:
         'timeslot subject' auto
         'timeslot details' 1fr
-        / 40px 1fr;
+        / auto 1fr;
 }
 
 [data-magister-mode=true] .st-start-event {
@@ -222,24 +274,21 @@
 
 .st-start-event-school-hours {
     grid-area: timeslot;
-    height: 40px;
     width: 40px;
+    height: 40px;
+    margin-right: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--st-highlight-primary);
     border-radius: calc(var(--st-border-radius) / 2);
     font: 600 16px/40px var(--st-font-family-primary);
-    z-index: 2;
-    transition: background-color 200ms, color 200ms;
-    animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1) both;
 }
 
-#st-start .tight .st-start-event-school-hours,
-#st-start .tight .st-start-event-teacher-edit {
-    position: absolute;
-    top: 50%;
-    translate: 0px -50%;
+.week-view .st-start-event-school-hours {
+    height: 24px;
+    width: 24px;
+    background-color: transparent;
 }
 
 .st-start-event-school-hours.icon {
@@ -251,8 +300,19 @@
     color: var(--st-contrast-accent);
 }
 
-#st-start.editing .st-start-event-school-hours {
-    animation: fadeIn 200ms reverse both;
+.week-view [data-ongoing=true] .st-start-event-school-hours {
+    background-color: transparent;
+    color: var(--st-foreground-accent);
+}
+
+.st-start-event.cancelled .st-start-event-school-hours {
+    background-color: var(--st-highlight-warn);
+    color: var(--st-foreground-primary);
+}
+
+.week-view .st-start-event.cancelled .st-start-event-school-hours {
+    background-color: transparent;
+    color: var(--st-accent-warn);
 }
 
 .st-start-event-cancelled {
@@ -265,7 +325,6 @@
     opacity: 1 !important;
 }
 
-.st-start-event.cancelled .st-start-event-school-hours,
 .st-start-event.cancelled .st-start-event-subject-wrapper,
 .st-start-event.cancelled .st-list-row {
     opacity: .75;
@@ -281,6 +340,7 @@
 .st-start-event-subject {
     display: inline-block;
     font: 600 16px/24px var(--st-font-family-secondary);
+    font-size: calc(16px * var(--font-size-modifier));
 }
 
 #st-start-schedule.magister-mode .st-start-event-subject {
@@ -289,7 +349,11 @@
 
 .st-start-event-teacher {
     grid-area: teacher;
+    max-height: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font: 500 12px/20px var(--st-font-family-secondary);
+    font-size: calc(12px * var(--font-size-modifier));
 }
 
 #st-start .st-start-event-teacher-edit {
@@ -302,11 +366,6 @@
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent) !important;
     border-radius: calc(var(--st-border-radius) / 2);
-}
-
-#st-start .tight .st-start-event-teacher-edit {
-    top: 50%;
-    translate: 0 -50%;
 }
 
 #st-start.editing .st-start-event-teacher-edit {
@@ -322,6 +381,7 @@
 .st-start-event-location {
     grid-area: location;
     font: 500 16px/24px var(--st-font-family-secondary);
+    font-size: calc(16px * var(--font-size-modifier));
 }
 
 .st-start-event-location:not(:empty):before {
@@ -340,14 +400,10 @@
     row-gap: 0;
 }
 
-.st-start-event.tight .st-list-row {
-    flex-direction: row;
-    width: max-content;
-}
-
 .st-start-event-time {
     grid-area: time;
     font: 500 12px/20px var(--st-font-family-secondary);
+    font-size: calc(12px * var(--font-size-modifier));
 }
 
 #st-start-widgets {

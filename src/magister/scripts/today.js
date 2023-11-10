@@ -24,10 +24,13 @@ async function today() {
     let renderSchedule
 
     const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
-    let daysToShow = daysToShowSetting
+    let agendaStartDate, agendaEndDate
 
     const magisterModeSetting = syncedStorage['start-schedule-view'] === 'list'
     let magisterMode = magisterModeSetting
+
+    let weekView = false // False for day view, true for week view
+    let weekOffset = 0 // Six weeks are capable of being shown in the agenda, so this value may not exceed 5.
 
     todaySchedule()
     todayWidgets()
@@ -105,19 +108,57 @@ async function today() {
         let interval
 
         let now = new Date()
+        let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
         const currentDay = now.getDay()
         const gatherStart = new Date(now)
         gatherStart.setDate(now.getDate() - (currentDay - 1))
+        gatherStart.setHours(0, 0, 0, 0)
 
         const gatherEnd = new Date(now)
         gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
+        gatherEnd.setHours(0, 0, 0, 0)
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
         const events = eventsRes.Items
 
+        // Create an array with 42 days (6 weeks) containing events of those days
+        let agendaDays = []
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(new Date(gatherStart.getTime()).setDate(gatherStart.getDate() + i))
+            const eventsOfDay =
+                events.filter(item => {
+                    const startDate = new Date(item.Start)
+                    return (startDate - date) < 86400000 && (startDate - date) >= 0 // Add all events that are on this date to this element
+                }) || []
+
+            agendaDays.push({
+                date: new Date(date),
+                today: (date - todayDate) === 0, // Days have the highest relevancy when they match the current date.
+                tomorrow: (date - todayDate) === 86400000, // Days have increased relevancy when they match tomorrow's date.
+                irrelevant: eventsOfDay.length < 1 || date < todayDate, // Days are irrelevant when they are empty or in the past.
+                events: eventsOfDay
+            })
+        }
+
         // Start rendering
         renderSchedule = async () => {
+
+            // Select which days to show based on view mode
+            if (!weekView) {
+                // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
+                agendaStartDate = todayDate
+                agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShowSetting - 1))
+                schedule.classList.remove('week-view')
+            } else {
+                // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
+                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + (weekOffset * 7)))
+                agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
+                schedule.classList.add('week-view')
+            }
+
+            now = new Date()
+
             clearInterval(interval)
 
             if (magisterMode) schedule.classList.add('magister-mode')
@@ -125,117 +166,57 @@ async function today() {
 
             schedule.innerText = ''
 
-            let scheduleHead = element('div', `st-start-schedule-head`, schedule)
+            let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule)
             let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
-
-
-            now = new Date()
-
-            // Loop through the events array and split based on date
-            let eventsPerDay = {}
-            for (let day = gatherStart; day <= gatherEnd; day.setDate(day.getDate() + 1)) {
-                const year = day.getFullYear(),
-                    month = day.getMonth() + 1,
-                    date = day.getDate(),
-                    key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
-                eventsPerDay[key] = []
-            }
-
-            events.forEach(item => {
-                const startDate = new Date(item.Start)
-                const year = startDate.getFullYear()
-                const month = startDate.getMonth() + 1
-                const date = startDate.getDate()
-
-                const key = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`
-                // if (!eventsPerDay[key] && Object.keys(eventsPerDay).length < daysToShow) eventsPerDay[key] = []
-                // if (Object.keys(eventsPerDay).length >= daysToShow) itemsHidden = true
-                // if (!eventsPerDay[key]) return
-                eventsPerDay[key].push(item)
-                // itemsHidden = false
-            })
-
-            // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
-            const agendaStart = Object.values(eventsPerDay).flat().reduce((earliestHour, currentItem) => {
-                let currentHour = timeInHours(currentItem.Start)
-                if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
-                return earliestHour
-            }, null)
-            const agendaEnd = Object.values(eventsPerDay).flat().reduce((latestHour, currentItem) => {
-                let currentHour = timeInHours(currentItem.Einde)
-                if (!latestHour || currentHour > latestHour) { return Math.ceil(currentHour * 2) / 2 }
-                return latestHour
-            }, null)
-
-            // Add another column if the day is over (given the user has not disabled start-schedule-extra-day)
-            if (
-                timeInHours(now) >= agendaEnd
-                && daysToShow === daysToShowSetting
-                && syncedStorage['start-schedule-extra-day']
-                && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
-            ) {
-                daysToShow = daysToShowSetting + 1
-                renderSchedule()
-                return
-            }
 
             // Create tick marks for schedule view
             if (!magisterMode) {
-                for (let i = agendaStart; i <= agendaEnd; i += 0.5) {
-                    let hourTick = element('div', `st-start-tick-${i}h`, scheduleWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i - agendaStart}` })
-                }
-                if (timeInHours(now) > agendaStart && timeInHours(now) < agendaEnd && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)) {
-                    let nowMarker = element('div', `st-start-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
-                    nowMarker.scrollIntoView({ block: 'center', behavior: 'instant' })
-                    interval = setInterval(() => {
-                        if (timeInHours(now) >= agendaEnd) {
-                            nowMarker.remove()
-                            clearInterval(interval)
-                        }
-                        if (
-                            timeInHours(now) >= agendaEnd
-                            && daysToShow === daysToShowSetting
-                            && syncedStorage['start-schedule-extra-day']
-                            && Object.keys(eventsPerDay).find(e => e === `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`)
-                        ) {
-                            daysToShow = daysToShowSetting + 1
-                            renderSchedule()
-                            return
-                        }
-                        now = new Date()
-                        nowMarker = element('div', `st-start-now`, scheduleWrapper, { style: `--relative-start: ${timeInHours(now) - agendaStart}` })
-                    }, 30000)
+                for (let i = 0; i <= 24; i += 0.5) {
+                    let hourTick = element('div', `st-start-tick-${i}h`, ticksWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i}` })
                 }
             }
 
-            Object.keys(eventsPerDay).forEach((key, i, a) => {
+            agendaDays.forEach((item, i, a) => {
                 // Limit the number of days shown for the list view to 1
                 if (magisterMode && i > 0) return
 
+                // If the date falls outside the agenda range, don't proceed.
+                if (item.date < agendaStartDate || item.date > agendaEndDate) return
+
                 // Create a column for the day
-                let col = element('div', `st-start-col-${key}`, scheduleWrapper, {
+                let col = element('div', `st-start-col-${i}`, scheduleWrapper, {
                     class: 'st-start-col',
-                    'data-today': (key === now.toISOString().split('T')[0]),
+                    'data-today': item.today,
+                    'data-tomorrow': item.tomorrow,
+                    'data-irrelevant': item.irrelevant,
                     'data-magister-mode': magisterMode
                 }),
                     colHead
-                if ((!magisterMode && a.length > 1) || key !== `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`) {
-                    colHead = element('div', `st-start-col-${key}-head`, scheduleHead, {
+                if (true) {
+                    colHead = element('div', `st-start-col-${i}-head`, col, {
                         class: 'st-start-col-head',
-                        'data-today': (key === now.toISOString().split('T')[0]),
-                        innerText: (key === now.toISOString().split('T')[0]) ? "Vandaag" : new Date(key).toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+                        innerText: item.today ? "Vandaag" : item.date.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
                     })
                 }
 
-                // Add a divider line if the days are more than a day apart
-                if (a[i + 1] && Math.abs(new Date(key) - new Date(a[i + 1])) > 86400000) {
-                    let colDivider = element('div', `st-start-col-${key}-divider`, scheduleWrapper, { class: 'st-divider vertical thick' })
-                    if (colHead) {
-                        let colHeadDivider = element('div', `st-start-col-${key}-head-divider`, scheduleHead, { class: 'st-divider vertical thick' })
-                    }
+                // Mark the current time and keep it updated
+                if (!magisterMode) {
+                    let nowMarker = element('div', `st-start-now`, document.querySelector('.st-start-col[data-today=true]'), { style: `--relative-start: ${timeInHours(now)}` })
+                    nowMarker.scrollIntoView({ block: 'center', behavior: 'instant' })
+                    interval = setInterval(() => {
+                        if (!nowMarker) {
+                            clearInterval(interval)
+                        } else if (timeInHours(now) >= 24) {
+                            clearInterval(interval)
+                            renderSchedule()
+                        } else {
+                            now = new Date()
+                            nowMarker = element('div', `st-start-now`, null, { style: `--relative-start: ${timeInHours(now)}` })
+                        }
+                    }, 10000)
                 }
 
-                let eventArr = checkCollision(eventsPerDay[key])
+                let eventArr = checkCollision(item.events)
 
                 function checkCollision(eventArr) {
                     let eventArrOut = []
@@ -258,8 +239,7 @@ async function today() {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start) - agendaStart}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
-                    if (eventElement.clientHeight < 72 && !magisterMode) eventElement.classList.add('tight')
+                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start)}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
                     let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
                     if (egg && egg.type === 'dialog') {
                         eventElement.addEventListener('click', () => notify('dialog', egg.output))
@@ -289,6 +269,10 @@ async function today() {
                     if (item.Type === 16) {
                         eventSchoolHours.classList.add('icon')
                         eventSchoolHours.innerText = ''
+                    }
+                    if (!eventSchoolHours.innerText) {
+                        eventSchoolHours.classList.add('icon')
+                        eventSchoolHours.innerText = ''
                     }
 
                     // Cancelled label
@@ -351,41 +335,43 @@ async function today() {
         renderSchedule()
 
         // Allow for 5-day view
-        let todayExpander = element('button', 'st-start-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Rooster uitvouwen" })
+        let todayExpander = element('button', 'st-start-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
         todayExpander.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
                 todayExpander.classList.remove('st-expanded')
-                todayExpander.dataset.icon = ''
+                todayExpander.dataset.icon = ''
+                todayExpander.title = "Weekweergave"
                 verifyDisplayMode()
-                schedule.innerText = ''
-                daysToShow = daysToShowSetting
+                weekView = false
+                weekOffset = 0
                 magisterMode = magisterModeSetting
                 renderSchedule()
             } else {
                 schedule.classList.add('st-expanded')
                 todayExpander.classList.add('st-expanded')
-                todayExpander.dataset.icon = ''
+                todayExpander.dataset.icon = ''
+                todayExpander.title = "Dagweergave"
                 verifyDisplayMode()
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-                schedule.innerText = ''
-                daysToShow = 5
+                weekView = true
                 magisterMode = false
                 renderSchedule()
             }
         })
 
         // Update ongoing events every 30 seconds
-        setInterval(() => {
-            let events = document.querySelectorAll('.st-start-event[data-start][data-end]'),
-                now = new Date()
+        updateSchedule = () => {
+            let events = document.querySelectorAll('.st-start-event[data-start][data-end]')
+            now = new Date()
 
             events.forEach(item => {
                 let ongoing = (new Date(item.dataset.start) < now && new Date(item.dataset.end) > now)
                 if (ongoing) item.dataset.ongoing = true
                 else item.dataset.ongoing = false
             })
-        }, 30000)
+        }
+        setInterval(updateSchedule, 30000)
     }
 
     async function todayWidgets() {
@@ -410,11 +396,6 @@ async function today() {
 
         const gatherEnd = new Date(now)
         gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
-
-        console.log(gatherStart, gatherEnd)
-
-        // const gatherStart = now,
-        //     gatherEnd = new Date(now.getTime() + (86400000 * 29)) // Period of 30 days
 
         let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
@@ -675,7 +656,7 @@ async function today() {
 
                         if (homeworkEvents.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Huiswerk", 'data-description': `${homeworkEvents.length} item${homeworkEvents.length > 1 ? 's' : ''} binnenkort` })
+                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: `Huiswerk (${homeworkEvents.length})` })
 
                         homeworkEvents.forEach(item => {
                             let subjectNames = item.Vakken?.map((e, i, a) => {
@@ -790,13 +771,14 @@ async function today() {
                         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                         const events = eventsRes.Items.filter(e => e.Einde.startsWith(`${gatherStart.toISOString().substring(0, 10)}`))
 
+                        // TODO: TODO!
                         // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
-                        const agendaStart = Object.values(events).reduce((earliestHour, currentItem) => {
+                        const aaaa = Object.values(events).reduce((earliestHour, currentItem) => {
                             let currentHour = new Date(currentItem.Start)
                             if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
                             return earliestHour
                         }, null)
-                        const agendaEnd = Object.values(events).reduce((latestHour, currentItem) => {
+                        const aaab = Object.values(events).reduce((latestHour, currentItem) => {
                             let currentHour = new Date(currentItem.Einde)
                             if (!latestHour || currentHour > latestHour) { return Math.ceil(currentHour * 2) / 2 }
                             return latestHour
@@ -809,7 +791,7 @@ async function today() {
                             timeString.split('').forEach((char, i) => {
                                 let charElement = element('span', `st-start-widget-digital-clock-time-${i}`, timeText, { innerText: char, style: char === ':' ? 'width: 7.2px' : '' })
                             })
-                            let progress = (now - agendaStart) / (agendaEnd - agendaStart)
+                            let progress = (now - aaaa) / (aaab - aaaa)
                             timeProgressBar.setAttribute('style', `--progress: ${progress}`)
                             timeProgressLabel.setAttribute('style', `--progress: ${progress}`)
                             timeProgressLabel.innerText = `${progress.toLocaleString('nl-NL', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
