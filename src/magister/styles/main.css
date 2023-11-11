@@ -185,7 +185,7 @@ div.loading-overlay {
     margin-right: 10px;
 }
 
-.st-button[disabled] {
+.st-button[disabled]:not([disabled=false]) {
     pointer-events: none;
     opacity: .5;
 }

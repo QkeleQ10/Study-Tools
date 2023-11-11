@@ -110,12 +110,11 @@ async function today() {
         let now = new Date()
         let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
-        const currentDay = now.getDay()
-        const gatherStart = new Date(now)
-        gatherStart.setDate(now.getDate() - (currentDay - 1))
+        const gatherStart = new Date()
+        gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
         gatherStart.setHours(0, 0, 0, 0)
 
-        const gatherEnd = new Date(now)
+        const gatherEnd = new Date()
         gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
         gatherEnd.setHours(0, 0, 0, 0)
 
@@ -164,10 +163,8 @@ async function today() {
             if (magisterMode) schedule.classList.add('magister-mode')
             else schedule.classList.remove('magister-mode')
 
-            schedule.innerText = ''
-
-            let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule)
-            let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
+            let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
+            let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}`, innerText: '' })
 
             // Create tick marks for schedule view
             if (!magisterMode) {
@@ -195,25 +192,8 @@ async function today() {
                 if (true) {
                     colHead = element('div', `st-start-col-${i}-head`, col, {
                         class: 'st-start-col-head',
-                        innerText: item.today ? "Vandaag" : item.date.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+                        innerText: item.today ? "Vandaag" : item.tomorrow ? "Morgen" : item.date.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
                     })
-                }
-
-                // Mark the current time and keep it updated
-                if (!magisterMode) {
-                    let nowMarker = element('div', `st-start-now`, document.querySelector('.st-start-col[data-today=true]'), { style: `--relative-start: ${timeInHours(now)}` })
-                    nowMarker.scrollIntoView({ block: 'center', behavior: 'instant' })
-                    interval = setInterval(() => {
-                        if (!nowMarker) {
-                            clearInterval(interval)
-                        } else if (timeInHours(now) >= 24) {
-                            clearInterval(interval)
-                            renderSchedule()
-                        } else {
-                            now = new Date()
-                            nowMarker = element('div', `st-start-now`, null, { style: `--relative-start: ${timeInHours(now)}` })
-                        }
-                    }, 10000)
                 }
 
                 let eventArr = checkCollision(item.events)
@@ -317,6 +297,34 @@ async function today() {
                 })
             })
 
+            if (!magisterMode && document.querySelector('.st-start-col[data-today=true]')) {
+                // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
+                let nowMarker = element('div', `st-start-now`, document.querySelector('.st-start-col[data-today=true]'), { style: `--relative-start: ${timeInHours(now)}` })
+                if (schedule.scrollTop === 0) nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                interval = setInterval(() => {
+                    if (!nowMarker) {
+                        clearInterval(interval)
+                    } else if (timeInHours(now) >= 24) {
+                        clearInterval(interval)
+                        renderSchedule()
+                    } else {
+                        now = new Date()
+                        nowMarker = element('div', `st-start-now`, null, { style: `--relative-start: ${timeInHours(now)}` })
+                    }
+                }, 10000)
+            }
+
+            // Update the week offset buttons accordingly
+            let todayWeekLeft = document.querySelector('#st-start-today-week-left')
+            let todayWeekRight = document.querySelector('#st-start-today-week-right')
+            if (todayWeekLeft && todayWeekRight) {
+                todayWeekLeft.style.display = weekView ? 'block' : 'none'
+                todayWeekRight.style.display = weekView ? 'block' : 'none'
+                todayWeekLeft.disabled = weekOffset <= 0
+                todayWeekRight.disabled = weekOffset >= 5
+            }
+
+            // TODO: move into general editor thingie
             function editTeacherName(event) {
                 let teacherName = event.target.dataset.teacherName
                 let teacherCode = event.target.dataset.teacherCode
@@ -335,13 +343,13 @@ async function today() {
         renderSchedule()
 
         // Allow for 5-day view
-        let todayExpander = element('button', 'st-start-today-expander', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
-        todayExpander.addEventListener('click', () => {
+        let todayViewSwitch = element('button', 'st-start-today-view-switch', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
+        todayViewSwitch.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
-                todayExpander.classList.remove('st-expanded')
-                todayExpander.dataset.icon = ''
-                todayExpander.title = "Weekweergave"
+                todayViewSwitch.classList.remove('st-expanded')
+                todayViewSwitch.dataset.icon = ''
+                todayViewSwitch.title = "Weekweergave"
                 verifyDisplayMode()
                 weekView = false
                 weekOffset = 0
@@ -349,15 +357,27 @@ async function today() {
                 renderSchedule()
             } else {
                 schedule.classList.add('st-expanded')
-                todayExpander.classList.add('st-expanded')
-                todayExpander.dataset.icon = ''
-                todayExpander.title = "Dagweergave"
+                todayViewSwitch.classList.add('st-expanded')
+                todayViewSwitch.dataset.icon = ''
+                todayViewSwitch.title = "Dagweergave"
                 verifyDisplayMode()
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
                 weekView = true
                 magisterMode = false
                 renderSchedule()
             }
+        })
+
+        let todayWeekLeft = element('button', 'st-start-today-week-left', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Vorige week", style: 'display: none;' })
+        todayWeekLeft.addEventListener('click', () => {
+            weekOffset--
+            renderSchedule()
+        })
+
+        let todayWeekRight = element('button', 'st-start-today-week-right', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Volgende week", style: 'display: none;' })
+        todayWeekRight.addEventListener('click', () => {
+            weekOffset++
+            renderSchedule()
         })
 
         // Update ongoing events every 30 seconds
@@ -389,13 +409,15 @@ async function today() {
         window.addEventListener('resize', () => { verifyDisplayMode() })
 
         let now = new Date()
+        let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
-        const currentDay = now.getDay()
-        const gatherStart = new Date(now)
-        gatherStart.setDate(now.getDate() - (currentDay - 1))
+        const gatherStart = new Date()
+        gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
+        gatherStart.setHours(0, 0, 0, 0)
 
-        const gatherEnd = new Date(now)
+        const gatherEnd = new Date()
         gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
+        gatherEnd.setHours(0, 0, 0, 0)
 
         let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
@@ -832,6 +854,7 @@ async function today() {
             function effectuateZoom() {
                 zoomReset.innerText = `Roosterschaal: ${Math.round(zoomSetting * 100)}%`
                 saveToStorage('start-zoom', zoomSetting, 'local')
+                document.querySelector('#st-start-ticks-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
                 document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
             }
 
