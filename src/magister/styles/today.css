@@ -212,6 +212,24 @@
     background-color: var(--st-highlight-primary);
 }
 
+.st-start-col:not(:has(.st-start-event)):after {
+    content: "Geen items";
+    display: block;
+    position: sticky;
+    top: 42px;
+    left: 0px;
+    right: 0px;
+    margin-inline: -8px;
+    padding-inline: 12px;
+    padding-bottom: 12px;
+    opacity: 0.5;
+    font: 500 12px/12px var(--st-font-family-secondary);
+}
+
+.st-start-col[data-today=true]:not(:has(.st-start-event)):after {
+    background-color: var(--st-highlight-primary);
+}
+
 .st-start-event {
     --font-size-modifier: 1;
     --relative-start: 0;
