@@ -230,6 +230,12 @@
     background-color: var(--st-highlight-primary);
 }
 
+.st-start-col:only-child[data-today=true]:not(:has(.st-start-event)):after {
+    content: "Geen agenda-items vandaag";
+    top: 0;
+    background-color: transparent;
+}
+
 .st-start-event {
     --font-size-modifier: 1;
     --relative-start: 0;
