@@ -17,9 +17,9 @@ async function today() {
         container = element('div', 'st-start', mainView, { class: sheetSetting ? 'sheet' : '' }),
         header = element('div', 'st-start-header', container),
         headerText = element('span', 'st-start-header-span', header, { class: 'st-title' }),
+        headerButtons = element('div', 'st-start-header-buttons', header),
         schedule = element('div', 'st-start-schedule', container),
-        widgets = element('div', 'st-start-widgets', container),
-        buttonWrapper = element('div', 'st-start-button-wrapper', container)
+        widgets = element('div', 'st-start-widgets', container)
 
     let renderSchedule
 
@@ -64,12 +64,6 @@ async function today() {
         greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation)
     headerText.innerText = greeting.slice(0, -1)
     headerText.dataset.lastLetter = greeting.slice(-1)
-    setTimeout(() => header.dataset.transition = true, 2000)
-    setTimeout(async () => {
-        headerText.innerText = now.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-        headerText.dataset.lastLetter = '.'
-        header.removeAttribute('data-transition')
-    }, 2500)
 
     // Birthday party mode!
     let accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`),
@@ -135,7 +129,8 @@ async function today() {
                 date: new Date(date),
                 today: (date - todayDate) === 0, // Days have the highest relevancy when they match the current date.
                 tomorrow: (date - todayDate) === 86400000, // Days have increased relevancy when they match tomorrow's date.
-                irrelevant: eventsOfDay.length < 1 || date < todayDate, // Days are irrelevant when they are empty or in the past.
+                irrelevant: eventsOfDay.length < 1 || date < todayDate, // Days are irrelevant when they are empty or in the past. // TODO: condense this into multiple values (past, empty)
+                // TODO: relevance value based on relation to today and whether it is empty or not
                 events: eventsOfDay
             })
         }
@@ -314,16 +309,6 @@ async function today() {
                 }, 10000)
             }
 
-            // Update the week offset buttons accordingly
-            let todayWeekLeft = document.querySelector('#st-start-today-week-left')
-            let todayWeekRight = document.querySelector('#st-start-today-week-right')
-            if (todayWeekLeft && todayWeekRight) {
-                todayWeekLeft.style.display = weekView ? 'block' : 'none'
-                todayWeekRight.style.display = weekView ? 'block' : 'none'
-                todayWeekLeft.disabled = weekOffset <= 0
-                todayWeekRight.disabled = weekOffset >= 5
-            }
-
             // TODO: move into general editor thingie
             function editTeacherName(event) {
                 let teacherName = event.target.dataset.teacherName
@@ -339,11 +324,32 @@ async function today() {
                 renderSchedule()
             }
         }
-
         renderSchedule()
 
+        updateHeader = () => {
+            // Update the week offset buttons accordingly
+            let todayWeekLeft = document.querySelector('#st-start-today-week-left')
+            let todayWeekRight = document.querySelector('#st-start-today-week-right')
+            if (todayWeekLeft && todayWeekRight) {
+                todayWeekLeft.style.display = weekView ? 'block' : 'none'
+                todayWeekRight.style.display = weekView ? 'block' : 'none'
+                todayWeekLeft.disabled = weekOffset <= 0
+                todayWeekRight.disabled = weekOffset >= 5
+            }
+
+            // Update the header text accordingly
+            header.dataset.transition = true
+            setTimeout(async () => {
+                if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + 7 * weekOffset)))
+                else headerText.innerText = now.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                headerText.dataset.lastLetter = '.'
+                header.removeAttribute('data-transition')
+            }, 300)
+        }
+        setTimeout(updateHeader, 2000)
+
         // Allow for 5-day view
-        let todayViewSwitch = element('button', 'st-start-today-view-switch', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
+        let todayViewSwitch = element('button', 'st-start-today-view-switch', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
         todayViewSwitch.addEventListener('click', () => {
             if (schedule.classList.contains('st-expanded')) {
                 schedule.classList.remove('st-expanded')
@@ -351,10 +357,12 @@ async function today() {
                 todayViewSwitch.dataset.icon = ''
                 todayViewSwitch.title = "Weekweergave"
                 verifyDisplayMode()
+                if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
                 weekView = false
                 weekOffset = 0
                 magisterMode = magisterModeSetting
                 renderSchedule()
+                updateHeader()
             } else {
                 schedule.classList.add('st-expanded')
                 todayViewSwitch.classList.add('st-expanded')
@@ -365,19 +373,22 @@ async function today() {
                 weekView = true
                 magisterMode = false
                 renderSchedule()
+                updateHeader()
             }
         })
 
-        let todayWeekLeft = element('button', 'st-start-today-week-left', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Vorige week", style: 'display: none;' })
+        let todayWeekLeft = element('button', 'st-start-today-week-left', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vorige week", style: 'display: none;' })
         todayWeekLeft.addEventListener('click', () => {
             weekOffset--
             renderSchedule()
+            updateHeader()
         })
 
-        let todayWeekRight = element('button', 'st-start-today-week-right', buttonWrapper, { class: 'st-button icon', 'data-icon': '', title: "Volgende week", style: 'display: none;' })
+        let todayWeekRight = element('button', 'st-start-today-week-right', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Volgende week", style: 'display: none;' })
         todayWeekRight.addEventListener('click', () => {
             weekOffset++
             renderSchedule()
+            updateHeader()
         })
 
         // Update ongoing events every 30 seconds
@@ -399,7 +410,7 @@ async function today() {
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
         let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
 
-        let widgetsToggler = element('button', 'st-start-widget-toggler', buttonWrapper, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
+        let widgetsToggler = element('button', 'st-start-widget-toggler', headerButtons, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
         widgetsToggler.addEventListener('click', () => {
             container.classList.toggle('sheet-shown')
         })

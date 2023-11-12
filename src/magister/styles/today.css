@@ -53,13 +53,15 @@
     grid-area: header;
     width: 100%;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 32px 32px 24px;
     background-color: var(--st-background-primary);
-    transition: background-color 200ms;
+    transition: background-color 200ms, padding-right 200ms;
 }
 
 #st-start-header>span {
-    transition: opacity 500ms;
+    transition: opacity 300ms;
 }
 
 #st-start-header[data-transition]>span {
@@ -72,6 +74,15 @@
 
 #st-start-header>span:first-letter {
     text-transform: capitalize;
+}
+
+#st-start.sheet.sheet-shown #st-start-header {
+    padding-right: 432px;
+}
+
+#st-start-header-buttons {
+    display: flex;
+    gap: 16px;
 }
 
 #st-start-schedule {
@@ -193,7 +204,7 @@
     padding-left: 32px;
 }
 
-.st-start-col:not(:has(.st-start-event)) .st-start-col-head {
+.st-start-col[data-irrelevant=true] .st-start-col-head {
     opacity: .5;
 }
 
@@ -221,7 +232,7 @@
         / auto 1fr;
     background-color: var(--background-color);
     color: var(--st-foreground-primary);
-    border-radius: var(--st-border-radius);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     border: var(--st-border);
     text-align: start;
     overflow: hidden;
@@ -688,25 +699,6 @@
 .st-list-content {
     max-height: 30px;
     overflow: hidden;
-}
-
-#st-start #st-start-button-wrapper {
-    display: flex;
-    gap: 16px;
-    position: fixed;
-    top: 32px;
-    right: 432px;
-    border-radius: 4px;
-    background-color: var(--st-background-primary);
-    transition: right 200ms, background-color 200ms;
-}
-
-#st-start.sheet #st-start-button-wrapper {
-    right: 32px;
-}
-
-#st-start.sheet.sheet-shown #st-start-button-wrapper {
-    right: 432px;
 }
 
 #st-start.sheet {
