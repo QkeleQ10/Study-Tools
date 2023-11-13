@@ -141,10 +141,12 @@
     left: -8px;
     right: -8px;
     height: 1px;
-    /* width: 100%; */
-    background-color: var(--st-accent-secondary);
-    opacity: .5;
+    background-color: var(--st-accent-primary);
     z-index: 0;
+}
+
+.st-start-col:only-child {
+    margin-inline: -24px;
 }
 
 .st-start-col {
@@ -210,30 +212,6 @@
 
 .st-start-col[data-today=true] .st-start-col-head {
     background-color: var(--st-highlight-primary);
-}
-
-.st-start-col:not(:has(.st-start-event)):after {
-    content: "Geen items";
-    display: block;
-    position: sticky;
-    top: 42px;
-    left: 0px;
-    right: 0px;
-    margin-inline: -8px;
-    padding-inline: 12px;
-    padding-bottom: 12px;
-    opacity: 0.5;
-    font: 500 12px/12px var(--st-font-family-secondary);
-}
-
-.st-start-col[data-today=true]:not(:has(.st-start-event)):after {
-    background-color: var(--st-highlight-primary);
-}
-
-.st-start-col:only-child[data-today=true]:not(:has(.st-start-event)):after {
-    content: "Geen agenda-items vandaag";
-    top: 0;
-    background-color: transparent;
 }
 
 .st-start-event {

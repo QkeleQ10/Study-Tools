@@ -30,7 +30,7 @@ async function today() {
     let magisterMode = magisterModeSetting
 
     let weekView = false // False for day view, true for week view
-    let weekOffset = 0 // Six weeks are capable of being shown in the agenda, so this value may not exceed 5.
+    let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
 
     todaySchedule()
     todayWidgets()
@@ -109,7 +109,7 @@ async function today() {
         gatherStart.setHours(0, 0, 0, 0)
 
         const gatherEnd = new Date()
-        gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
+        gatherEnd.setDate(now.getDate() + 42)
         gatherEnd.setHours(0, 0, 0, 0)
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
@@ -141,12 +141,12 @@ async function today() {
             // Select which days to show based on view mode
             if (!weekView) {
                 // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
-                agendaStartDate = todayDate
+                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                 agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShowSetting - 1))
                 schedule.classList.remove('week-view')
             } else {
                 // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + (weekOffset * 7)))
+                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                 agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
                 schedule.classList.add('week-view')
             }
@@ -326,32 +326,35 @@ async function today() {
         }
         renderSchedule()
 
-        updateHeader = () => {
+        const updateHeaderButtons = () => {
             // Update the week offset buttons accordingly
-            let todayWeekLeft = document.querySelector('#st-start-today-week-left')
-            let todayWeekRight = document.querySelector('#st-start-today-week-right')
-            if (todayWeekLeft && todayWeekRight) {
-                todayWeekLeft.style.display = weekView ? 'block' : 'none'
-                todayWeekRight.style.display = weekView ? 'block' : 'none'
-                todayWeekLeft.disabled = weekOffset <= 0
-                todayWeekRight.disabled = weekOffset >= 5
+            let todayResetOffset = document.querySelector('#st-start-today-offset-zero')
+            let todayDecreaseOffset = document.querySelector('#st-start-today-offset-minus')
+            let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
+            if (todayDecreaseOffset && todayIncreaseOffset) {
+                todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === 0
+                todayDecreaseOffset.disabled = (weekView && agendaDayOffset <= 0) || agendaDayOffset <= (gatherStart - todayDate) / 86400000
+                todayIncreaseOffset.disabled = (weekView && agendaDayOffset >= 34) || agendaDayOffset >= (gatherEnd - todayDate) / 86400000 - 1
+                console.log((gatherStart - todayDate) / 86400000, (gatherEnd - todayDate) / 86400000, agendaDayOffset, agendaDays) // TODO
             }
+        }
 
+        const updateHeaderText = () => {
             // Update the header text accordingly
             header.dataset.transition = true
             setTimeout(async () => {
-                if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + 7 * weekOffset)))
-                else headerText.innerText = now.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + agendaDayOffset)))
+                else headerText.innerText = new Date(new Date(now).setDate(now.getDate() + agendaDayOffset)).toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                 headerText.dataset.lastLetter = '.'
                 header.removeAttribute('data-transition')
             }, 300)
         }
-        setTimeout(updateHeader, 2000)
+        setTimeout(updateHeaderText, 2000)
 
         // Allow for 5-day view
         let todayViewSwitch = element('button', 'st-start-today-view-switch', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
         todayViewSwitch.addEventListener('click', () => {
-            if (schedule.classList.contains('st-expanded')) {
+            if (weekView) {
                 schedule.classList.remove('st-expanded')
                 todayViewSwitch.classList.remove('st-expanded')
                 todayViewSwitch.dataset.icon = ''
@@ -359,10 +362,10 @@ async function today() {
                 verifyDisplayMode()
                 if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
                 weekView = false
-                weekOffset = 0
                 magisterMode = magisterModeSetting
                 renderSchedule()
-                updateHeader()
+                updateHeaderButtons()
+                updateHeaderText()
             } else {
                 schedule.classList.add('st-expanded')
                 todayViewSwitch.classList.add('st-expanded')
@@ -370,26 +373,42 @@ async function today() {
                 todayViewSwitch.title = "Dagweergave"
                 verifyDisplayMode()
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+                agendaDayOffset = Math.max(0, Math.round(agendaDayOffset / 7) * 7)
                 weekView = true
                 magisterMode = false
                 renderSchedule()
-                updateHeader()
+                updateHeaderButtons()
+                updateHeaderText()
             }
         })
 
-        let todayWeekLeft = element('button', 'st-start-today-week-left', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vorige week", style: 'display: none;' })
-        todayWeekLeft.addEventListener('click', () => {
-            weekOffset--
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
+        todayResetOffset.addEventListener('click', () => {
+            agendaDayOffset = 0
             renderSchedule()
-            updateHeader()
+            updateHeaderButtons()
+            updateHeaderText()
         })
 
-        let todayWeekRight = element('button', 'st-start-today-week-right', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Volgende week", style: 'display: none;' })
-        todayWeekRight.addEventListener('click', () => {
-            weekOffset++
+        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vooruit" })
+        todayDecreaseOffset.addEventListener('click', () => {
+            if (weekView) agendaDayOffset -= 7
+            else agendaDayOffset--
             renderSchedule()
-            updateHeader()
+            updateHeaderButtons()
+            updateHeaderText()
         })
+
+        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Achteruit" })
+        todayIncreaseOffset.addEventListener('click', () => {
+            if (weekView) agendaDayOffset += 7
+            else agendaDayOffset++
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+
+        updateHeaderButtons()
 
         // Update ongoing events every 30 seconds
         updateSchedule = () => {
