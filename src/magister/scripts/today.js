@@ -36,6 +36,9 @@ async function today() {
     todayWidgets()
 
     const now = new Date(),
+        todayDate = new Date(new Date().setHours(0, 0, 0, 0)),
+        yesterdayDate = new Date(new Date(todayDate).setDate(todayDate.getDate() - 1)),
+        tomorrowDate = new Date(new Date(todayDate).setDate(todayDate.getDate() + 1)),
         hour = now.getHours(),
         weekday = now.toLocaleString('nl-NL', { weekday: 'long' }),
         firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
@@ -66,14 +69,14 @@ async function today() {
     headerText.dataset.lastLetter = greeting.slice(-1)
 
     // Birthday party mode!
-    let accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`),
-        birthday = new Date(accountInfo.Persoon.Geboortedatum)
-    birthday.setYear(now.getFullYear())
-    if (
-        (birthday.setHours(0, 0, 0, 0) === now.setHours(0, 0, 0, 0)) ||
-        (now.getDay() === 5 && birthday.getDate() === now.getDate() + 1) ||
-        (now.getDay() === 1 && birthday.getDate() === now.getDate() - 1)
-    ) {
+    const accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`),
+        dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
+        birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
+        isBirthdayToday = (birthday.getTime() === todayDate.getTime()),
+        isBirthdayYesterday = (todayDate.getDay() === 1 && birthday.getTime() === yesterdayDate.getTime()) || (todayDate.getDay() === 1 && new Date(new Date(birthday).setFullYear(birthday.getFullYear() - 1)).getTime() === yesterdayDate.getTime()),
+        isBirthdayTomorrow = (todayDate.getDay() === 5 && birthday.getTime() === tomorrowDate.getTime()) || (todayDate.getDay() === 1 && new Date(new Date(birthday).setFullYear(birthday.getFullYear() + 1)).getTime() === tomorrowDate.getTime())
+
+    if (isBirthdayToday || isBirthdayYesterday || isBirthdayTomorrow) {
         createStyle(`
 .menu-host, .appbar-host {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" style="font-size: 24px;"><text y="22">🎉</text></svg>'), auto;
@@ -87,11 +90,11 @@ async function today() {
     }
 }
 `, 'st-party-mode')
-        if (birthday.getDate() === now.getDate() + 1)
+        if (isBirthdayTomorrow)
             notify('snackbar', `Alvast van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
-        else if (birthday.getDate() === now.getDate() - 1)
+        else if (isBirthdayYesterday)
             notify('snackbar', `Nog van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
-        else
+        else if (isBirthdayToday)
             notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
     }
 
