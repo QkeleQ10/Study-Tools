@@ -146,7 +146,7 @@ async function today() {
                 schedule.classList.remove('week-view')
             } else {
                 // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.max(0, Math.round(agendaDayOffset / 7) * 7)))
                 agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
                 schedule.classList.add('week-view')
             }
@@ -373,7 +373,6 @@ async function today() {
                 todayViewSwitch.title = "Dagweergave"
                 verifyDisplayMode()
                 if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-                agendaDayOffset = Math.max(0, Math.round(agendaDayOffset / 7) * 7)
                 weekView = true
                 magisterMode = false
                 renderSchedule()

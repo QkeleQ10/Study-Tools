@@ -145,7 +145,7 @@
     z-index: 0;
 }
 
-.st-start-col:only-child {
+.st-start-col:only-child #st-start-now {
     margin-inline: -24px;
 }
 
