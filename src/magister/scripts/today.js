@@ -115,6 +115,8 @@ async function today() {
         gatherEnd.setDate(now.getDate() + 42)
         gatherEnd.setHours(0, 0, 0, 0)
 
+        agendaDayOffset = Math.round((todayDate - gatherStart) / 86400000)
+
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
         const events = eventsRes.Items
 
@@ -335,7 +337,7 @@ async function today() {
             let todayDecreaseOffset = document.querySelector('#st-start-today-offset-minus')
             let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
             if (todayDecreaseOffset && todayIncreaseOffset) {
-                todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === 0
+                todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === Math.round((todayDate - gatherStart) / 86400000)
                 todayDecreaseOffset.disabled = (weekView && agendaDayOffset <= 0) || agendaDayOffset <= (gatherStart - todayDate) / 86400000
                 todayIncreaseOffset.disabled = (weekView && agendaDayOffset >= 34) || agendaDayOffset >= (gatherEnd - todayDate) / 86400000 - 1
                 console.log((gatherStart - todayDate) / 86400000, (gatherEnd - todayDate) / 86400000, agendaDayOffset, agendaDays) // TODO
@@ -347,7 +349,7 @@ async function today() {
             header.dataset.transition = true
             setTimeout(async () => {
                 if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + agendaDayOffset)))
-                else headerText.innerText = new Date(new Date(now).setDate(now.getDate() + agendaDayOffset)).toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                 headerText.dataset.lastLetter = '.'
                 header.removeAttribute('data-transition')
             }, 300)
@@ -386,7 +388,7 @@ async function today() {
 
         let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
         todayResetOffset.addEventListener('click', () => {
-            agendaDayOffset = 0
+            agendaDayOffset = Math.round((todayDate - gatherStart) / 86400000)
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
