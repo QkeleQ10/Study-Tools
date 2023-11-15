@@ -52,15 +52,21 @@
 #st-start-header {
     grid-area: header;
     width: 100%;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template:
+        'text buttons' 32px
+        / 1fr auto;
     align-items: center;
     padding: 32px 32px 24px;
     background-color: var(--st-background-primary);
     transition: background-color 200ms, padding-right 200ms;
 }
 
-#st-start-header>span {
+#st-start-header-text {
+    margin-bottom: 0;
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: opacity 300ms;
 }
 
@@ -68,24 +74,29 @@
     opacity: 0
 }
 
-#st-start-header>span:after {
+#st-start-header-text:after {
     content: attr(data-last-letter);
 }
 
-#st-start-header>span:first-letter {
+#st-start-header-text:first-letter {
     text-transform: capitalize;
 }
 
-#st-start.sheet.sheet-shown #st-start-header {
-    padding-right: 432px;
+#st-start-header-buttons {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
 }
 
-#st-start-header-buttons {
+#st-start-today-view {
     display: flex;
-    gap: 16px;
+    flex-wrap: nowrap;
+    margin-inline: 8px;
 }
 
 #st-start-schedule {
+    grid-area: schedule;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -378,28 +389,6 @@
     font-size: calc(12px * var(--font-size-modifier));
 }
 
-#st-start .st-start-event-teacher-edit {
-    display: none;
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    min-width: 40px;
-    min-height: 40px;
-    background-color: var(--st-accent-primary);
-    color: var(--st-contrast-accent) !important;
-    border-radius: calc(var(--st-border-radius) / 2);
-}
-
-#st-start.editing .st-start-event-teacher-edit {
-    display: block;
-    animation: popIn 400ms cubic-bezier(0.5, 1.8, .8, 1);
-}
-
-#st-start.editing-done .st-start-event-teacher-edit {
-    display: block;
-    animation: fadeIn 200ms reverse both;
-}
-
 .st-start-event-location {
     grid-area: location;
     font: 500 16px/24px var(--st-font-family-secondary);
@@ -430,6 +419,7 @@
 
 #st-start-widgets {
     grid-area: widgets;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -444,8 +434,38 @@
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
 }
 
-#st-start:not(.sheet) #st-start-widgets {
-    animation: floatLeft 200ms both;
+#st-start-widget-controls-wrapper {
+    position: fixed;
+    right: 0;
+    top: 0;
+    padding: 8px 8px 16px 16px;
+    z-index: 1;
+    /* opacity: 0;
+    scale: 0.9; */
+    animation: 200ms 2000ms both shrinkOut;
+    /* transition: scale 200ms 1000ms, opacity 200ms 1000ms; */
+}
+
+#st-start-widget-controls {
+    display: flex;
+    gap: 8px;
+    height: 48px;
+    padding: 8px;
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    border-radius: calc(var(--st-border-radius) * 2);
+}
+
+#st-start-widget-controls-wrapper:hover {
+    /* opacity: 1;
+    scale: 1;
+    transition: scale 200ms, opacity 200ms; */
+    animation: 200ms both expandIn;
+}
+
+#st-start[data-widgets-collapsed=true] #st-start-collapse-widgets:before {
+    content: '';
 }
 
 #st-start-widget-progress {
@@ -462,10 +482,6 @@
     translate: -50%;
     color: var(--st-foreground-insignificant);
     font: 11px var(--st-font-family-secondary) !important;
-}
-
-#st-start-widget-toggler {
-    display: none;
 }
 
 .st-widget {
@@ -487,57 +503,6 @@
 
 .st-widget-title[data-description]:after {
     font-size: 12px;
-}
-
-#st-start.editing .st-widget,
-#st-start.editing #st-start-start-edit,
-#st-start:not(.editing) *[id^='st-start-edit'] {
-    display: none;
-}
-
-#st-start-start-edit,
-#st-start-edit-finish {
-    margin-top: auto;
-    margin-inline: auto;
-}
-
-#st-start-edit-widgets-heading,
-#st-start-edit-layout-heading,
-#st-start-edit-teachers-heading {
-    margin-block: 0;
-    text-align: left;
-    max-width: 100%;
-}
-
-#st-start-edit-divider {
-    margin-inline: -16px;
-    width: calc(100% + 24px);
-    min-height: 1px;
-}
-
-#st-start-edit-include,
-#st-start-edit-exclude {
-    display: inline-block;
-    font: 700 16px var(--st-font-family-primary);
-    margin-bottom: -4px;
-}
-
-#st-start-edit-exclude {
-    margin-top: 18px;
-    margin-bottom: 12px;
-}
-
-#st-start-edit-exclude-desc {
-    translate: 0 -32px;
-}
-
-#st-start-edit-zoom {
-    width: 100%;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
 }
 
 #st-start-widget-counters {
@@ -703,41 +668,11 @@
     overflow: hidden;
 }
 
-#st-start.sheet {
+#st-start[data-widgets-collapsed=true] {
     grid-template:
-        'header' auto
-        'schedule' 1fr
-        'widgets' auto
-        / 1fr;
-}
-
-#st-start.sheet #st-start-widgets {
-    position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: 8px;
-    border-radius: var(--st-border-radius);
-    border: var(--st-border);
-    background-color: var(--st-background-transparent);
-    backdrop-filter: blur(4px);
-    z-index: 100;
-    animation: widgetsOut 200ms both;
-}
-
-#st-start.sheet.sheet-shown #st-start-widgets {
-    animation: widgetsIn 100ms both;
-}
-
-#st-start.sheet #st-start-widget-toggler {
-    display: block;
-    rotate: 0;
-    transition: rotate 200ms, filter 200ms;
-}
-
-#st-start.sheet.sheet-shown #st-start-widget-toggler {
-    rotate: 180deg;
-    transition: rotate 200ms, filter 200ms;
+        'header widgets' auto
+        'schedule widgets' 1fr
+        / 1fr 0px;
 }
 
 @keyframes widgetsIn {

@@ -101,7 +101,7 @@ div.loading-overlay {
     color: var(--st-contrast-accent);
     cursor: pointer;
     user-select: none;
-    transition: filter 200ms, transform 200ms, border 200ms, color 200ms, background-color 200ms;
+    transition: filter 200ms, transform 200ms, border 200ms, color 200ms, background-color 200ms, opacity 100ms;
 }
 
 .st-button.small {
@@ -124,7 +124,9 @@ div.loading-overlay {
 }
 
 .st-button.icon {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
     color: var(--st-foreground-primary);
     font: 500 18px 'Font Awesome 5 Pro';
@@ -134,7 +136,7 @@ div.loading-overlay {
     max-height: 32px;
     padding: 0;
     border-radius: 50%;
-    transition: color 200ms, background-color 200ms, transform 200ms;
+    transition: color 200ms, background-color 200ms, transform 200ms, opacity 200ms;
 }
 
 .st-button.icon:hover {
@@ -163,6 +165,20 @@ div.loading-overlay {
     border-bottom-left-radius: 0;
 }
 
+.st-button.modern {
+    background: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+    outline: none;
+    border: 1px solid var(--st-accent-primary);
+}
+
+.st-button.modern.secondary {
+    background: var(--st-background-secondary);
+    color: var(--st-foreground-accent);
+    outline: none;
+    border: var(--st-border);
+}
+
 .st-button:hover,
 .st-button:focus-visible {
     filter: brightness(var(--st-hover-brightness));
@@ -187,7 +203,11 @@ div.loading-overlay {
 
 .st-button[disabled]:not([disabled=false]) {
     pointer-events: none;
-    opacity: .5;
+    opacity: .4;
+}
+
+.st-button.switch-left[disabled], .st-button.switch-right[disabled] {
+    opacity: 1;
 }
 
 .st-chips-wrapper {
@@ -919,7 +939,14 @@ a.st-keyboard-hint.clicked {
 @keyframes expandIn {
     from {
         opacity: 0;
-        scale: .75;
+        scale: .8;
+    }
+}
+
+@keyframes shrinkOut {
+    to {
+        opacity: 0;
+        scale: .8;
     }
 }
 

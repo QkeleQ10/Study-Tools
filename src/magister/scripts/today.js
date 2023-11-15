@@ -10,18 +10,17 @@ window.addEventListener('popstate', () => {
 async function today() {
     if (!syncedStorage['start-enabled']) return
 
-    let sheetSetting = await getFromStorage('start-sheet', 'local') ?? false,
+    let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
+        widgetsCollapsed = widgetsCollapsedSetting ?? false,
         zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
         teacherNamesSetting = await getFromStorage('teacher-names', 'local') || {},
         mainView = await awaitElement('div.view.ng-scope'),
-        container = element('div', 'st-start', mainView, { class: sheetSetting ? 'sheet' : '' }),
+        container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
-        headerText = element('span', 'st-start-header-span', header, { class: 'st-title' }),
-        headerButtons = element('div', 'st-start-header-buttons', header),
         schedule = element('div', 'st-start-schedule', container),
         widgets = element('div', 'st-start-widgets', container)
 
-    let renderSchedule
+    let renderSchedule, updateHeaderButtons, updateHeaderText
 
     const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
     let agendaStartDate, agendaEndDate
@@ -32,41 +31,20 @@ async function today() {
     let weekView = false // False for day view, true for week view
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
 
-    todaySchedule()
-    todayWidgets()
+    let now = new Date()
 
-    const now = new Date(),
-        todayDate = new Date(new Date().setHours(0, 0, 0, 0)),
+    const todayDate = new Date(new Date().setHours(0, 0, 0, 0)),
         yesterdayDate = new Date(new Date(todayDate).setDate(todayDate.getDate() - 1)),
         tomorrowDate = new Date(new Date(todayDate).setDate(todayDate.getDate() + 1)),
-        hour = now.getHours(),
-        weekday = now.toLocaleString('nl-NL', { weekday: 'long' }),
         firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
 
-    // Greeting system
-    const greetingsByHour = [
-        [22, 'Goedenavond#', 'Goedenavond, nachtuil.', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
-        [18, 'Goedenavond#', `Fijne ${weekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
-        [12, 'Goedemiddag#', `Fijne ${weekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
-        [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
-        [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${weekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
-    ],
-        greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Namaste!', 'G\'day!', 'Aloha!', 'Ciao!', 'Γεια!', 'Привіт!', '你好！', '今日は!', 'Olá!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', `Hey, ${firstName}#`]
+    // Automagically collapse the widgets panel when it's necessary
+    verifyDisplayMode()
+    window.addEventListener('resize', () => { verifyDisplayMode() })
 
-    let possibleGreetings = []
-    for (let i = 0; i < greetingsByHour.length; i++) {
-        const e = greetingsByHour[i]
-        if (hour >= e[0]) {
-            e.shift()
-            possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
-            break
-        }
-    }
-    possibleGreetings.push(...greetingsGeneric)
-    const punctuation = Math.random() < 0.7 ? '.' : '!',
-        greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation)
-    headerText.innerText = greeting.slice(0, -1)
-    headerText.dataset.lastLetter = greeting.slice(-1)
+    todayHeader()
+    todaySchedule()
+    todayWidgets()
 
     // Birthday party mode!
     const accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`),
@@ -101,10 +79,140 @@ async function today() {
     // Random thank you
     if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
 
+    async function todayHeader() {
+        let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),
+            headerButtons = element('div', 'st-start-header-buttons', header),
+            formattedWeekday = now.toLocaleString('nl-NL', { weekday: 'long' })
+
+        // Greeting system
+        const greetingsByHour = [
+            [22, 'Goedenavond#', 'Goedenavond, nachtuil.', `Fijne ${formattedWeekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
+            [18, 'Goedenavond#', `Fijne ${formattedWeekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
+            [12, 'Goedemiddag#', `Fijne ${formattedWeekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
+            [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
+            [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
+        ],
+            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Namaste!', 'G\'day!', 'Aloha!', 'Ciao!', 'Γεια!', 'Привіт!', '你好！', '今日は!', 'Olá!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', `Hey, ${firstName}#`]
+
+        let possibleGreetings = []
+        for (let i = 0; i < greetingsByHour.length; i++) {
+            const e = greetingsByHour[i]
+            if (now.getHours() >= e[0]) {
+                e.shift()
+                possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
+                break
+            }
+        }
+        possibleGreetings.push(...greetingsGeneric)
+        const punctuation = Math.random() < 0.7 ? '.' : '!',
+            greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation)
+        headerText.innerText = greeting.slice(0, -1)
+        headerText.dataset.lastLetter = greeting.slice(-1)
+
+        updateHeaderButtons = () => {
+            // Update the week offset buttons accordingly
+            let todayResetOffset = document.querySelector('#st-start-today-offset-zero')
+            let todayDecreaseOffset = document.querySelector('#st-start-today-offset-minus')
+            let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
+            if (todayDecreaseOffset && todayIncreaseOffset) {
+                todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1
+                todayDecreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0
+                todayIncreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41
+            }
+        }
+
+        updateHeaderText = () => {
+            // Update the header text accordingly
+            header.dataset.transition = true
+            setTimeout(async () => {
+                if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + Math.floor(agendaDayOffset / 7) * 7)))
+                else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+                headerText.dataset.lastLetter = '.'
+                header.removeAttribute('data-transition')
+            }, 300)
+        }
+
+        // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
+        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Achteruit" })
+        todayDecreaseOffset.addEventListener('click', () => {
+            if (weekView) agendaDayOffset -= 7
+            else agendaDayOffset--
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
+        todayResetOffset.addEventListener('click', () => {
+            agendaDayOffset = (todayDate.getDay() || 7) - 1
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vooruit" })
+        todayIncreaseOffset.addEventListener('click', () => {
+            if (weekView) agendaDayOffset += 7
+            else agendaDayOffset++
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+
+        let todayViewMode = element('div', 'st-start-today-view', headerButtons)
+        let todayViewDay = element('button', 'st-start-today-view-day', todayViewMode, { class: 'st-button switch-left modern', innerText: "Dag", disabled: true })
+        let todayViewWeek = element('button', 'st-start-today-view-week', todayViewMode, { class: 'st-button switch-right modern secondary', innerText: "Week" })
+        todayViewDay.addEventListener('click', () => {
+            todayViewDay.classList.remove('secondary')
+            todayViewDay.disabled = true
+            todayViewWeek.classList.add('secondary')
+            todayViewWeek.disabled = false
+            widgetsCollapsed = false
+            verifyDisplayMode()
+            if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
+            weekView = false
+            magisterMode = magisterModeSetting
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+        todayViewWeek.addEventListener('click', () => {
+            todayViewDay.classList.add('secondary')
+            todayViewDay.disabled = false
+            todayViewWeek.classList.remove('secondary')
+            todayViewWeek.disabled = true
+            widgetsCollapsed = true
+            verifyDisplayMode()
+            if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+            weekView = true
+            magisterMode = false
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+
+        let widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container)
+        let widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
+
+        let todayInvokeEditor = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Pagina Start bewerken" })
+        todayInvokeEditor.addEventListener('click', () => {
+            // TODO: editor with teacher names rebuilt too!
+        })
+
+        let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel" })
+        todayCollapseWidgets.addEventListener('click', () => {
+            widgetsCollapsed = !widgetsCollapsed
+            verifyDisplayMode()
+        })
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'ArrowLeft' && !todayDecreaseOffset.disabled) todayDecreaseOffset.click()
+            else if (event.key === 'ArrowRight' && !todayIncreaseOffset.disabled) todayIncreaseOffset.click()
+        })
+    }
+
     async function todaySchedule() {
         let interval
 
-        let now = new Date()
+        now = new Date()
         let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
         const gatherStart = new Date()
@@ -115,7 +223,7 @@ async function today() {
         gatherEnd.setDate(now.getDate() + 42)
         gatherEnd.setHours(0, 0, 0, 0)
 
-        agendaDayOffset = Math.round((todayDate - gatherStart) / 86400000)
+        agendaDayOffset = Math.floor((todayDate - gatherStart) / 86400000)
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
         const events = eventsRes.Items
@@ -146,12 +254,13 @@ async function today() {
             // Select which days to show based on view mode
             if (!weekView) {
                 // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
+                // TODO: This should account for the end of the day again, too!
                 agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                 agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShowSetting - 1))
                 schedule.classList.remove('week-view')
             } else {
                 // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.max(0, Math.round(agendaDayOffset / 7) * 7)))
+                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
                 agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
                 schedule.classList.add('week-view')
             }
@@ -268,12 +377,6 @@ async function today() {
                         let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject-wrapper' })
                         let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-start-event-subject', innerText: subjectNames.join(', ') })
                         let eventLocation = element('span', `st-start-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-start-event-location', innerText: locationNames.join(', ') })
-                        // Add a teacher edit button
-                        if (item.Docenten[0]) {
-                            let eventTeacherEdit = element('button', `st-start-event-${item.Id}-teacher-edit`, eventElement, { class: 'st-start-event-teacher-edit st-button icon', 'data-icon': '', title: `Bijnaam van ${item.Docenten[0].Naam} aanpassen`, 'data-teacher-name': item.Docenten[0].Naam, 'data-teacher-code': item.Docenten[0].Docentcode })
-                            eventTeacherEdit.removeEventListener('click', editTeacherName)
-                            eventTeacherEdit.addEventListener('click', editTeacherName)
-                        }
                     }
 
                     let row = element('div', `st-start-event-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
@@ -299,6 +402,7 @@ async function today() {
 
             if (!magisterMode && document.querySelector('.st-start-col[data-today=true]')) {
                 // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
+                // TODO: This should be more sophisticated so that it tries to fit as many relevant events as possible in the screen.
                 let nowMarker = element('div', `st-start-now`, document.querySelector('.st-start-col[data-today=true]'), { style: `--relative-start: ${timeInHours(now)}` })
                 if (schedule.scrollTop === 0) nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
                 interval = setInterval(() => {
@@ -313,106 +417,11 @@ async function today() {
                     }
                 }, 10000)
             }
-
-            // TODO: move into general editor thingie
-            function editTeacherName(event) {
-                let teacherName = event.target.dataset.teacherName
-                let teacherCode = event.target.dataset.teacherCode
-                event.stopPropagation()
-                let newName = prompt(`Bijnaam invoeren voor ${teacherName} (${teacherCode})`, teacherNamesSetting[teacherCode] || '')
-                if (newName?.length > 0) {
-                    teacherNamesSetting[teacherCode] = newName
-                } else if (teacherNamesSetting[teacherCode]) {
-                    delete teacherNamesSetting[teacherCode]
-                }
-                saveToStorage('teacher-names', teacherNamesSetting, 'local')
-                renderSchedule()
-            }
         }
         renderSchedule()
 
-        const updateHeaderButtons = () => {
-            // Update the week offset buttons accordingly
-            let todayResetOffset = document.querySelector('#st-start-today-offset-zero')
-            let todayDecreaseOffset = document.querySelector('#st-start-today-offset-minus')
-            let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
-            if (todayDecreaseOffset && todayIncreaseOffset) {
-                todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === Math.round((todayDate - gatherStart) / 86400000)
-                todayDecreaseOffset.disabled = (weekView && agendaDayOffset <= 0) || agendaDayOffset <= (gatherStart - todayDate) / 86400000
-                todayIncreaseOffset.disabled = (weekView && agendaDayOffset >= 34) || agendaDayOffset >= (gatherEnd - todayDate) / 86400000 - 1
-                console.log((gatherStart - todayDate) / 86400000, (gatherEnd - todayDate) / 86400000, agendaDayOffset, agendaDays) // TODO
-            }
-        }
-
-        const updateHeaderText = () => {
-            // Update the header text accordingly
-            header.dataset.transition = true
-            setTimeout(async () => {
-                if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + agendaDayOffset)))
-                else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                headerText.dataset.lastLetter = '.'
-                header.removeAttribute('data-transition')
-            }, 300)
-        }
-        setTimeout(updateHeaderText, 2000)
-
-        // Allow for 5-day view
-        let todayViewSwitch = element('button', 'st-start-today-view-switch', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Weekweergave" })
-        todayViewSwitch.addEventListener('click', () => {
-            if (weekView) {
-                schedule.classList.remove('st-expanded')
-                todayViewSwitch.classList.remove('st-expanded')
-                todayViewSwitch.dataset.icon = ''
-                todayViewSwitch.title = "Weekweergave"
-                verifyDisplayMode()
-                if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
-                weekView = false
-                magisterMode = magisterModeSetting
-                renderSchedule()
-                updateHeaderButtons()
-                updateHeaderText()
-            } else {
-                schedule.classList.add('st-expanded')
-                todayViewSwitch.classList.add('st-expanded')
-                todayViewSwitch.dataset.icon = ''
-                todayViewSwitch.title = "Dagweergave"
-                verifyDisplayMode()
-                if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-                weekView = true
-                magisterMode = false
-                renderSchedule()
-                updateHeaderButtons()
-                updateHeaderText()
-            }
-        })
-
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
-        todayResetOffset.addEventListener('click', () => {
-            agendaDayOffset = Math.round((todayDate - gatherStart) / 86400000)
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
-        })
-
-        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vooruit" })
-        todayDecreaseOffset.addEventListener('click', () => {
-            if (weekView) agendaDayOffset -= 7
-            else agendaDayOffset--
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
-        })
-
-        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Achteruit" })
-        todayIncreaseOffset.addEventListener('click', () => {
-            if (weekView) agendaDayOffset += 7
-            else agendaDayOffset++
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
-        })
-
         updateHeaderButtons()
+        setTimeout(updateHeaderText, 2000)
 
         // Update ongoing events every 30 seconds
         updateSchedule = () => {
@@ -433,17 +442,7 @@ async function today() {
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
         let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
 
-        let widgetsToggler = element('button', 'st-start-widget-toggler', headerButtons, { class: 'st-button icon', innerText: '', title: "Widgetpaneel" })
-        widgetsToggler.addEventListener('click', () => {
-            container.classList.toggle('sheet-shown')
-        })
-
-
-        verifyDisplayMode()
-        window.addEventListener('resize', () => { verifyDisplayMode() })
-
-        let now = new Date()
-        let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+        now = new Date()
 
         const gatherStart = new Date()
         gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
@@ -860,7 +859,8 @@ async function today() {
         }
 
         // Allow for editing
-        let editButton = element('button', 'st-start-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', innerText: "Pagina Start bewerken", title: "Het uiterlijk van deze pagina bewerken\nWijzig de agendaweergave, de widgetopties, docentennamen en meer." })
+        // TODO: TODO!
+        let editButton = element('button', 'st-start-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', style: 'display:none', innerText: "Pagina Start bewerken", title: "Het uiterlijk van deze pagina bewerken\nWijzig de agendaweergave, de widgetopties, docentennamen en meer." })
         editButton.addEventListener('click', () => {
             container.classList.add('editing')
             container.classList.remove('editing-done')
@@ -893,14 +893,13 @@ async function today() {
             }
 
             // View mode checkbox
-            let sheetModeLabel = element('label', 'st-start-edit-sheet-chip', widgets, { class: 'st-checkbox-label', innerText: "Widgets naast rooster weergeven" })
-            let sheetModeInput = element('input', 'st-start-edit-sheet-input', sheetModeLabel, { type: 'checkbox', class: 'st-checkbox-input' })
-            if (!sheetSetting) sheetModeInput.checked = true
-            sheetModeInput.addEventListener('change', event => {
-                sheetSetting = !event.target.checked
-                saveToStorage('start-sheet', sheetSetting, 'local')
+            let widgetsCollapsedDefaultLabel = element('label', 'st-start-widgets-collapsed-label', widgets, { class: 'st-checkbox-label', innerText: "Widgets standaard weergeven" })
+            let widgetsCollapsedDefaultInput = element('input', 'st-start-widgets-collapsed-input', widgetsCollapsedDefaultLabel, { type: 'checkbox', class: 'st-checkbox-input' })
+            if (!widgetsCollapsedSetting) widgetsCollapsedDefaultInput.checked = true
+            widgetsCollapsedDefaultInput.addEventListener('change', event => {
+                widgetsCollapsedSetting = !event.target.checked
+                saveToStorage('start-widgets-collapsed', widgetsCollapsedSetting, 'local')
                 verifyDisplayMode()
-                container.classList.add('sheet-shown')
             })
 
             let divider1 = element('div', 'st-start-edit-divider1', widgets, { class: 'st-divider' })
@@ -1035,13 +1034,8 @@ async function today() {
     }
 
     function verifyDisplayMode() {
-        if (window.innerWidth < 1100 || sheetSetting || document.querySelector('#st-start-schedule')?.classList.contains('st-expanded')) {
-            container.classList.remove('sheet-shown')
-            container.classList.add('sheet')
-        }
-        else {
-            container.classList.remove('sheet')
-        }
+        widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
+        container.setAttribute('data-widgets-collapsed', widgetsCollapsed)
     }
 }
 
