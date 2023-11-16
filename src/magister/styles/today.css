@@ -485,7 +485,7 @@
     content: '';
 }
 
-#st-start-collapse-widgets:active, #st-start-collapse-widgets:focus:active {
+#st-start-collapse-widgets:active:before, #st-start-collapse-widgets:focus:active:before {
     animation: none;
 }
 
