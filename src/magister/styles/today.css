@@ -92,7 +92,7 @@
 #st-start-today-view {
     display: flex;
     flex-wrap: nowrap;
-    margin-inline: 8px;
+    margin-left: 8px;
 }
 
 #st-start-schedule {
@@ -437,13 +437,31 @@
 #st-start-widget-controls-wrapper {
     position: fixed;
     right: 0;
-    top: 0;
-    padding: 8px 8px 16px 16px;
+    bottom: 0;
+    padding: 16px 8px 8px 32px;
     z-index: 1;
-    /* opacity: 0;
-    scale: 0.9; */
-    animation: 200ms 2000ms both shrinkOut;
-    /* transition: scale 200ms 1000ms, opacity 200ms 1000ms; */
+    opacity: 0;
+    scale: 0.9;
+    transition: scale 200ms 1000ms, opacity 200ms 1000ms;
+    animation: 4000ms 200ms subtle-fab-introduce;
+}
+
+@keyframes subtle-fab-introduce {
+    5% {
+        opacity: 1;
+        scale: 1.3;
+        translate: -8px -8px;
+    }
+
+    20% {
+        scale: 1;
+        translate: 0;
+    }
+
+    95% {
+        opacity: 1;
+        scale: 1;
+    }
 }
 
 #st-start-widget-controls {
@@ -458,25 +476,38 @@
 }
 
 #st-start-widget-controls-wrapper:hover {
-    /* opacity: 1;
+    opacity: 1;
     scale: 1;
-    transition: scale 200ms, opacity 200ms; */
-    animation: 200ms both expandIn;
+    transition: scale 200ms, opacity 200ms;
 }
 
 #st-start[data-widgets-collapsed=true] #st-start-collapse-widgets:before {
     content: '';
 }
 
+#st-start-collapse-widgets:active, #st-start-collapse-widgets:focus:active {
+    animation: none;
+}
+
+#st-start-collapse-widgets:focus {
+    animation: 200ms fake-flip;
+}
+
+@keyframes fake-flip {
+    50% {
+        scale: 0 1;
+    }
+}
+
 #st-start-widget-progress {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
 }
 
 #st-start-widget-progress-text {
-    position: fixed;
+    position: absolute;
     bottom: 4px;
     left: 50%;
     translate: -50%;

@@ -51,7 +51,7 @@ async function applyStyles() {
     --st-font-family-secondary: 'open-sans', sans-serif;
     --st-background-primary: #ffffff;
     --st-background-secondary: #ffffff;
-    --st-background-tertiary: #f5f5f5;
+    --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff5;
     --st-background-transparent: #ffffffbb;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
@@ -60,6 +60,7 @@ async function applyStyles() {
     --st-highlight-warn: #ffd4e2;
     --st-highlight-info: #dceefd;
     --st-foreground-primary: #333333;
+    --st-foreground-secondary: #555555;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-border-color: #ededed;
@@ -91,12 +92,13 @@ async function applyStyles() {
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f5;
     --st-background-transparent: #121212bb;
-    --st-highlight-primary: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
+    --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-subtle: #181f24;
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
     --st-highlight-info: #0f314d;
     --st-foreground-primary: #fff;
+    --st-foreground-secondary: #dddddd;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-border-color: #2e2e2e;

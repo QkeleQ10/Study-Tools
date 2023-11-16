@@ -155,17 +155,30 @@ div.loading-overlay {
     margin-right: 0;
 }
 
-.st-button.switch-left {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+.st-segmented-control {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    background-color: var(--st-background-tertiary);
+    outline: var(--st-border);
+    border-radius: var(--st-border-radius);
 }
 
-.st-button.switch-right {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+.st-button.segment {
+    background-color: transparent;
+    color: var(--st-foreground-secondary);
+    border: 1px solid transparent;
 }
 
-.st-button.modern {
+.st-button.segment.active {
+    background-color: var(--st-highlight-primary);
+    color: var(--st-foreground-accent);
+    border: var(--st-border);
+    transform: none !important;
+    filter: none !important;
+}
+
+/* .st-button.modern {
     background: var(--st-accent-primary);
     color: var(--st-contrast-accent);
     outline: none;
@@ -177,7 +190,7 @@ div.loading-overlay {
     color: var(--st-foreground-accent);
     outline: none;
     border: var(--st-border);
-}
+} */
 
 .st-button:hover,
 .st-button:focus-visible {
@@ -204,10 +217,6 @@ div.loading-overlay {
 .st-button[disabled]:not([disabled=false]) {
     pointer-events: none;
     opacity: .4;
-}
-
-.st-button.switch-left[disabled], .st-button.switch-right[disabled] {
-    opacity: 1;
 }
 
 .st-chips-wrapper {

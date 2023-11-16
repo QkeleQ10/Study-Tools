@@ -157,14 +157,12 @@ async function today() {
             updateHeaderText()
         })
 
-        let todayViewMode = element('div', 'st-start-today-view', headerButtons)
-        let todayViewDay = element('button', 'st-start-today-view-day', todayViewMode, { class: 'st-button switch-left modern', innerText: "Dag", disabled: true })
-        let todayViewWeek = element('button', 'st-start-today-view-week', todayViewMode, { class: 'st-button switch-right modern secondary', innerText: "Week" })
+        let todayViewMode = element('div', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' })
+        let todayViewDay = element('button', 'st-start-today-view-day', todayViewMode, { class: 'st-button segment active', innerText: "Dag" })
+        let todayViewWeek = element('button', 'st-start-today-view-week', todayViewMode, { class: 'st-button segment', innerText: "Week" })
         todayViewDay.addEventListener('click', () => {
-            todayViewDay.classList.remove('secondary')
-            todayViewDay.disabled = true
-            todayViewWeek.classList.add('secondary')
-            todayViewWeek.disabled = false
+            todayViewDay.classList.add('active')
+            todayViewWeek.classList.remove('active')
             widgetsCollapsed = false
             verifyDisplayMode()
             if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
@@ -175,10 +173,8 @@ async function today() {
             updateHeaderText()
         })
         todayViewWeek.addEventListener('click', () => {
-            todayViewDay.classList.add('secondary')
-            todayViewDay.disabled = false
-            todayViewWeek.classList.remove('secondary')
-            todayViewWeek.disabled = true
+            todayViewDay.classList.remove('active')
+            todayViewWeek.classList.add('active')
             widgetsCollapsed = true
             verifyDisplayMode()
             if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
@@ -404,7 +400,7 @@ async function today() {
                 // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
                 // TODO: This should be more sophisticated so that it tries to fit as many relevant events as possible in the screen.
                 let nowMarker = element('div', `st-start-now`, document.querySelector('.st-start-col[data-today=true]'), { style: `--relative-start: ${timeInHours(now)}` })
-                if (schedule.scrollTop === 0) nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                if (schedule.scrollTop === 0 && !weekView) nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
                 interval = setInterval(() => {
                     if (!nowMarker) {
                         clearInterval(interval)
