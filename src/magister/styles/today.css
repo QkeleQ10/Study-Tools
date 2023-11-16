@@ -489,7 +489,7 @@
     animation: none;
 }
 
-#st-start-collapse-widgets:focus {
+#st-start-collapse-widgets:focus:before {
     animation: 200ms fake-flip;
 }
 
