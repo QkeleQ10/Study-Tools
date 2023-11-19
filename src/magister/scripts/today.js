@@ -14,19 +14,22 @@ async function today() {
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
         zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
         teacherNamesSetting = await getFromStorage('teacher-names', 'local') || {},
+        widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock'],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
         schedule = element('div', 'st-start-schedule', container),
         widgets = element('div', 'st-start-widgets', container)
 
+    let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
-
-    const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
     let agendaStartDate, agendaEndDate
 
-    const magisterModeSetting = syncedStorage['start-schedule-view'] === 'list'
-    let magisterMode = magisterModeSetting
+    const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
+    const showExtraDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
+    const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
+
+    let listViewEnabled = listViewEnabledSetting
 
     let weekView = false // False for day view, true for week view
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
@@ -39,8 +42,12 @@ async function today() {
         firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
 
     // Automagically collapse the widgets panel when it's necessary
+    widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
     verifyDisplayMode()
-    window.addEventListener('resize', () => { verifyDisplayMode() })
+    window.addEventListener('resize', () => {
+        widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
+        verifyDisplayMode()
+    })
 
     todayHeader()
     todaySchedule()
@@ -163,11 +170,11 @@ async function today() {
         todayViewDay.addEventListener('click', () => {
             todayViewDay.classList.add('active')
             todayViewWeek.classList.remove('active')
-            widgetsCollapsed = false
+            widgetsCollapsed = window.innerWidth < 1100
             verifyDisplayMode()
             if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
             weekView = false
-            magisterMode = magisterModeSetting
+            listViewEnabled = listViewEnabledSetting
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -179,7 +186,7 @@ async function today() {
             verifyDisplayMode()
             if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
             weekView = true
-            magisterMode = false
+            listViewEnabled = false
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -188,9 +195,168 @@ async function today() {
         let widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container)
         let widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
 
-        let todayInvokeEditor = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Pagina Start bewerken" })
-        todayInvokeEditor.addEventListener('click', () => {
+        let invokeEditor = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Pagina Start bewerken" })
+        invokeEditor.addEventListener('click', () => {
+            let editor = element('dialog', 'st-start-editor', document.body, { class: 'st-overlay' }),
+                editorClose = element('button', 'st-start-editor-close', editor, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+                editorTitle = element('span', 'st-start-editor-title', editor, { class: 'st-title', innerText: "Start bewerken" }),
+                editorSubtitle = element('span', 'st-start-editor-subtitle', editor, { class: 'st-subtitle', innerText: "Pas de pagina Start geheel naar wens aan." }),
+                editorWrapper = element('div', 'st-start-editor-wrapper', editor),
+                editorView = element('div', 'st-start-editor-view', editorWrapper, { class: 'st-list st-tile' }),
+                editorViewTitle = element('span', 'st-start-editor-view-title', editorView, { class: 'st-section-title', 'data-icon': '', innerText: "Indeling" }),
+                editorTeachers = element('div', 'st-start-editor-teachers', editorWrapper, { class: 'st-list st-tile' }),
+                editorTeachersTitle = element('span', 'st-start-editor-teachers-title', editorTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Leraren" }),
+                editorWidgets = element('div', 'st-start-editor-widgets', editorWrapper, { class: 'st-list st-tile' }),
+                editorWidgetsTitle = element('span', 'st-start-editor-widgets-title', editorWidgets, { class: 'st-section-title', 'data-icon': '', innerText: "Widgets" })
+
+
+            editorClose.addEventListener('click', () => {
+                editor.close()
+                todayWidgets()
+                renderSchedule()
+            })
+
+            editor.showModal()
+
             // TODO: editor with teacher names rebuilt too!
+
+            // Zoom buttons
+            let zoomWrapper = element('div', 'st-start-edit-zoom', editorView)
+            let zoomIn = element('button', 'st-start-edit-zoom-in', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
+            let zoomReset = element('button', 'st-start-edit-zoom-reset', zoomWrapper, { class: 'st-button tertiary', innerText: `Roosterschaal: ${Math.round(zoomSetting * 100)}%` })
+            let zoomOut = element('button', 'st-start-edit-zoom-out', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
+            zoomIn.addEventListener('click', () => {
+                zoomSetting += .1
+                effectuateZoom()
+            })
+            zoomReset.addEventListener('click', () => {
+                zoomSetting = 1
+                effectuateZoom()
+            })
+            zoomOut.addEventListener('click', () => {
+                zoomSetting -= .1
+                effectuateZoom()
+            })
+            function effectuateZoom() {
+                zoomReset.innerText = `Roosterschaal: ${Math.round(zoomSetting * 100)}%`
+                saveToStorage('start-zoom', zoomSetting, 'local')
+                document.querySelector('#st-start-ticks-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+                document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+            }
+
+            // View mode checkbox
+            let widgetsCollapsedDefaultLabel = element('label', 'st-start-widgets-collapsed-label', editorView, { class: 'st-checkbox-label', innerText: "Widgetpaneel standaard uitgevouwen weergeven" })
+            let widgetsCollapsedDefaultInput = element('input', 'st-start-widgets-collapsed-input', widgetsCollapsedDefaultLabel, { type: 'checkbox', class: 'st-checkbox-input' })
+            if (!widgetsCollapsedSetting) widgetsCollapsedDefaultInput.checked = true
+            widgetsCollapsedDefaultInput.addEventListener('change', event => {
+                widgetsCollapsedSetting = !event.target.checked
+                saveToStorage('start-widgets-collapsed', widgetsCollapsedSetting, 'local')
+                verifyDisplayMode()
+            })
+
+            // Widgets editor
+            let includedWidgetsHeading = element('span', 'st-start-edit-include', editorWidgets, { innerText: "Ingeschakelde widgets" })
+            let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', editorWidgets, { innerText: "Deze widgets worden vanzelf getoond wanneer van toepassing." })
+            let sortableList = element('ul', 'st-start-edit-wrapper', editorWidgets, { class: 'st-sortable-list' })
+
+            Object.keys(widgetFunctions).forEach(key => {
+                if (!widgetsOrder.find(e => e === key)) widgetsOrder.push(key)
+            })
+
+            let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
+            widgetsOrder.forEach((key, i) => {
+                if (i === exclusionIndex) {
+                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Uitgeschakelde widgets", 'data-value': "EXCLUDE" })
+                    return
+                }
+
+                let widgetName = widgetFunctions[key].title
+                let item = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'aria-roledescription': "Sleepbaar item. Gebruik spatie om op te tillen.", 'data-value': key })
+
+                if (i > exclusionIndex) item.classList.add('excluded')
+
+                if (widgetFunctions[key].options) {
+                    widgetFunctions[key].options.forEach(option => {
+                        let optionWrapper = element('div', `st-start-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
+                        let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
+                        switch (option.type) {
+                            case 'select':
+                                let optionInput = element('select', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title })
+                                option.choices.forEach(async choice => {
+                                    let optionChoice = element('option', `st-start-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
+                                    if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
+                                })
+                                optionInput.addEventListener('change', event => {
+                                    saveToStorage(option.key, event.target.value, 'local')
+                                })
+                                break
+
+                            case 'description':
+                                let optionText = element('span', `st-start-edit-${option.key}-text`, optionWrapper, { name: option.title })
+                                break
+
+                            default:
+                                // TODO: implement other option types as necessary
+                                break
+                        }
+                    })
+                }
+
+                item.addEventListener('dragstart', event => {
+                    setTimeout(() => {
+                        item.classList.add('dragging')
+                    }, 0)
+
+                    let dragGhost = item.cloneNode(true)
+                    dragGhost.classList.add('st-sortable-list-ghost')
+                    dragGhost.classList.remove('dragging')
+                    dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
+                    editor.append(dragGhost)
+                })
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging')
+                    item.classList.add('dragging-return')
+                    document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
+                        e.classList.add('returning')
+                        e.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px;`)
+                        setTimeout(() => {
+                            e.remove()
+                            item.classList.remove('dragging-return')
+                        }, 200)
+                    })
+                })
+
+            })
+            let excludedWidgetsDesc = element('span', 'st-start-edit-exclude-desc', editorWidgets, { innerText: "Sleep widgets hierheen om ze uit te schakelen." })
+            sortableList.addEventListener('dragover', (event) => {
+                event.preventDefault()
+
+                const draggingItem = document.querySelector('.dragging')
+
+                const draggingGhost = document.querySelector('.st-sortable-list-ghost')
+                draggingGhost.style.translate = `${event.clientX}px ${event.clientY}px`
+
+                let siblings = [...draggingItem.parentElement.children].filter(child => child !== draggingItem)
+
+                let nextSibling = siblings.find(sibling => {
+                    return (event.clientY) <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
+                })
+
+                sortableList.insertBefore(draggingItem, nextSibling)
+
+                let widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
+                saveToStorage('start-widgets', widgetsOrder, 'local')
+
+                if (Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('.dragging')) > Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('#st-start-edit-exclude'))) {
+                    draggingGhost.classList.add('excluded')
+                    draggingItem.classList.add('excluded')
+                }
+                else {
+                    draggingGhost.classList.remove('excluded')
+                    draggingItem.classList.remove('excluded')
+                }
+            })
+            sortableList.addEventListener('dragenter', e => e.preventDefault())
         })
 
         let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel" })
@@ -234,13 +400,15 @@ async function today() {
                     return (startDate - date) < 86400000 && (startDate - date) >= 0 // Add all events that are on this date to this element
                 }) || []
 
+            let eventsOfDayWithCollision = checkCollision(eventsOfDay)
+
             agendaDays.push({
                 date: new Date(date),
                 today: (date - todayDate) === 0, // Days have the highest relevancy when they match the current date.
                 tomorrow: (date - todayDate) === 86400000, // Days have increased relevancy when they match tomorrow's date.
-                irrelevant: eventsOfDay.length < 1 || date < todayDate, // Days are irrelevant when they are empty or in the past. // TODO: condense this into multiple values (past, empty)
+                irrelevant: eventsOfDayWithCollision.length < 1 || date < todayDate, // Days are irrelevant when they are empty or in the past. // TODO: condense this into multiple values (past, empty)
                 // TODO: relevance value based on relation to today and whether it is empty or not
-                events: eventsOfDay
+                events: eventsOfDayWithCollision
             })
         }
 
@@ -252,79 +420,66 @@ async function today() {
                 // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
                 // TODO: This should account for the end of the day again, too!
                 agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShowSetting - 1))
+                if (listViewEnabled) {
+                    schedule.classList.add('list-view')
+                    agendaEndDate = new Date(new Date(agendaStartDate))
+                } else {
+                    let daysToShow = daysToShowSetting
+
+                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)
+                    let todayEvents = agendaDays.find(item => item.today).events
+                    let todayEndTime = new Date(Math.max(...todayEvents.map(item => new Date(item.Einde))))
+                    if ((new Date() >= todayEndTime || todayEvents.length < 1) && showExtraDaySetting && daysToShow === 1 && agendaDayOffset === (todayDate.getDay() || 7) - 1) daysToShow++
+
+                    agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
+                }
                 schedule.classList.remove('week-view')
             } else {
                 // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
                 agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
                 agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
                 schedule.classList.add('week-view')
+                schedule.classList.remove('list-view')
             }
 
             now = new Date()
 
             clearInterval(interval)
 
-            if (magisterMode) schedule.classList.add('magister-mode')
-            else schedule.classList.remove('magister-mode')
-
             let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
             let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}`, innerText: '' })
 
             // Create tick marks for schedule view
-            if (!magisterMode) {
+            if (!listViewEnabled) {
                 for (let i = 0; i <= 24; i += 0.5) {
                     let hourTick = element('div', `st-start-tick-${i}h`, ticksWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i}` })
                 }
             }
 
             agendaDays.forEach((item, i, a) => {
-                // Limit the number of days shown for the list view to 1
-                if (magisterMode && i > 0) return
-
                 // If the date falls outside the agenda range, don't proceed.
                 if (item.date < agendaStartDate || item.date > agendaEndDate) return
 
                 // Create a column for the day
-                let col = element('div', `st-start-col-${i}`, scheduleWrapper, {
+                let column = element('div', `st-start-col-${i}`, scheduleWrapper, {
                     class: 'st-start-col',
                     'data-today': item.today,
                     'data-tomorrow': item.tomorrow,
-                    'data-irrelevant': item.irrelevant,
-                    'data-magister-mode': magisterMode
+                    'data-irrelevant': item.irrelevant
                 }),
-                    colHead
-                if (true) {
-                    colHead = element('div', `st-start-col-${i}-head`, col, {
+                    columnLabel = element('div', `st-start-col-${i}-head`, column, {
                         class: 'st-start-col-head',
                         innerText: item.today ? "Vandaag" : item.tomorrow ? "Morgen" : item.date.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
                     })
-                }
-
-                let eventArr = checkCollision(item.events)
-
-                function checkCollision(eventArr) {
-                    let eventArrOut = []
-                    for (var i = 0; i < eventArr.length; i++) {
-                        eventArrOut[i] = { ...eventArr[i], cols: [], colsBefore: [] }
-                        for (var j = 0; j < eventArr.length; j++) {
-                            if (collidesWith(eventArr[i], eventArr[j])) {
-                                eventArrOut[i].cols.push(j)
-                                if (i > j) eventArrOut[i].colsBefore.push(j)
-                            }
-                        }
-                    }
-                    return eventArrOut
-                }
 
                 // Loop through all events of the day
-                eventArr.forEach((item, i) => {
+                item.events.forEach((item, i) => {
                     let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, col, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start)}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+                    let eventElement = element('button', `st-start-event-${item.Id}`, column, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start)}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
                     let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
                     if (egg && egg.type === 'dialog') {
                         eventElement.addEventListener('click', () => notify('dialog', egg.output))
@@ -349,15 +504,15 @@ async function today() {
                     let eventSchoolHours = element('div', `st-start-event-${item.Id}-school-hours`, eventElement, { class: 'st-start-event-school-hours', innerText: schoolHours })
                     if (item.Type === 1) {
                         eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = ''
+                        eventSchoolHours.innerText = '' // Icon: user-lock
                     }
                     if (item.Type === 16) {
                         eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = ''
+                        eventSchoolHours.innerText = '' // Icon: user-edit
                     }
                     if (!eventSchoolHours.innerText) {
                         eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = ''
+                        eventSchoolHours.innerText = '' // Icon: calendar-day
                     }
 
                     // Cancelled label
@@ -367,7 +522,7 @@ async function today() {
                     }
 
                     // Render the subject and location label
-                    if (magisterMode) {
+                    if (listViewEnabled) {
                         let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
                         let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject-wrapper' })
@@ -378,7 +533,7 @@ async function today() {
                     let row = element('div', `st-start-event-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
 
                     // Render the teacher label
-                    if (!magisterMode && item.Docenten[0]) {
+                    if (!listViewEnabled && item.Docenten[0]) {
                         let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, row, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
                     }
 
@@ -394,25 +549,30 @@ async function today() {
                         let chipElement = element('span', `st-start-event-${item.Id}-chip-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                     })
                 })
-            })
 
-            if (!magisterMode && document.querySelector('.st-start-col[data-today=true]')) {
-                // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
-                // TODO: This should be more sophisticated so that it tries to fit as many relevant events as possible in the screen.
-                let nowMarker = element('div', `st-start-now`, document.querySelector('.st-start-col[data-today=true]'), { style: `--relative-start: ${timeInHours(now)}` })
-                if (schedule.scrollTop === 0 && !weekView) nowMarker.scrollIntoView({ block: 'center', behavior: 'smooth' })
-                interval = setInterval(() => {
-                    if (!nowMarker) {
-                        clearInterval(interval)
-                    } else if (timeInHours(now) >= 24) {
-                        clearInterval(interval)
-                        renderSchedule()
-                    } else {
-                        now = new Date()
-                        nowMarker = element('div', `st-start-now`, null, { style: `--relative-start: ${timeInHours(now)}` })
+                if (!listViewEnabled && item.today) {
+                    // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
+                    let currentTimeMarker = element('div', `st-start-now`, column, { style: `--relative-start: ${timeInHours(now)}` })
+                    // TODO: This should be more sophisticated so that it tries to fit as many relevant events as possible in the screen.
+                    if (schedule.scrollTop === 0 && (!weekView || listViewEnabledSetting && weekView)) {
+                        schedule.scrollTop = zoomSetting * 115 * 8.5
+                        if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' })
+                        currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
                     }
-                }, 10000)
-            }
+                    // Keep the current time marker updated every 10 seconds.
+                    interval = setInterval(() => {
+                        if (!currentTimeMarker) {
+                            clearInterval(interval)
+                        } else if (timeInHours(now) >= 24) {
+                            clearInterval(interval)
+                            renderSchedule()
+                        } else {
+                            now = new Date()
+                            currentTimeMarker = element('div', `st-start-now`, null, { style: `--relative-start: ${timeInHours(now)}` })
+                        }
+                    }, 10000)
+                }
+            })
         }
         renderSchedule()
 
@@ -448,10 +608,9 @@ async function today() {
         gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
         gatherEnd.setHours(0, 0, 0, 0)
 
-        let widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock']
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
 
-        let widgetFunctions = {
+        widgetFunctions = {
 
             counters: {
                 title: "Beknopte notificaties",
@@ -737,7 +896,7 @@ async function today() {
 
                             let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-list-row' })
                             let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, row2, { class: 'st-list-content' })
-                            eventContent.innerHTML = item.Inhoud // eventContent.setHTML(item.Inhoud)
+                            eventContent.innerHTML = item.Inhoud.replace(/(<br ?\/?>)/gi, '') // eventContent.setHTML(item.Inhoud)
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
                             // TODO: More InfoTypes
@@ -793,7 +952,7 @@ async function today() {
 
                             let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })
                             let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-list-content' })
-                            assignmentContent.innerHTML = item.Omschrijving //assignmentContent.setHTML(item.Omschrijving)
+                            assignmentContent.innerHTML = item.Omschrijving.replace(/(<br ?\/?>)/gi, '') //assignmentContent.setHTML(item.Omschrijving)
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
@@ -854,175 +1013,11 @@ async function today() {
             }
         }
 
-        // Allow for editing
-        // TODO: TODO!
-        let editButton = element('button', 'st-start-start-edit', widgets, { class: 'st-button tertiary', 'data-icon': '', style: 'display:none', innerText: "Pagina Start bewerken", title: "Het uiterlijk van deze pagina bewerken\nWijzig de agendaweergave, de widgetopties, docentennamen en meer." })
-        editButton.addEventListener('click', () => {
-            container.classList.add('editing')
-            container.classList.remove('editing-done')
-            widgets.scrollTop = 0
-
-            let editLayoutTitle = element('span', 'st-start-edit-layout-heading', widgets, { class: 'st-section-title', innerText: "Indeling" })
-
-            // Zoom buttons
-            let zoomWrapper = element('div', 'st-start-edit-zoom', widgets)
-            let zoomIn = element('button', 'st-start-edit-zoom-in', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
-            let zoomReset = element('button', 'st-start-edit-zoom-reset', zoomWrapper, { class: 'st-button tertiary', innerText: `Roosterschaal: ${Math.round(zoomSetting * 100)}%` })
-            let zoomOut = element('button', 'st-start-edit-zoom-out', zoomWrapper, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
-            zoomIn.addEventListener('click', () => {
-                zoomSetting += .1
-                effectuateZoom()
-            })
-            zoomReset.addEventListener('click', () => {
-                zoomSetting = 1
-                effectuateZoom()
-            })
-            zoomOut.addEventListener('click', () => {
-                zoomSetting -= .1
-                effectuateZoom()
-            })
-            function effectuateZoom() {
-                zoomReset.innerText = `Roosterschaal: ${Math.round(zoomSetting * 100)}%`
-                saveToStorage('start-zoom', zoomSetting, 'local')
-                document.querySelector('#st-start-ticks-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
-                document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
-            }
-
-            // View mode checkbox
-            let widgetsCollapsedDefaultLabel = element('label', 'st-start-widgets-collapsed-label', widgets, { class: 'st-checkbox-label', innerText: "Widgets standaard weergeven" })
-            let widgetsCollapsedDefaultInput = element('input', 'st-start-widgets-collapsed-input', widgetsCollapsedDefaultLabel, { type: 'checkbox', class: 'st-checkbox-input' })
-            if (!widgetsCollapsedSetting) widgetsCollapsedDefaultInput.checked = true
-            widgetsCollapsedDefaultInput.addEventListener('change', event => {
-                widgetsCollapsedSetting = !event.target.checked
-                saveToStorage('start-widgets-collapsed', widgetsCollapsedSetting, 'local')
-                verifyDisplayMode()
-            })
-
-            let divider1 = element('div', 'st-start-edit-divider1', widgets, { class: 'st-divider' })
-
-            // Widgets editor
-            let editWidgetsHeading = element('span', 'st-start-edit-widgets-heading', widgets, { class: 'st-section-title', innerText: "Widgets" })
-            let includedWidgetsHeading = element('span', 'st-start-edit-include', widgets, { innerText: "Ingeschakelde widgets" })
-            let includedWidgetsDesc = element('span', 'st-start-edit-include-desc', widgets, { innerText: "Deze widgets worden vanzelf getoond wanneer van toepassing." })
-            let sortableList = element('ul', 'st-start-edit-wrapper', widgets, { class: 'st-sortable-list' })
-
-            Object.keys(widgetFunctions).forEach(key => {
-                if (!widgetsOrder.find(e => e === key)) widgetsOrder.push(key)
-            })
-
-            let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
-            widgetsOrder.forEach((key, i) => {
-                if (i === exclusionIndex) {
-                    let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Uitgeschakelde widgets", 'data-value': "EXCLUDE" })
-                    return
-                }
-
-                let widgetName = widgetFunctions[key].title
-                let item = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'aria-roledescription': "Sleepbaar item. Gebruik spatie om op te tillen.", 'data-value': key })
-
-                if (i > exclusionIndex) item.classList.add('excluded')
-
-                if (widgetFunctions[key].options) {
-                    widgetFunctions[key].options.forEach(option => {
-                        let optionWrapper = element('div', `st-start-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
-                        let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
-                        switch (option.type) {
-                            case 'select':
-                                let optionInput = element('select', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title })
-                                option.choices.forEach(async choice => {
-                                    let optionChoice = element('option', `st-start-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
-                                    if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
-                                })
-                                optionInput.addEventListener('change', event => {
-                                    saveToStorage(option.key, event.target.value, 'local')
-                                })
-                                break
-
-                            case 'description':
-                                let optionText = element('span', `st-start-edit-${option.key}-text`, optionWrapper, { name: option.title })
-                                break
-
-                            default:
-                                // TODO: implement other option types as necessary
-                                break
-                        }
-                    })
-                }
-
-                item.addEventListener('dragstart', event => {
-                    setTimeout(() => {
-                        item.classList.add('dragging')
-                    }, 0)
-
-                    let dragGhost = item.cloneNode(true)
-                    dragGhost.classList.add('st-sortable-list-ghost')
-                    dragGhost.classList.remove('dragging')
-                    dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
-                    document.body.append(dragGhost)
-                })
-                item.addEventListener('dragend', () => {
-                    item.classList.remove('dragging')
-                    item.classList.add('dragging-return')
-                    document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
-                        e.classList.add('returning')
-                        e.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px;`)
-                        setTimeout(() => {
-                            e.remove()
-                            item.classList.remove('dragging-return')
-                        }, 200)
-                    })
-                })
-
-            })
-            let excludedWidgetsDesc = element('span', 'st-start-edit-exclude-desc', widgets, { innerText: "Sleep widgets hierheen om ze uit te schakelen." })
-            sortableList.addEventListener('dragover', (event) => {
-                event.preventDefault()
-
-                const draggingItem = document.querySelector('.dragging')
-
-                const draggingGhost = document.querySelector('.st-sortable-list-ghost')
-                draggingGhost.style.translate = `${event.clientX}px ${event.clientY}px`
-
-                let siblings = [...draggingItem.parentElement.children].filter(child => child !== draggingItem)
-
-                let nextSibling = siblings.find(sibling => {
-                    return (event.clientY) <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
-                })
-
-                sortableList.insertBefore(draggingItem, nextSibling)
-
-                let widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
-                saveToStorage('start-widgets', widgetsOrder, 'local')
-
-                if (Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('.dragging')) > Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('#st-start-edit-exclude'))) {
-                    draggingGhost.classList.add('excluded')
-                    draggingItem.classList.add('excluded')
-                }
-                else {
-                    draggingGhost.classList.remove('excluded')
-                    draggingItem.classList.remove('excluded')
-                }
-            })
-            sortableList.addEventListener('dragenter', e => e.preventDefault())
-
-            // Finish button
-            let finishButton = element('button', 'st-start-edit-finish', widgets, { class: 'st-button primary', 'data-icon': '', innerText: "Bewerken voltooien", title: "Terugkeren naar widgetpaneel. Wijzigingen zijn al opgeslagen." })
-            finishButton.addEventListener('click', () => {
-                container.classList.add('editing-done')
-                container.classList.remove('editing')
-                widgets.scrollTop = 0
-                widgets.innerText = ''
-                todayWidgets()
-                renderSchedule()
-            }, { once: true })
-        })
-
         // Draw the selected widgets in the specified order
         for (const functionName of widgetsShown) {
             widgetsProgressText.innerText = `Widget '${widgetFunctions[functionName].title}' laden...`
             let widgetElement = await widgetFunctions[functionName].render()
             if (widgetElement) widgets.append(widgetElement)
-            widgets.append(editButton)
         }
 
         widgetsProgress.remove()
@@ -1030,7 +1025,6 @@ async function today() {
     }
 
     function verifyDisplayMode() {
-        widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
         container.setAttribute('data-widgets-collapsed', widgetsCollapsed)
     }
 }
@@ -1046,17 +1040,17 @@ function collidesWith(a, b) {
 }
 
 function checkCollision(eventArr) {
+    let eventArrOut = []
     for (var i = 0; i < eventArr.length; i++) {
-        eventArr[i].cols = [];
-        eventArr[i].colsBefore = [];
+        eventArrOut[i] = { ...eventArr[i], cols: [], colsBefore: [] }
         for (var j = 0; j < eventArr.length; j++) {
             if (collidesWith(eventArr[i], eventArr[j])) {
-                eventArr[i].cols.push(j);
-                if (i > j) eventArr[i].colsBefore.push(j); //also list which of the conflicts came before
+                eventArrOut[i].cols.push(j)
+                if (i > j) eventArrOut[i].colsBefore.push(j)
             }
         }
     }
-    return eventArr;
+    return eventArrOut
 }
 
 function eventChips(item) {

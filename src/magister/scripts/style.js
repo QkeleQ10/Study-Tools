@@ -1088,6 +1088,10 @@ h3:active> .icon-up-arrow:before {
     overflow: visible;
 }
 
+.menu-button a:focus-visible, .logo a:focus-visible {
+    outline: 2px solid var(--st-foreground-primary);
+}
+
 .challenge-container {
     color: var(--st-foreground-primary);
 }

@@ -144,7 +144,6 @@ div.loading-overlay {
     filter: none;
 }
 
-.st-button.icon:focus-visible,
 .st-button.icon:active {
     background-color: var(--st-highlight-primary);
     color: var(--st-foreground-accent);
@@ -165,6 +164,8 @@ div.loading-overlay {
 }
 
 .st-button.segment {
+    margin: 2px;
+    padding: 4px 14px;
     background-color: transparent;
     color: var(--st-foreground-secondary);
     border: 1px solid transparent;
@@ -178,22 +179,11 @@ div.loading-overlay {
     filter: none !important;
 }
 
-/* .st-button.modern {
-    background: var(--st-accent-primary);
-    color: var(--st-contrast-accent);
-    outline: none;
-    border: 1px solid var(--st-accent-primary);
+.st-button:focus-visible {
+    outline: 2px solid var(--st-foreground-primary);
 }
 
-.st-button.modern.secondary {
-    background: var(--st-background-secondary);
-    color: var(--st-foreground-accent);
-    outline: none;
-    border: var(--st-border);
-} */
-
-.st-button:hover,
-.st-button:focus-visible {
+.st-button:hover {
     filter: brightness(var(--st-hover-brightness));
 }
 
