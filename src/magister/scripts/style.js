@@ -153,12 +153,13 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
     createStyle(rootVars, 'study-tools-root-vars')
 
     // Menu bar decorations
-    let decorationCss
-    switch (syncedStorage['decoration']) {
+    let decorationPreset = syncedStorage['decoration'],
+        decorationCss
+    switch (decorationPreset) {
         case 'waves':
             decorationCss = 'background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) 25px ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );'
             break;
-        
+
         case 'zig-zag':
             decorationCss = 'background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: 25px 0, 25px 0, 0 0, 0 0; background-size: 50px 50px; background-repeat: repeat;'
             break;
@@ -177,6 +178,10 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
         case 'stripes-small':
             decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--st-decoration-fill) 10px, var(--st-decoration-fill) 20px);'
+            break;
+
+        case 'christmas':
+            decorationCss = 'background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decoration_christmas.svg"); background-size: 240px 480px; background-position: bottom 64px center; background-repeat: no-repeat;'
             break;
 
         default:
