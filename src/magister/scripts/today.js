@@ -63,8 +63,14 @@ async function today() {
 
     if (isBirthdayToday || isBirthdayYesterday || isBirthdayTomorrow) {
         createStyle(`
+nav.menu.ng-scope {
+    background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/birthday.svg");
+    background-size: 240px 480px;
+    background-position: bottom 64px center;
+    background-repeat: no-repeat;
+}
+
 .menu-host, .appbar-host {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" style="font-size: 24px;"><text y="22">🎉</text></svg>'), auto;
     animation: rainbow 5s linear 0s 3, red-accent 500ms 15s both;
 }
 
@@ -99,7 +105,7 @@ async function today() {
             [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
             [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
         ],
-            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Namaste!', 'G\'day!', 'Aloha!', 'Ciao!', 'Γεια!', 'Привіт!', '你好！', '今日は!', 'Olá!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', `Hey, ${firstName}#`]
+            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, `Hey, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Yooo!', 'Hello, handsome.', 'Guten Tag!', 'Greetings!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Buongiorno!', 'Namasté!', 'G\'day!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia!', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
 
         let possibleGreetings = []
         for (let i = 0; i < greetingsByHour.length; i++) {
@@ -296,7 +302,7 @@ async function today() {
                                 break
 
                             default:
-                                // TODO: implement other option types as necessary
+                                // Implement other option types as necessary
                                 break
                         }
                     })
@@ -555,9 +561,9 @@ async function today() {
                     let currentTimeMarker = element('div', `st-start-now`, column, { style: `--relative-start: ${timeInHours(now)}` })
                     // TODO: This should be more sophisticated so that it tries to fit as many relevant events as possible in the screen.
                     if (schedule.scrollTop === 0 && (!weekView || listViewEnabledSetting && weekView)) {
-                        schedule.scrollTop = zoomSetting * 115 * 8.5
-                        if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' })
-                        currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+                        schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
+                        if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                        currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
                     }
                     // Keep the current time marker updated every 10 seconds.
                     interval = setInterval(() => {

@@ -152,6 +152,8 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
+    let now = new Date()
+
     // Menu bar decorations
     let decorationPreset = syncedStorage['decoration'],
         decorationCss
@@ -180,15 +182,21 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
             decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--st-decoration-fill) 10px, var(--st-decoration-fill) 20px);'
             break;
 
-        case 'christmas':
-            decorationCss = 'background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decoration_christmas.svg"); background-size: 240px 480px; background-position: bottom 64px center; background-repeat: no-repeat;'
-            break;
-
         default:
             decorationCss = ''
             break;
     }
     createStyle(`.menu-host {${decorationCss}}`, 'study-tools-menu-decoration')
+
+    // Christmas mode!!!
+    if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {
+        createStyle(`nav.menu.ng-scope {
+    background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/christmas.svg");
+    background-size: 240px 480px;
+    background-position: bottom 64px center;
+    background-repeat: no-repeat;
+}`, 'st-christmas')
+    }
 
     if (!syncedStorage['disable-css']) {
         createStyle(`.block h3,
@@ -1191,8 +1199,10 @@ h3:active> .icon-up-arrow:before {
     }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {
-        createStyle(`.menu-button figure img,.photo.photo-high img{content: url("${syncedStorage['magister-picture-source']}")}`, 'study-tools-appbar-hidePicture')
+        createStyle(`.menu-button figure img,.photo.photo-high img{content: url("${syncedStorage['magister-picture-source']}")}`, 'study-tools-pfp')
     } else if (syncedStorage['magister-picture'] !== 'show') {
-        createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-appbar-hidePicture')
+        createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
+    } else {
+        createStyle('', 'study-tools-pfp')
     }
 }
