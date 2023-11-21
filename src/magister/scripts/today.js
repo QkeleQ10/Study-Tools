@@ -562,7 +562,9 @@ nav.menu.ng-scope {
                     // TODO: This should be more sophisticated so that it tries to fit as many relevant events as possible in the screen.
                     if (schedule.scrollTop === 0 && (!weekView || listViewEnabledSetting && weekView)) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
+                        if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                         if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                        schedule.scrollTop -= 1 // Scroll back one pixel to ensure the border looks nice.
                         currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
                     }
                     // Keep the current time marker updated every 10 seconds.
@@ -757,7 +759,7 @@ nav.menu.ng-scope {
                         widgetElement.addEventListener('click', () => {
                             window.location.hash = '#/cijfers'
                         })
-                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Laatste cijfer" })
+                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: "Laatste cijfer" })
 
                         let mostRecentItem = recentGrades[0]
                         if (mostRecentItem.unread) widgetElement.classList.add('st-unread')
@@ -810,7 +812,7 @@ nav.menu.ng-scope {
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-messages-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Berichten", 'data-description': `${unreadMessages.length} ongelezen bericht${unreadMessages.length > 1 ? 'en' : ''}` })
+                        let widgetTitle = element('div', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: "Berichten", 'data-amount': unreadMessages.length })
 
                         unreadMessages.forEach(item => {
                             let messageElement = element('button', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
@@ -872,7 +874,7 @@ nav.menu.ng-scope {
 
                         if (homeworkEvents.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: `Huiswerk (${homeworkEvents.length})` })
+                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: "Huiswerk", 'data-amount': homeworkEvents.length })
 
                         homeworkEvents.forEach(item => {
                             let subjectNames = item.Vakken?.map((e, i, a) => {
@@ -923,18 +925,12 @@ nav.menu.ng-scope {
                 title: "Opdrachten",
                 render: async () => {
                     return new Promise(async resolve => {
-                        let statements = []
-
                         const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
                         const relevantAssignments = assignmentsRes.Items.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
-                        const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
-                        if (dueAssignments.length > 0) statements.push(`${dueAssignments.length} openstaande opdracht${dueAssignments.length > 1 ? 'en' : ''}`)
-                        const markedAssignments = assignmentsRes.Items.filter(item => item.BeoordeeldOp)
-                        if (markedAssignments.length > 0) statements.push(`${markedAssignments.length} beoordeelde opdracht${markedAssignments.length > 1 ? 'en' : ''}`)
 
                         if (relevantAssignments.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-assignments-title', widgetElement, { class: 'st-section-title st-widget-title', innerText: "Opdrachten", 'data-description': statements.join(' en ') })
+                        let widgetTitle = element('div', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: "Opdrachten", 'data-amount': relevantAssignments.length })
 
                         relevantAssignments.forEach(item => {
                             let
