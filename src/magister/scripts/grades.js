@@ -393,12 +393,12 @@ async function formulateGradeAdvice(means, weight, mean) {
 }
 
 // Page 'Cijferoverzicht', backup
-// This needs a rework!!
 async function gradeBackup() {
     if (!syncedStorage['magister-cf-backup']) return
     let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         bkInvoke = element('button', 'st-cf-bk', document.body, { class: 'st-button', 'data-icon': '', innerText: "Cijferback-up" }),
+        // TODO: Give this modal the same treatment as the today.js edit modal.
         bkModal = element('dialog', 'st-cf-bk-modal', document.body, { class: 'st-overlay' }),
         bkModalClose = element('button', 'st-cf-bk-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
         bkModalTitle = element('span', 'st-cf-bk-title', bkModal, { class: 'st-title', innerText: "Cijferback-up" }),
@@ -714,6 +714,7 @@ async function gradeBackup() {
 }
 
 // Page 'Cijferoverzicht', statistics
+// TODO: Clean up code and muck
 async function gradeStatistics() {
     if (!syncedStorage['magister-cf-statistics']) return
     let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
@@ -758,6 +759,7 @@ async function gradeStatistics() {
     scRowFilterWrapper.id = 'st-cf-sc-row-filter-wrapper'
     scRowFilterWrapper.append(scRowFilter, scRowFilterInclude, scRowFilterExclude)
     setAttributes(scRowFilter, { id: 'st-cf-sc-row-filter', rows: 3, placeholder: "Typ hier vaknamen, gescheiden door komma's.\nWijzig de modus (insluiten of uitsluiten) met de knop hierboven." })
+    // Make the row filter much like the year filter, in that all subjects are displayed with checkboxes in front.
     scRowFilterInclude.id = 'st-cf-sc-row-filter-include'
     scRowFilterInclude.classList.add('st-button', 'small', 'switch-left')
     scRowFilterInclude.innerText = "Wel"

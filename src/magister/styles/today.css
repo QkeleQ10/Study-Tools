@@ -477,6 +477,7 @@
     min-width: 400px;
     padding: 8px;
     z-index: 1;
+    color: var(--st-foreground-insignificant);
     transition: scale 200ms, opacity 200ms, min-width 200ms;
 }
 
@@ -492,12 +493,15 @@
     padding: 16px 8px 8px 32px;
     opacity: 0;
     scale: 0.9;
+    color: var(--st-foreground-primary);
     transition: scale 200ms 1000ms, opacity 200ms 1000ms, min-width 200ms;
 }
 
 #st-start-widget-controls {
     display: flex;
+    justify-content: space-evenly;
     gap: 8px;
+    width: 100%;
     height: 48px;
     padding: 8px;
     background-color: var(--st-background-secondary);
@@ -505,6 +509,11 @@
     box-shadow: none;
     border-radius: calc(var(--st-border-radius) * 2);
     transition: border-color 200ms, box-shadow 200ms;
+}
+
+#st-start-widget-controls,
+#st-start-widget-controls>* {
+    color: currentColor;
 }
 
 #st-start[data-widgets-collapsed=true] #st-start-widget-controls {
@@ -748,55 +757,88 @@
 }
 
 #st-start-editor {
-    padding-block: 64px;
-    padding-inline: 56px;
+    grid-template:
+        '. . . .' 1fr
+        '. heading heading .' auto
+        '. left right .' auto
+        '. . . .' 1fr
+        / 1fr auto auto 1fr;
+    gap: 32px;
+}
+
+#st-start-editor[open] {
+    display: grid;
+}
+
+#st-start-editor-heading {
+    grid-area: heading;
+    display: grid;
+    grid-template:
+        'title close' auto
+        'subtitle subtitle' auto
+        / 1fr auto;
+}
+
+#st-start-editor-title {
+    grid-area: title;
+}
+
+#st-start-editor-subtitle {
+    grid-area: subtitle;
 }
 
 #st-start-editor-close {
-    position: absolute;
-    top: 64px;
-    right: 56px;
+    grid-area: close;
 }
 
-#st-start-editor-wrapper {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    height: auto;
-    width: max-content;
-    max-width: calc(100% - 64px);
-    translate: -50% -50%;
-    display: grid;
-    grid-template:
-        'layout widgets' auto
-        'teachers widgets' auto
-        / 1fr 1fr;
-    gap: 64px;
+#st-start-editor-teachers {
+    grid-area: left;
+    width: 100%;
+    height: 100%;
 }
 
-#st-start-editor-wrapper .st-tile {
+#st-start-edit-nicknames-list>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
     width: 100%;
 }
 
-#st-start-editor-wrapper .st-list>button {
-    text-align: left;
-}
-
-#st-start-editor-view {
-    align-items: center;
-}
-
-#st-start-edit-zoom {
-    display: flex;
-}
-
-#st-start-edit-zoom-reset {
-    width: 172px;
-    text-align: center;
+#st-start-edit-nicknames-list>div>.st-input {
+    height: auto;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
 }
 
 #st-start-editor-widgets {
-    grid-area: widgets;
+    grid-area: right;
+    width: 100%;
+    height: 100%;
+}
+
+#st-start-edit-include,
+#st-start-edit-exclude {
+    display: block;
+    font: 600 16px/22px var(--st-font-family-primary);
+}
+
+#st-start-edit-exclude {
+    margin-top: 24px;
+}
+
+#st-start-edit-include:after,
+#st-start-edit-exclude:after {
+    content: "Ingeschakelde widgets worden weergegeven wanneer relevant.";
+    display: block;
+    margin-block: 8px;
+    font: 12px var(--st-font-family-secondary);
+}
+
+#st-start-edit-exclude:after {
+    content: "Deze widgets zijn uitgeschakeld en worden niet weergegeven.";
+    margin-bottom: 16px;
 }
 
 @keyframes widgetsIn {

@@ -297,7 +297,7 @@ div.loading-overlay {
     background: var(--st-background-secondary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
-    border-radius: var(--st-border-radius);
+    border-radius: calc(var(--st-border-radius) / 2);
 }
 
 .st-input:focus {
@@ -433,6 +433,33 @@ div.loading-overlay {
     transition-duration: 200ms;
 }
 
+.st-number-ghost {
+    position: absolute;
+    width: 32px;
+    overflow: visible;
+    font: 16px var(--st-font-family-secondary);
+    text-align: center;
+    pointer-events: none;
+    z-index: 10000000;
+    animation: ghostUp 1000ms both;
+}
+
+@keyframes ghostUp {
+    0% {
+        opacity: 0;
+        translate: 0 -32px;
+    }
+
+    50% {
+        opacity: .5;
+    }
+
+    100% {
+        opacity: 0;
+        translate: 0 -96px;
+    }
+}
+
 .st-progress-bar {
     height: 4px;
     background-color: var(--st-background-tertiary);
@@ -529,12 +556,12 @@ div.loading-overlay {
     gap: 8px;
     color: var(--st-foreground-primary);
     font: 700 20px/2rem var(--st-font-family-primary);
-    margin-bottom: 26px;
+    margin-bottom: 20px;
 }
 
 .st-section-title[data-icon]:before {
     content: attr(data-icon);
-    font: 20px 'Font Awesome 5 Pro';
+    font: bold 20px 'Font Awesome 5 Pro';
     color: var(--st-foreground-accent);
 }
 

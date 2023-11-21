@@ -277,6 +277,7 @@ input[type=switch]+label span,
     display: inline-block;
     padding-inline: 12px !important;
     height: auto;
+    width: auto;
     border: 1px solid var(--st-chip-info-border);
     border-radius: 12px;
     background-color: var(--st-chip-info-background);
@@ -284,9 +285,22 @@ input[type=switch]+label span,
     font: 500 11px/22px var(--st-font-family-secondary);
 }
 
-.agenda-text-icon[icon-type=ok] {
-    border-color: var(--st-chip-ok-border);
+.agenda-text-icon[icon-type=ok], .text-icon[icon-type=ok] {
+    border: 1px solid var(--st-chip-ok-border) !important;
     background-color: var(--st-chip-ok-background);
+    color: var(--st-foreground-primary);
+}
+
+.agenda-text-icon[icon-type=information], .text-icon[icon-type=information] {
+    border: 1px solid var(--st-chip-info-border) !important;
+    background-color: var(--st-chip-info-background);
+    color: var(--st-foreground-primary);
+}
+
+.agenda-text-icon[icon-type=error], .text-icon[icon-type=error] {
+    border: 1px solid var(--st-chip-warn-border) !important;
+    background-color: var(--st-chip-warn-background);
+    color: var(--st-foreground-primary);
 }
 
 #studiewijzer-detail-container .content>ul.sources,
