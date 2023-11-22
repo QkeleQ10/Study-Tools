@@ -136,13 +136,9 @@ nav.menu.ng-scope {
 
         updateHeaderText = () => {
             // Update the header text accordingly
-            header.dataset.transition = true
-            setTimeout(async () => {
-                if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + Math.floor(agendaDayOffset / 7) * 7)))
-                else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
-                headerText.dataset.lastLetter = '.'
-                header.removeAttribute('data-transition')
-            }, 300)
+            if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + Math.floor(agendaDayOffset / 7) * 7)))
+            else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+            headerText.dataset.lastLetter = '.'
         }
 
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
@@ -623,7 +619,14 @@ nav.menu.ng-scope {
         renderSchedule()
 
         updateHeaderButtons()
-        setTimeout(updateHeaderText, 2000)
+
+        setTimeout(() => {
+            header.dataset.transition = true
+            setTimeout(async () => {
+                updateHeaderText()
+                header.removeAttribute('data-transition')
+            }, 300)
+        }, 2000)
 
         // Update ongoing events every 30 seconds
         updateSchedule = () => {
