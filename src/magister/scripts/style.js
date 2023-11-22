@@ -51,7 +51,7 @@ async function applyStyles() {
     --st-font-family-secondary: 'open-sans', sans-serif;
     --st-background-primary: #ffffff;
     --st-background-secondary: #ffffff;
-    --st-background-tertiary: #f5f5f5;
+    --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff5;
     --st-background-transparent: #ffffffbb;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
@@ -60,6 +60,7 @@ async function applyStyles() {
     --st-highlight-warn: #ffd4e2;
     --st-highlight-info: #dceefd;
     --st-foreground-primary: #333333;
+    --st-foreground-secondary: #555555;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
     --st-border-color: #ededed;
@@ -91,12 +92,13 @@ async function applyStyles() {
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f5;
     --st-background-transparent: #121212bb;
-    --st-highlight-primary: ${await shiftedHslColor(207, 33, 10, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
+    --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-subtle: #181f24;
     --st-highlight-ok: #1a4c38;
     --st-highlight-warn: #511f1f;
     --st-highlight-info: #0f314d;
     --st-foreground-primary: #fff;
+    --st-foreground-secondary: #dddddd;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
     --st-border-color: #2e2e2e;
@@ -150,13 +152,16 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
+    let now = new Date()
+
     // Menu bar decorations
-    let decorationCss
-    switch (syncedStorage['decoration']) {
+    let decorationPreset = syncedStorage['decoration'],
+        decorationCss
+    switch (decorationPreset) {
         case 'waves':
             decorationCss = 'background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) 25px ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );'
             break;
-        
+
         case 'zig-zag':
             decorationCss = 'background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: 25px 0, 25px 0, 0 0, 0 0; background-size: 50px 50px; background-repeat: repeat;'
             break;
@@ -182,6 +187,16 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
             break;
     }
     createStyle(`.menu-host {${decorationCss}}`, 'study-tools-menu-decoration')
+
+    // Christmas mode!!!
+    if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {
+        createStyle(`nav.menu.ng-scope {
+    background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/christmas.svg");
+    background-size: 240px 480px;
+    background-position: bottom 64px center;
+    background-repeat: no-repeat;
+}`, 'st-christmas')
+    }
 
     if (!syncedStorage['disable-css']) {
         createStyle(`.block h3,
@@ -262,6 +277,7 @@ input[type=switch]+label span,
     display: inline-block;
     padding-inline: 12px !important;
     height: auto;
+    width: auto;
     border: 1px solid var(--st-chip-info-border);
     border-radius: 12px;
     background-color: var(--st-chip-info-background);
@@ -269,9 +285,22 @@ input[type=switch]+label span,
     font: 500 11px/22px var(--st-font-family-secondary);
 }
 
-.agenda-text-icon[icon-type=ok] {
-    border-color: var(--st-chip-ok-border);
+.agenda-text-icon[icon-type=ok], .text-icon[icon-type=ok] {
+    border: 1px solid var(--st-chip-ok-border) !important;
     background-color: var(--st-chip-ok-background);
+    color: var(--st-foreground-primary);
+}
+
+.agenda-text-icon[icon-type=information], .text-icon[icon-type=information] {
+    border: 1px solid var(--st-chip-info-border) !important;
+    background-color: var(--st-chip-info-background);
+    color: var(--st-foreground-primary);
+}
+
+.agenda-text-icon[icon-type=error], .text-icon[icon-type=error] {
+    border: 1px solid var(--st-chip-warn-border) !important;
+    background-color: var(--st-chip-warn-background);
+    color: var(--st-foreground-primary);
 }
 
 #studiewijzer-detail-container .content>ul.sources,
@@ -1086,6 +1115,10 @@ h3:active> .icon-up-arrow:before {
     overflow: visible;
 }
 
+.menu-button a:focus-visible, .logo a:focus-visible {
+    outline: 2px solid var(--st-foreground-primary);
+}
+
 .challenge-container {
     color: var(--st-foreground-primary);
 }
@@ -1180,8 +1213,10 @@ h3:active> .icon-up-arrow:before {
     }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {
-        createStyle(`.menu-button figure img,.photo.photo-high img{content: url("${syncedStorage['magister-picture-source']}")}`, 'study-tools-appbar-hidePicture')
+        createStyle(`.menu-button figure img,.photo.photo-high img{content: url("${syncedStorage['magister-picture-source']}")}`, 'study-tools-pfp')
     } else if (syncedStorage['magister-picture'] !== 'show') {
-        createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-appbar-hidePicture')
+        createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
+    } else {
+        createStyle('', 'study-tools-pfp')
     }
 }
