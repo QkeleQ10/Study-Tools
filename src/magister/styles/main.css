@@ -165,7 +165,7 @@ div.loading-overlay {
 
 .st-button.segment {
     margin: 2px;
-    padding: 4px 14px;
+    padding: 0 12px;
     background-color: transparent;
     color: var(--st-foreground-secondary);
     border: 1px solid transparent;

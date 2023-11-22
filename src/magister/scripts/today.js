@@ -105,7 +105,7 @@ nav.menu.ng-scope {
             [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
             [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
         ],
-            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, `Hey, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Yooo!', 'Hello, handsome.', 'Guten Tag!', 'Greetings!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Buongiorno!', 'Namasté!', 'G\'day!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia!', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
+            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, `Hey, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Yooo!', 'Hello, handsome.', 'Guten Tag!', 'Greetings!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Buongiorno!', 'Namasté!', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia!', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
 
         let possibleGreetings = []
         for (let i = 0; i < greetingsByHour.length; i++) {
@@ -404,7 +404,7 @@ nav.menu.ng-scope {
         })
 
         // Side panel collapse/expand button
-        let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
+        let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
         todayCollapseWidgets.addEventListener('click', () => {
             widgetsCollapsed = !widgetsCollapsed
             widgetsCollapsedSetting = widgetsCollapsed
