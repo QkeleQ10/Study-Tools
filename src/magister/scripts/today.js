@@ -144,6 +144,7 @@ nav.menu.ng-scope {
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
         let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Achteruit" })
         todayDecreaseOffset.addEventListener('click', () => {
+            if ((weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
             if (weekView) agendaDayOffset -= 7
             else agendaDayOffset--
             renderSchedule()
@@ -152,6 +153,7 @@ nav.menu.ng-scope {
         })
         let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
         todayResetOffset.addEventListener('click', () => {
+            if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
             renderSchedule()
             updateHeaderButtons()
@@ -159,6 +161,7 @@ nav.menu.ng-scope {
         })
         let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vooruit" })
         todayIncreaseOffset.addEventListener('click', () => {
+            if ((weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
             if (weekView) agendaDayOffset += 7
             else agendaDayOffset++
             renderSchedule()
