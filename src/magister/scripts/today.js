@@ -344,6 +344,7 @@ nav.menu.ng-scope {
                         }, 0)
 
                         let dragGhost = item.cloneNode(true)
+                        dragGhost.id += '-ghost'
                         dragGhost.classList.add('st-sortable-list-ghost')
                         dragGhost.classList.remove('dragging')
                         dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
