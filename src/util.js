@@ -101,8 +101,6 @@ async function useApi(url, options) {
             if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
             else {
                 // If it's not a ratelimit, retry one more time.
-                notify('snackbar', `Fout ${res.status}`, null, 1000)
-
                 await getApiCredentials()
 
                 const res = await fetch(url.replace('$USERID', apiUserId), { headers: { Authorization: apiUserToken }, ...options })
@@ -187,39 +185,86 @@ function setAttributes(elem, attributes) {
     }
 }
 
-// TODO: Write something actually nice for this...
-function getRelativeTimeString(date) {
-    // Allow dates or times to be passed
-    const timeMs = typeof date === "number" ? date : date.getTime();
+// Elements with a temporal binding are updated every 10 seconds, or whenever the function is invoked manually.
+function updateTemporalBindings() {
+    let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
+    elementsWithTemporalBinding.forEach(element => {
 
-    // Get the amount of seconds between the given date and now
-    const deltaSeconds = Math.round((timeMs - Date.now()) / 1000);
+        let now = new Date(),
+            type = element.dataset.temporalType,
+            start = new Date(element.dataset.temporalStart || now),
+            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || now)
 
-    // Array reprsenting one minute, hour, day, week, month, etc in seconds
-    const cutoffs = [60, 3600, 86400, 86400 * 7, 86400 * 30, 86400 * 365, Infinity];
+        switch (type) {
+            case 'timestamp':
+                let timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
+                if (start >= now) {
+                    // Start date is in the future
+                    if (start - now < minToMs(15)) timestamp = 'zometeen'
+                    else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
+                    else if (start.isTomorrow()) timestamp = `morgen om ${start.getFormattedTime()}`
+                    else if (start - now < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                } else if (end <= now) {
+                    // End date is in the past
+                    if (now - end < minToMs(5)) timestamp = 'zojuist'
+                    else if (now - end < minToMs(15)) timestamp = 'een paar minuten geleden'
+                    else if (end.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
+                    else if (end.isYesterday()) timestamp = `gisteren om ${start.getFormattedTime()}`
+                    else if (now - end < daysToMs(5)) timestamp = `afgelopen ${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                } else if (start <= now && end >= now) {
+                    // Start date is in the past and End date is in the future
+                    timestamp = 'nu'
+                }
+                element.innerText = timestamp
+                break
 
-    // Array equivalent to the above but in the string representation of the units
-    const units = ["second", "minute", "hour", "day", "week", "month", "year"];
+            case 'style-hours':
+                element.style.setProperty('--relative-start', now.getHoursWithDecimals())
+                break
 
-    // Grab the ideal cutoff unit
-    const unitIndex = cutoffs.findIndex(cutoff => cutoff > Math.abs(deltaSeconds));
+            case 'ongoing-check':
+                element.dataset.ongoing = (start <= now && end >= now)
+                break
 
-    // Get the divisor to divide from the seconds. E.g. if our unit is "day" our divisor
-    // is one day in seconds, so we can divide our seconds by this to get the # of days
-    const divisor = unitIndex ? cutoffs[unitIndex - 1] : 1;
+            default:
+                break
+        }
 
-    // Intl.RelativeTimeFormat do its magic
-    const rtf = new Intl.RelativeTimeFormat('nl-NL', { numeric: "auto" });
-    return rtf.format(Math.floor(deltaSeconds / divisor), units[unitIndex]);
+    })
+}
+setIntervalImmediately(updateTemporalBindings, 10000)
+
+let minToMs = (minutes = 1) => minutes * 60000
+let daysToMs = (days = 1) => days * 8.64e7
+
+let midnight = (offset = 0) => {
+    const date = new Date()
+    date.setDate(date.getDate() + offset)
+    date.setHours(23, 59, 59, 999)
+    return date
 }
 
-function getWeekNumber(d = new Date()) {
+Date.prototype.getWeek = function () {
+    let d = this
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)),
         weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
     return weekNo
 }
+
+Date.prototype.getFormattedDay = function () {
+    let d = this
+    const weekDays = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag']
+    return weekDays[d.getDay()]
+}
+
+Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }
+Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
+
+Date.prototype.isTomorrow = function () { return this > midnight(0) && this < midnight(1) }
+Date.prototype.isToday = function () { return this > midnight(-1) && this < midnight(0) }
+Date.prototype.isYesterday = function () { return this > midnight(-2) && this < midnight(-1) }
 
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
     switch (type) {
