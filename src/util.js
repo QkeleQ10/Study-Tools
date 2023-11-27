@@ -198,7 +198,10 @@ function updateTemporalBindings() {
         switch (type) {
             case 'timestamp':
                 let timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
-                if (start >= now) {
+                if (start <= now && end >= now) {
+                    // Start date is in the past and End date is in the future
+                    timestamp = 'nu'
+                } else if (start >= now) {
                     // Start date is in the future
                     if (start - now < minToMs(15)) timestamp = 'zometeen'
                     else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
@@ -211,9 +214,6 @@ function updateTemporalBindings() {
                     else if (end.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
                     else if (end.isYesterday()) timestamp = `gisteren om ${start.getFormattedTime()}`
                     else if (now - end < daysToMs(5)) timestamp = `afgelopen ${start.getFormattedDay()} om ${start.getFormattedTime()}`
-                } else if (start <= now && end >= now) {
-                    // Start date is in the past and End date is in the future
-                    timestamp = 'nu'
                 }
                 element.innerText = timestamp
                 break
