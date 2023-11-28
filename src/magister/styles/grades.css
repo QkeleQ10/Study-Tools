@@ -110,7 +110,7 @@
 .st-cf-cl-added-element:after {
     right: 0;
     content: '';
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
 }
 
 .st-cf-cl-added-element:hover:before,
@@ -396,7 +396,7 @@
     left: 50%;
     translate: 28px;
     overflow: visible;
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
     font-weight: 600;
     font-size: 11px;
     color: var(--st-foreground-accent);
@@ -532,7 +532,7 @@
     background: var(--st-background-secondary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     text-align: center;
     padding-top: 3px;
 }

@@ -53,7 +53,7 @@ div.loading-overlay {
 }
 
 .st-shortcut-icon {
-    font: 20px 'Font Awesome 5 Pro';
+    font: 20px 'Font Awesome 6 Pro';
 }
 
 .st-title {
@@ -129,7 +129,7 @@ div.loading-overlay {
     justify-content: center;
     background-color: transparent;
     color: var(--st-foreground-primary);
-    font: 500 18px 'Font Awesome 5 Pro';
+    font: 500 18px 'Font Awesome 6 Pro';
     min-width: 32px;
     max-width: 32px;
     min-height: 32px;
@@ -198,7 +198,7 @@ div.loading-overlay {
     width: 20px;
     overflow: visible;
     text-align: center;
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
     font-weight: 500;
     font-size: 18px;
     vertical-align: -2px;
@@ -325,7 +325,7 @@ div.loading-overlay {
     left: -32px;
     top: -3px;
     padding-top: 4px;
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     text-align: center;
     color: var(--st-foreground-primary);
     border: var(--st-border);
@@ -395,7 +395,7 @@ div.loading-overlay {
     top: 12px;
     right: 12px;
     content: '';
-    font: 500 16px "Font Awesome 5 Pro";
+    font: 500 16px "Font Awesome 6 Pro";
     color: var(--st-foreground-insignificant);
 }
 
@@ -572,7 +572,7 @@ div.loading-overlay {
 
 .st-section-title[data-icon]:before {
     content: attr(data-icon);
-    font: bold 20px 'Font Awesome 5 Pro';
+    font: bold 20px 'Font Awesome 6 Pro';
     color: var(--st-foreground-accent);
 }
 
@@ -734,7 +734,7 @@ li.children .submenu .st-hotkey-label {
     left: 50%;
     translate: -50% -50%;
     padding: 2px;
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     transition: rotate 200ms, scale 200ms;
 }
 
@@ -754,7 +754,7 @@ li.children .submenu .st-hotkey-label {
     translate: -50% -50%;
     padding: 2px;
     rotate: 38deg;
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     transition: rotate 200ms, scale 200ms;
 }
 
