@@ -157,14 +157,15 @@ div.loading-overlay {
 .st-segmented-control {
     display: flex;
     flex-wrap: nowrap;
-    align-items: stretch;
+    align-items: center;
+    padding-inline: 2px;
+    height: 36px;
     background-color: var(--st-background-tertiary);
     outline: var(--st-border);
     border-radius: var(--st-border-radius);
 }
 
 .st-button.segment {
-    margin: 2px;
     padding: 0 12px;
     background-color: transparent;
     color: var(--st-foreground-secondary);
@@ -381,7 +382,12 @@ div.loading-overlay {
     border: var(--st-border);
     color: var(--st-foreground-primary);
     font: 14px/40px var(--st-font-family-secondary);
-    cursor: move;
+    cursor: grab;
+}
+
+.st-sortable-list-item:active {
+    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    cursor: grabbing !important;
 }
 
 .st-sortable-list-item:after {
@@ -415,6 +421,10 @@ div.loading-overlay {
     opacity: 0 !important;
 }
 
+.st-sortable-list-item.dragging {
+    cursor: grabbing !important;
+}
+
 .st-sortable-list-item.excluded {
     opacity: .75;
 }
@@ -425,6 +435,7 @@ div.loading-overlay {
     pointer-events: none;
     z-index: 10000000;
     box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    cursor: grabbing !important;
     animation: fadeIn 200ms;
 }
 

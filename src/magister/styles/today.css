@@ -667,10 +667,14 @@
     opacity: 1;
 }
 
+#st-start-widget-digital-clock {
+    padding: 0;
+}
+
 #st-start-widget-digital-clock-time {
     display: flex;
     justify-content: center;
-    margin-bottom: 24px;
+    margin-block: 14px;
 }
 
 #st-start-widget-digital-clock-time>* {
@@ -681,28 +685,31 @@
     overflow: hidden;
 }
 
-#st-start-widget-digital-clock-progress-bar {
-    --progress: 0;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: calc(var(--progress) * 100%);
-    height: 3px;
-    background-color: var(--st-accent-primary);
-    transition: --progress 200ms;
+#st-start-widget-digital-clock-wrapper {
+    display: flex;
+    gap: 3px;
 }
 
-#st-start-widget-digital-clock-progress-label {
-    --progress: 0;
+#st-start-widget-digital-clock-wrapper>div {
+    position: relative;
+    flex-grow: 1;
+    height: 5px;
+    background-color: var(--st-highlight-primary);
+}
+
+#st-start-widget-digital-clock-wrapper>div:after {
     position: absolute;
-    bottom: 6px;
-    left: calc(var(--progress) * calc(100% - 40px));
-    width: 40px;
-    height: auto;
-    font: 500 11px/16px var(--st-font-family-secondary);
-    text-align: center;
-    color: var(--st-foreground-insignificant);
-    transition: --progress 200ms;
+    content: '';
+    display: block;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(var(--progress) * 100%);
+    background-color: var(--st-accent-primary);
+}
+
+#st-start-widget-digital-clock-wrapper>div[data-done=true]:after {
+    background-color: var(--st-accent-secondary);
 }
 
 .st-list-item {

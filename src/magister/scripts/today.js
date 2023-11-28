@@ -136,7 +136,7 @@ nav.menu.ng-scope {
 
         updateHeaderText = () => {
             // Update the header text accordingly
-            if (weekView) headerText.innerText = "Week " + getWeekNumber(new Date(new Date(now).setDate(now.getDate() + Math.floor(agendaDayOffset / 7) * 7)))
+            if (weekView) headerText.innerText = "Week " + new Date(new Date(now).setDate(now.getDate() + Math.floor(agendaDayOffset / 7) * 7)).getWeek()
             else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
             headerText.dataset.lastLetter = '.'
         }
@@ -256,8 +256,6 @@ nav.menu.ng-scope {
                 gatherEnd.setDate(now.getDate() + 42)
                 gatherEnd.setHours(0, 0, 0, 0)
 
-                agendaDayOffset = Math.floor((todayDate - gatherStart) / 86400000)
-
                 const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                 const events = eventsRes.Items
 
@@ -344,6 +342,7 @@ nav.menu.ng-scope {
                         }, 0)
 
                         let dragGhost = item.cloneNode(true)
+                        dragGhost.id += '-ghost'
                         dragGhost.classList.add('st-sortable-list-ghost')
                         dragGhost.classList.remove('dragging')
                         dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
@@ -524,7 +523,15 @@ nav.menu.ng-scope {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, column, { class: 'st-start-event', 'data-2nd': item.Omschrijving, 'data-ongoing': ongoing, 'data-start': item.Start, 'data-end': item.Einde, style: `--relative-start: ${timeInHours(item.Start)}; --duration: ${timeInHours(item.Einde) - timeInHours(item.Start)}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`, title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+                    let eventElement = element('button', `st-start-event-${item.Id}`, column, {
+                        class: 'st-start-event',
+                        'data-2nd': item.Omschrijving,
+                        'data-temporal-type': 'ongoing-check',
+                        'data-temporal-start': item.Start,
+                        'data-temporal-end': item.Einde,
+                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
+                        title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).getFormattedTime()} - ${new Date(item.Einde).getFormattedTime()}`
+                    })
                     let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
                     if (egg && egg.type === 'dialog') {
                         eventElement.addEventListener('click', () => notify('dialog', egg.output))
@@ -583,7 +590,7 @@ nav.menu.ng-scope {
                     }
 
                     // Render the time label
-                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: `${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })} - ${new Date(item.Einde).toLocaleTimeString('nl-NL', { hour: "2-digit", minute: "2-digit" })}` })
+                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: `${new Date(item.Start).getFormattedTime()} - ${new Date(item.Einde).getFormattedTime()}` })
 
                     // Parse and render any chips
                     let chips = eventChips(item)
@@ -596,7 +603,8 @@ nav.menu.ng-scope {
 
                 if (!listViewEnabled && item.today) {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
-                    let currentTimeMarker = element('div', `st-start-now`, column, { style: `--relative-start: ${timeInHours(now)}` })
+                    let currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' })
+                    updateTemporalBindings()
                     if (schedule.scrollTop === 0 && (!weekView || listViewEnabledSetting && weekView)) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
                         if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
@@ -604,23 +612,12 @@ nav.menu.ng-scope {
                         schedule.scrollTop -= 1 // Scroll back one pixel to ensure the border looks nice.
                         currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
                     }
-                    // Keep the current time marker updated every 10 seconds.
-                    interval = setInterval(() => {
-                        if (!currentTimeMarker) {
-                            clearInterval(interval)
-                        } else if (timeInHours(now) >= 24) {
-                            clearInterval(interval)
-                            renderSchedule()
-                        } else {
-                            now = new Date()
-                            currentTimeMarker = element('div', `st-start-now`, null, { style: `--relative-start: ${timeInHours(now)}` })
-                        }
-                    }, 10000)
                 }
             })
         }
         renderSchedule()
 
+        updateTemporalBindings()
         updateHeaderButtons()
 
         setTimeout(() => {
@@ -631,18 +628,6 @@ nav.menu.ng-scope {
             }, 300)
         }, 2000)
 
-        // Update ongoing events every 30 seconds
-        updateSchedule = () => {
-            let events = document.querySelectorAll('.st-start-event[data-start][data-end]')
-            now = new Date()
-
-            events.forEach(item => {
-                let ongoing = (new Date(item.dataset.start) < now && new Date(item.dataset.end) > now)
-                if (ongoing) item.dataset.ongoing = true
-                else item.dataset.ongoing = false
-            })
-        }
-        setInterval(updateSchedule, 30000)
     }
 
     async function todayWidgets() {
@@ -653,13 +638,14 @@ nav.menu.ng-scope {
         let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
 
         now = new Date()
+        let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
         const gatherStart = new Date()
         gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
         gatherStart.setHours(0, 0, 0, 0)
 
         const gatherEnd = new Date()
-        gatherEnd.setDate(now.getDate() + 30 + (7 - (now.getDay() + 30) % 7))
+        gatherEnd.setDate(now.getDate() + 42)
         gatherEnd.setHours(0, 0, 0, 0)
 
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
@@ -814,7 +800,7 @@ nav.menu.ng-scope {
                         if (mostRecentItem.hidden) lastGrade.style.display = 'none'
                         let lastGradeSubj = element('span', 'st-start-widget-grades-last-subj', widgetElement, { innerText: mostRecentItem.vak.omschrijving.charAt(0).toUpperCase() + mostRecentItem.vak.omschrijving.slice(1) })
                         let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: mostRecentItem.weegfactor > 0 && mostRecentItem.teltMee ? `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor}×)` : mostRecentItem.omschrijving })
-                        let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { innerText: mostRecentItem.unread ? getRelativeTimeString(new Date(mostRecentItem.date)) : mostRecentItem.date.toLocaleDateString('nl-NL', { month: 'long', day: 'numeric' }) })
+                        let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { 'data-temporal-type': 'timestamp', 'data-temporal-start': mostRecentItem.date })
                         let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
                         lastGradeHide.addEventListener('click', (event) => {
                             event.stopPropagation()
@@ -868,7 +854,7 @@ nav.menu.ng-scope {
                             let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-list-title', innerText: item.afzender.naam })
                             let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, row1, {
                                 class: 'st-list-timestamp',
-                                innerText: new Date(item.verzondenOp).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
+                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.verzondenOp
                             })
 
                             let row2 = element('span', `st-start-widget-messages-${item.id}-row2`, messageElement, { class: 'st-list-row' })
@@ -929,15 +915,6 @@ nav.menu.ng-scope {
                             }) || [item.Omschrijving]
                             if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
 
-                            let
-                                date = `week ${getWeekNumber(new Date(item.Start))}, ${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                            if (getWeekNumber(new Date(item.Start)) === getWeekNumber())
-                                date = `${new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                            if (new Date(item.Start).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
-                                date = `morgen ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
-                            if (new Date(item.Start).toDateString() === new Date().toDateString())
-                                date = `vandaag ${new Date(item.Start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.Start))})`
-
                             let eventElement = element('button', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
                             eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
 
@@ -945,7 +922,7 @@ nav.menu.ng-scope {
                             let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-list-title', innerText: subjectNames.join(', ') })
                             let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
-                                innerText: date
+                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.End
                             })
 
                             let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-list-row' })
@@ -978,15 +955,6 @@ nav.menu.ng-scope {
                         let widgetTitle = element('div', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: "Opdrachten", 'data-amount': relevantAssignments.length })
 
                         relevantAssignments.forEach(item => {
-                            let
-                                date = `week ${getWeekNumber(new Date(item.InleverenVoor))}, ${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                            if (getWeekNumber(new Date(item.InleverenVoor)) === getWeekNumber())
-                                date = `${new Date(item.InleverenVoor).toLocaleDateString('nl-NL', { weekday: 'long' })} ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
-                            if (new Date(item.InleverenVoor).toDateString() === new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toDateString())
-                                date = `morgen ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
-                            if (new Date(item.InleverenVoor).toDateString() === new Date().toDateString())
-                                date = `vandaag ${new Date(item.InleverenVoor).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} (${getRelativeTimeString(new Date(item.InleverenVoor))})`
-
                             let assignmentElement = element('button', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
                             assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
 
@@ -994,7 +962,7 @@ nav.menu.ng-scope {
                             let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
                             let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
-                                innerText: date
+                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.End
                             })
 
                             let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })
@@ -1032,21 +1000,55 @@ nav.menu.ng-scope {
                         //     timeProgressBar = element('div', 'st-start-widget-digital-clock-progress-bar', widgetElement, { style: `--progress: 0` }),
                         //     timeProgressLabel = element('div', 'st-start-widget-digital-clock-progress-label', widgetElement, { style: `--progress: 0`, innerText: `0%` })
 
-                        // const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                        // const events = eventsRes.Items.filter(e => e.Einde.startsWith(`${gatherStart.toISOString().substring(0, 10)}`))
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
+                        const todaysEvents = eventsRes.Items.filter(item => new Date(item.Start).isToday())
+                        if (!todaysEvents?.length > 0) return
+                        const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
 
-                        // // TODO: Finish digital clock widget!
-                        // // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
-                        // const aaaa = Object.values(events).reduce((earliestHour, currentItem) => {
-                        //     let currentHour = new Date(currentItem.Start)
-                        //     if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
-                        //     return earliestHour
-                        // }, null)
-                        // const aaab = Object.values(events).reduce((latestHour, currentItem) => {
-                        //     let currentHour = new Date(currentItem.Einde)
-                        //     if (!latestHour || currentHour > latestHour) { return Math.ceil(currentHour * 2) / 2 }
-                        //     return latestHour
-                        // }, null)
+                        let schoolHours = {}
+                        todaysEvents.forEach(item => {
+                            if (item.LesuurVan) {
+                                schoolHours[item.LesuurVan] ??= {}
+                                schoolHours[item.LesuurVan].start = item.Start
+                            }
+                            if (item.LesuurTotMet) {
+                                schoolHours[item.LesuurTotMet] ??= {}
+                                schoolHours[item.LesuurVan].end = item.Einde
+                            }
+                        })
+
+                        function findGaps(schoolHours) {
+                            const hours = Object.keys(schoolHours);
+
+                            for (let i = 0; i < hours.length - 1; i++) {
+                                const currentHour = hours[i];
+                                const nextHour = hours[i + 1];
+
+                                const currentEnd = new Date(schoolHours[currentHour].end);
+                                const nextStart = new Date(schoolHours[nextHour].start);
+
+                                if (currentEnd < nextStart) {
+                                    const gapStart = currentEnd.toISOString();
+                                    const gapEnd = nextStart.toISOString();
+
+                                    schoolHours[`gap${i}`] = {
+                                        start: gapStart,
+                                        end: gapEnd,
+                                        gap: true
+                                    };
+                                }
+                            }
+
+                            return schoolHours
+                        }
+
+                        let daySegments = Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start))
+
+                        console.log(daySegments)
+
+                        daySegments.forEach(item => {
+                            const eventElement = element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
+                        })
 
                         setIntervalImmediately(() => {
                             now = new Date()
@@ -1055,10 +1057,6 @@ nav.menu.ng-scope {
                             timeString.split('').forEach((char, i) => {
                                 let charElement = element('span', `st-start-widget-digital-clock-time-${i}`, timeText, { innerText: char, style: char === ':' ? 'width: 7.2px' : '' })
                             })
-                            // let progress = (now - aaaa) / (aaab - aaaa)
-                            // timeProgressBar.setAttribute('style', `--progress: ${progress}`)
-                            // timeProgressLabel.setAttribute('style', `--progress: ${progress}`)
-                            // timeProgressLabel.innerText = `${progress.toLocaleString('nl-NL', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
                         }, 1000)
 
                         resolve(widgetElement)
@@ -1072,6 +1070,7 @@ nav.menu.ng-scope {
             widgetsProgressText.innerText = `Widget '${widgetFunctions[functionName].title}' laden...`
             let widgetElement = await widgetFunctions[functionName].render()
             if (widgetElement) widgets.append(widgetElement)
+            updateTemporalBindings()
         }
 
         widgetsProgress.remove()
@@ -1081,12 +1080,6 @@ nav.menu.ng-scope {
     function verifyDisplayMode() {
         container.setAttribute('data-widgets-collapsed', widgetsCollapsed)
     }
-}
-
-function timeInHours(input) {
-    let date = new Date(input),
-        currentHour = date.getHours() + (date.getMinutes() / 60)
-    return currentHour
 }
 
 function collidesWith(a, b) {

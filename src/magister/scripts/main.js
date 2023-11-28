@@ -26,7 +26,7 @@ async function main() {
 
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: getWeekNumber() })
+        let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: new Date().getWeek() })
     }
 
     // Custom shortcuts

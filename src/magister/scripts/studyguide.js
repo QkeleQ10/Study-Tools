@@ -58,7 +58,7 @@ async function studyguideIndividual() {
         list.parentElement.setAttribute('style', 'border: none !important; padding: 8px 0 0 8px !important;')
 
         titles.forEach(async title => {
-            if (list.childElementCount === 1 || regex.exec(title.innerText.replace(await getWeekNumber(), 'match'))) {
+            if (list.childElementCount === 1 || regex.exec(title.innerText.replace(new Date().getWeek(), 'match'))) {
                 let top = title.parentElement,
                     bottom = top.nextElementSibling.lastElementChild.previousElementSibling,
                     li = top.parentElement.parentElement
