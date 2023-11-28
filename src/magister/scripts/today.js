@@ -54,10 +54,10 @@ async function today() {
     todayWidgets()
 
     // Birthday party mode!
-    const accountInfo = await useApi(`https://amadeuslyceum.magister.net/api/account?noCache=0`),
+    const accountInfo = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/account?noCache=0`),
         dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
-        isBirthdayToday = (birthday.getTime() === todayDate.getTime()),
+        isBirthdayToday = (birthday.getTime() === todayDate.getTime()), // TODO: Date.isToday() etc
         isBirthdayYesterday = (todayDate.getDay() === 1 && birthday.getTime() === yesterdayDate.getTime()) || (todayDate.getDay() === 1 && new Date(new Date(birthday).setFullYear(birthday.getFullYear() - 1)).getTime() === yesterdayDate.getTime()),
         isBirthdayTomorrow = (todayDate.getDay() === 5 && birthday.getTime() === tomorrowDate.getTime()) || (todayDate.getDay() === 1 && new Date(new Date(birthday).setFullYear(birthday.getFullYear() + 1)).getTime() === tomorrowDate.getTime())
 
@@ -1043,8 +1043,6 @@ nav.menu.ng-scope {
                         }
 
                         let daySegments = Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start))
-
-                        console.log(daySegments)
 
                         daySegments.forEach(item => {
                             const eventElement = element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
