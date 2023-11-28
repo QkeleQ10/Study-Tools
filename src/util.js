@@ -226,6 +226,12 @@ function updateTemporalBindings() {
                 element.dataset.ongoing = (start <= now && end >= now)
                 break
 
+            case 'style-progress':
+                let progress = (now - start) / (end - start)
+                element.style.setProperty('--progress', Math.min(Math.max(0, progress), 1))
+                element.dataset.done = progress >= 1
+                break
+
             default:
                 break
         }

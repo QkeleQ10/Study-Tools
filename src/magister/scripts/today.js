@@ -1000,21 +1000,55 @@ nav.menu.ng-scope {
                         //     timeProgressBar = element('div', 'st-start-widget-digital-clock-progress-bar', widgetElement, { style: `--progress: 0` }),
                         //     timeProgressLabel = element('div', 'st-start-widget-digital-clock-progress-label', widgetElement, { style: `--progress: 0`, innerText: `0%` })
 
-                        // const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                        // const events = eventsRes.Items.filter(e => e.Einde.startsWith(`${gatherStart.toISOString().substring(0, 10)}`))
+                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
+                        const todaysEvents = eventsRes.Items.filter(item => new Date(item.Start).isToday())
+                        if (!todaysEvents?.length > 0) return
+                        const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
 
-                        // // TODO: Finish digital clock widget!
-                        // // Find the earliest start time and the latest end time, rounded outwards to 30 minutes.
-                        // const aaaa = Object.values(events).reduce((earliestHour, currentItem) => {
-                        //     let currentHour = new Date(currentItem.Start)
-                        //     if (!earliestHour || currentHour < earliestHour) { return Math.floor(currentHour * 2) / 2 }
-                        //     return earliestHour
-                        // }, null)
-                        // const aaab = Object.values(events).reduce((latestHour, currentItem) => {
-                        //     let currentHour = new Date(currentItem.Einde)
-                        //     if (!latestHour || currentHour > latestHour) { return Math.ceil(currentHour * 2) / 2 }
-                        //     return latestHour
-                        // }, null)
+                        let schoolHours = {}
+                        todaysEvents.forEach(item => {
+                            if (item.LesuurVan) {
+                                schoolHours[item.LesuurVan] ??= {}
+                                schoolHours[item.LesuurVan].start = item.Start
+                            }
+                            if (item.LesuurTotMet) {
+                                schoolHours[item.LesuurTotMet] ??= {}
+                                schoolHours[item.LesuurVan].end = item.Einde
+                            }
+                        })
+
+                        function findGaps(schoolHours) {
+                            const hours = Object.keys(schoolHours);
+
+                            for (let i = 0; i < hours.length - 1; i++) {
+                                const currentHour = hours[i];
+                                const nextHour = hours[i + 1];
+
+                                const currentEnd = new Date(schoolHours[currentHour].end);
+                                const nextStart = new Date(schoolHours[nextHour].start);
+
+                                if (currentEnd < nextStart) {
+                                    const gapStart = currentEnd.toISOString();
+                                    const gapEnd = nextStart.toISOString();
+
+                                    schoolHours[`gap${i}`] = {
+                                        start: gapStart,
+                                        end: gapEnd,
+                                        gap: true
+                                    };
+                                }
+                            }
+
+                            return schoolHours
+                        }
+
+                        let daySegments = Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start))
+
+                        console.log(daySegments)
+
+                        daySegments.forEach(item => {
+                            const eventElement = element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
+                        })
 
                         setIntervalImmediately(() => {
                             now = new Date()
@@ -1023,10 +1057,6 @@ nav.menu.ng-scope {
                             timeString.split('').forEach((char, i) => {
                                 let charElement = element('span', `st-start-widget-digital-clock-time-${i}`, timeText, { innerText: char, style: char === ':' ? 'width: 7.2px' : '' })
                             })
-                            // let progress = (now - aaaa) / (aaab - aaaa)
-                            // timeProgressBar.setAttribute('style', `--progress: ${progress}`)
-                            // timeProgressLabel.setAttribute('style', `--progress: ${progress}`)
-                            // timeProgressLabel.innerText = `${progress.toLocaleString('nl-NL', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
                         }, 1000)
 
                         resolve(widgetElement)
