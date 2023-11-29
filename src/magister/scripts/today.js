@@ -566,6 +566,7 @@ nav.menu.ng-scope {
                     columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { weekday: 'long' }) }),
                     columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { day: 'numeric' }) })
                 if (item.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { month: 'long' }) })
+                if (item.date.getDate() === 1 && item.date.getMonth() === 0) element('span', `st-start-col-${i}-head-span-3`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { year: 'numeric' }) })
 
                 // Loop through all events of the day
                 item.events.forEach((item, i) => {
