@@ -1,3 +1,9 @@
+@property --bar-fill-amount {
+    syntax: "<number>";
+    initial-value: 0;
+    inherits: true;
+}
+
 :root {
     --st-linear-gradient-study-tools: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
 }
@@ -919,6 +925,64 @@ a.st-keyboard-hint.clicked {
 .border-bottom-radius-none>span:nth-child(3) {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+}
+
+.st-bar-chart {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 16px;
+}
+
+.st-bar-chart-col {
+    --bar-fill-amount: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    padding-inline: 2px;
+    transition: --bar-fill-amount 200ms;
+}
+
+.st-bar-chart-col:hover {
+    background-color: var(--st-highlight-primary);
+}
+
+.st-bar-chart-bar {
+    width: 25px;
+    height: calc(var(--bar-fill-amount) * 100%);
+    border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
+    background-color: var(--st-accent-primary);
+}
+
+.st-bar-chart-col:hover .st-bar-chart-bar {
+    background-color: var(--st-accent-secondary);
+}
+
+.st-bar-chart-col:before {
+    content: attr(data-value);
+    text-align: center;
+    width: 100%;
+    height: 0;
+    translate: 0 6px;
+    font: 600 12px var(--st-font-family-secondary);
+}
+
+.st-bar-chart-col:hover:before {
+    content: attr(data-percentage) '%';
+    text-align: left;
+    font-weight: normal;
+    rotate: 90deg;
+    translate: 8px 22px;
+}
+
+.st-bar-chart-col:after {
+    content: attr(title);
+    width: 0;
+    height: 0;
+    rotate: 45deg;
+    translate: 2px 4px;
+    font: 11px var(--st-font-family-secondary);
 }
 
 @keyframes rotation {

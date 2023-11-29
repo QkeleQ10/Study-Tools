@@ -34,12 +34,18 @@ async function today() {
     let weekView = false // False for day view, true for week view
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
 
-    let now = new Date()
+    now = new Date()
 
-    const todayDate = new Date(new Date().setHours(0, 0, 0, 0)),
-        yesterdayDate = new Date(new Date(todayDate).setDate(todayDate.getDate() - 1)),
-        tomorrowDate = new Date(new Date(todayDate).setDate(todayDate.getDate() + 1)),
-        firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
+    const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+    firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
+
+    const gatherStart = new Date()
+    gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
+    gatherStart.setHours(0, 0, 0, 0)
+
+    const gatherEnd = new Date()
+    gatherEnd.setDate(now.getDate() + 42)
+    gatherEnd.setHours(0, 0, 0, 0)
 
     // Automagically collapse the widgets panel when it's necessary
     widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
@@ -57,9 +63,9 @@ async function today() {
     const accountInfo = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/account?noCache=0`),
         dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
-        isBirthdayToday = (birthday.getTime() === todayDate.getTime()), // TODO: Date.isToday() etc
-        isBirthdayYesterday = (todayDate.getDay() === 1 && birthday.getTime() === yesterdayDate.getTime()) || (todayDate.getDay() === 1 && new Date(new Date(birthday).setFullYear(birthday.getFullYear() - 1)).getTime() === yesterdayDate.getTime()),
-        isBirthdayTomorrow = (todayDate.getDay() === 5 && birthday.getTime() === tomorrowDate.getTime()) || (todayDate.getDay() === 1 && new Date(new Date(birthday).setFullYear(birthday.getFullYear() + 1)).getTime() === tomorrowDate.getTime())
+        isBirthdayToday = birthday.isToday(),
+        isBirthdayYesterday = todayDate.getDay() === 1 && birthday.isYesterday(),
+        isBirthdayTomorrow = todayDate.getDay() === 5 && birthday.isTomorrow()
 
     if (isBirthdayToday || isBirthdayYesterday || isBirthdayTomorrow) {
         createStyle(`
@@ -136,8 +142,15 @@ nav.menu.ng-scope {
 
         updateHeaderText = () => {
             // Update the header text accordingly
-            if (weekView) headerText.innerText = "Week " + new Date(new Date(now).setDate(now.getDate() + Math.floor(agendaDayOffset / 7) * 7)).getWeek()
-            else headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+            if (weekView) {
+                if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
+                    headerText.innerText = `Week ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString('nl-NL', { month: 'long' })})`
+                else
+                    headerText.innerText = `Week ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString('nl-NL', { month: 'short' })}–${agendaEndDate.toLocaleDateString('nl-NL', { month: 'short' })})`
+            }
+            else {
+                headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+            }
             headerText.dataset.lastLetter = '.'
         }
 
@@ -147,6 +160,7 @@ nav.menu.ng-scope {
             if ((weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
             if (weekView) agendaDayOffset -= 7
             else agendaDayOffset--
+            if (agendaDayOffset < 0) agendaDayOffset = 0
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -164,6 +178,7 @@ nav.menu.ng-scope {
             if ((weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
             if (weekView) agendaDayOffset += 7
             else agendaDayOffset++
+            if (agendaDayOffset > 41) agendaDayOffset = 41
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -224,7 +239,6 @@ nav.menu.ng-scope {
         }
 
         let editor
-
         (async () => {
 
             // Editor overlay
@@ -236,7 +250,7 @@ nav.menu.ng-scope {
                 editorTeachers = element('div', 'st-start-editor-teachers', editor, { class: 'st-list st-tile' }),
                 editorTeachersTitle = element('span', 'st-start-editor-teachers-title', editorTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Bijnamen" }),
                 editorWidgets = element('div', 'st-start-editor-widgets', editor, { class: 'st-list st-tile' }),
-                editorWidgetsTitle = element('span', 'st-start-editor-widgets-title', editorWidgets, { class: 'st-section-title', 'data-icon': '', innerText: "Widgets" })
+                editorWidgetsTitle = element('span', 'st-start-editor-widgets-title', editorWidgets, { class: 'st-section-title', 'data-icon': '', innerText: "Widgets" })
             editorClose.addEventListener('click', () => {
                 editor.close()
                 todayWidgets()
@@ -245,17 +259,6 @@ nav.menu.ng-scope {
 
             // Nicknames editor 
             {
-                now = new Date()
-                let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
-
-                const gatherStart = new Date()
-                gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
-                gatherStart.setHours(0, 0, 0, 0)
-
-                const gatherEnd = new Date()
-                gatherEnd.setDate(now.getDate() + 42)
-                gatherEnd.setHours(0, 0, 0, 0)
-
                 const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                 const events = eventsRes.Items
 
@@ -401,6 +404,64 @@ nav.menu.ng-scope {
             editor.showModal()
         })
 
+        let stats
+        (async () => {
+
+            // stats overlay
+            stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
+            let statsHeading = element('div', 'st-start-stats-heading', stats),
+                statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
+                statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in ontwikkeling.` }),
+                statsClose = element('button', 'st-start-stats-close', statsHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+                statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
+                statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
+                statsClassrooms = element('div', 'st-start-stats-classrooms', stats, { class: 'st-list st-tile' }),
+                statsClassroomsTitle = element('span', 'st-start-stats-classrooms-title', statsClassrooms, { class: 'st-section-title', 'data-icon': '', innerText: "Lokalen" })
+            statsClose.addEventListener('click', () => {
+                stats.close()
+            })
+
+            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
+            const events = eventsRes.Items
+
+            // Teacher stats 
+            {
+                const eventsTeachers = events.flatMap(item => item.Docenten)
+
+                let teachersFrequencyMap = {}
+
+                eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
+                    teachersFrequencyMap[teacherCode] ??= 0
+                    teachersFrequencyMap[teacherCode]++
+                })
+
+                // const teacherNames = Object.assign(
+                //     ...Object.entries(teachersFrequencyMap).map(([key, value]) => ({ [key]: eventsTeachers.find(t => t.Docentcode === item).Naam }))
+                // )
+
+                let chartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createBarChart(teachersFrequencyMap, null, 2)
+            }
+
+            // Classroom stats 
+            {
+                const eventsClassrooms = events.flatMap(item => item.Lokalen)
+
+                let classroomsFrequencyMap = {}
+
+                eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
+                    classroomsFrequencyMap[classroomName] ??= 0
+                    classroomsFrequencyMap[classroomName]++
+                })
+
+                let chartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createBarChart(classroomsFrequencyMap, null, 2)
+            }
+        })()
+
+        let invokeStats = element('button', 'st-start-invoke-stats', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Statistieken\nKrijg meer inzicht in je rooster", style: 'display:none;' })
+        invokeStats.addEventListener('click', async () => {
+            stats.showModal()
+        })
+
         // Side panel collapse/expand button
         let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
         todayCollapseWidgets.addEventListener('click', () => {
@@ -421,16 +482,6 @@ nav.menu.ng-scope {
         let interval
 
         now = new Date()
-        let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
-
-        const gatherStart = new Date()
-        gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
-        gatherStart.setHours(0, 0, 0, 0)
-
-        const gatherEnd = new Date()
-        gatherEnd.setDate(now.getDate() + 42)
-        gatherEnd.setHours(0, 0, 0, 0)
-
         agendaDayOffset = Math.floor((todayDate - gatherStart) / 86400000)
 
         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
@@ -472,7 +523,7 @@ nav.menu.ng-scope {
 
                     // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)
                     let todayEvents = agendaDays.find(item => item.today).events
-                    let todayEndTime = new Date(Math.max(...todayEvents.map(item => new Date(item.Einde))))
+                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
                     if ((new Date() >= todayEndTime || todayEvents.length < 1) && showExtraDaySetting && daysToShow === 1 && agendaDayOffset === (todayDate.getDay() || 7) - 1) daysToShow++
 
                     agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
@@ -511,10 +562,10 @@ nav.menu.ng-scope {
                     'data-tomorrow': item.tomorrow,
                     'data-irrelevant': item.irrelevant
                 }),
-                    columnLabel = element('div', `st-start-col-${i}-head`, column, {
-                        class: 'st-start-col-head',
-                        innerText: item.today ? "Vandaag" : item.tomorrow ? "Morgen" : item.date.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
-                    })
+                    columnLabel = element('div', `st-start-col-${i}-head`, column, { class: 'st-start-col-label' }),
+                    columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { weekday: 'long' }) }),
+                    columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { day: 'numeric' }) })
+                if (item.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { month: 'long' }) })
 
                 // Loop through all events of the day
                 item.events.forEach((item, i) => {
@@ -530,7 +581,7 @@ nav.menu.ng-scope {
                         'data-temporal-start': item.Start,
                         'data-temporal-end': item.Einde,
                         style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
-                        title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).getFormattedTime()} - ${new Date(item.Einde).getFormattedTime()}`
+                        title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).getFormattedTime()}–${new Date(item.Einde).getFormattedTime()}`
                     })
                     let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
                     if (egg && egg.type === 'dialog') {
@@ -590,7 +641,7 @@ nav.menu.ng-scope {
                     }
 
                     // Render the time label
-                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: `${new Date(item.Start).getFormattedTime()} - ${new Date(item.Einde).getFormattedTime()}` })
+                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: `${new Date(item.Start).getFormattedTime()}–${new Date(item.Einde).getFormattedTime()}` })
 
                     // Parse and render any chips
                     let chips = eventChips(item)
@@ -638,15 +689,6 @@ nav.menu.ng-scope {
         let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
 
         now = new Date()
-        let todayDate = new Date(new Date().setHours(0, 0, 0, 0))
-
-        const gatherStart = new Date()
-        gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
-        gatherStart.setHours(0, 0, 0, 0)
-
-        const gatherEnd = new Date()
-        gatherEnd.setDate(now.getDate() + 42)
-        gatherEnd.setHours(0, 0, 0, 0)
 
         let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
 
@@ -988,17 +1030,31 @@ nav.menu.ng-scope {
                 title: "Digitale klok",
                 options: [
                     {
-                        title: "Bètaversie van deze widget.",
-                        key: 'start-widget-digitalClock-widget',
-                        type: 'description'
+                        title: "Seconden tonen",
+                        key: 'start-widget-digitalClock-seconds',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Weergeven",
+                                value: 'show'
+                            },
+                            {
+                                title: "Verbergen",
+                                value: 'hide'
+                            }
+                        ]
                     }
                 ],
                 render: () => {
                     return new Promise(async resolve => {
-                        let widgetElement = element('div', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget' }),
-                            timeText = element('div', 'st-start-widget-digital-clock-time', widgetElement)
-                        //     timeProgressBar = element('div', 'st-start-widget-digital-clock-progress-bar', widgetElement, { style: `--progress: 0` }),
-                        //     timeProgressLabel = element('div', 'st-start-widget-digital-clock-progress-label', widgetElement, { style: `--progress: 0`, innerText: `0%` })
+                        const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
+
+                        let widgetElement = element('button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok vergroten/verkleinen" }),
+                            timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
+                                'data-temporal-type': secondsOption === 'show'
+                                    ? 'current-time-long'
+                                    : 'current-time-short'
+                            })
 
                         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                         const todaysEvents = eventsRes.Items.filter(item => new Date(item.Start).isToday())
@@ -1008,11 +1064,11 @@ nav.menu.ng-scope {
                         let schoolHours = {}
                         todaysEvents.forEach(item => {
                             if (item.LesuurVan) {
-                                schoolHours[item.LesuurVan] ??= {}
+                                schoolHours[item.LesuurVan] ??= { hour: item.LesuurVan }
                                 schoolHours[item.LesuurVan].start = item.Start
                             }
                             if (item.LesuurTotMet) {
-                                schoolHours[item.LesuurTotMet] ??= {}
+                                schoolHours[item.LesuurTotMet] ??= { hour: item.LesuurTotMet }
                                 schoolHours[item.LesuurVan].end = item.Einde
                             }
                         })
@@ -1042,20 +1098,11 @@ nav.menu.ng-scope {
                             return schoolHours
                         }
 
-                        let daySegments = Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start))
-
-                        daySegments.forEach(item => {
-                            const eventElement = element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
+                        Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start)).forEach(item => {
+                            element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, title: `${item.gap ? "Tijd tussen lesuren" : item.hour + "e lesuur"}\n${new Date(item.start).getFormattedTime()}–${new Date(item.end).getFormattedTime()}`, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
                         })
 
-                        setIntervalImmediately(() => {
-                            now = new Date()
-                            let timeString = now.toLocaleTimeString('nl-NL')
-                            timeText.innerText = ''
-                            timeString.split('').forEach((char, i) => {
-                                let charElement = element('span', `st-start-widget-digital-clock-time-${i}`, timeText, { innerText: char, style: char === ':' ? 'width: 7.2px' : '' })
-                            })
-                        }, 1000)
+                        widgetElement.addEventListener('click', () => widgetElement.classList.toggle('pop-out'))
 
                         resolve(widgetElement)
                     })
