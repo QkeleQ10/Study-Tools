@@ -107,7 +107,7 @@ async function useApi(url, options) {
                 if (!res.ok) {
                     if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
                     else {
-                        notify('snackbar', "Er is iets misgegaan. Deze update is nog gloednieuw en het kan zijn dat het me niet is gelukt om alle foutjes eruit te halen. Geef me alsjeblieft even een seintje!", { innerText: "e-mail", href: 'mailto:quinten@althues.nl' }, 36000000)
+                        notify('snackbar', `Er is iets misgegaan. Gebruik alsjeblieft de knop hiernaast om dit te melden. Fout ${res.status} bij ${url}.`, [{ innerText: "e-mail", href: `mailto:quinten@althues.nl` }], 36000000)
                         if (apiCache[url]) {
                             notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
                             return resolve(apiCache[url])
@@ -232,13 +232,21 @@ function updateTemporalBindings() {
                 element.dataset.done = progress >= 1
                 break
 
+            case 'current-time-long':
+                element.innerText = now.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                break
+
+            case 'current-time-short':
+                element.innerText = now.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                break
+
             default:
                 break
         }
 
     })
 }
-setIntervalImmediately(updateTemporalBindings, 10000)
+setIntervalImmediately(updateTemporalBindings, 1000)
 
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
@@ -271,6 +279,47 @@ Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (th
 Date.prototype.isTomorrow = function () { return this > midnight(0) && this < midnight(1) }
 Date.prototype.isToday = function () { return this > midnight(-1) && this < midnight(0) }
 Date.prototype.isYesterday = function () { return this > midnight(-2) && this < midnight(-1) }
+
+Element.prototype.createBarChart = function (frequencyMap, labels, threshold = 1) {
+    const chartArea = this
+    chartArea.innerText = ''
+    chartArea.classList.add('st-bar-chart', 'st-chart')
+
+    const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
+    const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
+    const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
+    const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
+
+    Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1]).forEach(([key, frequency]) => {
+        const col = element('div', `${chartArea.id}-${key}`, chartArea, {
+            class: 'st-bar-chart-col',
+            title: labels?.[key] ?? key,
+            'data-value': frequency,
+            'data-percentage': Math.round(frequency / totalFrequency * 100),
+            style: `--bar-fill-amount: ${frequency / maxFrequency}`
+        }),
+            bar = element('div', `${chartArea.id}-${key}-bar`, col, {
+                class: 'st-bar-chart-bar'
+            })
+    })
+
+    if (remainderFrequency > 0) {
+        const col = element('div', `${chartArea.id}-remainder`, chartArea, {
+            class: 'st-bar-chart-col',
+            title: remainingItems.length === 1
+                ? labels?.[remainingItems[0][0]] ?? remainingItems[0][0]
+                : "Overige",
+            'data-value': remainderFrequency,
+            'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
+            style: `--bar-fill-amount: ${remainderFrequency / maxFrequency}`
+        }),
+            bar = element('div', `${chartArea.id}-remainder-bar`, col, {
+                class: 'st-bar-chart-bar'
+            })
+    }
+
+    return chartArea
+}
 
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
     switch (type) {

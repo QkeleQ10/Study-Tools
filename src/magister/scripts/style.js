@@ -900,7 +900,7 @@ footer.endlink {
 
 .icon-down-arrow:before, .icon-up-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
     content: '' !important;
-    font: 400 24px/44px "Font Awesome 5 Pro" !important;
+    font: 400 24px/44px "Font Awesome 6 Pro" !important;
     transition: rotate 200ms, translate 200ms;
 }
 
@@ -1038,7 +1038,7 @@ h3:active> .icon-up-arrow:before {
     position: absolute;
     top: 6px;
     left: 16px;
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
     font-size: 18px;
     line-height: 100%;
     font-style: normal;
@@ -1066,7 +1066,7 @@ h3:active> .icon-up-arrow:before {
     position: absolute;
     top: 6px;
     left: 11px;
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
     font-size: 18px;
     line-height: 100%;
     z-index: 2;

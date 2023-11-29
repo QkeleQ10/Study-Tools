@@ -67,7 +67,7 @@ function setIcon(icon) {
 
 <style>
 @font-face {
-    font-family: "Font Awesome 5 Free";
+    font-family: "Font Awesome 6 Free";
     src: url("../assets/far.otf");
 }
 
@@ -82,7 +82,7 @@ function setIcon(icon) {
     border: none;
     border-radius: 4px;
     background-color: transparent;
-    font: 20px "Font Awesome 5 Free";
+    font: 20px "Font Awesome 6 Free";
     overflow: hidden;
     cursor: pointer;
     transition: background-color 200ms, color 200ms, outline-color 200ms;
@@ -118,7 +118,7 @@ function setIcon(icon) {
     color: var(--color-on-surface);
     border: none;
     border-radius: 4px;
-    font: 20px "Font Awesome 5 Free";
+    font: 20px "Font Awesome 6 Free";
     cursor: pointer;
     transition: background-color 200ms, color 200ms;
 }

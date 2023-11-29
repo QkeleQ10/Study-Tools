@@ -1,3 +1,9 @@
+@property --bar-fill-amount {
+    syntax: "<number>";
+    initial-value: 0;
+    inherits: true;
+}
+
 :root {
     --st-linear-gradient-study-tools: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
 }
@@ -53,7 +59,7 @@ div.loading-overlay {
 }
 
 .st-shortcut-icon {
-    font: 20px 'Font Awesome 5 Pro';
+    font: 20px 'Font Awesome 6 Pro';
 }
 
 .st-title {
@@ -129,7 +135,7 @@ div.loading-overlay {
     justify-content: center;
     background-color: transparent;
     color: var(--st-foreground-primary);
-    font: 500 18px 'Font Awesome 5 Pro';
+    font: 500 18px 'Font Awesome 6 Pro';
     min-width: 32px;
     max-width: 32px;
     min-height: 32px;
@@ -198,7 +204,7 @@ div.loading-overlay {
     width: 20px;
     overflow: visible;
     text-align: center;
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
     font-weight: 500;
     font-size: 18px;
     vertical-align: -2px;
@@ -325,7 +331,7 @@ div.loading-overlay {
     left: -32px;
     top: -3px;
     padding-top: 4px;
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     text-align: center;
     color: var(--st-foreground-primary);
     border: var(--st-border);
@@ -395,7 +401,7 @@ div.loading-overlay {
     top: 12px;
     right: 12px;
     content: '';
-    font: 500 16px "Font Awesome 5 Pro";
+    font: 500 16px "Font Awesome 6 Pro";
     color: var(--st-foreground-insignificant);
 }
 
@@ -572,7 +578,7 @@ div.loading-overlay {
 
 .st-section-title[data-icon]:before {
     content: attr(data-icon);
-    font: bold 20px 'Font Awesome 5 Pro';
+    font: bold 20px 'Font Awesome 6 Pro';
     color: var(--st-foreground-accent);
 }
 
@@ -734,7 +740,7 @@ li.children .submenu .st-hotkey-label {
     left: 50%;
     translate: -50% -50%;
     padding: 2px;
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     transition: rotate 200ms, scale 200ms;
 }
 
@@ -754,7 +760,7 @@ li.children .submenu .st-hotkey-label {
     translate: -50% -50%;
     padding: 2px;
     rotate: 38deg;
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
     transition: rotate 200ms, scale 200ms;
 }
 
@@ -919,6 +925,64 @@ a.st-keyboard-hint.clicked {
 .border-bottom-radius-none>span:nth-child(3) {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+}
+
+.st-bar-chart {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 16px;
+}
+
+.st-bar-chart-col {
+    --bar-fill-amount: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    padding-inline: 2px;
+    transition: --bar-fill-amount 200ms;
+}
+
+.st-bar-chart-col:hover {
+    background-color: var(--st-highlight-primary);
+}
+
+.st-bar-chart-bar {
+    width: 25px;
+    height: calc(var(--bar-fill-amount) * 100%);
+    border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
+    background-color: var(--st-accent-primary);
+}
+
+.st-bar-chart-col:hover .st-bar-chart-bar {
+    background-color: var(--st-accent-secondary);
+}
+
+.st-bar-chart-col:before {
+    content: attr(data-value);
+    text-align: center;
+    width: 100%;
+    height: 0;
+    translate: 0 6px;
+    font: 600 12px var(--st-font-family-secondary);
+}
+
+.st-bar-chart-col:hover:before {
+    content: attr(data-percentage) '%';
+    text-align: left;
+    font-weight: normal;
+    rotate: 90deg;
+    translate: 8px 22px;
+}
+
+.st-bar-chart-col:after {
+    content: attr(title);
+    width: 0;
+    height: 0;
+    rotate: 45deg;
+    translate: 2px 4px;
+    font: 11px var(--st-font-family-secondary);
 }
 
 @keyframes rotation {

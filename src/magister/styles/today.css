@@ -24,6 +24,7 @@
 #st-start button.st-list-item:hover,
 #st-start button.st-start-event:hover {
     filter: brightness(var(--st-hover-brightness));
+    transition: filter 0;
 }
 
 #st-start button.st-list-item:focus-visible,
@@ -215,40 +216,58 @@
     flex-basis: 18%;
 }
 
-.st-start-col-head {
+.st-start-col-label {
     position: sticky;
     top: 0;
     left: 0;
     right: 0;
-    height: 42px;
+    height: 38px;
+    padding-bottom: 6px;
     margin-inline: -8px;
-    padding: 8px 12px;
-    overflow: hidden;
-    font: 600 12px/26px var(--st-font-family-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background-color: var(--st-background-primary);
+    border-bottom: var(--st-border);
+    font: 12px var(--st-font-family-secondary);
+    z-index: 999;
 }
 
-.st-start-col-head:first-letter {
-    text-transform: capitalize;
+.st-start-col-label>span {
+    opacity: .7;
 }
 
-.st-start-col:only-child .st-start-col-head {
+.st-start-col-label>div {
+    display: inline-block;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.st-start-col[data-today=true] .st-start-col-label>span {
+    opacity: 1;
+}
+
+.st-start-col[data-today=true] .st-start-col-label>div {
+    width: 32px;
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+}
+
+.st-start-col:only-child .st-start-col-label {
     display: none;
 }
 
-#st-start-schedule:not(.week-view) .st-start-col:first-child .st-start-col-head {
+#st-start-schedule:not(.week-view) .st-start-col:first-child .st-start-col-label {
     margin-left: -32px;
 }
 
-.st-start-col:first-child .st-start-col-head {
-    padding-left: 32px;
-}
-
-.st-start-col[data-irrelevant=true] .st-start-col-head {
-    opacity: .5;
-}
-
-.st-start-col[data-today=true] .st-start-col-head {
-    background-color: var(--st-highlight-primary);
+#st-start-schedule:not(.week-view) .st-start-col:last-child .st-start-col-label {
+    margin-right: -32px;
 }
 
 .st-start-event {
@@ -357,7 +376,7 @@
 }
 
 .st-start-event-school-hours.icon {
-    font: 16px 'Font Awesome 5 Pro';
+    font: 16px 'Font Awesome 6 Pro';
 }
 
 [data-ongoing=true] .st-start-event-school-hours {
@@ -526,6 +545,10 @@
     color: currentColor;
 }
 
+#st-start-widget-controls>*:hover {
+    color: var(--st-foreground-accent);
+}
+
 #st-start[data-widgets-collapsed=true] #st-start-widget-controls {
     border-color: var(--st-border-color);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
@@ -578,7 +601,7 @@
     font: 600 16px/24px var(--st-font-family-primary);
 }
 
-.st-widget-title:after {
+.st-widget-title[data-amount]:after {
     content: attr(data-amount) '×';
     font: 14px/24px var(--st-font-family-secondary);
 }
@@ -589,16 +612,20 @@
     padding-top: 0;
 }
 
-#st-start-widget-grades {
+#st-start-widget-grades,
+#st-start-widget-digital-clock {
     cursor: pointer;
     transition: filter 200ms;
 }
 
-#st-start-widget-grades:hover {
+#st-start-widget-grades:hover,
+#st-start-widget-digital-clock:hover {
     filter: brightness(var(--st-hover-brightness));
+    transition: filter 0;
 }
 
-#st-start-widget-grades:focus-visible {
+#st-start-widget-grades:focus-visible,
+#st-start-widget-digital-clock:focus-visible {
     outline: 2px solid var(--st-foreground-primary);
 }
 
@@ -608,6 +635,11 @@
 
 #st-start-widget-grades.st-unread * {
     color: var(--st-contrast-accent);
+}
+
+#st-start-widget-grades-title {
+    justify-content: center;
+    border-bottom-color: transparent;
 }
 
 #st-start-widget-grades-last {
@@ -672,15 +704,13 @@
 }
 
 #st-start-widget-digital-clock-time {
-    display: flex;
+    display: inline-block;
     justify-content: center;
     margin-block: 14px;
-}
-
-#st-start-widget-digital-clock-time>* {
-    display: inline-block;
-    width: 16.7px;
-    font: 500 28px/42px var(--st-font-family-primary);
+    min-height: 42px;
+    width: 100%;
+    font: 600 28px/42px var(--st-font-family-secondary);
+    font-variant-numeric: tabular-nums lining-nums;
     text-align: center;
     overflow: hidden;
 }
@@ -688,12 +718,14 @@
 #st-start-widget-digital-clock-wrapper {
     display: flex;
     gap: 3px;
+    height: 5px;
+    width: 100%;
 }
 
 #st-start-widget-digital-clock-wrapper>div {
     position: relative;
     flex-grow: 1;
-    height: 5px;
+    height: 100%;
     background-color: var(--st-highlight-primary);
 }
 
@@ -710,6 +742,29 @@
 
 #st-start-widget-digital-clock-wrapper>div[data-done=true]:after {
     background-color: var(--st-accent-secondary);
+}
+
+#st-start-widget-digital-clock.pop-out {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: none;
+    border-radius: 0;
+    z-index: 99999999;
+}
+
+#st-start-widget-digital-clock.pop-out #st-start-widget-digital-clock-time {
+    margin-block: auto;
+    font-size: 8vw;
+    line-height: normal;
+}
+
+#st-start-widget-digital-clock.pop-out #st-start-widget-digital-clock-wrapper {
+    height: 32px;
 }
 
 .st-list-item {
@@ -763,7 +818,7 @@
         / 1fr 0px;
 }
 
-#st-start-editor {
+#st-start-editor, #st-start-stats {
     grid-template:
         '. . . .' 1fr
         '. heading heading .' auto
@@ -773,11 +828,11 @@
     gap: 32px;
 }
 
-#st-start-editor[open] {
+.st-overlay[id^="st-start"][open] {
     display: grid;
 }
 
-#st-start-editor-heading {
+.st-overlay[id^="st-start"]>div:first-child {
     grid-area: heading;
     display: grid;
     grid-template:
@@ -786,16 +841,32 @@
         / 1fr auto;
 }
 
-#st-start-editor-title {
+.st-overlay[id^="st-start"]>div:first-child>.st-title {
     grid-area: title;
 }
 
-#st-start-editor-subtitle {
+.st-overlay[id^="st-start"]>div:first-child>.st-subtitle {
     grid-area: subtitle;
 }
 
-#st-start-editor-close {
+.st-overlay[id^="st-start"]>div:first-child>.st-button {
     grid-area: close;
+}
+
+#st-start-stats-teachers {
+    grid-area: left;
+    width: 100%;
+    height: 100%;
+}
+
+#st-start-stats-classrooms {
+    grid-area: right;
+    width: 100%;
+    height: 100%;
+}
+
+#st-start-stats-teacher-chart, #st-start-stats-classroom-chart {
+    height: 256px;
 }
 
 #st-start-editor-teachers {

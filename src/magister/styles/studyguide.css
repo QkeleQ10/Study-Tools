@@ -32,7 +32,7 @@
 .st-sw-item.hidden-item:before,
 .st-sw-item-default.hidden-item>.st-sw-item-default-desc:before {
     content: '';
-    font-family: 'Font Awesome 5 Pro';
+    font-family: 'Font Awesome 6 Pro';
     font-weight: 500;
     font-size: 14px;
     vertical-align: -2px;
