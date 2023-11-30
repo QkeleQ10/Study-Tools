@@ -94,7 +94,7 @@ async function useApi(url, options) {
         // Otherwise, start a new request.
         await getApiCredentials()
 
-        const res = await fetch(url.replace('$USERID', apiUserId), { headers: { Authorization: apiUserToken }, ...options })
+        const res = await fetch(url.replace(/(\$USERID)/gi, apiUserId), { headers: { Authorization: apiUserToken }, ...options })
 
         // Catch any errors
         if (!res.ok) {
@@ -103,11 +103,11 @@ async function useApi(url, options) {
                 // If it's not a ratelimit, retry one more time.
                 await getApiCredentials()
 
-                const res = await fetch(url.replace('$USERID', apiUserId), { headers: { Authorization: apiUserToken }, ...options })
+                const res = await fetch(url.replace(/(\$USERID)/gi, apiUserId), { headers: { Authorization: apiUserToken }, ...options })
                 if (!res.ok) {
                     if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
                     else {
-                        notify('snackbar', `Er is iets misgegaan. Gebruik alsjeblieft de knop hiernaast om dit te melden. Fout ${res.status} bij ${url}.`, [{ innerText: "e-mail", href: `mailto:quinten@althues.nl` }], 36000000)
+                        notify('snackbar', `Er is iets misgegaan. Gebruik alsjeblieft de knop hiernaast om dit te melden. Fout ${res.status} bij ${res.url}.`, [{ innerText: "e-mail", href: `mailto:quinten@althues.nl` }], 36000000)
                         if (apiCache[url]) {
                             notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
                             return resolve(apiCache[url])
@@ -317,6 +317,66 @@ Element.prototype.createBarChart = function (frequencyMap, labels, threshold = 1
                 class: 'st-bar-chart-bar'
             })
     }
+
+    return chartArea
+}
+
+Element.prototype.createPieChart = function (frequencyMap, labels, threshold = 1) {
+    const chartArea = this
+    chartArea.innerText = ''
+    chartArea.classList.add('st-pie-chart', 'st-chart')
+
+    const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
+    const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
+    const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
+
+    const filteredAndSortedFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1])
+
+    filteredAndSortedFrequencyMap.forEach(([key, frequency], i, a) => {
+        const pieOffset = a.slice(0, i).reduce((acc, [key, frequency]) => acc + frequency, 0) / totalFrequency,
+            pieSize = frequency / totalFrequency,
+            hueRotate = 20 * i
+
+        const slice = element('div', `${chartArea.id}-${key}`, chartArea, {
+            class: 'st-pie-chart-slice',
+            title: labels?.[key] ?? key,
+            'data-value': frequency,
+            'data-percentage': Math.round(frequency / totalFrequency * 100),
+            'data-more-than-half': pieSize > 0.5,
+            style: `--hue-rotate: ${hueRotate}; --pie-offset: ${pieOffset}; --pie-size: ${pieSize}`
+        }),
+            box1 = element('div', `${chartArea.id}-${key}-box1`, slice, {
+                class: 'st-pie-chart-arc st-pie-chart-slice-box1'
+            }),
+            box2 = element('div', `${chartArea.id}-${key}-box2`, box1, {
+                class: 'st-pie-chart-arc st-pie-chart-slice-box2'
+            })
+    })
+
+    if (remainderFrequency > 0) {
+        const pieOffset = 1 - (remainderFrequency / totalFrequency),
+            pieSize = remainderFrequency / totalFrequency,
+            hueRotate = 20 * filteredAndSortedFrequencyMap.length
+
+        const slice = element('div', `${chartArea.id}-remainder`, chartArea, {
+            class: 'st-pie-chart-slice',
+            title: remainingItems.length === 1
+                ? labels?.[remainingItems[0][0]] ?? remainingItems[0][0]
+                : "Overige",
+            'data-value': remainderFrequency,
+            'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
+            'data-more-than-half': pieSize > 0.5,
+            style: `--hue-rotate: ${hueRotate}; --pie-offset: ${pieOffset}; --pie-size: ${pieSize}`
+        }),
+            box1 = element('div', `${chartArea.id}-remainder-box1`, slice, {
+                class: 'st-pie-chart-arc st-pie-chart-slice-box1'
+            }),
+            box2 = element('div', `${chartArea.id}-remainder-box2`, box1, {
+                class: 'st-pie-chart-arc st-pie-chart-slice-box2'
+            })
+    }
+
+    // if mouse is inside the bounding box of box1 and box2, apply a class or sth
 
     return chartArea
 }

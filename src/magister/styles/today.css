@@ -609,7 +609,8 @@
 #st-start-widget-counters {
     display: flex;
     flex-wrap: wrap;
-    padding-top: 0;
+    gap: 16px;
+    padding: 8px 16px 12px;
 }
 
 #st-start-widget-grades,
@@ -619,7 +620,7 @@
 }
 
 #st-start-widget-grades:hover,
-#st-start-widget-digital-clock:hover {
+#st-start-widget-digital-clock:not(:fullscreen):hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 0;
 }
@@ -744,26 +745,20 @@
     background-color: var(--st-accent-secondary);
 }
 
-#st-start-widget-digital-clock.pop-out {
+#st-start-widget-digital-clock:fullscreen {
     display: flex;
     flex-direction: column;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-height: none;
     border-radius: 0;
-    z-index: 99999999;
+    cursor: none;
 }
 
-#st-start-widget-digital-clock.pop-out #st-start-widget-digital-clock-time {
+#st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-time {
     margin-block: auto;
     font-size: 8vw;
     line-height: normal;
 }
 
-#st-start-widget-digital-clock.pop-out #st-start-widget-digital-clock-wrapper {
+#st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-wrapper {
     height: 32px;
 }
 
