@@ -362,7 +362,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout td a,
+a:not(.user-content a, .st-button, .st-metric, .st-keyboard-hint), table.table-grid-layout td a,
 .k-calendar .k-header .k-nav-fast {
     color: var(--st-foreground-accent);
     text-decoration: none;
@@ -568,7 +568,7 @@ span.nrblock {
     color: var(--st-background-secondary) !important;
     font-family: var(--st-font-family-secondary);
     font-weight: 700 !important;
-    border-radius: calc(var(--st-border-radius) / 2);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     aspect-ratio: 1;
     width: auto;
     height: 15px;
@@ -662,15 +662,40 @@ aside, aside .block,
 
 .cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
     background-color: var(--st-highlight-subtle) !important;
+    font-weight: normal;
 }
 
 .cijfers-k-grid.k-grid .grade.gemiddeldecolumn {
-    background-color: var(--st-highlight-ok) !important;
+    background-color: var(--st-accent-primary) !important;
+    color: var(--st-contrast-accent) !important;
+    font-weight: bold;
 }
 
 .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
     color: var(--st-foreground-primary);
     filter: brightness(var(--st-hover-brightness));
+}
+
+.cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
+    box-shadow: inset -0.5px 0 0 2px var(--st-accent-primary) !important;
+    width: 40px;
+    padding-left: 0;
+}
+
+.cijfers-k-grid.k-grid .grade .herkansing-icon {
+    visibility: hidden;
+    width: 0;
+    top: 0;
+}
+
+.cijfers-k-grid.k-grid .grade .herkansing-icon:after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    content: '';
+    color: var(--st-foreground-accent);
+    font: bold 6px "Font Awesome 6 Pro";
+    visibility: visible;
 }
 
 .dvd-screensaver {

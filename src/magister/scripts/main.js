@@ -463,14 +463,3 @@ function standardDeviation(valueArray = []) {
         mean = valueArray.reduce((a, b) => a + b) / n
     return Math.sqrt(valueArray.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
 }
-
-
-function weightedPossibleMeans(valueArray, weightArray, newWeight) {
-    let means = [],
-        grades = []
-    for (let i = 1.0; i <= 10; i += 0.1) {
-        grades.push(Number(i))
-        means.push(Number(weightedMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
-    }
-    return [means, grades]
-}

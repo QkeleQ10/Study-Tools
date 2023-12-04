@@ -103,7 +103,7 @@ div.loading-overlay {
     font-weight: 600;
     border: none;
     outline: none;
-    border-radius: var(--st-border-radius);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     color: var(--st-contrast-accent);
     cursor: pointer;
     user-select: none;
@@ -118,9 +118,9 @@ div.loading-overlay {
 
 .st-button.secondary {
     background: var(--st-background-secondary);
-    color: var(--st-foreground-accent);
-    outline: 2px solid var(--st-accent-primary);
-    outline-offset: -2px;
+    color: var(--st-foreground-primary);
+    outline: 1px solid var(--st-accent-primary);
+    outline-offset: -1px;
 }
 
 .st-button.tertiary {
@@ -304,7 +304,11 @@ div.loading-overlay {
     background: var(--st-background-secondary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) / 2);
+    border-radius: calc(var(--st-border-radius) * 0.75);
+}
+
+.st-input[type=number] {
+    width: 75px;
 }
 
 .st-input:focus {
@@ -414,11 +418,12 @@ div.loading-overlay {
 }
 
 .st-sortable-list-item-option select {
-    width: 135px;
+    min-width: 128px;
+    max-width: 256px;
     padding: 4px 8px;
     background-color: var(--st-background-secondary);
     border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) / 2);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     font: 12px var(--st-font-family-secondary);
 }
 
@@ -543,6 +548,17 @@ div.loading-overlay {
     font: 12px var(--st-font-family-secondary);
 }
 
+a.st-metric {
+    color: var(--st-foreground-primary);
+    text-decoration: none;
+    transition: color 200ms;
+}
+
+a.st-metric:hover {
+    color: var(--st-foreground-accent);
+    transition: color 0;
+}
+
 .st-list {
     display: flex;
     flex-direction: column;
@@ -610,22 +626,6 @@ div.loading-overlay {
     background: var(--st-highlight-primary)
 }
 
-.st-cf-ghost {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: var(--st-highlight-primary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
-    text-align: center;
-    font: 11px/40px var(--st-font-family-secondary);
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 10000000;
-    transition: top 300ms ease-in, right 300ms ease-in;
-    animation: fadeIn 200ms;
-}
-
 .menu-container {
     padding-top: 2px;
     margin-top: -2px;
@@ -646,7 +646,7 @@ div.loading-overlay {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: calc(var(--st-border-radius) / 2);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     background: var(--st-contrast-accent);
     color: #777;
     font: 600 14px var(--st-font-family-secondary);
@@ -899,11 +899,6 @@ a.st-keyboard-hint.clicked {
     color: var(--st-foreground-accent);
 }
 
-.st-cf-ghost-moving {
-    animation: gradeGhost 400ms;
-    animation-fill-mode: forwards;
-}
-
 #st-prevent-interactions {
     position: absolute;
     top: 0;
@@ -925,6 +920,22 @@ a.st-keyboard-hint.clicked {
 .border-bottom-radius-none>span:nth-child(3) {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+}
+
+.st-chart-about {
+    width: calc(var(--size) / 2);
+    max-height: var(--size);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.st-chart-label {
+    font: 700 16px/24px var(--st-font-family-primary);
+}
+
+.st-chart-info {
+    font: 14px/22px var(--st-font-family-secondary);
 }
 
 .st-bar-chart {
@@ -990,9 +1001,15 @@ a.st-keyboard-hint.clicked {
     position: relative;
     --size: 256px;
     --radius: calc(var(--size) / 2);
+    display: flex;
+    gap: 12px;
+}
+
+.st-pie-chart:before {
+    content: '';
+    display: block;
     width: var(--size);
     height: var(--size);
-    border-radius: 50%;
 }
 
 .st-pie-chart-slice {
@@ -1025,10 +1042,7 @@ a.st-keyboard-hint.clicked {
     color: var(--st-contrast-accent);
     font: 600 12px var(--st-font-family-secondary);
     transform:
-        rotate(calc(var(--angle) / 2))
-        translateY(calc(-0.85 * var(--y) ))
-        rotate(calc(-1 * var(--angle) / 2))
-        rotate(calc(-1 * var(--pie-offset) * 1turn));
+        rotate(calc(var(--angle) / 2)) translateY(calc(-0.85 * var(--y))) rotate(calc(-1 * var(--angle) / 2)) rotate(calc(-1 * var(--pie-offset) * 1turn));
 }
 
 .st-pie-chart-slice:has(.st-pie-chart-slice-box2:hover):after,
@@ -1038,6 +1052,7 @@ a.st-keyboard-hint.clicked {
 }
 
 .st-pie-chart-slice-box1 {
+    --background-color: var(--st-accent-primary);
     position: absolute;
     top: 0;
     left: calc(var(--size) / 2);
@@ -1050,7 +1065,7 @@ a.st-keyboard-hint.clicked {
 }
 
 .st-pie-chart-slice[data-more-than-half=true] .st-pie-chart-slice-box1 {
-    background-color: var(--st-accent-primary);
+    background-color: var(--background-color);
     overflow: visible;
 }
 
@@ -1064,7 +1079,7 @@ a.st-keyboard-hint.clicked {
     border-radius: var(--size) 0 0 var(--size);
     transform-origin: right;
     transform: rotate(calc(var(--pie-size) * 1turn));
-    background-color: var(--st-accent-primary);
+    background-color: var(--background-color);
 }
 
 .st-pie-chart-slice,
@@ -1077,12 +1092,8 @@ a.st-keyboard-hint.clicked {
     pointer-events: all;
 }
 
-.st-pie-chart-slice-box2:hover,
-.st-pie-chart-slice[data-more-than-half=true] .st-pie-chart-slice-box1:hover {
-    background-color: var(--st-accent-secondary);
-}
-
-.st-pie-chart-slice-box1:has(.st-pie-chart-slice-box2:hover) {
+.st-pie-chart-slice.active .st-pie-chart-slice-box1 {
+    --background-color: var(--st-accent-secondary);
     transform: scale(1.05);
 }
 

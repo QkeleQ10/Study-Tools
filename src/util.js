@@ -280,7 +280,7 @@ Date.prototype.isTomorrow = function () { return this > midnight(0) && this < mi
 Date.prototype.isToday = function () { return this > midnight(-1) && this < midnight(0) }
 Date.prototype.isYesterday = function () { return this > midnight(-2) && this < midnight(-1) }
 
-Element.prototype.createBarChart = function (frequencyMap, labels, threshold = 1) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
     const chartArea = this
     chartArea.innerText = ''
     chartArea.classList.add('st-bar-chart', 'st-chart')
@@ -321,10 +321,14 @@ Element.prototype.createBarChart = function (frequencyMap, labels, threshold = 1
     return chartArea
 }
 
-Element.prototype.createPieChart = function (frequencyMap, labels, threshold = 1) {
+Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
     const chartArea = this
     chartArea.innerText = ''
     chartArea.classList.add('st-pie-chart', 'st-chart')
+
+    const aboutWrapper = element('div', `${chartArea.id}-about`, chartArea, { class: 'st-chart-about' }),
+        aboutLabel = element('span', `${chartArea.id}-about-label`, aboutWrapper, { class: 'st-chart-label' }),
+        aboutMore = element('span', `${chartArea.id}-about-more`, aboutWrapper, { class: 'st-chart-info' })
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
@@ -339,7 +343,7 @@ Element.prototype.createPieChart = function (frequencyMap, labels, threshold = 1
 
         const slice = element('div', `${chartArea.id}-${key}`, chartArea, {
             class: 'st-pie-chart-slice',
-            title: labels?.[key] ?? key,
+            'data-key': key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
             'data-more-than-half': pieSize > 0.5,
@@ -360,9 +364,7 @@ Element.prototype.createPieChart = function (frequencyMap, labels, threshold = 1
 
         const slice = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-pie-chart-slice',
-            title: remainingItems.length === 1
-                ? labels?.[remainingItems[0][0]] ?? remainingItems[0][0]
-                : "Overige",
+            'data-key': 'remainder',
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
             'data-more-than-half': pieSize > 0.5,
@@ -376,7 +378,29 @@ Element.prototype.createPieChart = function (frequencyMap, labels, threshold = 1
             })
     }
 
-    // if mouse is inside the bounding box of box1 and box2, apply a class or sth
+    function updateAbout() {
+        const hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover') || chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
+        chartArea.querySelectorAll('.st-pie-chart-slice.active').forEach(element => element.classList.remove('active'))
+        hoveredElement.classList.add('active')
+
+        let key, frequency
+        if (!hoveredElement?.dataset.key || !hoveredElement?.dataset.value) {
+            [key, frequency] = filteredAndSortedFrequencyMap[0]
+        } else {
+            [key, frequency] = [hoveredElement.dataset.key, hoveredElement.dataset.value]
+        }
+
+        if (key === 'remainder') {
+            aboutLabel.innerText = "Overige"
+            aboutMore.innerText = remainingItems.map(([key, frequency]) => `${key}: ${frequency}× (${Math.round(frequency / totalFrequency * 1000) / 10}%)`).join('\n')
+        } else {
+            aboutLabel.innerText = labels?.[key] || key
+            aboutMore.innerText = `${labels?.[key] ? key + '\n' : ''}${frequency}× (${Math.round(frequency / totalFrequency * 1000) / 10}%)`
+        }
+    }
+    chartArea.addEventListener('mousemove', updateAbout)
+    chartArea.addEventListener('mouseout', updateAbout)
+    updateAbout()
 
     return chartArea
 }

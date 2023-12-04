@@ -1,73 +1,82 @@
-#st-cf-cl {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: var(--st-background-overlay);
-    color: var(--st-foreground-primary);
-    z-index: 999998;
-    transition: translate 300ms, opacity 200ms;
+#st-cf-cl:not([open]) {
+    display: none;
 }
 
-#st-cf-cl[data-step="0"] {
-    opacity: 0;
-    translate: 200px;
-    pointer-events: none !important;
-    user-select: none !important;
+#st-cf-cl[open] {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999998;
+    display: grid;
+    grid-template:
+        'title buttons aside' auto
+        'subtitle buttons aside' auto
+        '. . aside' 1fr
+        / 1fr auto 440px;
+    column-gap: 16px;
+    padding-top: 40px;
+    padding-left: 24px;
+    padding-right: 0;
+    padding-bottom: 0;
 }
 
 #st-cf-cl-title {
-    position: absolute;
-    top: 40px;
-    left: 23px;
-    font: 700 28px / 2rem arboria, sans-serif;
-    color: var(--st-foreground-accent);
-}
-
-#st-cf-cl-title:after {
-    content: ".";
-    display: inline-block;
-    width: 3px;
-    color: #ff8205;
+    grid-area: title;
 }
 
 #st-cf-cl-subtitle {
-    position: absolute;
-    top: 80px;
-    left: 23px;
-    font: 14px var(--st-font-family-secondary);
+    grid-area: subtitle;
 }
 
-#st-cf-cl-keyboard-hint {
-    position: absolute;
-    top: 105px;
-    left: 23px;
-    font: 14px var(--st-font-family-secondary);
+#st-cf-cl-buttons {
+    grid-area: buttons;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
 }
 
 #st-cf-cl-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: absolute;
-    top: 154px;
-    right: 16px;
-    width: 425px;
-    bottom: 24px;
-    padding: 0 16px;
+    grid-area: aside;
+    display: grid;
+    grid-template: 'added' 1fr 'averages' auto 'prediction' auto / 1fr;
+    margin-top: -40px;
+    width: 440px;
     overflow-y: auto;
     overflow-x: visible;
     font-size: 14px;
-    border-radius: var(--st-border-radius);
-    border: var(--st-border)
+    gap: 16px;
+    padding: 40px 16px 0;
+    border-left: var(--st-border);
 }
 
 #st-cf-cl-added {
-    height: 100%;
+    grid-area: added;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+    flex-direction: column;
+    gap: 16px;
+    margin-right: -16px;
+}
+
+#st-cf-cl-added:before {
+    content: 'Toegevoegde cijfers';
+    display: inline-block;
+    font: 600 16px var(--st-font-family-primary);
+}
+
+#st-cf-cl-added-list {
     overflow-y: auto;
-    overflow-x: visible;
-    font-size: 14px;
+}
+
+#st-cf-cl-added-list:empty:after {
+    content: "Er zijn nog geen cijfers toegevoegd aan de berekening.\AVoeg cijfers toe vanuit het overzicht of voer je eigen cijfers in.";
+    white-space: pre;
+    color: var(--st-foreground-insignificant);
+    font: 600 14px/22px var(--st-font-family-secondary);
 }
 
 .st-cf-cl-added-element {
@@ -79,12 +88,17 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     cursor: pointer;
+    font-size: 14px;
     transition: color 200ms, padding 200ms;
-    animation: gradeAdd 400ms ease-out;
+    animation: gradeAdd 200ms 200ms ease-out both;
+}
+
+.st-cf-cl-added-element[data-type=manual] {
+    animation: gradeAdd 200ms ease-out both;
 }
 
 .st-cf-cl-added-element.remove {
-    animation: gradeRemove 200ms ease-in;
+    animation: gradeRemove 100ms ease-in;
     animation-fill-mode: forwards;
 }
 
@@ -99,6 +113,7 @@
     top: 50%;
     translate: 100px -50%;
     color: var(--st-accent-warn);
+    user-select: none;
     transition: translate 200ms;
 }
 
@@ -118,17 +133,23 @@
     translate: 0 -50%;
 }
 
-#st-cf-cl-added:before {
-    content: 'Toegevoegde cijfers\A';
-    white-space: pre-wrap;
-    font: var(--st-font-primary);
+#st-cf-cl-custom-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-right: 16px;
+}
+
+#st-cf-cl-custom-buttons>* {
+    flex-grow: 1;
 }
 
 #st-cf-cl-averages {
+    grid-area: averages;
     display: flex;
-    gap: 6px;
-    margin-top: auto;
-    padding: 5px 0 2px;
+    gap: 8px;
+    padding-top: 6px;
+    padding-bottom: 2px;
     border-top: var(--st-border);
 }
 
@@ -140,141 +161,84 @@
     color: var(--st-foreground-primary);
 }
 
+#st-cf-cl-prediction {
+    grid-area: prediction;
+    display: grid;
+    grid-template:
+        'title label' auto
+        'info input' 51px
+        'canvas canvas' auto;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: var(--st-border);
+}
+
+#st-cf-cl-prediction:before {
+    grid-area: title;
+    content: 'Voorspelling';
+    display: inline-block;
+    font: 600 16px var(--st-font-family-primary);
+}
+
+#st-cf-cl-future-weight-label {
+    grid-area: label;
+    justify-self: end;
+}
+
+#st-cf-cl-future-weight-input {
+    grid-area: input;
+    justify-self: end;
+}
+
 #st-cf-cl-future-desc {
-    padding-top: 40px;
-    margin-right: -16px;
+    grid-area: info;
     font-size: 12px;
     font-weight: normal;
-    border-top: var(--st-border);
     transition: color 150ms;
 }
 
-#st-cf-cl-future-desc:before {
-    position: absolute;
-    bottom: 275px;
-    content: 'Toekomstig cijfer';
-    font: var(--st-font-primary);
-    color: var(--st-foreground-primary);
-}
-
-#st-cf-cl-future-desc:after {
-    position: absolute;
-    bottom: 287px;
-    right: 80px;
-    content: 'Weging';
-    font-family: var(--st-secondary-font);
-    font-size: 14px;
-    color: var(--st-foreground-primary);
-}
-
-#st-cf-cl #st-cf-cl-future-weight {
-    bottom: 306px;
-    right: 32px;
-    top: auto;
-}
-
-#st-cf-cl:not([data-step="2"]) #st-cf-cl-future-weight,
-#st-cf-cl:not([data-step="2"]) #st-cf-cl-future-desc:after {
-    display: none;
-}
-
 #st-cf-cl-canvas {
-    margin: 0 -16px;
+    grid-area: canvas;
+    position: relative;
+    width: calc(100% + 32px);
+    height: 260px;
+    margin-inline: -16px;
     border-top: var(--st-border);
 }
 
-#st-cf-cl:not([data-step="2"]) #st-cf-cl-canvas,
-#st-cf-cl:not([data-step="2"]) .st-cf-cl-canvas-hl {
-    pointer-events: none;
-    visibility: hidden;
+@property --min-grade {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
 }
 
-.st-cf-cl-canvas-hl {
+@property --max-grade {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 10;
+}
+
+#st-cf-cl-canvas-line {
+    --min-grade: 1;
+    --max-grade: 10;
     position: absolute;
-    width: 2px;
-    height: 250px;
-    bottom: 25px;
-    opacity: 0;
-    background: var(--st-accent-primary);
-    pointer-events: none;
-    transition: opacity 200ms;
-}
-
-#st-cf-cl-canvas-hl-vertical.show {
-    opacity: .75;
-}
-
-#st-cf-cl-canvas-hl-horizontal {
-    height: 2px;
-    width: 424px;
-    right: 16px;
-    translate: 0 2px;
-    opacity: .75;
-}
-
-#st-cf-cl-canvas-hl-horizontal:before {
-    position: absolute;
-    left: 30px;
-    bottom: 5px;
-    content: 'nu ' attr(data-average-now);
-    font: 12px var(--st-font-family-secondary);
-    color: var(--st-foreground-accent);
-}
-
-#st-cf-cl-canvas-hl-horizontal.show:before {
-    content: attr(data-average);
-}
-
-#st-cf-cl-canvas-hl-horizontal.show[data-very-high=true]:before {
-    bottom: unset;
-    top: 5px;
-}
-
-#st-cf-cl-canvas-hl-horizontal:not(.show)[data-very-high-now=true]:not(.show):before {
-    bottom: unset;
-    top: 5px;
+    left: 0;
+    right: 0;
+    top: calc(((-1/9) * var(--max-grade) + (10/9)) * 100%);
+    bottom: calc(((1/9) * var(--min-grade) + (-1/9)) * 100%);
+    background-image: linear-gradient(to bottom right, transparent calc(50% - 1.5px), var(--st-foreground-primary), transparent calc(50% + 1.5px));
+    transition: --min-grade 200ms, --max-grade 200ms;
 }
 
 #st-cf-cl-averages>div.insufficient {
     color: var(--st-accent-warn) !important;
 }
 
-#st-cf-cl-open,
-#st-cf-cl-closer {
+#st-cf-cl-open {
     position: absolute;
     top: 35px;
     right: 28px;
     z-index: 99999;
-}
-
-#st-cf-cl-add-table {
-    position: absolute;
-    top: 35px;
-    right: 215px;
-}
-
-#st-cf-cl-add-custom {
-    position: absolute;
-    top: 75px;
-    right: 28px;
-}
-
-#st-cf-cl input[type=number] {
-    position: absolute;
-    top: 75px;
-    right: 318px;
-    width: 60px;
-    height: 32px;
-    font-family: var(--st-font-family-secondary);
-    font-size: 14px;
-    padding: 6px;
-    background: var(--st-background-secondary);
-    border: 2px solid var(--st-accent-primary);
-    border-radius: var(--st-border-radius);
-}
-
-#st-cf-cl #st-cf-cl-add-custom-weight {
-    right: 253px;
 }
 
 #st-cf-bk {
@@ -577,17 +541,30 @@ aside.st-appear-top {
     background: var(--st-background-secondary);
 }
 
-@keyframes gradeAdd {
+.st-cf-ghost {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: var(--st-border);
+    text-align: center;
+    font: bold 12px/40px var(--st-font-family-secondary);
+    overflow: hidden;
+    pointer-events: none;
+    scale: 1.2;
+    z-index: 10000000;
+    animation: ghost-create 100ms both;
+    transition: top 300ms ease-in, right 300ms ease-in;
+}
 
-    0%,
-    50% {
+.st-cf-ghost-moving {
+    animation: ghost-destroy 100ms both;
+    animation-delay: 300ms;
+}
+
+@keyframes gradeAdd {
+    0% {
         opacity: 0;
         translate: -370px;
-    }
-
-    100% {
-        opacity: 1;
-        translate: 0;
     }
 }
 
@@ -606,14 +583,24 @@ aside.st-appear-top {
     }
 }
 
-@keyframes gradeGhost {
-    30% {
+@keyframes ghost-create {
+    0% {
+        scale: 1;
+        opacity: 0;
+    }
+
+    25% {
         opacity: 1;
     }
 
     100% {
-        scale: 2;
+        scale: 1.2;
+    }
+}
+
+@keyframes ghost-destroy {
+    100% {
+        scale: 0.75;
         opacity: 0;
-        background: var(--st-highlight-ok);
     }
 }

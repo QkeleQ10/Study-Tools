@@ -404,7 +404,6 @@ nav.menu.ng-scope {
             editor.showModal()
         })
 
-        // TODO: stats
         let stats
         (async () => {
 
@@ -412,7 +411,7 @@ nav.menu.ng-scope {
             stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
             let statsHeading = element('div', 'st-start-stats-heading', stats),
                 statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
-                statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in ontwikkeling.` }),
+                statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
                 statsClose = element('button', 'st-start-stats-close', statsHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
                 statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
                 statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
@@ -436,11 +435,7 @@ nav.menu.ng-scope {
                     teachersFrequencyMap[teacherCode]++
                 })
 
-                // const teacherNames = Object.assign(
-                //     ...Object.entries(teachersFrequencyMap).map(([key, value]) => ({ [key]: eventsTeachers.find(t => t.Docentcode === item).Naam }))
-                // )
-
-                let chartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createPieChart(teachersFrequencyMap, null, 3)
+                let chartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
             }
 
             // Classroom stats 
@@ -454,7 +449,7 @@ nav.menu.ng-scope {
                     classroomsFrequencyMap[classroomName]++
                 })
 
-                let chartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createBarChart(classroomsFrequencyMap, null, 3)
+                let chartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createPieChart(classroomsFrequencyMap, null, 3)
             }
         })()
 
@@ -711,16 +706,18 @@ nav.menu.ng-scope {
 
                         if (!widgetsShown.includes('grades')) {
                             widgetsProgressText.innerText = `Cijfers ophalen...`
+                            let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
                             let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
                             let lastViewDate = new Date(lastViewMs)
                             if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
                             const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                            const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate).length
+                            const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7))).length
                             if (unreadGradesNum > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-grades', null, {
                                     class: 'st-metric',
                                     innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum,
-                                    'data-description': unreadGradesNum > 1 ? "Cijfers" : "Cijfer"
+                                    'data-description': unreadGradesNum > 1 ? "Cijfers" : "Cijfer",
+                                    href: '#/cijfers'
                                 }))
                             }
                         }
@@ -733,7 +730,8 @@ nav.menu.ng-scope {
                                 elems.push(element('div', 'st-start-widget-counters-messages', null, {
                                     class: 'st-metric',
                                     innerText: unreadMessagesNum,
-                                    'data-description': unreadMessagesNum > 1 ? "Berichten" : "Bericht"
+                                    'data-description': unreadMessagesNum > 1 ? "Berichten" : "Bericht",
+                                    href: '#/berichten'
                                 }))
                             }
                         }
@@ -756,10 +754,11 @@ nav.menu.ng-scope {
                             const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
                             const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                             if (dueAssignments.length > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-assignments', null, {
+                                elems.push(element('a', 'st-start-widget-counters-assignments', null, {
                                     class: 'st-metric',
                                     innerText: dueAssignments.length,
-                                    'data-description': dueAssignments.length > 1 ? "Opdrachten" : "Opdracht"
+                                    'data-description': dueAssignments.length > 1 ? "Opdrachten" : "Opdracht",
+                                    href: '#/elo/opdrachten'
                                 }))
                             }
                         }
@@ -768,10 +767,11 @@ nav.menu.ng-scope {
                         const activitiesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan&count=true`)
                         const activitiesNum = activitiesRes.TotalCount
                         if (activitiesNum > 0) {
-                            elems.push(element('div', 'st-start-widget-counters-activities', null, {
+                            elems.push(element('a', 'st-start-widget-counters-activities', null, {
                                 class: 'st-metric',
                                 innerText: activitiesNum,
-                                'data-description': activitiesNum > 1 ? "Activiteiten" : "Activiteit"
+                                'data-description': activitiesNum > 1 ? "Activiteiten" : "Activiteit",
+                                href: '#/elo/activiteiten'
                             }))
                         }
 
@@ -815,6 +815,21 @@ nav.menu.ng-scope {
                         ]
                     },
                     {
+                        title: "Als nieuw beschouwen indien",
+                        key: 'start-widget-cf-new',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Cijferlijst niet geopend",
+                                value: 'unread'
+                            },
+                            {
+                                title: "Minder dan week oud",
+                                value: 'week'
+                            }
+                        ]
+                    },
+                    {
                         title: "Beoordeling weergeven",
                         key: 'start-widget-cf-result',
                         type: 'select',
@@ -838,6 +853,7 @@ nav.menu.ng-scope {
                     return new Promise(async resolve => {
                         let viewWidget = await getFromStorage('start-widget-cf-widget', 'local') || 'always'
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
+                        let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
                         let hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
                         let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
                         let lastViewDate = new Date(lastViewMs)
@@ -848,7 +864,7 @@ nav.menu.ng-scope {
                             return {
                                 ...item,
                                 date: new Date(item.ingevoerdOp),
-                                unread: new Date(item.ingevoerdOp) > lastViewDate,
+                                unread: new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7)),
                                 hidden: (hiddenItems.includes(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
                             }
                         })
@@ -893,9 +909,9 @@ nav.menu.ng-scope {
                         if (moreUnreadItems.length === 1) {
                             let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].item.vak.code}` })
                         } else if (moreUnreadItems.length > 10) {
-                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${[...new Set(moreUnreadItems.map(item => item.vak.code))].join(', ').replace(/, ([^,]*)$/, ' en $1')}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${new Intl.ListFormat('nl-NL').format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
                         } else if (moreUnreadItems.length > 1) {
-                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog ${moreUnreadItems.length} cijfers voor ${[...new Set(moreUnreadItems.map(item => item.vak.code))].join(', ').replace(/, ([^,]*)$/, ' en $1')}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog ${moreUnreadItems.length} cijfers voor ${new Intl.ListFormat('nl-NL').format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
                         }
 
                         resolve(widgetElement)
@@ -1082,6 +1098,24 @@ nav.menu.ng-scope {
                                     : 'current-time-short'
                             })
 
+                        widgetElement.addEventListener('click', () => {
+                            if (!document.fullscreenElement) {
+                                widgetElement.requestFullscreen()
+                                widgetElement.removeAttribute('title')
+                                timeText.dataset.temporalType = 'current-time-long'
+                                updateTemporalBindings()
+                            } else {
+                                if (document.exitFullscreen) document.exitFullscreen()
+                                widgetElement.title = "Klok in volledig scherm"
+                                timeText.dataset.temporalType = secondsOption === 'show' ? 'current-time-long' : 'current-time-short'
+                                updateTemporalBindings()
+                            }
+                        })
+
+                        resolve(widgetElement)
+
+                        // Aditionally, show the progress of the day. Widget will be rendered even before this is available!
+
                         const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
                         const todaysEvents = eventsRes.Items.filter(item => new Date(item.Start).isToday())
                         if (!todaysEvents?.length > 0) return
@@ -1124,25 +1158,9 @@ nav.menu.ng-scope {
                             return schoolHours
                         }
 
-                        Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start)).forEach(item => {
-                            element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, title: `${item.gap ? "Tijd tussen lesuren" : item.hour + "e lesuur"}\n${new Date(item.start).getFormattedTime()}–${new Date(item.end).getFormattedTime()}`, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
+                        Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start)).forEach((item, i) => {
+                            element('div', `st-start-widget-digital-clock-${i}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, title: `${item.gap ? "Tijd tussen lesuren" : item.hour + "e lesuur"}\n${new Date(item.start).getFormattedTime()}–${new Date(item.end).getFormattedTime()}`, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
                         })
-
-                        widgetElement.addEventListener('click', () => {
-                            if (!document.fullscreenElement) {
-                                widgetElement.requestFullscreen()
-                                widgetElement.removeAttribute('title')
-                                timeText.dataset.temporalType = 'current-time-long'
-                                updateTemporalBindings()
-                            } else {
-                                if (document.exitFullscreen) document.exitFullscreen()
-                                widgetElement.title = "Klok in volledig scherm"
-                                timeText.dataset.temporalType = secondsOption === 'show' ? 'current-time-long' : 'current-time-short'
-                                updateTemporalBindings()
-                            }
-                        })
-
-                        resolve(widgetElement)
                     })
                 }
             }
