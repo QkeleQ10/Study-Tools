@@ -119,8 +119,7 @@ div.loading-overlay {
 .st-button.secondary {
     background: var(--st-background-secondary);
     color: var(--st-foreground-primary);
-    outline: 1px solid var(--st-accent-primary);
-    outline-offset: -2px;
+    border: 1px solid var(--st-accent-primary);
 }
 
 .st-button.tertiary {

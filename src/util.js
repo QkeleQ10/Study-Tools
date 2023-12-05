@@ -436,36 +436,39 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                 setTimeout(() => snackbar.classList.remove('open'), duration)
                 setTimeout(() => snackbar.remove(), duration + 2000)
             }
-            break;
+            break
 
         case 'dialog':
-            const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
-            dialog.showModal()
+            return new Promise(resolve => {
+                const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
+                dialog.showModal()
 
-            if (buttons?.length > 0) {
-                const buttonsWrapper = element('div', null, dialog, { class: 'st-dialog-buttons' })
-                buttons.forEach(item => {
-                    const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
-                    if (item.innerText) button.innerText = item.innerText
-                    if (item.clickSelector) {
-                        button.addEventListener('click', event => {
-                            document.querySelector(item.clickSelector)?.click()
-                            event.stopPropagation()
-                        })
-                    }
-                    else button.addEventListener('click', event => event.stopPropagation())
+                if (buttons?.length > 0) {
+                    const buttonsWrapper = element('div', null, dialog, { class: 'st-dialog-buttons' })
+                    buttons.forEach(item => {
+                        const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
+                        if (item.innerText) button.innerText = item.innerText
+                        if (item.clickSelector) {
+                            button.addEventListener('click', event => {
+                                document.querySelector(item.clickSelector)?.click()
+                                event.stopPropagation()
+                            })
+                        }
+                        else button.addEventListener('click', event => event.stopPropagation())
+                    })
+                }
+
+                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '' })
+                dialogDismiss.addEventListener('click', () => {
+                    dialog.close()
+                    dialog.remove()
                 })
-            }
 
-            const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '' })
-            dialogDismiss.addEventListener('click', () => {
-                dialog.close()
-                dialog.remove()
+                dialog.addEventListener('close', () => { resolve() }, { once: true })
             })
-            break;
 
         default:
-            break;
+            break
     }
 
 }

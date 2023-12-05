@@ -16,19 +16,19 @@ async function popstate() {
 async function gradeCalculator() {
     if (!syncedStorage['magister-cf-calculator']) return
 
+    let accessedBefore = await getFromStorage('cf-calc-accessed', 'local') || false
+
     const aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl')
 
-    // TODO: some sort of tooltip letting the user know they can double click grades
     const clOpen = element('button', 'st-cf-cl-open', document.body, { class: 'st-button', innerText: "Cijfercalculator", 'data-icon': '' }),
         clOverlay = element('div', 'st-cf-cl', document.body, { class: 'st-overlay' }),
         clTitle = element('span', 'st-cf-cl-title', clOverlay, { class: 'st-title', innerText: "Cijfercalculator" }),
-        clSubtitle = element('span', 'st-cf-cl-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt.\nGebruik de toets '?' voor informatie over een cijfer." }),
+        clSubtitle = element('span', 'st-cf-cl-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt." }),
         clButtons = element('div', 'st-cf-cl-buttons', clOverlay),
-        clClose = element('button', 'st-cf-cl-closer', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
-        // clAddTable = element('button', 'st-cf-cl-add-table', clButtons, { class: 'st-button', innerText: "Cijfer toevoegen", 'data-icon': '', title: "Neem het geselecteerde cijfer op in de berekening." }),
-        // clAddTableSubject = element('button', 'st-cf-cl-add-table-subject', clButtons, { class: 'st-button', innerText: "Alle cijfers van vak toevoegen", 'data-icon': '' }),
+        clHelp = element('button', 'st-cf-cl-help', clButtons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
+        clClose = element('button', 'st-cf-cl-close', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
         clSidebar = element('div', 'st-cf-cl-sidebar', clOverlay),
         clAdded = element('div', 'st-cf-cl-added', clSidebar),
         clAddedList = element('div', 'st-cf-cl-added-list', clAdded),
@@ -42,56 +42,162 @@ async function gradeCalculator() {
         clWeight = element('div', 'st-cf-cl-weight', clAveragesWrapper, { class: 'st-metric', 'data-description': "Gewicht" }),
         clPredictionWrapper = element('div', 'st-cf-cl-prediction', clSidebar),
         clFutureWeightLabel = element('label', 'st-cf-cl-future-weight-label', clPredictionWrapper, { innerText: "Weegfactor:" }),
-        clFutureWeightInput = element('input', 'st-cf-cl-future-weight-input', clPredictionWrapper, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1, value: 1 }),
+        clFutureWeightInput = element('input', 'st-cf-cl-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
         clFutureDesc = element('p', 'st-cf-cl-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
         clCanvas = element('div', 'st-cf-cl-canvas', clPredictionWrapper)
 
-    let resultsList = [],
-        weightsList = [],
-        hypotheticalWeight = 1,
+    let years = (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/$USERID/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`)).items
+
+    let apiGrades = {},
+        gradeColumns = {},
+        addedToCalculation = [],
+        hypotheticalWeight,
+        fallbackHypotheticalWeight,
         calcMean,
         calcMedian,
         advice
 
     clOpen.addEventListener('click', async () => {
         if (!document.querySelector('#st-cf-bk-aside')) {
-            let schoolYear = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
-            apiGrades = (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYear}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`)).Items
+            let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+            let schoolYear = years.find(y => y.id == schoolYearId)
+            apiGrades[schoolYearId] ??= (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYearId}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${schoolYear.einde}`)).Items
         }
 
         clOverlay.setAttribute('open', true)
-        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 156px);position: fixed;left: 20px;top: 140px;right: 456px;bottom: 16px;')
+        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
 
-        resultsList = []
-        weightsList = []
+        addedToCalculation = []
         clAddedList.innerText = ''
         updateCalculations()
+
+        if (!accessedBefore) {
+            await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
+            accessedBefore = true
+            saveToStorage('cf-calc-accessed', true, 'local')
+        }
+    })
+
+    clClose.addEventListener('click', () => {
+        gradesContainer.removeAttribute('style')
+        clOverlay.removeAttribute('open')
+        aside.removeAttribute('style')
+        createStyle('', 'st-calculation-added')
+    })
+
+    clHelp.addEventListener('click', async () => {
+        await notify('dialog', "Welkom in de cijfercalculator!\n\nMet de cijfercalculator kun je gemakkelijk zien wat je moet halen of wat je gemiddelde zou kunnen worden.")
+
+        await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.\n\nAls je meer wil weten over een cijfer, druk dan op '?' op je toetsenbord.")
+
+        await notify('dialog', "In het zijpaneel zie je alle cijfers die je hebt toegevoegd, samen met wat centrummaten.\n\nHelemaal onderin zie je een diagram. Die geeft op de x-as de cijfers 1 t/m 10 weer, met op de y-as de \ngemiddelden die je zou kunnen komen te staan als je voor je volgende cijfer x haalt. Vergeet niet \nom de weegfactor goed in te stellen.")
     })
 
     addEventListener("keydown", e => {
-        if (clOverlay.hasAttribute('open') && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top') // TODO: add class for this
+        if (clOverlay.hasAttribute('open') && (e.key === '?' || e.key === '/')) {
+            if (aside.hasAttribute('style')) aside.removeAttribute('style')
+            else aside.setAttribute('style', 'z-index: 9999999;width: 408px;height: calc(100vh - 139px);position: fixed;top: 123px !important;bottom: 16px;right: 16px;background-color: var(--st-background-primary);pointer-events: none;')
+        }
     })
 
-    gradesContainer.addEventListener('click', event => {
-        const span = event.target.closest('.grade[id]:not(.empty)')
-        if (!span) return
+    gradesContainer.addEventListener('click', async (event) => {
+        if (!clOverlay.hasAttribute('open')) return
 
-        let result = Number(span.title.replace(',', '.')), weight, column, title
-        if (!result || isNaN(result) || result < 1 || result > 10) return notify('snackbar', "Dat cijfer kan niet worden toegevoegd aan de berekening.")
-
-        if (document.querySelector('#st-cf-bk-aside')) {
-            // This means there was an imported grade backup!
-        } else {
-            let gradeColumnId = apiGrades.find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}`).CijferKolom.Id
-            let gradeColumnInfo = useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYear}/cijfers/extrakolominfo/${gradeColumnId}`) // TODO: OMFG
-            weight = gradeColumnInfo.Weging
-            column = 
+        if (event.target.closest('td:nth-child(2)')) {
+            // If this is true, a subject title has been clicked.
+            event.target.closest('td:nth-child(2)').parentElement.querySelectorAll('.grade[id]:not(.empty)').forEach((elem, i) => {
+                setTimeout(() => {
+                    const result = Number(elem?.title?.replace(',', '.'))
+                    if (!result || isNaN(result) || result < 1 || result > 10) return
+                    if (elem.classList.contains('gemiddeldecolumn') && !elem.classList.contains('heeftonderliggendekolommen') && !elem.classList.contains('herkansingKolom')) return
+                    elem.click()
+                }, i * 100)
+            })
         }
 
-        // if (clOverlay.hasAttribute('open')) clAddTable.click()
+        const gradeElement = event.target.closest('.grade[id]:not(.empty)')
+        if (!gradeElement) return
+
+        const alreadyAddedElement = clAddedList.querySelector(`.st-cf-cl-added-element[data-id="${gradeElement.id}"]`)
+        if (alreadyAddedElement) {
+            alreadyAddedElement.click()
+            return
+        }
+
+        let ghostSourcePosition = gradeElement.getBoundingClientRect()
+        const ghostElement = element('span', null, document.body, {
+            class: 'st-cf-ghost',
+            innerText: gradeElement.title,
+            style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
+        })
+
+        let result = Number(gradeElement.title.replace(',', '.')),
+            weight,
+            column = '?',
+            title = '?'
+
+        if (gradeElement.parentElement.dataset.weight && gradeElement.parentElement.dataset.column && gradeElement.parentElement.dataset.title) {
+            weight = Number(gradeElement.parentElement.dataset.weight)
+            column = gradeElement.parentElement.dataset.column
+            title = gradeElement.parentElement.dataset.title
+        } else {
+            let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+            let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === gradeElement.id).CijferKolom.Id
+            gradeColumns[gradeColumnId] ??= await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${document.querySelector('#aanmeldingenSelect>option[selected=selected]').value}/cijfers/extracijferkolominfo/${gradeColumnId}`)
+            weight = gradeColumns[gradeColumnId].Weging
+            gradeElement.parentElement.dataset.weight = weight
+            column = gradeColumns[gradeColumnId].KolomNaam
+            gradeElement.parentElement.dataset.column = column
+            title = gradeColumns[gradeColumnId].KolomOmschrijving
+            gradeElement.parentElement.dataset.title = title
+        }
+
+        if (!result || isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
+            ghostElement.remove()
+            notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
+            return
+        }
+        if (!weight || weight <= 0) {
+            ghostElement.remove()
+            notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+            return
+        }
+
+        let addedElement = element('span', null, clAddedList, {
+            class: 'st-cf-cl-added-element',
+            innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
+            'data-insufficient': result < 5.5,
+            'data-type': 'table',
+            'data-id': gradeElement.id
+        })
+        addedElement.addEventListener('click', event => {
+            addedToCalculation = addedToCalculation.filter(item => item.id !== gradeElement.id)
+            event.target.classList.add('remove')
+            setTimeout(() => {
+                event.target.remove()
+                createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+            }, 100)
+            updateCalculations()
+        })
+        addedElement.scrollIntoView({ behavior: 'smooth' })
+        createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+
+        let ghostTargetPosition = addedElement.getBoundingClientRect()
+        ghostElement.style.top = `${ghostTargetPosition.top}px`
+        ghostElement.style.right = `${window.innerWidth - ghostTargetPosition.right}px`
+        ghostElement.classList.add('st-cf-ghost-moving')
+        setTimeout(() => ghostElement.remove(), 400)
+
+        addedToCalculation.push({
+            id: gradeElement.id,
+            result,
+            weight
+        })
+        updateCalculations()
     })
 
     clAddCustom.addEventListener('click', event => {
+        let id = Date.now()
         let result = Number(clAddCustomResult.value.replace(',', '.'))
         let weight = Number(clAddCustomWeight.value.replace(',', '.'))
 
@@ -107,126 +213,53 @@ async function gradeCalculator() {
         let addedElement = element('span', null, clAddedList, {
             class: 'st-cf-cl-added-element',
             innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — handmatig ingevoerd\n`,
+            'data-insufficient': result < 5.5,
             'data-type': 'manual',
-            'data-grade-index': resultsList.length
+            'data-id': id
         })
         addedElement.addEventListener('click', event => {
-            resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
-            weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
+            addedToCalculation = addedToCalculation.filter(item => item.id !== id)
             event.target.classList.add('remove')
             setTimeout(() => event.target.remove(), 100)
             updateCalculations()
         })
         addedElement.scrollIntoView({ behavior: 'smooth' })
 
-        resultsList.push(result)
-        weightsList.push(weight)
+        addedToCalculation.push({ id, result, weight })
         updateCalculations()
-    })
-
-    clAddTable.addEventListener('click', async event => {
-        if (item.dataset.title) {
-            // If manually imported, this will trigger because it's much simpler and faster.
-            result = Number(item.dataset.result.replace(',', '.'))
-            weight = Number(item.dataset.weight.replace('x', '').replace(',', '.'))
-            column = item.dataset.column
-            title = item.dataset.title
-        } else {
-            // This timeout is in place to hopefully ensure the data is all in place
-            // TODO: Get rid of this annoying timeout
-            clAddTable.setAttribute('disabled', true)
-            setTimeout(() => {
-                gradeDetails.childNodes.forEach(element => {
-                    if (element.innerText === 'Beoordeling' || element.innerText === 'Resultaat') {
-                        result = Number(element.nextElementSibling.innerText.replace(',', '.'))
-                    } else if (element.innerText === 'Weging' || element.innerText === 'Weegfactor') {
-                        weight = Number(element.nextElementSibling.innerText.replace('x', '').replace(',', '.'))
-                    } else if (element.innerText === 'Kolomnaam' || element.innerText === 'Vak') {
-                        column = element.nextElementSibling.innerText
-                    } else if (element.innerText === 'Kolomkop' || element.innerText === 'Omschrijving') {
-                        title = element.nextElementSibling.innerText
-                    }
-                })
-                clAddTable.removeAttribute('disabled')
-            }, 300)
-        }
-
-        let ghostSourcePosition = document.querySelector('.k-state-selected .grade')?.getBoundingClientRect()
-        if (!ghostSourcePosition) {
-            notify('snackbar', 'Er is geen cijfer geselecteerd.')
-            return
-        }
-        const ghostElement = element('span', null, document.body, {
-            class: 'st-cf-ghost',
-            innerText: document.querySelector('.k-state-selected .grade')?.lastChild?.wholeText,
-            style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(document.querySelector('.k-state-selected .grade')).backgroundColor}; color: ${window.getComputedStyle(document.querySelector('.k-state-selected .grade')).color}`
-        })
-
-        setTimeout(() => {
-            if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
-                ghostElement.remove()
-                notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
-                return
-            }
-            if (weight <= 0) {
-                ghostElement.remove()
-                notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
-                return
-            }
-
-            let addedElement = element('span', null, clAddedList, {
-                class: 'st-cf-cl-added-element',
-                innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
-                'data-type': 'table',
-                'data-grade-index': resultsList.length
-            })
-            addedElement.addEventListener('click', event => {
-                resultsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
-                weightsList.splice(Array.from(event.target.parentNode.children).indexOf(event.target), 1)
-                event.target.classList.add('remove')
-                setTimeout(() => event.target.remove(), 100)
-                updateCalculations()
-            })
-            addedElement.scrollIntoView({ behavior: 'smooth' })
-
-            let ghostTargetPosition = addedElement.getBoundingClientRect()
-            ghostElement.style.top = `${ghostTargetPosition.top}px`
-            ghostElement.style.right = `${window.innerWidth - ghostTargetPosition.right}px`
-            ghostElement.classList.add('st-cf-ghost-moving')
-            setTimeout(() => ghostElement.remove(), 400)
-
-            resultsList.push(result)
-            weightsList.push(weight)
-            updateCalculations()
-        }, item.dataset.title ? 0 : 300)
     })
 
     clFutureWeightInput.addEventListener('input', async () => {
         hypotheticalWeight = Number(clFutureWeightInput.value)
-        if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) hypotheticalWeight = 1
+        if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) {
+            hypotheticalWeight = null
+            clFutureWeightInput.value = null
+        }
         updateCalculations()
     })
 
-    clClose.addEventListener('click', async () => {
-        gradesContainer.removeAttribute('style')
-        clOverlay.removeAttribute('open')
+    clCanvas.addEventListener('mouseover', () => {
+
     })
 
     function updateCalculations() {
-        calcMean = weightedMean(resultsList, weightsList)
-        calcMedian = median(resultsList)
+        calcMean = weightedMean(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight))
+        calcMedian = median(addedToCalculation.map(item => item.result))
         clMean.innerText = isNaN(calcMean)
             ? '?'
             : calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         clMedian.innerText = isNaN(calcMedian)
             ? '?'
             : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-        clWeight.innerText = weightsList.reduce((acc, curr) => acc + curr, 0) + '×'
+        clWeight.innerText = addedToCalculation.map(item => item.weight).reduce((acc, curr) => acc + curr, 0) + '×'
 
         if (calcMean < 5.5) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')
 
-        advice = formulateGradeAdvice(weightedPossibleMeans(resultsList, weightsList, hypotheticalWeight), hypotheticalWeight, calcMean)
+        fallbackHypotheticalWeight = Math.round(median(addedToCalculation.map(item => item.weight)) || 1)
+        clFutureWeightInput.placeholder = fallbackHypotheticalWeight + '×'
+
+        advice = formulateGradeAdvice()
         clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
         clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
         renderGradeChart()
@@ -234,9 +267,20 @@ async function gradeCalculator() {
 
     // TODO: chart also with tick marks, hover possibility etc
     function renderGradeChart() {
-        let minGrade = weightedPossibleMeans(resultsList, weightsList, hypotheticalWeight)[0][0],
-            maxGrade = weightedPossibleMeans(resultsList, weightsList, hypotheticalWeight)[0][90]
-        let line = element('div', 'st-cf-cl-canvas-line', clCanvas, { style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};` })
+        clCanvas.dataset.irrelevant = addedToCalculation.length < 1
+
+        let minGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][0],
+            maxGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][90]
+        let line = element('div', 'st-cf-cl-canvas-line', clCanvas, {
+            'data-min-grade': minGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'data-max-grade': maxGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
+        })
+
+        let currentMean = element('div', 'st-cf-cl-canvas-mean', clCanvas, {
+            'data-grade': calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            style: `--grade: ${calcMean}`
+        })
     }
 
     function weightedPossibleMeans(valueArray, weightArray, newWeight = 1) {
@@ -249,39 +293,42 @@ async function gradeCalculator() {
         return [means, grades]
     }
 
-}
+    function formulateGradeAdvice() {
+        let means = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight),
+            weight = hypotheticalWeight || fallbackHypotheticalWeight,
+            mean = calcMean
 
-function formulateGradeAdvice(means, weight = 1, mean) {
-    let text = "Bereken wat je moet halen of zie wat je komt te staan",
-        color = 'normal'
+        let text = "Bereken wat je moet halen of zie wat je komt te staan. Voeg eerst cijfers toe aan de berekening.",
+            color = 'normal'
 
-    const hypotheticalMeans = means[0],
-        hypotheticalGrades = means[1]
-    const minimumMean = Math.min(...hypotheticalMeans)
+        if (addedToCalculation.length < 1) return { text, color }
 
-    if (!hypotheticalMeans?.length > 0) {
+        const hypotheticalMeans = means[0],
+            hypotheticalGrades = means[1]
+        const minimumMean = Math.min(...hypotheticalMeans)
+
+
+        for (let i = 0; i < hypotheticalMeans.length; i++) {
+            let meanH = hypotheticalMeans[i],
+                gradeH = hypotheticalGrades[i] || 1.0
+            if (meanH >= 5.495) {
+                color = 'normal'
+                text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
+                if (gradeH <= 1.0) {
+                    text = `Met een cijfer dat ${weight}× meetelt\nkun je niet lager komen te staan dan een ${minimumMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+                } else if (gradeH > 9.9) {
+                    text = `Haal een 10,0 die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
+                }
+                break
+            } else {
+                color = 'warn'
+                text = `Met een cijfer dat ${weight}× meetelt\nkun je geen voldoende komen te staan.`
+            }
+        }
+
         return { text, color }
     }
 
-    for (let i = 0; i < hypotheticalMeans.length; i++) {
-        let meanH = hypotheticalMeans[i],
-            gradeH = hypotheticalGrades[i] || 1.0
-        if (meanH >= 5.495) {
-            color = 'normal'
-            text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
-            if (gradeH <= 1.0) {
-                text = `Met een cijfer dat ${weight}× meetelt kun je niet lager komen te staan dan een ${minimumMean.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}.`
-            } else if (gradeH > 9.9) {
-                text = `Haal een 10,0 om een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
-            }
-            break
-        } else {
-            color = 'warn'
-            text = `Met een cijfer dat ${weight}× meetelt kun je geen voldoende komen te staan.`
-        }
-    }
-
-    return { text, color }
 }
 
 // Page 'Cijferoverzicht', backup

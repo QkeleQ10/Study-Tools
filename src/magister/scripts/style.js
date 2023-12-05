@@ -645,7 +645,9 @@ aside, aside .block,
 }
 
 .cijfers-k-grid.k-grid .grade {
+    box-shadow: inset -0.5px 0 0 0 transparent;
     user-select: none;
+    transition: filter 200ms, box-shadow 200ms;
 }
 
 .cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
@@ -673,14 +675,12 @@ aside, aside .block,
 }
 
 .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
-    color: var(--st-foreground-primary);
-    filter: brightness(var(--st-hover-brightness));
-}
-
-.cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
-    box-shadow: inset -0.5px 0 0 2px var(--st-accent-primary) !important;
+    outline: 2px solid var(--st-accent-primary) !important;
+    outline-offset: -2px;
     width: 40px;
     padding-left: 0;
+    color: var(--st-foreground-primary);
+    filter: brightness(var(--st-hover-brightness));
 }
 
 .cijfers-k-grid.k-grid .grade .herkansing-icon {
