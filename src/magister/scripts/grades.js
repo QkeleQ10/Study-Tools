@@ -54,10 +54,10 @@ async function gradeCalculator() {
         advice
 
     clOpen.addEventListener('click', async () => {
-        // if (!document.querySelector('#st-cf-bk-aside')) {
-            // let schoolYear = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
-            // apiGrades = (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYear}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`)).Items
-        // }
+        if (!document.querySelector('#st-cf-bk-aside')) {
+            let schoolYear = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+            apiGrades = (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYear}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`)).Items
+        }
 
         clOverlay.setAttribute('open', true)
         gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 156px);position: fixed;left: 20px;top: 140px;right: 456px;bottom: 16px;')
@@ -82,8 +82,10 @@ async function gradeCalculator() {
         if (document.querySelector('#st-cf-bk-aside')) {
             // This means there was an imported grade backup!
         } else {
-            let gradeInApi = useApi() // TODO: OMFG
-            weight = 
+            let gradeColumnId = apiGrades.find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}`).CijferKolom.Id
+            let gradeColumnInfo = useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYear}/cijfers/extrakolominfo/${gradeColumnId}`) // TODO: OMFG
+            weight = gradeColumnInfo.Weging
+            column = 
         }
 
         // if (clOverlay.hasAttribute('open')) clAddTable.click()
