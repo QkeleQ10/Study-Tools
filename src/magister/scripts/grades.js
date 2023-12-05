@@ -27,8 +27,8 @@ async function gradeCalculator() {
         clSubtitle = element('span', 'st-cf-cl-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe met de knoppen hiernaast en zie wat je moet halen of wat je gemiddelde wordt.\nGebruik de toets '?' voor informatie over een cijfer." }),
         clButtons = element('div', 'st-cf-cl-buttons', clOverlay),
         clClose = element('button', 'st-cf-cl-closer', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
-        clAddTable = element('button', 'st-cf-cl-add-table', clButtons, { class: 'st-button', innerText: "Cijfer overnemen", 'data-icon': '' }),
-        clAddTableSubject = element('button', 'st-cf-cl-add-table-subject', clButtons, { class: 'st-button', innerText: "Vak overnemen", 'data-icon': '' }),
+        clAddTable = element('button', 'st-cf-cl-add-table', clButtons, { class: 'st-button', innerText: "Cijfer toevoegen", 'data-icon': '', title: "Neem het geselecteerde cijfer op in de berekening." }),
+        // clAddTableSubject = element('button', 'st-cf-cl-add-table-subject', clButtons, { class: 'st-button', innerText: "Alle cijfers van vak toevoegen", 'data-icon': '' }),
         clSidebar = element('div', 'st-cf-cl-sidebar', clOverlay),
         clAdded = element('div', 'st-cf-cl-added', clSidebar),
         clAddedList = element('div', 'st-cf-cl-added-list', clAdded),
@@ -50,7 +50,8 @@ async function gradeCalculator() {
         weightsList = [],
         hypotheticalWeight = 1,
         calcMean,
-        calcMedian
+        calcMedian,
+        advice
 
     clOpen.addEventListener('click', async () => {
         clOverlay.setAttribute('open', true)
@@ -66,7 +67,7 @@ async function gradeCalculator() {
     })
 
     addEventListener("keydown", e => {
-        if (clOverlay.hasAttribute('open') && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top')
+        if (clOverlay.hasAttribute('open') && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top') // TODO: add class for this
     })
 
     gradesContainer.addEventListener('dblclick', () => {
@@ -191,8 +192,8 @@ async function gradeCalculator() {
 
     clFutureWeightInput.addEventListener('input', async () => {
         hypotheticalWeight = Number(clFutureWeightInput.value)
-        if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) return
-        renderGradeChart()
+        if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) hypotheticalWeight = 1
+        updateCalculations()
     })
 
     clClose.addEventListener('click', async () => {
@@ -214,6 +215,9 @@ async function gradeCalculator() {
         if (calcMean < 5.5) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')
 
+        advice = formulateGradeAdvice(weightedPossibleMeans(resultsList, weightsList, hypotheticalWeight), hypotheticalWeight, calcMean)
+        clFutureDesc.innerText = advice.text
+        clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
         renderGradeChart()
     }
 
@@ -224,7 +228,7 @@ async function gradeCalculator() {
         let line = element('div', 'st-cf-cl-canvas-line', clCanvas, { style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};` })
     }
 
-    function weightedPossibleMeans(valueArray, weightArray, newWeight) {
+    function weightedPossibleMeans(valueArray, weightArray, newWeight = 1) {
         let means = [],
             grades = []
         for (let i = 1.0; i <= 10; i += 0.1) {
@@ -235,31 +239,33 @@ async function gradeCalculator() {
     }
 
 }
-async function formulateGradeAdvice(means, weight, mean) {
-    return new Promise((resolve, reject) => {
-        let text, color
-        for (let i = 0; i < means[0].length; i++) {
-            let meanH = means[0][i],
-                gradeH = means[1][i] || 1.0
-            if (meanH >= 5.495) {
-                color = 'var(--st-foreground-primary)'
-                text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
-                if (gradeH <= 1.0) {
-                    text = `Met een cijfer dat ${weight}× meetelt blijf je in elk geval een voldoende staan.`
-                } else if (gradeH > 9.9) {
-                    text = `Haal een 10,0 om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
-                }
-                break
-            } else {
-                color = 'var(--st-accent-warn)'
-                text = `Met een cijfer dat ${weight}× meetelt kun je geen voldoende komen te staan.`
+function formulateGradeAdvice(means, weight = 1, mean) {
+    let text = 'Bereken wat je moet halen of zie wat je komt te staan.',
+        color = 'normal'
+
+    const hypotheticalMeans = means[0],
+        hypotheticalGrades = means[1]
+    const minimumMean = Math.min(...hypotheticalMeans)
+
+    for (let i = 0; i < hypotheticalMeans.length; i++) {
+        let meanH = hypotheticalMeans[i],
+            gradeH = hypotheticalGrades[i] || 1.0
+        if (meanH >= 5.495) {
+            color = 'normal'
+            text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+            if (gradeH <= 1.0) {
+                text = `Met een cijfer dat ${weight}× meetelt kun je niet lager komen te staan dan een ${minimumMean.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}.`
+            } else if (gradeH > 9.9) {
+                text = `Haal een 10,0 om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
             }
+            break
+        } else {
+            color = 'warn'
+            text = `Met een cijfer dat ${weight}× meetelt kun je geen voldoende komen te staan.`
         }
-        resolve({
-            text: text || '',
-            color: color || 'var(--st-foreground-primary)'
-        })
-    })
+    }
+
+    return { text, color }
 }
 
 // Page 'Cijferoverzicht', backup

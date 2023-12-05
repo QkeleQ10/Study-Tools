@@ -662,6 +662,7 @@ aside, aside .block,
 
 .cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
     background-color: var(--st-highlight-subtle) !important;
+    color: var(--st-foreground-primary) !important;
     font-weight: normal;
 }
 
