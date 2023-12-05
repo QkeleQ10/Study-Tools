@@ -24,10 +24,10 @@ async function gradeCalculator() {
     const clOpen = element('button', 'st-cf-cl-open', document.body, { class: 'st-button', innerText: "Cijfercalculator", 'data-icon': '' }),
         clOverlay = element('div', 'st-cf-cl', document.body, { class: 'st-overlay' }),
         clTitle = element('span', 'st-cf-cl-title', clOverlay, { class: 'st-title', innerText: "Cijfercalculator" }),
-        clSubtitle = element('span', 'st-cf-cl-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe met de knoppen hiernaast en zie wat je moet halen of wat je gemiddelde wordt.\nGebruik de toets '?' voor informatie over een cijfer." }),
+        clSubtitle = element('span', 'st-cf-cl-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt.\nGebruik de toets '?' voor informatie over een cijfer." }),
         clButtons = element('div', 'st-cf-cl-buttons', clOverlay),
         clClose = element('button', 'st-cf-cl-closer', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
-        clAddTable = element('button', 'st-cf-cl-add-table', clButtons, { class: 'st-button', innerText: "Cijfer toevoegen", 'data-icon': '', title: "Neem het geselecteerde cijfer op in de berekening." }),
+        // clAddTable = element('button', 'st-cf-cl-add-table', clButtons, { class: 'st-button', innerText: "Cijfer toevoegen", 'data-icon': '', title: "Neem het geselecteerde cijfer op in de berekening." }),
         // clAddTableSubject = element('button', 'st-cf-cl-add-table-subject', clButtons, { class: 'st-button', innerText: "Alle cijfers van vak toevoegen", 'data-icon': '' }),
         clSidebar = element('div', 'st-cf-cl-sidebar', clOverlay),
         clAdded = element('div', 'st-cf-cl-added', clSidebar),
@@ -43,7 +43,7 @@ async function gradeCalculator() {
         clPredictionWrapper = element('div', 'st-cf-cl-prediction', clSidebar),
         clFutureWeightLabel = element('label', 'st-cf-cl-future-weight-label', clPredictionWrapper, { innerText: "Weegfactor:" }),
         clFutureWeightInput = element('input', 'st-cf-cl-future-weight-input', clPredictionWrapper, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1, value: 1 }),
-        clFutureDesc = element('p', 'st-cf-cl-future-desc', clPredictionWrapper),
+        clFutureDesc = element('p', 'st-cf-cl-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
         clCanvas = element('div', 'st-cf-cl-canvas', clPredictionWrapper)
 
     let resultsList = [],
@@ -54,24 +54,39 @@ async function gradeCalculator() {
         advice
 
     clOpen.addEventListener('click', async () => {
+        // if (!document.querySelector('#st-cf-bk-aside')) {
+            // let schoolYear = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+            // apiGrades = (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYear}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`)).Items
+        // }
+
         clOverlay.setAttribute('open', true)
+        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 156px);position: fixed;left: 20px;top: 140px;right: 456px;bottom: 16px;')
+
         resultsList = []
         weightsList = []
         clAddedList.innerText = ''
-        clMean.innerText = '?'
-        clMedian.innerText = '?'
-        clWeight.innerText = '0×'
-        clFutureDesc.innerText = "Zie hier wat je moet halen en wat je komt te staan."
-        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 156px);position: fixed;left: 20px;top: 140px;right: 456px;bottom: 16px;')
-        notify('dialog', "Welkom in de cijfercalculator!\n\nJe kunt cijfers handmatig toevoegen, maar je kunt ze ook rechtstreeks overnemen vanuit het\ncijferoverzicht. Neem een cijfer over door deze te selecteren en vervolgens erop te dubbelklikken.") // TODO: don't do this :(
+        updateCalculations()
     })
 
     addEventListener("keydown", e => {
         if (clOverlay.hasAttribute('open') && (e.key === '?' || e.key === '/')) aside.classList.toggle('st-appear-top') // TODO: add class for this
     })
 
-    gradesContainer.addEventListener('dblclick', () => {
-        if (clOverlay.hasAttribute('open')) clAddTable.click()
+    gradesContainer.addEventListener('click', event => {
+        const span = event.target.closest('.grade[id]:not(.empty)')
+        if (!span) return
+
+        let result = Number(span.title.replace(',', '.')), weight, column, title
+        if (!result || isNaN(result) || result < 1 || result > 10) return notify('snackbar', "Dat cijfer kan niet worden toegevoegd aan de berekening.")
+
+        if (document.querySelector('#st-cf-bk-aside')) {
+            // This means there was an imported grade backup!
+        } else {
+            let gradeInApi = useApi() // TODO: OMFG
+            weight = 
+        }
+
+        // if (clOverlay.hasAttribute('open')) clAddTable.click()
     })
 
     clAddCustom.addEventListener('click', event => {
@@ -83,8 +98,8 @@ async function gradeCalculator() {
             return
         }
         if (isNaN(weight) || weight <= 0) {
-            notify('snackbar', 'Geef een geldige weegfactor op.')
-            return
+            weight = 1
+            notify('snackbar', '1× genomen als weegfactor.')
         }
 
         let addedElement = element('span', null, clAddedList, {
@@ -108,11 +123,6 @@ async function gradeCalculator() {
     })
 
     clAddTable.addEventListener('click', async event => {
-        if (clAddTable.disabled) return
-
-        let item = document.querySelector('.k-state-selected'),
-            result, weight, column, title
-
         if (item.dataset.title) {
             // If manually imported, this will trigger because it's much simpler and faster.
             result = Number(item.dataset.result.replace(',', '.'))
@@ -144,7 +154,6 @@ async function gradeCalculator() {
             notify('snackbar', 'Er is geen cijfer geselecteerd.')
             return
         }
-
         const ghostElement = element('span', null, document.body, {
             class: 'st-cf-ghost',
             innerText: document.querySelector('.k-state-selected .grade')?.lastChild?.wholeText,
@@ -216,7 +225,7 @@ async function gradeCalculator() {
         else clMean.classList.remove('insufficient')
 
         advice = formulateGradeAdvice(weightedPossibleMeans(resultsList, weightsList, hypotheticalWeight), hypotheticalWeight, calcMean)
-        clFutureDesc.innerText = advice.text
+        clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
         clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
         renderGradeChart()
     }
@@ -239,24 +248,29 @@ async function gradeCalculator() {
     }
 
 }
+
 function formulateGradeAdvice(means, weight = 1, mean) {
-    let text = 'Bereken wat je moet halen of zie wat je komt te staan.',
+    let text = "Bereken wat je moet halen of zie wat je komt te staan",
         color = 'normal'
 
     const hypotheticalMeans = means[0],
         hypotheticalGrades = means[1]
     const minimumMean = Math.min(...hypotheticalMeans)
 
+    if (!hypotheticalMeans?.length > 0) {
+        return { text, color }
+    }
+
     for (let i = 0; i < hypotheticalMeans.length; i++) {
         let meanH = hypotheticalMeans[i],
             gradeH = hypotheticalGrades[i] || 1.0
         if (meanH >= 5.495) {
             color = 'normal'
-            text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+            text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger om een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
             if (gradeH <= 1.0) {
                 text = `Met een cijfer dat ${weight}× meetelt kun je niet lager komen te staan dan een ${minimumMean.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}.`
             } else if (gradeH > 9.9) {
-                text = `Haal een 10,0 om een voldoende te ${mean < 5.5 ? 'komen' : 'blijven'} staan.`
+                text = `Haal een 10,0 om een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
             }
             break
         } else {

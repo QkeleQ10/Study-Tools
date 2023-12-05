@@ -73,7 +73,7 @@
 }
 
 #st-cf-cl-added-list:empty:after {
-    content: "Er zijn nog geen cijfers toegevoegd aan de berekening.\AVoeg cijfers toe vanuit het overzicht of voer je eigen cijfers in.";
+    content: "Er zijn nog geen cijfers toegevoegd aan de berekening.\AVoeg cijfers toe vanuit het overzicht door erop te klikken\Aof voer hieronder je eigen cijfers in.";
     white-space: pre;
     color: var(--st-foreground-insignificant);
     font: 600 14px/22px var(--st-font-family-secondary);
