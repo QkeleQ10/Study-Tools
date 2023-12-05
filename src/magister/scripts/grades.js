@@ -63,7 +63,7 @@ async function gradeCalculator() {
         clWeight.innerText = '0×'
         clFutureDesc.innerText = "Zie hier wat je moet halen en wat je komt te staan."
         gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 156px);position: fixed;left: 20px;top: 140px;right: 456px;bottom: 16px;')
-        notify('dialog', "Welkom in de cijfercalculator!\n\nJe kunt cijfers handmatig toevoegen, maar je kunt ze ook rechtstreeks overnemen vanuit het\ncijferoverzicht. Neem een cijfer over door deze te selecteren en vervolgens erop te dubbelklikken.")
+        notify('dialog', "Welkom in de cijfercalculator!\n\nJe kunt cijfers handmatig toevoegen, maar je kunt ze ook rechtstreeks overnemen vanuit het\ncijferoverzicht. Neem een cijfer over door deze te selecteren en vervolgens erop te dubbelklikken.") // TODO: don't do this :(
     })
 
     addEventListener("keydown", e => {
@@ -209,7 +209,7 @@ async function gradeCalculator() {
             : calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         clMedian.innerText = isNaN(calcMedian)
             ? '?'
-            : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
         clWeight.innerText = weightsList.reduce((acc, curr) => acc + curr, 0) + '×'
 
         if (calcMean < 5.5) clMean.classList.add('insufficient')

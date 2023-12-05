@@ -166,7 +166,7 @@
     display: grid;
     grid-template:
         'title label' auto
-        'info input' 51px
+        'info input' 35px
         'canvas canvas' auto;
     gap: 8px;
     padding-top: 12px;
@@ -204,6 +204,10 @@
     height: 230px;
     margin-inline: -16px;
     border-top: var(--st-border);
+    background-image:
+        linear-gradient(to right, transparent calc(100% - 1px), var(--st-border-color) 1px),
+        linear-gradient(to bottom, transparent calc(100% - 1px), var(--st-border-color) 1px);
+    background-size: 10% 10%;
 }
 
 @property --min-grade {
@@ -226,7 +230,7 @@
     right: 0;
     top: calc(((-1/9) * var(--max-grade) + (10/9)) * 100%);
     bottom: calc(((1/9) * var(--min-grade) + (-1/9)) * 100%);
-    background-image: linear-gradient(to bottom right, transparent calc(50% - 1.5px), var(--st-foreground-primary), transparent calc(50% + 1.5px));
+    background-image: linear-gradient(to bottom right, transparent calc(50% - 2px), var(--st-foreground-primary), transparent calc(50% + 2px));
     transition: --min-grade 200ms, --max-grade 200ms;
 }
 
