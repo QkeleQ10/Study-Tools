@@ -647,7 +647,7 @@ aside, aside .block,
 .cijfers-k-grid.k-grid .grade {
     box-shadow: inset -0.5px 0 0 0 transparent;
     user-select: none;
-    transition: filter 200ms, box-shadow 200ms;
+    transition: filter 200ms, box-shadow 200ms, color 200ms, opacity 200ms;
 }
 
 .cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
@@ -697,6 +697,12 @@ aside, aside .block,
     color: var(--st-foreground-accent);
     font: bold 6px "Font Awesome 6 Pro";
     visibility: visible;
+}
+
+.cijfers-k-grid.k-grid .grade.st-cannot-add {
+    box-shadow: inset -0.5px 0 0 4px var(--st-accent-warn) !important;
+    color: var(--st-accent-warn) !important;
+    opacity: 0.5 !important;
 }
 
 .dvd-screensaver {

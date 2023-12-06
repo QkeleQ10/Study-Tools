@@ -30,7 +30,7 @@ async function gradeCalculator() {
         clHelp = element('button', 'st-cf-cl-help', clButtons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
         clClose = element('button', 'st-cf-cl-close', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
         clSidebar = element('div', 'st-cf-cl-sidebar', clOverlay),
-        clAdded = element('div', 'st-cf-cl-added', clSidebar),
+        clAdded = element('div', 'st-cf-cl-added', clSidebar, { 'data-amount': 0 }),
         clAddedList = element('div', 'st-cf-cl-added-list', clAdded),
         clCustomButtons = element('div', 'st-cf-cl-custom-buttons', clAdded),
         clAddCustomResult = element('input', 'st-cf-custom-result', clCustomButtons, { class: 'st-input', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 }),
@@ -104,107 +104,126 @@ async function gradeCalculator() {
         if (!clOverlay.hasAttribute('open')) return
 
         if (event.target.closest('td:nth-child(2)')) {
-            // If this is true, a subject title has been clicked.
-            event.target.closest('td:nth-child(2)').parentElement.querySelectorAll('.grade[id]:not(.empty)').forEach((elem, i) => {
-                setTimeout(() => {
-                    const result = Number(elem?.title?.replace(',', '.'))
-                    if (!result || isNaN(result) || result < 1 || result > 10) return
-                    if (elem.classList.contains('gemiddeldecolumn') && !elem.classList.contains('heeftonderliggendekolommen') && !elem.classList.contains('herkansingKolom')) return
-                    elem.click()
-                }, i * 100)
-            })
-        }
+            // If this is true, a subject title has been clicked. Add every belonging grade to the calculation.
+            const gradeElements = event.target.closest('td:nth-child(2)').parentElement.querySelectorAll('.grade[id]:not(.empty)')
+            for (const elem of gradeElements) {
+                const result = Number(elem?.title?.replace(',', '.'))
 
-        const gradeElement = event.target.closest('.grade[id]:not(.empty)')
-        if (!gradeElement) return
-
-        const alreadyAddedElement = clAddedList.querySelector(`.st-cf-cl-added-element[data-id="${gradeElement.id}"]`)
-        if (alreadyAddedElement) {
-            alreadyAddedElement.click()
-            return
-        }
-
-        let ghostSourcePosition = gradeElement.getBoundingClientRect()
-        const ghostElement = element('span', null, document.body, {
-            class: 'st-cf-ghost',
-            innerText: gradeElement.title,
-            style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
-        })
-
-        let result = Number(gradeElement.title.replace(',', '.')),
-            weight,
-            column = '?',
-            title = '?'
-
-        if (gradeElement.parentElement.dataset.weight && gradeElement.parentElement.dataset.column && gradeElement.parentElement.dataset.title) {
-            weight = Number(gradeElement.parentElement.dataset.weight)
-            column = gradeElement.parentElement.dataset.column
-            title = gradeElement.parentElement.dataset.title
+                if (
+                    result && !isNaN(result) &&
+                    result >= 1 && result <= 10 &&
+                    !(
+                        elem.classList.contains('gemiddeldecolumn') &&
+                        !elem.classList.contains('heeftonderliggendekolommen') &&
+                        !elem.classList.contains('herkansingKolom')
+                    )
+                ) {
+                    await addOrRemoveGrade(elem.id, true)
+                } else {
+                    elem.classList.add('st-cannot-add')
+                    setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
+                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+                }
+            }
         } else {
-            let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
-            let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === gradeElement.id).CijferKolom.Id
-            gradeColumns[gradeColumnId] ??= await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${document.querySelector('#aanmeldingenSelect>option[selected=selected]').value}/cijfers/extracijferkolominfo/${gradeColumnId}`)
-            weight = gradeColumns[gradeColumnId].Weging
-            gradeElement.parentElement.dataset.weight = weight
-            column = gradeColumns[gradeColumnId].KolomNaam
-            gradeElement.parentElement.dataset.column = column
-            title = gradeColumns[gradeColumnId].KolomOmschrijving
-            gradeElement.parentElement.dataset.title = title
+            const gradeElement = event.target.closest('.grade[id]:not(.empty)')
+            if (gradeElement) await addOrRemoveGrade(gradeElement.id)
         }
 
-        if (!result || isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
-            ghostElement.remove()
-            notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
-            return
-        }
-        if (!weight || weight <= 0) {
-            ghostElement.remove()
-            notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
-            return
-        }
-
-        let addedElement = element('span', null, clAddedList, {
-            class: 'st-cf-cl-added-element',
-            innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
-            'data-insufficient': result < 5.5,
-            'data-type': 'table',
-            'data-id': gradeElement.id
-        })
-        addedElement.addEventListener('click', event => {
-            addedToCalculation = addedToCalculation.filter(item => item.id !== gradeElement.id)
-            event.target.classList.add('remove')
-            setTimeout(() => {
-                event.target.remove()
-                createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
-            }, 100)
-            updateCalculations()
-        })
-        addedElement.scrollIntoView({ behavior: 'smooth' })
-        createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
-
-        let ghostTargetPosition = addedElement.getBoundingClientRect()
-        ghostElement.style.top = `${ghostTargetPosition.top}px`
-        ghostElement.style.right = `${window.innerWidth - ghostTargetPosition.right}px`
-        ghostElement.classList.add('st-cf-ghost-moving')
-        setTimeout(() => ghostElement.remove(), 400)
-
-        addedToCalculation.push({
-            id: gradeElement.id,
-            result,
-            weight
-        })
-        updateCalculations()
     })
+
+    function addOrRemoveGrade(id, lowVerbosity) {
+        return new Promise(async (resolve) => {
+            const alreadyAddedElement = clAddedList.querySelector(`.st-cf-cl-added-element[data-id="${id}"]`)
+            if (alreadyAddedElement) {
+                alreadyAddedElement.click()
+                return resolve()
+            }
+
+            const gradeElement = document.querySelector(`.grade[id="${id}"]`)
+
+            let ghostSourcePosition = gradeElement.getBoundingClientRect()
+            const ghostElement = element('span', null, document.body, {
+                class: 'st-cf-ghost',
+                innerText: gradeElement.title,
+                style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
+            })
+
+            let result = Number(gradeElement.title.replace(',', '.')),
+                weight,
+                column = '?',
+                title = '?'
+
+            if (gradeElement.parentElement.dataset.weight && gradeElement.parentElement.dataset.column && gradeElement.parentElement.dataset.title) {
+                weight = Number(gradeElement.parentElement.dataset.weight)
+                column = gradeElement.parentElement.dataset.column
+                title = gradeElement.parentElement.dataset.title
+            } else {
+                let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+                let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === id).CijferKolom.Id
+                gradeColumns[gradeColumnId] ??= await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${document.querySelector('#aanmeldingenSelect>option[selected=selected]').value}/cijfers/extracijferkolominfo/${gradeColumnId}`)
+                weight = gradeColumns[gradeColumnId].Weging
+                gradeElement.parentElement.dataset.weight = weight
+                column = gradeColumns[gradeColumnId].KolomNaam
+                gradeElement.parentElement.dataset.column = column
+                title = gradeColumns[gradeColumnId].KolomOmschrijving
+                gradeElement.parentElement.dataset.title = title
+            }
+
+            if (!result || isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
+                ghostElement.remove()
+                if (!lowVerbosity) notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
+                gradeElement.classList.add('st-cannot-add')
+                setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
+                return resolve()
+            }
+            if (!weight || weight <= 0) {
+                ghostElement.remove()
+                if (!lowVerbosity) notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+                gradeElement.classList.add('st-cannot-add')
+                setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
+                return resolve()
+            }
+
+            let addedElement = element('span', null, clAddedList, {
+                class: 'st-cf-cl-added-element',
+                innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
+                'data-insufficient': result < 5.5,
+                'data-type': 'table',
+                'data-id': id
+            })
+            addedElement.addEventListener('click', event => {
+                addedToCalculation = addedToCalculation.filter(item => item.id !== id)
+                event.target.classList.add('remove')
+                setTimeout(() => {
+                    event.target.remove()
+                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+                }, 100)
+                updateCalculations()
+            })
+            addedElement.scrollIntoView({ behavior: 'smooth' })
+            createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+
+            let ghostTargetPosition = addedElement.getBoundingClientRect()
+            ghostElement.style.top = `${ghostTargetPosition.top}px`
+            ghostElement.style.right = `${window.innerWidth - ghostTargetPosition.right}px`
+            ghostElement.classList.add('st-cf-ghost-moving')
+            setTimeout(() => ghostElement.remove(), 400)
+
+            addedToCalculation.push({ id, result, weight })
+            updateCalculations()
+            return resolve()
+        })
+    }
 
     clAddCustom.addEventListener('click', event => {
         let id = Date.now()
         let result = Number(clAddCustomResult.value.replace(',', '.'))
         let weight = Number(clAddCustomWeight.value.replace(',', '.'))
 
-        if (isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
-            notify('snackbar', 'Geef een geldig cijfer op dat ligt tussen de 1 en 10.')
-            return
-        }
+        if (isNaN(result)) return notify('snackbar', 'Geef een geldig cijfer op.')
+        if (result < 1) return notify('snackbar', 'Een cijfer kan niet lager zijn dan 1,0.')
+        if (result > 10) return notify('snackbar', 'Een cijfer kan niet hoger zijn dan 10,0.')
         if (isNaN(weight) || weight <= 0) {
             weight = 1
             notify('snackbar', '1× genomen als weegfactor.')
@@ -252,6 +271,8 @@ async function gradeCalculator() {
             ? '?'
             : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
         clWeight.innerText = addedToCalculation.map(item => item.weight).reduce((acc, curr) => acc + curr, 0) + '×'
+
+        clAdded.dataset.amount = addedToCalculation.length
 
         if (calcMean < 5.5) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')

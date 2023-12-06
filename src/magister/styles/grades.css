@@ -63,10 +63,14 @@
 }
 
 #st-cf-cl-added:before {
-    content: 'Toegevoegde cijfers';
+    content: 'Toegevoegde cijfers (' attr(data-amount) ')'; 
     display: inline-block;
     font: 600 16px var(--st-font-family-primary);
     padding-inline: 16px;
+}
+
+#st-cf-cl-added[data-amount="0"]:before {
+    content: 'Toegevoegde cijfers';
 }
 
 #st-cf-cl-added-list {
@@ -230,7 +234,7 @@
 }
 
 #st-cf-cl-canvas[data-irrelevant=true]>* {
-    opacity: 0;
+    opacity: 0 !important;
 }
 
 #st-cf-cl-canvas:after {
@@ -289,8 +293,9 @@
     bottom: -20px;
     left: 6px;
     color: var(--st-foreground-primary);
-    font: 12px var(--st-font-family-secondary);
-    opacity: 0.3;
+    font: bold 12px var(--st-font-family-secondary);
+    opacity: 0.4;
+    transition: opacity 200ms;
 }
 
 #st-cf-cl-canvas-line:not([data-max-grade=NaN]):after {
@@ -299,8 +304,9 @@
     top: -20px;
     right: 6px;
     color: var(--st-foreground-primary);
-    font: 12px var(--st-font-family-secondary);
-    opacity: 0.3;
+    font: bold 12px var(--st-font-family-secondary);
+    opacity: 0.4;
+    transition: opacity 200ms;
 }
 
 #st-cf-cl-canvas-mean {
@@ -318,8 +324,19 @@
     top: -20px;
     left: 6px;
     color: var(--st-foreground-accent);
-    font: 12px var(--st-font-family-secondary);
-    opacity: 0.5;
+    font: bold 12px var(--st-font-family-secondary);
+    opacity: 0.6;
+    transition: opacity 200ms;
+}
+
+#st-cf-cl-canvas:hover #st-cf-cl-canvas-mean {
+    opacity: .5;
+}
+
+#st-cf-cl-canvas:hover #st-cf-cl-canvas-line:before,
+#st-cf-cl-canvas:hover #st-cf-cl-canvas-line:after,
+#st-cf-cl-canvas:hover #st-cf-cl-canvas-mean:after {
+    opacity: 0;
 }
 
 #st-cf-cl-averages>div.insufficient {
