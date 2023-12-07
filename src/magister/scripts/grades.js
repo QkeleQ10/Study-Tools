@@ -257,8 +257,37 @@ async function gradeCalculator() {
         updateCalculations()
     })
 
-    clCanvas.addEventListener('mouseover', () => {
+    clCanvas.addEventListener('mousemove', event => {
+        if (addedToCalculation.length < 1) return
 
+        const hoverX = document.querySelector('#st-cf-cl-canvas-x'),
+            hoverY = document.querySelector('#st-cf-cl-canvas-y')
+
+        let mouseLeftPart = (event.pageX - event.currentTarget.offsetLeft) / event.currentTarget.offsetWidth
+        let hypotheticalGrade = Math.round(0.9 * mouseLeftPart * 100 + 10) / 10
+
+        hoverX.dataset.grade = hypotheticalGrade
+        hoverX.style.setProperty('--left', `${mouseLeftPart * 100}%`)
+
+        let hypotheticalMean = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][Math.round(0.9 * mouseLeftPart * 100)]
+
+        hoverY.dataset.grade = hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        hoverY.style.setProperty('--grade', hypotheticalMean)
+
+        if (hypotheticalMean.toFixed(2) === calcMean.toFixed(2)) {
+            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan blijf je gemiddeld een ${hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
+        } else if (hypotheticalMean > calcMean) {
+            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan stijgt je gemiddelde tot een ${hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+        } else {
+            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan daalt je gemiddelde tot een ${hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+        }
+        clFutureDesc.style.color = hypotheticalMean < 5.5 ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
+    })
+
+    clCanvas.addEventListener('mouseleave', event => {
+        advice = formulateGradeAdvice()
+        clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
+        clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
     })
 
     function updateCalculations() {
@@ -292,16 +321,20 @@ async function gradeCalculator() {
 
         let minGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][0],
             maxGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][90]
-        let line = element('div', 'st-cf-cl-canvas-line', clCanvas, {
+
+        const line = element('div', 'st-cf-cl-canvas-line', clCanvas, {
             'data-min-grade': minGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            'data-max-grade': maxGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'data-max-grade': maxGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), // TODO: turn red when below 5.5
             style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
         })
 
-        let currentMean = element('div', 'st-cf-cl-canvas-mean', clCanvas, {
+        const currentMean = element('div', 'st-cf-cl-canvas-mean', clCanvas, {
             'data-grade': calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             style: `--grade: ${calcMean}`
         })
+
+        let hoverX = element('div', 'st-cf-cl-canvas-x', clCanvas)
+        let hoverY = element('div', 'st-cf-cl-canvas-y', clCanvas)
     }
 
     function weightedPossibleMeans(valueArray, weightArray, newWeight = 1) {
