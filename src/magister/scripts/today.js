@@ -404,59 +404,71 @@ nav.menu.ng-scope {
             editor.showModal()
         })
 
-        let stats
-        (async () => {
+        if (syncedStorage['start-stats']) {
+            let stats
+            (async () => {
 
-            // stats overlay
-            stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
-            let statsHeading = element('div', 'st-start-stats-heading', stats),
-                statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
-                statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
-                statsClose = element('button', 'st-start-stats-close', statsHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
-                statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
-                statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
-                statsClassrooms = element('div', 'st-start-stats-classrooms', stats, { class: 'st-list st-tile' }),
-                statsClassroomsTitle = element('span', 'st-start-stats-classrooms-title', statsClassrooms, { class: 'st-section-title', 'data-icon': '', innerText: "Lokalen" })
-            statsClose.addEventListener('click', () => {
-                stats.close()
-            })
+                // stats overlay
+                stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
+                let statsHeading = element('div', 'st-start-stats-heading', stats),
+                    statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
+                    statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
+                    statsButtonWrapper = element('div', 'st-start-stats-button-wrapper', statsHeading, { class: 'st-button-wrapper' }),
+                    statsViewMode = element('div', 'st-start-stats-view', statsButtonWrapper, { class: 'st-segmented-control' }),
+                    statsViewPie = element('button', 'st-start-stats-view-pie', statsViewMode, { class: 'st-button segment active', innerText: "Taart", 'data-icon': '' }),
+                    statsViewBar = element('button', 'st-start-stats-view-bar', statsViewMode, { class: 'st-button segment', innerText: "Staaf", 'data-icon': '' }),
+                    statsClose = element('button', 'st-start-stats-close', statsButtonWrapper, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+                    statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
+                    statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
+                    statsClassrooms = element('div', 'st-start-stats-classrooms', stats, { class: 'st-list st-tile' }),
+                    statsClassroomsTitle = element('span', 'st-start-stats-classrooms-title', statsClassrooms, { class: 'st-section-title', 'data-icon': '', innerText: "Lokalen" })
+                statsClose.addEventListener('click', () => {
+                    stats.close()
+                })
 
-            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-            const events = eventsRes.Items
+                const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
+                const events = eventsRes.Items
 
-            // Teacher stats 
-            {
+                // Teacher stats 
                 const eventsTeachers = events.flatMap(item => item.Docenten)
-
                 let teachersFrequencyMap = {}
-
                 eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
                     teachersFrequencyMap[teacherCode] ??= 0
                     teachersFrequencyMap[teacherCode]++
                 })
+                let teachersChartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
 
-                let chartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
-            }
-
-            // Classroom stats 
-            {
+                // Classroom stats 
                 const eventsClassrooms = events.flatMap(item => item.Lokalen)
-
                 let classroomsFrequencyMap = {}
-
                 eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
                     classroomsFrequencyMap[classroomName] ??= 0
                     classroomsFrequencyMap[classroomName]++
                 })
+                let classroomsChartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createPieChart(classroomsFrequencyMap, null, 3)
 
-                let chartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createPieChart(classroomsFrequencyMap, null, 3)
-            }
-        })()
+                // Switch chart type
+                statsViewPie.addEventListener('click', () => {
+                    statsViewPie.classList.add('active')
+                    statsViewBar.classList.remove('active')
 
-        let invokeStats = element('button', 'st-start-invoke-stats', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Statistieken\nKrijg meer inzicht in je rooster" })
-        invokeStats.addEventListener('click', async () => {
-            stats.showModal()
-        })
+                    teachersChartArea.createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
+                    classroomsChartArea.createPieChart(classroomsFrequencyMap, null, 3)
+                })
+                statsViewBar.addEventListener('click', () => {
+                    statsViewBar.classList.add('active')
+                    statsViewPie.classList.remove('active')
+
+                    teachersChartArea.createBarChart(teachersFrequencyMap, teacherNamesSetting, 3)
+                    classroomsChartArea.createBarChart(classroomsFrequencyMap, null, 3)
+                })
+            })()
+
+            let invokeStats = element('button', 'st-start-invoke-stats', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Statistieken\nKrijg meer inzicht in je rooster" })
+            invokeStats.addEventListener('click', async () => {
+                stats.showModal()
+            })
+        }
 
         // Side panel collapse/expand button
         let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })

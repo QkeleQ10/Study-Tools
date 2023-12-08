@@ -848,7 +848,7 @@
     grid-area: heading;
     display: grid;
     grid-template:
-        'title close' auto
+        'title buttons' auto
         'subtitle subtitle' auto
         / 1fr auto;
 }
@@ -861,8 +861,9 @@
     grid-area: subtitle;
 }
 
-.st-overlay[id^="st-start"]>div:first-child>.st-button {
-    grid-area: close;
+.st-overlay[id^="st-start"]>div:first-child>.st-button,
+.st-overlay[id^="st-start"]>div:first-child>.st-button-wrapper {
+    grid-area: buttons;
 }
 
 #st-start-stats-teachers {

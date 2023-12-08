@@ -287,26 +287,31 @@
     transition: --min-grade 200ms, --max-grade 200ms, opacity 200ms;
 }
 
-#st-cf-cl-canvas-line:not([data-min-grade=NaN]):before {
-    content: attr(data-min-grade);
+#st-cf-cl-canvas-line:not([data-min-grade=NaN]):before,
+#st-cf-cl-canvas-line:not([data-max-grade=NaN]):after {
     position: absolute;
-    bottom: -20px;
-    left: 6px;
     color: var(--st-foreground-primary);
     font: bold 12px var(--st-font-family-secondary);
     opacity: 0.4;
-    transition: opacity 200ms;
+    transition: opacity 200ms, color 200ms;
+}
+
+#st-cf-cl-canvas-line:not([data-min-grade=NaN]):before {
+    content: attr(data-min-grade);
+    bottom: -20px;
+    left: 6px;
 }
 
 #st-cf-cl-canvas-line:not([data-max-grade=NaN]):after {
     content: attr(data-max-grade);
-    position: absolute;
     top: -20px;
     right: 6px;
-    color: var(--st-foreground-primary);
-    font: bold 12px var(--st-font-family-secondary);
-    opacity: 0.4;
-    transition: opacity 200ms;
+}
+
+#st-cf-cl-canvas-line[data-min-grade-insufficient=true]:not([data-min-grade=NaN]):before,
+#st-cf-cl-canvas-line[data-max-grade-insufficient=true]:not([data-max-grade=NaN]):after {
+    color: var(--st-accent-warn);
+    opacity: 0.6;
 }
 
 #st-cf-cl-canvas-mean {
@@ -363,7 +368,7 @@
 #st-cf-cl-canvas-x[data-grade] {
     position: absolute;
     height: 100%;
-    left: var(--left);
+    left: calc(((1/9) * var(--grade) + (-1/9)) * 100%);
     translate: -1px 0;
     border-left: 2px solid var(--st-foreground-accent);
     opacity: 0;

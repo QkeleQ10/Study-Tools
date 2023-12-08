@@ -94,6 +94,13 @@ div.loading-overlay {
     box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
 }
 
+.st-button-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
 .st-button {
     height: 32px;
     padding: 6px 16px;
@@ -645,11 +652,11 @@ a.st-metric:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: calc(var(--st-border-radius) * 0.75);
-    background: var(--st-contrast-accent);
-    color: #777;
+    border-radius: calc(var(--st-border-radius) * 0.5);
+    background: var(--st-accent-secondary);
+    color: var(--st-contrast-accent);
     font: 600 14px var(--st-font-family-secondary);
-    border: 1px solid #e7e7e7;
+    border: 1px solid var(--st-foreground-accent);
     scale: 0;
     opacity: 0;
     transition: scale 100ms var(--reverse-transition-delay), opacity 200ms;
@@ -661,7 +668,7 @@ li.children .submenu .st-hotkey-label {
 
 [data-hotkeys-visible="true"] .st-hotkey-label {
     scale: 1;
-    opacity: .6;
+    opacity: .8;
     transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms;
 }
 
@@ -676,14 +683,14 @@ li.children .submenu .st-hotkey-label {
 [data-hotkeys-visible="true"] .menu-host.collapsed-menu li.children .st-hotkey-label-collapsed-only {
     left: calc(var(--child-index) * 12px - 2px);
     scale: 1 !important;
-    opacity: .6 !important;
+    opacity: .8 !important;
     transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
 }
 
 [data-hotkeys-visible="true"] li.children:not(.expanded) .st-hotkey-label-collapsed-only {
     left: calc(var(--child-index) * 24px - 2px);
     scale: 1 !important;
-    opacity: .6 !important;
+    opacity: .8 !important;
     transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
 }
 
@@ -940,10 +947,12 @@ a.st-keyboard-hint.clicked {
 .st-bar-chart {
     display: flex;
     justify-content: space-between;
-    padding-bottom: 16px;
+    height: var(--size);
+    padding-bottom: 48px;
 }
 
 .st-bar-chart-col {
+    --hue-rotate: 0;
     --bar-fill-amount: 0;
     display: flex;
     flex-direction: column;
@@ -951,6 +960,7 @@ a.st-keyboard-hint.clicked {
     align-items: center;
     height: 100%;
     padding-inline: 2px;
+    filter: hue-rotate(calc(var(--hue-rotate) * 1deg));
     transition: --bar-fill-amount 200ms;
 }
 
@@ -994,6 +1004,7 @@ a.st-keyboard-hint.clicked {
     rotate: 45deg;
     translate: 2px 4px;
     font: 11px var(--st-font-family-secondary);
+    text-wrap: nowrap;
 }
 
 .st-pie-chart {

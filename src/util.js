@@ -85,8 +85,8 @@ async function getApiCredentials() {
 // Wrapper for fetch().json() with caching
 async function useApi(url, options) {
     return new Promise(async (resolve, reject) => {
-        // If the cached result is less than 20 seconds old, use it!
-        if (apiCache[url] && (new Date() - apiCache[url].date) < 20000) {
+        // If the cached result is less than 30 seconds old, use it!
+        if (apiCache[url] && (new Date() - apiCache[url].date) < 30000) {
             resolve(apiCache[url])
             return
         }
@@ -107,7 +107,18 @@ async function useApi(url, options) {
                 if (!res.ok) {
                     if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
                     else {
-                        notify('snackbar', `Er is iets misgegaan. Gebruik alsjeblieft de knop hiernaast om dit te melden. Fout ${res.status} bij ${res.url}.`, [{ innerText: "e-mail", href: `mailto:quinten@althues.nl` }], 36000000)
+                        console.error(`Error ${res.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${apiUserId}\nuserToken.length: ${apiUserToken.length}\nInfo about result and options:`)
+                        console.error(res, options)
+                        console.log(`Het zou me erg helpen als je een screenshot of kopie van dit scherm doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
+                        notify(
+                            'snackbar',
+                            `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+                            [
+                                { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
+                                { innerText: "Discord", href: `https://discord.gg/RVKXKyaS6y` }
+                            ],
+                            36000000
+                        )
                         if (apiCache[url]) {
                             notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
                             return resolve(apiCache[url])
@@ -283,6 +294,7 @@ Date.prototype.isYesterday = function () { return this > midnight(-2) && this < 
 Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
     const chartArea = this
     chartArea.innerText = ''
+    chartArea.classList.remove('st-pie-chart')
     chartArea.classList.add('st-bar-chart', 'st-chart')
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
@@ -290,13 +302,17 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
     const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
 
-    Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1]).forEach(([key, frequency]) => {
+    const filteredAndSortedFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1])
+
+    filteredAndSortedFrequencyMap.forEach(([key, frequency], i) => {
+        const hueRotate = 20 * i
+
         const col = element('div', `${chartArea.id}-${key}`, chartArea, {
             class: 'st-bar-chart-col',
             title: labels?.[key] ?? key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
-            style: `--bar-fill-amount: ${frequency / maxFrequency}`
+            style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-${key}-bar`, col, {
                 class: 'st-bar-chart-bar'
@@ -304,6 +320,8 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     })
 
     if (remainderFrequency > 0) {
+        const hueRotate = 20 * filteredAndSortedFrequencyMap.length
+
         const col = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-bar-chart-col',
             title: remainingItems.length === 1
@@ -311,7 +329,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
                 : "Overige",
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
-            style: `--bar-fill-amount: ${remainderFrequency / maxFrequency}`
+            style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${remainderFrequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-remainder-bar`, col, {
                 class: 'st-bar-chart-bar'
@@ -324,6 +342,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
 Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
     const chartArea = this
     chartArea.innerText = ''
+    chartArea.classList.remove('st-bar-chart')
     chartArea.classList.add('st-pie-chart', 'st-chart')
 
     const aboutWrapper = element('div', `${chartArea.id}-about`, chartArea, { class: 'st-chart-about' }),
@@ -381,6 +400,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     function updateAbout() {
         const hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover') || chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
         chartArea.querySelectorAll('.st-pie-chart-slice.active').forEach(element => element.classList.remove('active'))
+        if(!hoveredElement) return
         hoveredElement.classList.add('active')
 
         let key, frequency
@@ -473,10 +493,15 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
 
 }
 
-function createStyle(content, id = 'st-style') {
+function createStyle(content, id) {
     return new Promise((resolve, reject) => {
-        let styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
-        styleElem.id = id
+        let styleElem
+        if (!id) {
+            styleElem = document.createElement('style')
+        } else {
+            styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
+            styleElem.id = id
+        }
         styleElem.textContent = content
         document.head.append(styleElem)
         resolve(styleElem)

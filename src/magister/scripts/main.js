@@ -17,6 +17,7 @@ async function main() {
     if (syncedStorage['start-enabled']) {
         let vandaagText = await awaitElement('a#menu-vandaag span')
         vandaagText.innerText = "Start"
+        if (Math.random() < 0.009) createStyle(`.fa-home:before { content: '' !important; }`)
     }
 
     // Appbar metrics

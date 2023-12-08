@@ -1,0 +1,5 @@
+const MagisterApi = {
+    events: () => {
+        
+    }
+}

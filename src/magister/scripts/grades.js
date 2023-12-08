@@ -27,6 +27,7 @@ async function gradeCalculator() {
         clTitle = element('span', 'st-cf-cl-title', clOverlay, { class: 'st-title', innerText: "Cijfercalculator" }),
         clSubtitle = element('span', 'st-cf-cl-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt." }),
         clButtons = element('div', 'st-cf-cl-buttons', clOverlay),
+        clBugReport = element('button', 'st-cf-cl-bugs', clButtons, { class: 'st-button icon', title: "Ervaar je problemen?", 'data-icon': '' }),
         clHelp = element('button', 'st-cf-cl-help', clButtons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
         clClose = element('button', 'st-cf-cl-close', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
         clSidebar = element('div', 'st-cf-cl-sidebar', clOverlay),
@@ -58,19 +59,18 @@ async function gradeCalculator() {
         advice
 
     clOpen.addEventListener('click', async () => {
+        addedToCalculation = []
+        clAddedList.innerText = ''
+        updateCalculations()
+
+        clOverlay.setAttribute('open', true)
+        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
+
         if (!document.querySelector('#st-cf-bk-aside')) {
             let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
             let schoolYear = years.find(y => y.id == schoolYearId)
             apiGrades[schoolYearId] ??= (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYearId}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${schoolYear.einde}`)).Items
         }
-
-        clOverlay.setAttribute('open', true)
-        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
-
-        addedToCalculation = []
-        clAddedList.innerText = ''
-        updateCalculations()
-
         if (!accessedBefore) {
             await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
             accessedBefore = true
@@ -83,6 +83,17 @@ async function gradeCalculator() {
         clOverlay.removeAttribute('open')
         aside.removeAttribute('style')
         createStyle('', 'st-calculation-added')
+    })
+
+    clBugReport.addEventListener('click', () => {
+        notify(
+            'dialog',
+            "Ervaar je problemen met de cijfercalculator?\n\nJe kunt nog steeds handmatig je cijfers toevoegen. Stuur me ook even een berichtje of een mailtje om me te laten weten wat er misgaat. Zo kan ik het oplossen!",
+            [
+                { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+                { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
+            ]
+        )
     })
 
     clHelp.addEventListener('click', async () => {
@@ -267,7 +278,7 @@ async function gradeCalculator() {
         let hypotheticalGrade = Math.round(0.9 * mouseLeftPart * 100 + 10) / 10
 
         hoverX.dataset.grade = hypotheticalGrade
-        hoverX.style.setProperty('--left', `${mouseLeftPart * 100}%`)
+        hoverX.style.setProperty('--grade', hypotheticalGrade)
 
         let hypotheticalMean = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][Math.round(0.9 * mouseLeftPart * 100)]
 
@@ -324,7 +335,9 @@ async function gradeCalculator() {
 
         const line = element('div', 'st-cf-cl-canvas-line', clCanvas, {
             'data-min-grade': minGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            'data-max-grade': maxGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), // TODO: turn red when below 5.5
+            'data-min-grade-insufficient': minGrade < 5.5,
+            'data-max-grade': maxGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'data-max-grade-insufficient': maxGrade < 5.5,
             style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
         })
 
