@@ -36,13 +36,18 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 async function applyStyles() {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
+    let now = new Date()
+
     let hueWish = syncedStorage.color.h,
         saturationWish = syncedStorage.color.s,
         luminanceWish = syncedStorage.color.l,
         borderRadius = syncedStorage.shape
 
-    if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
-        hueWish = 266, saturationWish = 51, luminanceWish = 41
+    const res = (await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/timed-events.json`))
+    if (res.ok) {
+        let timedColors = await res.json()
+        let todaysTimedColor = timedColors.find(e => e.date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`)?.color
+        if (todaysTimedColor) [hueWish, saturationWish, luminanceWish] = todaysTimedColor
     }
 
     let lightThemeCss = `:root {
@@ -152,7 +157,7 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
-    let now = new Date()
+    now = new Date()
 
     // Menu bar decorations
     let decorationPreset = syncedStorage['decoration'],
