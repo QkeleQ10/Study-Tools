@@ -389,15 +389,6 @@ export default [
                 ]
             },
             {
-                id: 'notes-enabled',
-                title: "Notitieblok",
-                subtitle: "Oproepen met de activatietoets voor de sneltoetsen.",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
                 id: "disable-css",
                 title: "Algemene CSS-modificaties uitschakelen",
                 subtitle: "Veel functies van Study Tools werken mogelijk niet.",

@@ -60,7 +60,7 @@ async function today() {
     todayWidgets()
 
     // Birthday party mode!
-    const accountInfo = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/account?noCache=0`),
+    const accountInfo = await MagisterApi.accountInfo(),
         dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
         isBirthdayToday = birthday.isToday(),
@@ -135,6 +135,7 @@ nav.menu.ng-scope {
             let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
             if (todayDecreaseOffset && todayIncreaseOffset) {
                 todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1
+                todayResetOffset.dataset.icon = todayResetOffset.disabled ? '' : ''
                 todayDecreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0
                 todayIncreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41
             }
@@ -165,7 +166,7 @@ nav.menu.ng-scope {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
         todayResetOffset.addEventListener('click', () => {
             if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
@@ -259,8 +260,7 @@ nav.menu.ng-scope {
 
             // Nicknames editor 
             {
-                const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                const events = eventsRes.Items
+                const events = await MagisterApi.events()
 
                 const eventsTeachers = events.flatMap(item => item.Docenten).filter((value, index, self) =>
                     index === self.findIndex((t) => (
@@ -426,8 +426,7 @@ nav.menu.ng-scope {
                     stats.close()
                 })
 
-                const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                const events = eventsRes.Items
+                const events = await MagisterApi.events()
 
                 // Teacher stats 
                 const eventsTeachers = events.flatMap(item => item.Docenten)
@@ -492,8 +491,7 @@ nav.menu.ng-scope {
         now = new Date()
         agendaDayOffset = Math.floor((todayDate - gatherStart) / 86400000)
 
-        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-        const events = eventsRes.Items
+        const events = await MagisterApi.events()
 
         // Create an array with 42 days (6 weeks) containing events of those days
         let agendaDays = []
@@ -722,8 +720,8 @@ nav.menu.ng-scope {
                             let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
                             let lastViewDate = new Date(lastViewMs)
                             if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
-                            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                            const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7))).length
+                            const grades = await MagisterApi.grades.recent()
+                            const unreadGradesNum = grades.filter(item => new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7))).length
                             if (unreadGradesNum > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-grades', null, {
                                     class: 'st-metric',
@@ -736,8 +734,8 @@ nav.menu.ng-scope {
 
                         if (!widgetsShown.includes('messages')) {
                             widgetsProgressText.innerText = `Berichten ophalen...`
-                            const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
-                            const unreadMessagesNum = messagesRes.totalCount
+                            const messages = await MagisterApi.messages()
+                            const unreadMessagesNum = messages.length
                             if (unreadMessagesNum > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-messages', null, {
                                     class: 'st-metric',
@@ -750,8 +748,8 @@ nav.menu.ng-scope {
 
                         if (!widgetsShown.includes('homework')) {
                             widgetsProgressText.innerText = `Huiswerk ophalen...`
-                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                            const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                            const events = await MagisterApi.events()
+                            const homeworkEvents = events.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                             if (homeworkEvents.length > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-homework', null, {
                                     class: 'st-metric',
@@ -763,8 +761,8 @@ nav.menu.ng-scope {
 
                         if (!widgetsShown.includes('assignments')) {
                             widgetsProgressText.innerText = `Opdrachten ophalen...`
-                            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
-                            const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
+                            const assignments = await MagisterApi.assignments()
+                            const dueAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                             if (dueAssignments.length > 0) {
                                 elems.push(element('a', 'st-start-widget-counters-assignments', null, {
                                     class: 'st-metric',
@@ -776,8 +774,8 @@ nav.menu.ng-scope {
                         }
 
                         widgetsProgressText.innerText = `Activiteiten ophalen...`
-                        const activitiesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan&count=true`)
-                        const activitiesNum = activitiesRes.TotalCount
+                        const activities = await MagisterApi.activities()
+                        const activitiesNum = activities.length
                         if (activitiesNum > 0) {
                             elems.push(element('a', 'st-start-widget-counters-activities', null, {
                                 class: 'st-metric',
@@ -788,13 +786,14 @@ nav.menu.ng-scope {
                         }
 
                         widgetsProgressText.innerText = `Logboeken ophalen...`
-                        const logsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/$USERID/logboeken/count`)
-                        const logsNum = logsRes.count
+                        const logs = await MagisterApi.logs()
+                        const logsNum = logs.length
                         if (logsNum > 0) {
-                            elems.push(element('div', 'st-start-widget-counters-logs', null, {
+                            elems.push(element('a', 'st-start-widget-counters-logs', null, {
                                 class: 'st-metric',
                                 innerText: logsNum,
-                                'data-description': logsNum > 1 ? "Logboeken" : "Logboek"
+                                'data-description': logsNum > 1 ? "Logboeken" : "Logboek",
+                                href: '#/lvs-logboeken'
                             }))
                         }
 
@@ -871,8 +870,8 @@ nav.menu.ng-scope {
                         let lastViewDate = new Date(lastViewMs)
                         if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
-                        const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                        const recentGrades = gradesJson.items.map(item => {
+                        const grades = await MagisterApi.grades.recent()
+                        const recentGrades = grades.map(item => {
                             return {
                                 ...item,
                                 date: new Date(item.ingevoerdOp),
@@ -935,8 +934,7 @@ nav.menu.ng-scope {
                 title: "Berichten",
                 render: async () => {
                     return new Promise(async resolve => {
-                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
-                        const unreadMessages = messagesRes.items
+                        const unreadMessages = await MagisterApi.messages()
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
@@ -992,8 +990,8 @@ nav.menu.ng-scope {
                 render: async () => {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                        const homeworkEvents = eventsRes.Items.filter(item => {
+                        const events = await MagisterApi.events()
+                        const homeworkEvents = events.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
                             else
@@ -1042,9 +1040,9 @@ nav.menu.ng-scope {
             assignments: {
                 title: "Opdrachten",
                 render: async () => {
-                    return new Promise(async resolve => {
-                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
-                        const relevantAssignments = assignmentsRes.Items.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+                    return new Promise(async (resolve) => {
+                        const assignments = await MagisterApi.assignments()
+                        const relevantAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
 
                         if (relevantAssignments.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
@@ -1128,8 +1126,8 @@ nav.menu.ng-scope {
 
                         // Aditionally, show the progress of the day. Widget will be rendered even before this is available!
 
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                        const todaysEvents = eventsRes.Items.filter(item => new Date(item.Start).isToday())
+                        const events = await MagisterApi.events()
+                        const todaysEvents = events.filter(item => new Date(item.Start).isToday())
                         if (!todaysEvents?.length > 0) return
                         const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
 

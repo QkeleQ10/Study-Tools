@@ -208,7 +208,7 @@ function updateTemporalBindings() {
 
         switch (type) {
             case 'timestamp':
-                let timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
+                let timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long' })
                 if (start <= now && end >= now) {
                     // Start date is in the past and End date is in the future
                     timestamp = 'nu'
@@ -218,13 +218,16 @@ function updateTemporalBindings() {
                     else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
                     else if (start.isTomorrow()) timestamp = `morgen om ${start.getFormattedTime()}`
                     else if (start - now < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                    else if (start - now < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
+                    else timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 } else if (end <= now) {
                     // End date is in the past
                     if (now - end < minToMs(5)) timestamp = 'zojuist'
                     else if (now - end < minToMs(15)) timestamp = 'een paar minuten geleden'
-                    else if (end.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
-                    else if (end.isYesterday()) timestamp = `gisteren om ${start.getFormattedTime()}`
-                    else if (now - end < daysToMs(5)) timestamp = `afgelopen ${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                    else if (end.isToday()) timestamp = `vandaag om ${end.getFormattedTime()}`
+                    else if (end.isYesterday()) timestamp = `gisteren om ${end.getFormattedTime()}`
+                    else if (now - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
+                    else if (now.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
                 element.innerText = timestamp
                 break
@@ -400,7 +403,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     function updateAbout() {
         const hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover') || chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
         chartArea.querySelectorAll('.st-pie-chart-slice.active').forEach(element => element.classList.remove('active'))
-        if(!hoveredElement) return
+        if (!hoveredElement) return
         hoveredElement.classList.add('active')
 
         let key, frequency

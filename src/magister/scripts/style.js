@@ -514,7 +514,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span),
+span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span):not([id^="st-"]),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,

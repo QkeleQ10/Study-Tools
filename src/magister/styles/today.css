@@ -800,11 +800,18 @@
 .st-list-timestamp {
     text-align: end;
     z-index: 2;
+    font-weight: 600;
+    color: var(--st-foreground-insignificant);
 }
 
 .st-list-content {
     max-height: 30px;
     overflow: hidden;
+    color: var(--st-foreground-insignificant);
+}
+
+#st-start-widget-homework .st-list-content p {
+    color: var(--st-foreground-insignificant);
 }
 
 #st-start[data-widgets-collapsed=true] {
