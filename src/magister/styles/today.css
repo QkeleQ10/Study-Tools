@@ -696,7 +696,8 @@
 }
 
 #st-start-widget-grades:hover #st-start-widget-grades-last-hide,
-#st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide {
+#st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide,
+#st-start-widget-grades-last-hide:focus-visible {
     opacity: 1;
 }
 

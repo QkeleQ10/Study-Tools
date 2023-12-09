@@ -290,9 +290,9 @@ Date.prototype.getFormattedDay = function () {
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
-Date.prototype.isTomorrow = function () { return this > midnight(0) && this < midnight(1) }
-Date.prototype.isToday = function () { return this > midnight(-1) && this < midnight(0) }
-Date.prototype.isYesterday = function () { return this > midnight(-2) && this < midnight(-1) }
+Date.prototype.isTomorrow = function (offset=0) { return this > midnight(0+offset) && this < midnight(1+offset) }
+Date.prototype.isToday = function (offset=0) { return this > midnight(-1+offset) && this < midnight(0+offset) }
+Date.prototype.isYesterday = function (offset=0) { return this > midnight(-2+offset) && this < midnight(-1+offset) }
 
 Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
     const chartArea = this
