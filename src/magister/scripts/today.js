@@ -60,7 +60,7 @@ async function today() {
     todayWidgets()
 
     // Birthday party mode!
-    const accountInfo = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/account?noCache=0`),
+    const accountInfo = await MagisterApi.accountInfo(),
         dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
         isBirthdayToday = birthday.isToday(),
@@ -135,6 +135,7 @@ nav.menu.ng-scope {
             let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
             if (todayDecreaseOffset && todayIncreaseOffset) {
                 todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1
+                todayResetOffset.dataset.icon = todayResetOffset.disabled ? '' : ''
                 todayDecreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0
                 todayIncreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41
             }
@@ -165,7 +166,7 @@ nav.menu.ng-scope {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
         todayResetOffset.addEventListener('click', () => {
             if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
@@ -259,8 +260,7 @@ nav.menu.ng-scope {
 
             // Nicknames editor 
             {
-                const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                const events = eventsRes.Items
+                const events = await MagisterApi.events()
 
                 const eventsTeachers = events.flatMap(item => item.Docenten).filter((value, index, self) =>
                     index === self.findIndex((t) => (
@@ -348,7 +348,7 @@ nav.menu.ng-scope {
                         dragGhost.id += '-ghost'
                         dragGhost.classList.add('st-sortable-list-ghost')
                         dragGhost.classList.remove('dragging')
-                        dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
+                        dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top + editor.scrollTop}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
                         editor.append(dragGhost)
                     })
                     item.addEventListener('dragend', () => {
@@ -356,7 +356,7 @@ nav.menu.ng-scope {
                         item.classList.add('dragging-return')
                         document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
                             e.classList.add('returning')
-                            e.setAttribute('style', `top: ${item.getBoundingClientRect().top}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px;`)
+                            e.setAttribute('style', `top: ${item.getBoundingClientRect().top + editor.scrollTop}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px;`)
                             setTimeout(() => {
                                 e.remove()
                                 item.classList.remove('dragging-return')
@@ -404,63 +404,70 @@ nav.menu.ng-scope {
             editor.showModal()
         })
 
-        let stats
-        (async () => {
+        if (syncedStorage['start-stats']) {
+            let stats
+            (async () => {
 
-            // stats overlay
-            stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
-            let statsHeading = element('div', 'st-start-stats-heading', stats),
-                statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
-                statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in ontwikkeling.` }),
-                statsClose = element('button', 'st-start-stats-close', statsHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
-                statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
-                statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
-                statsClassrooms = element('div', 'st-start-stats-classrooms', stats, { class: 'st-list st-tile' }),
-                statsClassroomsTitle = element('span', 'st-start-stats-classrooms-title', statsClassrooms, { class: 'st-section-title', 'data-icon': '', innerText: "Lokalen" })
-            statsClose.addEventListener('click', () => {
-                stats.close()
-            })
+                // stats overlay
+                stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
+                let statsHeading = element('div', 'st-start-stats-heading', stats),
+                    statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
+                    statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
+                    statsButtonWrapper = element('div', 'st-start-stats-button-wrapper', statsHeading, { class: 'st-button-wrapper' }),
+                    statsViewMode = element('div', 'st-start-stats-view', statsButtonWrapper, { class: 'st-segmented-control' }),
+                    statsViewPie = element('button', 'st-start-stats-view-pie', statsViewMode, { class: 'st-button segment active', innerText: "Taart", 'data-icon': '' }),
+                    statsViewBar = element('button', 'st-start-stats-view-bar', statsViewMode, { class: 'st-button segment', innerText: "Staaf", 'data-icon': '' }),
+                    statsClose = element('button', 'st-start-stats-close', statsButtonWrapper, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+                    statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
+                    statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
+                    statsClassrooms = element('div', 'st-start-stats-classrooms', stats, { class: 'st-list st-tile' }),
+                    statsClassroomsTitle = element('span', 'st-start-stats-classrooms-title', statsClassrooms, { class: 'st-section-title', 'data-icon': '', innerText: "Lokalen" })
+                statsClose.addEventListener('click', () => {
+                    stats.close()
+                })
 
-            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-            const events = eventsRes.Items
+                const events = await MagisterApi.events()
 
-            // Teacher stats 
-            {
+                // Teacher stats 
                 const eventsTeachers = events.flatMap(item => item.Docenten)
-
                 let teachersFrequencyMap = {}
-
                 eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
                     teachersFrequencyMap[teacherCode] ??= 0
                     teachersFrequencyMap[teacherCode]++
                 })
+                let teachersChartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
 
-                // const teacherNames = Object.assign(
-                //     ...Object.entries(teachersFrequencyMap).map(([key, value]) => ({ [key]: eventsTeachers.find(t => t.Docentcode === item).Naam }))
-                // )
-
-                let chartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createBarChart(teachersFrequencyMap, null, 2)
-            }
-
-            // Classroom stats 
-            {
+                // Classroom stats 
                 const eventsClassrooms = events.flatMap(item => item.Lokalen)
-
                 let classroomsFrequencyMap = {}
-
                 eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
                     classroomsFrequencyMap[classroomName] ??= 0
                     classroomsFrequencyMap[classroomName]++
                 })
+                let classroomsChartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createPieChart(classroomsFrequencyMap, null, 3)
 
-                let chartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createBarChart(classroomsFrequencyMap, null, 2)
-            }
-        })()
+                // Switch chart type
+                statsViewPie.addEventListener('click', () => {
+                    statsViewPie.classList.add('active')
+                    statsViewBar.classList.remove('active')
 
-        let invokeStats = element('button', 'st-start-invoke-stats', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Statistieken\nKrijg meer inzicht in je rooster", style: 'display:none;' })
-        invokeStats.addEventListener('click', async () => {
-            stats.showModal()
-        })
+                    teachersChartArea.createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
+                    classroomsChartArea.createPieChart(classroomsFrequencyMap, null, 3)
+                })
+                statsViewBar.addEventListener('click', () => {
+                    statsViewBar.classList.add('active')
+                    statsViewPie.classList.remove('active')
+
+                    teachersChartArea.createBarChart(teachersFrequencyMap, teacherNamesSetting, 3)
+                    classroomsChartArea.createBarChart(classroomsFrequencyMap, null, 3)
+                })
+            })()
+
+            let invokeStats = element('button', 'st-start-invoke-stats', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Statistieken\nKrijg meer inzicht in je rooster" })
+            invokeStats.addEventListener('click', async () => {
+                stats.showModal()
+            })
+        }
 
         // Side panel collapse/expand button
         let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
@@ -484,8 +491,7 @@ nav.menu.ng-scope {
         now = new Date()
         agendaDayOffset = Math.floor((todayDate - gatherStart) / 86400000)
 
-        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-        const events = eventsRes.Items
+        const events = await MagisterApi.events()
 
         // Create an array with 42 days (6 weeks) containing events of those days
         let agendaDays = []
@@ -710,60 +716,90 @@ nav.menu.ng-scope {
 
                         if (!widgetsShown.includes('grades')) {
                             widgetsProgressText.innerText = `Cijfers ophalen...`
+                            let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
                             let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
                             let lastViewDate = new Date(lastViewMs)
                             if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
-                            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                            const unreadGradesNum = gradesRes.items.filter(item => new Date(item.ingevoerdOp) > lastViewDate).length
+                            const grades = await MagisterApi.grades.recent()
+                            const unreadGradesNum = grades.filter(item => new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7))).length
                             if (unreadGradesNum > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-grades', null, { class: 'st-metric', innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum, 'data-description': "Cijfers" }))
+                                elems.push(element('div', 'st-start-widget-counters-grades', null, {
+                                    class: 'st-metric',
+                                    innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum,
+                                    'data-description': unreadGradesNum > 1 ? "Cijfers" : "Cijfer",
+                                    href: '#/cijfers'
+                                }))
                             }
                         }
 
                         if (!widgetsShown.includes('messages')) {
                             widgetsProgressText.innerText = `Berichten ophalen...`
-                            const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
-                            const unreadMessagesNum = messagesRes.totalCount
+                            const messages = await MagisterApi.messages()
+                            const unreadMessagesNum = messages.length
                             if (unreadMessagesNum > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-messages', null, { class: 'st-metric', innerText: unreadMessagesNum, 'data-description': "Berichten" }))
+                                elems.push(element('div', 'st-start-widget-counters-messages', null, {
+                                    class: 'st-metric',
+                                    innerText: unreadMessagesNum,
+                                    'data-description': unreadMessagesNum > 1 ? "Berichten" : "Bericht",
+                                    href: '#/berichten'
+                                }))
                             }
                         }
 
                         if (!widgetsShown.includes('homework')) {
                             widgetsProgressText.innerText = `Huiswerk ophalen...`
-                            const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                            const homeworkEvents = eventsRes.Items.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                            const events = await MagisterApi.events()
+                            const homeworkEvents = events.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                             if (homeworkEvents.length > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-homework', null, { class: 'st-metric', innerText: homeworkEvents.length, 'data-description': "Huiswerk" }))
+                                elems.push(element('div', 'st-start-widget-counters-homework', null, {
+                                    class: 'st-metric',
+                                    innerText: homeworkEvents.length,
+                                    'data-description': homeworkEvents.length > 1 ? "Huiswerk" : "Huiswerk"
+                                }))
                             }
                         }
 
                         if (!widgetsShown.includes('assignments')) {
                             widgetsProgressText.innerText = `Opdrachten ophalen...`
-                            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
-                            const dueAssignments = assignmentsRes.Items.filter(item => !item.Afgesloten && !item.IngeleverdOp)
+                            const assignments = await MagisterApi.assignments()
+                            const dueAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                             if (dueAssignments.length > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-assignments', null, { class: 'st-metric', innerText: dueAssignments.length, 'data-description': "Opdrachten" }))
+                                elems.push(element('a', 'st-start-widget-counters-assignments', null, {
+                                    class: 'st-metric',
+                                    innerText: dueAssignments.length,
+                                    'data-description': dueAssignments.length > 1 ? "Opdrachten" : "Opdracht",
+                                    href: '#/elo/opdrachten'
+                                }))
                             }
                         }
 
                         widgetsProgressText.innerText = `Activiteiten ophalen...`
-                        const activitiesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan&count=true`)
-                        const activitiesNum = activitiesRes.TotalCount
+                        const activities = await MagisterApi.activities()
+                        const activitiesNum = activities.length
                         if (activitiesNum > 0) {
-                            elems.push(element('div', 'st-start-widget-counters-activities', null, { class: 'st-metric', innerText: activitiesNum, 'data-description': "Activiteiten" }))
+                            elems.push(element('a', 'st-start-widget-counters-activities', null, {
+                                class: 'st-metric',
+                                innerText: activitiesNum,
+                                'data-description': activitiesNum > 1 ? "Activiteiten" : "Activiteit",
+                                href: '#/elo/activiteiten'
+                            }))
                         }
 
                         widgetsProgressText.innerText = `Logboeken ophalen...`
-                        const logsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/$USERID/logboeken/count`)
-                        const logsNum = logsRes.count
+                        const logs = await MagisterApi.logs()
+                        const logsNum = logs.length
                         if (logsNum > 0) {
-                            elems.push(element('div', 'st-start-widget-counters-logs', null, { class: 'st-metric', innerText: logsNum, 'data-description': "Logboeken" }))
+                            elems.push(element('a', 'st-start-widget-counters-logs', null, {
+                                class: 'st-metric',
+                                innerText: logsNum,
+                                'data-description': logsNum > 1 ? "Logboeken" : "Logboek",
+                                href: '#/lvs-logboeken'
+                            }))
                         }
 
                         if (elems.length < 1) return resolve()
 
-                        let widgetElement = element('div', 'st-start-widget-counters', null, { class: 'st-widget' })
+                        let widgetElement = element('div', 'st-start-widget-counters', null, { class: 'st-tile st-widget' })
                         widgetElement.append(...elems)
 
                         resolve(widgetElement)
@@ -786,6 +822,21 @@ nav.menu.ng-scope {
                             {
                                 title: "Bij nieuw cijfer",
                                 value: 'new'
+                            }
+                        ]
+                    },
+                    {
+                        title: "Als nieuw beschouwen indien",
+                        key: 'start-widget-cf-new',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Cijferlijst niet geopend",
+                                value: 'unread'
+                            },
+                            {
+                                title: "Minder dan week oud",
+                                value: 'week'
                             }
                         ]
                     },
@@ -813,17 +864,18 @@ nav.menu.ng-scope {
                     return new Promise(async resolve => {
                         let viewWidget = await getFromStorage('start-widget-cf-widget', 'local') || 'always'
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
+                        let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
                         let hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
                         let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
                         let lastViewDate = new Date(lastViewMs)
                         if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
-                        const gradesJson = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`)
-                        const recentGrades = gradesJson.items.map(item => {
+                        const grades = await MagisterApi.grades.recent()
+                        const recentGrades = grades.map(item => {
                             return {
                                 ...item,
                                 date: new Date(item.ingevoerdOp),
-                                unread: new Date(item.ingevoerdOp) > lastViewDate,
+                                unread: new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7)),
                                 hidden: (hiddenItems.includes(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
                             }
                         })
@@ -868,9 +920,9 @@ nav.menu.ng-scope {
                         if (moreUnreadItems.length === 1) {
                             let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].item.vak.code}` })
                         } else if (moreUnreadItems.length > 10) {
-                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${[...new Set(moreUnreadItems.map(item => item.vak.code))].join(', ').replace(/, ([^,]*)$/, ' en $1')}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${new Intl.ListFormat('nl-NL').format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
                         } else if (moreUnreadItems.length > 1) {
-                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog ${moreUnreadItems.length} cijfers voor ${[...new Set(moreUnreadItems.map(item => item.vak.code))].join(', ').replace(/, ([^,]*)$/, ' en $1')}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog ${moreUnreadItems.length} cijfers voor ${new Intl.ListFormat('nl-NL').format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
                         }
 
                         resolve(widgetElement)
@@ -882,8 +934,7 @@ nav.menu.ng-scope {
                 title: "Berichten",
                 render: async () => {
                     return new Promise(async resolve => {
-                        const messagesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`)
-                        const unreadMessages = messagesRes.items
+                        const unreadMessages = await MagisterApi.messages()
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
@@ -939,8 +990,8 @@ nav.menu.ng-scope {
                 render: async () => {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                        const homeworkEvents = eventsRes.Items.filter(item => {
+                        const events = await MagisterApi.events()
+                        const homeworkEvents = events.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
                             else
@@ -989,9 +1040,9 @@ nav.menu.ng-scope {
             assignments: {
                 title: "Opdrachten",
                 render: async () => {
-                    return new Promise(async resolve => {
-                        const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}&einddatum=${now.getFullYear() + 1}-${now.getMonth() + 1}-${now.getDate()}`)
-                        const relevantAssignments = assignmentsRes.Items.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+                    return new Promise(async (resolve) => {
+                        const assignments = await MagisterApi.assignments()
+                        const relevantAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
 
                         if (relevantAssignments.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
@@ -1050,15 +1101,33 @@ nav.menu.ng-scope {
                     return new Promise(async resolve => {
                         const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
 
-                        let widgetElement = element('button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok vergroten/verkleinen" }),
+                        let widgetElement = element('button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" }),
                             timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
                                 'data-temporal-type': secondsOption === 'show'
                                     ? 'current-time-long'
                                     : 'current-time-short'
                             })
 
-                        const eventsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`)
-                        const todaysEvents = eventsRes.Items.filter(item => new Date(item.Start).isToday())
+                        widgetElement.addEventListener('click', () => {
+                            if (!document.fullscreenElement) {
+                                widgetElement.requestFullscreen()
+                                widgetElement.removeAttribute('title')
+                                timeText.dataset.temporalType = 'current-time-long'
+                                updateTemporalBindings()
+                            } else {
+                                if (document.exitFullscreen) document.exitFullscreen()
+                                widgetElement.title = "Klok in volledig scherm"
+                                timeText.dataset.temporalType = secondsOption === 'show' ? 'current-time-long' : 'current-time-short'
+                                updateTemporalBindings()
+                            }
+                        })
+
+                        resolve(widgetElement)
+
+                        // Aditionally, show the progress of the day. Widget will be rendered even before this is available!
+
+                        const events = await MagisterApi.events()
+                        const todaysEvents = events.filter(item => new Date(item.Start).isToday())
                         if (!todaysEvents?.length > 0) return
                         const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
 
@@ -1099,13 +1168,9 @@ nav.menu.ng-scope {
                             return schoolHours
                         }
 
-                        Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start)).forEach(item => {
-                            element('div', `st-start-widget-digital-clock-${item.Id}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, title: `${item.gap ? "Tijd tussen lesuren" : item.hour + "e lesuur"}\n${new Date(item.start).getFormattedTime()}–${new Date(item.end).getFormattedTime()}`, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
+                        Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start)).forEach((item, i) => {
+                            element('div', `st-start-widget-digital-clock-${i}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, title: `${item.gap ? "Tijd tussen lesuren" : item.hour + "e lesuur"}\n${new Date(item.start).getFormattedTime()}–${new Date(item.end).getFormattedTime()}`, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
                         })
-
-                        widgetElement.addEventListener('click', () => widgetElement.classList.toggle('pop-out'))
-
-                        resolve(widgetElement)
                     })
                 }
             }

@@ -365,7 +365,7 @@
     justify-content: center;
     align-items: center;
     background-color: var(--st-highlight-primary);
-    border-radius: calc(var(--st-border-radius) / 2);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     font: 600 16px/40px var(--st-font-family-primary);
 }
 
@@ -609,7 +609,8 @@
 #st-start-widget-counters {
     display: flex;
     flex-wrap: wrap;
-    padding-top: 0;
+    gap: 16px;
+    padding: 8px 16px 12px;
 }
 
 #st-start-widget-grades,
@@ -619,7 +620,7 @@
 }
 
 #st-start-widget-grades:hover,
-#st-start-widget-digital-clock:hover {
+#st-start-widget-digital-clock:not(:fullscreen):hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 0;
 }
@@ -695,7 +696,8 @@
 }
 
 #st-start-widget-grades:hover #st-start-widget-grades-last-hide,
-#st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide {
+#st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide,
+#st-start-widget-grades-last-hide:focus-visible {
     opacity: 1;
 }
 
@@ -718,8 +720,9 @@
 #st-start-widget-digital-clock-wrapper {
     display: flex;
     gap: 3px;
-    height: 5px;
     width: 100%;
+    height: 5px;
+    margin-top: -5px;
 }
 
 #st-start-widget-digital-clock-wrapper>div {
@@ -744,26 +747,20 @@
     background-color: var(--st-accent-secondary);
 }
 
-#st-start-widget-digital-clock.pop-out {
+#st-start-widget-digital-clock:fullscreen {
     display: flex;
     flex-direction: column;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-height: none;
     border-radius: 0;
-    z-index: 99999999;
+    cursor: none;
 }
 
-#st-start-widget-digital-clock.pop-out #st-start-widget-digital-clock-time {
+#st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-time {
     margin-block: auto;
     font-size: 8vw;
     line-height: normal;
 }
 
-#st-start-widget-digital-clock.pop-out #st-start-widget-digital-clock-wrapper {
+#st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-wrapper {
     height: 32px;
 }
 
@@ -804,11 +801,18 @@
 .st-list-timestamp {
     text-align: end;
     z-index: 2;
+    font-weight: 600;
+    color: var(--st-foreground-insignificant);
 }
 
 .st-list-content {
     max-height: 30px;
     overflow: hidden;
+    color: var(--st-foreground-insignificant);
+}
+
+#st-start-widget-homework .st-list-content p {
+    color: var(--st-foreground-insignificant);
 }
 
 #st-start[data-widgets-collapsed=true] {
@@ -818,7 +822,8 @@
         / 1fr 0px;
 }
 
-#st-start-editor, #st-start-stats {
+#st-start-editor,
+#st-start-stats {
     grid-template:
         '. . . .' 1fr
         '. heading heading .' auto
@@ -826,6 +831,21 @@
         '. . . .' 1fr
         / 1fr auto auto 1fr;
     gap: 32px;
+}
+
+@media (width < 1100px) {
+
+    #st-start-editor,
+    #st-start-stats {
+        grid-template:
+            '. . .' 1fr
+            '. heading .' auto
+            '. left .' auto
+            '. right .' auto
+            '. . .' 1fr
+            / 1fr auto 1fr;
+        gap: 32px;
+    }
 }
 
 .st-overlay[id^="st-start"][open] {
@@ -836,7 +856,7 @@
     grid-area: heading;
     display: grid;
     grid-template:
-        'title close' auto
+        'title buttons' auto
         'subtitle subtitle' auto
         / 1fr auto;
 }
@@ -849,8 +869,9 @@
     grid-area: subtitle;
 }
 
-.st-overlay[id^="st-start"]>div:first-child>.st-button {
-    grid-area: close;
+.st-overlay[id^="st-start"]>div:first-child>.st-button,
+.st-overlay[id^="st-start"]>div:first-child>.st-button-wrapper {
+    grid-area: buttons;
 }
 
 #st-start-stats-teachers {
@@ -865,14 +886,16 @@
     height: 100%;
 }
 
-#st-start-stats-teacher-chart, #st-start-stats-classroom-chart {
-    height: 256px;
+#st-start-stats-teacher-chart,
+#st-start-stats-classroom-chart {
+    --size: 256px;
 }
 
 #st-start-editor-teachers {
     grid-area: left;
     width: 100%;
     height: 100%;
+    overflow: auto;
 }
 
 #st-start-edit-nicknames-list>div {
@@ -894,6 +917,7 @@
     grid-area: right;
     width: 100%;
     height: 100%;
+    overflow: auto;
 }
 
 #st-start-edit-include,

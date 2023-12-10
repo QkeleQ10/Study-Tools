@@ -36,13 +36,18 @@ async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, lumin
 async function applyStyles() {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
+    let now = new Date()
+
     let hueWish = syncedStorage.color.h,
         saturationWish = syncedStorage.color.s,
         luminanceWish = syncedStorage.color.l,
         borderRadius = syncedStorage.shape
 
-    if (new Date().getMonth() === 11 && new Date().getDate() >= 8 && new Date().getDate() <= 14 && new Date().getDay() === 5 || new Date().getTime() >= new Date(new Date().getFullYear(), 11, 8 + (5 - new Date(new Date().getFullYear(), 11, 1).getDay())).getTime() && new Date().getMonth() === 11) {
-        hueWish = 266, saturationWish = 51, luminanceWish = 41
+    const res = (await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/timed-events.json`))
+    if (res.ok) {
+        let timedColors = await res.json()
+        let todaysTimedColor = timedColors.find(e => e.date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`)?.color
+        if (todaysTimedColor) [hueWish, saturationWish, luminanceWish] = todaysTimedColor
     }
 
     let lightThemeCss = `:root {
@@ -152,7 +157,7 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 
     createStyle(rootVars, 'study-tools-root-vars')
 
-    let now = new Date()
+    now = new Date()
 
     // Menu bar decorations
     let decorationPreset = syncedStorage['decoration'],
@@ -362,7 +367,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button, .st-keyboard-hint), table.table-grid-layout td a,
+a:not(.user-content a, .st-button, .st-metric, .st-keyboard-hint), table.table-grid-layout td a,
 .k-calendar .k-header .k-nav-fast {
     color: var(--st-foreground-accent);
     text-decoration: none;
@@ -509,7 +514,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span),
+span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span):not([id^="st-"]),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,
@@ -568,7 +573,7 @@ span.nrblock {
     color: var(--st-background-secondary) !important;
     font-family: var(--st-font-family-secondary);
     font-weight: 700 !important;
-    border-radius: calc(var(--st-border-radius) / 2);
+    border-radius: calc(var(--st-border-radius) * 0.75);
     aspect-ratio: 1;
     width: auto;
     height: 15px;
@@ -645,7 +650,9 @@ aside, aside .block,
 }
 
 .cijfers-k-grid.k-grid .grade {
+    box-shadow: inset -0.5px 0 0 0 transparent;
     user-select: none;
+    transition: filter 200ms, box-shadow 200ms, color 200ms, opacity 200ms;
 }
 
 .cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
@@ -662,15 +669,45 @@ aside, aside .block,
 
 .cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
     background-color: var(--st-highlight-subtle) !important;
+    color: var(--st-foreground-primary) !important;
+    font-weight: normal;
 }
 
 .cijfers-k-grid.k-grid .grade.gemiddeldecolumn {
-    background-color: var(--st-highlight-ok) !important;
+    background-color: var(--st-accent-primary) !important;
+    color: var(--st-contrast-accent) !important;
+    font-weight: bold;
 }
 
 .cijfers-k-grid.k-grid .k-selectable .k-state-selected .grade {
+    outline: 2px solid var(--st-accent-primary) !important;
+    outline-offset: -2px;
+    width: 40px;
+    padding-left: 0;
     color: var(--st-foreground-primary);
     filter: brightness(var(--st-hover-brightness));
+}
+
+.cijfers-k-grid.k-grid .grade .herkansing-icon {
+    visibility: hidden;
+    width: 0;
+    top: 0;
+}
+
+.cijfers-k-grid.k-grid .grade .herkansing-icon:after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    content: '';
+    color: var(--st-foreground-accent);
+    font: bold 6px "Font Awesome 6 Pro";
+    visibility: visible;
+}
+
+.cijfers-k-grid.k-grid .grade.st-cannot-add {
+    box-shadow: inset -0.5px 0 0 4px var(--st-accent-warn) !important;
+    color: var(--st-accent-warn) !important;
+    opacity: 0.5 !important;
 }
 
 .dvd-screensaver {

@@ -1,0 +1,30 @@
+name: Create beta release
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Indicate beta version
+        run: |
+          sed -i '3s/.*/"message": "Study Tools voor Magister BETA",/' _locales/nl/messages.json
+
+
+      - name: Compress Chromium build
+        run: |
+          zip -r chromium.zip _locales icons popup/dist src manifest.json updates.json
+
+      - name: Upload as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Releases
+          path: |
+            chromium.zip

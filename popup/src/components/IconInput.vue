@@ -17,14 +17,15 @@ const value = computed({
 
 const iconCats = {
     "Media": '',
-    "Technologie": '',
+    "Technologie": '',
     "Kalenders": '',
     "Bestanden": '',
     "Personen": '',
-    "Divers": '',
-    "Cirkels": '',
-    "Vierkanten": '',
+    "Divers": '☀⏾',
+    "Cirkels": '',
+    "Vierkanten": '⬛',
     "Handen": '',
+    "Amusement": '♝♚♞♟♛♜',
     "Emoticons": '',
 }
 
@@ -68,7 +69,7 @@ function setIcon(icon) {
 <style>
 @font-face {
     font-family: "Font Awesome 6 Free";
-    src: url("../assets/far.otf");
+    src: url("../assets/fa-regular-400.ttf");
 }
 
 .icon-input {
