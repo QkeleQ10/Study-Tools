@@ -721,6 +721,7 @@ nav.menu.ng-scope {
                             let lastViewDate = new Date(lastViewMs)
                             if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
                             const grades = await MagisterApi.grades.recent()
+                                .catch(() => { return })
                             const unreadGradesNum = grades.filter(item => new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7))).length
                             if (unreadGradesNum > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-grades', null, {
@@ -735,6 +736,7 @@ nav.menu.ng-scope {
                         if (!widgetsShown.includes('messages')) {
                             widgetsProgressText.innerText = `Berichten ophalen...`
                             const messages = await MagisterApi.messages()
+                                .catch(() => { return })
                             const unreadMessagesNum = messages.length
                             if (unreadMessagesNum > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-messages', null, {
@@ -749,6 +751,7 @@ nav.menu.ng-scope {
                         if (!widgetsShown.includes('homework')) {
                             widgetsProgressText.innerText = `Huiswerk ophalen...`
                             const events = await MagisterApi.events()
+                                .catch(() => { return })
                             const homeworkEvents = events.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
                             if (homeworkEvents.length > 0) {
                                 elems.push(element('div', 'st-start-widget-counters-homework', null, {
@@ -762,6 +765,7 @@ nav.menu.ng-scope {
                         if (!widgetsShown.includes('assignments')) {
                             widgetsProgressText.innerText = `Opdrachten ophalen...`
                             const assignments = await MagisterApi.assignments.top()
+                                .catch(() => { return })
                             const dueAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                             if (dueAssignments.length > 0) {
                                 elems.push(element('a', 'st-start-widget-counters-assignments', null, {
@@ -775,6 +779,7 @@ nav.menu.ng-scope {
 
                         widgetsProgressText.innerText = `Activiteiten ophalen...`
                         const activities = await MagisterApi.activities()
+                            .catch(() => { return })
                         const activitiesNum = activities.length
                         if (activitiesNum > 0) {
                             elems.push(element('a', 'st-start-widget-counters-activities', null, {
@@ -787,6 +792,7 @@ nav.menu.ng-scope {
 
                         widgetsProgressText.innerText = `Logboeken ophalen...`
                         const logs = await MagisterApi.logs()
+                            .catch(() => { return })
                         const logsNum = logs.length
                         if (logsNum > 0) {
                             elems.push(element('a', 'st-start-widget-counters-logs', null, {
@@ -871,6 +877,7 @@ nav.menu.ng-scope {
                         if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
                         const grades = await MagisterApi.grades.recent()
+                            .catch(() => { return reject() })
                         const recentGrades = grades.map(item => {
                             return {
                                 ...item,
@@ -935,6 +942,7 @@ nav.menu.ng-scope {
                 render: async () => {
                     return new Promise(async resolve => {
                         const unreadMessages = await MagisterApi.messages()
+                            .catch(() => { return reject() })
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
@@ -991,6 +999,7 @@ nav.menu.ng-scope {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
                         const events = await MagisterApi.events()
+                            .catch(() => { return reject() })
                         const homeworkEvents = events.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
@@ -1042,6 +1051,7 @@ nav.menu.ng-scope {
                 render: async () => {
                     return new Promise(async (resolve) => {
                         const assignments = await MagisterApi.assignments.top()
+                            .catch(() => { return reject() })
                         const relevantAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
 
                         if (relevantAssignments.length < 1) return resolve()
@@ -1127,6 +1137,7 @@ nav.menu.ng-scope {
                         // Aditionally, show the progress of the day. Widget will be rendered even before this is available!
 
                         const events = await MagisterApi.events()
+                            .catch(() => { return reject() })
                         const todaysEvents = events.filter(item => new Date(item.Start).isToday())
                         if (!todaysEvents?.length > 0) return
                         const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)

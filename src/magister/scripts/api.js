@@ -186,6 +186,11 @@ async function fetchWrapper(url, options) {
             return resolve(json)
         }
 
+        // Reject when forbidden (e.g. feature disabled by school)
+        if (res1.status === 403) {
+            return reject(res1.status)
+        }
+
         // Reject when ratelimit is hit
         if (res1.status === 429) {
             notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
@@ -202,6 +207,11 @@ async function fetchWrapper(url, options) {
         if (res2.ok) {
             const json = await res2.json()
             return resolve(json)
+        }
+
+        // Reject when forbidden (e.g. feature disabled by school)
+        if (res1.status === 403) {
+            return reject(res1.status)
         }
 
         // Reject when ratelimit is hit
