@@ -35,20 +35,16 @@ async function gamification() {
         await getApiCredentials()
 
         // Fetch all years and info related.
-        const yearsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${apiUserId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: apiUserToken } }),
-            yearsArray = yearsRes.items,
+        const yearsArray = await MagisterApi.years(),
             years = {}
 
         // Loop through each year and gather grades, absences and assignments. Bind them to their respective key in the 'years' object.
         yearsArray.forEach(async year => {
-            const gradesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: apiUserToken } })
-            const gradesJson = gradesRes.Items
+            const gradesJson = await MagisterApi.grades.forYear(year)
 
-            const absencesRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/absenties?van=${year.begin}&tot=${year.einde}`, { headers: { Authorization: apiUserToken } }),
-                absencesJson = absencesRes.Items
+            const absencesJson = await MagisterApi.absences.forYear(year)
 
-            const assignmentsRes = await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, { headers: { Authorization: apiUserToken } }),
-                assignmentsJson = assignmentsRes.Items
+            const assignmentsJson = await MagisterApi.assignments.forYear(year)
 
             years[year.id] = { grades: gradesJson, absences: absencesJson, assignments: assignmentsJson, name: year.studie.code }
         })

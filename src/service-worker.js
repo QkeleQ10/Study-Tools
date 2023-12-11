@@ -5,34 +5,36 @@ let apiUserId,
     apiUserTokenDate
 
 const settingsToClear = [
-    'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'notes-enabled', 'vd-enabled', 'vd-subjects-display', 'version', 'hotkeys-today'
+    'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-subjects-display', 'version', 'hotkeys-today'
 ]
 
-init()
+startListenCredentials()
+setDefaults()
+console.info("Service worker running!")
 
-async function init() {
-    apiUserId = (await chrome.storage.local.get('user-id'))?.['user-id'] || undefined
-    apiUserToken = (await chrome.storage.local.get('token'))?.['token'] || undefined
-    apiUserTokenDate = (await chrome.storage.local.get('token-date'))?.['token-date'] || undefined
+async function startListenCredentials() {
+    // Allow any context to use chrome.storage.session
+    chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' })
 
-    console.info("Service worker running!")
-
-    setDefaults()
+    // Initialise the three variables
+    apiUserId = (await chrome.storage.session.get('user-id'))?.['user-id'] || null
+    apiUserToken = (await chrome.storage.session.get('token'))?.['token'] || null
+    apiUserTokenDate = (await chrome.storage.session.get('token-date'))?.['token-date'] || null
 
     chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
         let userIdWas = apiUserId
         let userTokenWas = apiUserToken
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
             apiUserId = e.url.split('/personen/')[1].split('/')[0]
-            chrome.storage.local.set({ 'user-id': apiUserId })
+            chrome.storage.session.set({ 'user-id': apiUserId })
             if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
         }
         let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')
         if (authObject) {
             apiUserToken = authObject.value
             apiUserTokenDate = new Date()
-            chrome.storage.local.set({ 'token': apiUserToken })
-            chrome.storage.local.set({ 'token-date': apiUserTokenDate })
+            chrome.storage.session.set({ 'token': apiUserToken })
+            chrome.storage.session.set({ 'token-date': apiUserTokenDate.getTime() })
             if (userTokenWas !== apiUserToken) console.info(`User token changed between ${new Date().toLocaleDateString()} and now.`)
         }
 
@@ -70,20 +72,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case 'popstateDetected':
             console.info("Popstate detected, service worker revived for 30 seconds.")
             break
-
-        case 'getCredentials':
-            console.info(`Credentials requested by ${sender.url}.`)
-            // TODO: this sucks
-            sleepUntil(() => { return (new Date() - apiUserTokenDate) < 300000 }, 1500)
-                .then(() => {
-                    sendResponse({ apiUserId, apiUserToken })
-                    console.info(`Credentials sent to ${sender.url}.`)
-                })
-                .catch(() => {
-                    sendResponse({ apiUserId, apiUserToken, error: "May be too old." })
-                    console.warn(`Possibly outdated credentials sent to ${sender.url}.`)
-                })
-            return true
 
         case 'waitForRequestCompleted':
             console.info(`Request completion notification requested by ${sender.url}.`)

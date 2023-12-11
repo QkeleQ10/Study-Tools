@@ -47,7 +47,7 @@ async function gradeCalculator() {
         clFutureDesc = element('p', 'st-cf-cl-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
         clCanvas = element('div', 'st-cf-cl-canvas', clPredictionWrapper)
 
-    let years = (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/$USERID/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`)).items
+    let years = await MagisterApi.years()
 
     let apiGrades = {},
         gradeColumns = {},
@@ -69,7 +69,7 @@ async function gradeCalculator() {
         if (!document.querySelector('#st-cf-bk-aside')) {
             let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
             let schoolYear = years.find(y => y.id == schoolYearId)
-            apiGrades[schoolYearId] ??= (await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${schoolYearId}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${schoolYear.einde}`)).Items
+            apiGrades[schoolYearId] ??= await MagisterApi.grades.forYear(schoolYear)
         }
         if (!accessedBefore) {
             await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
@@ -172,7 +172,8 @@ async function gradeCalculator() {
             } else {
                 let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
                 let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === id).CijferKolom.Id
-                gradeColumns[gradeColumnId] ??= await useApi(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/aanmeldingen/${document.querySelector('#aanmeldingenSelect>option[selected=selected]').value}/cijfers/extracijferkolominfo/${gradeColumnId}`)
+                let year = { id: schoolYearId }
+                gradeColumns[gradeColumnId] ??= await MagisterApi.grades.columnInfo(year, gradeColumnId)
                 weight = gradeColumns[gradeColumnId].Weging
                 gradeElement.parentElement.dataset.weight = weight
                 column = gradeColumns[gradeColumnId].KolomNaam
@@ -185,14 +186,14 @@ async function gradeCalculator() {
                 ghostElement.remove()
                 if (!lowVerbosity) notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
                 gradeElement.classList.add('st-cannot-add')
-                setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
+                setTimeout(() => gradeElement.classList.remove('st-cannot-add'), 500)
                 return resolve()
             }
             if (!weight || weight <= 0) {
                 ghostElement.remove()
                 if (!lowVerbosity) notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
                 gradeElement.classList.add('st-cannot-add')
-                setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
+                setTimeout(() => gradeElement.classList.remove('st-cannot-add'), 500)
                 return resolve()
             }
 
