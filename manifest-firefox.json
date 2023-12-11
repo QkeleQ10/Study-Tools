@@ -33,6 +33,7 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
+                "src/magister/scripts/api.js",
                 "src/util.js"
             ],
             "css": [

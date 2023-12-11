@@ -761,7 +761,7 @@ nav.menu.ng-scope {
 
                         if (!widgetsShown.includes('assignments')) {
                             widgetsProgressText.innerText = `Opdrachten ophalen...`
-                            const assignments = await MagisterApi.assignments()
+                            const assignments = await MagisterApi.assignments.top()
                             const dueAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
                             if (dueAssignments.length > 0) {
                                 elems.push(element('a', 'st-start-widget-counters-assignments', null, {
@@ -1041,7 +1041,7 @@ nav.menu.ng-scope {
                 title: "Opdrachten",
                 render: async () => {
                     return new Promise(async (resolve) => {
-                        const assignments = await MagisterApi.assignments()
+                        const assignments = await MagisterApi.assignments.top()
                         const relevantAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
 
                         if (relevantAssignments.length < 1) return resolve()

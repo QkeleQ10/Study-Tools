@@ -15,8 +15,7 @@ jobs:
 
       - name: Indicate beta version
         run: |
-          sed -i '3s/.*/"message": "Study Tools voor Magister BETA",/' _locales/nl/messages.json
-
+          sed -i '3s/.*/"message": "Study Tools voor Magister BETA"/' _locales/nl/messages.json
 
       - name: Compress Chromium build
         run: |

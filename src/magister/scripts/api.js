@@ -1,6 +1,7 @@
 let magisterApiCache = {},
     magisterApiUserId,
     magisterApiUserToken,
+    magisterApiUserTokenDate,
     magisterApiSchoolName = window.location.hostname.split('.')[0]
 
 now = new Date()
@@ -13,15 +14,28 @@ const gatherEnd = new Date()
 gatherEnd.setDate(now.getDate() + 42)
 gatherEnd.setHours(0, 0, 0, 0)
 
+let sessionStorage = chrome.storage.session || chrome.storage.local
+
 const MagisterApi = {
     accountInfo: async () => {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.accountInfo ??=
                 fetchWrapper(
-                    `https://${window.location.hostname.split('.')[0]}.magister.net/api/account?noCache=0`
+                    `https://${magisterApiSchoolName}.magister.net/api/account?noCache=0`
                 )
             resolve(
                 (await magisterApiCache.accountInfo)
+            )
+        })
+    },
+    years: async () => {
+        return new Promise(async (resolve, reject) => {
+            magisterApiCache.years ??=
+                fetchWrapper(
+                    `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`
+                )
+            resolve(
+                (await magisterApiCache.years)?.items || []
             )
         })
     },
@@ -41,30 +55,65 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.gradesRecent ??=
                     fetchWrapper(
-                        `https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`
                     )
                 resolve(
                     (await magisterApiCache.gradesRecent)?.items || []
                 )
             })
+        },
+        forYear: async (year) => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache['gradesYear' + year.id] ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`
+                    )
+                resolve(
+                    (await magisterApiCache['gradesYear' + year.id])?.Items || []
+                )
+            })
+        },
+        columnInfo: async (year, columnId) => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache['gradesYear' + year.id + 'Col' + columnId] ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${columnId}`
+                    )
+                resolve(
+                    (await magisterApiCache['gradesYear' + year.id + 'Col' + columnId]) || {}
+                )
+            })
         }
     },
-    assignments: async () => {
-        return new Promise(async (resolve, reject) => {
-            magisterApiCache.assignments ??=
-                fetchWrapper(
-                    `https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${gatherStart.toISOString().substring(0, 10)}&einddatum=${gatherEnd.toISOString().substring(0, 10)}`
+    assignments: {
+        top: async () => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache.assignments ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${gatherStart.toISOString().substring(0, 10)}&einddatum=${gatherEnd.toISOString().substring(0, 10)}`
+                    )
+                resolve(
+                    (await magisterApiCache.assignments)?.Items || []
                 )
-            resolve(
-                (await magisterApiCache.assignments)?.Items || []
-            )
-        })
+            })
+        },
+        forYear: async (year) => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache['assignmentsYear' + year.id] ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`
+                    )
+                resolve(
+                    (await magisterApiCache['assignmentsYear' + year.id])?.Items || []
+                )
+            })
+        }
     },
     messages: async () => {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.messages ??=
                 fetchWrapper(
-                    `https://${window.location.hostname.split('.')[0]}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`
+                    `https://${magisterApiSchoolName}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`
                 )
             resolve(
                 (await magisterApiCache.messages)?.items || []
@@ -75,7 +124,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.activities ??=
                 fetchWrapper(
-                    `https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan`
+                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan`
                 )
             resolve(
                 (await magisterApiCache.activities)?.Items || []
@@ -86,37 +135,48 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.logs ??=
                 fetchWrapper(
-                    `https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/$USERID/logboeken/count`
+                    `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/logboeken/count`
                 )
             resolve(
                 Array((await magisterApiCache.logs).count) || []
             )
         })
     },
+    absences: {
+        forYear: async (year) => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache['absencesYear' + year.id] ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/absenties?van=${year.begin}&tot=${year.einde}`
+                    )
+                resolve(
+                    (await magisterApiCache['absencesYear' + year.id])?.Items || []
+                )
+            })
+        }
+    },
 }
 
-async function getMagisterApiCredentials() {
-    const promiseReq = new Promise(async (resolve) => {
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-        magisterApiUserId = req.apiUserId
-        magisterApiUserToken = req.apiUserToken
-        resolve({ apiUserId: magisterApiUserId, apiUserToken: magisterApiUserToken })
+async function updateApiCredentials(forceRefresh) {
+    const promiseMemory = new Promise(async (resolve, reject) => {
+        if (!forceRefresh && now - new Date(magisterApiUserTokenDate) < 30000) {
+            return resolve({ magisterApiUserId, magisterApiUserToken })
+        }
+        magisterApiUserId = (await sessionStorage.get('user-id'))?.['user-id'] || magisterApiUserId
+        magisterApiUserToken = (await sessionStorage.get('token'))?.['token'] || magisterApiUserToken
+        magisterApiUserTokenDate = (await sessionStorage.get('token-date'))?.['token-date'] || magisterApiUserTokenDate
+        resolve({ magisterApiUserId, magisterApiUserToken })
     })
-    const promiseCache = new Promise((resolve) => setTimeout(async () => {
-        magisterApiUserId = await getFromStorage('user-id', 'local')
-        magisterApiUserToken = await getFromStorage('token', 'local')
-        resolve({ apiUserId: magisterApiUserId, apiUserToken: magisterApiUserToken })
-    }, 2500))
-    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 5000, 'Timeout exceeded!'))
+    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 5000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
 
-    return Promise.race([promiseReq, promiseCache, promiseTime])
+    return Promise.race([promiseMemory, promiseTime])
 }
 
 // Wrapper for fetch().json()
 async function fetchWrapper(url, options) {
     const promiseReq = new Promise(async (resolve, reject) => {
 
-        await getMagisterApiCredentials()
+        await updateApiCredentials()
 
         const res1 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
 
@@ -132,8 +192,8 @@ async function fetchWrapper(url, options) {
             return reject(res1.status)
         }
 
-        // If it's not a ratelimit, retry one more time.
-        await getMagisterApiCredentials()
+        // If it's not a ratelimit, retry one more time. Also forcibly refresh from memory.
+        await updateApiCredentials(true)
 
         // Retry with a second request
         const res2 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
