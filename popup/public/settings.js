@@ -368,12 +368,6 @@ export default [
         id: "about",
         settings: [
             {
-                id: "update-notes",
-                title: "Update-informatie weergeven",
-                subtitle: "Af en toe een korte melding over de nieuwste updates weergeven.",
-                default: true,
-            },
-            {
                 id: "beta-options",
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
