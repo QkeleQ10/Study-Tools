@@ -52,7 +52,7 @@ const filled = computed(() => {
 .text-input-label .setting-title {
 	position: absolute;
 	left: 16px;
-	top: 28px;
+	top: 14px;
 	color: var(--color-on-surface-variant);
 	font: var(--typescale-body-large);
 	pointer-events: none;
@@ -61,7 +61,7 @@ const filled = computed(() => {
 
 .text-input-label.focused .setting-title,
 .text-input-label.filled .setting-title {
-	top: 4px;
+	top: -8px;
 	font-size: 12px;
 	line-height: 16px;
 }
@@ -76,7 +76,7 @@ const filled = computed(() => {
 
 .text-input-label .border-cutout {
 	position: absolute;
-	top: 6px;
+	top: -6px;
 	left: 12px;
 	font: var(--typescale-body-large);
 	font-size: 12px;
@@ -88,6 +88,10 @@ const filled = computed(() => {
 	scale: 0 1;
 	pointer-events: none;
 	transition: background-color 200ms, scale 200ms;
+}
+
+.dialog .text-input-label .border-cutout {
+	background-color: var(--color-surface-container-high);
 }
 
 .text-input-label.focused .border-cutout,

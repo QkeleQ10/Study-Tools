@@ -160,38 +160,34 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
     now = new Date()
 
     // Menu bar decorations
-    let decorationPreset = syncedStorage['decoration'],
-        decorationCss
-    switch (decorationPreset) {
-        case 'waves':
-            decorationCss = 'background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) 25px ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );'
-            break;
+    function decorations() {
+        let style = syncedStorage['decoration'],
+            size = syncedStorage['decoration-size'] ?? 1,
+            css
+        switch (style) {
+            case 'waves':
+                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
+                break;
 
-        case 'zig-zag':
-            decorationCss = 'background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: 25px 0, 25px 0, 0 0, 0 0; background-size: 50px 50px; background-repeat: repeat;'
-            break;
+            case 'zig-zag':
+                css = `background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: calc(${size} * 25px) 0, calc(${size} * 25px) 0, 0 0, 0 0; background-size: calc(${size} * 50px) calc(${size} * 50px); background-repeat: repeat;`
+                break;
 
-        case 'polka-dot-big':
-            decorationCss = 'background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, 52px 52px; background-size: 104px 104px;'
-            break;
+            case 'polka-dot':
+                css = `background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, calc(${size} * 40px) calc(${size} * 40px); background-size: calc(${size} * 80px) calc(${size} * 80px);`
+                break;
 
-        case 'polka-dot-small':
-            decorationCss = 'background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, 26px 26px; background-size: 52px 52px;'
-            break;
+            case 'stripes':
+                css = `background-image: repeating-linear-gradient(45deg, transparent, transparent calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 40px));`
+                break;
 
-        case 'stripes-big':
-            decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 30px, var(--st-decoration-fill) 30px, var(--st-decoration-fill) 60px);'
-            break;
-
-        case 'stripes-small':
-            decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--st-decoration-fill) 10px, var(--st-decoration-fill) 20px);'
-            break;
-
-        default:
-            decorationCss = ''
-            break;
+            default:
+                css = ''
+                break;
+        }
+        createStyle(`.menu-host {${css}}`, 'study-tools-menu-decoration')
     }
-    createStyle(`.menu-host {${decorationCss}}`, 'study-tools-menu-decoration')
+    decorations()
 
     // Christmas mode!!!
     if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {

@@ -269,9 +269,11 @@ main {
     padding-inline: 12px;
 }
 
-.button.anchor {
+.button.inline {
+    display: inline;
     padding: 0;
     height: auto;
+    font-size: inherit;
 }
 
 .button .icon {

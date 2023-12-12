@@ -17,10 +17,20 @@ const settingsInputDialogActive = ref(false)
 
 const settingsString = computed({
     get() {
-        return JSON.stringify(syncedStorage.value) || {}
+        try {
+            return JSON.stringify(syncedStorage.value) || {}
+        } catch {
+            return {}
+        }
     },
     set(value) {
-        syncedStorage.value = JSON.parse(value) || {}
+        try {
+            syncedStorage.value = JSON.parse(value) || syncedStorage.value || {}
+            return syncedStorage.value
+        } catch {
+            syncedStorage.value = syncedStorage.value || {}
+            return syncedStorage.value
+        }
     }
 })
 
@@ -36,14 +46,14 @@ function openInNewTab(url) {
 
 <template>
     <div id="about">
-        <h4 id="about-hero">Ontwikkeld door Quinten Althues</h4>
-        <p id="about-description">
-            Bedankt voor het gebruiken van Study Tools!
-            <br>
-            <button class="button text anchor"
+        <h4 id="about-hero">Study Tools voor Magister (<button class="button text inline"
                 @click="openInNewTab('https://github.com/QkeleQ10/Study-Tools/blob/dev/updates.json')">
-                <span>Versie: {{ manifest.version || "onbekend" }}</span>
-            </button>
+                <span>versie {{ manifest.version || "onbekend" }}</span>
+            </button>)</h4>
+        <p id="about-description">
+            Ontwikkeld door Quinten Althues<br>
+            Bedankt voor het gebruiken van Study Tools!<br>
+            
         </p>
         <div id="about-buttons">
             <button class="button" @click="openInNewTab('https://qkeleq10.github.io/studytools')">

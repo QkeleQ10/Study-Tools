@@ -17,13 +17,14 @@ jobs:
         run: |
           sed -i '3s/.*/"message": "Study Tools voor Magister BETA"/' _locales/nl/messages.json
 
-      - name: Compress Chromium build
-        run: |
-          zip -r chromium.zip _locales icons popup/dist src manifest.json updates.json
-
       - name: Upload as artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Releases
+          name: Beta release
           path: |
-            chromium.zip
+            _locales
+            icons
+            popup/dist
+            src
+            manifest.json
+            updates.json

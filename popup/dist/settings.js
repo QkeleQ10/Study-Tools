@@ -80,10 +80,21 @@ export default [
             },
             {
                 id: "decoration",
-                title: "Decoratie",
+                title: "Decoratiestijl",
                 subtitle: "Wordt weergegeven in de zijbalk.",
                 type: "DecorationPicker",
                 default: 'none',
+            },
+            {
+                id: "decoration-size",
+                title: "Decoratiegrootte",
+                type: "SlideInput",
+                default: 1,
+                format: "percent",
+                decimals: 0,
+                min: 0.5,
+                max: 3,
+                step: 0.1,
             },
             {
                 id: "shape",
