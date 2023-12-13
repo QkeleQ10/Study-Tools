@@ -741,12 +741,6 @@ async function gradeStatistics() {
         scTab = element('li', 'st-cs-tab', tabs, { class: 'asideTrigger' }),
         scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" }),
         scContainer = element('div', 'st-cs', document.body, { style: 'display: none;', class: 'not-ready' }),
-        scFilterContainer = document.createElement('div'),
-        scYearFilterWrapper = document.createElement('div'),
-        scRowFilterWrapper = document.createElement('div'),
-        scRowFilter = document.createElement('textarea'),
-        scRowFilterInclude = document.createElement('button'),
-        scRowFilterExclude = document.createElement('button'),
         scMetricsWrapper = element('div', 'st-cs-metrics-wrapper', scContainer),
         scMetrics1 = element('div', 'st-cs-metrics-1', scMetricsWrapper),
         scMean = element('div', 'st-cs-mean', scMetrics1, { class: 'st-metric', 'data-description': "Ongewogen\ngemiddelde", style: 'color: var(--st-foreground-primary)', title: "De gemiddelde waarde, zonder weegfactoren." }),
@@ -760,31 +754,21 @@ async function gradeStatistics() {
         scMin = element('div', 'st-cs-min', scMetrics3, { class: 'st-metric', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
         scMax = element('div', 'st-cs-max', scMetrics3, { class: 'st-metric', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
         scStDev = element('div', 'st-cs-stdev', scMetrics3, { class: 'st-metric', 'data-description': "Standaard-\nafwijking", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
-        scBarChart = element('div', 'st-cs-bar-chart'),
+        scBarChart = element('div', 'st-cs-bar-chart', scContainer),
+        scFilters = element('div', 'st-cs-filters', scContainer),
+        scYearFilter = element('div', 'st-cs-year-filter', scFilters),
+        scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters),
+        // TODO
         scInteractionPreventer = document.createElement('div'),
         scBkCommunication = document.createElement('button'),
         grades = {},
         years = new Set(),
+        subjects = new Set(),
+        excludedSubjects = new Set(),
         backup = false
 
+    // TODO
     document.body.append(scInteractionPreventer, scBkCommunication)
-    scContainer.append(scMetricsWrapper, scBarChart, scFilterContainer)
-    scFilterContainer.id = 'st-cs-filter-container'
-    scFilterContainer.append(scYearFilterWrapper, scRowFilterWrapper)
-    scYearFilterWrapper.id = 'st-cs-year-filter-wrapper'
-    scRowFilterWrapper.id = 'st-cs-row-filter-wrapper'
-    scRowFilterWrapper.append(scRowFilter, scRowFilterInclude, scRowFilterExclude)
-    setAttributes(scRowFilter, { id: 'st-cs-row-filter', rows: 3, placeholder: "Typ hier vaknamen, gescheiden door komma's.\nWijzig de modus (insluiten of uitsluiten) met de knop hierboven." })
-    // Make the row filter much like the year filter, in that all subjects are displayed with checkboxes in front.
-    scRowFilterInclude.id = 'st-cs-row-filter-include'
-    scRowFilterInclude.classList.add('st-button', 'small', 'switch-left')
-    scRowFilterInclude.innerText = "Wel"
-    scRowFilterInclude.title = "Alleen de opgegeven vakken worden meegerekend."
-    scRowFilterExclude.id = 'st-cs-row-filter-exclude'
-    scRowFilterExclude.classList.add('st-button', 'small', 'secondary', 'switch-right')
-    scRowFilterExclude.innerText = "Niet"
-    scRowFilterExclude.title = "Alle vakken worden meegerekend, behalve de opgegeven vakken."
-    scMetricsWrapper.id = 'st-cs-metrics-wrapper'
     scBkCommunication.id = 'st-cs-bk-communication'
     scBkCommunication.style.display = 'none'
 
@@ -801,22 +785,6 @@ async function gradeStatistics() {
         tabs.classList.add('st-cs-override')
         scTab.classList.add('active')
         scContainer.style.display = 'flex'
-    })
-
-    scRowFilter.addEventListener('input', async () => {
-        await displayStatistics(grades)
-    })
-
-    scRowFilterInclude.addEventListener('click', async () => {
-        scRowFilterInclude.classList.remove('secondary')
-        scRowFilterExclude.classList.add('secondary')
-        await displayStatistics(grades)
-    })
-
-    scRowFilterExclude.addEventListener('click', async () => {
-        scRowFilterExclude.classList.remove('secondary')
-        scRowFilterInclude.classList.add('secondary')
-        await displayStatistics(grades)
     })
 
     scBkCommunication.addEventListener('click', async () => {
@@ -836,23 +804,20 @@ async function gradeStatistics() {
         await displayStatistics(grades)
     }, { once: true })
 
-    // Gather all years
+    // Gather all years and populate the year filter
     const yearSelect = await awaitElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span')
     yearSelect.click()
-    document.querySelectorAll(`#aanmeldingenSelect_listbox>li.k-item`).forEach((year, index) => {
-        if (document.getElementById(`st-cs-year-${index}`)) return
-        years.add(year.innerText)
-        let label = document.createElement('label'),
-            input = document.createElement('input')
-        scYearFilterWrapper.append(input, label)
-        label.innerText = year.innerText
-        label.setAttribute('for', `st-cs-year-${index}`)
-        setAttributes(input, { type: 'checkbox', id: `st-cs-year-${index}` })
-        if (index === 0) input.checked = true
+    document.querySelectorAll(`#aanmeldingenSelect_listbox>li.k-item`).forEach((yearElement, yearIndex) => {
+        years.add(yearElement.innerText)
+
+        let label = element('label', `st-cs-year-${yearIndex}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${yearIndex}`, innerText: yearElement.innerText }),
+            input = element('input', `st-cs-year-${yearIndex}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
+        input.checked = yearIndex === 0
+
         input.addEventListener('input', async () => {
-            if (!grades[index]) {
+            if (!grades[yearIndex]) {
                 label.dataset.loading = true
-                grades = await gatherGradesForYear(grades, index)
+                grades = await gatherGradesForYear(grades, yearIndex)
                 label.dataset.loading = false
             }
             await displayStatistics(grades)
@@ -860,12 +825,12 @@ async function gradeStatistics() {
     })
     yearSelect.click()
 
-    async function gatherGradesForYear(grades = {}, index = 0) {
+    async function gatherGradesForYear(grades = {}, yearIndex = 0) {
         return new Promise(async (resolve, reject) => {
             scTab.dataset.loading = true
             scInteractionPreventer.id = 'st-prevent-interactions'
             if (!backup) {
-                let yearSelection = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${index + 1})`),
+                let yearSelection = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${yearIndex + 1})`),
                     tableBody = await awaitElement("#cijferoverzichtgrid tbody")
                 tableBody.innerText = ''
                 yearSelection.click()
@@ -878,16 +843,37 @@ async function gradeStatistics() {
                         let result = Number(grade.innerText.replace(',', '.').replace('', '')),
                             id = grade.id,
                             subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText
+
+                        subjects.add(subject)
+
                         if (!isNaN(result)) {
-                            if (!grades[index]) grades[index] = {}
-                            if (!grades[index][subject]) grades[index][subject] = {}
-                            grades[index][subject][id] = result
+                            if (!grades[yearIndex]) grades[yearIndex] = {}
+                            if (!grades[yearIndex][subject]) grades[yearIndex][subject] = {}
+                            grades[yearIndex][subject][id] = result
                         }
                     })
                 }
                 resolve(grades)
+                buildSubjectFilter(subjects)
                 scInteractionPreventer.id = ''
-            }, index < 1 ? 0 : 500)
+            }, yearIndex < 1 ? 0 : 500)
+        })
+    }
+
+    function buildSubjectFilter(subjects) {
+        scSubjectFilter.innerText = ''
+
+        let sortedSubjects = [...subjects].sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' }))
+
+        sortedSubjects.forEach(subjectName => {
+            let label = element('label', `st-cs-subject-${subjectName}-label`, scSubjectFilter, { class: 'st-checkbox-label', for: `st-cs-subject-${subjectName}`, innerText: subjectName }),
+                input = element('input', `st-cs-subject-${subjectName}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
+            input.checked = !excludedSubjects.has(subjectName)
+
+            input.addEventListener('input', async () => {
+                excludedSubjects.has(subjectName) ? excludedSubjects.delete(subjectName) : excludedSubjects.add(subjectName)
+                await displayStatistics(grades)
+            })
         })
     }
 
@@ -900,8 +886,7 @@ async function gradeStatistics() {
                 if (!backup && !document.querySelector(`#st-cs-year-${yearIndex}`).checked) return
                 let yearObject = grades[yearIndex]
                 Object.keys(yearObject).forEach(subjectKey => {
-                    if (document.querySelector("#st-cs-row-filter-exclude").classList.contains('secondary') && document.querySelector("#st-cs-row-filter").value && !document.querySelector("#st-cs-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
-                    if (document.querySelector("#st-cs-row-filter-include").classList.contains('secondary') && document.querySelector("#st-cs-row-filter").value && document.querySelector("#st-cs-row-filter").value.split(/(?:,|\r|\n|\r\n)/g).map(x => x.toLowerCase().trim()).includes(subjectKey.toLowerCase())) return
+                    if (excludedSubjects.has(subjectKey)) return
                     let subjectObject = yearObject[subjectKey]
                     Object.values(subjectObject).forEach(result => {
                         if (result > 10) return

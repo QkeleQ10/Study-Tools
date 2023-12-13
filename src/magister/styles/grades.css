@@ -531,26 +531,6 @@
     animation: rotation 1s infinite linear;
 }
 
-#st-cs>#st-cs-filter-container {
-    margin-top: auto;
-    margin-bottom: 12px;
-    border-top: var(--st-border);
-}
-
-#st-cs-year-filter-wrapper:before {
-    content: 'Filteren op leerjaar\A';
-    white-space: pre-wrap;
-    font: var(--st-font-primary);
-    margin-bottom: -10px;
-}
-
-#st-cs-row-filter-wrapper:before {
-    content: 'Filteren op vak\A';
-    white-space: pre-wrap;
-    font: var(--st-font-primary);
-    margin-bottom: -10px;
-}
-
 #st-cs-metrics-wrapper {
     display: flex;
     flex-direction: column;
@@ -570,76 +550,16 @@
     color: var(--st-foreground-insignificant);
 }
 
-#st-cs-year-filter-wrapper,
-#st-cs-row-filter-wrapper {
-    position: relative;
+#st-cs-filters {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
 }
 
-#st-cs-year-filter-wrapper>label {
-    position: relative;
-    height: 25px;
-    padding: 4px 10px 4px 30px;
-    border-radius: var(--st-border-radius);
-    cursor: pointer;
-}
-
-#st-cs-year-filter-wrapper>input:checked+label {
-    background-color: var(--st-highlight-primary);
-}
-
-#st-cs-year-filter-wrapper>label:before {
-    content: '';
-    position: absolute;
-    display: block;
-    height: 25px;
-    width: 25px;
-    left: 0;
-    top: 0;
-    color: var(--st-foreground-primary);
-    background: var(--st-background-secondary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
-    font: 16px 'Font Awesome 6 Pro';
-    text-align: center;
-    padding-top: 3px;
-}
-
-#st-cs-year-filter-wrapper>input:checked+label:before {
-    content: '';
-}
-
-#st-cs-year-filter-wrapper>label[data-loading=true]:before {
-    content: '' !important;
-    border: none;
-    background: none;
-    padding: 4px 2px 2px 2px;
-    translate: 1px;
-    animation: rotation 1s infinite linear;
-}
-
-#st-cs-row-filter {
-    background: var(--st-highlight-primary);
-    border: none;
-    position: relative;
-    padding: 4px 10px 4px 10px;
-    border-radius: var(--st-border-radius);
-    font: 11px var(--st-font-family-secondary);
-    word-wrap: break-word;
-}
-
-#st-cs-row-filter-include {
-    position: absolute;
-    top: 10px;
-    right: 44px;
-}
-
-#st-cs-row-filter-exclude {
-    position: absolute;
-    top: 10px;
-    right: 0;
+#st-cs-year-filter, #st-cs-subject-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 aside.st-appear-top {

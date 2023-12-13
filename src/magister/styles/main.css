@@ -827,6 +827,8 @@ a.st-keyboard-hint.clicked {
     color: var(--st-contrast-accent);
     font: 600 12px var(--st-font-family-secondary);
     text-align: center;
+    transform: none;
+    transition: transform 200ms;
 }
 
 .st-bar-chart-col[data-y-tight=true]:before {
