@@ -781,7 +781,7 @@ aside .tabs li:hover:after {
   translate: -50%;
 }
 
-aside .tabs:not(.st-cf-sc-override) li.active:after {
+aside .tabs:not(.st-cs-override) li.active:after {
   width: calc(100% - 24px);
   height: 3px;
   translate: -50%;

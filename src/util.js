@@ -290,13 +290,13 @@ Date.prototype.getFormattedDay = function () {
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
-Date.prototype.isTomorrow = function (offset=0) { return this > midnight(0+offset) && this < midnight(1+offset) }
-Date.prototype.isToday = function (offset=0) { return this > midnight(-1+offset) && this < midnight(0+offset) }
-Date.prototype.isYesterday = function (offset=0) { return this > midnight(-2+offset) && this < midnight(-1+offset) }
+Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + offset) && this < midnight(1 + offset) }
+Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
+Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true) {
     const chartArea = this
-    chartArea.innerText = ''
+    if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart')
     chartArea.classList.add('st-bar-chart', 'st-chart')
 
@@ -305,9 +305,10 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
     const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
 
-    const filteredAndSortedFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1])
+    const filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
+    if (sort) filteredFrequencyMap.sort((a, b) => b[1] - a[1])
 
-    filteredAndSortedFrequencyMap.forEach(([key, frequency], i) => {
+    filteredFrequencyMap.forEach(([key, frequency], i) => {
         const hueRotate = 20 * i
 
         const col = element('div', `${chartArea.id}-${key}`, chartArea, {
@@ -315,6 +316,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             title: labels?.[key] ?? key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
+            'data-y-tight': frequency / totalFrequency <= 0.1,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-${key}-bar`, col, {
@@ -323,7 +325,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     })
 
     if (remainderFrequency > 0) {
-        const hueRotate = 20 * filteredAndSortedFrequencyMap.length
+        const hueRotate = 20 * filteredFrequencyMap.length
 
         const col = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-bar-chart-col',
@@ -332,6 +334,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
                 : "Overige",
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
+            'data-y-tight': remainderFrequency / maxFrequency <= 0.1,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${remainderFrequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-remainder-bar`, col, {

@@ -550,6 +550,7 @@ div.loading-overlay {
 
 .st-metric:before {
     content: attr(data-description) '\A';
+    display: block;
     white-space: pre-wrap;
     font: 12px var(--st-font-family-secondary);
 }
@@ -617,7 +618,7 @@ a.st-metric:hover {
     color: var(--st-foreground-insignificant);
 }
 
-#st-cf-sc-tab.active:after {
+#st-cs-tab.active:after {
     width: calc(100% - 24px);
     height: 3px;
     translate: -50%;
@@ -820,12 +821,16 @@ a.st-keyboard-hint.clicked {
 
 .st-bar-chart-col:before {
     content: attr(data-value);
-    text-align: center;
     width: 100%;
     height: 0;
     translate: 0 6px;
     color: var(--st-contrast-accent);
     font: 600 12px var(--st-font-family-secondary);
+    text-align: center;
+}
+
+.st-bar-chart-col[data-y-tight=true]:before {
+    transform: translateY(-22px);
 }
 
 .st-bar-chart-col:hover:before {
@@ -834,6 +839,11 @@ a.st-keyboard-hint.clicked {
     font-weight: normal;
     rotate: 90deg;
     translate: 8px 22px;
+}
+
+.st-bar-chart-col[data-y-tight=true]:hover:before {
+    text-align: right;
+    transform: translateX(-38px);
 }
 
 .st-bar-chart-col:after {

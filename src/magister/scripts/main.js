@@ -160,10 +160,10 @@ window.addEventListener('popstate', popstate)
 function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
-    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-"][id$="-ghost"], [id^="st-cc"], [id^="st-cs"], [id^="st-cb"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
-    document.querySelectorAll('.st-overlay').forEach(e => { e.close() })
+    document.querySelectorAll('.st-overlay').forEach(e => { e.close?.() })
 }
 
 function parseSubject(string, enabled, subjects) {
@@ -206,6 +206,32 @@ function median(valueArray = []) {
     var half = Math.floor(values.length / 2)
     if (values.length % 2) return values[half]
     return (values[half - 1] + values[half]) / 2.0
+}
+
+function mode(valueArray = []) {
+    if (valueArray.length === 0) return { modes: [], occurrences: 0 }
+
+    let frequencyMap = {}
+    valueArray.forEach(value => {
+        frequencyMap[value] ??= 0
+        frequencyMap[value]++
+    })
+
+    let maxOccurrences = 0
+    let modes = []
+
+    Object.entries(frequencyMap).forEach(([value, occurrences]) => {
+        if (occurrences > maxOccurrences) {
+            maxOccurrences = occurrences
+            modes = [Number(value)]
+        } else if (occurrences === maxOccurrences) {
+            modes.push(Number(value))
+        }
+    })
+
+    if (modes.length >= 1 && modes.length <= 2) return { modes, occurrences: maxOccurrences }
+    else return { modes: [], occurrences: 0 }
+
 }
 
 function standardDeviation(valueArray = []) {
