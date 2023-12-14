@@ -3,18 +3,15 @@ let syncedStorage = {},
     apiUserToken,
     apiCache = {}
 
-let eggs = []
+let eggs = [];
 
-prepareStorage()
-async function prepareStorage() {
+(async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
-}
+})()
 
 window.addEventListener('DOMContentLoaded', async () => {
 
-    const snackbarWrapper = document.createElement('div')
-    snackbarWrapper.id = 'st-snackbars'
-    document.body.append(snackbarWrapper)
+    const snackbarWrapper = element('div', 'st-snackbars', snackbarWrapper)
 
     checkAnnouncements()
 
@@ -43,6 +40,7 @@ async function checkAnnouncements() {
     })
 }
 
+// TODO: ugly code
 // Output eggs
 fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/eggs.json`)
     .then(response => {
@@ -53,11 +51,25 @@ fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tool
             })
     })
 
+/**
+ * 
+ * @param {TimerHandler} func 
+ * @param {number} [interval]
+ */
 function setIntervalImmediately(func, interval) {
     func()
     return setInterval(func, interval)
 }
 
+/**
+ * Creates an element if it doesn't exist already and applies the specified properties to it.
+ * @param {string} [tagName] The element's tag name
+ * @param {string} [id] The element's ID
+ * @param {HTMLElement} [parent] The element's parent
+ * @param {Object} [attributes] The attributes to assign to the element
+ * @param {string} [attributes.innerText] The element's inner text
+ * @returns {HTMLElement} The created element.
+ */
 function element(tagName, id, parent, attributes) {
     let elem = id ? document.getElementById(id) : undefined
     if (!elem) {
@@ -71,6 +83,7 @@ function element(tagName, id, parent, attributes) {
     return elem
 }
 
+// TODO: Abolish
 async function getApiCredentials() {
     apiUserId = await getFromStorage('user-id', 'local')
     apiUserToken = await getFromStorage('token', 'local')
@@ -82,72 +95,14 @@ async function getApiCredentials() {
     })
 }
 
-// Wrapper for fetch().json() with caching
-async function useApi(url, options) {
-    return new Promise(async (resolve, reject) => {
-        // If the cached result is less than 30 seconds old, use it!
-        if (apiCache[url] && (new Date() - apiCache[url].date) < 30000) {
-            resolve(apiCache[url])
-            return
-        }
-
-        // Otherwise, start a new request.
-        await getApiCredentials()
-
-        const res = await fetch(url.replace(/(\$USERID)/gi, apiUserId), { headers: { Authorization: apiUserToken }, ...options })
-
-        // Catch any errors
-        if (!res.ok) {
-            if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-            else {
-                // If it's not a ratelimit, retry one more time.
-                await getApiCredentials()
-
-                const res = await fetch(url.replace(/(\$USERID)/gi, apiUserId), { headers: { Authorization: apiUserToken }, ...options })
-                if (!res.ok) {
-                    if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                    else {
-                        console.error(`Error ${res.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${apiUserId}\nuserToken.length: ${apiUserToken.length}\nInfo about result and options:`)
-                        console.error(res, options)
-                        console.log(`Het zou me erg helpen als je een screenshot of kopie van dit scherm doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
-                        notify(
-                            'snackbar',
-                            `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
-                            [
-                                { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
-                                { innerText: "Discord", href: `https://discord.gg/RVKXKyaS6y` }
-                            ],
-                            36000000
-                        )
-                        if (apiCache[url]) {
-                            notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
-                            return resolve(apiCache[url])
-                        }
-                        else {
-                            notify('snackbar', `Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
-                            return reject(res.status)
-                        }
-                    }
-                } else {
-                    const json = await res.json()
-                    resolve({ ...json, date: new Date() })
-                    // Cache the result and include the date
-                    apiCache[url] = { ...json, date: new Date() }
-                }
-            }
-
-            // Continue if no errors
-        } else {
-            const json = await res.json()
-            resolve(json)
-            // Cache the result and include the date
-            apiCache[url] = { ...json, date: new Date() }
-        }
-
-    })
-}
-
-function awaitElement(querySelector, all, duration) {
+/**
+ * 
+ * @param {string} querySelector 
+ * @param {boolean} [all=false] 
+ * @param {number} [duration=10000] 
+ * @returns 
+ */
+function awaitElement(querySelector, all = false, duration = 10000) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             if (document.querySelector(querySelector)) {
@@ -161,22 +116,35 @@ function awaitElement(querySelector, all, duration) {
             clearInterval(interval)
             console.warn("Could not find element: ", querySelector, all, duration)
             return resolve(undefined)
-        }, duration || 10000)
+        }, duration)
     })
 }
 
-function getFromStorage(key, location) {
+/**
+ * 
+ * @param {string} key 
+ * @param {'sync'|'local'|'session'} [location='sync'] 
+ * @returns {*} Value
+ */
+function getFromStorage(key, location = 'sync') {
     return new Promise((resolve, reject) => {
-        chrome.storage[location ? location : 'sync'].get([key], (result) => {
+        chrome.storage[location].get([key], (result) => {
             let value = Object.values(result)[0]
             value ? resolve(value) : resolve('')
         })
     })
 }
 
-function getFromStorageMultiple(array, location, all) {
+/**
+ * 
+ * @param {string[]} [array] 
+ * @param {'sync'|'local'|'session'} [location='sync'] 
+ * @param {boolean} [all=false] 
+ * @returns {object} Key-value pairs
+ */
+function getFromStorageMultiple(array, location = 'sync', all = false) {
     return new Promise((resolve, reject) => {
-        chrome.storage[location ? location : 'sync'].get(all ? null : array.map(e => [e]), (result) => {
+        chrome.storage[location].get(all ? null : array.map(e => [e]), (result) => {
             result ? resolve(result) : reject(Error('None found'))
         })
     })
@@ -316,12 +284,14 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             title: labels?.[key] ?? key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
-            'data-y-tight': frequency / totalFrequency <= 0.1,
+            'data-y-tight': (frequency / totalFrequency * chartArea.clientHeight) <= 25,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-${key}-bar`, col, {
                 class: 'st-bar-chart-bar'
             })
+
+        console.log(frequency / totalFrequency, (frequency / totalFrequency * chartArea.clientHeight))
     })
 
     if (remainderFrequency > 0) {
@@ -334,7 +304,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
                 : "Overige",
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
-            'data-y-tight': remainderFrequency / maxFrequency <= 0.1,
+            'data-y-tight': (remainderFrequency / maxFrequency * chartArea.clientHeight) <= 25,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${remainderFrequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-remainder-bar`, col, {

@@ -828,10 +828,11 @@ a.st-keyboard-hint.clicked {
     font: 600 12px var(--st-font-family-secondary);
     text-align: center;
     transform: none;
-    transition: transform 200ms;
+    transition: color 200ms, transform 200ms;
 }
 
 .st-bar-chart-col[data-y-tight=true]:before {
+    color: var(--st-foreground-primary);
     transform: translateY(-22px);
 }
 
@@ -840,12 +841,12 @@ a.st-keyboard-hint.clicked {
     text-align: left;
     font-weight: normal;
     rotate: 90deg;
-    translate: 8px 22px;
+    translate: 10px 22px;
 }
 
 .st-bar-chart-col[data-y-tight=true]:hover:before {
     text-align: right;
-    transform: translateX(-38px);
+    translate: -12px -16px;
 }
 
 .st-bar-chart-col:after {

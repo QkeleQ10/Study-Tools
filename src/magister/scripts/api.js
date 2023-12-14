@@ -14,7 +14,31 @@ const gatherEnd = new Date()
 gatherEnd.setDate(now.getDate() + 42)
 gatherEnd.setHours(0, 0, 0, 0)
 
-let sessionStorage = chrome.storage.session || chrome.storage.local
+/**
+ * Retrieve the latest credentials information from memory.
+ * @returns {Promise<Object>} Object containing userId and token
+ */
+async function updateApiCredentials() {
+    const promiseMemory = new Promise(getApiCredentialsMemory)
+    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 5000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
+
+    return Promise.race([promiseMemory, promiseTime])
+
+    async function getApiCredentialsMemory(resolve, reject) {
+        let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
+        now = new Date()
+
+        magisterApiUserId = await getFromStorage('user-id', storageLocation) || magisterApiUserId
+        magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
+        magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
+
+        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate) && Math.abs(now - new Date(magisterApiUserTokenDate)) < 30000) {
+            resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+        } else {
+            getApiCredentialsMemory(resolve, reject)
+        }
+    }
+}
 
 const MagisterApi = {
     accountInfo: async () => {
@@ -157,22 +181,12 @@ const MagisterApi = {
     },
 }
 
-async function updateApiCredentials(forceRefresh) {
-    const promiseMemory = new Promise(async (resolve, reject) => {
-        if (!forceRefresh && now - new Date(magisterApiUserTokenDate) < 30000) {
-            return resolve({ magisterApiUserId, magisterApiUserToken })
-        }
-        magisterApiUserId = (await sessionStorage.get('user-id'))?.['user-id'] || magisterApiUserId
-        magisterApiUserToken = (await sessionStorage.get('token'))?.['token'] || magisterApiUserToken
-        magisterApiUserTokenDate = (await sessionStorage.get('token-date'))?.['token-date'] || magisterApiUserTokenDate
-        resolve({ magisterApiUserId, magisterApiUserToken })
-    })
-    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 5000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
-
-    return Promise.race([promiseMemory, promiseTime])
-}
-
-// Wrapper for fetch().json()
+/**
+ * Wrapper for fetch().json()
+ * @param {number} url
+ * @param {Object} options
+ * @returns {Promise<Object>}
+ */
 async function fetchWrapper(url, options) {
     const promiseReq = new Promise(async (resolve, reject) => {
 
@@ -198,7 +212,7 @@ async function fetchWrapper(url, options) {
         }
 
         // If it's not a ratelimit, retry one more time. Also forcibly refresh from memory.
-        await updateApiCredentials(true)
+        await updateApiCredentials()
 
         // Retry with a second request
         const res2 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
@@ -231,7 +245,7 @@ async function fetchWrapper(url, options) {
             120000
         )
         console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
-        console.error(`Error ${res2.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken.length}`)
+        console.error(`Error ${res2.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
         return reject(res2.status)
     })
 
