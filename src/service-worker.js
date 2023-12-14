@@ -17,7 +17,7 @@ async function startListenCredentials() {
     chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' })
 
     // Initialise the three variables
-    apiUserId = (await chrome.storage.session.get('user-id'))?.['user-id'] || null
+    apiUserId = (await chrome.storage.sync.get('user-id'))?.['user-id'] || null
     apiUserToken = (await chrome.storage.session.get('token'))?.['token'] || null
     apiUserTokenDate = (await chrome.storage.session.get('token-date'))?.['token-date'] || null
 
@@ -26,7 +26,7 @@ async function startListenCredentials() {
         let userTokenWas = apiUserToken
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
             apiUserId = e.url.split('/personen/')[1].split('/')[0]
-            chrome.storage.session.set({ 'user-id': apiUserId })
+            chrome.storage.sync.set({ 'user-id': apiUserId })
             if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
         }
         let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')

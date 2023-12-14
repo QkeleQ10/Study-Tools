@@ -14,7 +14,7 @@ console.info("Service worker running!")
 
 async function startListenCredentials() {
     // Initialise the three variables
-    apiUserId = (await browser.storage.local.get('user-id'))?.['user-id'] || null
+    apiUserId = (await browser.storage.sync.get('user-id'))?.['user-id'] || null
     apiUserToken = (await browser.storage.local.get('token'))?.['token'] || null
     apiUserTokenDate = (await browser.storage.local.get('token-date'))?.['token-date'] || null
 
@@ -23,7 +23,7 @@ async function startListenCredentials() {
         let userTokenWas = apiUserToken
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
             apiUserId = e.url.split('/personen/')[1].split('/')[0]
-            browser.storage.local.set({ 'user-id': apiUserId })
+            browser.storage.sync.set({ 'user-id': apiUserId })
             if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
         }
         let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')
