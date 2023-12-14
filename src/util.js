@@ -11,7 +11,7 @@ let eggs = [];
 
 window.addEventListener('DOMContentLoaded', async () => {
 
-    const snackbarWrapper = element('div', 'st-snackbars', snackbarWrapper)
+    const snackbarWrapper = element('div', 'st-snackbars', document.body)
 
     checkAnnouncements()
 
@@ -81,18 +81,6 @@ function element(tagName, id, parent, attributes) {
         if (attributes) setAttributes(elem, attributes)
     }
     return elem
-}
-
-// TODO: Abolish
-async function getApiCredentials() {
-    apiUserId = await getFromStorage('user-id', 'local')
-    apiUserToken = await getFromStorage('token', 'local')
-    return new Promise(async (resolve, reject) => {
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-        apiUserId = req.apiUserId
-        apiUserToken = req.apiUserToken
-        resolve({ apiUserId, apiUserToken })
-    })
 }
 
 /**
@@ -284,14 +272,12 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             title: labels?.[key] ?? key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
-            'data-y-tight': (frequency / totalFrequency * chartArea.clientHeight) <= 25,
+            'data-y-tight': (frequency / maxFrequency * chartArea.clientHeight) <= 25,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-${key}-bar`, col, {
                 class: 'st-bar-chart-bar'
             })
-
-        console.log(frequency / totalFrequency, (frequency / totalFrequency * chartArea.clientHeight))
     })
 
     if (remainderFrequency > 0) {

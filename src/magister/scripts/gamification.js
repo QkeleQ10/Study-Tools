@@ -32,8 +32,6 @@ async function gamification() {
     calculateScore()
 
     async function calculateScore() {
-        await getApiCredentials()
-
         // Fetch all years and info related.
         const yearsArray = await MagisterApi.years(),
             years = {}

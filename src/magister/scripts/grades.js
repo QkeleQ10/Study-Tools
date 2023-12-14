@@ -460,14 +460,7 @@ async function gradeBackup() {
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
         if (yearsArray?.length > 0) return
 
-        await getApiCredentials()
-
-        const yearsRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/leerlingen/${apiUserId}/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, { headers: { Authorization: apiUserToken } })
-        if (yearsRes.status >= 400 && yearsRes.status < 600) {
-            let errorEl = element('span', 'st-cb-ex-error', bkModalEx, { innerText: "Vernieuw de pagina en probeer het opnieuw." })
-            return
-        }
-        yearsArray = (await yearsRes.json()).items
+        yearsArray = await MagisterApi.years()
 
         yearsArray.forEach((year, i) => {
             const button = element('button', `st-cb-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
@@ -481,24 +474,12 @@ async function gradeBackup() {
         busy = true
         bkModalExListTitle.dataset.description = "Schooljaar selecteren..."
 
-        await getApiCredentials()
-
         let yearElement = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${year.i + 1})`)
         yearElement.click()
 
         bkModalExListTitle.dataset.description = "Wachten op cijfers..."
 
-        const gradesRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, { headers: { Authorization: apiUserToken } })
-        if (!gradesRes.ok) {
-            bkModalExListTitle.dataset.description = `Fout ${gradesRes.status}\nVernieuw de pagina en probeer het opnieuw`
-            bkModalExListTitle.disabled = true
-            if (gradesRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
-            bkModalEx.querySelectorAll(`[id*='st-cb-ex-opt']`).forEach(e => e.remove())
-            return
-        }
-        const gradesJson = await gradesRes.json()
-        const gradesArray = gradesJson.Items
-
+        const gradesArray = await MagisterApi.grades.forYear(year)
         if (!gradesArray?.length > 0) {
             bkModalExListTitle.dataset.description = "Geen cijfers gevonden!"
             busy = false
@@ -547,15 +528,7 @@ async function gradeBackup() {
                     }
 
                     setTimeout(async () => {
-                        const extraRes = await fetch(`https://${window.location.hostname.split('.')[0]}.magister.net/api/personen/${apiUserId}/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${gradeBasis.CijferKolom.Id}`, { headers: { Authorization: apiUserToken } })
-                        if (!extraRes.ok) {
-                            bkModalExListTitle.dataset.description = `Fout ${extraRes.status}\nVernieuw de pagina en probeer het opnieuw`
-                            bkModalExListTitle.disabled = true
-                            if (extraRes.status === 429) bkModalExListTitle.dataset.description = `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`
-                            bkModalEx.querySelectorAll(`[id*='st-cb-ex-opt']`).forEach(e => e.remove())
-                            return
-                        }
-                        const gradeExtra = await extraRes.json()
+                        const gradeExtra = await MagisterApi.grades.columnInfo(year, gradeBasis.CijferKolom.Id)
 
                         let weight = Number(gradeExtra.Weging),
                             column = gradeExtra.KolomNaam,
