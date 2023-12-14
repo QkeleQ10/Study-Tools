@@ -104,7 +104,7 @@ div.loading-overlay {
 .st-button {
     height: 32px;
     padding: 6px 16px;
-    background: var(--st-accent-primary);
+    background-color: var(--st-accent-primary);
     font-family: var(--st-font-family-secondary);
     font-size: 14px;
     font-weight: 600;
@@ -123,14 +123,26 @@ div.loading-overlay {
     height: 24px;
 }
 
+.st-button.primary, .st-button.primary.icon {
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+    border: none;
+}
+
+.st-button.primary:hover, .st-button.primary.icon:hover {
+    background-color: var(--st-accent-secondary);
+    color: var(--st-contrast-accent);
+    filter: none;
+}
+
 .st-button.secondary {
-    background: var(--st-background-secondary);
+    background-color: var(--st-background-secondary);
     color: var(--st-foreground-primary);
     border: 1px solid var(--st-accent-primary);
 }
 
 .st-button.tertiary {
-    background: var(--st-background-secondary);
+    background-color: var(--st-background-secondary);
     color: var(--st-foreground-insignificant);
     outline: none;
 }

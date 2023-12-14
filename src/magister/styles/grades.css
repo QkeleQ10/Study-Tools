@@ -444,22 +444,39 @@
 }
 
 #st-cs {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    display: none;
+    grid-template-rows: 100% 0%;
+    gap: 1px;
     position: absolute;
     width: 294px;
     bottom: 24px;
     top: 195px;
     right: 16px;
-    padding: 0 12px;
-    background: var(--st-background-secondary);
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     border: var(--st-border);
+    background-color: var(--st-border-color);
     border-top: none;
-    font: 12px var(--st-font-family-secondary);
-    overflow-y: auto;
+    overflow: hidden;
     z-index: 999;
+    transition: grid-template-rows 200ms;
+}
+
+#st-cs[data-visible=true] {
+    display: grid;
+}
+
+#st-cs[data-filters=true] {
+    grid-template-rows: 40% 60%;
+}
+
+#st-cs-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    background-color: var(--st-background-secondary);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #st-cs.small {
@@ -467,34 +484,58 @@
     border-top: var(--st-border);
 }
 
-#st-cs.empty>#st-cs-metrics-wrapper,
-#st-cs.empty>#st-cs-bar-chart,
-#st-cs.not-ready>#st-cs-metrics-wrapper,
-#st-cs.not-ready>#st-cs-bar-chart {
-    visibility: hidden;
+#st-cs>#st-cs-stats>*:not(#st-cs-stats-heading) {
+    opacity: 1;
+    transition: opacity 200ms;
 }
 
-#st-cs.empty:after {
-    content: 'Er zijn geen cijfers die voldoen aan de criteria.';
+#st-cs.empty>#st-cs-stats>*:not(#st-cs-stats-heading) {
+    opacity: 0;
+}
+
+#st-cs>#st-cs-stats:after {
+    content: 'Er zijn geen cijfers die voldoen aan de criteria. Probeer de filters te wijzigen.';
+    display: inline-block;
     position: absolute;
-    top: 40px;
+    top: 44px;
+    color: var(--st-foreground-insignificant);
+    font: 600 14px/22px var(--st-font-family-secondary);
+    opacity: 0;
+    transition: opacity 200ms;
 }
 
-#st-cs.not-ready:after {
-    content: 'Cijfers worden verzameld. Een ogenblik geduld...';
+#st-cs.empty>#st-cs-stats:after {
+    opacity: 1;
+}
+
+#st-cs-stats-heading,
+#st-cs-filters-heading {
+    font: 500 16px/25px var(--st-font-family-primary);
+    position: relative;
+    margin-bottom: -5px;
+}
+
+#st-cs-stats-heading:after {
+    content: "" attr(data-amount) " cijfers";
     position: absolute;
-    top: 40px;
+    right: 0;
+    color: var(--st-foreground-insignificant);
+    font: 14px/25px var(--st-font-family-secondary);
 }
 
-#st-cs:before {
-    content: 'Statistieken\A';
-    white-space: pre-wrap;
-    font: var(--st-font-primary);
-    margin-bottom: -24px;
+#st-cs-stats-info {
+    translate: 0 -4px;
+    font: 600 12px var(--st-font-family-secondary);
+    color: var(--st-foreground-insignificant);
+    max-height: 34px;
+    /* overflow: hidden; */
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
 }
 
 #st-cs-bar-chart {
-    height: 256px;
+    min-height: 256px;
+    min-width: 268px;
 }
 
 #st-cs-bar-chart>.st-bar-chart-col {
@@ -535,6 +576,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-width: 268px;
 }
 
 #st-cs-metrics-wrapper>div,
@@ -550,16 +592,97 @@
     color: var(--st-foreground-insignificant);
 }
 
+#st-cs-filter-button {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+    max-width: none;
+    max-height: none;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    z-index: 2;
+    rotate: 0;
+    transition: color 200ms, background-color 200ms, transform 200ms, scale 200ms, rotate 200ms;
+}
+
+#st-cs[data-filters=true] #st-cs-filter-button {
+    rotate: 180deg;
+}
+
+#st-cs[data-filters=true] #st-cs-filter-button:before {
+    content: '';
+}
+
+#st-cs-filter-button-tooltip {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 72px;
+    height: 48px;
+    padding: 7px 13px;
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    font: 12px var(--st-font-family-secondary);
+    z-index: 2;
+    transform-origin: right;
+    transform: none;
+    opacity: 1;
+    transition: transform 200ms, opacity 200ms;
+}
+
+#st-cs-filter-button-tooltip:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--st-accent-primary);
+}
+
+#st-cs-filter-button-tooltip.hidden,
+#st-cs[data-filters=true] #st-cs-filter-button-tooltip {
+    transform: scale(0);
+    opacity: 0;
+}
+
 #st-cs-filters {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding: 12px;
+    background-color: var(--st-background-secondary);
+    overflow-y: auto;
 }
 
-#st-cs-year-filter, #st-cs-subject-filter {
+#st-cs-year-filter,
+#st-cs-subject-filter {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    position: relative;
+}
+
+#st-cs-year-filter-all,
+#st-cs-subject-filter-all {
+    margin-left: auto;
+    translate: 0 6px;
+}
+
+#st-cs-year-filter:before,
+#st-cs-subject-filter:before {
+    content: "Leerjaren";
+    position: absolute;
+    top: -32px;
+    font: 500 14px var(--st-font-family-primary);
+}
+
+#st-cs-subject-filter:before {
+    content: "Vakken";
 }
 
 aside.st-appear-top {

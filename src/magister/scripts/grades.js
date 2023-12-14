@@ -713,29 +713,38 @@ async function gradeStatistics() {
     let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'asideTrigger' }),
         scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" }),
-        scContainer = element('div', 'st-cs', document.body, { style: 'display: none;', class: 'not-ready' }),
-        scMetricsWrapper = element('div', 'st-cs-metrics-wrapper', scContainer),
+        scContainer = element('div', 'st-cs', document.body, { 'data-visible': 'false' }),
+        scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
+        scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Kies hier leerjaren en vakken om statistieken voor te tonen!" }),
+        scStats = element('div', 'st-cs-stats', scContainer),
+        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: "Statistieken", 'data-amount': 0 }),
+        scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." }),
+        scMetricsWrapper = element('div', 'st-cs-metrics-wrapper', scStats),
         scMetrics1 = element('div', 'st-cs-metrics-1', scMetricsWrapper),
         scMean = element('div', 'st-cs-mean', scMetrics1, { class: 'st-metric', 'data-description': "Ongewogen\ngemiddelde", style: 'color: var(--st-foreground-primary)', title: "De gemiddelde waarde, zonder weegfactoren." }),
         scMedian = element('div', 'st-cs-median', scMetrics1, { class: 'st-metric', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
         scMode = element('div', 'st-cs-mode', scMetrics1, { class: 'st-metric', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
         scMetrics2 = element('div', 'st-cs-metrics-2', scMetricsWrapper),
-        scNum = element('div', 'st-cs-num', scMetrics2, { class: 'st-metric', 'data-description': "Aantal", title: "Het aantal cijfers dat wordt meegenomen in de statistieken." }),
         scSufficient = element('div', 'st-cs-sufficient', scMetrics2, { class: 'st-metric', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger of gelijk aan 5,5." }),
         scInsufficient = element('div', 'st-cs-insufficient', scMetrics2, { class: 'st-metric', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." }),
         scMetrics3 = element('div', 'st-cs-metrics-3', scMetricsWrapper),
         scMin = element('div', 'st-cs-min', scMetrics3, { class: 'st-metric', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
         scMax = element('div', 'st-cs-max', scMetrics3, { class: 'st-metric', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
         scStDev = element('div', 'st-cs-stdev', scMetrics3, { class: 'st-metric', 'data-description': "Standaard-\nafwijking", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
-        scBarChart = element('div', 'st-cs-bar-chart', scContainer),
+        scBarChart = element('div', 'st-cs-bar-chart', scStats),
         scFilters = element('div', 'st-cs-filters', scContainer),
+        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: "Filters" }),
+        scYearFilterAll = element('button', 'st-cs-year-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scYearFilter = element('div', 'st-cs-year-filter', scFilters),
+        scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters),
         // TODO
         scInteractionPreventer = document.createElement('div'),
         scBkCommunication = document.createElement('button'),
-        grades = {},
-        years = new Set(),
+        grades = [],
+        years = [],
+        gatheredYears = new Set(),
+        includedYears = new Set(),
         subjects = new Set(),
         excludedSubjects = new Set(),
         backup = false
@@ -749,7 +758,7 @@ async function gradeStatistics() {
         if (scTab.classList.contains('active')) {
             scTab.classList.remove('active')
             tabs.classList.remove('st-cs-override')
-            scContainer.style.display = 'none'
+            scContainer.dataset.visible = false
         }
     })
 
@@ -757,158 +766,182 @@ async function gradeStatistics() {
         event.stopPropagation()
         tabs.classList.add('st-cs-override')
         scTab.classList.add('active')
-        scContainer.style.display = 'flex'
+        scContainer.dataset.visible = true
     })
 
-    scBkCommunication.addEventListener('click', async () => {
-        backup = true
-        years = new Set()
-        grades = {}
-        setTimeout(async () => {
-            grades = await gatherGradesForYear(grades)
-            scContainer.classList.remove('not-ready')
-            await displayStatistics(grades)
-        }, 200);
-    })
+    // scBkCommunication.addEventListener('click', async () => {
+    //     backup = true
+    //     years = new Set()
+    //     grades = {}
+    //     setTimeout(async () => {
+    //         grades = await gatherGradesForYear(grades)
+    //         await displayStatistics(grades)
+    //     }, 200);
+    // })
 
     scTab.addEventListener('click', async event => {
-        grades = await gatherGradesForYear(grades)
-        scContainer.classList.remove('not-ready')
-        await displayStatistics(grades)
+        await displayStatistics()
     }, { once: true })
 
-    // Gather all years and populate the year filter
-    const yearSelect = await awaitElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span')
-    yearSelect.click()
-    document.querySelectorAll(`#aanmeldingenSelect_listbox>li.k-item`).forEach((yearElement, yearIndex) => {
-        years.add(yearElement.innerText)
+    scFilterButton.addEventListener('click', () => {
+        scFilterButtonTooltip.classList.add('hidden')
+        if ((scContainer.dataset.filters == 'true')) {
+            scContainer.dataset.filters = false
+        } else {
+            scContainer.dataset.filters = true
+        }
+    })
 
-        let label = element('label', `st-cs-year-${yearIndex}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${yearIndex}`, innerText: yearElement.innerText }),
-            input = element('input', `st-cs-year-${yearIndex}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
-        input.checked = yearIndex === 0
+    scYearFilterAll.addEventListener('click', () => {
+        [...scYearFilter.children].forEach(e => e.click())
+    })
+
+    scSubjectFilterAll.addEventListener('click', () => {
+        [...scSubjectFilter.children].forEach(e => e.click())
+    })
+
+    // Gather all years and populate the year filter
+    years = await MagisterApi.years()
+    years.forEach(async (year, i) => {
+        let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
+        let input = element('input', `st-cs-year-${year.id}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
+
+        if (i === 0) {
+            input.checked = true
+            let yearGrades = (await MagisterApi.grades.forYear(year))
+            grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, year: year.id })))
+
+            let yearSubjects = yearGrades.map(e => e.Vak.Omschrijving)
+            subjects = new Set([...subjects, ...yearSubjects])
+            buildSubjectFilter()
+
+            gatheredYears.add(year.id)
+            includedYears.add(year.id)
+            displayStatistics()
+        }
 
         input.addEventListener('input', async () => {
-            if (!grades[yearIndex]) {
-                label.dataset.loading = true
-                grades = await gatherGradesForYear(grades, yearIndex)
-                label.dataset.loading = false
+            if (!gatheredYears.has(year.id)) {
+                let yearGrades = (await MagisterApi.grades.forYear(year))
+                grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, year: year.id })))
+
+                gatheredYears.add(year.id)
             }
-            await displayStatistics(grades)
+
+            input.checked ? includedYears.add(year.id) : includedYears.delete(year.id)
+
+            let yearSubjects = grades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
+            subjects = new Set([...subjects, ...yearSubjects])
+            buildSubjectFilter()
+
+            displayStatistics()
         })
     })
-    yearSelect.click()
 
-    async function gatherGradesForYear(grades = {}, yearIndex = 0) {
-        return new Promise(async (resolve, reject) => {
-            scTab.dataset.loading = true
-            scInteractionPreventer.id = 'st-prevent-interactions'
-            if (!backup) {
-                let yearSelection = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${yearIndex + 1})`),
-                    tableBody = await awaitElement("#cijferoverzichtgrid tbody")
-                tableBody.innerText = ''
-                yearSelection.click()
-            }
-
-            setTimeout(async () => {
-                let gradeElements = await awaitElement('#cijferoverzichtgrid:not(.ng-hide) tr td>span.grade:not(.empty, .gemiddeldecolumn), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.herkansingKolom:not(.empty), #cijferoverzichtgrid:not(.ng-hide) tr td>span.grade.heeftonderliggendekolommen:not(.empty)', true, 2000)
-                if (gradeElements?.[0]) {
-                    gradeElements.forEach(grade => {
-                        let result = Number(grade.innerText.replace(',', '.').replace('', '')),
-                            id = grade.id,
-                            subject = grade.parentElement.parentElement.querySelector('td>span.text').innerText
-
-                        subjects.add(subject)
-
-                        if (!isNaN(result)) {
-                            if (!grades[yearIndex]) grades[yearIndex] = {}
-                            if (!grades[yearIndex][subject]) grades[yearIndex][subject] = {}
-                            grades[yearIndex][subject][id] = result
-                        }
-                    })
-                }
-                resolve(grades)
-                buildSubjectFilter(subjects)
-                scInteractionPreventer.id = ''
-            }, yearIndex < 1 ? 0 : 500)
-        })
-    }
-
-    function buildSubjectFilter(subjects) {
+    function buildSubjectFilter() {
         scSubjectFilter.innerText = ''
 
-        let sortedSubjects = [...subjects].sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' }))
+        subjects = new Set([...subjects]
+            .filter(subject => grades.filter(e => includedYears.has(e.year)).find(e => e.Vak.Omschrijving === subject))
+            .sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' })))
 
-        sortedSubjects.forEach(subjectName => {
-            let label = element('label', `st-cs-subject-${subjectName}-label`, scSubjectFilter, { class: 'st-checkbox-label', for: `st-cs-subject-${subjectName}`, innerText: subjectName }),
-                input = element('input', `st-cs-subject-${subjectName}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
+        let subjectsArray = [...subjects]
+        subjectsArray.forEach(subjectName => {
+            let label = element('label', `st-cs-subject-${subjectName}-label`, scSubjectFilter, { class: 'st-checkbox-label', for: `st-cs-subject-${subjectName}`, innerText: subjectName })
+            let input = element('input', `st-cs-subject-${subjectName}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
             input.checked = !excludedSubjects.has(subjectName)
 
             input.addEventListener('input', async () => {
                 excludedSubjects.has(subjectName) ? excludedSubjects.delete(subjectName) : excludedSubjects.add(subjectName)
-                await displayStatistics(grades)
+                displayStatistics()
             })
         })
+
+        let excludedSubjectsArray = [...excludedSubjects]
+        excludedSubjects = new Set(excludedSubjectsArray.filter(e => subjects.has(e)))
     }
 
-    async function displayStatistics(grades = new Set()) {
+    function filterGrades() {
+        const filtered = grades
+            .filter(e =>
+                includedYears.has(e.year) &&
+                !excludedSubjects.has(e.Vak.Omschrijving)
+            )
+            .filter((grade, index, self) =>
+                index === self.findIndex((g) =>
+                    g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
+                    g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
+                    g.CijferStr === grade.CijferStr
+                )
+            )
+        return filtered
+    }
+
+    async function displayStatistics() {
         return new Promise(async (resolve, reject) => {
-            let results = [],
+            let filteredGrades = filterGrades() || []
+            scStatsHeading.dataset.amount = filteredGrades.length
+
+            let yearsText = [...includedYears]
+                .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
+                .map(id => years.find(y => y.id === id).studie.code).join(', ')
+            if (includedYears.size === 1 && includedYears.has(years.at(0).id)) yearsText = `Dit leerjaar ${years.at(0).studie.code}`
+            if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1).studie.code} t/m ${years.at(0).studie.code})`
+
+            let includedSubjects = [...subjects]
+                .filter(subject => !excludedSubjects.has(subject))
+                .sort()
+            let subjectsText = includedSubjects.join(', ')
+            if (includedSubjects.length > 3) subjectsText = `${includedSubjects.length} van de ${subjects.size} vakken`
+            if (excludedSubjects.size === 1) subjectsText = `Alle ${subjects.size} vakken behalve ${[...excludedSubjects][0]}`
+            if (excludedSubjects.size === 0) subjectsText = ''
+
+            scStatsInfo.innerText = [yearsText, subjectsText].filter(t => t.length > 0).join('\n')
+
+            if (filteredGrades.length < 1) {
+                scContainer.dataset.filters = true
+                scContainer.classList.add('empty')
+                return
+            }
+            scContainer.classList.remove('empty')
+
+            let filteredResults = filteredGrades.map(grade => Number(grade.CijferStr.replace(',', '.'))),
                 roundedFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
 
-            Object.keys(grades).forEach(yearIndex => {
-                if (!backup && !document.querySelector(`#st-cs-year-${yearIndex}`).checked) return
-                let yearObject = grades[yearIndex]
-                Object.keys(yearObject).forEach(subjectKey => {
-                    if (excludedSubjects.has(subjectKey)) return
-                    let subjectObject = yearObject[subjectKey]
-                    Object.values(subjectObject).forEach(result => {
-                        if (result > 10) return
-                        results.push(result)
-                        roundedFrequencies[Math.round(result)]++
-                    })
-                })
-            })
+            filteredResults.forEach(result => roundedFrequencies[Math.round(result)]++)
 
-            if (results.length < 1) {
-                scContainer.classList.add('empty')
-                scTab.dataset.loading = false
-                return
-            } else scContainer.classList.remove('empty')
+            scMean.innerText = weightedMean(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
-            scNum.innerText = results.length
+            scMedian.innerText = median(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-            scMean.innerText = weightedMean(results).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-
-            scMedian.innerText = median(results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-
-            let { modes, occurrences } = mode(results)
+            let { modes, occurrences } = mode(filteredResults)
             scMode.innerText = modes.map(e => e.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join(' & ')
+            scMode.dataset.extra = occurrences + '×'
+            scMode.dataset.description = modes.length <= 1 ? "Modus" : "Modi"
             if (scMode.innerText.length < 1) {
                 scMode.innerText = "geen"
                 scMode.removeAttribute('data-extra')
             }
-            scMode.dataset.extra = occurrences + '×'
-            scMode.dataset.description = modes.length === 1 ? "Modus" : "Modi"
 
-            scStDev.innerText = standardDeviation(results).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            scStDev.innerText = standardDeviation(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-            scMin.innerText = Math.min(...results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMin.innerText = Math.min(...filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-            scMax.innerText = Math.max(...results).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMax.innerText = Math.max(...filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-            let resultsSufficient = results.filter((e) => { return e >= 5.5 })
+            let resultsSufficient = filteredResults.filter((e) => { return e >= 5.5 })
             if (resultsSufficient.length > 0) {
                 scSufficient.innerText = resultsSufficient.length
-                scSufficient.dataset.extra = `${(resultsSufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+                scSufficient.dataset.extra = `${(resultsSufficient.length / filteredGrades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
             } else {
                 scSufficient.innerText = 'geen'
                 scSufficient.removeAttribute('data-extra')
             }
 
-            let resultsInsufficient = results.filter((e) => { return e < 5.5 })
+            let resultsInsufficient = filteredResults.filter((e) => { return e < 5.5 })
             if (resultsInsufficient.length > 0) {
                 scInsufficient.innerText = resultsInsufficient.length
-                scInsufficient.dataset.extra = `${(resultsInsufficient.length / results.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+                scInsufficient.dataset.extra = `${(resultsInsufficient.length / filteredGrades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
             } else {
                 scInsufficient.innerText = 'geen'
                 scInsufficient.removeAttribute('data-extra')
@@ -916,7 +949,6 @@ async function gradeStatistics() {
 
             scBarChart.createBarChart(roundedFrequencies, null, 0, false)
 
-            scTab.dataset.loading = false
             resolve()
         })
     }
