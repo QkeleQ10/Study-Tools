@@ -253,7 +253,7 @@ Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 +
 Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
-    chartArea.classList.remove('st-pie-chart')
+    chartArea.classList.remove('st-pie-chart', 'st-line-chart')
     chartArea.classList.add('st-bar-chart', 'st-chart')
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
@@ -272,7 +272,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             title: labels?.[key] ?? key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
-            'data-y-tight': (frequency / maxFrequency * chartArea.clientHeight) <= 25,
+            'data-y-tight': (frequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-${key}-bar`, col, {
@@ -290,7 +290,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
                 : "Overige",
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
-            'data-y-tight': (remainderFrequency / maxFrequency * chartArea.clientHeight) <= 25,
+            'data-y-tight': (remainderFrequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${remainderFrequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-remainder-bar`, col, {
@@ -301,10 +301,10 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
+Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1, rotateHue = true) {
     const chartArea = this
     chartArea.innerText = ''
-    chartArea.classList.remove('st-bar-chart')
+    chartArea.classList.remove('st-bar-chart', 'st-line-chart')
     chartArea.classList.add('st-pie-chart', 'st-chart')
 
     const aboutWrapper = element('div', `${chartArea.id}-about`, chartArea, { class: 'st-chart-about' }),
@@ -320,7 +320,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     filteredAndSortedFrequencyMap.forEach(([key, frequency], i, a) => {
         const pieOffset = a.slice(0, i).reduce((acc, [key, frequency]) => acc + frequency, 0) / totalFrequency,
             pieSize = frequency / totalFrequency,
-            hueRotate = 20 * i
+            hueRotate = rotateHue ? (20 * i) : 0
 
         const slice = element('div', `${chartArea.id}-${key}`, chartArea, {
             class: 'st-pie-chart-slice',
@@ -341,7 +341,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     if (remainderFrequency > 0) {
         const pieOffset = 1 - (remainderFrequency / totalFrequency),
             pieSize = remainderFrequency / totalFrequency,
-            hueRotate = 20 * filteredAndSortedFrequencyMap.length
+            hueRotate = rotateHue ? (20 * filteredAndSortedFrequencyMap.length) : 0
 
         const slice = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-pie-chart-slice',
@@ -360,7 +360,8 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     }
 
     function updateAbout() {
-        const hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover') || chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
+        let hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover')
+        if (!chartArea.classList.contains('donut')) hoveredElement ||= chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
         chartArea.querySelectorAll('.st-pie-chart-slice.active').forEach(element => element.classList.remove('active'))
         if (!hoveredElement) return
         hoveredElement.classList.add('active')
@@ -383,6 +384,34 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     chartArea.addEventListener('mousemove', updateAbout)
     chartArea.addEventListener('mouseout', updateAbout)
     updateAbout()
+
+    return chartArea
+}
+
+Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue) {
+    const chartArea = this
+    if (!chartArea.classList.contains('st-line-chart')) chartArea.innerText = ''
+    chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
+    chartArea.classList.add('st-line-chart', 'st-chart')
+
+    minValue ??= Math.min(...values)
+    maxValue ??= Math.max(...values)
+
+    values.forEach((value, i) => {
+        const hueRotate = 20 * i
+
+        const col = element('div', `${chartArea.id}-${i}`, chartArea, {
+            class: 'st-line-chart-col',
+            title: `${labels?.[i] ?? i}\n${value}`,
+            'data-delta': values[i - 1] > value ? 'fall' : values[i - 1] < value ? 'rise' : values[i - 1] === value ? 'equal' : 'none',
+            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}`
+        }),
+            bar = element('div', `${chartArea.id}-${i}-bar`, col, {
+                class: 'st-line-chart-point'
+            })
+    })
+
+    chartArea.querySelectorAll(`.st-line-chart-col:not(:nth-child(-n+${values.length}))`).forEach(e => e.remove())
 
     return chartArea
 }

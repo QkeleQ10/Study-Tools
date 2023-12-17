@@ -318,8 +318,8 @@ async function gradeCalculator() {
     })
 
     function updateCalculations() {
-        calcMean = weightedMean(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight))
-        calcMedian = median(addedToCalculation.map(item => item.result))
+        calcMean = calculateMean(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight))
+        calcMedian = calculateMedian(addedToCalculation.map(item => item.result))
         clMean.innerText = isNaN(calcMean)
             ? '?'
             : calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -333,7 +333,7 @@ async function gradeCalculator() {
         if (calcMean < 5.5) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')
 
-        fallbackHypotheticalWeight = Math.round(median(addedToCalculation.map(item => item.weight)) || 1)
+        fallbackHypotheticalWeight = Math.round(calculateMedian(addedToCalculation.map(item => item.weight)) || 1)
         clFutureWeightInput.placeholder = fallbackHypotheticalWeight + '×'
 
         advice = formulateGradeAdvice()
@@ -371,7 +371,7 @@ async function gradeCalculator() {
             grades = []
         for (let i = 1.0; i <= 10; i += 0.1) {
             grades.push(Number(i))
-            means.push(Number(weightedMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
+            means.push(Number(calculateMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
         }
         return [means, grades]
     }
@@ -710,29 +710,41 @@ async function gradeBackup() {
 // TODO: Revamp!
 async function gradeStatistics() {
     if (!syncedStorage['magister-cf-statistics']) return
-    let tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
+    const tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'asideTrigger' }),
-        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" }),
-        scContainer = element('div', 'st-cs', document.body, { 'data-visible': 'false' }),
+        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" })
+
+    const scContainer = element('div', 'st-cs', document.body, { 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
-        scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Kies hier leerjaren en vakken om statistieken voor te tonen!" }),
-        scStats = element('div', 'st-cs-stats', scContainer),
+        scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Kies hier leerjaren en vakken om statistieken voor te tonen!" })
+
+    const scStats = element('div', 'st-cs-stats', scContainer),
         scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: "Statistieken", 'data-amount': 0 }),
-        scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." }),
-        scMetricsWrapper = element('div', 'st-cs-metrics-wrapper', scStats),
-        scMetrics1 = element('div', 'st-cs-metrics-1', scMetricsWrapper),
-        scMean = element('div', 'st-cs-mean', scMetrics1, { class: 'st-metric', 'data-description': "Ongewogen\ngemiddelde", style: 'color: var(--st-foreground-primary)', title: "De gemiddelde waarde, zonder weegfactoren." }),
-        scMedian = element('div', 'st-cs-median', scMetrics1, { class: 'st-metric', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
-        scMode = element('div', 'st-cs-mode', scMetrics1, { class: 'st-metric', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
-        scMetrics2 = element('div', 'st-cs-metrics-2', scMetricsWrapper),
-        scSufficient = element('div', 'st-cs-sufficient', scMetrics2, { class: 'st-metric', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger of gelijk aan 5,5." }),
-        scInsufficient = element('div', 'st-cs-insufficient', scMetrics2, { class: 'st-metric', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." }),
-        scMetrics3 = element('div', 'st-cs-metrics-3', scMetricsWrapper),
-        scMin = element('div', 'st-cs-min', scMetrics3, { class: 'st-metric', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
-        scMax = element('div', 'st-cs-max', scMetrics3, { class: 'st-metric', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
-        scStDev = element('div', 'st-cs-stdev', scMetrics3, { class: 'st-metric', 'data-description': "Standaard-\nafwijking", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
-        scBarChart = element('div', 'st-cs-bar-chart', scStats),
-        scFilters = element('div', 'st-cs-filters', scContainer),
+        scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
+
+    const scMetricsWrapper = element('div', 'st-cs-metrics', scStats),
+        scMean = element('div', 'st-cs-mean', scMetricsWrapper, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
+        scCentralTendencies = element('div', 'st-cs-central-tendencies', scMetricsWrapper),
+        scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
+        scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
+        scVariance = element('div', 'st-cs-variance', scCentralTendencies, { class: 'st-metric', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." })
+
+    const scRoundedHeading = element('span', 'st-cs-rounded-heading', scStats, { class: 'st-section-heading', innerText: "Afgerond behaalde cijfers" }),
+        scRoundedChart = element('div', 'st-cs-rounded-chart', scStats)
+
+    const scSufInsuf = element('div', 'st-cs-suf-insuf', scStats),
+        scSufInsufHeading = element('span', 'st-cs-suf-insuf-heading', scSufInsuf, { class: 'st-section-heading', innerText: "Voldoendes en onvoldoendes" }),
+        scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger of gelijk aan 5,5." }),
+        scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." }),
+        scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut' })
+
+    const scHistory = element('div', 'st-cs-history', scStats),
+        scHistoryHeading = element('span', 'st-cs-history-heading', scHistory, { class: 'st-section-heading', innerText: "Behaalde cijfers" }),
+        scMin = element('div', 'st-cs-min', scHistory, { class: 'st-metric', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
+        scMax = element('div', 'st-cs-max', scHistory, { class: 'st-metric', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
+        scLineChart = element('div', 'st-cs-history-chart', scHistory)
+
+    const scFilters = element('div', 'st-cs-filters', scContainer),
         scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: "Filters" }),
         scYearFilterAll = element('button', 'st-cs-year-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scYearFilter = element('div', 'st-cs-year-filter', scFilters),
@@ -740,8 +752,9 @@ async function gradeStatistics() {
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters),
         // TODO
         scInteractionPreventer = document.createElement('div'),
-        scBkCommunication = document.createElement('button'),
-        grades = [],
+        scBkCommunication = document.createElement('button')
+
+    let grades = [],
         years = [],
         gatheredYears = new Set(),
         includedYears = new Set(),
@@ -820,6 +833,13 @@ async function gradeStatistics() {
             displayStatistics()
         }
 
+        label.addEventListener('dblclick', () => {
+            scYearFilter.querySelectorAll('input').forEach(child => {
+                if (child.checked) child.click()
+            })
+            input.click()
+        })
+
         input.addEventListener('input', async () => {
             if (!gatheredYears.has(year.id)) {
                 let yearGrades = (await MagisterApi.grades.forYear(year))
@@ -855,6 +875,13 @@ async function gradeStatistics() {
                 excludedSubjects.has(subjectName) ? excludedSubjects.delete(subjectName) : excludedSubjects.add(subjectName)
                 displayStatistics()
             })
+
+            label.addEventListener('dblclick', () => {
+                scSubjectFilter.querySelectorAll('input').forEach(child => {
+                    if (child.checked) child.click()
+                })
+                input.click()
+            })
         })
 
         let excludedSubjectsArray = [...excludedSubjects]
@@ -863,10 +890,12 @@ async function gradeStatistics() {
 
     function filterGrades() {
         const filtered = grades
+            // Remove grades that don't match filter
             .filter(e =>
                 includedYears.has(e.year) &&
                 !excludedSubjects.has(e.Vak.Omschrijving)
             )
+            // Remove any duplicates (based on column num, column name and result)
             .filter((grade, index, self) =>
                 index === self.findIndex((g) =>
                     g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
@@ -874,6 +903,8 @@ async function gradeStatistics() {
                     g.CijferStr === grade.CijferStr
                 )
             )
+            // Sort from old to new
+            .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
         return filtered
     }
 
@@ -890,13 +921,13 @@ async function gradeStatistics() {
 
             let includedSubjects = [...subjects]
                 .filter(subject => !excludedSubjects.has(subject))
-                .sort()
+                .sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' }))
             let subjectsText = includedSubjects.join(', ')
             if (includedSubjects.length > 3) subjectsText = `${includedSubjects.length} van de ${subjects.size} vakken`
             if (excludedSubjects.size === 1) subjectsText = `Alle ${subjects.size} vakken behalve ${[...excludedSubjects][0]}`
-            if (excludedSubjects.size === 0) subjectsText = ''
+            if (excludedSubjects.size === 0) subjectsText = `Alle ${subjects.size} vakken`
 
-            scStatsInfo.innerText = [yearsText, subjectsText].filter(t => t.length > 0).join('\n')
+            scStatsInfo.innerText = [yearsText, subjectsText].join('\n')
 
             if (filteredGrades.length < 1) {
                 scContainer.dataset.filters = true
@@ -910,11 +941,11 @@ async function gradeStatistics() {
 
             filteredResults.forEach(result => roundedFrequencies[Math.round(result)]++)
 
-            scMean.innerText = weightedMean(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+            scMean.innerText = calculateMean(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
-            scMedian.innerText = median(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMedian.innerText = calculateMedian(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-            let { modes, occurrences } = mode(filteredResults)
+            let { modes, occurrences } = calculateMode(filteredResults)
             scMode.innerText = modes.map(e => e.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join(' & ')
             scMode.dataset.extra = occurrences + '×'
             scMode.dataset.description = modes.length <= 1 ? "Modus" : "Modi"
@@ -923,7 +954,7 @@ async function gradeStatistics() {
                 scMode.removeAttribute('data-extra')
             }
 
-            scStDev.innerText = standardDeviation(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            scVariance.innerText = calculateVariance(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
             scMin.innerText = Math.min(...filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
@@ -947,7 +978,12 @@ async function gradeStatistics() {
                 scInsufficient.removeAttribute('data-extra')
             }
 
-            scBarChart.createBarChart(roundedFrequencies, null, 0, false)
+            scRoundedChart.createBarChart(roundedFrequencies, null, 0, false)
+
+            scSufInsufChart.createPieChart({ "Voldoendes": resultsSufficient.length, "Onvoldoendes": resultsInsufficient.length }, null, 0, false)
+
+            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak.Omschrijving}\n${e.CijferKolom.KolomNaam}, ${e.CijferKolom.KolomKop}`), 1, 10)
+            // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
 
             resolve()
         })

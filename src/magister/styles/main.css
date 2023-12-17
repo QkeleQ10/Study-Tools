@@ -123,13 +123,15 @@ div.loading-overlay {
     height: 24px;
 }
 
-.st-button.primary, .st-button.primary.icon {
+.st-button.primary,
+.st-button.primary.icon {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
     border: none;
 }
 
-.st-button.primary:hover, .st-button.primary.icon:hover {
+.st-button.primary:hover,
+.st-button.primary.icon:hover {
     background-color: var(--st-accent-secondary);
     color: var(--st-contrast-accent);
     filter: none;
@@ -601,6 +603,12 @@ a.st-metric:hover {
     padding: 32px;
 }
 
+.st-section-heading {
+    display: block;
+    color: var(--st-foreground-primary);
+    font: 500 16px/25px var(--st-font-family-primary);
+}
+
 .st-section-title {
     display: flex;
     flex-direction: column;
@@ -788,6 +796,10 @@ a.st-keyboard-hint.clicked {
     gap: 8px;
 }
 
+.st-pie-chart.donut .st-chart-about {
+    display: none;
+}
+
 .st-chart-label {
     font: 700 16px/24px var(--st-font-family-primary);
 }
@@ -824,11 +836,12 @@ a.st-keyboard-hint.clicked {
     width: 25px;
     height: calc(var(--bar-fill-amount) * 100%);
     border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
-    background-color: var(--st-accent-primary);
+    background-color: var(--st-accent-ok);
+    transition: filter 200ms;
 }
 
 .st-bar-chart-col:hover .st-bar-chart-bar {
-    background-color: var(--st-accent-secondary);
+    filter: brightness(0.95)
 }
 
 .st-bar-chart-col:before {
@@ -840,7 +853,6 @@ a.st-keyboard-hint.clicked {
     font: 600 12px var(--st-font-family-secondary);
     text-align: center;
     transform: none;
-    transition: color 200ms, transform 200ms;
 }
 
 .st-bar-chart-col[data-y-tight=true]:before {
@@ -853,12 +865,13 @@ a.st-keyboard-hint.clicked {
     text-align: left;
     font-weight: normal;
     rotate: 90deg;
-    translate: 10px 22px;
+    translate: 8px 22px;
+    z-index: 1;
 }
 
 .st-bar-chart-col[data-y-tight=true]:hover:before {
     text-align: right;
-    translate: -12px -16px;
+    translate: -14px -16px;
 }
 
 .st-bar-chart-col:after {
@@ -886,8 +899,25 @@ a.st-keyboard-hint.clicked {
     height: var(--size);
 }
 
+.st-pie-chart.donut:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: calc(var(--size) * 0.2);
+    left: calc(var(--size) * 0.2);
+    width: calc(var(--size) * 0.6);
+    height: calc(var(--size) * 0.6);
+    background-color: var(--st-background-secondary);
+    border-radius: 100%;
+}
+
+.st-pie-chart.donut .st-pie-chart-slice::after {
+    --y: calc(var(--radius) - 8px);
+}
+
 .st-pie-chart-slice {
     --hue-rotate: 0;
+    --background-color: var(--st-accent-ok);
     --pie-offset: 0;
     --pie-size: 1;
     --angle: calc(var(--pie-size) * 360deg);
@@ -926,7 +956,6 @@ a.st-keyboard-hint.clicked {
 }
 
 .st-pie-chart-slice-box1 {
-    --background-color: var(--st-accent-primary);
     position: absolute;
     top: 0;
     left: calc(var(--size) / 2);
@@ -935,7 +964,7 @@ a.st-keyboard-hint.clicked {
     border-radius: 0 var(--size) var(--size) 0;
     transform-origin: left;
     overflow: hidden;
-    transition: transform 200ms;
+    transition: transform 200ms, filter 200ms;
 }
 
 .st-pie-chart-slice[data-more-than-half=true] .st-pie-chart-slice-box1 {
@@ -967,8 +996,80 @@ a.st-keyboard-hint.clicked {
 }
 
 .st-pie-chart-slice.active .st-pie-chart-slice-box1 {
-    --background-color: var(--st-accent-secondary);
+    filter: brightness(0.95);
     transform: scale(1.05);
+}
+
+.st-line-chart {
+    --size: 256px;
+    display: flex;
+    justify-content: stretch;
+    height: var(--size);
+}
+
+.st-line-chart-col {
+    --hue-rotate: 0;
+    --point-height: 0;
+    flex-grow: 1;
+    position: relative;
+    height: 100%;
+    filter: hue-rotate(calc(var(--hue-rotate) * 1deg));
+    transition: --point-height 200ms;
+}
+
+.st-line-chart-col:hover {
+    background-color: var(--st-highlight-primary);
+}
+
+.st-line-chart-point {
+    position: absolute;
+    top: calc((1 - var(--point-height)) * 100%);
+    left: 50%;
+    translate: -50% -50%;
+    width: 100%;
+    max-width: 6px;
+    aspect-ratio: 1;
+    border-radius: 100%;
+    background-color: var(--st-accent-ok);
+    z-index: 1;
+}
+
+.st-line-chart-col[data-delta="rise"]:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc((1 - var(--point-height)) * 100%);
+    right: 0;
+    translate: -50%;
+    width: 100%;
+    height: calc((1 * (var(--point-height) - var(--previous-point-height))) * 100%);
+    min-height: 0.5px;
+    background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--st-accent-ok), transparent calc(50% + 1px));
+}
+
+.st-line-chart-col[data-delta="fall"]:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc((1 - var(--previous-point-height)) * 100%);
+    right: 0;
+    translate: -50%;
+    width: 100%;
+    height: calc((1 * (var(--previous-point-height) - var(--point-height))) * 100%);
+    min-height: 0.5px;
+    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--st-accent-ok), transparent calc(50% + 1px));
+}
+
+.st-line-chart-col[data-delta="equal"]:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc((1 - var(--point-height)) * 100%);
+    right: 0;
+    translate: -50%;
+    width: 100%;
+    height: 1px;
+    background-color: var(--st-accent-ok);
 }
 
 @keyframes rotation {

@@ -20,7 +20,7 @@ gatherEnd.setHours(0, 0, 0, 0)
  */
 async function updateApiCredentials() {
     const promiseMemory = new Promise(getApiCredentialsMemory)
-    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 5000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
+    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 4000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
 
     return Promise.race([promiseMemory, promiseTime])
 
@@ -249,7 +249,7 @@ async function fetchWrapper(url, options) {
         return reject(res2.status)
     })
 
-    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 5000, 'Timeout exceeded!'))
+    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 8000, 'Timeout exceeded!'))
 
     return Promise.race([promiseReq, promiseTime])
 }

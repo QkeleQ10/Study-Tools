@@ -190,9 +190,9 @@ function formatKey(string) {
     return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-function weightedMean(valueArray = [], weightArray = []) {
-    let result = valueArray.map((value, i) => {
-        let weight = weightArray[i] ?? 1,
+function calculateMean(values = [], weights = []) {
+    let result = values.map((value, i) => {
+        let weight = weights[i] ?? 1,
             sum = value * weight
         return [sum, weight]
     }).reduce((p, c) => {
@@ -201,18 +201,18 @@ function weightedMean(valueArray = [], weightArray = []) {
     return (result[0] / result[1])
 }
 
-function median(valueArray = []) {
-    let values = [...valueArray].sort()
-    var half = Math.floor(values.length / 2)
-    if (values.length % 2) return values[half]
-    return (values[half - 1] + values[half]) / 2.0
+function calculateMedian(values = []) {
+    let sortedValues = [...values].sort()
+    var half = Math.floor(sortedValues.length / 2)
+    if (sortedValues.length % 2) return sortedValues[half]
+    return (sortedValues[half - 1] + sortedValues[half]) / 2.0
 }
 
-function mode(valueArray = []) {
-    if (valueArray.length === 0) return { modes: [], occurrences: 0 }
+function calculateMode(values = []) {
+    if (values.length === 0) return { modes: [], occurrences: 0 }
 
     let frequencyMap = {}
-    valueArray.forEach(value => {
+    values.forEach(value => {
         frequencyMap[value] ??= 0
         frequencyMap[value]++
     })
@@ -234,8 +234,12 @@ function mode(valueArray = []) {
 
 }
 
-function standardDeviation(valueArray = []) {
-    let n = valueArray.length,
-        mean = valueArray.reduce((a, b) => a + b) / n
-    return Math.sqrt(valueArray.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
+function calculateVariance(values = []) {
+    const average = calculateMean(values)
+    const squareDiffs = values.map((value) => {
+        const diff = value - average
+        return diff * diff
+    })
+    const variance = calculateMean(squareDiffs)
+    return variance
 }
