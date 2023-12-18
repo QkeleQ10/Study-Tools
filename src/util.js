@@ -250,7 +250,7 @@ Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + o
 Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
 Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true, rotateHue = true) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-line-chart')
@@ -265,7 +265,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     if (sort) filteredFrequencyMap.sort((a, b) => b[1] - a[1])
 
     filteredFrequencyMap.forEach(([key, frequency], i) => {
-        const hueRotate = 20 * i
+        const hueRotate = rotateHue ? (20 * i) : 0
 
         const col = element('div', `${chartArea.id}-${key}`, chartArea, {
             class: 'st-bar-chart-col',
@@ -281,7 +281,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     })
 
     if (remainderFrequency > 0) {
-        const hueRotate = 20 * filteredFrequencyMap.length
+        const hueRotate = rotateHue ? (20 * filteredFrequencyMap.length) : 0
 
         const col = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-bar-chart-col',

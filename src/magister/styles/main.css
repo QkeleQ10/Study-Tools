@@ -546,25 +546,53 @@ div.loading-overlay {
 }
 
 #st-appbar-metrics>.st-metric {
+    justify-content: center;
     text-align: center;
 }
 
 .st-metric {
-    font: var(--st-font-primary);
-    line-height: normal;
-    font-size: 20px;
+    display: grid;
+    grid-template:
+        'desc' auto
+        'result' auto
+        / auto;
+    gap: 2px;
+    padding: 2px;
+    font: 500 20px/22px var(--st-font-family-primary);
     flex-grow: 2;
 }
 
-.st-metric[data-extra]:after {
-    content: ' (' attr(data-extra) ')';
-    white-space: pre-wrap;
-    font: 12px var(--st-font-family-secondary);
+.st-metric[data-extra] {
+    grid-template:
+        'desc desc' auto
+        'result extra' auto
+        / auto 1fr;
+}
+
+.st-metric.secondary {
+    font: 500 18px/20px var(--st-font-family-primary);
 }
 
 .st-metric:before {
-    content: attr(data-description) '\A';
-    display: block;
+    grid-area: desc;
+
+    content: attr(data-description);
+    white-space: pre-wrap;
+    font: 600 12px var(--st-font-family-secondary);
+    opacity: 0.8;
+}
+
+.st-metric.secondary:before {
+    font: 600 11px var(--st-font-family-secondary);
+    color: var(--st-foreground-insignificant);
+    opacity: 1;
+}
+
+.st-metric[data-extra]:after {
+    grid-area: extra;
+    place-self: end start;
+
+    content: ' (' attr(data-extra) ')';
     white-space: pre-wrap;
     font: 12px var(--st-font-family-secondary);
 }
@@ -818,6 +846,7 @@ a.st-keyboard-hint.clicked {
 .st-bar-chart-col {
     --hue-rotate: 0;
     --bar-fill-amount: 0;
+    --background-color: var(--st-accent-ok);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -836,7 +865,7 @@ a.st-keyboard-hint.clicked {
     width: 25px;
     height: calc(var(--bar-fill-amount) * 100%);
     border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
-    background-color: var(--st-accent-ok);
+    background-color: var(--background-color);
     transition: filter 200ms;
 }
 

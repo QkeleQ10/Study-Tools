@@ -54,9 +54,9 @@ async function gradeCalculator() {
         clAddCustomWeight = element('input', 'st-cf-custom-weight', clCustomButtons, { class: 'st-input', type: 'number', placeholder: 'Weegfactor', min: 1 }),
         clAddCustom = element('button', 'st-cc-custom', clCustomButtons, { class: 'st-button secondary', innerText: "Eigen cijfer toevoegen", 'data-icon': '' }),
         clAveragesWrapper = element('div', 'st-cc-averages', clSidebar),
-        clMean = element('div', 'st-cc-mean', clAveragesWrapper, { class: 'st-metric', 'data-description': "Gemiddelde (gewogen)" }),
-        clMedian = element('div', 'st-cc-median', clAveragesWrapper, { class: 'st-metric', 'data-description': "Mediaan" }),
-        clWeight = element('div', 'st-cc-weight', clAveragesWrapper, { class: 'st-metric', 'data-description': "Gewicht" }),
+        clMean = element('div', 'st-cc-mean', clAveragesWrapper, { class: 'st-metric', 'data-description': "Gewogen gemiddelde" }),
+        clMedian = element('div', 'st-cc-median', clAveragesWrapper, { class: 'st-metric secondary', 'data-description': "Mediaan" }),
+        clWeight = element('div', 'st-cc-weight', clAveragesWrapper, { class: 'st-metric secondary', 'data-description': "Gewicht" }),
         clPredictionWrapper = element('div', 'st-cc-prediction', clSidebar),
         clFutureWeightLabel = element('label', 'st-cc-future-weight-label', clPredictionWrapper, { innerText: "Weegfactor:" }),
         clFutureWeightInput = element('input', 'st-cc-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
@@ -723,20 +723,20 @@ async function gradeStatistics() {
         scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
 
     const scMetricsWrapper = element('div', 'st-cs-metrics', scStats),
-        scMean = element('div', 'st-cs-mean', scMetricsWrapper, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
+        scMeans = element('div', 'st-cs-means', scMetricsWrapper),
+        scWeightedMean = element('div', 'st-cs-weighted-mean', scMeans, { class: 'st-metric', 'data-description': "Gewogen gemiddelde", title: "De gemiddelde waarde met weegfactoren." }),
+        scUnweightedMean = element('div', 'st-cs-unweighted-mean', scMeans, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
         scCentralTendencies = element('div', 'st-cs-central-tendencies', scMetricsWrapper),
-        scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
-        scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
-        scVariance = element('div', 'st-cs-variance', scCentralTendencies, { class: 'st-metric', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." })
+        scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
+        scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
+        scVariance = element('div', 'st-cs-variance', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
+        scSufInsuf = element('div', 'st-cs-suf-insuf', scMetricsWrapper),
+        scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger dan of gelijk aan 5,5." }),
+        scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut', title: "Het percentage cijfers hoger dan of gelijk aan 5,5." }),
+        scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." })
 
     const scRoundedHeading = element('span', 'st-cs-rounded-heading', scStats, { class: 'st-section-heading', innerText: "Afgerond behaalde cijfers" }),
         scRoundedChart = element('div', 'st-cs-rounded-chart', scStats)
-
-    const scSufInsuf = element('div', 'st-cs-suf-insuf', scStats),
-        scSufInsufHeading = element('span', 'st-cs-suf-insuf-heading', scSufInsuf, { class: 'st-section-heading', innerText: "Voldoendes en onvoldoendes" }),
-        scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger of gelijk aan 5,5." }),
-        scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." }),
-        scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut' })
 
     const scHistory = element('div', 'st-cs-history', scStats),
         scHistoryHeading = element('span', 'st-cs-history-heading', scHistory, { class: 'st-section-heading', innerText: "Behaalde cijfers" }),
@@ -833,7 +833,8 @@ async function gradeStatistics() {
             displayStatistics()
         }
 
-        label.addEventListener('dblclick', () => {
+        label.addEventListener('contextmenu', (event) => {
+            event.preventDefault()
             scYearFilter.querySelectorAll('input').forEach(child => {
                 if (child.checked) child.click()
             })
@@ -876,7 +877,8 @@ async function gradeStatistics() {
                 displayStatistics()
             })
 
-            label.addEventListener('dblclick', () => {
+            label.addEventListener('contextmenu', (event) => {
+                event.preventDefault()
                 scSubjectFilter.querySelectorAll('input').forEach(child => {
                     if (child.checked) child.click()
                 })
@@ -910,14 +912,19 @@ async function gradeStatistics() {
 
     async function displayStatistics() {
         return new Promise(async (resolve, reject) => {
+            scContainer.classList.remove('empty')
+            scContainer.classList.remove('with-weights')
+            scUnweightedMean.classList.remove('secondary')
+
+
             let filteredGrades = filterGrades() || []
             scStatsHeading.dataset.amount = filteredGrades.length
 
             let yearsText = [...includedYears]
                 .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
                 .map(id => years.find(y => y.id === id).studie.code).join(', ')
-            if (includedYears.size === 1 && includedYears.has(years.at(0).id)) yearsText = `Dit leerjaar ${years.at(0).studie.code}`
-            if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1).studie.code} t/m ${years.at(0).studie.code})`
+            if (includedYears.size === 1 && includedYears.has(years.at(0).id)) yearsText = `Dit leerjaar (${years.at(0)?.studie?.code})`
+            if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
 
             let includedSubjects = [...subjects]
                 .filter(subject => !excludedSubjects.has(subject))
@@ -934,14 +941,15 @@ async function gradeStatistics() {
                 scContainer.classList.add('empty')
                 return
             }
-            scContainer.classList.remove('empty')
+
 
             let filteredResults = filteredGrades.map(grade => Number(grade.CijferStr.replace(',', '.'))),
                 roundedFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
 
             filteredResults.forEach(result => roundedFrequencies[Math.round(result)]++)
 
-            scMean.innerText = calculateMean(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+
+            scUnweightedMean.innerText = calculateMean(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
             scMedian.innerText = calculateMedian(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
@@ -961,31 +969,46 @@ async function gradeStatistics() {
             scMax.innerText = Math.max(...filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             let resultsSufficient = filteredResults.filter((e) => { return e >= 5.5 })
-            if (resultsSufficient.length > 0) {
-                scSufficient.innerText = resultsSufficient.length
-                scSufficient.dataset.extra = `${(resultsSufficient.length / filteredGrades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-            } else {
-                scSufficient.innerText = 'geen'
-                scSufficient.removeAttribute('data-extra')
-            }
+            scSufficient.innerText = resultsSufficient.length
 
             let resultsInsufficient = filteredResults.filter((e) => { return e < 5.5 })
-            if (resultsInsufficient.length > 0) {
-                scInsufficient.innerText = resultsInsufficient.length
-                scInsufficient.dataset.extra = `${(resultsInsufficient.length / filteredGrades.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-            } else {
-                scInsufficient.innerText = 'geen'
-                scInsufficient.removeAttribute('data-extra')
-            }
+            scInsufficient.innerText = resultsInsufficient.length
+            scInsufficient.dataset.has = resultsInsufficient.length > 0
 
-            scRoundedChart.createBarChart(roundedFrequencies, null, 0, false)
+            scRoundedChart.createBarChart(roundedFrequencies, null, 0, false, false)
 
-            scSufInsufChart.createPieChart({ "Voldoendes": resultsSufficient.length, "Onvoldoendes": resultsInsufficient.length }, null, 0, false)
+            scSufInsufChart.style.backgroundImage = `
+            url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-warn').replace('#', '%23')}' stroke-width='7' stroke-dasharray='${(resultsInsufficient.length / filteredResults.length) * 278}%25%2c 10000%25' stroke-dashoffset='0'/%3e%3c/svg%3e"),
+            url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-primary').replace('#', '%23')}' stroke-width='6.9'/%3e%3c/svg%3e")`
+            scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 
             scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak.Omschrijving}\n${e.CijferKolom.KolomNaam}, ${e.CijferKolom.KolomKop}`), 1, 10)
             // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
 
             resolve()
+
+            // Add weighted stats afterwards in case there's only one subject and year selected
+            if (includedYears.size === 1 && includedSubjects.length === 1) {
+                for (const e of filteredGrades) {
+                    e.weight ??= (await MagisterApi.grades.columnInfo({ id: [...includedYears][0] }, e.CijferKolom.Id)).Weging
+                    grades[grades.findIndex(f => f.CijferKolom.Id === e.CijferKolom.Id)].weight ??= e.weight
+                }
+
+                if (!filteredGrades.every(grade => grade.weight) || !filteredGrades.some(grade => grade.weight > 0)) return
+
+                scWeightedMean.innerText = calculateMean(
+                    filteredGrades
+                        .filter(grade => grade.weight > 0)
+                        .map(grade => Number(grade.CijferStr.replace(',', '.'))),
+                    filteredGrades
+                        .filter(grade => grade.weight > 0)
+                        .map(grade => grade.weight)
+                ).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+
+
+                scContainer.classList.add('with-weights')
+                scUnweightedMean.classList.add('secondary')
+            }
         })
     }
 }
