@@ -207,6 +207,18 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
     position: relative;
 }
 
+div.view {
+    min-width: calc(100vw - 304px);
+    width: 100%;
+    max-width: calc(100vw - 304px);
+    transition: min-width 200ms, max-width 200ms;
+}
+
+div.collapsed-menu ~ div.view {
+    min-width: calc(100vw - 128px);
+    max-width: calc(100vw - 128px);
+}
+
 .block h4 {
     border-bottom: var(--st-border)
 }
@@ -754,7 +766,8 @@ aside .tabs {
 
 aside .tabs li {
     width: auto;
-    flex-grow: 2;
+    flex-shrink: 1;
+    flex-grow: 1;
     transition: filter 200ms;
 }
 
@@ -783,10 +796,28 @@ aside .tabs li:hover:after {
   translate: -50%;
 }
 
-aside .tabs:not(.st-cs-override) li.active:after {
+aside .tabs li.active:after,
+aside .tabs:has(li.st-tab.active) li.st-tab.active:after {
   width: calc(100% - 24px);
   height: 3px;
   translate: -50%;
+}
+
+aside .tabs:has(li.st-tab.active) li.active:after {
+    width: 0;
+    height: 0;
+    translate: -50% 1px;
+}
+
+aside .tabs li a {
+    line-height: normal;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
 }
 
 .menu-footer>a>i {
@@ -1240,6 +1271,23 @@ h3:active> .icon-up-arrow:before {
     padding-bottom: 0 !important
 }`, 'study-tools-sw-grid')
     }
+
+    if (syncedStorage['cs']) {
+        createStyle(`
+#cijfers-container.subtitle .main {
+    padding-top: 125px !important;
+}
+
+#cijfers-container.subtitle aside {
+    top: 125px !important;
+}
+
+#cijfers-container .main div.content-container-cijfers {
+    width: 100% !important;
+    max-width: none !important;
+}
+`, 'study-tools-cs')
+    } else { createStyle('', 'study-tools-cs') }
 
     if (syncedStorage['magister-cf-failred']) {
         createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')

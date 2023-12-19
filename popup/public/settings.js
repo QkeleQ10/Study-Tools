@@ -290,19 +290,19 @@ export default [
         id: "grades",
         settings: [
             {
-                id: "magister-cf-calculator",
+                id: "cc",
                 title: "Cijfercalculator",
                 subtitle: "Zie wat je moet halen of wat je komt te staan op basis van je cijferlijst en/of aangepaste cijfers.",
                 default: true,
             },
             {
-                id: "magister-cf-statistics",
+                id: "cs",
                 title: "Cijferstatistieken",
                 subtitle: "Nieuw tabblad in het cijferoverzicht met statistieken, grafiekjes en handige filters.",
                 default: true,
             },
             {
-                id: "magister-cf-backup",
+                id: "cb",
                 title: "Cijferback-up",
                 subtitle: "Knop in het cijferoverzicht om je cijferlijst te exporteren en te importeren.",
                 default: true,

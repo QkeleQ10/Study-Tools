@@ -30,7 +30,7 @@ async function gradeOverview() {
 
 // Grade calculator
 async function gradeCalculator() {
-    if (!syncedStorage['magister-cf-calculator']) return
+    if (!syncedStorage['cc']) return
 
     let accessedBefore = await getFromStorage('cf-calc-accessed', 'local') || false
 
@@ -416,8 +416,8 @@ async function gradeCalculator() {
 
 // Grade backup
 async function gradeBackup() {
-    if (!syncedStorage['magister-cf-backup']) return
-    let aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
+    if (!syncedStorage['cb']) return
+    const aside = await awaitElement('#cijfers-container > aside'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         bkInvoke = element('button', 'st-cb', document.body, { class: 'st-button', 'data-icon': '', innerText: "Cijferback-up" }),
         // TODO: Give this modal the same treatment as the today.js edit modal.
@@ -434,13 +434,17 @@ async function gradeBackup() {
         bkModalImExtTip = element('span', 'st-cb-im-ext-tip', bkModalIm, { class: 'st-tip', innerText: "Website speciaal ontwikkeld voor het\nimporteren van cijferback-ups (aanbevolen)\n\n" }),
         bkModalImMagister = element('label', 'st-cb-import', bkModalIm, { class: 'st-button secondary', 'data-icon': '', innerText: "Importeren in Magister" }),
         bkModalImMagTip = element('span', 'st-cb-im-mag-tip', bkModalIm, { class: 'st-tip', innerText: "Niet aanbevolen" }),
-        bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' }),
-        bkIWrapper = document.createElement('div'),
-        bkIResult = document.createElement('div'),
-        bkIWeight = document.createElement('div'),
-        bkIColumn = document.createElement('div'),
-        bkITitle = document.createElement('div'),
-        yearsArray = [],
+        bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' })
+
+    const bkI = element('div', 'st-cb-i', aside, { class: 'st-sheet', 'data-visible': 'false' }),
+        bkIInfo = element('span', 'st-cb-i-info', bkI),
+        bkIMetrics = element('div', 'st-cb-i-metrics', bkI),
+        bkIResult = element('div', 'st-cb-i-result', bkIMetrics, { class: 'st-metric', 'data-description': "Resultaat", innerText: "?" }),
+        bkIWeight = element('div', 'st-cb-i-weight', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Weegfactor", innerText: "?" }),
+        bkIColumn = element('div', 'st-cb-i-column', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Kolomnaam", innerText: "?" }),
+        bkITitle = element('div', 'st-cb-i-title', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Kolomkop", innerText: "?" })
+
+    let yearsArray = [],
         busy = false,
         list = []
 
@@ -587,7 +591,27 @@ async function gradeBackup() {
             let table = document.createElement('table')
             setAttributes(table, { role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
             div2.append(table)
-            aside.innerText = "Geïmporteerd uit back-up van " + new Date(json.date).toLocaleString('nl-NL', {
+
+            const tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
+                existingTabs = document.querySelectorAll('#cijfers-container > aside > div.head-bar > ul > li[data-ng-class]'),
+                bkTab = element('li', 'st-cb-tab', tabs, { class: 'st-tab asideTrigger' }),
+                bkTabLink = element('a', 'st-cb-tab-link', bkTab, { innerText: "Back-upinformatie" })
+            existingTabs.forEach(e => e.style.display = 'none')
+
+            tabs.addEventListener('click', (event) => {
+                let bkTabClicked = event.target.id.startsWith('st-cb-tab')
+                if (bkTabClicked) {
+                    bkTab.classList.add('active')
+                    bkI.dataset.visible = true
+                } else {
+                    bkTab.classList.remove('active')
+                    bkI.dataset.visible = false
+                }
+            })
+
+            bkTab.click()
+
+            bkIInfo.innerText = "Geïmporteerd uit back-up van " + new Date(json.date).toLocaleString('nl-NL', {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -595,23 +619,6 @@ async function gradeBackup() {
                 hour: "numeric",
                 minute: "numeric"
             })
-            aside.id = 'st-cb-aside'
-            aside.append(bkIWrapper)
-            bkIWrapper.id = 'st-cb-i-wrapper'
-            bkIWrapper.append(bkIResult, bkIWeight, bkIColumn, bkITitle)
-            bkIResult.dataset.description = "Resultaat"
-            bkIResult.classList.add('st-metric')
-            bkIResult.innerText = "?"
-            bkIResult.style.color = 'var(--st-foreground-primary)'
-            bkIWeight.dataset.description = "Weegfactor"
-            bkIWeight.classList.add('st-metric')
-            bkIWeight.innerText = "?"
-            bkIColumn.dataset.description = "Kolomnaam"
-            bkIColumn.classList.add('st-metric')
-            bkIColumn.innerText = "?"
-            bkITitle.dataset.description = "Kolomkop"
-            bkITitle.classList.add('st-metric')
-            bkITitle.innerText = "Klik op een cijfer"
 
             for (let i = 0; i < list.length; i++) {
                 bkModalImMagister.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
@@ -620,13 +627,6 @@ async function gradeBackup() {
                     .then(() => {
                         return
                     })
-            }
-
-            if (document.querySelector('#st-cs')) {
-                document.querySelector('#st-cs').style.display = 'flex'
-                document.querySelector('#st-cs').classList.add('small')
-                document.querySelector('#st-cs-bk-communication').click()
-                document.querySelector('#st-cs-year-filter-wrapper').style.display = 'none'
             }
 
             gradesContainer.removeAttribute('style')
@@ -709,12 +709,16 @@ async function gradeBackup() {
 // Grade statistics
 // TODO: Revamp!
 async function gradeStatistics() {
-    if (!syncedStorage['magister-cf-statistics']) return
-    const tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
-        scTab = element('li', 'st-cs-tab', tabs, { class: 'asideTrigger' }),
+    if (!syncedStorage['cs']) return
+    const gradeContainer = await awaitElement('#cijfers-container'),
+        aside = await awaitElement('#cijfers-container > aside'),
+        tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
+        scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
         scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" })
 
-    const scContainer = element('div', 'st-cs', document.body, { 'data-visible': 'false' }),
+    const asideResizer = element('div', 'st-cs-resize', document.body, { innerText: '' })
+
+    const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
         scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Kies hier leerjaren en vakken om statistieken voor te tonen!" })
 
@@ -722,14 +726,13 @@ async function gradeStatistics() {
         scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: "Statistieken", 'data-amount': 0 }),
         scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
 
-    const scMetricsWrapper = element('div', 'st-cs-metrics', scStats),
-        scMeans = element('div', 'st-cs-means', scMetricsWrapper),
-        scWeightedMean = element('div', 'st-cs-weighted-mean', scMeans, { class: 'st-metric', 'data-description': "Gewogen gemiddelde", title: "De gemiddelde waarde met weegfactoren." }),
-        scUnweightedMean = element('div', 'st-cs-unweighted-mean', scMeans, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
-        scCentralTendencies = element('div', 'st-cs-central-tendencies', scMetricsWrapper),
+    const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
+        scWeightedMean = element('div', 'st-cs-weighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Gemiddelde", title: "De gemiddelde waarde met weegfactoren." }),
+        scUnweightedMean = element('div', 'st-cs-unweighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
         scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
-        scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
-        scSufInsuf = element('div', 'st-cs-suf-insuf', scMetricsWrapper),
+        scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." })
+
+    const scSufInsuf = element('div', 'st-cs-suf-insuf', scStats),
         scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger dan of gelijk aan 5,5." }),
         scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut', title: "Het percentage cijfers hoger dan of gelijk aan 5,5." }),
         scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." })
@@ -749,52 +752,48 @@ async function gradeStatistics() {
         scYearFilterAll = element('button', 'st-cs-year-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scYearFilter = element('div', 'st-cs-year-filter', scFilters),
         scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
-        scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters),
-        // TODO
-        scInteractionPreventer = document.createElement('div'),
-        scBkCommunication = document.createElement('button')
+        scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)
 
-    let grades = [],
+    let m_pos,
+        asideWidth = 294,
+        grades = [],
         years = [],
         gatheredYears = new Set(),
         includedYears = new Set(),
         subjects = new Set(),
-        excludedSubjects = new Set(),
-        backup = false
+        excludedSubjects = new Set()
 
-    // TODO
-    document.body.append(scInteractionPreventer, scBkCommunication)
-    scBkCommunication.id = 'st-cs-bk-communication'
-    scBkCommunication.style.display = 'none'
 
-    tabs.addEventListener('click', () => {
-        if (scTab.classList.contains('active')) {
+    tabs.addEventListener('click', (event) => {
+        let scTabClicked = event.target.id.startsWith('st-cs-tab')
+        if (scTabClicked) {
+            scTab.classList.add('active')
+            scContainer.dataset.visible = true
+        } else {
             scTab.classList.remove('active')
-            tabs.classList.remove('st-cs-override')
             scContainer.dataset.visible = false
         }
     })
 
-    scTab.addEventListener('click', async event => {
-        event.stopPropagation()
-        tabs.classList.add('st-cs-override')
-        scTab.classList.add('active')
-        scContainer.dataset.visible = true
-    })
+    function asideResize(e) {
+        let dx = m_pos - e.x
+        m_pos = e.x
+        asideWidth += dx
+        if (asideWidth < 294) asideWidth = 294
+        if (asideWidth > 600) asideWidth = 600
+        aside.style.width = (asideWidth) + 'px'
+        gradeContainer.style.paddingRight = (20 + asideWidth) + 'px'
+        asideResizer.style.right = (asideWidth + 8) + 'px'
+    }
 
-    // scBkCommunication.addEventListener('click', async () => {
-    //     backup = true
-    //     years = new Set()
-    //     grades = {}
-    //     setTimeout(async () => {
-    //         grades = await gatherGradesForYear(grades)
-    //         await displayStatistics(grades)
-    //     }, 200);
-    // })
+    asideResizer.addEventListener("mousedown", function (e) {
+        m_pos = e.x
+        document.addEventListener("mousemove", asideResize, false)
+    }, false)
+    document.addEventListener("mouseup", function () {
+        document.removeEventListener("mousemove", asideResize, false)
+    }, false)
 
-    scTab.addEventListener('click', async event => {
-        await displayStatistics()
-    }, { once: true })
 
     scFilterButton.addEventListener('click', () => {
         scFilterButtonTooltip.classList.add('hidden')
@@ -824,7 +823,7 @@ async function gradeStatistics() {
             let yearGrades = (await MagisterApi.grades.forYear(year))
             grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
-            let yearSubjects = yearGrades.map(e => e.Vak.Omschrijving)
+            let yearSubjects = grades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
             buildSubjectFilter()
 
@@ -949,9 +948,13 @@ async function gradeStatistics() {
             filteredResults.forEach(result => roundedFrequencies[Math.round(result)]++)
 
 
-            scUnweightedMean.innerText = calculateMean(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+            let unweightedMean = calculateMean(filteredResults)
+            scUnweightedMean.innerText = unweightedMean.toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
-            scMedian.innerText = calculateMedian(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scCentralTendencies.dataset.great = unweightedMean >= 7.0 ? true : false
+
+            let median = calculateMedian(filteredResults)
+            scMedian.innerText = median.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             let { modes, occurrences } = calculateMode(filteredResults)
             scMode.innerText = modes.map(e => e.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join(' & ')
@@ -962,7 +965,8 @@ async function gradeStatistics() {
                 scMode.removeAttribute('data-extra')
             }
 
-            scVariance.innerText = calculateVariance(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            let variance = calculateVariance(filteredResults)
+            scVariance.innerText = variance.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
             let minResult = Math.min(...filteredResults)
             scMin.innerText = minResult.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -999,6 +1003,8 @@ async function gradeStatistics() {
                 }
 
                 if (!filteredGrades.every(grade => grade.weight) || !filteredGrades.some(grade => grade.weight > 0)) return
+
+                console.log(filteredGrades)
 
                 scWeightedMean.innerText = calculateMean(
                     filteredGrades

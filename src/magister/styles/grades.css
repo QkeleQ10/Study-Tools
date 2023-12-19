@@ -380,14 +380,14 @@
 #st-cc-open {
     position: absolute;
     top: 35px;
-    right: 28px;
+    right: 20px;
     z-index: 99999;
 }
 
 #st-cb {
     position: absolute;
     top: 35px;
-    right: 200px;
+    right: 192px;
 }
 
 #st-cb-modal-close {
@@ -421,39 +421,52 @@
     text-align: left;
 }
 
-#st-cb-aside {
-    background-color: var(--st-background-secondary);
-    padding: 0 12px;
-    font: 12px var(--st-font-family-secondary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
+#st-cb-i {
+    display: none;
+    position: absolute;
+    width: calc(100% - 2px);
+    height: calc(100% - 42px);
+    inset: 1px;
+    margin-top: 40px;
+    background-color: var(--st-background-primary);
+    overflow: hidden;
+    z-index: 999999;
+    padding: 12px;
 }
 
-#st-cb-aside:before {
-    content: 'Details\A';
-    white-space: pre-wrap;
-    font: var(--st-font-primary);
-    margin-bottom: -24px;
+#st-cb-i[data-visible=true] {
+    display: flex;
+}
+
+#st-cs-resize {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    width: 12.5px;
+    bottom: 24px;
+    top: 125px;
+    right: 302px;
+    font: 700 18px 'Font Awesome 6 Pro';
+    color: var(--st-foreground-insignificant);
+    cursor: col-resize;
+    user-select: none;
 }
 
 #st-cs {
     display: none;
     position: absolute;
-    width: 294px;
-    bottom: 24px;
-    top: 195px;
-    right: 16px;
-    border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
-    border: var(--st-border);
+    width: calc(100% - 2px);
+    height: calc(100% - 42px);
+    inset: 1px;
+    margin-top: 40px;
     background-color: var(--st-background-primary);
-    border-top: none;
     overflow: hidden;
-    z-index: 999;
-    transition: grid-template-rows 200ms;
+    z-index: 999999;
 }
 
 #st-cs[data-visible=true] {
-    display: grid;
+    display: block;
 }
 
 #st-cs[data-filters=true] #st-cs-filter-button {
@@ -464,156 +477,6 @@
     content: '';
 }
 
-#st-cs-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: relative;
-    padding: 12px;
-    background-color: var(--st-background-primary);
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-#st-cs-stats:before {
-    content: '';
-    display: block;
-    position: absolute;
-    inset: 0;
-
-    background-color: var(--st-background-overlaid);
-    pointer-events: none;
-
-    opacity: 0;
-    transition: opacity 200ms;
-}
-
-#st-cs[data-filters=true] #st-cs-stats:before {
-    opacity: 1;
-}
-
-/* #st-cs.small {
-    top: 425px;
-    border-top: var(--st-border);
-} */
-
-#st-cs>#st-cs-stats>*:not(#st-cs-stats-heading) {
-    opacity: 1;
-    transition: opacity 200ms;
-}
-
-#st-cs.empty>#st-cs-stats>*:not(#st-cs-stats-heading) {
-    opacity: 0;
-}
-
-#st-cs>#st-cs-stats:after {
-    content: 'Er zijn geen cijfers die voldoen aan de criteria. Probeer de filters te wijzigen.';
-    display: inline-block;
-    position: absolute;
-    top: 44px;
-    color: var(--st-foreground-insignificant);
-    font: 600 14px/22px var(--st-font-family-secondary);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 200ms;
-}
-
-#st-cs.empty>#st-cs-stats:after {
-    opacity: 1;
-}
-
-#st-cs-stats-heading,
-#st-cs-filters-heading {
-    font: 500 16px/25px var(--st-font-family-primary);
-    position: relative;
-}
-
-#st-cs-stats-heading:after {
-    content: "" attr(data-amount) " cijfers";
-    position: absolute;
-    right: 0;
-    color: var(--st-foreground-insignificant);
-    font: 14px/25px var(--st-font-family-secondary);
-}
-
-#st-cs-stats-info {
-    translate: 0 -4px;
-    font: 600 12px var(--st-font-family-secondary);
-    color: var(--st-foreground-insignificant);
-    min-height: 34px;
-    max-height: 34px;
-    overflow: hidden;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-}
-
-#st-cs-history {
-    display: grid;
-    grid-template:
-        'a a a' auto
-        'b c d' auto
-        'e e e' auto;
-    gap: 8px;
-    justify-content: space-between;
-}
-
-#st-cs-history-heading {
-    grid-area: a;
-}
-
-#st-cs-min {
-    grid-area: b;
-}
-
-#st-cs-max {
-    grid-area: c;
-}
-
-#st-cs-variance {
-    grid-area: d;
-}
-
-#st-cs-history-chart {
-    grid-area: e;
-    margin-inline: -12px;
-    margin-block: 8px;
-    background-image:
-        linear-gradient(to bottom, transparent calc(100% - 1px), var(--st-border-color) 1px),
-        linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--st-highlight-warn) 1px, transparent calc(50% + 0.5px));
-    background-size: calc((100% / 9) + (1px / 9)) calc((100% / 9) - (1px / 9)), 100% 100%;
-    background-position: 0 1px, 0 0;
-}
-
-#st-cs-rounded-chart,
-#st-cs-history-chart {
-    --size: 190px;
-    min-height: 190px;
-    max-height: 190px;
-}
-
-#st-cs-rounded-chart {
-    padding-bottom: 24px;
-}
-
-#st-cs-rounded-chart>.st-bar-chart-col {
-    padding-inline: 0;
-}
-
-#st-cs-rounded-chart .st-bar-chart-col:after {
-    rotate: 0deg;
-    translate: 0 4px;
-    text-align: center;
-    width: 100%;
-}
-
-#st-cs-rounded-chart .st-bar-chart-col:nth-child(n+5) {
-    --background-color: var(--st-accent-primary);
-}
-
-#st-cs-rounded-chart .st-bar-chart-col:nth-child(-n+5) {
-    --background-color: var(--st-accent-warn);
-}
-
 #st-cs-tab:before {
     content: '';
     position: absolute;
@@ -622,76 +485,6 @@
     overflow: visible;
     font: 600 11px 'Font Awesome 6 Pro';
     color: var(--st-foreground-accent);
-}
-
-#st-cs-metrics {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-#st-cs-suf-insuf {
-    display: flex;
-    gap: 12px;
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    margin-inline: -4px;
-    padding: 12px;
-    border-radius: var(--st-border-radius);
-    border: var(--st-border);
-}
-
-#st-cs-sufficient {
-    grid-area: suf;
-    place-self: start end;
-    text-align: right;
-}
-
-#st-cs-insufficient {
-    grid-area: insuf;
-    place-self: end start;
-
-    position: relative;
-}
-
-#st-cs-suf-insuf-chart {
-    grid-area: chart;
-    place-self: center;
-
-    position: relative;
-    width: 72px;
-    aspect-ratio: 1;
-    border-radius: 100%;
-}
-
-#st-cs-suf-insuf-chart:after {
-    content: attr(data-percentage) '%';
-    display: inline-block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    translate: -50% -50%;
-    font: 12px var(--st-font-family-secondary);
-}
-
-#st-cs-means {
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    margin-inline: -4px;
-    padding: 12px;
-    border-radius: var(--st-border-radius);
-    border: var(--st-border);
-}
-
-#st-cs:not(.with-weights) #st-cs-weighted-mean {
-    display: none;
-}
-
-#st-cs-central-tendencies {
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
 }
 
 #st-cs-filter-button {
@@ -769,6 +562,84 @@
     translate: 0;
 }
 
+#st-cs-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    padding: 12px;
+    background-color: var(--st-background-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#st-cs-stats:before {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: 0;
+
+    background-color: var(--st-background-overlaid);
+    pointer-events: none;
+
+    opacity: 0;
+    transition: opacity 200ms;
+}
+
+#st-cs[data-filters=true] #st-cs-stats:before {
+    opacity: 1;
+}
+
+#st-cs>#st-cs-stats>*:not(#st-cs-stats-heading) {
+    opacity: 1;
+    transition: opacity 200ms;
+}
+
+#st-cs.empty>#st-cs-stats>*:not(#st-cs-stats-heading) {
+    opacity: 0;
+}
+
+#st-cs>#st-cs-stats:after {
+    content: 'Er zijn geen cijfers die voldoen aan de criteria. Probeer de filters te wijzigen.';
+    display: inline-block;
+    position: absolute;
+    top: 44px;
+    color: var(--st-foreground-insignificant);
+    font: 600 14px/22px var(--st-font-family-secondary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms;
+}
+
+#st-cs.empty>#st-cs-stats:after {
+    opacity: 1;
+}
+
+#st-cs-stats-heading,
+#st-cs-filters-heading {
+    font: 500 16px/25px var(--st-font-family-primary);
+    position: relative;
+}
+
+#st-cs-stats-heading:after {
+    content: "" attr(data-amount) " cijfers";
+    position: absolute;
+    right: 0;
+    color: var(--st-foreground-insignificant);
+    font: 14px/25px var(--st-font-family-secondary);
+}
+
+#st-cs-stats-info {
+    translate: 0 -4px;
+    font: 600 12px var(--st-font-family-secondary);
+    color: var(--st-foreground-insignificant);
+    min-height: 34px;
+    max-height: 34px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
 #st-cs-year-filter,
 #st-cs-subject-filter {
     display: flex;
@@ -794,6 +665,143 @@
 
 #st-cs-subject-filter:before {
     content: "Vakken";
+}
+
+#st-cs-central-tendencies {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    place-items: baseline;
+
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    margin-inline: -4px;
+    padding: 12px;
+    border-radius: var(--st-border-radius);
+    border: var(--st-border);
+}
+
+#st-cs-central-tendencies[data-great=true] {
+    background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary));
+    color: var(--st-contrast-accent);
+}
+
+#st-cs:not(.with-weights) #st-cs-unweighted-mean {
+    grid-row: span 2;
+    font-size: 22px;
+    gap: 4px;
+}
+
+#st-cs.with-weights #st-cs-unweighted-mean {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+#st-cs:not(.with-weights) #st-cs-weighted-mean {
+    display: none;
+}
+
+#st-cs-suf-insuf {
+    display: flex;
+    gap: 12px;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    margin-inline: -4px;
+    padding: 12px;
+    border-radius: var(--st-border-radius);
+    border: var(--st-border);
+}
+
+#st-cs-sufficient {
+    grid-area: suf;
+    place-self: start end;
+    text-align: right;
+}
+
+#st-cs-insufficient {
+    grid-area: insuf;
+    place-self: end start;
+
+    position: relative;
+}
+
+#st-cs-suf-insuf-chart {
+    grid-area: chart;
+    place-self: center;
+
+    position: relative;
+    width: 72px;
+    aspect-ratio: 1;
+    border-radius: 100%;
+}
+
+#st-cs-suf-insuf-chart:after {
+    content: attr(data-percentage) '%';
+    display: inline-block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    font: 12px var(--st-font-family-secondary);
+}
+
+#st-cs-rounded-heading,
+#st-cs-history-heading {
+    padding-top: 8px;
+}
+
+#st-cs-rounded-chart,
+#st-cs-history-chart {
+    --size: 190px;
+    min-height: 190px;
+    max-height: 190px;
+}
+
+#st-cs-rounded-chart {
+    padding-bottom: 24px;
+}
+
+#st-cs-rounded-chart>.st-bar-chart-col {
+    padding-inline: 0;
+}
+
+#st-cs-rounded-chart .st-bar-chart-col:after {
+    rotate: 0deg;
+    translate: 0 4px;
+    text-align: center;
+    width: 100%;
+}
+
+#st-cs-rounded-chart .st-bar-chart-col:nth-child(n+5) {
+    --background-color: var(--st-accent-primary);
+}
+
+#st-cs-rounded-chart .st-bar-chart-col:nth-child(-n+5) {
+    --background-color: var(--st-accent-warn);
+}
+
+#st-cs-history {
+    display: grid;
+    grid-template-columns: 3fr 3fr 2fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+#st-cs-history-heading {
+    grid-column: span 3;
+    margin-top: 4px;
+    border-top: var(--st-border);
+}
+
+#st-cs-history-chart {
+    grid-column: span 3;
+    margin-inline: -12px;
+    margin-block: 8px;
+    background-image:
+        linear-gradient(to bottom, transparent calc(100% - 1px), var(--st-border-color) 1px),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--st-highlight-warn) 1px, transparent calc(50% + 0.5px));
+    background-size: calc((100% / 9) + (1px / 9)) calc((100% / 9) - (1px / 9)), 100% 100%;
+    background-position: 0 1px, 0 0;
 }
 
 aside.st-appear-top {
