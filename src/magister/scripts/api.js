@@ -20,7 +20,7 @@ gatherEnd.setHours(0, 0, 0, 0)
  */
 async function updateApiCredentials() {
     const promiseMemory = new Promise(getApiCredentialsMemory)
-    const promiseTime = new Promise((resolve, reject) => setTimeout(resolve, 2000, `Couldn't retrieve ID and token from memory within 2 seconds.`))
+    const promiseTime = new Promise((resolve, reject) => setTimeout(resolve, 5000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
 
     return Promise.race([promiseMemory, promiseTime])
 

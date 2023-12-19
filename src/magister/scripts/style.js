@@ -59,6 +59,7 @@ async function applyStyles() {
     --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff5;
     --st-background-transparent: #ffffffbb;
+    --st-background-overlaid: #12121210;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
     --st-highlight-subtle: #f2f9ff;
     --st-highlight-ok: #b6fadf;
@@ -97,6 +98,7 @@ async function applyStyles() {
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f5;
     --st-background-transparent: #121212bb;
+    --st-background-overlaid: #00000030;
     --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-subtle: #181f24;
     --st-highlight-ok: #1a4c38;

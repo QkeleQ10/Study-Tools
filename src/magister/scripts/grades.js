@@ -729,7 +729,6 @@ async function gradeStatistics() {
         scCentralTendencies = element('div', 'st-cs-central-tendencies', scMetricsWrapper),
         scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
         scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." }),
-        scVariance = element('div', 'st-cs-variance', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
         scSufInsuf = element('div', 'st-cs-suf-insuf', scMetricsWrapper),
         scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger dan of gelijk aan 5,5." }),
         scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut', title: "Het percentage cijfers hoger dan of gelijk aan 5,5." }),
@@ -740,8 +739,9 @@ async function gradeStatistics() {
 
     const scHistory = element('div', 'st-cs-history', scStats),
         scHistoryHeading = element('span', 'st-cs-history-heading', scHistory, { class: 'st-section-heading', innerText: "Behaalde cijfers" }),
-        scMin = element('div', 'st-cs-min', scHistory, { class: 'st-metric', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
-        scMax = element('div', 'st-cs-max', scHistory, { class: 'st-metric', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
+        scMin = element('div', 'st-cs-min', scHistory, { class: 'st-metric secondary', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
+        scMax = element('div', 'st-cs-max', scHistory, { class: 'st-metric secondary', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
+        scVariance = element('div', 'st-cs-variance', scHistory, { class: 'st-metric secondary', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
         scLineChart = element('div', 'st-cs-history-chart', scHistory)
 
     const scFilters = element('div', 'st-cs-filters', scContainer),
@@ -822,7 +822,7 @@ async function gradeStatistics() {
         if (i === 0) {
             input.checked = true
             let yearGrades = (await MagisterApi.grades.forYear(year))
-            grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, year: year.id })))
+            grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
             let yearSubjects = yearGrades.map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
@@ -844,7 +844,7 @@ async function gradeStatistics() {
         input.addEventListener('input', async () => {
             if (!gatheredYears.has(year.id)) {
                 let yearGrades = (await MagisterApi.grades.forYear(year))
-                grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, year: year.id })))
+                grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
                 gatheredYears.add(year.id)
             }
@@ -943,7 +943,7 @@ async function gradeStatistics() {
             }
 
 
-            let filteredResults = filteredGrades.map(grade => Number(grade.CijferStr.replace(',', '.'))),
+            let filteredResults = filteredGrades.map(grade => grade.result),
                 roundedFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
 
             filteredResults.forEach(result => roundedFrequencies[Math.round(result)]++)
@@ -964,9 +964,13 @@ async function gradeStatistics() {
 
             scVariance.innerText = calculateVariance(filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-            scMin.innerText = Math.min(...filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            let minResult = Math.min(...filteredResults)
+            scMin.innerText = minResult.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMin.dataset.extra = filteredResults.filter(result => result === minResult).length + '×'
 
-            scMax.innerText = Math.max(...filteredResults).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            let maxResult = Math.max(...filteredResults)
+            scMax.innerText = maxResult.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMax.dataset.extra = filteredResults.filter(result => result === maxResult).length + '×'
 
             let resultsSufficient = filteredResults.filter((e) => { return e >= 5.5 })
             scSufficient.innerText = resultsSufficient.length
@@ -999,7 +1003,7 @@ async function gradeStatistics() {
                 scWeightedMean.innerText = calculateMean(
                     filteredGrades
                         .filter(grade => grade.weight > 0)
-                        .map(grade => Number(grade.CijferStr.replace(',', '.'))),
+                        .map(grade => grade.result),
                     filteredGrades
                         .filter(grade => grade.weight > 0)
                         .map(grade => grade.weight)

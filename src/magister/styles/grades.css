@@ -438,8 +438,6 @@
 
 #st-cs {
     display: none;
-    grid-template-rows: 100% 0%;
-    gap: 1px;
     position: absolute;
     width: 294px;
     bottom: 24px;
@@ -447,7 +445,7 @@
     right: 16px;
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     border: var(--st-border);
-    background-color: var(--st-border-color);
+    background-color: var(--st-background-primary);
     border-top: none;
     overflow: hidden;
     z-index: 999;
@@ -456,10 +454,6 @@
 
 #st-cs[data-visible=true] {
     display: grid;
-}
-
-#st-cs[data-filters=true] {
-    grid-template-rows: 40% 60%;
 }
 
 #st-cs[data-filters=true] #st-cs-filter-button {
@@ -474,10 +468,28 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    position: relative;
     padding: 12px;
     background-color: var(--st-background-primary);
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+#st-cs-stats:before {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: 0;
+
+    background-color: var(--st-background-overlaid);
+    pointer-events: none;
+
+    opacity: 0;
+    transition: opacity 200ms;
+}
+
+#st-cs[data-filters=true] #st-cs-stats:before {
+    opacity: 1;
 }
 
 /* #st-cs.small {
@@ -538,9 +550,9 @@
 #st-cs-history {
     display: grid;
     grid-template:
-        'a a' auto
-        'b c' auto
-        'd d' auto;
+        'a a a' auto
+        'b c d' auto
+        'e e e' auto;
     gap: 8px;
     justify-content: space-between;
 }
@@ -557,8 +569,12 @@
     grid-area: c;
 }
 
-#st-cs-history-chart {
+#st-cs-variance {
     grid-area: d;
+}
+
+#st-cs-history-chart {
+    grid-area: e;
     margin-inline: -12px;
     margin-block: 8px;
     background-image:
@@ -729,16 +745,28 @@
 }
 
 #st-cs-filters {
+    position: absolute;
+    bottom: 0;
+    min-height: 320px;
+    height: clamp(320px, 75%, 800px);
+    max-height: 100%;
+    width: 100%;
+
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding: 12px;
     background-color: var(--st-background-secondary);
+    border-top: var(--st-border);
     overflow-y: auto;
+
+    translate: 0 100%;
+    transition: translate 200ms, box-shadow 200ms;
 }
 
 #st-cs[data-filters=true] #st-cs-filters {
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    translate: 0;
 }
 
 #st-cs-year-filter,

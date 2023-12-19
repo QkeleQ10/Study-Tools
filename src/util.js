@@ -398,7 +398,7 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
     maxValue ??= Math.max(...values)
 
     values.forEach((value, i) => {
-        const hueRotate = 20 * i
+        const hueRotate = 10 * i
 
         const col = element('div', `${chartArea.id}-${i}`, chartArea, {
             class: 'st-line-chart-col',
