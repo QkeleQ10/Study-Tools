@@ -80,7 +80,7 @@ async function gradeCalculator() {
         updateCalculations()
 
         clOverlay.setAttribute('open', true)
-        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px);max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
+        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px) !important;max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
 
         if (!document.querySelector('#st-cb-aside')) {
             let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
