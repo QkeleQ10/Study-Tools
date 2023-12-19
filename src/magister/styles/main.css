@@ -881,12 +881,12 @@ a.st-keyboard-hint.clicked {
     color: var(--st-contrast-accent);
     font: 600 12px var(--st-font-family-secondary);
     text-align: center;
-    transform: none;
+    transition: none;
 }
 
 .st-bar-chart-col[data-y-tight=true]:before {
     color: var(--st-foreground-primary);
-    transform: translateY(-22px);
+    translate: 0 -14px;
 }
 
 .st-bar-chart-col:hover:before {
@@ -900,7 +900,7 @@ a.st-keyboard-hint.clicked {
 
 .st-bar-chart-col[data-y-tight=true]:hover:before {
     text-align: right;
-    translate: -14px -16px;
+    translate: 8px -16px;
 }
 
 .st-bar-chart-col:after {
