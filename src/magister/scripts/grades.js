@@ -1,3 +1,5 @@
+let statsGrades = []
+
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
@@ -437,12 +439,13 @@ async function gradeBackup() {
         bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' })
 
     const bkI = element('div', 'st-cb-i', aside, { class: 'st-sheet', 'data-visible': 'false' }),
-        bkIInfo = element('span', 'st-cb-i-info', bkI),
+        bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-up", 'data-amount': 0 }),
+        bkIInfo = element('span', 'st-cb-i-info', bkI, { innerText: "Laden..." }),
         bkIMetrics = element('div', 'st-cb-i-metrics', bkI),
         bkIResult = element('div', 'st-cb-i-result', bkIMetrics, { class: 'st-metric', 'data-description': "Resultaat", innerText: "?" }),
         bkIWeight = element('div', 'st-cb-i-weight', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Weegfactor", innerText: "?" }),
-        bkIColumn = element('div', 'st-cb-i-column', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Kolomnaam", innerText: "?" }),
-        bkITitle = element('div', 'st-cb-i-title', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Kolomkop", innerText: "?" })
+        bkIColumn = element('div', 'st-cb-i-column', bkI, { class: 'st-metric secondary', 'data-description': "Kolomnaam", innerText: "?" }),
+        bkITitle = element('div', 'st-cb-i-title', bkI, { class: 'st-metric secondary', 'data-description': "Kolomkop", innerText: "?" })
 
     let yearsArray = [],
         busy = false,
@@ -519,6 +522,7 @@ async function gradeBackup() {
                     let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
 
                     let result = gradeBasis.CijferStr || gradeBasis.Cijfer
+                    let date = gradeBasis.DatumIngevoerd
 
                     if (Math.floor(i / 400) * 10000 >= 10000) {
                         bkModalExListTitle.dataset.description = `10 seconden wachten...`
@@ -539,7 +543,7 @@ async function gradeBackup() {
                             title = gradeExtra.KolomOmschrijving
 
                         resolve({
-                            result, weight, column, title, type, className
+                            result, weight, column, title, date, type, className, year: year.id
                         })
                     }, Math.floor(i / 400) * 10000)
                 }
@@ -611,7 +615,9 @@ async function gradeBackup() {
 
             bkTab.click()
 
-            bkIInfo.innerText = "Geïmporteerd uit back-up van " + new Date(json.date).toLocaleString('nl-NL', {
+            bkIHeading.dataset.amount = list.filter(grade => grade.result).length
+
+            bkIInfo.innerText = "Geïmporteerd uit back-up van \n" + new Date(json.date).toLocaleString('nl-NL', {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -691,6 +697,8 @@ async function gradeBackup() {
                     span.title = item.result
                     span.id = item.column
                     td.append(span)
+                    console.log(item)
+                    statsGrades.push({ item })
                     td.addEventListener('click', () => {
                         document.querySelectorAll('.k-state-selected').forEach(e => e.classList.remove('k-state-selected'))
                         td.classList.add('k-state-selected')
@@ -756,7 +764,6 @@ async function gradeStatistics() {
 
     let m_pos,
         asideWidth = 294,
-        grades = [],
         years = [],
         gatheredYears = new Set(),
         includedYears = new Set(),
@@ -779,11 +786,11 @@ async function gradeStatistics() {
         let dx = m_pos - e.x
         m_pos = e.x
         asideWidth += dx
-        if (asideWidth < 294) asideWidth = 294
-        if (asideWidth > 600) asideWidth = 600
-        aside.style.width = (asideWidth) + 'px'
-        gradeContainer.style.paddingRight = (20 + asideWidth) + 'px'
-        asideResizer.style.right = (asideWidth + 8) + 'px'
+        let trueWidth = Math.max(Math.min(600, asideWidth), 294)
+        if (asideWidth < 100) trueWidth = 0
+        aside.style.width = (trueWidth) + 'px'
+        gradeContainer.style.paddingRight = (20 + trueWidth) + 'px'
+        asideResizer.style.right = (trueWidth + 8) + 'px'
     }
 
     asideResizer.addEventListener("mousedown", function (e) {
@@ -821,9 +828,9 @@ async function gradeStatistics() {
         if (i === 0) {
             input.checked = true
             let yearGrades = (await MagisterApi.grades.forYear(year))
-            grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
+            statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
-            let yearSubjects = grades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
+            let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
             buildSubjectFilter()
 
@@ -843,14 +850,14 @@ async function gradeStatistics() {
         input.addEventListener('input', async () => {
             if (!gatheredYears.has(year.id)) {
                 let yearGrades = (await MagisterApi.grades.forYear(year))
-                grades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
+                statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
                 gatheredYears.add(year.id)
             }
 
             input.checked ? includedYears.add(year.id) : includedYears.delete(year.id)
 
-            let yearSubjects = grades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
+            let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
             buildSubjectFilter()
 
@@ -862,7 +869,7 @@ async function gradeStatistics() {
         scSubjectFilter.innerText = ''
 
         subjects = new Set([...subjects]
-            .filter(subject => grades.filter(e => includedYears.has(e.year)).find(e => e.Vak.Omschrijving === subject))
+            .filter(subject => statsGrades.filter(e => includedYears.has(e.year)).find(e => e.Vak.Omschrijving === subject))
             .sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' })))
 
         let subjectsArray = [...subjects]
@@ -890,7 +897,7 @@ async function gradeStatistics() {
     }
 
     function filterGrades() {
-        const filtered = grades
+        const filtered = statsGrades
             // Remove grades that don't match filter
             .filter(e =>
                 includedYears.has(e.year) &&
@@ -999,7 +1006,7 @@ async function gradeStatistics() {
             if (includedYears.size === 1 && includedSubjects.length === 1) {
                 for (const e of filteredGrades) {
                     e.weight ??= (await MagisterApi.grades.columnInfo({ id: [...includedYears][0] }, e.CijferKolom.Id)).Weging
-                    grades[grades.findIndex(f => f.CijferKolom.Id === e.CijferKolom.Id)].weight ??= e.weight
+                    statsGrades[statsGrades.findIndex(f => f.CijferKolom.Id === e.CijferKolom.Id)].weight ??= e.weight
                 }
 
                 if (!filteredGrades.every(grade => grade.weight) || !filteredGrades.some(grade => grade.weight > 0)) return

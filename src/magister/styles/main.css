@@ -583,8 +583,7 @@ div.loading-overlay {
 
 .st-metric.secondary:before {
     font: 600 11px var(--st-font-family-secondary);
-    color: var(--st-foreground-insignificant);
-    opacity: 1;
+    opacity: 0.6;
 }
 
 .st-metric[data-extra]:after {
