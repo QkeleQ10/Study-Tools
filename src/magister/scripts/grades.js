@@ -1,4 +1,5 @@
-let statsGrades = []
+let statsGrades = [],
+    displayStatistics
 
 // Run at start and when the URL changes
 popstate()
@@ -13,6 +14,7 @@ async function popstate() {
 }
 
 async function gradeOverview() {
+    allowAsideResize()
     gradeCalculator()
     gradeBackup()
     gradeStatistics()
@@ -28,6 +30,39 @@ async function gradeOverview() {
     colTypeSelect.click()
     const colTypeOptionNums = await awaitElement('#kolomweergave_listbox > li:nth-child(2)')
     colTypeOptionNums.click()
+}
+
+async function allowAsideResize() {
+    // Allow resizing aside
+    let m_pos,
+        asidePreferenceWidth = 294,
+        asideDisplayWidth = 294
+
+    const gradeContainer = await awaitElement('#cijfers-container'),
+        aside = await awaitElement('#cijfers-container > aside'),
+        asideResizer = element('div', 'st-aside-resize', document.body, { innerText: '' })
+
+    function asideResize(e) {
+        let dx = m_pos - e.x
+        m_pos = e.x
+        asidePreferenceWidth += dx
+
+        asideDisplayWidth = Math.max(Math.min(600, asidePreferenceWidth), 294)
+        if (asidePreferenceWidth < 100) asideDisplayWidth = 0
+
+        aside.style.width = (asideDisplayWidth) + 'px'
+        gradeContainer.style.paddingRight = (20 + asideDisplayWidth) + 'px'
+        asideResizer.style.right = (asideDisplayWidth + 8) + 'px'
+    }
+
+    asideResizer.addEventListener("mousedown", function (e) {
+        m_pos = e.x
+        document.addEventListener("mousemove", asideResize, false)
+    }, false)
+    document.addEventListener("mouseup", function () {
+        asidePreferenceWidth = asideDisplayWidth
+        document.removeEventListener("mousemove", asideResize, false)
+    }, false)
 }
 
 // Grade calculator
@@ -99,7 +134,6 @@ async function gradeCalculator() {
     clClose.addEventListener('click', () => {
         gradesContainer.removeAttribute('style')
         clOverlay.removeAttribute('open')
-        aside.removeAttribute('style')
         createStyle('', 'st-cculation-added')
     })
 
@@ -117,16 +151,9 @@ async function gradeCalculator() {
     clHelp.addEventListener('click', async () => {
         await notify('dialog', "Welkom in de cijfercalculator!\n\nMet de cijfercalculator kun je gemakkelijk zien wat je moet halen of wat je gemiddelde zou kunnen worden.")
 
-        await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.\n\nAls je meer wil weten over een cijfer, druk dan op '?' op je toetsenbord.")
+        await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.")
 
         await notify('dialog', "In het zijpaneel zie je alle cijfers die je hebt toegevoegd, samen met wat centrummaten.\n\nHelemaal onderin zie je een diagram. Die geeft op de x-as de cijfers 1 t/m 10 weer, met op de y-as de \ngemiddelden die je zou kunnen komen te staan als je voor je volgende cijfer x haalt. Vergeet niet \nom de weegfactor goed in te stellen.")
-    })
-
-    addEventListener("keydown", e => {
-        if (clOverlay.hasAttribute('open') && (e.key === '?' || e.key === '/')) {
-            if (aside.hasAttribute('style')) aside.removeAttribute('style')
-            else aside.setAttribute('style', 'z-index: 9999999;width: 408px;height: calc(100vh - 139px);position: fixed;top: 123px !important;bottom: 16px;right: 16px;background-color: var(--st-background-primary);pointer-events: none;')
-        }
     })
 
     gradesContainer.addEventListener('click', async (event) => {
@@ -344,7 +371,6 @@ async function gradeCalculator() {
         renderGradeChart()
     }
 
-    // TODO: chart also with tick marks, hover possibility etc
     function renderGradeChart() {
         clCanvas.dataset.irrelevant = addedToCalculation.length < 1
 
@@ -615,7 +641,7 @@ async function gradeBackup() {
 
             bkTab.click()
 
-            bkIHeading.dataset.amount = list.filter(grade => grade.result).length
+            bkIHeading.dataset.amount = list.filter(grade => grade.result?.length > 1).length
 
             bkIInfo.innerText = "Geïmporteerd uit back-up van \n" + new Date(json.date).toLocaleString('nl-NL', {
                 weekday: "long",
@@ -626,6 +652,8 @@ async function gradeBackup() {
                 minute: "numeric"
             })
 
+            statsGrades = []
+
             for (let i = 0; i < list.length; i++) {
                 bkModalImMagister.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
                 item = list[i]
@@ -634,6 +662,11 @@ async function gradeBackup() {
                         return
                     })
             }
+
+            document.querySelectorAll('*[id^="st-cs-filter"]').forEach(e => e.style.display = 'none')
+            document.querySelectorAll('#st-cs').forEach(e => e.dataset.filters = false)
+
+            displayStatistics(true)
 
             gradesContainer.removeAttribute('style')
             bkModalImListTitle.dataset.description = "Cijferlijst geüpload!"
@@ -697,8 +730,7 @@ async function gradeBackup() {
                     span.title = item.result
                     span.id = item.column
                     td.append(span)
-                    console.log(item)
-                    statsGrades.push({ item })
+                    statsGrades.push({ ...item, result: Number(item.result.replace(',', '.')) })
                     td.addEventListener('click', () => {
                         document.querySelectorAll('.k-state-selected').forEach(e => e.classList.remove('k-state-selected'))
                         td.classList.add('k-state-selected')
@@ -715,16 +747,12 @@ async function gradeBackup() {
 }
 
 // Grade statistics
-// TODO: Revamp!
 async function gradeStatistics() {
     if (!syncedStorage['cs']) return
-    const gradeContainer = await awaitElement('#cijfers-container'),
-        aside = await awaitElement('#cijfers-container > aside'),
+    const aside = await awaitElement('#cijfers-container > aside'),
         tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
         scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" })
-
-    const asideResizer = element('div', 'st-cs-resize', document.body, { innerText: '' })
 
     const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
@@ -762,9 +790,7 @@ async function gradeStatistics() {
         scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)
 
-    let m_pos,
-        asideWidth = 294,
-        years = [],
+    let years = [],
         gatheredYears = new Set(),
         includedYears = new Set(),
         subjects = new Set(),
@@ -781,26 +807,6 @@ async function gradeStatistics() {
             scContainer.dataset.visible = false
         }
     })
-
-    function asideResize(e) {
-        let dx = m_pos - e.x
-        m_pos = e.x
-        asideWidth += dx
-        let trueWidth = Math.max(Math.min(600, asideWidth), 294)
-        if (asideWidth < 100) trueWidth = 0
-        aside.style.width = (trueWidth) + 'px'
-        gradeContainer.style.paddingRight = (20 + trueWidth) + 'px'
-        asideResizer.style.right = (trueWidth + 8) + 'px'
-    }
-
-    asideResizer.addEventListener("mousedown", function (e) {
-        m_pos = e.x
-        document.addEventListener("mousemove", asideResize, false)
-    }, false)
-    document.addEventListener("mouseup", function () {
-        document.removeEventListener("mousemove", asideResize, false)
-    }, false)
-
 
     scFilterButton.addEventListener('click', () => {
         scFilterButtonTooltip.classList.add('hidden')
@@ -916,38 +922,49 @@ async function gradeStatistics() {
         return filtered
     }
 
-    async function displayStatistics() {
+    displayStatistics = async (fromBackup = false) => {
         return new Promise(async (resolve, reject) => {
             scContainer.classList.remove('empty')
             scContainer.classList.remove('with-weights')
             scUnweightedMean.classList.remove('secondary')
 
-
-            let filteredGrades = filterGrades() || []
-            scStatsHeading.dataset.amount = filteredGrades.length
-
-            let yearsText = [...includedYears]
-                .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
-                .map(id => years.find(y => y.id === id).studie.code).join(', ')
-            if (includedYears.size === 1 && includedYears.has(years.at(0).id)) yearsText = `Dit leerjaar (${years.at(0)?.studie?.code})`
-            if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
-
             let includedSubjects = [...subjects]
                 .filter(subject => !excludedSubjects.has(subject))
                 .sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' }))
-            let subjectsText = includedSubjects.join(', ')
-            if (includedSubjects.length > 3) subjectsText = `${includedSubjects.length} van de ${subjects.size} vakken`
-            if (excludedSubjects.size === 1) subjectsText = `Alle ${subjects.size} vakken behalve ${[...excludedSubjects][0]}`
-            if (excludedSubjects.size === 0) subjectsText = `Alle ${subjects.size} vakken`
 
-            scStatsInfo.innerText = [yearsText, subjectsText].join('\n')
+            let filteredGrades = []
+
+            if (fromBackup) {
+                filteredGrades = statsGrades
+                    .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn')
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                scStatsHeading.dataset.amount = filteredGrades.length
+
+                scStatsInfo.innerText = "Statistieken kunnen in Magister niet cor-\nrect worden weergegeven voor back-ups."
+            } else {
+                filteredGrades = filterGrades()
+                scStatsHeading.dataset.amount = filteredGrades.length
+
+                let yearsText = [...includedYears]
+                    .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
+                    .map(id => years.find(y => y.id === id).studie.code).join(', ')
+                if (includedYears.size === 1 && includedYears.has(years.at(0).id)) yearsText = `Dit leerjaar (${years.at(0)?.studie?.code})`
+                if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
+
+                let subjectsText = includedSubjects.join(', ')
+                if (includedSubjects.length > 3) subjectsText = `${includedSubjects.length} van de ${subjects.size} vakken`
+                if (excludedSubjects.size === 1) subjectsText = `Alle ${subjects.size} vakken behalve ${[...excludedSubjects][0]}`
+                if (excludedSubjects.size === 0) subjectsText = `Alle ${subjects.size} vakken`
+
+                scStatsInfo.innerText = [yearsText, subjectsText].join('\n')
+            }
+
 
             if (filteredGrades.length < 1) {
                 scContainer.dataset.filters = true
                 scContainer.classList.add('empty')
                 return
             }
-
 
             let filteredResults = filteredGrades.map(grade => grade.result),
                 roundedFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
@@ -997,21 +1014,19 @@ async function gradeStatistics() {
             url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-primary').replace('#', '%23')}' stroke-width='6.9'/%3e%3c/svg%3e")`
             scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 
-            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak.Omschrijving}\n${e.CijferKolom.KolomNaam}, ${e.CijferKolom.KolomKop}`), 1, 10)
+            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
             // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
 
             resolve()
 
             // Add weighted stats afterwards in case there's only one subject and year selected
-            if (includedYears.size === 1 && includedSubjects.length === 1) {
+            if (!fromBackup && includedYears.size === 1 && includedSubjects.length === 1) {
                 for (const e of filteredGrades) {
                     e.weight ??= (await MagisterApi.grades.columnInfo({ id: [...includedYears][0] }, e.CijferKolom.Id)).Weging
                     statsGrades[statsGrades.findIndex(f => f.CijferKolom.Id === e.CijferKolom.Id)].weight ??= e.weight
                 }
 
                 if (!filteredGrades.every(grade => grade.weight) || !filteredGrades.some(grade => grade.weight > 0)) return
-
-                console.log(filteredGrades)
 
                 scWeightedMean.innerText = calculateMean(
                     filteredGrades

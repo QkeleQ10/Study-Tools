@@ -112,6 +112,9 @@ async function main() {
             })
         }
 
+        document.querySelector('#menu-berichten-new').dataset.hotkey = 'b'
+        shortcutHotkey = element('div', `st-messages-hotkey-label`, document.querySelector('#menu-berichten-new'), { class: 'st-hotkey-label', innerText: 'B' })
+
         addEventListener('keydown', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
@@ -160,7 +163,7 @@ window.addEventListener('popstate', popstate)
 function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
-    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-"][id$="-ghost"], [id^="st-cc"], [id^="st-cs"], [id^="st-cb"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, #st-aside-resize, [id^="st-"][id$="-ghost"], [id^="st-cc"], [id^="st-cs"], [id^="st-cb"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
     document.querySelectorAll('.st-overlay').forEach(e => { e.close?.() })

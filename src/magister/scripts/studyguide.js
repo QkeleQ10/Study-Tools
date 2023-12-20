@@ -44,6 +44,11 @@ async function studyguideList() {
     let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
     let showHiddenItemsInput = element('input', 'st-sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
     showHiddenItemsInput.addEventListener('input', appendStudyguidesToList)
+
+    let swHelp = element('button', 'st-sw-help', document.body, { class: 'st-button icon', title: "Informatie over studiewijzers met 'Geen vak'", 'data-icon': '', style: 'display: none' })
+    swHelp.addEventListener('click', async () => {
+        await notify('dialog', "Eén of meerdere van je studiewijzers is gelabeld als 'Geen vak'. Dit gebeurt als het vak van je studiewijzer \nniet kan worden afgeleid uit de naam van de studiewijzer. Daar zit een complex systeem achter.\n\nGelukkig kun je dit systeem zelf bijstellen. Als je wilt, kun je in het configuratiepaneel onder 'ELO' \nen dan 'Vaknamen bewerken' zelf je vaknamen beheren.\n\nZorg er dan voor dat je onder 'Weergavenaam' de juiste vaknaam invoert, en onder 'Aliassen' de \nvakcodes/-afkortingen die gebruikt worden in de titel van de studiewijzer.")
+    })
 }
 
 // Page 'Studiewijzer'
@@ -145,6 +150,10 @@ async function renderStudyguideList() {
 
         if (!object[subject]) object[subject] = []
         object[subject].push({ elem, title, period })
+
+        if (subject === "Geen vak") {
+            document.querySelector('#st-sw-help').style.display = 'flex'
+        }
     })
 
     let tiles = []

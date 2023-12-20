@@ -520,10 +520,15 @@
 #st-start[data-widgets-collapsed=true] #st-start-widget-controls-wrapper {
     min-width: 90px;
     padding: 16px 8px 8px 32px;
-    opacity: 0;
-    scale: 0.9;
     color: var(--st-foreground-primary);
     transition: scale 200ms 1000ms, opacity 200ms 1000ms, min-width 200ms;
+}
+
+@media (hover: hover) {
+    #st-start[data-widgets-collapsed=true] #st-start-widget-controls-wrapper {
+        opacity: 0;
+        scale: 0.9;
+    }
 }
 
 #st-start-widget-controls {

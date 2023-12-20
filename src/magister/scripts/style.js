@@ -43,13 +43,6 @@ async function applyStyles() {
         luminanceWish = syncedStorage.color.l,
         borderRadius = syncedStorage.shape
 
-    const res = (await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/timed-events.json`))
-    if (res.ok) {
-        let timedColors = await res.json()
-        let todaysTimedColor = timedColors.find(e => e.date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`)?.color
-        if (todaysTimedColor) [hueWish, saturationWish, luminanceWish] = todaysTimedColor
-    }
-
     let lightThemeCss = `:root {
     --st-font-primary: 600 16px/44px 'arboria', sans-serif;
     --st-font-family-primary: 'arboria', sans-serif;
@@ -201,8 +194,7 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 }`, 'st-christmas')
     }
 
-    if (!syncedStorage['disable-css']) {
-        createStyle(`.block h3,
+    createStyle(`.block h3,
 .view {
     position: relative;
 }
@@ -1224,8 +1216,36 @@ h3:active> .icon-up-arrow:before {
 .podium input {
     color: var(--st-foreground-primary) !important;
 }
+
+.animation-container-loading {
+    position: fixed;
+    inset: 0;
+
+    display: flex !important;
+    background-color: var(--st-background-transparent);
+    opacity: 1;
+    backdrop-filter: blur(3px);
+    z-index: 999999999999;
+}
+
+.animation-container-loading.ng-cloak {
+    display: flex !important;
+    opacity: 0;
+    backdrop-filter: none;
+    pointer-events: none;
+    transition: opacity 400ms, backdrop-filter 400ms;
+}
+
+.container.ng-cloak {
+    display: flex !important;
+}
+
+.loading-animation {
+    width: 96px;
+    content: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/load-animation.svg");
+}
 `, 'study-tools')
-    } else {
+    if (syncedStorage['disable-css']) {
         createStyle('', 'study-tools')
     }
 
