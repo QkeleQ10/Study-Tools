@@ -3,7 +3,8 @@ let syncedStorage = {},
     apiUserToken,
     apiCache = {}
 
-let eggs = [];
+let eggs = [],
+    announcements = [];
 
 (async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
@@ -13,30 +14,40 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const snackbarWrapper = element('div', 'st-snackbars', document.body)
 
-    checkAnnouncements()
+    handleAnnouncements()
 
     setTimeout(() => {
         saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
     }, 500)
 })
 
-async function checkAnnouncements() {
+async function handleAnnouncements() {
     let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
     if (!response.ok) return
-    let data = await response.json()
+    announcements = Object.values(await response.json())
 
-    Object.keys(data).forEach(async key => {
-        let value = data[key]
+    announcements
+        .filter(announcement => announcement.type === 'snackbar' || announcement.type === 'dialog')
+        .forEach(async announcement => {
+            if (await isAnnouncementValid(announcement)) {
+                notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
+            }
+        })
+}
 
-        if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
-        if (value.onlyForSchools && !value.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) return
-        if (value.dateStart && (new Date(value.dateStart) > new Date())) return
-        if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
-        if (value.onlyOnWeekdays && !value.onlyOnWeekdays.includes(new Date().getDay())) return
-        if (value.onlyBeforeTime && (new Date(`${new Date().toDateString()} ${value.onlyOnWeekdays}`) < new Date())) return
-        if (value.onlyAfterTime && (new Date(`${new Date().toDateString()} ${value.onlyAfterTime}`) > new Date())) return
+function isAnnouncementValid(announcement) {
+    return new Promise(async (resolve, reject) => {
+        let now = new Date()
 
-        notify(value.type || 'snackbar', value.body, value.buttons, value.duration || 10000)
+        if (announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
+        if (announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) resolve(false)
+        if (announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
+        if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
+        if (announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
+        if (announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
+        if (announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
+
+        resolve(true)
     })
 }
 
