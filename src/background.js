@@ -5,7 +5,7 @@ let apiUserId,
     apiUserTokenDate
 
 const settingsToClear = [
-    'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-subjects-display', 'version', 'hotkeys-today'
+    'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'magister-cf-calculator', 'magister-cf-statistics', 'magister-cf-backup', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-subjects-display', 'teacher-names', 'version', 'hotkeys-today'
 ]
 
 startListenCredentials()
@@ -14,7 +14,7 @@ console.info("Service worker running!")
 
 async function startListenCredentials() {
     // Initialise the three variables
-    apiUserId = (await browser.storage.local.get('user-id'))?.['user-id'] || null
+    apiUserId = (await browser.storage.sync.get('user-id'))?.['user-id'] || null
     apiUserToken = (await browser.storage.local.get('token'))?.['token'] || null
     apiUserTokenDate = (await browser.storage.local.get('token-date'))?.['token-date'] || null
 
@@ -23,7 +23,7 @@ async function startListenCredentials() {
         let userTokenWas = apiUserToken
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
             apiUserId = e.url.split('/personen/')[1].split('/')[0]
-            browser.storage.local.set({ 'user-id': apiUserId })
+            browser.storage.sync.set({ 'user-id': apiUserId })
             if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
         }
         let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')

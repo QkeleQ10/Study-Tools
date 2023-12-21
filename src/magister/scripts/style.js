@@ -43,13 +43,6 @@ async function applyStyles() {
         luminanceWish = syncedStorage.color.l,
         borderRadius = syncedStorage.shape
 
-    const res = (await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/timed-events.json`))
-    if (res.ok) {
-        let timedColors = await res.json()
-        let todaysTimedColor = timedColors.find(e => e.date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`)?.color
-        if (todaysTimedColor) [hueWish, saturationWish, luminanceWish] = todaysTimedColor
-    }
-
     let lightThemeCss = `:root {
     --st-font-primary: 600 16px/44px 'arboria', sans-serif;
     --st-font-family-primary: 'arboria', sans-serif;
@@ -59,6 +52,7 @@ async function applyStyles() {
     --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff5;
     --st-background-transparent: #ffffffbb;
+    --st-background-overlaid: #12121210;
     --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
     --st-highlight-subtle: #f2f9ff;
     --st-highlight-ok: #b6fadf;
@@ -97,6 +91,7 @@ async function applyStyles() {
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f5;
     --st-background-transparent: #121212bb;
+    --st-background-overlaid: #00000030;
     --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
     --st-highlight-subtle: #181f24;
     --st-highlight-ok: #1a4c38;
@@ -160,38 +155,34 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
     now = new Date()
 
     // Menu bar decorations
-    let decorationPreset = syncedStorage['decoration'],
-        decorationCss
-    switch (decorationPreset) {
-        case 'waves':
-            decorationCss = 'background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) 25px ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );'
-            break;
+    function decorations() {
+        let style = syncedStorage['decoration'],
+            size = syncedStorage['decoration-size'] ?? 1,
+            css
+        switch (style) {
+            case 'waves':
+                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
+                break;
 
-        case 'zig-zag':
-            decorationCss = 'background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: 25px 0, 25px 0, 0 0, 0 0; background-size: 50px 50px; background-repeat: repeat;'
-            break;
+            case 'zig-zag':
+                css = `background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: calc(${size} * 25px) 0, calc(${size} * 25px) 0, 0 0, 0 0; background-size: calc(${size} * 50px) calc(${size} * 50px); background-repeat: repeat;`
+                break;
 
-        case 'polka-dot-big':
-            decorationCss = 'background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, 52px 52px; background-size: 104px 104px;'
-            break;
+            case 'polka-dot':
+                css = `background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, calc(${size} * 40px) calc(${size} * 40px); background-size: calc(${size} * 80px) calc(${size} * 80px);`
+                break;
 
-        case 'polka-dot-small':
-            decorationCss = 'background-image: radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%), radial-gradient(var(--st-decoration-fill) 30%, transparent 31.2%); background-position: 0px 0px, 26px 26px; background-size: 52px 52px;'
-            break;
+            case 'stripes':
+                css = `background-image: repeating-linear-gradient(45deg, transparent, transparent calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 40px));`
+                break;
 
-        case 'stripes-big':
-            decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 30px, var(--st-decoration-fill) 30px, var(--st-decoration-fill) 60px);'
-            break;
-
-        case 'stripes-small':
-            decorationCss = 'background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--st-decoration-fill) 10px, var(--st-decoration-fill) 20px);'
-            break;
-
-        default:
-            decorationCss = ''
-            break;
+            default:
+                css = ''
+                break;
+        }
+        createStyle(`.menu-host {${css}}`, 'study-tools-menu-decoration')
     }
-    createStyle(`.menu-host {${decorationCss}}`, 'study-tools-menu-decoration')
+    decorations()
 
     // Christmas mode!!!
     if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {
@@ -203,10 +194,21 @@ ${syncedStorage.theme === 'auto' ? '}' : ''}`
 }`, 'st-christmas')
     }
 
-    if (!syncedStorage['disable-css']) {
-        createStyle(`.block h3,
+    createStyle(`.block h3,
 .view {
     position: relative;
+}
+
+div.view {
+    min-width: calc(100vw - 304px);
+    width: 100%;
+    max-width: calc(100vw - 304px);
+    transition: min-width 200ms, max-width 200ms;
+}
+
+div.collapsed-menu ~ div.view {
+    min-width: calc(100vw - 128px);
+    max-width: calc(100vw - 128px);
 }
 
 .block h4 {
@@ -514,7 +516,7 @@ div.ngRow:hover>:not(.unselectable) {
 .widget .list li a,
 a.ng-binding,
 dd,
-span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span):not([id^="st-"]),
+span:not(.st-title, .st-subtitle, .st-section-title, .st-banner, .st-tip, .caption, .k-dropdown, .user-content span):not([class^="st-"]):not([id^="st-"]),
 dl.list-dl dd,
 dl.list-dl dt,
 dna-breadcrumb,
@@ -756,7 +758,8 @@ aside .tabs {
 
 aside .tabs li {
     width: auto;
-    flex-grow: 2;
+    flex-shrink: 1;
+    flex-grow: 1;
     transition: filter 200ms;
 }
 
@@ -785,10 +788,28 @@ aside .tabs li:hover:after {
   translate: -50%;
 }
 
-aside .tabs:not(.st-cf-sc-override) li.active:after {
+aside .tabs li.active:after,
+aside .tabs:has(li.st-tab.active) li.st-tab.active:after {
   width: calc(100% - 24px);
   height: 3px;
   translate: -50%;
+}
+
+aside .tabs:has(li.st-tab.active) li.active:after {
+    width: 0;
+    height: 0;
+    translate: -50% 1px;
+}
+
+aside .tabs li a {
+    line-height: normal;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
 }
 
 .menu-footer>a>i {
@@ -1195,8 +1216,36 @@ h3:active> .icon-up-arrow:before {
 .podium input {
     color: var(--st-foreground-primary) !important;
 }
+
+.animation-container-loading {
+    position: fixed;
+    inset: 0;
+
+    display: flex !important;
+    background-color: var(--st-background-transparent);
+    opacity: 1;
+    backdrop-filter: blur(3px);
+    z-index: 999999999999;
+}
+
+.animation-container-loading.ng-cloak {
+    display: flex !important;
+    opacity: 0;
+    backdrop-filter: none;
+    pointer-events: none;
+    transition: opacity 400ms, backdrop-filter 400ms;
+}
+
+.container.ng-cloak {
+    display: flex !important;
+}
+
+.loading-animation {
+    width: 96px;
+    content: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/load-animation.svg");
+}
 `, 'study-tools')
-    } else {
+    if (syncedStorage['disable-css']) {
         createStyle('', 'study-tools')
     }
 
@@ -1242,6 +1291,23 @@ h3:active> .icon-up-arrow:before {
     padding-bottom: 0 !important
 }`, 'study-tools-sw-grid')
     }
+
+    if (syncedStorage['cs']) {
+        createStyle(`
+#cijfers-container.subtitle .main {
+    padding-top: 125px !important;
+}
+
+#cijfers-container.subtitle aside {
+    top: 125px !important;
+}
+
+#cijfers-container .main div.content-container-cijfers {
+    width: 100% !important;
+    max-width: none !important;
+}
+`, 'study-tools-cs')
+    } else { createStyle('', 'study-tools-cs') }
 
     if (syncedStorage['magister-cf-failred']) {
         createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')

@@ -37,31 +37,17 @@ const decorations = [
         }
     },
     {
-        id: 'polka-dot-big',
+        id: 'polka-dot',
         name: "Grote stippen",
         style: {
             'background-image': 'radial-gradient(#ffffff66 30%, transparent 31.2%), radial-gradient(#ffffff66 30%, transparent 31.2%)', 'background-position': '0px 0px, 52px 52px', 'background-size': '104px 104px'
         }
     },
     {
-        id: 'polka-dot-small',
-        name: "Kleine stippen",
-        style: {
-            'background-image': 'radial-gradient(#ffffff66 30%, transparent 31.2%), radial-gradient(#ffffff66 30%, transparent 31.2%)', 'background-position': '0px 0px, 26px 26px', 'background-size': '52px 52px'
-        }
-    },
-    {
-        id: 'stripes-big',
+        id: 'stripes',
         name: "Grote strepen",
         style: {
             'background-image': 'repeating-linear-gradient(45deg, transparent, transparent 30px, #ffffff66 30px, #ffffff66 60px)'
-        }
-    },
-    {
-        id: 'stripes-small',
-        name: "Kleine strepen",
-        style: {
-            'background-image': 'repeating-linear-gradient(45deg, transparent, transparent 10px, #ffffff66 10px, #ffffff66 20px)'
         }
     },
 ]

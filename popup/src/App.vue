@@ -269,6 +269,13 @@ main {
     padding-inline: 12px;
 }
 
+.button.inline {
+    display: inline;
+    padding: 0;
+    height: auto;
+    font-size: inherit;
+}
+
 .button .icon {
     font-size: 18px;
     margin-left: -8px;

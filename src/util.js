@@ -3,46 +3,55 @@ let syncedStorage = {},
     apiUserToken,
     apiCache = {}
 
-let eggs = []
+let eggs = [],
+    announcements = [];
 
-prepareStorage()
-async function prepareStorage() {
+(async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
-}
+})()
 
 window.addEventListener('DOMContentLoaded', async () => {
 
-    const snackbarWrapper = document.createElement('div')
-    snackbarWrapper.id = 'st-snackbars'
-    document.body.append(snackbarWrapper)
+    const snackbarWrapper = element('div', 'st-snackbars', document.body)
 
-    checkAnnouncements()
+    handleAnnouncements()
 
     setTimeout(() => {
         saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
     }, 500)
 })
 
-async function checkAnnouncements() {
+async function handleAnnouncements() {
     let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
     if (!response.ok) return
-    let data = await response.json()
+    announcements = Object.values(await response.json())
 
-    Object.keys(data).forEach(async key => {
-        let value = data[key]
+    announcements
+        .filter(announcement => announcement.type === 'snackbar' || announcement.type === 'dialog')
+        .forEach(async announcement => {
+            if (await isAnnouncementValid(announcement)) {
+                notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
+            }
+        })
+}
 
-        if (value.requiredSettings && !value.requiredSettings.every(setting => syncedStorage[setting])) return
-        if (value.onlyForSchools && !value.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) return
-        if (value.dateStart && (new Date(value.dateStart) > new Date())) return
-        if (value.dateEnd && (new Date(value.dateEnd) < new Date())) return
-        if (value.onlyOnWeekdays && !value.onlyOnWeekdays.includes(new Date().getDay())) return
-        if (value.onlyBeforeTime && (new Date(`${new Date().toDateString()} ${value.onlyOnWeekdays}`) < new Date())) return
-        if (value.onlyAfterTime && (new Date(`${new Date().toDateString()} ${value.onlyAfterTime}`) > new Date())) return
+function isAnnouncementValid(announcement) {
+    return new Promise(async (resolve, reject) => {
+        let now = new Date()
 
-        notify(value.type || 'snackbar', value.body, value.buttons, value.duration || 10000)
+        if (announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
+        if (announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) resolve(false)
+        if (announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
+        if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
+        if (announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
+        if (announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
+        if (announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
+
+        resolve(true)
     })
 }
 
+// TODO: ugly code
 // Output eggs
 fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/eggs.json`)
     .then(response => {
@@ -53,11 +62,25 @@ fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tool
             })
     })
 
+/**
+ * 
+ * @param {TimerHandler} func 
+ * @param {number} [interval]
+ */
 function setIntervalImmediately(func, interval) {
     func()
     return setInterval(func, interval)
 }
 
+/**
+ * Creates an element if it doesn't exist already and applies the specified properties to it.
+ * @param {string} [tagName] The element's tag name
+ * @param {string} [id] The element's ID
+ * @param {HTMLElement} [parent] The element's parent
+ * @param {Object} [attributes] The attributes to assign to the element
+ * @param {string} [attributes.innerText] The element's inner text
+ * @returns {HTMLElement} The created element.
+ */
 function element(tagName, id, parent, attributes) {
     let elem = id ? document.getElementById(id) : undefined
     if (!elem) {
@@ -71,83 +94,14 @@ function element(tagName, id, parent, attributes) {
     return elem
 }
 
-async function getApiCredentials() {
-    apiUserId = await getFromStorage('user-id', 'local')
-    apiUserToken = await getFromStorage('token', 'local')
-    return new Promise(async (resolve, reject) => {
-        let req = await chrome.runtime.sendMessage({ action: 'getCredentials' })
-        apiUserId = req.apiUserId
-        apiUserToken = req.apiUserToken
-        resolve({ apiUserId, apiUserToken })
-    })
-}
-
-// Wrapper for fetch().json() with caching
-async function useApi(url, options) {
-    return new Promise(async (resolve, reject) => {
-        // If the cached result is less than 30 seconds old, use it!
-        if (apiCache[url] && (new Date() - apiCache[url].date) < 30000) {
-            resolve(apiCache[url])
-            return
-        }
-
-        // Otherwise, start a new request.
-        await getApiCredentials()
-
-        const res = await fetch(url.replace(/(\$USERID)/gi, apiUserId), { headers: { Authorization: apiUserToken }, ...options })
-
-        // Catch any errors
-        if (!res.ok) {
-            if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-            else {
-                // If it's not a ratelimit, retry one more time.
-                await getApiCredentials()
-
-                const res = await fetch(url.replace(/(\$USERID)/gi, apiUserId), { headers: { Authorization: apiUserToken }, ...options })
-                if (!res.ok) {
-                    if (res.status === 429) notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-                    else {
-                        console.error(`Error ${res.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${apiUserId}\nuserToken.length: ${apiUserToken.length}\nInfo about result and options:`)
-                        console.error(res, options)
-                        console.log(`Het zou me erg helpen als je een screenshot of kopie van dit scherm doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
-                        notify(
-                            'snackbar',
-                            `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
-                            [
-                                { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
-                                { innerText: "Discord", href: `https://discord.gg/RVKXKyaS6y` }
-                            ],
-                            36000000
-                        )
-                        if (apiCache[url]) {
-                            notify('snackbar', `Fout ${res.status}\nGegevens zijn mogelijk verouderd`)
-                            return resolve(apiCache[url])
-                        }
-                        else {
-                            notify('snackbar', `Fout ${res.status}\nVernieuw de pagina en probeer het opnieuw`)
-                            return reject(res.status)
-                        }
-                    }
-                } else {
-                    const json = await res.json()
-                    resolve({ ...json, date: new Date() })
-                    // Cache the result and include the date
-                    apiCache[url] = { ...json, date: new Date() }
-                }
-            }
-
-            // Continue if no errors
-        } else {
-            const json = await res.json()
-            resolve(json)
-            // Cache the result and include the date
-            apiCache[url] = { ...json, date: new Date() }
-        }
-
-    })
-}
-
-function awaitElement(querySelector, all, duration) {
+/**
+ * 
+ * @param {string} querySelector 
+ * @param {boolean} [all=false] 
+ * @param {number} [duration=10000] 
+ * @returns 
+ */
+function awaitElement(querySelector, all = false, duration = 10000) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             if (document.querySelector(querySelector)) {
@@ -161,22 +115,35 @@ function awaitElement(querySelector, all, duration) {
             clearInterval(interval)
             console.warn("Could not find element: ", querySelector, all, duration)
             return resolve(undefined)
-        }, duration || 10000)
+        }, duration)
     })
 }
 
-function getFromStorage(key, location) {
+/**
+ * 
+ * @param {string} key 
+ * @param {'sync'|'local'|'session'} [location='sync'] 
+ * @returns {*} Value
+ */
+function getFromStorage(key, location = 'sync') {
     return new Promise((resolve, reject) => {
-        chrome.storage[location ? location : 'sync'].get([key], (result) => {
+        chrome.storage[location].get([key], (result) => {
             let value = Object.values(result)[0]
             value ? resolve(value) : resolve('')
         })
     })
 }
 
-function getFromStorageMultiple(array, location, all) {
+/**
+ * 
+ * @param {string[]} [array] 
+ * @param {'sync'|'local'|'session'} [location='sync'] 
+ * @param {boolean} [all=false] 
+ * @returns {object} Key-value pairs
+ */
+function getFromStorageMultiple(array, location = 'sync', all = false) {
     return new Promise((resolve, reject) => {
-        chrome.storage[location ? location : 'sync'].get(all ? null : array.map(e => [e]), (result) => {
+        chrome.storage[location].get(all ? null : array.map(e => [e]), (result) => {
             result ? resolve(result) : reject(Error('None found'))
         })
     })
@@ -290,14 +257,14 @@ Date.prototype.getFormattedDay = function () {
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
-Date.prototype.isTomorrow = function (offset=0) { return this > midnight(0+offset) && this < midnight(1+offset) }
-Date.prototype.isToday = function (offset=0) { return this > midnight(-1+offset) && this < midnight(0+offset) }
-Date.prototype.isYesterday = function (offset=0) { return this > midnight(-2+offset) && this < midnight(-1+offset) }
+Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + offset) && this < midnight(1 + offset) }
+Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
+Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true, rotateHue = true) {
     const chartArea = this
-    chartArea.innerText = ''
-    chartArea.classList.remove('st-pie-chart')
+    if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
+    chartArea.classList.remove('st-pie-chart', 'st-line-chart')
     chartArea.classList.add('st-bar-chart', 'st-chart')
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
@@ -305,16 +272,18 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
     const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
 
-    const filteredAndSortedFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1])
+    const filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
+    if (sort) filteredFrequencyMap.sort((a, b) => b[1] - a[1])
 
-    filteredAndSortedFrequencyMap.forEach(([key, frequency], i) => {
-        const hueRotate = 20 * i
+    filteredFrequencyMap.forEach(([key, frequency], i) => {
+        const hueRotate = rotateHue ? (20 * i) : 0
 
         const col = element('div', `${chartArea.id}-${key}`, chartArea, {
             class: 'st-bar-chart-col',
             title: labels?.[key] ?? key,
             'data-value': frequency,
             'data-percentage': Math.round(frequency / totalFrequency * 100),
+            'data-y-tight': (frequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-${key}-bar`, col, {
@@ -323,7 +292,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     })
 
     if (remainderFrequency > 0) {
-        const hueRotate = 20 * filteredAndSortedFrequencyMap.length
+        const hueRotate = rotateHue ? (20 * filteredFrequencyMap.length) : 0
 
         const col = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-bar-chart-col',
@@ -332,6 +301,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
                 : "Overige",
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
+            'data-y-tight': (remainderFrequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
             style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${remainderFrequency / maxFrequency}`
         }),
             bar = element('div', `${chartArea.id}-remainder-bar`, col, {
@@ -342,10 +312,10 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1) {
+Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1, rotateHue = true) {
     const chartArea = this
     chartArea.innerText = ''
-    chartArea.classList.remove('st-bar-chart')
+    chartArea.classList.remove('st-bar-chart', 'st-line-chart')
     chartArea.classList.add('st-pie-chart', 'st-chart')
 
     const aboutWrapper = element('div', `${chartArea.id}-about`, chartArea, { class: 'st-chart-about' }),
@@ -361,7 +331,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     filteredAndSortedFrequencyMap.forEach(([key, frequency], i, a) => {
         const pieOffset = a.slice(0, i).reduce((acc, [key, frequency]) => acc + frequency, 0) / totalFrequency,
             pieSize = frequency / totalFrequency,
-            hueRotate = 20 * i
+            hueRotate = rotateHue ? (20 * i) : 0
 
         const slice = element('div', `${chartArea.id}-${key}`, chartArea, {
             class: 'st-pie-chart-slice',
@@ -382,7 +352,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     if (remainderFrequency > 0) {
         const pieOffset = 1 - (remainderFrequency / totalFrequency),
             pieSize = remainderFrequency / totalFrequency,
-            hueRotate = 20 * filteredAndSortedFrequencyMap.length
+            hueRotate = rotateHue ? (20 * filteredAndSortedFrequencyMap.length) : 0
 
         const slice = element('div', `${chartArea.id}-remainder`, chartArea, {
             class: 'st-pie-chart-slice',
@@ -401,7 +371,8 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     }
 
     function updateAbout() {
-        const hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover') || chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
+        let hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover')
+        if (!chartArea.classList.contains('donut')) hoveredElement ||= chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
         chartArea.querySelectorAll('.st-pie-chart-slice.active').forEach(element => element.classList.remove('active'))
         if (!hoveredElement) return
         hoveredElement.classList.add('active')
@@ -424,6 +395,34 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     chartArea.addEventListener('mousemove', updateAbout)
     chartArea.addEventListener('mouseout', updateAbout)
     updateAbout()
+
+    return chartArea
+}
+
+Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue) {
+    const chartArea = this
+    if (!chartArea.classList.contains('st-line-chart')) chartArea.innerText = ''
+    chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
+    chartArea.classList.add('st-line-chart', 'st-chart')
+
+    minValue ??= Math.min(...values)
+    maxValue ??= Math.max(...values)
+
+    values.forEach((value, i) => {
+        const hueRotate = 10 * i
+
+        const col = element('div', `${chartArea.id}-${i}`, chartArea, {
+            class: 'st-line-chart-col',
+            title: `${labels?.[i] ?? i}\n${value}`,
+            'data-delta': values[i - 1] > value ? 'fall' : values[i - 1] < value ? 'rise' : values[i - 1] === value ? 'equal' : 'none',
+            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}`
+        }),
+            bar = element('div', `${chartArea.id}-${i}-bar`, col, {
+                class: 'st-line-chart-point'
+            })
+    })
+
+    chartArea.querySelectorAll(`.st-line-chart-col:not(:nth-child(-n+${values.length}))`).forEach(e => e.remove())
 
     return chartArea
 }

@@ -112,6 +112,9 @@ async function main() {
             })
         }
 
+        document.querySelector('#menu-berichten-new').dataset.hotkey = 'b'
+        shortcutHotkey = element('div', `st-messages-hotkey-label`, document.querySelector('#menu-berichten-new'), { class: 'st-hotkey-label', innerText: 'B' })
+
         addEventListener('keydown', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
             if (e.key.toLowerCase() === key.toLowerCase()) {
@@ -160,10 +163,10 @@ window.addEventListener('popstate', popstate)
 function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
-    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, [id^="st-cf"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
+    document.querySelectorAll('.st-button, .st-input, .st-checkbox-label, .st-checkbox-input, #st-aside-resize, [id^="st-"][id$="-ghost"], [id^="st-cc"], [id^="st-cs"], [id^="st-cb"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
-    document.querySelectorAll('.st-overlay').forEach(e => { e.close() })
+    document.querySelectorAll('.st-overlay').forEach(e => { e.close?.() })
 }
 
 function parseSubject(string, enabled, subjects) {
@@ -190,9 +193,9 @@ function formatKey(string) {
     return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-function weightedMean(valueArray = [], weightArray = []) {
-    let result = valueArray.map((value, i) => {
-        let weight = weightArray[i] ?? 1,
+function calculateMean(values = [], weights = []) {
+    let result = values.map((value, i) => {
+        let weight = weights[i] ?? 1,
             sum = value * weight
         return [sum, weight]
     }).reduce((p, c) => {
@@ -201,15 +204,45 @@ function weightedMean(valueArray = [], weightArray = []) {
     return (result[0] / result[1])
 }
 
-function median(valueArray = []) {
-    let values = [...valueArray].sort()
-    var half = Math.floor(values.length / 2)
-    if (values.length % 2) return values[half]
-    return (values[half - 1] + values[half]) / 2.0
+function calculateMedian(values = []) {
+    let sortedValues = [...values].sort()
+    var half = Math.floor(sortedValues.length / 2)
+    if (sortedValues.length % 2) return sortedValues[half]
+    return (sortedValues[half - 1] + sortedValues[half]) / 2.0
 }
 
-function standardDeviation(valueArray = []) {
-    let n = valueArray.length,
-        mean = valueArray.reduce((a, b) => a + b) / n
-    return Math.sqrt(valueArray.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
+function calculateMode(values = []) {
+    if (values.length === 0) return { modes: [], occurrences: 0 }
+
+    let frequencyMap = {}
+    values.forEach(value => {
+        frequencyMap[value] ??= 0
+        frequencyMap[value]++
+    })
+
+    let maxOccurrences = 0
+    let modes = []
+
+    Object.entries(frequencyMap).forEach(([value, occurrences]) => {
+        if (occurrences > maxOccurrences) {
+            maxOccurrences = occurrences
+            modes = [Number(value)]
+        } else if (occurrences === maxOccurrences) {
+            modes.push(Number(value))
+        }
+    })
+
+    if (modes.length >= 1 && modes.length <= 2) return { modes, occurrences: maxOccurrences }
+    else return { modes: [], occurrences: 0 }
+
+}
+
+function calculateVariance(values = []) {
+    const average = calculateMean(values)
+    const squareDiffs = values.map((value) => {
+        const diff = value - average
+        return diff * diff
+    })
+    const variance = calculateMean(squareDiffs)
+    return variance
 }

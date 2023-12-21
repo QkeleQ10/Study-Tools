@@ -80,10 +80,21 @@ export default [
             },
             {
                 id: "decoration",
-                title: "Decoratie",
+                title: "Decoratiestijl",
                 subtitle: "Wordt weergegeven in de zijbalk.",
                 type: "DecorationPicker",
                 default: 'none',
+            },
+            {
+                id: "decoration-size",
+                title: "Decoratiegrootte",
+                type: "SlideInput",
+                default: 1,
+                format: "percent",
+                decimals: 0,
+                min: 0.5,
+                max: 3,
+                step: 0.1,
             },
             {
                 id: "shape",
@@ -279,19 +290,19 @@ export default [
         id: "grades",
         settings: [
             {
-                id: "magister-cf-calculator",
+                id: "cc",
                 title: "Cijfercalculator",
                 subtitle: "Zie wat je moet halen of wat je komt te staan op basis van je cijferlijst en/of aangepaste cijfers.",
                 default: true,
             },
             {
-                id: "magister-cf-statistics",
+                id: "cs",
                 title: "Cijferstatistieken",
                 subtitle: "Nieuw tabblad in het cijferoverzicht met statistieken, grafiekjes en handige filters.",
                 default: true,
             },
             {
-                id: "magister-cf-backup",
+                id: "cb",
                 title: "Cijferback-up",
                 subtitle: "Knop in het cijferoverzicht om je cijferlijst te exporteren en te importeren.",
                 default: true,
@@ -367,12 +378,6 @@ export default [
     {
         id: "about",
         settings: [
-            {
-                id: "update-notes",
-                title: "Update-informatie weergeven",
-                subtitle: "Af en toe een korte melding over de nieuwste updates weergeven.",
-                default: true,
-            },
             {
                 id: "beta-options",
                 title: "Experimentele opties",
