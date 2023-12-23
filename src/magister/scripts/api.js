@@ -63,14 +63,36 @@ const MagisterApi = {
             )
         })
     },
-    events: async () => {
+    yearInfo: async (year) => {
         return new Promise(async (resolve, reject) => {
-            magisterApiCache.events ??=
+            magisterApiCache['yearInfo' + year.id] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year.id}`
                 )
             resolve(
-                (await magisterApiCache.events)?.Items || []
+                (await magisterApiCache['yearInfo' + year.id])
+            )
+        })
+    },
+    examInfo: async (year) => {
+        return new Promise(async (resolve, reject) => {
+            magisterApiCache['examInfo' + year.id] ??=
+                fetchWrapper(
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year.id}/examen`
+                )
+            resolve(
+                (await magisterApiCache['examInfo' + year.id])
+            )
+        })
+    },
+    events: async (start = gatherStart, end = gatherEnd) => {
+        return new Promise(async (resolve, reject) => {
+            magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)] ??=
+                fetchWrapper(
+                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${start.toISOString().substring(0, 10)}&tot=${end.toISOString().substring(0, 10)}`
+                )
+            resolve(
+                (await magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)])?.Items || []
             )
         })
     },

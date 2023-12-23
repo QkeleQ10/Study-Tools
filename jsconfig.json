@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "target": "ES6"
+    },
+    "include": [
+        "src/util.js",
+        "src/magister/scripts/api.js",
+        "src/*"
+    ]
+}

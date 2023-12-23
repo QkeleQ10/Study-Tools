@@ -62,6 +62,10 @@ div.loading-overlay {
     font: 20px 'Font Awesome 6 Pro';
 }
 
+.st-icon {
+    font-family: 'Font Awesome 6 Pro';
+}
+
 .st-title {
     display: block;
     color: var(--st-foreground-accent);
@@ -835,6 +839,7 @@ a.st-keyboard-hint.clicked {
 }
 
 .st-bar-chart {
+    --size: 256px;
     display: flex;
     justify-content: space-between;
     height: var(--size);
@@ -1123,6 +1128,12 @@ a.st-keyboard-hint.clicked {
     100% {
         pointer-events: all;
         opacity: 1;
+    }
+}
+
+@keyframes opacityIn {
+    0% {
+        opacity: 0;
     }
 }
 

@@ -261,13 +261,14 @@ Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + o
 Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
 Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true, rotateHue = true) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-line-chart')
     chartArea.classList.add('st-bar-chart', 'st-chart')
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
+    threshold ??= totalFrequency / 40
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
     const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
@@ -312,7 +313,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1, rotateHue = true) {
+Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold, rotateHue = true) {
     const chartArea = this
     chartArea.innerText = ''
     chartArea.classList.remove('st-bar-chart', 'st-line-chart')
@@ -323,6 +324,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
         aboutMore = element('span', `${chartArea.id}-about-more`, aboutWrapper, { class: 'st-chart-info' })
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
+    threshold ??= totalFrequency / 40
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
 
