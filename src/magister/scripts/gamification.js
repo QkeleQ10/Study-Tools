@@ -208,7 +208,7 @@ async function wrapped() {
     const widgetElement = element('button', 'st-start-widget-wrapped', widgets, { class: 'st-tile st-widget', title: "Jouw Magister Wrapped", innerText: "Magister\nWrapped" })
 
     widgetElement.addEventListener('click', async () => {
-        const wrapped = element('dialog', 'st-wrapped', document.body, { class: 'st-overlay st-force-dark' }),
+        const wrapped = element('dialog', 'st-wrapped', document.body, { class: 'st-overlay st-force-dark', innerText: '' }),
             title = element('span', 'st-wrapped-title', wrapped, { class: 'st-title', innerText: "Magister Wrapped" }),
             buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' }),
             viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control' }),
