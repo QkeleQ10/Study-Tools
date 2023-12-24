@@ -265,6 +265,11 @@ async function wrapped() {
             einde: new Date(wrappedYear, 11, 31).toISOString().substring(0, 10)
         })
 
+        const assignments = await MagisterApi.assignments.forYear({
+            begin: new Date(wrappedYear, 0, 1).toISOString().substring(0, 10),
+            einde: new Date(wrappedYear, 11, 31).toISOString().substring(0, 10)
+        })
+
 
         const isFirstYear = !lastYearShallow
         const isFinalYear = thisYearExam && !thisYearExam.doetVroegtijdig
@@ -344,15 +349,28 @@ async function wrapped() {
 
         // Num of grades and num of sufficient and mean and promo
         const tileGrades = element('div', 'st-wrapped-2-grades', section2, { 'data-hide': true })
-        const tileGradesPromo = element('span', 'st-wrapped-2-grades-promo', tileGrades, { innerText: "Tip: " })
-        element('u', null, tileGradesPromo, { innerText: "Cijfer-\nstatistieken" })
-        tileGradesPromo.append(document.createTextNode(" is vernieuwd.\nNeem een kijkje!"))
         const tileGradesA = element('div', 'st-wrapped-2-grades-a', tileGrades)
         element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
         element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
         const tileGradesB = element('div', 'st-wrapped-2-grades-b', tileGrades)
         element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
         element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
+        const tileGradesChart = element('div', 'st-wrapped-2-grades-chart', tileGrades, { class: 'st-force-light' })
+        tileGradesChart.createLineChart(grades.map(grade => Number(grade.CijferStr.replace(',', '.'))), grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+        const tileGradesPromo = element('span', 'st-wrapped-2-grades-promo', tileGrades, { class: 'st-metric-large-sub', innerText: "Tip: " })
+        element('u', null, tileGradesPromo, { innerText: "Cijfer-\nstatistieken" })
+        tileGradesPromo.append(document.createTextNode(" is vernieuwd.\nNeem een kijkje voor meer!"))
+        tileGradesPromo.addEventListener('click', async () => { wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
+
+        const tileAssignments = element('div', 'st-wrapped-2-assignments', section2, { 'data-hide': true })
+        const tileAssignmentsA = element('div', 'st-wrapped-2-assignments-a', tileAssignments)
+        element('span', null, tileAssignmentsA, { class: 'st-metric-huge', innerText: Math.round(assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) < new Date(item.IngeleverdOp)).length / assignments.length * 100) + '%' })
+        element('span', null, tileAssignmentsA, { class: 'st-metric-huge-sub', innerText: "opdrachten op tijd ingeleverd" })
+        const tileAssignmentsB = element('div', 'st-wrapped-2-assignments-b', tileAssignments)
+        element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.length, 'data-desc': "opdrachten" })
+        element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) < new Date(item.IngeleverdOp)).length, 'data-desc': "op tijd" })
+        element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) >= new Date(item.IngeleverdOp)).length, 'data-desc': "te laat" })
+        element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => !item.IngeleverdOp).length, 'data-desc': "geskipt" })
 
         // Teacher stats 
         const teacherNames = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {}

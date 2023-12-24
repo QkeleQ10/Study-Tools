@@ -342,54 +342,54 @@
 }
 
 #st-wrapped .st-metric-enormous {
-    font: 700 100px var(--st-font-family-primary);
+    font: 700 12svh var(--st-font-family-primary);
 }
 
 #st-wrapped .st-metric-enormous-sub {
-    font: 700 28px var(--st-font-family-secondary);
+    font: 700 3svh var(--st-font-family-secondary);
     text-transform: uppercase;
 }
 
 #st-wrapped .st-metric-huge {
-    font: 700 75px var(--st-font-family-primary);
+    font: 700 9svh var(--st-font-family-primary);
 }
 
 #st-wrapped .st-metric-huge-sub {
-    font: 700 24px var(--st-font-family-secondary);
+    font: 700 1.75svh var(--st-font-family-secondary);
     text-transform: uppercase;
 }
 
 #st-wrapped .st-metric-large {
-    font: 700 60px var(--st-font-family-primary);
+    font: 700 7.5svh var(--st-font-family-primary);
 }
 
 #st-wrapped .st-metric-large-sub {
-    font: 600 22px var(--st-font-family-secondary);
+    font: 600 1.625svh var(--st-font-family-secondary);
     text-transform: uppercase;
 }
 
 #st-wrapped .st-metric-medium {
-    font: 700 48px var(--st-font-family-primary);
+    font: 700 6.5svh var(--st-font-family-primary);
 }
 
 #st-wrapped .st-metric-medium-sub {
-    font: 600 18px var(--st-font-family-secondary);
+    font: 600 1.5svh var(--st-font-family-secondary);
 }
 
 #st-wrapped .st-metric-small {
-    font: 700 38px var(--st-font-family-primary);
+    font: 700 5.5svh var(--st-font-family-primary);
 }
 
 #st-wrapped .st-metric-small-sub {
-    font: 500 16px var(--st-font-family-secondary);
+    font: 500 1.475svh var(--st-font-family-secondary);
 }
 
 #st-wrapped .st-metric-tiny {
-    font: 700 34px var(--st-font-family-primary);
+    font: 700 4.5svh var(--st-font-family-primary);
 }
 
 #st-wrapped .st-metric-tiny-sub {
-    font: 500 14px var(--st-font-family-secondary);
+    font: 500 1.25svh var(--st-font-family-secondary);
 }
 
 #st-wrapped em {
@@ -432,7 +432,7 @@
 }
 
 #st-wrapped-2>* {
-    height: 50svh;
+    height: 40svh;
     position: relative;
     border-radius: 16px;
     border: var(--st-border);
@@ -449,12 +449,17 @@
 
 #st-wrapped-2-grades {
     grid-row: span 2;
-    height: 100svh;
+    height: 80svh;
     background-image: linear-gradient(45deg, #1f774b, #53993e);
 }
 
+#st-wrapped-2-assignments {
+    background-image: linear-gradient(45deg, #3276b3, #20a199);
+}
+
 #st-wrapped-2-lessons-a,
-#st-wrapped-2-absences-a {
+#st-wrapped-2-absences-a,
+#st-wrapped-2-assignments-a {
     position: absolute;
     top: 75px;
     left: 50%;
@@ -499,6 +504,64 @@
     align-items: flex-end;
 }
 
+#st-wrapped-2-assignments-b {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    translate: -50%;
+
+    display: flex;
+    gap: 32px;
+}
+
+#st-wrapped-2-assignments-b>span {
+    position: relative;
+    width: 64px;
+    text-align: center;
+}
+
+#st-wrapped-2-assignments-b>span:after {
+    content: attr(data-desc);
+    position: absolute;
+    bottom: -2svh;
+    left: 50%;
+    translate: -50%;
+    width: max-content;
+    font: 500 1.25svh var(--st-font-family-secondary);
+}
+
+#st-wrapped-2-assignments-b>span:not(:first-child):before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -16px;
+    translate: 0 -50%;
+    width: 3px;
+    height: 3px;
+    background-color: #ffffff60;
+    border-radius: 50%;
+}
+
+#st-wrapped-2-grades-chart {
+    position: absolute;
+    bottom: 20%;
+    left: 24px;
+    right: 24px;
+    --size: 20%;
+    --st-highlight-primary: #ffffff20;
+
+    background-image:
+        linear-gradient(to bottom, transparent calc(100% - 1px), #ffffff20 1px),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), #ff444460 1px, transparent calc(50% + 0.5px));
+    background-size: calc((100% / 9) + (1px / 9)) calc((100% / 9) - (1px / 9)), 100% 100%;
+    background-position: 0 1px, 0 0;
+}
+
+#st-wrapped-2-grades-chart>.st-line-chart-col {
+    --hue-rotate: 0 !important;
+    --color: #ffffffd0;
+}
+
 #st-wrapped-2-grades-promo {
     position: absolute;
     bottom: 24px;
@@ -508,4 +571,5 @@
     font: 600 16px var(--st-font-family-secondary);
     text-transform: uppercase;
     text-align: right;
+    cursor: pointer;
 }

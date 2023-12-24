@@ -149,7 +149,7 @@ ${syncedStorage.theme !== 'light' ? darkCss : ''}
 ${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertCss : ''}
 ${syncedStorage.theme === 'auto' ? '}' : ''}
 
-.st-force-dark { ${darkCssVars} }`
+.st-force-dark { ${darkCssVars} } .st-force-light { ${lightCssVars} }`
 
     createStyle(cssVars, 'study-tools-vars')
 
