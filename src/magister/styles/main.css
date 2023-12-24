@@ -287,6 +287,11 @@ div.loading-overlay {
     color: #fff;
 }
 
+.st-chip.important:after {
+    display: none;
+    content: none;
+}
+
 .st-dialog {
     display: flex;
     flex-direction: column;
