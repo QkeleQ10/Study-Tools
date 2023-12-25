@@ -220,7 +220,29 @@ async function wrapped() {
         close.addEventListener('click', () => wrapped.close())
 
         const section1 = element('div', 'st-wrapped-1', wrapped, { class: 'st-wrapped-section' })
-        const section1Text = element('span', 'st-wrapped-1-title', section1, { innerText: "Welkom bij Magister Wrapped." })
+        const section1Wrapper = element('div', 'st-wrapped-1-wrapper', section1)
+        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper, { innerText: "Welkom bij jouw Magister Wrapped." })
+        const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: "Laden..." })
+        function changeTexts(newTitle, newSubtitle) {
+            section1Text.dataset.transition = true
+            section1Sub.dataset.transition = true
+            setTimeout(async () => {
+                section1Text.innerText = ''
+                section1Sub.innerText = newSubtitle
+                newTitle.split('*').forEach((segment, i) => {
+                    if (i % 2 == 0) {
+                        section1Text.append(document.createTextNode(segment))
+                    } else {
+                        element('em', null, section1Text, { innerText: segment })
+                    }
+                })
+
+                section1Text.removeAttribute('data-transition')
+                section1Sub.removeAttribute('data-transition')
+            }, 200)
+        }
+
+        changeTexts(`Welkom bij jouw Magister Wrapped, *${(await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]}*.`, "Je Wrapped wordt voor je klaargezet...")
 
         const wrappedYear = now < january15 ? (now.getFullYear() - 1) : now.getFullYear()
 
@@ -314,7 +336,7 @@ async function wrapped() {
         else if (gradesMean < 5.55) textAdditional =
             "Ruimschoots is wat anders, maar het is je toch gelukt!"
 
-        const section1Sub = element('span', 'st-wrapped-1-subtitle', section1, { 'data-hide': true, innerText: textAdditional })
+        changeTexts(`In *2023* ${textMain}.`, textAdditional)
 
         const section2 = element('div', 'st-wrapped-2', wrapped)
 
@@ -410,26 +432,11 @@ async function wrapped() {
 
         displayWrapped()
         function displayWrapped() {
-
-            title.dataset.transition = true
-            section1Text.dataset.transition = true
-            setTimeout(async () => {
-                title.innerText = `Magister Wrapped van ${accountInfo.Persoon.Roepnaam}`
-                section1Text.innerText = `In `
-                element('em', null, section1Text, { innerText: wrappedYear })
-                section1Text.append(document.createTextNode(` ${textMain.split('*')[0]}`))
-                element('em', null, section1Text, { innerText: textMain.split('*')[1] })
-                section1Text.append(document.createTextNode(`${textMain.split('*')[2]}.`))
-
-                title.removeAttribute('data-transition')
-                section1Text.removeAttribute('data-transition')
-
-                wrapped.querySelectorAll('[data-hide=true]').forEach((e, i) => {
-                    setTimeout(() => {
-                        e.dataset.hide = false
-                    }, 300 * i)
-                })
-            }, 300)
+            wrapped.querySelectorAll('[data-hide=true]').forEach((e, i) => {
+                setTimeout(() => {
+                    e.dataset.hide = false
+                }, 300 * i)
+            })
         }
     })
 
