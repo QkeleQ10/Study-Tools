@@ -301,6 +301,7 @@
 
 #st-wrapped {
     background-image: linear-gradient(35deg, #080808, #222);
+    overflow-y: scroll;
 }
 
 #st-wrapped[open] {
