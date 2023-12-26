@@ -423,7 +423,8 @@
     transition: opacity 200ms;
 }
 
-#st-wrapped-1>*[data-transition] {
+#st-wrapped-1-title[data-transition=true],
+#st-wrapped-1-subtitle[data-transition=true] {
     opacity: 0;
 }
 
@@ -434,6 +435,7 @@
 
 #st-wrapped-1-subtitle {
     font: 500 28px var(--st-font-family-primary);
+    transition: opacity 300ms;
 }
 
 #st-wrapped-2 {

@@ -261,6 +261,13 @@ Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + o
 Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
 Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
+Array.prototype.random = function () {
+    const arr = this
+    const random = arr[Math.floor(Math.random() * arr.length)]
+    console.log(random)
+    return random
+}
+
 Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''

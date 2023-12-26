@@ -203,6 +203,8 @@ async function gamification() {
 }
 
 async function wrapped() {
+    let currentTitle, currentSubtitle
+    const firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
     const widgets = await awaitElement('#st-start-widgets:not([data-working=true])')
 
     const widgetElement = element('button', 'st-start-widget-wrapped', widgets, { class: 'st-tile st-widget', title: "Jouw Magister Wrapped", innerText: "Magister\nWrapped" })
@@ -221,42 +223,16 @@ async function wrapped() {
 
         const section1 = element('div', 'st-wrapped-1', wrapped, { class: 'st-wrapped-section' })
         const section1Wrapper = element('div', 'st-wrapped-1-wrapper', section1)
-        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper, { innerText: "Welkom bij jouw Magister Wrapped." })
-        const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: "Laden..." })
-        function changeTexts(newTitle, newSubtitle) {
-            section1Text.dataset.transition = true
-            section1Sub.dataset.transition = true
-            setTimeout(async () => {
-                section1Text.innerText = ''
-                section1Sub.innerText = newSubtitle
-                newTitle.split('*').forEach((segment, i) => {
-                    if (i % 2 == 0) {
-                        section1Text.append(document.createTextNode(segment))
-                    } else {
-                        element('em', null, section1Text, { innerText: segment })
-                    }
-                })
+        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper, { innerText: `Welkom bij jouw Magister Wrapped, ${firstName}.` })
+        const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: "Je Wrapped wordt voor je klaargezet..." })
 
-                section1Text.removeAttribute('data-transition')
-                section1Sub.removeAttribute('data-transition')
-            }, 200)
-        }
-
-        changeTexts(`Welkom bij jouw Magister Wrapped, *${(await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]}*.`, "Je Wrapped wordt voor je klaargezet...")
+        changeTexts(`Welkom bij jouw Magister Wrapped, *${firstName}*.`, "Je Wrapped wordt voor je klaargezet...")
 
         const wrappedYear = now < january15 ? (now.getFullYear() - 1) : now.getFullYear()
 
-        const accountInfo = await MagisterApi.accountInfo()
+        // const accountInfo = await MagisterApi.accountInfo()
 
         const years = await MagisterApi.years()
-
-        years.forEach(async yearShallow => {
-
-            const year = await MagisterApi.yearInfo(yearShallow)
-            const yearExam = year.links.examengegevens ? await MagisterApi.examInfo(yearShallow) : {}
-
-            console.log(year, yearExam)
-        })
 
         const thisYearShallow = years.find(y => y.begin.includes(wrappedYear))
         const thisYear = thisYearShallow ? await MagisterApi.yearInfo(thisYearShallow) : {}
@@ -292,51 +268,55 @@ async function wrapped() {
             einde: new Date(wrappedYear, 11, 31).toISOString().substring(0, 10)
         })
 
-
         const isFirstYear = !lastYearShallow
         const isFinalYear = thisYearExam && !thisYearExam.doetVroegtijdig
 
-        // Hero: In 2023...
-        let textMain =
+        let text1A = [`*${wrappedYear}* is alweer ${now < january15 ? 'bijna ' : ''}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
+        if (isFirstYear) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
+        else if (isFinalYear) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `Je laatste schooljaar op de middelbare beginnen met *Magister Wrapped*.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
+
+        let text1B = ["Scroll snel door voor inzichten over het afgelopen jaar.", "Neem snel een kijkje en scroll door!", "Fijn dat je er bent, scroll omlaag om te beginnen.", "Scroll omlaag om jouw Magister Wrapped te zien.", "Scroll naar beneden om te beginnen."].random()
+
+        let text2A =
             `ben je doorgestroomd naar *${thisYear.studie.code}*`
-        if (isFirstYear) textMain =
+        if (isFirstYear) text2A =
             `ben je hier begonnen met *${thisYearShallow.studie.code}* in ${thisYearShallow.groep.code}`
-        else if (lastYear.isZittenBlijver) textMain =
+        else if (lastYear.isZittenBlijver) text2A =
             `ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
-        else if (isFinalYear) textMain =
+        else if (isFinalYear) text2A =
             `ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`
-        else if (thisYear.isZittenBlijver) textMain =
+        else if (thisYear.isZittenBlijver) text2A =
             `besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`
 
-        // Subhero
-        let textAdditional =
+        let text2B =
             "Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar."
-        if (isFirstYear) textAdditional =
+        if (isFirstYear) text2B =
             "Hoe bevalt het op je nieuwe school?"
-        else if (isFinalYear && lastYearExam?.doetVroegtijdig && !lastYear.isZittenBlijver) textAdditional =
+        else if (isFinalYear && lastYearExam?.doetVroegtijdig && !lastYear.isZittenBlijver) text2B =
             "Je hebt zelfs al ervaring met het eindexamen. Nu de rest van je vakken nog."
-        else if (isFinalYear && gradesMean > 7) textAdditional =
+        else if (isFinalYear && gradesMean > 7) text2B =
             "En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je."
-        else if (isFinalYear && lastYear.isZittenBlijver) textAdditional =
+        else if (isFinalYear && lastYear.isZittenBlijver) text2B =
             "Ze zeggen dat je het moeilijkste jaar al achter de rug hebt (jij zelfs al twee keer). Jij kunt dit!"
-        else if (isFinalYear) textAdditional =
+        else if (isFinalYear) text2B =
             Math.random() < 0.5 ? "Ze zeggen dat je het moeilijkste jaar al achter de rug hebt. Dit kun jij!" : "Laten we terugkijken op het afgelopen jaar; het allerlaatste jaar voor je centraal examen."
-        else if (thisYear.isZittenBlijver && thisYearExam.doetVroegtijdig) textAdditional =
+        else if (thisYear.isZittenBlijver && thisYearExam.doetVroegtijdig) text2B =
             `En dat is helemaal oké! Je gaat in ${wrappedYear + 1} zelfs vervroegd examen doen.`
-        else if (thisYear.isZittenBlijver) textAdditional =
+        else if (thisYear.isZittenBlijver) text2B =
             "En dat is helemaal oké! Je bent zeker niet de enige. Neem rustig de tijd."
-        else if (thisYear.opleidingCode.omschrijving !== lastYear.opleidingCode.omschrijving) textAdditional =
+        else if (thisYear.opleidingCode.omschrijving !== lastYear.opleidingCode.omschrijving) text2B =
             "Je hebt ook een belangrijke keuze achter de rug. Was het de juiste?"
-        else if (lastYear.isZittenBlijver && gradesMean > 7) textAdditional =
+        else if (lastYear.isZittenBlijver && gradesMean > 7) text2B =
             "En dat deed je met vlag en wimpel; wat een mooie cijfers dit jaar!"
-        else if (lastYear.isZittenBlijver) textAdditional =
+        else if (lastYear.isZittenBlijver) text2B =
             "Wat fijn! Laten we eens terugkijken op het afgelopen kalenderjaar."
-        else if (gradesMean > 7) textAdditional =
+        else if (gradesMean > 7) text2B =
             `En wat een cijfers haalde je in ${wrappedYear}!`
-        else if (gradesMean < 5.55) textAdditional =
+        else if (gradesMean < 5.55) text2B =
             "Ruimschoots is wat anders, maar het is je toch gelukt!"
 
-        changeTexts(`In *2023* ${textMain}.`, textAdditional)
+        let text3A = [`Laten we jouw ${wrappedYear} eens bekijken *in cijfers*.`].random()
+        let text3B = ["Blijf scrollen voor cijfers en grafieken.", "Zie nu jouw jaar vanuit een andere invalshoek.", "Vergelijk je statistieken met vrienden!", "Maak een screenshot en deel 'm met vrienden!", "Als je graag meer of andere dingen ziet, laat het me dan weten."].random()
 
         const section2 = element('div', 'st-wrapped-2', wrapped)
 
@@ -429,14 +409,45 @@ async function wrapped() {
             classroomsChartArea.createBarChart(classroomsFrequencyMap, null)
         })
 
-
         displayWrapped()
         function displayWrapped() {
+            changeTexts(text1A, text1B)
+            wrapped.addEventListener('scroll', (event) => {
+                if (event.target.scrollTop == 0) {
+                    changeTexts(text1A, text1B)
+                } else if (event.target.scrollTop < 275) {
+                    changeTexts(`In *${wrappedYear}* ${text2A}.`, text2B)
+                } else {
+                    changeTexts(text3A, text3B)
+                }
+            })
             wrapped.querySelectorAll('[data-hide=true]').forEach((e, i) => {
                 setTimeout(() => {
                     e.dataset.hide = false
                 }, 300 * i)
             })
+        }
+
+        function changeTexts(newTitle, newSubtitle) {
+            if (currentTitle === newTitle && currentSubtitle === newSubtitle) return
+            currentTitle = newTitle
+            currentSubtitle = newSubtitle
+            section1Text.dataset.transition = true
+            section1Sub.dataset.transition = true
+            setTimeout(async () => {
+                section1Text.innerText = ''
+                section1Sub.innerText = newSubtitle
+                newTitle.split('*').forEach((segment, i) => {
+                    if (i % 2 == 0) {
+                        section1Text.append(document.createTextNode(segment))
+                    } else {
+                        element('em', null, section1Text, { innerText: segment })
+                    }
+                })
+
+                section1Text.removeAttribute('data-transition')
+                section1Sub.removeAttribute('data-transition')
+            }, 200)
         }
     })
 
