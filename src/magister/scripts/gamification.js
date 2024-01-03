@@ -201,7 +201,7 @@ async function gamification() {
 
 async function wrapped() {
     let step = 0
-    const maxStep = 3
+    const maxStep = 2
 
     const wrappedYear = now < january15 ? (now.getFullYear() - 1) : now.getFullYear()
     let lastAccessYear = await getFromStorage('wrapped-accessed', 'local') || 0
@@ -401,10 +401,9 @@ async function wrapped() {
         element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
         const tileGradesChart = element('div', 'st-wrapped-tiles-grades-chart', tileGrades, { class: 'st-force-light' })
         tileGradesChart.createLineChart(grades.map(grade => Number(grade.CijferStr.replace(',', '.'))), grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
-        const tileGradesPromo = element('span', 'st-wrapped-tiles-grades-promo', tileGrades, { class: 'st-metric-large-sub', innerText: "Tip: " })
-        element('u', null, tileGradesPromo, { innerText: "Cijferstatistieken" })
-        tileGradesPromo.append(document.createTextNode(" is vernieuwd.\nNeem een kijkje voor meer!"))
-        tileGradesPromo.addEventListener('click', async (event) => { event.stopPropagation(); wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
+        const tileGradesPromo = element('span', 'st-wrapped-tiles-grades-promo', tileGrades, { class: 'st-metric-large-sub', innerText: "Vernieuwd: Cijferstatistieken\n" })
+        element('u', null, tileGradesPromo, { innerText: "Nu bekijken" })
+        tileGrades.addEventListener('click', async (event) => { event.stopPropagation(); wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
 
         const tileAssignments = element('div', 'st-wrapped-tiles-assignments', sectionTiles)
         const tileAssignmentsA = element('div', 'st-wrapped-tiles-assignments-a', tileAssignments)
@@ -416,27 +415,25 @@ async function wrapped() {
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) >= new Date(item.IngeleverdOp)).length, 'data-desc': "te laat" })
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => !item.IngeleverdOp).length, 'data-desc': "geskipt" })
 
-        const tileOther = element('div', 'st-wrapped-tiles-other', sectionTiles)
-        const tileOtherA = element('div', 'st-wrapped-tiles-other-a', tileOther)
-        element('span', null, tileOtherA, { class: 'st-metric-large-sub', innerText: `meest voorkomende docent (uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size})` })
-        element('span', null, tileOtherA, {
+        const tileTeachers = element('div', 'st-wrapped-tiles-teachers', sectionTiles)
+        const tileTeachersA = element('div', 'st-wrapped-tiles-teachers-a', tileTeachers)
+        element('span', null, tileTeachersA, { class: 'st-metric-huge-sub', innerText: "meeste lessen in" })
+        element('span', null, tileTeachersA, {
+            class: 'st-metric-large',
+            innerText: (Object.entries(classroomsFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0]
+        })
+        element('span', null, tileTeachersA, { class: 'st-metric-tiny-sub', innerText: `uit ${new Set(eventsClassrooms.map(classroom => classroom.Naam)).size} locaties` })
+        const tileTeachersB = element('div', 'st-wrapped-tiles-teachers-b', tileTeachers)
+        element('span', null, tileTeachersB, { class: 'st-metric-large-sub', innerText: "meeste lessen van" })
+        element('span', null, tileTeachersB, {
             class: 'st-metric-tiny',
             innerText: teacherNames?.[mostCommonTeacherCode] || eventsTeachers.find(e => e.Docentcode === mostCommonTeacherCode).Naam || mostCommonTeacherCode
         })
-        const tileOtherB = element('div', 'st-wrapped-tiles-other-b', tileOther)
-        element('span', null, tileOtherB, { class: 'st-metric-large-sub', innerText: `meest voorkomend lokaal (uit ${new Set(eventsClassrooms.map(classroom => classroom.Naam)).size})` })
-        element('span', null, tileOtherB, {
-            class: 'st-metric-medium',
-            innerText: (Object.entries(classroomsFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0]
-        })
+        element('span', null, tileTeachersB, { class: 'st-metric-tiny-sub', innerText: `uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size} docenten` })
 
-        const sectionLessons = element('section', 'st-wrapped-lessons', container, { 'data-step': 3 })
-
-        // Teacher stats 
-        let teachersChartArea = element('div', 'st-wrapped-teacher-chart', sectionLessons).createBarChart(teachersFrequencyMap, teacherNames)
-
-        // Classroom stats 
-        let classroomsChartArea = element('div', 'st-wrapped-classroom-chart', sectionLessons).createBarChart(classroomsFrequencyMap, null)
+        const sectionTeachers = element('section', 'st-wrapped-teachers', container, { 'data-step': 3 })
+        let teachersChartArea = element('div', 'st-wrapped-teacher-chart', sectionTeachers).createBarChart(teachersFrequencyMap, teacherNames)
+        let classroomsChartArea = element('div', 'st-wrapped-classroom-chart', sectionTeachers).createBarChart(classroomsFrequencyMap, null)
 
         // Switch chart type
         viewPie.addEventListener('click', () => {
@@ -474,14 +471,26 @@ async function wrapped() {
     }
 
     container.addEventListener('click', () => {
-        step = Math.min(step + 1, maxStep)
+        step = Math.min(Math.max(0, step + 1), maxStep)
         handleWrappedStep()
     })
 
     container.addEventListener('contextmenu', (event) => {
         event.preventDefault()
-        step = Math.max(step - 1, 0)
+        step = Math.min(Math.max(0, step - 1), maxStep)
         handleWrappedStep()
+    })
+
+    // Allow for keyboard navigation
+    document.addEventListener('keydown', event => {
+        if (event.key === 'ArrowLeft' && wrapped.open) {
+            step = Math.min(Math.max(0, step - 1), maxStep)
+            handleWrappedStep()
+        }
+        else if (event.key === 'ArrowRight' && wrapped.open) {
+            step = Math.min(Math.max(0, step + 1), maxStep)
+            handleWrappedStep()
+        }
     })
 
     Element.prototype.formatAndApplyTitleText = function (textWithMarkdown) {

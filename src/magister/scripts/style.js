@@ -606,7 +606,7 @@ span.nrblock {
 }
 
 .menu-footer,
-.appbar>div>a,
+.appbar>div>a:not(.st-metric),
 a.appbar-button,
 .menu-host {
     background-color: var(--st-accent-primary);

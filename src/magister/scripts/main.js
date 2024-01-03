@@ -27,7 +27,7 @@ async function main() {
 
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarWeek = element('div', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: new Date().getWeek() })
+        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: new Date().getWeek(), href: '#/agenda/werkweek' })
     }
 
     // Custom shortcuts
@@ -38,7 +38,7 @@ async function main() {
         let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
             shortcutA = element('a', `st-shortcut-${i}-a`, shortcutDiv, { href: url, target: '_blank', }),
             shortcutI = element('i', `st-shortcut-${i}-i`, shortcutA, { class: 'st-shortcut-icon', innerText: shortcut.icon }),
-            shortcutSpan = element('span', `st-shortcut-${i}-span`, shortcutA, { innerText: url.replace('https://', '').split('/')?.[0] || "Ongeldige URL" })
+            shortcutSpan = element('span', null, shortcutA, { innerText: url.replace('https://', '').split('/')?.[0] || "Ongeldige URL" })
 
         if (spacer) spacer.after(shortcutDiv)
 
