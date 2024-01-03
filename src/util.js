@@ -269,6 +269,15 @@ Array.prototype.random = function () {
     return random
 }
 
+Array.prototype.mode = function () {
+    const arr = this
+    return [...arr].sort((a, b) =>
+        arr.filter(v => v === a).length
+        - arr.filter(v => v === b).length
+    ).at(-1)
+}
+
+
 Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''

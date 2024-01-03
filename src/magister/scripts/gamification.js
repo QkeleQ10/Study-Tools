@@ -264,6 +264,7 @@ async function wrapped() {
             new Date(wrappedYear, 0, 1),
             new Date(wrappedYear, 11, 31)
         )
+        const eventsWithRegistration = events.filter(item => item.Type === 7 && item.Lokatie?.length > 0)
 
         const absences = await MagisterApi.absences.forYear({
             begin: new Date(wrappedYear, 0, 1).toISOString().substring(0, 10),
@@ -276,7 +277,7 @@ async function wrapped() {
         })
 
         const teacherNames = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {}
-        const eventsTeachers = events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).flatMap(item => item.Docenten)
+        const eventsTeachers = events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id)).flatMap(item => item.Docenten)
         let teachersFrequencyMap = {}
         eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
             teachersFrequencyMap[teacherCode] ??= 0
@@ -284,7 +285,7 @@ async function wrapped() {
         })
         const mostCommonTeacherCode = (Object.entries(teachersFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0]
 
-        const eventsClassrooms = events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).flatMap(item => item.Lokalen)
+        const eventsClassrooms = events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id)).flatMap(item => item.Lokalen)
         let classroomsFrequencyMap = {}
         eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
             classroomsFrequencyMap[classroomName] ??= 0
@@ -356,7 +357,7 @@ async function wrapped() {
         const sectionTiles = element('section', 'st-wrapped-tiles', container, { 'data-step': 2 })
 
         // Num of events and num of attended lessons
-        const tileLessons = element('div', 'st-wrapped-tiles-lessons', sectionTiles)
+        const tileLessons = element('buttons', 'st-wrapped-tiles-lessons', sectionTiles, { class: 'st-wrapped-tile' })
         const tileLessonsA = element('div', 'st-wrapped-tiles-lessons-a', tileLessons)
         element('span', null, tileLessonsA, { class: 'st-metric-huge', innerText: events.length })
         element('span', null, tileLessonsA, { class: 'st-metric-huge-sub', innerText: "agenda-items" })
@@ -364,7 +365,7 @@ async function wrapped() {
         element('span', null, tileLessonsB, {
             class: 'st-metric-tiny',
             innerText:
-                events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).length
+                events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id)).length
         })
         element('span', null, tileLessonsB, { class: 'st-metric-tiny-sub', innerText: "lessen bijgewoond" })
         const tileLessonsC = element('div', 'st-wrapped-tiles-lessons-c', tileLessons)
@@ -374,14 +375,43 @@ async function wrapped() {
                 `${events.filter(item => item.Status === 5).length}×`
         })
         element('span', null, tileLessonsC, { class: 'st-metric-tiny-sub', innerText: "uitval" })
+        tileLessons.addEventListener('click', () => moreLessons.dataset.show = true)
+
+        const moreLessons = element('div', 'st-wrapped-more-lessons', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
+        element('span', null, moreLessons, { class: 'st-metric-large', innerText: events.length })
+        element('span', null, moreLessons, { class: 'st-metric-large-sub', innerText: "agenda-items" })
+        element('span', null, moreLessons)
+        element('span', null, moreLessons)
+        element('span', null, moreLessons, { class: 'st-metric-small', innerText: events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id)).length })
+        element('span', null, moreLessons, { class: 'st-metric-medium-sub', innerText: "lessen bijgewoond" })
+        element('span', null, moreLessons, { class: 'st-metric-small', innerText: events.filter(item => absences.some(absence => absence.AfspraakId === item.Id)).length })
+        element('span', null, moreLessons, { class: 'st-metric-medium-sub', innerText: "lessen absent" })
+        element('span', null, moreLessons, { class: 'st-metric-small', innerText: events.filter(item => item.Status === 5).length })
+        element('span', null, moreLessons, { class: 'st-metric-medium-sub', innerText: "lessen vervallen" })
+        element('span', null, moreLessons, { class: 'st-metric-small', innerText: events.filter(item => item.Type === 7 && !(item.Lokatie?.length > 0)).length })
+        element('span', null, moreLessons, { class: 'st-metric-medium-sub', innerText: "keuzelessen niet ingeschreven" })
+        element('span', null, moreLessons, { class: 'st-metric-small', innerText: events.filter(item => !item.LesuurVan || !item.LesuurTotMet || (item.Type !== 7 && !(item.Lokatie?.length > 0))).length })
+        element('span', null, moreLessons, { class: 'st-metric-medium-sub', innerText: "andere afspraken" })
+        if (eventsWithRegistration.length > 0) {
+            element('div', null, moreLessons)
+            element('div', null, moreLessons)
+            element('span', null, moreLessons, { class: 'st-metric-tiny', innerText: eventsWithRegistration.length })
+            element('span', null, moreLessons, { class: 'st-metric-small-sub', innerText: "keuzelessen ingeschreven" })
+            element('span', null, moreLessons, { class: 'st-metric-tiny', innerText: eventsWithRegistration.map(item => item.Omschrijving).mode() || '?' })
+            element('span', null, moreLessons, { class: 'st-metric-small-sub', innerText: `vaakst gekozen (${eventsWithRegistration.filter(item => item.Omschrijving === eventsWithRegistration.map(e => e.Omschrijving).mode()).length}×)` })
+        }
+        moreLessons.addEventListener('click', () => moreLessons.dataset.show = false)
 
         // Percentage of absences and num of licit and num of illicit
-        const tileAbsences = element('div', 'st-wrapped-tiles-absences', sectionTiles)
+        const tileAbsences = element('div', 'st-wrapped-tiles-absences', sectionTiles, { class: 'st-wrapped-tile' })
         const tileAbsencesA = element('div', 'st-wrapped-tiles-absences-a', tileAbsences)
         element('span', null, tileAbsencesA, {
             class: 'st-metric-huge',
             innerText:
-                Math.round(events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).length / events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0))).length * 100) + '%'
+                Math.round(
+                    events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id)).length
+                    / events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet).length
+                    * 100) + '%'
         })
         element('span', null, tileAbsencesA, { class: 'st-metric-huge-sub', innerText: 'aanwezigheid' })
         const tileAbsencesB = element('div', 'st-wrapped-tiles-absences-b', tileAbsences)
@@ -390,9 +420,30 @@ async function wrapped() {
         const tileAbsencesC = element('div', 'st-wrapped-tiles-absences-c', tileAbsences)
         element('span', null, tileAbsencesC, { class: 'st-metric-tiny', innerText: absences.filter(item => !item.Geoorloofd).length + '×' })
         element('span', null, tileAbsencesC, { class: 'st-metric-tiny-sub', innerText: 'ongeoorloofd absent' })
+        tileAbsences.addEventListener('click', () => moreAbsences.dataset.show = true)
+
+        const moreAbsences = element('div', 'st-wrapped-more-absences', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
+        element('span', null, moreAbsences, { class: 'st-metric-large', innerText: absences.length })
+        element('span', null, moreAbsences, { class: 'st-metric-large-sub', innerText: "absenties" })
+        element('span', null, moreAbsences)
+        element('span', null, moreAbsences)
+        const absenceTypes = [...new Set(absences.map(item => (item.Omschrijving.toLowerCase() + (item.Geoorloofd ? ' (geoorloofd)' : ' (ongeoorloofd)'))))]
+        absenceTypes.forEach(type => {
+            element('span', null, moreAbsences, { class: 'st-metric-small', innerText: absences.filter(item => (item.Omschrijving.toLowerCase() + (item.Geoorloofd ? ' (geoorloofd)' : ' (ongeoorloofd)')) === type).length + '×' })
+            element('span', null, moreAbsences, { class: 'st-metric-medium-sub', innerText: type })
+        })
+        // if (eventsWithRegistration.length > 0) {
+        //     element('div', null, moreAbsences)
+        //     element('div', null, moreAbsences)
+        //     element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: eventsWithRegistration.length })
+        //     element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "keuzelessen ingeschreven" })
+        //     element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: eventsWithRegistration.map(item => item.Omschrijving).mode() || '?' })
+        //     element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: `vaakst gekozen (${eventsWithRegistration.filter(item => item.Omschrijving === eventsWithRegistration.map(e => e.Omschrijving).mode()).length}×)` })
+        // }
+        moreAbsences.addEventListener('click', () => moreAbsences.dataset.show = false)
 
         // Num of grades and num of sufficient and mean and promo
-        const tileGrades = element('div', 'st-wrapped-tiles-grades', sectionTiles)
+        const tileGrades = element('div', 'st-wrapped-tiles-grades', sectionTiles, { class: 'st-wrapped-tile' })
         const tileGradesA = element('div', 'st-wrapped-tiles-grades-a', tileGrades)
         element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
         element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
@@ -405,7 +456,7 @@ async function wrapped() {
         element('u', null, tileGradesPromo, { innerText: "Nu bekijken" })
         tileGrades.addEventListener('click', async (event) => { event.stopPropagation(); wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
 
-        const tileAssignments = element('div', 'st-wrapped-tiles-assignments', sectionTiles)
+        const tileAssignments = element('div', 'st-wrapped-tiles-assignments', sectionTiles, { class: 'st-wrapped-tile' })
         const tileAssignmentsA = element('div', 'st-wrapped-tiles-assignments-a', tileAssignments)
         element('span', null, tileAssignmentsA, { class: 'st-metric-huge', innerText: Math.round(assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) < new Date(item.IngeleverdOp)).length / assignments.length * 100) + '%' })
         element('span', null, tileAssignmentsA, { class: 'st-metric-huge-sub', innerText: "opdrachten op tijd ingeleverd" })
@@ -415,21 +466,21 @@ async function wrapped() {
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) >= new Date(item.IngeleverdOp)).length, 'data-desc': "te laat" })
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => !item.IngeleverdOp).length, 'data-desc': "geskipt" })
 
-        const tileTeachers = element('div', 'st-wrapped-tiles-teachers', sectionTiles)
+        const tileTeachers = element('div', 'st-wrapped-tiles-teachers', sectionTiles, { class: 'st-wrapped-tile' })
         const tileTeachersA = element('div', 'st-wrapped-tiles-teachers-a', tileTeachers)
         element('span', null, tileTeachersA, { class: 'st-metric-huge-sub', innerText: "meeste lessen in" })
         element('span', null, tileTeachersA, {
             class: 'st-metric-large',
             innerText: (Object.entries(classroomsFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0]
         })
-        element('span', null, tileTeachersA, { class: 'st-metric-tiny-sub', innerText: `uit ${new Set(eventsClassrooms.map(classroom => classroom.Naam)).size} locaties` })
+        element('span', null, tileTeachersA, { class: 'st-metric-tiny-sub', innerText: `${events.filter(item => item.Lokalen.some(d => d.Naam === (Object.entries(classroomsFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0])).length}×, uit ${new Set(eventsClassrooms.map(classroom => classroom.Naam)).size} locaties` })
         const tileTeachersB = element('div', 'st-wrapped-tiles-teachers-b', tileTeachers)
         element('span', null, tileTeachersB, { class: 'st-metric-large-sub', innerText: "meeste lessen van" })
         element('span', null, tileTeachersB, {
             class: 'st-metric-tiny',
             innerText: teacherNames?.[mostCommonTeacherCode] || eventsTeachers.find(e => e.Docentcode === mostCommonTeacherCode).Naam || mostCommonTeacherCode
         })
-        element('span', null, tileTeachersB, { class: 'st-metric-tiny-sub', innerText: `uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size} docenten` })
+        element('span', null, tileTeachersB, { class: 'st-metric-tiny-sub', innerText: `${events.filter(item=>item.Docenten.some(d=>d.Docentcode===mostCommonTeacherCode)).length}×, uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size} docenten` })
 
         const sectionTeachers = element('section', 'st-wrapped-teachers', container, { 'data-step': 3 })
         let teachersChartArea = element('div', 'st-wrapped-teacher-chart', sectionTeachers).createBarChart(teachersFrequencyMap, teacherNames)
