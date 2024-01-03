@@ -4,10 +4,7 @@ let now = new Date()
 const december15 = new Date(now.getFullYear(), 11, 15)
 const january15 = new Date(now.getFullYear(), 0, 15)
 if (now > december15 || now < january15) {
-    if (document.location.href.split('?')[0].endsWith('/vandaag')) wrapped()
-    window.addEventListener('popstate', () => {
-        if (document.location.href.split('?')[0].endsWith('/vandaag')) wrapped()
-    })
+    wrapped()
 }
 
 async function gamification() {
@@ -203,32 +200,42 @@ async function gamification() {
 }
 
 async function wrapped() {
-    let currentTitle, currentSubtitle
+    let step = 0
+    const maxStep = 3
+
+    const wrappedYear = now < january15 ? (now.getFullYear() - 1) : now.getFullYear()
+    let lastAccessYear = await getFromStorage('wrapped-accessed', 'local') || 0
+
     const firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
-    const widgets = await awaitElement('#st-start-widgets:not([data-working=true])')
+    const appbarMetrics = await awaitElement('#st-appbar-metrics')
 
-    const widgetElement = element('button', 'st-start-widget-wrapped', widgets, { class: 'st-tile st-widget', title: "Jouw Magister Wrapped", innerText: "Magister\nWrapped" })
+    const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Magister Wrapped", innerText: "" })
+    appbarMetrics.firstElementChild.before(wrappedInvoke)
+    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: "Bekijk nu jouw Magister Wrapped!" })
+    if (lastAccessYear != wrappedYear) setTimeout(() => wrappedInvokeTip.classList.remove('hidden'), 100)
+    setTimeout(() => wrappedInvokeTip.classList.add('hidden'), 30000)
 
-    widgetElement.addEventListener('click', async () => {
-        const wrapped = element('dialog', 'st-wrapped', document.body, { class: 'st-overlay st-force-dark', innerText: '' }),
-            title = element('span', 'st-wrapped-title', wrapped, { class: 'st-title', innerText: "Magister Wrapped" }),
-            buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' }),
-            viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control' }),
-            viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button icon segment active', 'data-icon': '' }),
-            viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button icon segment', 'data-icon': '' }),
-            close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
+    const wrapped = element('dialog', 'st-wrapped', document.body, { class: 'st-overlay st-force-dark', innerText: '' }),
+        spinner = element('svg', 'st-wrapped-spinner', wrapped, { innerHTML: '<style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3" /></g>', xmlns: 'http://www.w3.org/2000/svg', width: 64, height: 64, stroke: 'var(--st-foreground-accent)', 'viewBox': '0 0 24 24' })
+    wrapped.innerHTML += ''
+    const container = element('div', 'st-wrapped-container', wrapped, { 'data-step': step }),
+        title = element('span', 'st-wrapped-title', wrapped, { class: 'st-title', innerText: "Magister Wrapped" }),
+        buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' }),
+        viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control' }),
+        viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button icon segment active', 'data-icon': '' }),
+        viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button icon segment', 'data-icon': '' }),
+        close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
 
+    close.addEventListener('click', () => wrapped.close())
+
+    wrappedInvoke.addEventListener('click', async () => {
+        wrappedInvokeTip.classList.add('hidden')
         wrapped.showModal()
-        close.addEventListener('click', () => wrapped.close())
 
-        const section1 = element('div', 'st-wrapped-1', wrapped, { class: 'st-wrapped-section' })
-        const section1Wrapper = element('div', 'st-wrapped-1-wrapper', section1)
-        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper, { innerText: `Welkom bij jouw Magister Wrapped, ${firstName}.` })
-        const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: "Je Wrapped wordt voor je klaargezet..." })
-
-        changeTexts(`Welkom bij jouw Magister Wrapped, *${firstName}*.`, "Je Wrapped wordt voor je klaargezet...")
-
-        const wrappedYear = now < january15 ? (now.getFullYear() - 1) : now.getFullYear()
+        if (container.innerText?.length > 0 || container.children?.length > 0) {
+            displayWrapped()
+            return
+        }
 
         // const accountInfo = await MagisterApi.accountInfo()
 
@@ -268,25 +275,47 @@ async function wrapped() {
             einde: new Date(wrappedYear, 11, 31).toISOString().substring(0, 10)
         })
 
+        const teacherNames = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {}
+        const eventsTeachers = events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).flatMap(item => item.Docenten)
+        let teachersFrequencyMap = {}
+        eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
+            teachersFrequencyMap[teacherCode] ??= 0
+            teachersFrequencyMap[teacherCode]++
+        })
+        const mostCommonTeacherCode = (Object.entries(teachersFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0]
+
+        const eventsClassrooms = events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).flatMap(item => item.Lokalen)
+        let classroomsFrequencyMap = {}
+        eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
+            classroomsFrequencyMap[classroomName] ??= 0
+            classroomsFrequencyMap[classroomName]++
+        })
+
         const isFirstYear = !lastYearShallow
         const isFinalYear = thisYearExam && !thisYearExam.doetVroegtijdig
 
         let text1A = [`*${wrappedYear}* is alweer ${now < january15 ? 'bijna ' : ''}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
         if (isFirstYear) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
-        else if (isFinalYear) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `Je laatste schooljaar op de middelbare beginnen met *Magister Wrapped*.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
+        else if (isFinalYear) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `*Magister Wrapped* om je laatste schooljaar mee te beginnen.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
 
-        let text1B = ["Scroll snel door voor inzichten over het afgelopen jaar.", "Neem snel een kijkje en scroll door!", "Fijn dat je er bent, scroll omlaag om te beginnen.", "Scroll omlaag om jouw Magister Wrapped te zien.", "Scroll naar beneden om te beginnen."].random()
+        let text1B = ["Klik verder voor inzichten over het afgelopen jaar.", "Neem snel een kijkje en klik verder!", "Fijn dat je er bent, klik verder om te beginnen.", "Klik verder om jouw Magister Wrapped te zien.", "Klik verder om te beginnen."].random()
+
+        const section1 = element('section', 'st-wrapped-1', container, { 'data-step': 0 })
+        const section1Wrapper = element('div', 'st-wrapped-1-wrapper', section1)
+        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper)
+        section1Text.formatAndApplyTitleText(text1A)
+        const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: text1B })
 
         let text2A =
-            `ben je doorgestroomd naar *${thisYear.studie.code}*`
+            `In *2023* ben je doorgestroomd naar *${thisYear.studie.code}*`
         if (isFirstYear) text2A =
-            `ben je hier begonnen met *${thisYearShallow.studie.code}* in ${thisYearShallow.groep.code}`
+            `In *2023* ben je hier begonnen met *${thisYearShallow.studie.code}* in ${thisYearShallow.groep.code}`
         else if (lastYear.isZittenBlijver) text2A =
-            `ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
+            `In *2023* ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
         else if (isFinalYear) text2A =
-            `ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`
+            `In *2023* ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`
         else if (thisYear.isZittenBlijver) text2A =
-            `besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`
+            `In *2023* besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`
 
         let text2B =
             "Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar."
@@ -315,83 +344,99 @@ async function wrapped() {
         else if (gradesMean < 5.55) text2B =
             "Ruimschoots is wat anders, maar het is je toch gelukt!"
 
-        let text3A = [`Laten we jouw ${wrappedYear} eens bekijken *in cijfers*.`].random()
-        let text3B = ["Blijf scrollen voor cijfers en grafieken.", "Zie nu jouw jaar vanuit een andere invalshoek.", "Vergelijk je statistieken met vrienden!", "Maak een screenshot en deel 'm met vrienden!", "Als je graag meer of andere dingen ziet, laat het me dan weten."].random()
 
-        const section2 = element('div', 'st-wrapped-2', wrapped)
+        const section2 = element('section', 'st-wrapped-2', container, { 'data-step': 1 })
+        const section2Wrapper = element('div', 'st-wrapped-2-wrapper', section2)
+        const section2Text = element('span', 'st-wrapped-2-title', section2Wrapper)
+        section2Text.formatAndApplyTitleText(text2A)
+        const section2Sub = element('span', 'st-wrapped-2-subtitle', section2Wrapper, { innerText: text2B })
+
+        let text3A = [`Laten we jouw ${wrappedYear} eens bekijken *in cijfers*.`].random()
+
+        const sectionTiles = element('section', 'st-wrapped-tiles', container, { 'data-step': 2 })
 
         // Num of events and num of attended lessons
-        const tileLessons = element('div', 'st-wrapped-2-lessons', section2, { 'data-hide': true })
-        const tileLessonsA = element('div', 'st-wrapped-2-lessons-a', tileLessons)
+        const tileLessons = element('div', 'st-wrapped-tiles-lessons', sectionTiles)
+        const tileLessonsA = element('div', 'st-wrapped-tiles-lessons-a', tileLessons)
         element('span', null, tileLessonsA, { class: 'st-metric-huge', innerText: events.length })
         element('span', null, tileLessonsA, { class: 'st-metric-huge-sub', innerText: "agenda-items" })
-        const tileLessonsB = element('div', 'st-wrapped-2-lessons-b', tileLessons)
+        const tileLessonsB = element('div', 'st-wrapped-tiles-lessons-b', tileLessons)
         element('span', null, tileLessonsB, {
-            class: 'st-metric-small',
+            class: 'st-metric-tiny',
             innerText:
-                events.filter(item => item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).length
+                events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).length
         })
-        element('span', null, tileLessonsB, { class: 'st-metric-small-sub', innerText: "lessen bijgewoond" })
+        element('span', null, tileLessonsB, { class: 'st-metric-tiny-sub', innerText: "lessen bijgewoond" })
+        const tileLessonsC = element('div', 'st-wrapped-tiles-lessons-c', tileLessons)
+        element('span', null, tileLessonsC, {
+            class: 'st-metric-tiny',
+            innerText:
+                `${events.filter(item => item.Status === 5).length}×`
+        })
+        element('span', null, tileLessonsC, { class: 'st-metric-tiny-sub', innerText: "uitval" })
 
         // Percentage of absences and num of licit and num of illicit
-        const tileAbsences = element('div', 'st-wrapped-2-absences', section2, { 'data-hide': true })
-        const tileAbsencesA = element('div', 'st-wrapped-2-absences-a', tileAbsences)
+        const tileAbsences = element('div', 'st-wrapped-tiles-absences', sectionTiles)
+        const tileAbsencesA = element('div', 'st-wrapped-tiles-absences-a', tileAbsences)
         element('span', null, tileAbsencesA, {
             class: 'st-metric-huge',
             innerText:
-                Math.round(events.filter(item => item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).length / events.filter(item => item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0))).length * 100) + '%'
+                Math.round(events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0)) && !absences.some(absence => absence.AfspraakId === item.Id)).length / events.filter(item => item.Status !== 5 && item.LesuurVan && item.LesuurTotMet && (item.Type !== 7 || (item.Type === 7 && item.Lokatie?.length > 0))).length * 100) + '%'
         })
         element('span', null, tileAbsencesA, { class: 'st-metric-huge-sub', innerText: 'aanwezigheid' })
-        const tileAbsencesB = element('div', 'st-wrapped-2-absences-b', tileAbsences)
+        const tileAbsencesB = element('div', 'st-wrapped-tiles-absences-b', tileAbsences)
         element('span', null, tileAbsencesB, { class: 'st-metric-tiny', innerText: absences.filter(item => item.Geoorloofd).length + '×' })
         element('span', null, tileAbsencesB, { class: 'st-metric-tiny-sub', innerText: 'geoorloofd absent' })
-        const tileAbsencesC = element('div', 'st-wrapped-2-absences-c', tileAbsences)
+        const tileAbsencesC = element('div', 'st-wrapped-tiles-absences-c', tileAbsences)
         element('span', null, tileAbsencesC, { class: 'st-metric-tiny', innerText: absences.filter(item => !item.Geoorloofd).length + '×' })
         element('span', null, tileAbsencesC, { class: 'st-metric-tiny-sub', innerText: 'ongeoorloofd absent' })
 
         // Num of grades and num of sufficient and mean and promo
-        const tileGrades = element('div', 'st-wrapped-2-grades', section2, { 'data-hide': true })
-        const tileGradesA = element('div', 'st-wrapped-2-grades-a', tileGrades)
+        const tileGrades = element('div', 'st-wrapped-tiles-grades', sectionTiles)
+        const tileGradesA = element('div', 'st-wrapped-tiles-grades-a', tileGrades)
         element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
         element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
-        const tileGradesB = element('div', 'st-wrapped-2-grades-b', tileGrades)
+        const tileGradesB = element('div', 'st-wrapped-tiles-grades-b', tileGrades)
         element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
         element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
-        const tileGradesChart = element('div', 'st-wrapped-2-grades-chart', tileGrades, { class: 'st-force-light' })
+        const tileGradesChart = element('div', 'st-wrapped-tiles-grades-chart', tileGrades, { class: 'st-force-light' })
         tileGradesChart.createLineChart(grades.map(grade => Number(grade.CijferStr.replace(',', '.'))), grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
-        const tileGradesPromo = element('span', 'st-wrapped-2-grades-promo', tileGrades, { class: 'st-metric-large-sub', innerText: "Tip: " })
-        element('u', null, tileGradesPromo, { innerText: "Cijfer-\nstatistieken" })
+        const tileGradesPromo = element('span', 'st-wrapped-tiles-grades-promo', tileGrades, { class: 'st-metric-large-sub', innerText: "Tip: " })
+        element('u', null, tileGradesPromo, { innerText: "Cijferstatistieken" })
         tileGradesPromo.append(document.createTextNode(" is vernieuwd.\nNeem een kijkje voor meer!"))
-        tileGradesPromo.addEventListener('click', async () => { wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
+        tileGradesPromo.addEventListener('click', async (event) => { event.stopPropagation(); wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
 
-        const tileAssignments = element('div', 'st-wrapped-2-assignments', section2, { 'data-hide': true })
-        const tileAssignmentsA = element('div', 'st-wrapped-2-assignments-a', tileAssignments)
+        const tileAssignments = element('div', 'st-wrapped-tiles-assignments', sectionTiles)
+        const tileAssignmentsA = element('div', 'st-wrapped-tiles-assignments-a', tileAssignments)
         element('span', null, tileAssignmentsA, { class: 'st-metric-huge', innerText: Math.round(assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) < new Date(item.IngeleverdOp)).length / assignments.length * 100) + '%' })
         element('span', null, tileAssignmentsA, { class: 'st-metric-huge-sub', innerText: "opdrachten op tijd ingeleverd" })
-        const tileAssignmentsB = element('div', 'st-wrapped-2-assignments-b', tileAssignments)
+        const tileAssignmentsB = element('div', 'st-wrapped-tiles-assignments-b', tileAssignments)
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.length, 'data-desc': "opdrachten" })
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) < new Date(item.IngeleverdOp)).length, 'data-desc': "op tijd" })
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) >= new Date(item.IngeleverdOp)).length, 'data-desc': "te laat" })
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => !item.IngeleverdOp).length, 'data-desc': "geskipt" })
 
-        // Teacher stats 
-        const teacherNames = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {}
-        const eventsTeachers = events.flatMap(item => item.Docenten)
-        let teachersFrequencyMap = {}
-        eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
-            teachersFrequencyMap[teacherCode] ??= 0
-            teachersFrequencyMap[teacherCode]++
+        const tileOther = element('div', 'st-wrapped-tiles-other', sectionTiles)
+        const tileOtherA = element('div', 'st-wrapped-tiles-other-a', tileOther)
+        element('span', null, tileOtherA, { class: 'st-metric-large-sub', innerText: `meest voorkomende docent (uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size})` })
+        element('span', null, tileOtherA, {
+            class: 'st-metric-tiny',
+            innerText: teacherNames?.[mostCommonTeacherCode] || eventsTeachers.find(e => e.Docentcode === mostCommonTeacherCode).Naam || mostCommonTeacherCode
         })
-        let teachersChartArea = element('div', 'st-wrapped-teacher-chart', wrapped, { 'data-hide': true }).createBarChart(teachersFrequencyMap, teacherNames)
+        const tileOtherB = element('div', 'st-wrapped-tiles-other-b', tileOther)
+        element('span', null, tileOtherB, { class: 'st-metric-large-sub', innerText: `meest voorkomend lokaal (uit ${new Set(eventsClassrooms.map(classroom => classroom.Naam)).size})` })
+        element('span', null, tileOtherB, {
+            class: 'st-metric-medium',
+            innerText: (Object.entries(classroomsFrequencyMap).sort((a, b) => b[1] - a[1])[0])[0]
+        })
+
+        const sectionLessons = element('section', 'st-wrapped-lessons', container, { 'data-step': 3 })
+
+        // Teacher stats 
+        let teachersChartArea = element('div', 'st-wrapped-teacher-chart', sectionLessons).createBarChart(teachersFrequencyMap, teacherNames)
 
         // Classroom stats 
-        const eventsClassrooms = events.flatMap(item => item.Lokalen)
-        let classroomsFrequencyMap = {}
-        eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
-            classroomsFrequencyMap[classroomName] ??= 0
-            classroomsFrequencyMap[classroomName]++
-        })
-        let classroomsChartArea = element('div', 'st-wrapped-classroom-chart', wrapped, { 'data-hide': true }).createBarChart(classroomsFrequencyMap, null)
+        let classroomsChartArea = element('div', 'st-wrapped-classroom-chart', sectionLessons).createBarChart(classroomsFrequencyMap, null)
 
         // Switch chart type
         viewPie.addEventListener('click', () => {
@@ -410,45 +455,44 @@ async function wrapped() {
         })
 
         displayWrapped()
-        function displayWrapped() {
-            changeTexts(text1A, text1B)
-            wrapped.addEventListener('scroll', (event) => {
-                if (event.target.scrollTop == 0) {
-                    changeTexts(text1A, text1B)
-                } else if (event.target.scrollTop < 275) {
-                    changeTexts(`In *${wrappedYear}* ${text2A}.`, text2B)
-                } else {
-                    changeTexts(text3A, text3B)
-                }
-            })
-            wrapped.querySelectorAll('[data-hide=true]').forEach((e, i) => {
-                setTimeout(() => {
-                    e.dataset.hide = false
-                }, 300 * i)
-            })
-        }
-
-        function changeTexts(newTitle, newSubtitle) {
-            if (currentTitle === newTitle && currentSubtitle === newSubtitle) return
-            currentTitle = newTitle
-            currentSubtitle = newSubtitle
-            section1Text.dataset.transition = true
-            section1Sub.dataset.transition = true
-            setTimeout(async () => {
-                section1Text.innerText = ''
-                section1Sub.innerText = newSubtitle
-                newTitle.split('*').forEach((segment, i) => {
-                    if (i % 2 == 0) {
-                        section1Text.append(document.createTextNode(segment))
-                    } else {
-                        element('em', null, section1Text, { innerText: segment })
-                    }
-                })
-
-                section1Text.removeAttribute('data-transition')
-                section1Sub.removeAttribute('data-transition')
-            }, 200)
-        }
     })
 
+    function displayWrapped() {
+        handleWrappedStep()
+        container.classList.add('done')
+        lastAccessYear = wrappedYear
+        saveToStorage('wrapped-accessed', lastAccessYear, 'local')
+    }
+
+    function handleWrappedStep() {
+        container.dataset.step = step
+        container.querySelectorAll('section').forEach(e => {
+            if (Number(e.dataset.step) < step) e.dataset.state = 'past'
+            else if (Number(e.dataset.step) > step) e.dataset.state = 'future'
+            else e.dataset.state = 'current'
+        })
+    }
+
+    container.addEventListener('click', () => {
+        step = Math.min(step + 1, maxStep)
+        handleWrappedStep()
+    })
+
+    container.addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        step = Math.max(step - 1, 0)
+        handleWrappedStep()
+    })
+
+    Element.prototype.formatAndApplyTitleText = function (textWithMarkdown) {
+        const elem = this
+        elem.innerText = ''
+        textWithMarkdown.split('*').forEach((segment, i) => {
+            if (i % 2 == 0) {
+                elem.append(document.createTextNode(segment))
+            } else {
+                element('em', null, elem, { innerText: segment })
+            }
+        })
+    }
 }

@@ -19,6 +19,7 @@ div.loading-overlay {
     max-width: none;
     max-height: none;
     background: var(--st-background-overlay);
+    backdrop-filter: blur(3px);
     color: var(--st-foreground-primary);
     margin: 0;
     padding: 32px 24px 16px 24px;
@@ -549,12 +550,12 @@ div.loading-overlay {
     width: 100%;
     height: auto;
     color: var(--st-contrast-accent);
-    opacity: 0.5;
     translate: 0 -8px;
     text-align: left;
 }
 
 #st-appbar-metrics>.st-metric {
+    opacity: 0.5;
     justify-content: center;
     text-align: center;
 }

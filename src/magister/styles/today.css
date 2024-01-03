@@ -256,6 +256,7 @@
     width: 32px;
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
+    font-size: 14px;
 }
 
 .st-start-col:only-child .st-start-col-label {

@@ -28,7 +28,8 @@ async function updateApiCredentials() {
         let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
         now = new Date()
 
-        magisterApiUserId ??= await getFromStorage('user-id', 'sync')
+        if (!(magisterApiUserId?.length > 1))
+            magisterApiUserId = await getFromStorage('user-id', 'sync')
         magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
         magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
 

@@ -87,9 +87,9 @@ function element(tagName, id, parent, attributes) {
         elem = document.createElement(tagName)
         if (id) elem.id = id
         if (parent) parent.append(elem)
-        if (attributes) setAttributes(elem, attributes)
+        if (attributes) elem.setAttributes(attributes)
     } else {
-        if (attributes) setAttributes(elem, attributes)
+        if (attributes) elem.setAttributes(attributes)
     }
     return elem
 }
@@ -155,10 +155,12 @@ function saveToStorage(key, value, location) {
     })
 }
 
-function setAttributes(elem, attributes) {
+Element.prototype.setAttributes = function (attributes) {
+    const elem = this
     for (var key in attributes) {
         if (key === 'innerText') elem.innerText = attributes[key]
-        if (key === 'innerHTML') elem.innerHTML = attributes[key]
+        else if (key === 'innerHTML') elem.innerHTML = attributes[key]
+        else if (key === 'viewBox') elem.setAttributeNS(null, 'viewBox', attributes[key])
         else elem.setAttribute(key, attributes[key])
     }
 }
@@ -264,7 +266,6 @@ Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 +
 Array.prototype.random = function () {
     const arr = this
     const random = arr[Math.floor(Math.random() * arr.length)]
-    console.log(random)
     return random
 }
 
