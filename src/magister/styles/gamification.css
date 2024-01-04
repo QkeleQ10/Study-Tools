@@ -294,9 +294,9 @@
 
 #st-wrapped-invoke-tip {
     position: absolute;
-    top: 32px;
+    top: 24px;
     left: 58px;
-    height: 32px;
+    height: auto;
     background-color: var(--st-accent-secondary);
     color: var(--st-contrast-accent);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
