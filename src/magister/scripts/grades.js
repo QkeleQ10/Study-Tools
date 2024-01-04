@@ -838,10 +838,11 @@ async function gradeStatistics() {
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
-            buildSubjectFilter()
 
             gatheredYears.add(year.id)
             includedYears.add(year.id)
+
+            buildSubjectFilter()
             displayStatistics()
         }
 
@@ -865,8 +866,8 @@ async function gradeStatistics() {
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
+            
             buildSubjectFilter()
-
             displayStatistics()
         })
     })

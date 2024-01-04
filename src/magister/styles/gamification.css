@@ -537,19 +537,22 @@
 #st-wrapped-tiles>.st-wrapped-tile {
     position: relative;
     padding: 24px;
+    border: none;
     border-radius: 16px;
     outline: var(--st-border);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    text-align: left;
     transition: margin 200ms, outline 200ms, box-shadow 400ms, text-shadow 400ms, transform 200ms;
 }
 
-#st-wrapped-tiles>.st-wrapped-tile:hover,
-#st-wrapped-tiles>.st-wrapped-tile:focus-visible {
+#st-wrapped-tiles>button.st-wrapped-tile:hover,
+#st-wrapped-tiles>button.st-wrapped-tile:focus-visible {
     margin: -4px;
     outline: 4px solid var(--st-foreground-accent);
     outline-offset: -2px;
     box-shadow: 0 0 16px 4px var(--st-foreground-accent);
     text-shadow: 0 0 8px #fff;
+    cursor: pointer;
 }
 
 #st-wrapped-tiles>.st-wrapped-details {
@@ -585,7 +588,6 @@
 
 #st-wrapped-tiles-lessons {
     background-image: linear-gradient(45deg, #4d27b5, #2c37d3);
-    cursor: pointer;
 }
 
 #st-wrapped-more-lessons {
@@ -614,7 +616,6 @@
 
 #st-wrapped-tiles-absences {
     background-image: linear-gradient(45deg, #910000, #d36b2c);
-    cursor: pointer;
 }
 
 #st-wrapped-more-absences {
@@ -644,7 +645,6 @@
 #st-wrapped-tiles-grades {
     grid-row: span 2;
     background-image: linear-gradient(45deg, #1f774b, #53993e);
-    cursor: pointer;
 }
 
 #st-wrapped-tiles-assignments {
@@ -653,7 +653,39 @@
 
 #st-wrapped-tiles-teachers {
     background-image: linear-gradient(45deg, #2f8d2e, #cba72a);
-    cursor: pointer;
+}
+
+#st-wrapped-more-teachers {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    place-items: center;
+    place-content: center;
+    background-image: linear-gradient(45deg, #124d12, #555f10);
+}
+
+#st-wrapped-more-teachers:has(.st-pie-chart) {
+    flex-direction: row;
+}
+
+#st-wrapped-more-teachers[data-show=false] {
+    left: calc(1vh + 33.33%);
+    right: calc(1vh + 33.33%);
+    top: calc(1vh + 50%);
+    bottom: 1vh;
+}
+
+#st-wrapped-more-teachers>.st-chart {
+    width: auto;
+}
+
+#st-wrapped-more-teachers .st-bar-chart-col {
+    --background-color: #fff;
+    --st-highlight-primary: #ffffff20;
+}
+
+#st-wrapped-more-teachers .st-bar-chart-col:not([data-y-tight="true"]):before {
+    color: #000 !important;
 }
 
 #st-wrapped-tiles-lessons-a,
@@ -786,8 +818,4 @@
 #st-wrapped-tiles-teachers-b {
     display: flex;
     flex-direction: column;
-}
-
-#st-wrapped-teachers>.st-chart {
-    width: min(50vw, calc(100% - 64px));
 }

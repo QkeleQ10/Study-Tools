@@ -271,7 +271,8 @@ Array.prototype.random = function () {
 
 Array.prototype.mode = function () {
     const arr = this
-    return [...arr].sort((a, b) =>
+    if (arr.length < 1) return undefined
+    else return [...arr].sort((a, b) =>
         arr.filter(v => v === a).length
         - arr.filter(v => v === b).length
     ).at(-1)

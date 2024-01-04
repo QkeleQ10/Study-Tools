@@ -2,8 +2,8 @@ gamification()
 
 let now = new Date()
 const december15 = new Date(now.getFullYear(), 11, 15)
-const january15 = new Date(now.getFullYear(), 0, 15)
-if (now > december15 || now < january15) {
+const january22 = new Date(now.getFullYear(), 0, 22)
+if (now > december15 || now < january22) {
     wrapped()
 }
 
@@ -203,7 +203,7 @@ async function wrapped() {
     let step = 0
     const maxStep = 2
 
-    const wrappedYear = now < january15 ? (now.getFullYear() - 1) : now.getFullYear()
+    const wrappedYear = now < january22 ? (now.getFullYear() - 1) : now.getFullYear()
     let lastAccessYear = await getFromStorage('wrapped-accessed', 'local') || 0
 
     const firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
@@ -211,7 +211,7 @@ async function wrapped() {
 
     const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Magister Wrapped", innerText: "" })
     appbarMetrics.firstElementChild.before(wrappedInvoke)
-    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: "Bekijk nu jouw Magister Wrapped!" })
+    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: "Bekijk nu jouw Magister Wrapped!\nBeschikbaar t/m 21 januari." })
     if (lastAccessYear != wrappedYear) setTimeout(() => wrappedInvokeTip.classList.remove('hidden'), 100)
     setTimeout(() => wrappedInvokeTip.classList.add('hidden'), 30000)
 
@@ -221,9 +221,9 @@ async function wrapped() {
     const container = element('div', 'st-wrapped-container', wrapped, { 'data-step': step }),
         title = element('span', 'st-wrapped-title', wrapped, { class: 'st-title', innerText: "Magister Wrapped" }),
         buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' }),
-        viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control' }),
-        viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button icon segment active', 'data-icon': '' }),
-        viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button icon segment', 'data-icon': '' }),
+        viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control', style: 'display: none;' }),
+        viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button segment active', innerText: "Staaf", 'data-icon': '' }),
+        viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button segment', innerText: "Taart", 'data-icon': '' }),
         close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
 
     close.addEventListener('click', () => wrapped.close())
@@ -295,7 +295,7 @@ async function wrapped() {
         const isFirstYear = !lastYearShallow
         const isFinalYear = thisYearExam && !thisYearExam.doetVroegtijdig
 
-        let text1A = [`*${wrappedYear}* is alweer ${now < january15 ? 'bijna ' : ''}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
+        let text1A = [`*${wrappedYear}* is alweer ${now < january22 ? 'bijna ' : ''}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
         if (isFirstYear) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
         else if (isFinalYear) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `*Magister Wrapped* om je laatste schooljaar mee te beginnen.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
 
@@ -303,14 +303,13 @@ async function wrapped() {
 
         const section1 = element('section', 'st-wrapped-1', container, { 'data-step': 0 })
         const section1Wrapper = element('div', 'st-wrapped-1-wrapper', section1)
-        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper)
-        section1Text.formatAndApplyTitleText(text1A)
+        const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper).formatAndApplyTitleText(text1A)
         const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: text1B })
 
         let text2A =
-            `In *2023* ben je doorgestroomd naar *${thisYear.studie.code}*`
+            [`In *2023* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *2023* begon je aan *${thisYear.studie.code}*.`].random()
         if (isFirstYear) text2A =
-            `In *2023* ben je hier begonnen met *${thisYearShallow.studie.code}* in ${thisYearShallow.groep.code}`
+            `In *2023* ging je in ${thisYearShallow.groep.code} van start met *${thisYearShallow.studie.code}*.`
         else if (lastYear.isZittenBlijver) text2A =
             `In *2023* ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
         else if (isFinalYear) text2A =
@@ -319,7 +318,7 @@ async function wrapped() {
             `In *2023* besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`
 
         let text2B =
-            "Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar."
+            ["Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar.", "Gefeliciteerd! Laten we terugblikken op afgelopen jaar."].random()
         if (isFirstYear) text2B =
             "Hoe bevalt het op je nieuwe school?"
         else if (isFinalYear && lastYearExam?.doetVroegtijdig && !lastYear.isZittenBlijver) text2B =
@@ -345,19 +344,15 @@ async function wrapped() {
         else if (gradesMean < 5.55) text2B =
             "Ruimschoots is wat anders, maar het is je toch gelukt!"
 
-
         const section2 = element('section', 'st-wrapped-2', container, { 'data-step': 1 })
         const section2Wrapper = element('div', 'st-wrapped-2-wrapper', section2)
-        const section2Text = element('span', 'st-wrapped-2-title', section2Wrapper)
-        section2Text.formatAndApplyTitleText(text2A)
+        const section2Text = element('span', 'st-wrapped-2-title', section2Wrapper).formatAndApplyTitleText(text2A)
         const section2Sub = element('span', 'st-wrapped-2-subtitle', section2Wrapper, { innerText: text2B })
-
-        let text3A = [`Laten we jouw ${wrappedYear} eens bekijken *in cijfers*.`].random()
 
         const sectionTiles = element('section', 'st-wrapped-tiles', container, { 'data-step': 2 })
 
         // Num of events and num of attended lessons
-        const tileLessons = element('buttons', 'st-wrapped-tiles-lessons', sectionTiles, { class: 'st-wrapped-tile' })
+        const tileLessons = element('button', 'st-wrapped-tiles-lessons', sectionTiles, { class: 'st-wrapped-tile' })
         const tileLessonsA = element('div', 'st-wrapped-tiles-lessons-a', tileLessons)
         element('span', null, tileLessonsA, { class: 'st-metric-huge', innerText: events.length })
         element('span', null, tileLessonsA, { class: 'st-metric-huge-sub', innerText: "agenda-items" })
@@ -401,9 +396,10 @@ async function wrapped() {
             element('span', null, moreLessons, { class: 'st-metric-small-sub', innerText: `vaakst gekozen (${eventsWithRegistration.filter(item => item.Omschrijving === eventsWithRegistration.map(e => e.Omschrijving).mode()).length}×)` })
         }
         moreLessons.addEventListener('click', () => moreLessons.dataset.show = false)
+        moreLessons.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); moreLessons.dataset.show = false })
 
         // Percentage of absences and num of licit and num of illicit
-        const tileAbsences = element('div', 'st-wrapped-tiles-absences', sectionTiles, { class: 'st-wrapped-tile' })
+        const tileAbsences = element('button', 'st-wrapped-tiles-absences', sectionTiles, { class: 'st-wrapped-tile' })
         const tileAbsencesA = element('div', 'st-wrapped-tiles-absences-a', tileAbsences)
         element('span', null, tileAbsencesA, {
             class: 'st-metric-huge',
@@ -432,18 +428,21 @@ async function wrapped() {
             element('span', null, moreAbsences, { class: 'st-metric-small', innerText: absences.filter(item => (item.Omschrijving.toLowerCase() + (item.Geoorloofd ? ' (geoorloofd)' : ' (ongeoorloofd)')) === type).length + '×' })
             element('span', null, moreAbsences, { class: 'st-metric-medium-sub', innerText: type })
         })
-        // if (eventsWithRegistration.length > 0) {
-        //     element('div', null, moreAbsences)
-        //     element('div', null, moreAbsences)
-        //     element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: eventsWithRegistration.length })
-        //     element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "keuzelessen ingeschreven" })
-        //     element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: eventsWithRegistration.map(item => item.Omschrijving).mode() || '?' })
-        //     element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: `vaakst gekozen (${eventsWithRegistration.filter(item => item.Omschrijving === eventsWithRegistration.map(e => e.Omschrijving).mode()).length}×)` })
-        // }
+        const dayMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' }).toLowerCase()).mode()
+        const hourMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => `lesuur ${item.Afspraak.LesuurVan}`).mode()
+        if (dayMostOftenTooLate && hourMostOftenTooLate) {
+            element('div', null, moreAbsences)
+            element('div', null, moreAbsences)
+            element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: dayMostOftenTooLate })
+            element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "vaakst te laat" })
+            element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: hourMostOftenTooLate })
+            element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "vaakst te laat" })
+        }
         moreAbsences.addEventListener('click', () => moreAbsences.dataset.show = false)
+        moreAbsences.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); moreAbsences.dataset.show = false })
 
         // Num of grades and num of sufficient and mean and promo
-        const tileGrades = element('div', 'st-wrapped-tiles-grades', sectionTiles, { class: 'st-wrapped-tile' })
+        const tileGrades = element('button', 'st-wrapped-tiles-grades', sectionTiles, { class: 'st-wrapped-tile' })
         const tileGradesA = element('div', 'st-wrapped-tiles-grades-a', tileGrades)
         element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
         element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
@@ -466,7 +465,7 @@ async function wrapped() {
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) >= new Date(item.IngeleverdOp)).length, 'data-desc': "te laat" })
         element('span', null, tileAssignmentsB, { class: 'st-metric-tiny', innerText: assignments.filter(item => !item.IngeleverdOp).length, 'data-desc': "geskipt" })
 
-        const tileTeachers = element('div', 'st-wrapped-tiles-teachers', sectionTiles, { class: 'st-wrapped-tile' })
+        const tileTeachers = element('button', 'st-wrapped-tiles-teachers', sectionTiles, { class: 'st-wrapped-tile' })
         const tileTeachersA = element('div', 'st-wrapped-tiles-teachers-a', tileTeachers)
         element('span', null, tileTeachersA, { class: 'st-metric-huge-sub', innerText: "meeste lessen in" })
         element('span', null, tileTeachersA, {
@@ -480,11 +479,14 @@ async function wrapped() {
             class: 'st-metric-tiny',
             innerText: teacherNames?.[mostCommonTeacherCode] || eventsTeachers.find(e => e.Docentcode === mostCommonTeacherCode).Naam || mostCommonTeacherCode
         })
-        element('span', null, tileTeachersB, { class: 'st-metric-tiny-sub', innerText: `${events.filter(item=>item.Docenten.some(d=>d.Docentcode===mostCommonTeacherCode)).length}×, uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size} docenten` })
+        element('span', null, tileTeachersB, { class: 'st-metric-tiny-sub', innerText: `${events.filter(item => item.Docenten.some(d => d.Docentcode === mostCommonTeacherCode)).length}×, uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size} docenten` })
+        tileTeachers.addEventListener('click', () => { moreTeachers.dataset.show = true; viewOpts.style.display = 'flex' })
 
-        const sectionTeachers = element('section', 'st-wrapped-teachers', container, { 'data-step': 3 })
-        let teachersChartArea = element('div', 'st-wrapped-teacher-chart', sectionTeachers).createBarChart(teachersFrequencyMap, teacherNames)
-        let classroomsChartArea = element('div', 'st-wrapped-classroom-chart', sectionTeachers).createBarChart(classroomsFrequencyMap, null)
+        const moreTeachers = element('section', 'st-wrapped-more-teachers', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
+        const classroomsChartArea = element('div', 'st-wrapped-more-teachers-chart1', moreTeachers).createBarChart(classroomsFrequencyMap, null, null, true, false)
+        const teachersChartArea = element('div', 'st-wrapped-more-teachers-chart2', moreTeachers).createBarChart(teachersFrequencyMap, teacherNames, null, true, false)
+        moreTeachers.addEventListener('click', () => { moreTeachers.dataset.show = false; viewOpts.style.display = 'none' })
+        moreTeachers.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); moreTeachers.dataset.show = false; viewOpts.style.display = 'none' })
 
         // Switch chart type
         viewPie.addEventListener('click', () => {
@@ -498,8 +500,8 @@ async function wrapped() {
             viewBar.classList.add('active')
             viewPie.classList.remove('active')
 
-            teachersChartArea.createBarChart(teachersFrequencyMap, teacherNames)
-            classroomsChartArea.createBarChart(classroomsFrequencyMap, null)
+            teachersChartArea.createBarChart(teachersFrequencyMap, teacherNames, null, true, false)
+            classroomsChartArea.createBarChart(classroomsFrequencyMap, null, null, true, false)
         })
 
         displayWrapped()
