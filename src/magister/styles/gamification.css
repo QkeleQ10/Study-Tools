@@ -553,7 +553,7 @@
     translate: 0 20%;
     opacity: 0 !important;
     background-size: 45%, auto;
-    transition: none;
+    transition: all 200ms;
 }
 
 #st-wrapped-tiles[data-state=current]>.st-wrapped-tile {
