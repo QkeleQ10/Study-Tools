@@ -455,18 +455,14 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
             snackbarWrapper.append(snackbar)
             snackbar.innerText = body
 
-            if (buttons?.length > 0) buttons.forEach(element => {
-                let a = document.createElement('a')
-                snackbar.append(a)
-                setAttributes(a, element)
-                if (element.innerText) a.innerText = element.innerText
-                if (element.clickSelector) {
-                    a.addEventListener('click', event => {
-                        document.querySelector(element.clickSelector)?.click()
+            if (buttons?.length > 0) buttons.forEach(button => {
+                let anchor = element('a', null, snackbar, button)
+                if (button.clickSelector) {
+                    anchor.addEventListener('click', event => {
+                        document.querySelector(button.clickSelector)?.click()
                         event.stopPropagation()
                     })
-                }
-                else a.addEventListener('click', event => event.stopPropagation())
+                } else anchor.addEventListener('click', event => event.stopPropagation())
             })
             const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
             snackbarDismiss.addEventListener('click', () => {
