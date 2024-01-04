@@ -551,7 +551,7 @@
 #st-wrapped-tiles[data-state=future]>.st-wrapped-tile {
     scale: 0.9;
     translate: 0 20%;
-    opacity: 0;
+    opacity: 0 !important;
     background-size: 45%, auto;
     transition: none;
 }
