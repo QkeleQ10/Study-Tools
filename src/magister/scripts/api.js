@@ -28,7 +28,8 @@ async function updateApiCredentials() {
         let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
         now = new Date()
 
-        magisterApiUserId ??= await getFromStorage('user-id', 'sync')
+        if (!(magisterApiUserId?.length > 1))
+            magisterApiUserId = await getFromStorage('user-id', 'sync')
         magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
         magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
 
@@ -63,14 +64,36 @@ const MagisterApi = {
             )
         })
     },
-    events: async () => {
+    yearInfo: async (year) => {
         return new Promise(async (resolve, reject) => {
-            magisterApiCache.events ??=
+            magisterApiCache['yearInfo' + year.id] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${gatherStart.toISOString().substring(0, 10)}&tot=${gatherEnd.toISOString().substring(0, 10)}`
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year.id}`
                 )
             resolve(
-                (await magisterApiCache.events)?.Items || []
+                (await magisterApiCache['yearInfo' + year.id])
+            )
+        })
+    },
+    examInfo: async (year) => {
+        return new Promise(async (resolve, reject) => {
+            magisterApiCache['examInfo' + year.id] ??=
+                fetchWrapper(
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year.id}/examen`
+                )
+            resolve(
+                (await magisterApiCache['examInfo' + year.id])
+            )
+        })
+    },
+    events: async (start = gatherStart, end = gatherEnd) => {
+        return new Promise(async (resolve, reject) => {
+            magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)] ??=
+                fetchWrapper(
+                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${start.toISOString().substring(0, 10)}&tot=${end.toISOString().substring(0, 10)}`
+                )
+            resolve(
+                (await magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)])?.Items || []
             )
         })
     },
@@ -202,13 +225,13 @@ async function fetchWrapper(url, options) {
 
         // Reject when forbidden (e.g. feature disabled by school)
         if (res1.status === 403) {
-            return reject(res1.status)
+            return resolve({})
         }
 
         // Reject when ratelimit is hit
         if (res1.status === 429) {
             notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-            return reject(res1.status)
+            return resolve({})
         }
 
         // If it's not a ratelimit, retry one more time. Also forcibly refresh from memory.
@@ -224,14 +247,14 @@ async function fetchWrapper(url, options) {
         }
 
         // Reject when forbidden (e.g. feature disabled by school)
-        if (res1.status === 403) {
-            return reject(res1.status)
+        if (res2.status === 403) {
+            return resolve({})
         }
 
         // Reject when ratelimit is hit
         if (res2.status === 429) {
             notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
-            return reject(res2.status)
+            return resolve({})
         }
 
         // Handle other errors
@@ -246,7 +269,7 @@ async function fetchWrapper(url, options) {
         )
         console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
         console.error(`Error ${res2.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
-        return reject(res2.status)
+        return resolve({})
     })
 
     const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 8000, 'Timeout exceeded!'))

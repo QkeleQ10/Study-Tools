@@ -19,7 +19,7 @@ async function today() {
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
         schedule = element('div', 'st-start-schedule', container),
-        widgets = element('div', 'st-start-widgets', container)
+        widgets = element('div', 'st-start-widgets', container, { 'data-working': true })
 
     let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
@@ -689,6 +689,7 @@ nav.menu.ng-scope {
     }
 
     async function todayWidgets() {
+        widgets.dataset.working = true
         widgets.innerText = ''
 
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
@@ -1195,6 +1196,7 @@ nav.menu.ng-scope {
             updateTemporalBindings()
         }
 
+        widgets.dataset.working = false
         widgetsProgress.remove()
         widgetsProgressText.remove()
     }

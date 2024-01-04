@@ -613,13 +613,13 @@ async function gradeBackup() {
             list = json.list
             gradesContainer.innerText = ''
             let div1 = document.createElement('div')
-            setAttributes(div1, { id: 'cijferoverzichtgrid', 'data-role': 'grid', class: 'cijfers-k-grid ng-isolate-scope k-grid k-widget', style: 'height: 100%' })
+            div1.setAttributes({ id: 'cijferoverzichtgrid', 'data-role': 'grid', class: 'cijfers-k-grid ng-isolate-scope k-grid k-widget', style: 'height: 100%' })
             gradesContainer.append(div1)
             let div2 = document.createElement('div')
-            setAttributes(div2, { class: 'k-grid-content', style: 'height: 100% !important' })
+            div2.setAttributes({ class: 'k-grid-content', style: 'height: 100% !important' })
             div1.append(div2)
             let table = document.createElement('table')
-            setAttributes(table, { role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
+            table.setAttributes({ role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
             div2.append(table)
 
             const tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
@@ -838,10 +838,11 @@ async function gradeStatistics() {
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
-            buildSubjectFilter()
 
             gatheredYears.add(year.id)
             includedYears.add(year.id)
+
+            buildSubjectFilter()
             displayStatistics()
         }
 
@@ -865,8 +866,8 @@ async function gradeStatistics() {
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
+            
             buildSubjectFilter()
-
             displayStatistics()
         })
     })

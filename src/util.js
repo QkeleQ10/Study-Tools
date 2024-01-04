@@ -87,9 +87,9 @@ function element(tagName, id, parent, attributes) {
         elem = document.createElement(tagName)
         if (id) elem.id = id
         if (parent) parent.append(elem)
-        if (attributes) setAttributes(elem, attributes)
+        if (attributes) elem.setAttributes(attributes)
     } else {
-        if (attributes) setAttributes(elem, attributes)
+        if (attributes) elem.setAttributes(attributes)
     }
     return elem
 }
@@ -155,10 +155,12 @@ function saveToStorage(key, value, location) {
     })
 }
 
-function setAttributes(elem, attributes) {
+Element.prototype.setAttributes = function (attributes) {
+    const elem = this
     for (var key in attributes) {
         if (key === 'innerText') elem.innerText = attributes[key]
-        if (key === 'innerHTML') elem.innerHTML = attributes[key]
+        else if (key === 'innerHTML') elem.innerHTML = attributes[key]
+        else if (key === 'viewBox') elem.setAttributeNS(null, 'viewBox', attributes[key])
         else elem.setAttribute(key, attributes[key])
     }
 }
@@ -261,13 +263,30 @@ Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + o
 Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
 Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold = 1, sort = true, rotateHue = true) {
+Array.prototype.random = function () {
+    const arr = this
+    const random = arr[Math.floor(Math.random() * arr.length)]
+    return random
+}
+
+Array.prototype.mode = function () {
+    const arr = this
+    if (arr.length < 1) return undefined
+    else return [...arr].sort((a, b) =>
+        arr.filter(v => v === a).length
+        - arr.filter(v => v === b).length
+    ).at(-1)
+}
+
+
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-line-chart')
     chartArea.classList.add('st-bar-chart', 'st-chart')
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
+    threshold ??= totalFrequency / 40
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
     const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
@@ -312,7 +331,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold = 1, rotateHue = true) {
+Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold, rotateHue = true) {
     const chartArea = this
     chartArea.innerText = ''
     chartArea.classList.remove('st-bar-chart', 'st-line-chart')
@@ -323,6 +342,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
         aboutMore = element('span', `${chartArea.id}-about-more`, aboutWrapper, { class: 'st-chart-info' })
 
     const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
+    threshold ??= totalFrequency / 40
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
 
@@ -435,18 +455,14 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
             snackbarWrapper.append(snackbar)
             snackbar.innerText = body
 
-            if (buttons?.length > 0) buttons.forEach(element => {
-                let a = document.createElement('a')
-                snackbar.append(a)
-                setAttributes(a, element)
-                if (element.innerText) a.innerText = element.innerText
-                if (element.clickSelector) {
-                    a.addEventListener('click', event => {
-                        document.querySelector(element.clickSelector)?.click()
+            if (buttons?.length > 0) buttons.forEach(button => {
+                let anchor = element('a', null, snackbar, button)
+                if (button.clickSelector) {
+                    anchor.addEventListener('click', event => {
+                        document.querySelector(button.clickSelector)?.click()
                         event.stopPropagation()
                     })
-                }
-                else a.addEventListener('click', event => event.stopPropagation())
+                } else anchor.addEventListener('click', event => event.stopPropagation())
             })
             const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
             snackbarDismiss.addEventListener('click', () => {

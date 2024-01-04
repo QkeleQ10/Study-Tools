@@ -43,90 +43,88 @@ async function applyStyles() {
         luminanceWish = syncedStorage.color.l,
         borderRadius = syncedStorage.shape
 
-    let lightThemeCss = `:root {
-    --st-font-primary: 600 16px/44px 'arboria', sans-serif;
-    --st-font-family-primary: 'arboria', sans-serif;
-    --st-font-family-secondary: 'open-sans', sans-serif;
-    --st-background-primary: #ffffff;
-    --st-background-secondary: #ffffff;
-    --st-background-tertiary: #fafafa;
-    --st-background-overlay: #fffffff5;
-    --st-background-transparent: #ffffffbb;
-    --st-background-overlaid: #12121210;
-    --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
-    --st-highlight-subtle: #f2f9ff;
-    --st-highlight-ok: #b6fadf;
-    --st-highlight-warn: #ffd4e2;
-    --st-highlight-info: #dceefd;
-    --st-foreground-primary: #333333;
-    --st-foreground-secondary: #555555;
-    --st-foreground-insignificant: #888;
-    --st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
-    --st-border-color: #ededed;
-    --st-border: 1px solid var(--st-border-color);
-    --st-border-radius: ${borderRadius}px;
-    --st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
-    --st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
-    --st-accent-ok: #339e7c;
-    --st-accent-warn: #e94f4f;
-    --st-chip-info-border: #066ec2;
-    --st-chip-info-background: #ffffff;
-    --st-chip-ok-border: #19c5a5;
-    --st-chip-ok-background: #d0f3ed;
-    --st-chip-warn-border: #a53e52;
-    --st-chip-warn-background: #f7d4d2;
-    --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-decoration-fill: #dddddd11;
-    --st-decoration-fill-intense: #dddddd2a;
-    --st-shadow-value: 210;
-    --st-shadow-alpha: .5;
-    --st-hover-brightness: .9;
-}`,
-        darkThemeCss = `:root {
-    --st-font-primary: 600 16px/44px 'arboria', sans-serif;
-    --st-font-family-primary: 'arboria', sans-serif;
-    --st-font-family-secondary: 'open-sans', sans-serif;
-    --st-background-primary: #121212;
-    --st-background-secondary: #161616;
-    --st-background-tertiary: #0c0c0c;
-    --st-background-overlay: #121212f5;
-    --st-background-transparent: #121212bb;
-    --st-background-overlaid: #00000030;
-    --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
-    --st-highlight-subtle: #181f24;
-    --st-highlight-ok: #1a4c38;
-    --st-highlight-warn: #511f1f;
-    --st-highlight-info: #0f314d;
-    --st-foreground-primary: #fff;
-    --st-foreground-secondary: #dddddd;
-    --st-foreground-insignificant: #888;
-    --st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
-    --st-border-color: #2e2e2e;
-    --st-border: 1px solid var(--st-border-color);
-    --st-border-radius: ${borderRadius}px;
-    --st-accent-primary: ${await shiftedHslColor(207, 73, 30, hueWish, saturationWish, luminanceWish)};
-    --st-accent-secondary: ${await shiftedHslColor(207, 73, 22, hueWish, saturationWish, luminanceWish)};
-    --st-accent-ok: #339e7c;
-    --st-accent-warn: #e94f4f;
-    --st-chip-info-border: #0565b4;
-    --st-chip-info-background: #022a4b;
-    --st-chip-ok-border: #13c4a3;
-    --st-chip-ok-background: #15363c;
-    --st-chip-warn-border: #953541;
-    --st-chip-warn-background: #2f1623;
-    --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
-    --st-decoration-fill: #77777711;
-    --st-decoration-fill-intense: #77777730;
-    --st-shadow-value: 0;
-    --st-shadow-alpha: .7;
-    --st-hover-brightness: 1.3;
-    color-scheme: dark;
-}
-
-* {
-    color-scheme: dark;
-}`,
-        invertCss = `
+    const lightCssVars = `
+--st-font-primary: 600 16px/44px 'arboria', sans-serif;
+--st-font-family-primary: 'arboria', sans-serif;
+--st-font-family-secondary: 'open-sans', sans-serif;
+--st-background-primary: #ffffff;
+--st-background-secondary: #ffffff;
+--st-background-tertiary: #fafafa;
+--st-background-overlay: #fffffff5;
+--st-background-transparent: #ffffffbb;
+--st-background-overlaid: #12121210;
+--st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
+--st-highlight-subtle: #f2f9ff;
+--st-highlight-ok: #b6fadf;
+--st-highlight-warn: #ffd4e2;
+--st-highlight-info: #dceefd;
+--st-foreground-primary: #333333;
+--st-foreground-secondary: #555555;
+--st-foreground-insignificant: #888;
+--st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
+--st-border-color: #ededed;
+--st-border: 1px solid var(--st-border-color);
+--st-border-radius: ${borderRadius}px;
+--st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
+--st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
+--st-accent-ok: #339e7c;
+--st-accent-warn: #e94f4f;
+--st-chip-info-border: #066ec2;
+--st-chip-info-background: #ffffff;
+--st-chip-ok-border: #19c5a5;
+--st-chip-ok-background: #d0f3ed;
+--st-chip-warn-border: #a53e52;
+--st-chip-warn-background: #f7d4d2;
+--st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
+--st-decoration-fill: #dddddd11;
+--st-decoration-fill-intense: #dddddd2a;
+--st-shadow-value: 210;
+--st-shadow-alpha: .5;
+--st-hover-brightness: .9;
+    `,
+        lightCss = `:root { ${lightCssVars} } `
+    const darkCssVars = `
+--st-font-primary: 600 16px/44px 'arboria', sans-serif;
+--st-font-family-primary: 'arboria', sans-serif;
+--st-font-family-secondary: 'open-sans', sans-serif;
+--st-background-primary: #121212;
+--st-background-secondary: #161616;
+--st-background-tertiary: #0c0c0c;
+--st-background-overlay: #121212f5;
+--st-background-transparent: #121212bb;
+--st-background-overlaid: #00000030;
+--st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
+--st-highlight-subtle: #181f24;
+--st-highlight-ok: #1a4c38;
+--st-highlight-warn: #511f1f;
+--st-highlight-info: #0f314d;
+--st-foreground-primary: #fff;
+--st-foreground-secondary: #dddddd;
+--st-foreground-insignificant: #888;
+--st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
+--st-border-color: #2e2e2e;
+--st-border: 1px solid var(--st-border-color);
+--st-border-radius: ${borderRadius}px;
+--st-accent-primary: ${await shiftedHslColor(207, 73, 30, hueWish, saturationWish, luminanceWish)};
+--st-accent-secondary: ${await shiftedHslColor(207, 73, 22, hueWish, saturationWish, luminanceWish)};
+--st-accent-ok: #339e7c;
+--st-accent-warn: #e94f4f;
+--st-chip-info-border: #0565b4;
+--st-chip-info-background: #022a4b;
+--st-chip-ok-border: #13c4a3;
+--st-chip-ok-background: #15363c;
+--st-chip-warn-border: #953541;
+--st-chip-warn-background: #2f1623;
+--st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
+--st-decoration-fill: #77777711;
+--st-decoration-fill-intense: #77777730;
+--st-shadow-value: 0;
+--st-shadow-alpha: .7;
+--st-hover-brightness: 1.3;
+color-scheme: dark;
+    `,
+        darkCss = `:root { ${darkCssVars} } * { color-scheme: dark; }`
+    const invertCss = `
 #studiewijzer-detail-container .clearfix.user-content {
     background-color: var(--st-background-primary);
     color: var(--st-foreground-primary);
@@ -143,14 +141,17 @@ async function applyStyles() {
 .view>iframe, .view>.container>iframe {
     filter: invert(1) hue-rotate(180deg);
 }
-        `,
-        rootVars = `${lightThemeCss}
-${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
-${syncedStorage.theme !== 'light' ? darkThemeCss : ''}
-${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertCss : ''}
-${syncedStorage.theme === 'auto' ? '}' : ''}`
+        `
 
-    createStyle(rootVars, 'study-tools-root-vars')
+    const cssVars = `${lightCss}
+${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
+${syncedStorage.theme !== 'light' ? darkCss : ''}
+${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertCss : ''}
+${syncedStorage.theme === 'auto' ? '}' : ''}
+
+.st-force-dark { ${darkCssVars} } .st-force-light { ${lightCssVars} }`
+
+    createStyle(cssVars, 'study-tools-vars')
 
     now = new Date()
 
@@ -605,7 +606,7 @@ span.nrblock {
 }
 
 .menu-footer,
-.appbar>div>a,
+.appbar>div>a:not(.st-metric),
 a.appbar-button,
 .menu-host {
     background-color: var(--st-accent-primary);

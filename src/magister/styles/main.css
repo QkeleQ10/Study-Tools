@@ -19,6 +19,7 @@ div.loading-overlay {
     max-width: none;
     max-height: none;
     background: var(--st-background-overlay);
+    backdrop-filter: blur(3px);
     color: var(--st-foreground-primary);
     margin: 0;
     padding: 32px 24px 16px 24px;
@@ -60,6 +61,10 @@ div.loading-overlay {
 
 .st-shortcut-icon {
     font: 20px 'Font Awesome 6 Pro';
+}
+
+.st-icon {
+    font-family: 'Font Awesome 6 Pro';
 }
 
 .st-title {
@@ -281,6 +286,11 @@ div.loading-overlay {
     border-color: var(--st-chip-info-border);
     background-color: var(--st-chip-info-border);
     color: #fff;
+}
+
+.st-chip.important:after {
+    display: none;
+    content: none;
 }
 
 .st-dialog {
@@ -540,17 +550,31 @@ div.loading-overlay {
     width: 100%;
     height: auto;
     color: var(--st-contrast-accent);
-    opacity: 0.5;
     translate: 0 -8px;
     text-align: left;
 }
 
 #st-appbar-metrics>.st-metric {
+    display: grid;
+    width: 50px;
+    padding: 0;
+    margin-inline: auto;
+    opacity: 0.5;
     justify-content: center;
     text-align: center;
+    color: var(--st-contrast-accent);
+    background-color: transparent;
+    border-radius: var(--st-border-radius);
 }
 
-.st-metric {
+#st-appbar-metrics>a.st-metric:hover,
+#st-appbar-metrics>a.st-metric:focus-visible {
+    color: var(--st-contrast-accent);
+    opacity: 1;
+}
+
+.st-metric,
+a.st-metric {
     display: grid;
     grid-template:
         'desc' auto
@@ -558,7 +582,11 @@ div.loading-overlay {
         / auto;
     gap: 2px;
     font: 500 20px/22px var(--st-font-family-primary);
+    text-decoration: none;
+    border: none;
+    outline: none;
     flex-grow: 2;
+    transition: color 200ms, opacity 200ms;
 }
 
 .st-metric[data-extra] {
@@ -595,15 +623,14 @@ div.loading-overlay {
     font: 12px var(--st-font-family-secondary);
 }
 
-a.st-metric {
-    color: var(--st-foreground-primary);
-    text-decoration: none;
-    transition: color 200ms;
-}
-
-a.st-metric:hover {
+a.st-metric:hover,
+a.st-metric:focus-visible {
     color: var(--st-foreground-accent);
     transition: color 0;
+}
+
+a.st-metric:focus-visible {
+    outline: 2px solid var(--st-foreground-primary);
 }
 
 .st-list {
@@ -835,6 +862,7 @@ a.st-keyboard-hint.clicked {
 }
 
 .st-bar-chart {
+    --size: 256px;
     display: flex;
     justify-content: space-between;
     height: var(--size);
@@ -1036,6 +1064,7 @@ a.st-keyboard-hint.clicked {
 
 .st-line-chart-col {
     --hue-rotate: 0;
+    --color: var(--st-accent-ok);
     --point-height: 0;
     flex-grow: 1;
     position: relative;
@@ -1057,7 +1086,7 @@ a.st-keyboard-hint.clicked {
     max-width: 6px;
     aspect-ratio: 1;
     border-radius: 100%;
-    background-color: var(--st-accent-ok);
+    background-color: var(--color);
     z-index: 1;
 }
 
@@ -1071,7 +1100,7 @@ a.st-keyboard-hint.clicked {
     width: 100%;
     height: calc((1 * (var(--point-height) - var(--previous-point-height))) * 100%);
     min-height: 0.5px;
-    background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--st-accent-ok), transparent calc(50% + 1px));
+    background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--color), transparent calc(50% + 1px));
 }
 
 .st-line-chart-col[data-delta="fall"]:before {
@@ -1084,7 +1113,7 @@ a.st-keyboard-hint.clicked {
     width: 100%;
     height: calc((1 * (var(--previous-point-height) - var(--point-height))) * 100%);
     min-height: 0.5px;
-    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--st-accent-ok), transparent calc(50% + 1px));
+    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--color), transparent calc(50% + 1px));
 }
 
 .st-line-chart-col[data-delta="equal"]:before {
@@ -1096,7 +1125,7 @@ a.st-keyboard-hint.clicked {
     translate: -50%;
     width: 100%;
     height: 1px;
-    background-color: var(--st-accent-ok);
+    background-color: var(--color);
 }
 
 @keyframes rotation {
@@ -1123,6 +1152,12 @@ a.st-keyboard-hint.clicked {
     100% {
         pointer-events: all;
         opacity: 1;
+    }
+}
+
+@keyframes opacityIn {
+    0% {
+        opacity: 0;
     }
 }
 
