@@ -383,6 +383,7 @@
     position: fixed;
     top: 32px;
     right: 24px;
+    min-height: 36px;
     gap: 16px;
     z-index: 2;
 }
