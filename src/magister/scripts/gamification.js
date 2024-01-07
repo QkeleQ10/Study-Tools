@@ -220,17 +220,33 @@ async function wrapped() {
     wrapped.innerHTML += ''
     const container = element('div', 'st-wrapped-container', wrapped, { 'data-step': step }),
         title = element('span', 'st-wrapped-title', wrapped, { class: 'st-title', innerText: "Magister Wrapped" }),
-        buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' }),
-        viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control', style: 'display: none;' }),
-        viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button segment active', innerText: "Staaf", 'data-icon': '' }),
-        viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button segment', innerText: "Taart", 'data-icon': '' }),
-        close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
-
-    close.addEventListener('click', () => wrapped.close())
+        buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' })
 
     wrappedInvoke.addEventListener('click', async () => {
         wrappedInvokeTip.classList.add('hidden')
         wrapped.showModal()
+
+        const viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control', style: 'display: none;' }),
+            viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button segment active', innerText: "Staaf", 'data-icon': '' }),
+            viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button segment', innerText: "Taart", 'data-icon': '' }),
+            help = element('button', 'st-wrapped-help', buttons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
+            close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
+
+        close.addEventListener('click', () => wrapped.close())
+
+        help.addEventListener('click', async () => {
+            await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze generieke kloon van het Wrapped-/Rewind-concept zie je sinds eind 2023 elk jaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)")
+
+            await notify('dialog', "Om naar de volgende dia te gaan, klik je op de dia.\nOm een dia terug te gaan, kun je rechtsklikken.\n\nAls je op de tegelweergave uitgebreide statistieken wil zien, klik je op een tegel.\nJe kunt dan wederom terugkeren met de rechtermuisknop.")
+
+            await notify(
+                'dialog',
+                "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van functionaliteitensuggesties en probleemrapporten) zijn daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
+                [
+                    { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+                    { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
+                ])
+        })
 
         if (container.innerText?.length > 0 || container.children?.length > 0) {
             displayWrapped()
@@ -250,7 +266,7 @@ async function wrapped() {
         const lastYearExam = lastYear.links?.examengegevens ? await MagisterApi.examInfo(lastYearShallow) : {}
 
         const grades = [...(await MagisterApi.grades.forYear(lastYearShallow)), ...(await MagisterApi.grades.forYear(thisYearShallow))]
-            .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && new Date(grade.DatumIngevoerd) >= new Date(wrappedYear, 0, 1))
+            .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1 && new Date(grade.DatumIngevoerd) >= new Date(wrappedYear, 0, 1))
             .filter((grade, index, self) =>
                 index === self.findIndex((g) =>
                     g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
@@ -293,7 +309,7 @@ async function wrapped() {
         })
 
         const isFirstYear = !lastYearShallow
-        const isFinalYear = thisYearExam && !thisYearExam.doetVroegtijdig
+        const isFinalYear = thisYearExam && Object.keys(thisYearExam).length > 0 && !thisYearExam.doetVroegtijdig
 
         let text1A = [`*${wrappedYear}* is alweer ${now < january22 ? 'bijna ' : ''}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
         if (isFirstYear) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
@@ -306,16 +322,19 @@ async function wrapped() {
         const section1Text = element('span', 'st-wrapped-1-title', section1Wrapper).formatAndApplyTitleText(text1A)
         const section1Sub = element('span', 'st-wrapped-1-subtitle', section1Wrapper, { innerText: text1B })
 
-        let text2A =
-            [`In *2023* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *2023* begon je aan *${thisYear.studie.code}*.`].random()
+        let text2A
         if (isFirstYear) text2A =
-            `In *2023* ging je in ${thisYearShallow.groep.code} van start met *${thisYearShallow.studie.code}*.`
+            `In *${wrappedYear}* ging je in ${thisYearShallow.groep.code} van start met *${thisYearShallow.studie.code}*.`
         else if (lastYear.isZittenBlijver) text2A =
-            `In *2023* ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
+            `In *${wrappedYear}* ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
         else if (isFinalYear) text2A =
-            `In *2023* ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`
+            [`In *${wrappedYear}* ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`, `In *${wrappedYear}* ging je van start met ${thisYear.studie.code}—je *laatste jaar*`].random()
         else if (thisYear.isZittenBlijver) text2A =
-            `In *2023* besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`
+            [`In *${wrappedYear}* besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`, `In *${wrappedYear}* bleef je helaas zitten in *${thisYearShallow.studie.code}*`].random()
+        else if (lastYear.studie.code.includes('1')) text2A =
+            [`In *${wrappedYear}* rondde je je eerste jaar op de middelbare af`, `In *2023* verloor je je status als brugpieper`, `In *${wrappedYear}* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* begon je aan *${thisYear.studie.code}*.`, `In *${wrappedYear}* rondde je *${lastYear.studie.code}* af`].random()
+        else text2A =
+            [`In *${wrappedYear}* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* begon je aan *${thisYear.studie.code}*.`, `In *${wrappedYear}* rondde je *${lastYear.studie.code}* af`].random()
 
         let text2B =
             ["Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar.", "Gefeliciteerd! Laten we terugblikken op afgelopen jaar."].random()
@@ -328,7 +347,7 @@ async function wrapped() {
         else if (isFinalYear && lastYear.isZittenBlijver) text2B =
             "Ze zeggen dat je het moeilijkste jaar al achter de rug hebt (jij zelfs al twee keer). Jij kunt dit!"
         else if (isFinalYear) text2B =
-            Math.random() < 0.5 ? "Ze zeggen dat je het moeilijkste jaar al achter de rug hebt. Dit kun jij!" : "Laten we terugkijken op het afgelopen jaar; het allerlaatste jaar voor je centraal examen."
+            ["Ze zeggen dat je het moeilijkste jaar al achter de rug hebt. Dit kun jij!", "Laten we terugkijken op het afgelopen jaar; het allerlaatste jaar voor je centraal examen."].random()
         else if (thisYear.isZittenBlijver && thisYearExam.doetVroegtijdig) text2B =
             `En dat is helemaal oké! Je gaat in ${wrappedYear + 1} zelfs vervroegd examen doen.`
         else if (thisYear.isZittenBlijver) text2B =
@@ -340,7 +359,7 @@ async function wrapped() {
         else if (lastYear.isZittenBlijver) text2B =
             "Wat fijn! Laten we eens terugkijken op het afgelopen kalenderjaar."
         else if (gradesMean > 7) text2B =
-            `En wat een cijfers haalde je in ${wrappedYear}!`
+            [`En wat een cijfers haalde je in ${wrappedYear}!`, "En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je.", "En dat deed je met vlag en wimpel; wat een mooie cijfers dit jaar!"].random()
         else if (gradesMean < 5.55) text2B =
             "Ruimschoots is wat anders, maar het is je toch gelukt!"
 

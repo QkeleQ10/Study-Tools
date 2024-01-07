@@ -383,6 +383,7 @@
     position: fixed;
     top: 32px;
     right: 24px;
+    min-height: 36px;
     gap: 16px;
     z-index: 2;
 }
@@ -551,9 +552,9 @@
 #st-wrapped-tiles[data-state=future]>.st-wrapped-tile {
     scale: 0.9;
     translate: 0 20%;
-    opacity: 0;
+    opacity: 0 !important;
     background-size: 45%, auto;
-    transition: none;
+    transition: all 200ms;
 }
 
 #st-wrapped-tiles[data-state=current]>.st-wrapped-tile {
