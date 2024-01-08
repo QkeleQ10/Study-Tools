@@ -4,8 +4,6 @@ let magisterApiCache = {},
     magisterApiUserTokenDate,
     magisterApiSchoolName = window.location.hostname.split('.')[0]
 
-let verbose = true
-
 now = new Date()
 
 const gatherStart = new Date()
@@ -47,7 +45,7 @@ async function updateApiCredentials() {
 
         if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate) && Math.abs(now - new Date(magisterApiUserTokenDate)) < 30000) {
             resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
-            if (verbose) console.info("CREDS OK: Resolved.")
+            if (verbose) console.info(`CREDS OK: userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
         } else {
             if (verbose) console.info("CREDS ERR: Too old. Retrying...")
             getApiCredentialsMemory(resolve, reject)
@@ -226,6 +224,11 @@ const MagisterApi = {
  */
 async function fetchWrapper(url, options) {
     const promiseReq = new Promise(async (resolve, reject) => {
+        if (!magisterApiUserId || !magisterApiUserToken) {
+            await updateApiCredentials()
+                .catch(err => console.error(err))
+        }
+
         const res1 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
 
         // Resolve if no errors
@@ -283,7 +286,7 @@ async function fetchWrapper(url, options) {
             120000
         )
         console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
-        console.error(`APIRQ: ${res2.status}\n\nDetails:\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
+        console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
         return resolve({})
     })
 
@@ -305,7 +308,7 @@ async function fetchWrapper(url, options) {
                 120000
             )
             console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
-            console.error(`APIRQ: ${err}\n\nDetails:\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
+            console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
             return resolve({})
         })
 }

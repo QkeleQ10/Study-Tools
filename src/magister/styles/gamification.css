@@ -560,7 +560,8 @@
     transition: margin 200ms, outline 200ms, box-shadow 400ms, text-shadow 400ms, scale 400ms var(--appear-delay), translate 400ms var(--appear-delay), opacity 400ms var(--appear-delay), background-size 2000ms var(--appear-delay), z-index 400ms;
 }
 
-#st-wrapped-tiles[data-state=future]>.st-wrapped-tile, #st-wrapped:not([open]) #st-wrapped-tiles>.st-wrapped-tile {
+#st-wrapped-tiles[data-state=future]>.st-wrapped-tile,
+#st-wrapped:not([open]) #st-wrapped-tiles>.st-wrapped-tile {
     scale: 0.9;
     translate: 0 20%;
     opacity: 0 !important;

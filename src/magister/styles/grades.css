@@ -527,10 +527,12 @@
 
 #st-cs-filter-button-tooltip {
     position: absolute;
-    bottom: 12px;
-    left: 12px;
-    right: 72px;
-    height: 48px;
+    bottom: 24px;
+    right: 60px;
+    translate: 0 50%;
+    height: auto;
+    width: auto;
+    margin: 12px;
     padding: 7px 13px;
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
@@ -541,6 +543,7 @@
     transform-origin: right;
     transform: none;
     opacity: 1;
+    pointer-events: none;
     transition: transform 200ms, opacity 200ms;
 }
 

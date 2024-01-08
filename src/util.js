@@ -1,4 +1,5 @@
 let syncedStorage = {},
+    verbose = false,
     apiUserId,
     apiUserToken,
     apiCache = {}
@@ -8,6 +9,7 @@ let eggs = [],
 
 (async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+    verbose = syncedStorage['verbosity']
 })()
 
 window.addEventListener('DOMContentLoaded', async () => {
