@@ -78,23 +78,23 @@ const MagisterApi = {
     },
     yearInfo: async (year) => {
         return new Promise(async (resolve, reject) => {
-            magisterApiCache['yearInfo' + year.id] ??=
+            magisterApiCache['yearInfo' + year?.id] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year.id}`
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}`
                 )
             resolve(
-                (await magisterApiCache['yearInfo' + year.id])
+                (await magisterApiCache['yearInfo' + year?.id])
             )
         })
     },
     examInfo: async (year) => {
         return new Promise(async (resolve, reject) => {
-            magisterApiCache['examInfo' + year.id] ??=
+            magisterApiCache['examInfo' + year?.id] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year.id}/examen`
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examen`
                 )
             resolve(
-                (await magisterApiCache['examInfo' + year.id])
+                (await magisterApiCache['examInfo' + year?.id])
             )
         })
     },
@@ -123,23 +123,23 @@ const MagisterApi = {
         },
         forYear: async (year) => {
             return new Promise(async (resolve, reject) => {
-                magisterApiCache['gradesYear' + year.id] ??=
+                magisterApiCache['gradesYear' + year?.id] ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`
                     )
                 resolve(
-                    (await magisterApiCache['gradesYear' + year.id])?.Items || []
+                    (await magisterApiCache['gradesYear' + year?.id])?.Items || []
                 )
             })
         },
         columnInfo: async (year, columnId) => {
             return new Promise(async (resolve, reject) => {
-                magisterApiCache['gradesYear' + year.id + 'Col' + columnId] ??=
+                magisterApiCache['gradesYear' + year?.id + 'Col' + columnId] ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year.id}/cijfers/extracijferkolominfo/${columnId}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/extracijferkolominfo/${columnId}`
                     )
                 resolve(
-                    (await magisterApiCache['gradesYear' + year.id + 'Col' + columnId]) || {}
+                    (await magisterApiCache['gradesYear' + year?.id + 'Col' + columnId]) || {}
                 )
             })
         }
@@ -158,12 +158,12 @@ const MagisterApi = {
         },
         forYear: async (year) => {
             return new Promise(async (resolve, reject) => {
-                magisterApiCache['assignmentsYear' + year.id] ??=
+                magisterApiCache['assignmentsYear' + year?.id] ??=
                     fetchWrapper(
                         `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`
                     )
                 resolve(
-                    (await magisterApiCache['assignmentsYear' + year.id])?.Items || []
+                    (await magisterApiCache['assignmentsYear' + year?.id])?.Items || []
                 )
             })
         }
@@ -204,12 +204,12 @@ const MagisterApi = {
     absences: {
         forYear: async (year) => {
             return new Promise(async (resolve, reject) => {
-                magisterApiCache['absencesYear' + year.id] ??=
+                magisterApiCache['absencesYear' + year?.id] ??=
                     fetchWrapper(
                         `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/absenties?van=${year.begin}&tot=${year.einde}`
                     )
                 resolve(
-                    (await magisterApiCache['absencesYear' + year.id])?.Items || []
+                    (await magisterApiCache['absencesYear' + year?.id])?.Items || []
                 )
             })
         }

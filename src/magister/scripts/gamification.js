@@ -266,7 +266,7 @@ async function wrapped() {
         const lastYear = lastYearShallow ? await MagisterApi.yearInfo(lastYearShallow) : {}
         const lastYearExam = lastYear.links?.examengegevens ? await MagisterApi.examInfo(lastYearShallow) : {}
 
-        const grades = [...(await MagisterApi.grades.forYear(lastYearShallow)), ...(await MagisterApi.grades.forYear(thisYearShallow))]
+        const grades = [...(lastYearShallow ? await MagisterApi.grades.forYear(lastYearShallow) : []), ...(await MagisterApi.grades.forYear(thisYearShallow))]
             .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1 && new Date(grade.DatumIngevoerd) >= new Date(wrappedYear, 0, 1))
             .filter((grade, index, self) =>
                 index === self.findIndex((g) =>
@@ -312,9 +312,9 @@ async function wrapped() {
         const isFirstYear = !lastYearShallow
         const isFinalYear = thisYearExam && Object.keys(thisYearExam).length > 0 && !thisYearExam.doetVroegtijdig
 
-        let text1A = [`*${wrappedYear}* is alweer ${now < january22 ? 'bijna ' : ''}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
-        if (isFirstYear) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
-        else if (isFinalYear) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `*Magister Wrapped* om je laatste schooljaar mee te beginnen.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
+        let text1A = [`*${wrappedYear}* is alweer ${now < january22 ? '' : 'bijna '}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
+        if (isFirstYear && Math.random() < 0.5) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
+        else if (isFinalYear && Math.random() < 0.5) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `*Magister Wrapped* om je laatste schooljaar mee te beginnen.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
 
         let text1B = ["Klik verder voor inzichten over het afgelopen jaar.", "Neem snel een kijkje en klik verder!", "Fijn dat je er bent, klik verder om te beginnen.", "Klik verder om jouw Magister Wrapped te zien.", "Klik verder om te beginnen."].random()
 
