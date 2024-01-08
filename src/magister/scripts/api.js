@@ -4,6 +4,8 @@ let magisterApiCache = {},
     magisterApiUserTokenDate,
     magisterApiSchoolName = window.location.hostname.split('.')[0]
 
+let verbose = true
+
 now = new Date()
 
 const gatherStart = new Date()
@@ -19,10 +21,20 @@ gatherEnd.setHours(0, 0, 0, 0)
  * @returns {Promise<Object>} Object containing userId and token
  */
 async function updateApiCredentials() {
-    const promiseMemory = new Promise(getApiCredentialsMemory)
-    const promiseTime = new Promise((resolve, reject) => setTimeout(resolve, 5000, `Couldn't retrieve ID and token from memory within 5 seconds.`))
+    if (verbose) console.info("CREDS START.")
 
-    return Promise.race([promiseMemory, promiseTime])
+    const promiseMemory = new Promise(getApiCredentialsMemory)
+
+    return Promise.race([
+        promiseMemory,
+        new Promise((resolve, reject) => {
+            // Reject after 5 seconds
+            setTimeout(() => reject(new Error("Timed out")), 5000)
+        })
+    ])
+        .catch(err => {
+            console.error(`CREDS ERR: ${err}.`)
+        })
 
     async function getApiCredentialsMemory(resolve, reject) {
         let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
@@ -35,7 +47,9 @@ async function updateApiCredentials() {
 
         if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate) && Math.abs(now - new Date(magisterApiUserTokenDate)) < 30000) {
             resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+            if (verbose) console.info("CREDS OK: Resolved.")
         } else {
+            if (verbose) console.info("CREDS ERR: Too old. Retrying...")
             getApiCredentialsMemory(resolve, reject)
         }
     }
@@ -212,9 +226,6 @@ const MagisterApi = {
  */
 async function fetchWrapper(url, options) {
     const promiseReq = new Promise(async (resolve, reject) => {
-
-        await updateApiCredentials()
-
         const res1 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
 
         // Resolve if no errors
@@ -234,8 +245,11 @@ async function fetchWrapper(url, options) {
             return resolve({})
         }
 
+        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Retrying...`)
+
         // If it's not a ratelimit, retry one more time. Also forcibly refresh from memory.
         await updateApiCredentials()
+            .catch(err => console.error(err))
 
         // Retry with a second request
         const res2 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
@@ -243,6 +257,7 @@ async function fetchWrapper(url, options) {
         // Resolve if no errors
         if (res2.ok) {
             const json = await res2.json()
+            if (verbose) console.info(`APIRQ OK: Succeeded on second try.`)
             return resolve(json)
         }
 
@@ -268,11 +283,29 @@ async function fetchWrapper(url, options) {
             120000
         )
         console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
-        console.error(`Error ${res2.status} occurred while processing a network request. Details:\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
+        console.error(`APIRQ: ${res2.status}\n\nDetails:\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
         return resolve({})
     })
 
-    const promiseTime = new Promise((resolve, reject) => setTimeout(reject, 8000, 'Timeout exceeded!'))
-
-    return Promise.race([promiseReq, promiseTime])
+    return Promise.race([
+        promiseReq,
+        new Promise((resolve, reject) => {
+            // Reject after 10 seconds
+            setTimeout(() => reject(new Error("Request timed out.")), 10000)
+        })
+    ])
+        .catch(err => {
+            notify(
+                'snackbar',
+                `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+                [
+                    { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
+                    { innerText: "Discord", href: `https://discord.gg/RVKXKyaS6y` }
+                ],
+                120000
+            )
+            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
+            console.error(`APIRQ: ${err}\n\nDetails:\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
+            return resolve({})
+        })
 }

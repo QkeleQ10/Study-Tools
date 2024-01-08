@@ -756,7 +756,7 @@ async function gradeStatistics() {
 
     const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
-        scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Kies hier leerjaren en vakken om statistieken voor te tonen!" })
+        scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Selecteer hier welke vakken en leerjaren worden getoond!" })
 
     const scStats = element('div', 'st-cs-stats', scContainer),
         scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: "Statistieken", 'data-amount': 0 }),

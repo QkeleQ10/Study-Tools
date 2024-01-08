@@ -50,7 +50,7 @@ async function applyStyles() {
 --st-background-primary: #ffffff;
 --st-background-secondary: #ffffff;
 --st-background-tertiary: #fafafa;
---st-background-overlay: #fffffff5;
+--st-background-overlay: #fffffff7;
 --st-background-transparent: #ffffffbb;
 --st-background-overlaid: #12121210;
 --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
@@ -90,7 +90,7 @@ async function applyStyles() {
 --st-background-primary: #121212;
 --st-background-secondary: #161616;
 --st-background-tertiary: #0c0c0c;
---st-background-overlay: #121212f5;
+--st-background-overlay: #121212f7;
 --st-background-transparent: #121212bb;
 --st-background-overlaid: #00000030;
 --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};

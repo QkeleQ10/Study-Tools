@@ -203,6 +203,8 @@ async function wrapped() {
     let step = 0
     const maxStep = 2
 
+    let opened = false
+
     const wrappedYear = now < january22 ? (now.getFullYear() - 1) : now.getFullYear()
     let lastAccessYear = await getFromStorage('wrapped-accessed', 'local') || 0
 
@@ -220,38 +222,37 @@ async function wrapped() {
     wrapped.innerHTML += ''
     const container = element('div', 'st-wrapped-container', wrapped, { 'data-step': step }),
         title = element('span', 'st-wrapped-title', wrapped, { class: 'st-title', innerText: "Magister Wrapped" }),
-        buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' })
+        buttons = element('div', 'st-wrapped-button-wrapper', wrapped, { class: 'st-button-wrapper' }),
+        tip = element('span', 'st-wrapped-tip', wrapped, { innerText: "Klik op een tegel voor meer statistieken." }),
+        viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control', style: 'display: none;' }),
+        viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button segment active', innerText: "Staaf", 'data-icon': '' }),
+        viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button segment', innerText: "Taart", 'data-icon': '' }),
+        help = element('button', 'st-wrapped-help', buttons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
+        close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
+
+    close.addEventListener('click', () => wrapped.close())
+
+    help.addEventListener('click', async () => {
+        await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze generieke kloon van het Wrapped-/Rewind-concept zie je sinds eind 2023 elk jaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)")
+
+        await notify('dialog', "Om naar de volgende dia te gaan, klik je op de dia.\nOm een dia terug te gaan, kun je rechtsklikken.\n\nAls je op de tegelweergave uitgebreide statistieken wil zien, klik je op een tegel.\nJe kunt dan ook terugkeren met de rechtermuisknop.")
+
+        await notify(
+            'dialog',
+            "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van functionaliteitensuggesties en probleemrapporten) zijn daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
+            [
+                { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+                { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
+            ])
+    })
 
     wrappedInvoke.addEventListener('click', async () => {
+        opened = true
         wrappedInvokeTip.classList.add('hidden')
         wrapped.showModal()
 
-        const viewOpts = element('div', 'st-wrapped-view', buttons, { class: 'st-segmented-control', style: 'display: none;' }),
-            viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button segment active', innerText: "Staaf", 'data-icon': '' }),
-            viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button segment', innerText: "Taart", 'data-icon': '' }),
-            help = element('button', 'st-wrapped-help', buttons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
-            close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: "Sluiten", 'data-icon': '' })
-
-        close.addEventListener('click', () => wrapped.close())
-
-        help.addEventListener('click', async () => {
-            await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze generieke kloon van het Wrapped-/Rewind-concept zie je sinds eind 2023 elk jaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)")
-
-            await notify('dialog', "Om naar de volgende dia te gaan, klik je op de dia.\nOm een dia terug te gaan, kun je rechtsklikken.\n\nAls je op de tegelweergave uitgebreide statistieken wil zien, klik je op een tegel.\nJe kunt dan wederom terugkeren met de rechtermuisknop.")
-
-            await notify(
-                'dialog',
-                "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van functionaliteitensuggesties en probleemrapporten) zijn daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
-                [
-                    { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
-                    { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
-                ])
-        })
-
-        if (container.innerText?.length > 0 || container.children?.length > 0) {
-            displayWrapped()
-            return
-        }
+        if (!opened) return displayWrapped()
+        container.innerText = ''
 
         // const accountInfo = await MagisterApi.accountInfo()
 
@@ -390,7 +391,10 @@ async function wrapped() {
                     `${events.filter(item => item.Status === 5).length}×`
             })
             element('span', null, tileLessonsC, { class: 'st-metric-tiny-sub', innerText: "uitval" })
-            tileLessons.addEventListener('click', () => moreLessons.dataset.show = true)
+            tileLessons.addEventListener('click', () => {
+                moreLessons.dataset.show = true
+                tip.innerText = "Klik om terug te keren."
+            })
 
             const moreLessons = element('div', 'st-wrapped-more-lessons', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
             element('span', null, moreLessons, { class: 'st-metric-large', innerText: events.length })
@@ -415,8 +419,16 @@ async function wrapped() {
                 element('span', null, moreLessons, { class: 'st-metric-tiny', innerText: eventsWithRegistration.map(item => item.Omschrijving).mode() || '?' })
                 element('span', null, moreLessons, { class: 'st-metric-small-sub', innerText: `vaakst gekozen (${eventsWithRegistration.filter(item => item.Omschrijving === eventsWithRegistration.map(e => e.Omschrijving).mode()).length}×)` })
             }
-            moreLessons.addEventListener('click', () => moreLessons.dataset.show = false)
-            moreLessons.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); moreLessons.dataset.show = false })
+            moreLessons.addEventListener('click', () => {
+                moreLessons.dataset.show = false
+                tip.innerText = "Klik op een tegel voor meer statistieken."
+            })
+            moreLessons.addEventListener('contextmenu', (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                moreLessons.dataset.show = false
+                tip.innerText = "Klik op een tegel voor meer statistieken."
+            })
         }
 
         // Absences stats
@@ -438,7 +450,10 @@ async function wrapped() {
             const tileAbsencesC = element('div', 'st-wrapped-tiles-absences-c', tileAbsences)
             element('span', null, tileAbsencesC, { class: 'st-metric-tiny', innerText: absences.filter(item => !item.Geoorloofd).length + '×' })
             element('span', null, tileAbsencesC, { class: 'st-metric-tiny-sub', innerText: 'ongeoorloofd absent' })
-            tileAbsences.addEventListener('click', () => moreAbsences.dataset.show = true)
+            tileAbsences.addEventListener('click', () => {
+                moreAbsences.dataset.show = true
+                tip.innerText = "Klik om terug te keren."
+            })
 
             const moreAbsences = element('div', 'st-wrapped-more-absences', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
             element('span', null, moreAbsences, { class: 'st-metric-large', innerText: absences.length })
@@ -460,8 +475,16 @@ async function wrapped() {
                 element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: hourMostOftenTooLate })
                 element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "vaakst te laat" })
             }
-            moreAbsences.addEventListener('click', () => moreAbsences.dataset.show = false)
-            moreAbsences.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); moreAbsences.dataset.show = false })
+            moreAbsences.addEventListener('click', () => {
+                moreAbsences.dataset.show = false
+                tip.innerText = "Klik op een tegel voor meer statistieken."
+            })
+            moreAbsences.addEventListener('contextmenu', (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                moreAbsences.dataset.show = false
+                tip.innerText = "Klik op een tegel voor meer statistieken."
+            })
         }
 
         // Grades stats
@@ -510,13 +533,27 @@ async function wrapped() {
                 innerText: teacherNames?.[mostCommonTeacherCode] || eventsTeachers.find(e => e.Docentcode === mostCommonTeacherCode).Naam || mostCommonTeacherCode
             })
             element('span', null, tileTeachersB, { class: 'st-metric-tiny-sub', innerText: `${events.filter(item => item.Docenten.some(d => d.Docentcode === mostCommonTeacherCode)).length}×, uit ${new Set(eventsTeachers.map(teacher => teacher.Docentcode)).size} docenten` })
-            tileTeachers.addEventListener('click', () => { moreTeachers.dataset.show = true; viewOpts.style.display = 'flex' })
+            tileTeachers.addEventListener('click', () => {
+                moreTeachers.dataset.show = true
+                viewOpts.style.display = 'flex'
+                tip.innerText = "Klik om terug te keren."
+            })
 
             const moreTeachers = element('section', 'st-wrapped-more-teachers', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
             const classroomsChartArea = element('div', 'st-wrapped-more-teachers-chart1', moreTeachers).createBarChart(classroomsFrequencyMap, null, null, true, false)
             const teachersChartArea = element('div', 'st-wrapped-more-teachers-chart2', moreTeachers).createBarChart(teachersFrequencyMap, teacherNames, null, true, false)
-            moreTeachers.addEventListener('click', () => { moreTeachers.dataset.show = false; viewOpts.style.display = 'none' })
-            moreTeachers.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); moreTeachers.dataset.show = false; viewOpts.style.display = 'none' })
+            moreTeachers.addEventListener('click', () => {
+                moreTeachers.dataset.show = false
+                viewOpts.style.display = 'none'
+                tip.innerText = "Klik op een tegel voor meer statistieken."
+            })
+            moreTeachers.addEventListener('contextmenu', (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                moreTeachers.dataset.show = false
+                viewOpts.style.display = 'none'
+                tip.innerText = "Klik op een tegel voor meer statistieken."
+            })
 
             // Switch chart type
             viewPie.addEventListener('click', () => {
