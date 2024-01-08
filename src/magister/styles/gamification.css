@@ -379,6 +379,20 @@
     transition: opacity 300ms;
 }
 
+#st-wrapped-tip {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    translate: -50%;
+    opacity: 0;
+    font: 14px var(--st-font-family-secondary);
+    transition: opacity 200ms;
+}
+
+#st-wrapped:has(#st-wrapped-container[data-step="2"]) #st-wrapped-tip {
+    opacity: .5;
+}
+
 #st-wrapped-button-wrapper {
     position: fixed;
     top: 32px;
@@ -386,10 +400,6 @@
     min-height: 36px;
     gap: 16px;
     z-index: 2;
-}
-
-#st-wrapped-button-wrapper>* {
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
 }
 
 #st-wrapped-container>section {
@@ -480,9 +490,10 @@
 }
 
 #st-wrapped-1 {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='1024' width='1024' viewBox='0 0 512 512' fill='%23ffffff04'%3E%3Cpath d='M459.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4L288 214.3V256v41.7L459.5 440.6zM256 352V256 128 96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160C4.2 237.5 0 246.5 0 256s4.2 18.5 11.5 24.6l192 160c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V352z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='16' width='16' viewBox='0 0 512 512' fill='%23ffffff04'%3E%3Cpath d='M459.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4L288 214.3V256v41.7L459.5 440.6zM256 352V256 128 96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160C4.2 237.5 0 246.5 0 256s4.2 18.5 11.5 24.6l192 160c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V352z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: 50vw;
+    background-size: 80vh;
+    background-position: 50%;
 }
 
 #st-wrapped[open] #st-wrapped-container.done #st-wrapped-1[data-state=current] {
@@ -549,7 +560,8 @@
     transition: margin 200ms, outline 200ms, box-shadow 400ms, text-shadow 400ms, scale 400ms var(--appear-delay), translate 400ms var(--appear-delay), opacity 400ms var(--appear-delay), background-size 2000ms var(--appear-delay), z-index 400ms;
 }
 
-#st-wrapped-tiles[data-state=future]>.st-wrapped-tile {
+#st-wrapped-tiles[data-state=future]>.st-wrapped-tile,
+#st-wrapped:not([open]) #st-wrapped-tiles>.st-wrapped-tile {
     scale: 0.9;
     translate: 0 20%;
     opacity: 0 !important;
@@ -557,8 +569,10 @@
     transition: all 200ms;
 }
 
-#st-wrapped-tiles[data-state=current]>.st-wrapped-tile {
-    animation: 150000ms randomMoveTileIcon calc(1200ms - var(--appear-delay) * 107.28) infinite both;
+@media (prefers-reduced-motion: no-preference) {
+    #st-wrapped[open] #st-wrapped-tiles[data-state=current]>.st-wrapped-tile {
+        animation: 150000ms randomMoveTileIcon calc(1200ms - var(--appear-delay) * 107.28) infinite both;
+    }
 }
 
 #st-wrapped-tiles>button.st-wrapped-tile:hover,

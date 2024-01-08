@@ -1067,7 +1067,7 @@ nav.menu.ng-scope {
                             let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
                             let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
-                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.End
+                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.InleverenVoor
                             })
 
                             let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })

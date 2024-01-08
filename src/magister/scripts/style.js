@@ -50,7 +50,7 @@ async function applyStyles() {
 --st-background-primary: #ffffff;
 --st-background-secondary: #ffffff;
 --st-background-tertiary: #fafafa;
---st-background-overlay: #fffffff5;
+--st-background-overlay: #fffffff7;
 --st-background-transparent: #ffffffbb;
 --st-background-overlaid: #12121210;
 --st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
@@ -90,7 +90,7 @@ async function applyStyles() {
 --st-background-primary: #121212;
 --st-background-secondary: #161616;
 --st-background-tertiary: #0c0c0c;
---st-background-overlay: #121212f5;
+--st-background-overlay: #121212f7;
 --st-background-transparent: #121212bb;
 --st-background-overlaid: #00000030;
 --st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
@@ -1246,9 +1246,6 @@ h3:active> .icon-up-arrow:before {
     content: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/load-animation.svg");
 }
 `, 'study-tools')
-    if (syncedStorage['disable-css']) {
-        createStyle('', 'study-tools')
-    }
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
@@ -1310,10 +1307,27 @@ h3:active> .icon-up-arrow:before {
 `, 'study-tools-cs')
     } else { createStyle('', 'study-tools-cs') }
 
-    if (syncedStorage['magister-cf-failred']) {
-        createStyle(`.grade[title^="5,0"],.grade[title^="5,1"],.grade[title^="5,2"],.grade[title^="5,3"],.grade[title^="5,4"],.grade[title^="1,"],.grade[title^="2,"],.grade[title^="3,"],.grade[title^="4,"]{background-color:var(--st-highlight-warn) !important;color:var(--st-accent-warn) !important;font-weight:700}`, 'study-tools-cf-failred')
+    if (syncedStorage['insuf-red']) {
+        createStyle(`
+.grade.grade.grade.grade[title^="1,"],
+.grade.grade.grade.grade[title^="2,"],
+.grade.grade.grade.grade[title^="3,"],
+.grade.grade.grade.grade[title^="4,"],
+.grade.grade.grade.grade[title^="5,0"],
+.grade.grade.grade.grade[title^="5,1"],
+.grade.grade.grade.grade[title^="5,2"],
+.grade.grade.grade.grade[title^="5,3"],
+.grade.grade.grade.grade[title^="5,4"] {
+    color: var(--st-accent-warn) !important;
+    font-weight: 700;
+}
+
+.grade.grade.grade.grade[title^="10,0"] {
+    color: var(--st-accent-ok) !important;
+    font-weight: 700;
+}`, 'study-tools-insuf-red')
     } else {
-        createStyle('', 'study-tools-cf-failred')
+        createStyle('', 'study-tools-insuf-red')
     }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {

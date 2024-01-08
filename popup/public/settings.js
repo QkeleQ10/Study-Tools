@@ -308,10 +308,10 @@ export default [
                 default: true,
                 links: [
                     { icon: 'upload', label: "Cijferback-up importeren", href: 'https://qkeleq10.github.io/studytools/grades' }
-                ]
+                ],
             },
             {
-                id: "magister-cf-failred",
+                id: "insuf-red",
                 title: "Onvoldoendes rood kleuren",
                 subtitle: "Alleen in het cijferoverzicht.",
                 default: true,
@@ -394,9 +394,9 @@ export default [
                 ]
             },
             {
-                id: "disable-css",
-                title: "Algemene CSS-modificaties uitschakelen",
-                subtitle: "Veel functies van Study Tools werken mogelijk niet.",
+                id: "verbosity",
+                title: "Uitgebreide consoleberichten",
+                subtitle: "Er worden meer activiteiten geplaatst in de console.",
                 default: false,
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }

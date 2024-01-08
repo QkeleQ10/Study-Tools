@@ -19,7 +19,7 @@ div.loading-overlay {
     max-width: none;
     max-height: none;
     background: var(--st-background-overlay);
-    backdrop-filter: blur(3px);
+    /* backdrop-filter: blur(3px); */
     color: var(--st-foreground-primary);
     margin: 0;
     padding: 32px 24px 16px 24px;
