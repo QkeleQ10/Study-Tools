@@ -254,7 +254,8 @@ async function wrapped() {
         if (!opened) return displayWrapped()
         container.innerText = ''
 
-        // const accountInfo = await MagisterApi.accountInfo()
+        let seed = cyrb128(firstName)
+        let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
         const years = await MagisterApi.years()
 
@@ -311,12 +312,30 @@ async function wrapped() {
 
         const isFirstYear = !lastYearShallow
         const isFinalYear = thisYearExam && Object.keys(thisYearExam).length > 0 && !thisYearExam.doetVroegtijdig
+        const isFirstProfileYear = (
+            (
+                thisYear.studie.code.includes('4') &&
+                !thisYear.studie.code.toLowerCase().includes('vmbo') &&
+                (
+                    thisYear.studie.code.toLowerCase().includes('v') ||
+                    thisYear.studie.code.toLowerCase().includes('h') ||
+                    thisYear.studie.code.toLowerCase().includes('ath')
+                )
+            ) ||
+            (
+                thisYear.studie.code.includes('3') &&
+                (
+                    thisYear.studie.code.includes('tl') ||
+                    thisYear.studie.code.includes('vmbo')
+                )
+            )
+        )
 
-        let text1A = [`*${wrappedYear}* is alweer ${now < january22 ? '' : 'bijna '}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random()
-        if (isFirstYear && Math.random() < 0.5) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random()
-        else if (isFinalYear && Math.random() < 0.5) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `*Magister Wrapped* om je laatste schooljaar mee te beginnen.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random()
+        let text1A = [`*${wrappedYear}* is alweer ${now < january22 ? '' : 'bijna '}voorbij.`, `Laten we een terugblik werpen op *${wrappedYear}*.`, `Kom meer te weten over *jouw ${wrappedYear}* op Magister.`, `Welkom bij jouw Magister Wrapped, *${firstName}*.`].random(seed)
+        if (isFirstYear && rand() < 0.5) text1A = [`Dit is jouw *eerste Magister Wrapped*, welkom!`, `Welkom bij Magister Wrapped, *${firstName}*!`].random(seed)
+        else if (isFinalYear && rand() < 0.5) text1A = [`Dit is jouw *laatste Magister Wrapped*.`, `Fijn dat je je *laatste Magister Wrapped* komt bekijken.`, `*Magister Wrapped* om je laatste schooljaar mee te beginnen.`, `Welkom bij je laatste Magister Wrapped, *${firstName}*!`].random(seed)
 
-        let text1B = ["Klik verder voor inzichten over het afgelopen jaar.", "Neem snel een kijkje en klik verder!", "Fijn dat je er bent, klik verder om te beginnen.", "Klik verder om jouw Magister Wrapped te zien.", "Klik verder om te beginnen."].random()
+        let text1B = ["Klik verder voor inzichten over het afgelopen jaar.", "Neem snel een kijkje en klik verder!", "Fijn dat je er bent, klik verder om te beginnen.", "Klik verder om jouw Magister Wrapped te zien.", "Klik verder om te beginnen."].random(seed)
 
         const section1 = element('section', 'st-wrapped-1', container, { 'data-step': 0 })
         const section1Wrapper = element('div', 'st-wrapped-1-wrapper', section1)
@@ -327,40 +346,38 @@ async function wrapped() {
         if (isFirstYear) text2A =
             `In *${wrappedYear}* ging je in ${thisYearShallow.groep.code} van start met *${thisYearShallow.studie.code}*.`
         else if (lastYear.isZittenBlijver) text2A =
-            `In *${wrappedYear}* ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`
+            [`In *${wrappedYear}* ben je dan eindelijk doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* heb je je tweede poging tot *${lastYear.studie.code}* afgerond`, `In *${wrappedYear}* ben je wél doorgestroomd naar *${thisYear.studie.code}* afgerond`]
         else if (isFinalYear) text2A =
-            [`In *${wrappedYear}* ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`, `In *${wrappedYear}* ging je van start met ${thisYear.studie.code}—je *laatste jaar*`].random()
+            [`In *${wrappedYear}* ben je begonnen aan je *laatste jaar*: ${thisYear.studie.code}`, `In *${wrappedYear}* ging je van start met ${thisYear.studie.code}—je *laatste jaar*`].random(seed)
         else if (thisYear.isZittenBlijver) text2A =
-            [`In *${wrappedYear}* besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`, `In *${wrappedYear}* bleef je helaas zitten in *${thisYearShallow.studie.code}*`].random()
+            [`In *${wrappedYear}* besloot jij *${thisYearShallow.studie.code}* nog maar een jaartje te doen`, `In *${wrappedYear}* bleef je helaas zitten in *${thisYearShallow.studie.code}*`].random(seed)
         else if (lastYear.studie.code.includes('1')) text2A =
-            [`In *${wrappedYear}* rondde je je eerste jaar op de middelbare af`, `In *2023* verloor je je status als brugpieper`, `In *${wrappedYear}* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* begon je aan *${thisYear.studie.code}*.`, `In *${wrappedYear}* rondde je *${lastYear.studie.code}* af`].random()
+            [`In *${wrappedYear}* rondde je je eerste jaar op de middelbare af`, `In *2023* verloor je je status als brugpieper`, `In *${wrappedYear}* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* begon je aan *${thisYear.studie.code}*.`, `In *${wrappedYear}* rondde je *${lastYear.studie.code}* af`].random(seed)
         else text2A =
-            [`In *${wrappedYear}* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* begon je aan *${thisYear.studie.code}*.`, `In *${wrappedYear}* rondde je *${lastYear.studie.code}* af`].random()
+            [`In *${wrappedYear}* ben je doorgestroomd naar *${thisYear.studie.code}*`, `In *${wrappedYear}* begon je aan *${thisYear.studie.code}*.`, `In *${wrappedYear}* rondde je *${lastYear.studie.code}* af`].random(seed)
 
         let text2B =
-            ["Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar.", "Gefeliciteerd! Laten we terugblikken op afgelopen jaar."].random()
+            ["Wat goed! Laten we eens terugkijken op het afgelopen kalenderjaar.", "Gefeliciteerd! Laten we terugblikken op afgelopen jaar."].random(seed)
         if (isFirstYear) text2B =
             "Hoe bevalt het op je nieuwe school?"
         else if (isFinalYear && lastYearExam?.doetVroegtijdig && !lastYear.isZittenBlijver) text2B =
             "Je hebt zelfs al ervaring met het eindexamen. Nu de rest van je vakken nog."
         else if (isFinalYear && gradesMean > 7) text2B =
-            "En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je."
+            ["En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je.", `En wat een cijfers haalde je in ${wrappedYear}!`, "En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je.", "En dat deed je met vlag en wimpel; wat een mooie cijfers dit jaar!"].random(seed)
         else if (isFinalYear && lastYear.isZittenBlijver) text2B =
             "Ze zeggen dat je het moeilijkste jaar al achter de rug hebt (jij zelfs al twee keer). Jij kunt dit!"
         else if (isFinalYear) text2B =
-            ["Ze zeggen dat je het moeilijkste jaar al achter de rug hebt. Dit kun jij!", "Laten we terugkijken op het afgelopen jaar; het allerlaatste jaar voor je centraal examen."].random()
+            ["Ze zeggen dat je het moeilijkste jaar al achter de rug hebt. Dit kun jij!", "Laten we terugkijken op het afgelopen jaar; het allerlaatste jaar voor je centraal examen.", "Laten we eens terugkijken op het afgelopen kalenderjaar.", "Laten we terugblikken op afgelopen jaar."].random(seed)
         else if (thisYear.isZittenBlijver && thisYearExam.doetVroegtijdig) text2B =
-            `En dat is helemaal oké! Je gaat in ${wrappedYear + 1} zelfs vervroegd examen doen.`
+            [`En dat is helemaal oké! Je gaat in ${wrappedYear + 1} gelukkig al vervroegd examen doen.`, "Wel heb je besloten vervroegd examen te doen volgend jaar. Wat fijn!", "Laten we eens terugkijken op het afgelopen kalenderjaar.", "Laten we terugblikken op afgelopen jaar."].random(seed)
         else if (thisYear.isZittenBlijver) text2B =
-            "En dat is helemaal oké! Je bent zeker niet de enige. Neem rustig de tijd."
-        else if (thisYear.opleidingCode.omschrijving !== lastYear.opleidingCode.omschrijving) text2B =
-            "Je hebt ook een belangrijke keuze achter de rug. Was het de juiste?"
+            ["En dat is helemaal oké! Je bent zeker niet de enige. Neem rustig de tijd.", "Laten we eens terugkijken op het afgelopen kalenderjaar.", "Laten we terugblikken op afgelopen jaar."].random(seed)
+        else if (isFirstProfileYear) text2B =
+            ["Je hebt ook een belangrijke keuze achter de rug. Was het de juiste?", "In dit jaar begon je ook met je eigen vakkenpakket.", "Ook heb je een profielkeuze gemaakt. Hoe bevalt dat?"].random(seed)
         else if (lastYear.isZittenBlijver && gradesMean > 7) text2B =
-            "En dat deed je met vlag en wimpel; wat een mooie cijfers dit jaar!"
-        else if (lastYear.isZittenBlijver) text2B =
-            "Wat fijn! Laten we eens terugkijken op het afgelopen kalenderjaar."
+            ["En dat deed je met vlag en wimpel; wat heb je je cijfers verhoogd!", "Je hebt het roer helemaal omgegooid dit jaar. Wat een prachtige cijfers!"].random(seed)
         else if (gradesMean > 7) text2B =
-            [`En wat een cijfers haalde je in ${wrappedYear}!`, "En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je.", "En dat deed je met vlag en wimpel; wat een mooie cijfers dit jaar!"].random()
+            [`En wat een cijfers haalde je in ${wrappedYear}!`, "En je cijfers zijn super, dus dit moet goedkomen! Ik heb vertrouwen in je.", "En dat deed je met vlag en wimpel; wat een mooie cijfers dit jaar!"].random(seed)
         else if (gradesMean < 5.55) text2B =
             "Ruimschoots is wat anders, maar het is je toch gelukt!"
 
