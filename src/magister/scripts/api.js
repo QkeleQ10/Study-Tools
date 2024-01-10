@@ -21,6 +21,8 @@ gatherEnd.setHours(0, 0, 0, 0)
 async function updateApiCredentials() {
     if (verbose) console.info("CREDS START.")
 
+    const timeInit = new Date()
+
     const promiseMemory = new Promise(getApiCredentialsMemory)
 
     return Promise.race([
@@ -47,8 +49,13 @@ async function updateApiCredentials() {
             resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
             if (verbose) console.info(`CREDS OK: userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
         } else {
-            if (verbose) console.info("CREDS ERR: Too old. Retrying...")
-            getApiCredentialsMemory(resolve, reject)
+            if (new Date() - timeInit < 3000) {
+                if (verbose) console.info(`CREDS OK: Data too old! userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
+                resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+            } else {
+                if (verbose) console.info("CREDS ERR: Data too old! Retrying...")
+                getApiCredentialsMemory(resolve, reject)
+            }
         }
     }
 }
@@ -281,11 +288,11 @@ async function fetchWrapper(url, options) {
             `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
             [
                 { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
-                { innerText: "Discord", href: `https://discord.gg/RVKXKyaS6y` }
+                { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
             ],
             120000
         )
-        console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
+        console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
         console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
         return resolve({})
     })
@@ -303,11 +310,11 @@ async function fetchWrapper(url, options) {
                 `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
                 [
                     { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
-                    { innerText: "Discord", href: `https://discord.gg/RVKXKyaS6y` }
+                    { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
                 ],
                 120000
             )
-            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/RVKXKyaS6y) 💚`)
+            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
             console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
             return resolve({})
         })

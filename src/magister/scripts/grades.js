@@ -143,7 +143,7 @@ async function gradeCalculator() {
             "Ervaar je problemen met de cijfercalculator?\n\nJe kunt nog steeds handmatig je cijfers toevoegen. Stuur me ook even een berichtje of een mailtje om me te laten weten wat er misgaat. Zo kan ik het oplossen!",
             [
                 { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
-                { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
+                { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
             ]
         )
     })
