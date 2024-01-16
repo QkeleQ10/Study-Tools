@@ -167,7 +167,7 @@ Element.prototype.setAttributes = function (attributes) {
     }
 }
 
-// Elements with a temporal binding are updated every 10 seconds, or whenever the function is invoked manually.
+// Elements with a temporal binding are updated every second, or whenever the function is invoked manually.
 function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
     elementsWithTemporalBinding.forEach(element => {
@@ -218,11 +218,11 @@ function updateTemporalBindings() {
                 break
 
             case 'current-time-long':
-                element.innerText = now.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                element.innerText = currentTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
                 break
 
             case 'current-time-short':
-                element.innerText = now.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                element.innerText = currentTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
                 break
 
             default:
@@ -231,6 +231,16 @@ function updateTemporalBindings() {
 
     })
 }
+
+let currentTime = new Date()
+setIntervalImmediately(() => {
+    fetch("http://worldtimeapi.org/api/timezone/Europe/Amsterdam")
+        .then(response => response.json())
+        .then(data => currentTime = new Date(data.datetime))
+}, 60000)
+setInterval(() => {
+    currentTime = new Date(currentTime.getTime() + 1000)
+}, 1000)
 setIntervalImmediately(updateTemporalBindings, 1000)
 
 let minToMs = (minutes = 1) => minutes * 60000
