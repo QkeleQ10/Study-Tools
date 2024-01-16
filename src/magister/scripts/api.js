@@ -19,15 +19,22 @@ gatherEnd.setHours(0, 0, 0, 0)
  * @returns {Promise<Object>} Object containing userId and token
  */
 async function updateApiCredentials() {
-    if (verbose) console.info("CREDS START.")
+
+    let isCancelled = false
+
+    now = new Date()
+    if (verbose) console.info(`CREDS START: now: ${now.toTimeString().split(' ')[0]}`)
 
     const promiseMemory = new Promise(getApiCredentialsMemory)
 
     return Promise.race([
         promiseMemory,
         new Promise((resolve, reject) => {
-            // Reject after 5 seconds
-            setTimeout(() => reject(new Error("Timed out")), 5000)
+            // Reject after 4 seconds
+            setTimeout(() => {
+                isCancelled = true
+                reject(new Error("Timed out"))
+            }, 4000)
         })
     ])
         .catch(err => {
@@ -43,10 +50,11 @@ async function updateApiCredentials() {
         magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
         magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
 
-        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate) && Math.abs(now - new Date(magisterApiUserTokenDate)) < 30000) {
+        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate) && Math.abs(now - new Date(magisterApiUserTokenDate)) < 60000) {
             resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
-            if (verbose) console.info(`CREDS OK: userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
+            if (verbose) console.info(`CREDS OK: userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length} | userTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago) | now: ${now.toTimeString().split(' ')[0]}`)
         } else {
+            if (isCancelled) return reject(new Error("Timed out"))
             if (verbose) console.info("CREDS ERR: Too old. Retrying...")
             getApiCredentialsMemory(resolve, reject)
         }
@@ -197,7 +205,7 @@ const MagisterApi = {
                     `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/logboeken/count`
                 )
             resolve(
-                Array((await magisterApiCache.logs).count) || []
+                Array((await magisterApiCache.logs).count || 0) || []
             )
         })
     },

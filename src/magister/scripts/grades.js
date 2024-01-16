@@ -4,12 +4,38 @@ let statsGrades = [],
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
-async function popstate() {
+function popstate() {
     if (document.location.href.includes('cijfers')) {
-        await saveToStorage('viewedGrades', new Date().getTime(), 'local')
+        console.log(document.location.href)
+        if (document.location.href.includes('cijferoverzicht')) {
+            gradeOverview()
+        } else {
+            gradeList()
+        }
     }
-    if (document.location.href.includes('cijferoverzicht')) {
-        gradeOverview()
+}
+
+async function gradeList() {
+    saveToStorage('viewedGrades', new Date().getTime(), 'local')
+
+    const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
+
+    if (syncedStorage['cb']) {
+        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: "Cijferback-up", 'data-icon': '' })
+        cbPreOpen.addEventListener('click', async () => {
+            document.location.hash = '#/cijfers/cijferoverzicht'
+            const cbOpen = await awaitElement('#st-cb')
+            cbOpen.click()
+        })
+    }
+
+    if (syncedStorage['cc']) {
+        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: "Cijfercalculator", 'data-icon': '' })
+        ccPreOpen.addEventListener('click', async () => {
+            document.location.hash = '#/cijfers/cijferoverzicht'
+            const ccOpen = await awaitElement('#st-cc-open')
+            ccOpen.click()
+        })
     }
 }
 
@@ -866,7 +892,7 @@ async function gradeStatistics() {
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
-            
+
             buildSubjectFilter()
             displayStatistics()
         })
