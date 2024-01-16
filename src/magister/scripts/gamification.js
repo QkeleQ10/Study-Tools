@@ -242,7 +242,7 @@ async function wrapped() {
             "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van functionaliteitensuggesties en probleemrapporten) zijn daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
             [
                 { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
-                { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
+                { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
             ])
     })
 
