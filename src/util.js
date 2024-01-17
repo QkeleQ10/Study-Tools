@@ -173,6 +173,7 @@ function updateTemporalBindings() {
     elementsWithTemporalBinding.forEach(element => {
 
         let now = new Date(),
+            amsterdamTime = new Date(now + (timeOffset || 0)),
             type = element.dataset.temporalType,
             start = new Date(element.dataset.temporalStart || now),
             end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || now)
@@ -180,49 +181,49 @@ function updateTemporalBindings() {
         switch (type) {
             case 'timestamp':
                 let timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long' })
-                if (start <= now && end >= now) {
+                if (start <= amsterdamTime && end >= amsterdamTime) {
                     // Start date is in the past and End date is in the future
                     timestamp = 'nu'
-                } else if (start >= now) {
+                } else if (start >= amsterdamTime) {
                     // Start date is in the future
-                    if (start - now < minToMs(15)) timestamp = 'zometeen'
+                    if (start - amsterdamTime < minToMs(15)) timestamp = 'zometeen'
                     else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
                     else if (start.isTomorrow()) timestamp = `morgen om ${start.getFormattedTime()}`
-                    else if (start - now < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
-                    else if (start - now < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
+                    else if (start - amsterdamTime < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                    else if (start - amsterdamTime < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
                     else timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                } else if (end <= now) {
+                } else if (end <= amsterdamTime) {
                     // End date is in the past
-                    if (now - end < minToMs(5)) timestamp = 'zojuist'
-                    else if (now - end < minToMs(15)) timestamp = 'een paar minuten geleden'
+                    if (amsterdamTime - end < minToMs(5)) timestamp = 'zojuist'
+                    else if (amsterdamTime - end < minToMs(15)) timestamp = 'een paar minuten geleden'
                     else if (end.isToday()) timestamp = `vandaag om ${end.getFormattedTime()}`
                     else if (end.isYesterday()) timestamp = `gisteren om ${end.getFormattedTime()}`
-                    else if (now - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
-                    else if (now.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                    else if (amsterdamTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
+                    else if (amsterdamTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
                 element.innerText = timestamp
                 break
 
             case 'style-hours':
-                element.style.setProperty('--relative-start', now.getHoursWithDecimals())
+                element.style.setProperty('--relative-start', amsterdamTime.getHoursWithDecimals())
                 break
 
             case 'ongoing-check':
-                element.dataset.ongoing = (start <= now && end >= now)
+                element.dataset.ongoing = (start <= amsterdamTime && end >= amsterdamTime)
                 break
 
             case 'style-progress':
-                let progress = (now - start) / (end - start)
+                let progress = (amsterdamTime - start) / (end - start)
                 element.style.setProperty('--progress', Math.min(Math.max(0, progress), 1))
                 element.dataset.done = progress >= 1
                 break
 
             case 'current-time-long':
-                element.innerText = currentTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                element.innerText = amsterdamTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
                 break
 
             case 'current-time-short':
-                element.innerText = currentTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                element.innerText = amsterdamTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
                 break
 
             default:
@@ -232,15 +233,11 @@ function updateTemporalBindings() {
     })
 }
 
-let currentTime = new Date()
-setIntervalImmediately(() => {
-    fetch("http://worldtimeapi.org/api/timezone/Europe/Amsterdam")
-        .then(response => response.json())
-        .then(data => currentTime = new Date(data.datetime))
-}, 60000)
-setInterval(() => {
-    currentTime = new Date(currentTime.getTime() + 1000)
-}, 1000)
+let amsterdamTime = new Date()
+let timeOffset = 0
+fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
+    .then(response => response.json())
+    .then(data => timeOffset = new Date(data.datetime) - amsterdamTime)
 setIntervalImmediately(updateTemporalBindings, 1000)
 
 let minToMs = (minutes = 1) => minutes * 60000

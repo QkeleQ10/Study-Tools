@@ -239,7 +239,7 @@ async function wrapped() {
 
         await notify(
             'dialog',
-            "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van functionaliteitensuggesties en probleemrapporten) zijn daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
+            "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van functionaliteitensuggesties en probleemrapporten) is daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
             [
                 { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
                 { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
@@ -276,6 +276,7 @@ async function wrapped() {
                     g.CijferStr === grade.CijferStr
                 )
             )
+            .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
         const gradesMean = calculateMean(grades.map(grade => Number(grade.CijferStr.replace(',', '.'))))
 
         const events = await MagisterApi.events(

@@ -61,7 +61,7 @@ async function updateApiCredentials() {
                 resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
             } else {
                 if (isCancelled) return reject(new Error("Timed out"))
-            if (verbose) console.info("CREDS ERR: Data too old! Retrying...")
+                if (verbose) console.info("CREDS ERR: Data too old! Retrying...")
                 getApiCredentialsMemory(resolve, reject)
             }
         }
@@ -249,8 +249,11 @@ async function fetchWrapper(url, options) {
         // Resolve if no errors
         if (res1.ok) {
             const json = await res1.json()
+            if (verbose) console.info(`APIRQ OK`)
             return resolve(json)
         }
+
+        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Retrying...`)
 
         // Reject when forbidden (e.g. feature disabled by school)
         if (res1.status === 403) {
@@ -262,8 +265,6 @@ async function fetchWrapper(url, options) {
             notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
             return resolve({})
         }
-
-        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Retrying...`)
 
         // If it's not a ratelimit, retry one more time. Also forcibly refresh from memory.
         await updateApiCredentials()
@@ -279,6 +280,8 @@ async function fetchWrapper(url, options) {
             return resolve(json)
         }
 
+        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Resolving empty.`)
+
         // Reject when forbidden (e.g. feature disabled by school)
         if (res2.status === 403) {
             return resolve({})
@@ -293,7 +296,7 @@ async function fetchWrapper(url, options) {
         // Handle other errors
         notify(
             'snackbar',
-            `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+            `Fout ${res2.status}. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
             [
                 { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
                 { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }

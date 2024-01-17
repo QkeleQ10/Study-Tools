@@ -6,7 +6,6 @@ popstate()
 window.addEventListener('popstate', popstate)
 function popstate() {
     if (document.location.href.includes('cijfers')) {
-        console.log(document.location.href)
         if (document.location.href.includes('cijferoverzicht')) {
             gradeOverview()
         } else {
@@ -16,6 +15,8 @@ function popstate() {
 }
 
 async function gradeList() {
+    await awaitElement('#cijferslaatstbehaalderesultaten-uitgebreideweergave')
+
     saveToStorage('viewedGrades', new Date().getTime(), 'local')
 
     const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
@@ -573,8 +574,8 @@ async function gradeBackup() {
 
                     let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
 
-                    let result = gradeBasis.CijferStr || gradeBasis.Cijfer
-                    let date = gradeBasis.DatumIngevoerd
+                    let result = gradeBasis?.CijferStr || gradeBasis?.Cijfer
+                    let date = gradeBasis?.DatumIngevoerd
 
                     if (Math.floor(i / 400) * 10000 >= 10000) {
                         bkModalExListTitle.dataset.description = `10 seconden wachten...`
@@ -588,7 +589,7 @@ async function gradeBackup() {
                     }
 
                     setTimeout(async () => {
-                        const gradeExtra = await MagisterApi.grades.columnInfo(year, gradeBasis.CijferKolom.Id)
+                        const gradeExtra = await MagisterApi.grades.columnInfo(year, gradeBasis?.CijferKolom?.Id)
 
                         let weight = Number(gradeExtra.Weging),
                             column = gradeExtra.KolomNaam,

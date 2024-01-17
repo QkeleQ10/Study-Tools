@@ -408,6 +408,7 @@
     width: 5px;
     background-color: var(--st-accent-warn);
     opacity: 1 !important;
+    transform: none !important;
 }
 
 .st-start-event.cancelled .st-start-event-subject-wrapper,
