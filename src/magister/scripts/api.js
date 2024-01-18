@@ -19,11 +19,11 @@ gatherEnd.setHours(0, 0, 0, 0)
  * @returns {Promise<Object>} Object containing userId and token
  */
 async function updateApiCredentials() {
-
     let isCancelled = false
 
     now = new Date()
-    if (verbose) console.info(`CREDS START: now: ${now.toTimeString().split(' ')[0]}`)
+    const calledAt = new Date()
+    if (verbose) console.info(`CREDS START`)
 
     const timeInit = new Date()
 
@@ -47,23 +47,31 @@ async function updateApiCredentials() {
         let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
         now = new Date()
 
-        if (!(magisterApiUserId?.length > 1))
+        if (!(magisterApiUserId?.length > 1)) {
             magisterApiUserId = await getFromStorage('user-id', 'sync')
+        }
+
         magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
         magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
 
-        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate) && Math.abs(now - new Date(magisterApiUserTokenDate)) < 60000) {
-            resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
-            if (verbose) console.info(`CREDS OK: userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length} | userTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago) | now: ${now.toTimeString().split(' ')[0]}`)
-        } else {
-            if (new Date() - timeInit < 3000) {
-                if (verbose) console.info(`CREDS OK: Data too old! userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
+        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate)) {
+            if (Math.abs(now - new Date(magisterApiUserTokenDate)) < 60000) {
                 resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+                if (verbose) console.info(`CREDS OK after ${now - calledAt} ms\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}\nuserTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago)`)
             } else {
-                if (isCancelled) return reject(new Error("Timed out"))
-                if (verbose) console.info("CREDS ERR: Data too old! Retrying...")
-                getApiCredentialsMemory(resolve, reject)
+                if (new Date() - timeInit < 3000) {
+                    if (verbose) console.info(`CREDS OK: Data too old! userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
+                    resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+                } else {
+                    if (isCancelled) return reject(new Error("Timed out"))
+                    if (verbose) console.info("CREDS INFO: Data too old! Retrying...")
+                    getApiCredentialsMemory(resolve, reject)
+                }
             }
+        } else {
+            if (isCancelled) return reject(new Error("Timed out"))
+            if (verbose) console.info("CREDS INFO: Data incomplete! Retrying...")
+            getApiCredentialsMemory(resolve, reject)
         }
     }
 }
@@ -238,18 +246,25 @@ const MagisterApi = {
  * @returns {Promise<Object>}
  */
 async function fetchWrapper(url, options) {
+    const calledAt = new Date()
+
     const promiseReq = new Promise(async (resolve, reject) => {
         if (!magisterApiUserId || !magisterApiUserToken) {
             await updateApiCredentials()
                 .catch(err => console.error(err))
         }
 
-        const res1 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
+        const res1 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), {
+            headers: {
+                Authorization: magisterApiUserToken,
+                'X-Request-Source': 'study-tools'
+            }, ...options
+        })
 
         // Resolve if no errors
         if (res1.ok) {
             const json = await res1.json()
-            if (verbose) console.info(`APIRQ OK`)
+            if (verbose) console.info(`APIRQ OK after ${new Date() - calledAt} ms`)
             return resolve(json)
         }
 
@@ -271,12 +286,17 @@ async function fetchWrapper(url, options) {
             .catch(err => console.error(err))
 
         // Retry with a second request
-        const res2 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), { headers: { Authorization: magisterApiUserToken }, ...options })
+        const res2 = await fetch(url.replace(/(\$USERID)/gi, magisterApiUserId), {
+            headers: {
+                Authorization: magisterApiUserToken,
+                'X-Request-Source': 'study-tools'
+            }, ...options
+        })
 
         // Resolve if no errors
         if (res2.ok) {
             const json = await res2.json()
-            if (verbose) console.info(`APIRQ OK: Succeeded on second try.`)
+            if (verbose) console.info(`APIRQ OK after ${new Date() - calledAt} ms: Succeeded on second try.`)
             return resolve(json)
         }
 
