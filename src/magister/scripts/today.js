@@ -1226,12 +1226,14 @@ function checkCollision(eventArr) {
 
 function eventChips(item) {
     let chips = []
-
+    
     if (item.Status === 5) chips.push({ name: "Vervallen", type: 'warn' })
     if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
     else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
     if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
     else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'important' })
+    if (item.InfoType === 6 && item.Afgerond) chips.push({ name: "Informatie", type: 'ok' })
+    else if (item.InfoType === 6) chips.push({ name: "Informatie", type: 'info' })
     if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
     else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 
