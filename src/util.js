@@ -13,8 +13,7 @@ let eggs = [],
 })()
 
 window.addEventListener('DOMContentLoaded', async () => {
-
-    const snackbarWrapper = element('div', 'st-snackbars', document.body)
+    element('div', 'st-snackbars', document.body)
 
     handleAnnouncements()
 
@@ -172,73 +171,84 @@ function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
     elementsWithTemporalBinding.forEach(element => {
 
-        let now = new Date(),
-            amsterdamTime = new Date(now + (timeOffset || 0)),
+        let networkTime = new Date(new Date() - (timeOffset || 0)),
             type = element.dataset.temporalType,
-            start = new Date(element.dataset.temporalStart || now),
-            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || now)
+            start = new Date(element.dataset.temporalStart || networkTime),
+            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || networkTime)
 
         switch (type) {
             case 'timestamp':
-                let timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long' })
-                if (start <= amsterdamTime && end >= amsterdamTime) {
+                let timestamp = start.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
+                if (start <= networkTime && end >= networkTime) {
                     // Start date is in the past and End date is in the future
                     timestamp = 'nu'
-                } else if (start >= amsterdamTime) {
+                } else if (start >= networkTime) {
                     // Start date is in the future
-                    if (start - amsterdamTime < minToMs(15)) timestamp = 'zometeen'
+                    if (start - networkTime < minToMs(15)) timestamp = 'zometeen'
                     else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
                     else if (start.isTomorrow()) timestamp = `morgen om ${start.getFormattedTime()}`
-                    else if (start - amsterdamTime < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
-                    else if (start - amsterdamTime < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
-                    else timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                } else if (end <= amsterdamTime) {
+                    else if (start - networkTime < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                    else if (start - networkTime < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
+                    else timestamp = start.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                } else if (end <= networkTime) {
                     // End date is in the past
-                    if (amsterdamTime - end < minToMs(5)) timestamp = 'zojuist'
-                    else if (amsterdamTime - end < minToMs(15)) timestamp = 'een paar minuten geleden'
+                    if (networkTime - end < minToMs(5)) timestamp = 'zojuist'
+                    else if (networkTime - end < minToMs(15)) timestamp = 'een paar minuten geleden'
                     else if (end.isToday()) timestamp = `vandaag om ${end.getFormattedTime()}`
                     else if (end.isYesterday()) timestamp = `gisteren om ${end.getFormattedTime()}`
-                    else if (amsterdamTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
-                    else if (amsterdamTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                    else if (networkTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
+                    else if (networkTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
                 element.innerText = timestamp
                 break
 
             case 'style-hours':
-                element.style.setProperty('--relative-start', amsterdamTime.getHoursWithDecimals())
+                element.style.setProperty('--relative-start', networkTime.getHoursWithDecimals())
                 break
 
             case 'ongoing-check':
-                element.dataset.ongoing = (start <= amsterdamTime && end >= amsterdamTime)
+                element.dataset.ongoing = (start <= networkTime && end >= networkTime)
                 break
 
             case 'style-progress':
-                let progress = (amsterdamTime - start) / (end - start)
+                let progress = (networkTime - start) / (end - start)
                 element.style.setProperty('--progress', Math.min(Math.max(0, progress), 1))
                 element.dataset.done = progress >= 1
                 break
 
             case 'current-time-long':
-                element.innerText = amsterdamTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
                 break
 
             case 'current-time-short':
-                element.innerText = amsterdamTime.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                break
+
+            case 'current-time-disclaimer':
+                if (timeZoneDifference === 0) return element.style.display = 'none'
+                else element.style.removeProperty('style')
+                element.innerText = timeZoneDifference > 0
+                    ? `Tijd in Nederland (${timeZoneDifference} uur later)`
+                    : `Tijd in Nederland (${-timeZoneDifference} uur eerder)`
                 break
 
             default:
                 break
         }
-
     })
 }
 
-let amsterdamTime = new Date()
 let timeOffset = 0
+let timeZoneDifference = 0
 fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
     .then(response => response.json())
-    .then(data => timeOffset = new Date(data.datetime) - amsterdamTime)
-setIntervalImmediately(updateTemporalBindings, 1000)
+    .then(data => {
+        timeOffset = (new Date(data?.datetime) - new Date()) || 0 // timeOffset is the difference between the system time and the network time.
+        let amsterdamTimeZoneOffset = (parseInt(data?.datetime.slice(-5, -3), 10) * 60 +
+            parseInt(data?.datetime.slice(-2), 10)) * -1
+        timeZoneDifference = ((new Date().getTimezoneOffset() - amsterdamTimeZoneOffset) / 60)
+    })
+setIntervalImmediately(updateTemporalBindings, 500)
 
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
@@ -265,7 +275,7 @@ Date.prototype.getFormattedDay = function () {
     return weekDays[d.getDay()]
 }
 
-Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }
+Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
 Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + offset) && this < midnight(1 + offset) }

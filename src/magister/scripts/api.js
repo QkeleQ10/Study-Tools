@@ -14,74 +14,13 @@ const gatherEnd = new Date()
 gatherEnd.setDate(now.getDate() + 42)
 gatherEnd.setHours(0, 0, 0, 0)
 
-/**
- * Retrieve the latest credentials information from memory.
- * @returns {Promise<Object>} Object containing userId and token
- */
-async function updateApiCredentials() {
-    let isCancelled = false
-
-    now = new Date()
-    const calledAt = new Date()
-    if (verbose) console.info(`CREDS START`)
-
-    const timeInit = new Date()
-
-    const promiseMemory = new Promise(getApiCredentialsMemory)
-
-    return Promise.race([
-        promiseMemory,
-        new Promise((resolve, reject) => {
-            // Reject after 4 seconds
-            setTimeout(() => {
-                isCancelled = true
-                reject(new Error("Timed out"))
-            }, 4000)
-        })
-    ])
-        .catch(err => {
-            console.error(`CREDS ERR: ${err}.`)
-        })
-
-    async function getApiCredentialsMemory(resolve, reject) {
-        let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
-        now = new Date()
-
-        if (!(magisterApiUserId?.length > 1)) {
-            magisterApiUserId = await getFromStorage('user-id', 'sync')
-        }
-
-        magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
-        magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
-
-        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate)) {
-            if (Math.abs(now - new Date(magisterApiUserTokenDate)) < 60000) {
-                resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
-                if (verbose) console.info(`CREDS OK after ${now - calledAt} ms\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}\nuserTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago)`)
-            } else {
-                if (new Date() - timeInit < 3000) {
-                    if (verbose) console.info(`CREDS OK: Data too old! userId: ${magisterApiUserId} | userToken.length: ${magisterApiUserToken?.length}`)
-                    resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
-                } else {
-                    if (isCancelled) return reject(new Error("Timed out"))
-                    if (verbose) console.info("CREDS INFO: Data too old! Retrying...")
-                    getApiCredentialsMemory(resolve, reject)
-                }
-            }
-        } else {
-            if (isCancelled) return reject(new Error("Timed out"))
-            if (verbose) console.info("CREDS INFO: Data incomplete! Retrying...")
-            getApiCredentialsMemory(resolve, reject)
-        }
-    }
-}
 
 const MagisterApi = {
     accountInfo: async () => {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.accountInfo ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/account?noCache=0`
+                    `https://${magisterApiSchoolName}.magister.net/api/account?noCache=0`, null, 'accountInfo'
                 )
             resolve(
                 (await magisterApiCache.accountInfo)
@@ -92,7 +31,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.years ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`
+                    `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/aanmeldingen?begin=2013-01-01&einde=${new Date().getFullYear() + 1}-01-01`, null, 'years'
                 )
             resolve(
                 (await magisterApiCache.years)?.items || []
@@ -103,7 +42,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache['yearInfo' + year?.id] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}`
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}`, null, 'yearInfo'
                 )
             resolve(
                 (await magisterApiCache['yearInfo' + year?.id])
@@ -114,7 +53,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache['examInfo' + year?.id] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examen`
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examen`, null, 'examInfo'
                 )
             resolve(
                 (await magisterApiCache['examInfo' + year?.id])
@@ -125,7 +64,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)] ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${start.toISOString().substring(0, 10)}&tot=${end.toISOString().substring(0, 10)}`
+                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${start.toISOString().substring(0, 10)}&tot=${end.toISOString().substring(0, 10)}`, null, 'events'
                 )
             resolve(
                 (await magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)])?.Items || []
@@ -137,7 +76,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.gradesRecent ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`, null, 'grades.recent'
                     )
                 resolve(
                     (await magisterApiCache.gradesRecent)?.items || []
@@ -148,7 +87,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache['gradesYear' + year?.id] ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year.einde}`, null, 'grades.forYear'
                     )
                 resolve(
                     (await magisterApiCache['gradesYear' + year?.id])?.Items || []
@@ -159,7 +98,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache['gradesYear' + year?.id + 'Col' + columnId] ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/extracijferkolominfo/${columnId}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/extracijferkolominfo/${columnId}`, null, 'grades.columnInfo'
                     )
                 resolve(
                     (await magisterApiCache['gradesYear' + year?.id + 'Col' + columnId]) || {}
@@ -172,7 +111,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.assignments ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${gatherStart.toISOString().substring(0, 10)}&einddatum=${gatherEnd.toISOString().substring(0, 10)}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${gatherStart.toISOString().substring(0, 10)}&einddatum=${gatherEnd.toISOString().substring(0, 10)}`, null, 'assignments.top'
                     )
                 resolve(
                     (await magisterApiCache.assignments)?.Items || []
@@ -183,7 +122,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache['assignmentsYear' + year?.id] ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=250&startdatum=${year.begin}&einddatum=${year.einde}`, null, 'assignments.forYear'
                     )
                 resolve(
                     (await magisterApiCache['assignmentsYear' + year?.id])?.Items || []
@@ -195,7 +134,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.messages ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`
+                    `https://${magisterApiSchoolName}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, null, 'messages'
                 )
             resolve(
                 (await magisterApiCache.messages)?.items || []
@@ -206,7 +145,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.activities ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan`
+                    `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/activiteiten?status=NogNietAanEisVoldaan`, null, 'activities'
                 )
             resolve(
                 (await magisterApiCache.activities)?.Items || []
@@ -217,7 +156,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.logs ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/logboeken/count`
+                    `https://${magisterApiSchoolName}.magister.net/api/leerlingen/$USERID/logboeken/count`, null, 'logs'
                 )
             resolve(
                 Array((await magisterApiCache.logs).count || 0) || []
@@ -229,7 +168,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache['absencesYear' + year?.id] ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/absenties?van=${year.begin}&tot=${year.einde}`
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/absenties?van=${year.begin}&tot=${year.einde}`, null, 'absences'
                     )
                 resolve(
                     (await magisterApiCache['absencesYear' + year?.id])?.Items || []
@@ -245,12 +184,12 @@ const MagisterApi = {
  * @param {Object} options
  * @returns {Promise<Object>}
  */
-async function fetchWrapper(url, options) {
+async function fetchWrapper(url, options, identifier = 'unknown') {
     const calledAt = new Date()
 
     const promiseReq = new Promise(async (resolve, reject) => {
         if (!magisterApiUserId || !magisterApiUserToken) {
-            await updateApiCredentials()
+            await updateApiCredentials(identifier)
                 .catch(err => console.error(err))
         }
 
@@ -264,11 +203,11 @@ async function fetchWrapper(url, options) {
         // Resolve if no errors
         if (res1.ok) {
             const json = await res1.json()
-            if (verbose) console.info(`APIRQ OK after ${new Date() - calledAt} ms`)
+            if (verbose) console.info(`APIRQ OK after ${new Date() - calledAt} ms (@ ${identifier})`)
             return resolve(json)
         }
 
-        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Retrying...`)
+        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Retrying... (@ ${identifier})`)
 
         // Reject when forbidden (e.g. feature disabled by school)
         if (res1.status === 403) {
@@ -282,7 +221,7 @@ async function fetchWrapper(url, options) {
         }
 
         // If it's not a ratelimit, retry one more time. Also forcibly refresh from memory.
-        await updateApiCredentials()
+        await updateApiCredentials(identifier)
             .catch(err => console.error(err))
 
         // Retry with a second request
@@ -296,11 +235,11 @@ async function fetchWrapper(url, options) {
         // Resolve if no errors
         if (res2.ok) {
             const json = await res2.json()
-            if (verbose) console.info(`APIRQ OK after ${new Date() - calledAt} ms: Succeeded on second try.`)
+            if (verbose) console.info(`APIRQ OK after ${new Date() - calledAt} ms: Succeeded on second try. (@ ${identifier})`)
             return resolve(json)
         }
 
-        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Resolving empty.`)
+        if (verbose) console.info(`APIRQ ERR: ${res1.status}. Resolving empty. (@ ${identifier})`)
 
         // Reject when forbidden (e.g. feature disabled by school)
         if (res2.status === 403) {
@@ -324,7 +263,7 @@ async function fetchWrapper(url, options) {
             120000
         )
         console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
-        console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
+        console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
         return resolve({})
     })
 
@@ -346,7 +285,69 @@ async function fetchWrapper(url, options) {
                 120000
             )
             console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
-            console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}`)
+            console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
             return resolve({})
         })
+}
+
+/**
+ * Retrieve the latest credentials information from memory.
+ * @returns {Promise<Object>} Object containing userId and token
+ */
+async function updateApiCredentials(identifier = 'unknown') {
+    let isCancelled = false
+
+    now = new Date()
+    const calledAt = new Date()
+    if (verbose) console.info(`CREDS START (@ ${identifier})`)
+
+    const timeInit = new Date()
+
+    const promiseMemory = new Promise(getApiCredentialsMemory)
+
+    return Promise.race([
+        promiseMemory,
+        new Promise((resolve, reject) => {
+            // Reject after 4 seconds
+            setTimeout(() => {
+                isCancelled = true
+                reject(new Error("Timed out"))
+            }, 4000)
+        })
+    ])
+        .catch(err => {
+            console.error(`CREDS ERR: ${err} (@ ${identifier})`)
+        })
+
+    async function getApiCredentialsMemory(resolve, reject) {
+        let storageLocation = chrome.storage.session?.get ? 'session' : 'local'
+        now = new Date()
+
+        if (!(magisterApiUserId?.length > 1)) {
+            magisterApiUserId = await getFromStorage('user-id', 'sync')
+        }
+
+        magisterApiUserToken = await getFromStorage('token', storageLocation) || magisterApiUserToken
+        magisterApiUserTokenDate = await getFromStorage('token-date', storageLocation) || magisterApiUserTokenDate
+
+        if (magisterApiUserId && magisterApiUserToken && magisterApiUserTokenDate && new Date(magisterApiUserTokenDate)) {
+            if (Math.abs(now - new Date(magisterApiUserTokenDate)) < 60000) {
+                resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+                if (verbose) console.info(`CREDS OK after ${now - calledAt} ms (@ ${identifier})\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}\nuserTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago)`)
+            } else {
+                if (new Date() - timeInit < 3000) {
+                    if (verbose) console.info(`CREDS WARN after ${now - calledAt} ms: Data too old! (@ ${identifier})\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}\nuserTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago)`)
+                    resolve({ userId: magisterApiUserId, token: magisterApiUserToken })
+                } else {
+                    if (isCancelled) return reject(new Error("Timed out"))
+                    if (verbose) console.info(`CREDS WARN: Data too old! Retrying... (@ ${identifier})`)
+                    getApiCredentialsMemory(resolve, reject)
+                }
+            }
+        } else {
+            if (isCancelled) return reject(new Error("Timed out"))
+            if (verbose) console.info("CREDS INFO: Data incomplete! Retrying...")
+            getApiCredentialsMemory(resolve, reject)
+        }
+    }
 }

@@ -712,6 +712,10 @@
     padding: 0;
 }
 
+#st-start-widget-digital-clock-disclaimer {
+    translate: 0 16px;
+}
+
 #st-start-widget-digital-clock-time {
     display: inline-block;
     justify-content: center;
