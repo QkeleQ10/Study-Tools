@@ -36,9 +36,6 @@
                 "src/magister/scripts/api.js",
                 "src/util.js"
             ],
-            "css": [
-                "src/util.css"
-            ],
             "run_at": "document_start"
         },
         {

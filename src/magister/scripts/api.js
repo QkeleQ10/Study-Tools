@@ -257,7 +257,7 @@ async function fetchWrapper(url, options, identifier = 'unknown') {
             'snackbar',
             `Fout ${res2.status}. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
             [
-                { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
+                { innerText: "E-mail", href: `mailto:quinten@althues.nl` },
                 { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
             ],
             120000

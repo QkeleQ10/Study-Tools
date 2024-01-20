@@ -5,7 +5,8 @@ let syncedStorage = {},
     apiCache = {}
 
 let eggs = [],
-    announcements = [];
+    announcements = [],
+    snackbarQueue = [];
 
 (async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
@@ -13,8 +14,6 @@ let eggs = [],
 })()
 
 window.addEventListener('DOMContentLoaded', async () => {
-    element('div', 'st-snackbars', document.body)
-
     handleAnnouncements()
 
     setTimeout(() => {
@@ -32,6 +31,9 @@ async function handleAnnouncements() {
         .forEach(async announcement => {
             if (await isAnnouncementValid(announcement)) {
                 notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
+                if (announcement.showOnceId) setTimeout(() => {
+                    saveToStorage(announcement.showOnceId, true, 'local')
+                }, 5000)
             }
         })
 }
@@ -43,10 +45,11 @@ function isAnnouncementValid(announcement) {
         if (announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
         if (announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) resolve(false)
         if (announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
-        if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
+        // if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
         if (announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
         if (announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
         if (announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
+        if (announcement.showOnceId && !(await getFromStorage(announcement.showOnceId, 'local') || false)) resolve(false)
 
         resolve(true)
     })
@@ -474,30 +477,9 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
     switch (type) {
         case 'snackbar':
-            const snackbar = document.createElement('div'),
-                snackbarWrapper = await awaitElement('#st-snackbars')
-            snackbarWrapper.append(snackbar)
-            snackbar.innerText = body
-
-            if (buttons?.length > 0) buttons.forEach(button => {
-                let anchor = element('a', null, snackbar, button)
-                if (button.clickSelector) {
-                    anchor.addEventListener('click', event => {
-                        document.querySelector(button.clickSelector)?.click()
-                        event.stopPropagation()
-                    })
-                } else anchor.addEventListener('click', event => event.stopPropagation())
-            })
-            const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
-            snackbarDismiss.addEventListener('click', () => {
-                snackbar.classList.remove('open')
-                setTimeout(() => snackbar.remove(), 2000)
-            })
-            setTimeout(() => snackbar.classList.add('open'), 50)
-            if (duration !== 0) {
-                setTimeout(() => snackbar.classList.remove('open'), duration)
-                setTimeout(() => snackbar.remove(), duration + 2000)
-            }
+            const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 10000) }
+            snackbarQueue.push(snackbar)
+            if (!document.querySelector('.st-snackbar')) showSnackbar(snackbar)
             break
 
         case 'dialog':
@@ -506,7 +488,7 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                 dialog.showModal()
 
                 if (buttons?.length > 0) {
-                    const buttonsWrapper = element('div', null, dialog, { class: 'st-dialog-buttons' })
+                    const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                     buttons.forEach(item => {
                         const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
                         if (item.innerText) button.innerText = item.innerText
@@ -515,12 +497,16 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                                 document.querySelector(item.clickSelector)?.click()
                                 event.stopPropagation()
                             })
-                        }
-                        else button.addEventListener('click', event => event.stopPropagation())
+                        } else if (item.href) {
+                            button.addEventListener('click', event => {
+                                window.open(item.href, '_blank').focus()
+                                event.stopPropagation()
+                            })
+                        } else button.addEventListener('click', event => event.stopPropagation())
                     })
                 }
 
-                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '' })
+                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '', title: "Dialoogvenster verbergen" })
                 dialogDismiss.addEventListener('click', () => {
                     dialog.close()
                     dialog.remove()
@@ -532,7 +518,57 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
         default:
             break
     }
+}
 
+function showSnackbar(object) {
+    const { id, body, buttons, duration } = object
+    snackbarQueue.splice(snackbarQueue.findIndex(item => item.id === id), 1)
+
+    const snackbar = element('div', `st-snackbar-${id}`, document.body, { class: 'st-snackbar', innerText: body })
+
+    if (buttons?.length > 0) {
+        const buttonsWrapper = element('div', null, snackbar, { class: 'st-button-wrapper' })
+        buttons.forEach(item => {
+            const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
+            if (item.innerText) button.innerText = item.innerText
+            if (item.clickSelector) {
+                button.addEventListener('click', event => {
+                    document.querySelector(item.clickSelector)?.click()
+                    event.stopPropagation()
+                })
+            } else if (item.expandToDialog) {
+                button.addEventListener('click', event => {
+                    notify('dialog', item.expandToDialog)
+                    event.stopPropagation()
+                })
+            } else if (item.href) {
+                button.addEventListener('click', event => {
+                    window.open(item.href, '_blank').focus()
+                    event.stopPropagation()
+                })
+            } else button.addEventListener('click', event => event.stopPropagation())
+        })
+    }
+
+    const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon st-snackbar-dismiss', innerText: '', title: "Melding verbergen" })
+    snackbarDismiss.addEventListener('click', () => {
+        if (!snackbar?.parentElement) return
+        snackbar.classList.add('hiding')
+        setTimeout(() => {
+            if (!snackbar?.parentElement) return
+            snackbar.remove()
+            if (snackbarQueue[0]) showSnackbar(snackbarQueue[0])
+        }, 200)
+    })
+    setTimeout(() => {
+        if (!snackbar?.parentElement) return
+        snackbar.classList.add('hiding')
+        setTimeout(() => {
+            if (!snackbar?.parentElement) return
+            snackbar.remove()
+            if (snackbarQueue[0]) showSnackbar(snackbarQueue[0])
+        }, 200)
+    }, duration)
 }
 
 function createStyle(content, id) {
