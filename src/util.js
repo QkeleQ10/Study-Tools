@@ -32,7 +32,7 @@ async function handleAnnouncements() {
             if (await isAnnouncementValid(announcement)) {
                 notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
                 if (announcement.showOnceId) setTimeout(() => {
-                    saveToStorage(announcement.showOnceId, true, 'local')
+                    saveToStorage(`announcement-${announcement.showOnceId}`, true, 'local')
                 }, 5000)
             }
         })
@@ -45,11 +45,11 @@ function isAnnouncementValid(announcement) {
         if (announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
         if (announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) resolve(false)
         if (announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
-        // if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
+        if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
         if (announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
         if (announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
         if (announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
-        if (announcement.showOnceId && !(await getFromStorage(announcement.showOnceId, 'local') || false)) resolve(false)
+        if (announcement.showOnceId && (await getFromStorage(`announcement-${announcement.showOnceId}`, 'local') || false)) resolve(false)
 
         resolve(true)
     })
