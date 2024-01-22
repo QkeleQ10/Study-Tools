@@ -408,6 +408,7 @@
     width: 5px;
     background-color: var(--st-accent-warn);
     opacity: 1 !important;
+    transform: none !important;
 }
 
 .st-start-event.cancelled .st-start-event-subject-wrapper,
@@ -709,6 +710,10 @@
 
 #st-start-widget-digital-clock {
     padding: 0;
+}
+
+#st-start-widget-digital-clock-disclaimer {
+    translate: 0 16px;
 }
 
 #st-start-widget-digital-clock-time {

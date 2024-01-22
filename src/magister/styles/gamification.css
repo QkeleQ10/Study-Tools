@@ -269,6 +269,7 @@
     margin-inline: auto;
     background-image: linear-gradient(35deg, #ffffff, #7cc4ff9c);
     background-clip: text;
+    -webkit-background-clip: text;
     text-fill-color: transparent;
     color: transparent;
     border: none;
@@ -485,6 +486,7 @@
     font-style: normal;
     background-image: linear-gradient(35deg, var(--st-foreground-accent), #4c95d1);
     background-clip: text;
+    -webkit-background-clip: text;
     text-fill-color: transparent;
     color: transparent;
 }
@@ -527,6 +529,7 @@
 #st-wrapped-1-title,
 #st-wrapped-2-title {
     font: 600 40px var(--st-font-family-primary);
+    text-align: center;
     transition: opacity 300ms;
 }
 

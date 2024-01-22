@@ -163,7 +163,7 @@ window.addEventListener('popstate', popstate)
 function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
-    document.querySelectorAll('#st-aside-resize, [id^="st-"][id$="-ghost"], [id^="st-cc"], [id^="st-cs"], [id^="st-cb"], [id^="st-start"], [id^="st-sw"], .k-animation-container').forEach(e => {
+    document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-cc"], *[id^="st-cs"], *[id^="st-cb"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
     document.querySelectorAll('.st-overlay').forEach(e => { if (e.open) e.close?.() })

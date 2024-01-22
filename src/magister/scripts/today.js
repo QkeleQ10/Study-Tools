@@ -101,7 +101,7 @@ nav.menu.ng-scope {
     async function todayHeader() {
         let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),
             headerButtons = element('div', 'st-start-header-buttons', header),
-            formattedWeekday = now.toLocaleString('nl-NL', { weekday: 'long' })
+            formattedWeekday = now.toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'long' })
 
         // Greeting system
         const greetingsByHour = [
@@ -145,12 +145,12 @@ nav.menu.ng-scope {
             // Update the header text accordingly
             if (weekView) {
                 if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
-                    headerText.innerText = `Week ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString('nl-NL', { month: 'long' })})`
+                    headerText.innerText = `Week ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', month: 'long' })})`
                 else
-                    headerText.innerText = `Week ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString('nl-NL', { month: 'short' })}–${agendaEndDate.toLocaleDateString('nl-NL', { month: 'short' })})`
+                    headerText.innerText = `Week ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', month: 'short' })})`
             }
             else {
-                headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { weekday: 'long', month: 'long', day: 'numeric' })
+                headerText.innerText = agendaStartDate.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })
             }
             headerText.dataset.lastLetter = '.'
         }
@@ -412,7 +412,7 @@ nav.menu.ng-scope {
                 stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
                 let statsHeading = element('div', 'st-start-stats-heading', stats),
                     statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
-                    statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
+                    statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
                     statsButtonWrapper = element('div', 'st-start-stats-button-wrapper', statsHeading, { class: 'st-button-wrapper' }),
                     statsViewMode = element('div', 'st-start-stats-view', statsButtonWrapper, { class: 'st-segmented-control' }),
                     statsViewPie = element('button', 'st-start-stats-view-pie', statsViewMode, { class: 'st-button segment active', innerText: "Taart", 'data-icon': '' }),
@@ -569,10 +569,10 @@ nav.menu.ng-scope {
                     'data-irrelevant': item.irrelevant
                 }),
                     columnLabel = element('div', `st-start-col-${i}-head`, column, { class: 'st-start-col-label' }),
-                    columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { weekday: 'long' }) }),
-                    columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { day: 'numeric' }) })
-                if (item.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { month: 'long' }) })
-                if (item.date.getDate() === 1 && item.date.getMonth() === 0) element('span', `st-start-col-${i}-head-span-3`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { year: 'numeric' }) })
+                    columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'long' }) }),
+                    columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric' }) })
+                if (item.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', month: 'long' }) })
+                if (item.date.getDate() === 1 && item.date.getMonth() === 0) element('span', `st-start-col-${i}-head-span-3`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', year: 'numeric' }) })
 
                 // Loop through all events of the day
                 item.events.forEach((item, i) => {
@@ -1112,12 +1112,13 @@ nav.menu.ng-scope {
                     return new Promise(async resolve => {
                         const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
 
-                        let widgetElement = element('button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" }),
-                            timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
-                                'data-temporal-type': secondsOption === 'show'
-                                    ? 'current-time-long'
-                                    : 'current-time-short'
-                            })
+                        const widgetElement = element('button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" })
+                        const timeDisclaimer = element('p', 'st-start-widget-digital-clock-disclaimer', widgetElement, { 'data-temporal-type': 'current-time-disclaimer' })
+                        const timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
+                            'data-temporal-type': secondsOption === 'show'
+                                ? 'current-time-long'
+                                : 'current-time-short'
+                        })
 
                         widgetElement.addEventListener('click', () => {
                             if (!document.fullscreenElement) {
@@ -1226,12 +1227,14 @@ function checkCollision(eventArr) {
 
 function eventChips(item) {
     let chips = []
-
+    
     if (item.Status === 5) chips.push({ name: "Vervallen", type: 'warn' })
     if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
     else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })
     if (item.InfoType === 2 && item.Afgerond) chips.push({ name: "Proefwerk", type: 'ok' })
     else if (item.InfoType === 2) chips.push({ name: "Proefwerk", type: 'important' })
+    if (item.InfoType === 6 && item.Afgerond) chips.push({ name: "Informatie", type: 'ok' })
+    else if (item.InfoType === 6) chips.push({ name: "Informatie", type: 'info' })
     if (item.Type === 7 && item.Lokatie?.length > 0) chips.push({ name: "Ingeschreven", type: 'ok' })
     else if (item.Type === 7) chips.push({ name: "KWT", type: 'info' })
 

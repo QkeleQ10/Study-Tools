@@ -5,7 +5,8 @@ let syncedStorage = {},
     apiCache = {}
 
 let eggs = [],
-    announcements = [];
+    announcements = [],
+    snackbarQueue = [];
 
 (async () => {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
@@ -13,9 +14,6 @@ let eggs = [],
 })()
 
 window.addEventListener('DOMContentLoaded', async () => {
-
-    const snackbarWrapper = element('div', 'st-snackbars', document.body)
-
     handleAnnouncements()
 
     setTimeout(() => {
@@ -33,6 +31,9 @@ async function handleAnnouncements() {
         .forEach(async announcement => {
             if (await isAnnouncementValid(announcement)) {
                 notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
+                if (announcement.showOnceId) setTimeout(() => {
+                    saveToStorage(`announcement-${announcement.showOnceId}`, true, 'local')
+                }, 5000)
             }
         })
 }
@@ -48,6 +49,7 @@ function isAnnouncementValid(announcement) {
         if (announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
         if (announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
         if (announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
+        if (announcement.showOnceId && (await getFromStorage(`announcement-${announcement.showOnceId}`, 'local') || false)) resolve(false)
 
         resolve(true)
     })
@@ -167,71 +169,89 @@ Element.prototype.setAttributes = function (attributes) {
     }
 }
 
-// Elements with a temporal binding are updated every 10 seconds, or whenever the function is invoked manually.
+// Elements with a temporal binding are updated every second, or whenever the function is invoked manually.
 function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
     elementsWithTemporalBinding.forEach(element => {
 
-        let now = new Date(),
+        let networkTime = new Date(new Date() - (timeOffset || 0)),
             type = element.dataset.temporalType,
-            start = new Date(element.dataset.temporalStart || now),
-            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || now)
+            start = new Date(element.dataset.temporalStart || networkTime),
+            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || networkTime)
 
         switch (type) {
             case 'timestamp':
-                let timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long' })
-                if (start <= now && end >= now) {
+                let timestamp = start.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
+                if (start <= networkTime && end >= networkTime) {
                     // Start date is in the past and End date is in the future
                     timestamp = 'nu'
-                } else if (start >= now) {
+                } else if (start >= networkTime) {
                     // Start date is in the future
-                    if (start - now < minToMs(15)) timestamp = 'zometeen'
+                    if (start - networkTime < minToMs(15)) timestamp = 'zometeen'
                     else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
                     else if (start.isTomorrow()) timestamp = `morgen om ${start.getFormattedTime()}`
-                    else if (start - now < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
-                    else if (start - now < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
-                    else timestamp = start.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                } else if (end <= now) {
+                    else if (start - networkTime < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
+                    else if (start - networkTime < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
+                    else timestamp = start.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                } else if (end <= networkTime) {
                     // End date is in the past
-                    if (now - end < minToMs(5)) timestamp = 'zojuist'
-                    else if (now - end < minToMs(15)) timestamp = 'een paar minuten geleden'
+                    if (networkTime - end < minToMs(5)) timestamp = 'zojuist'
+                    else if (networkTime - end < minToMs(15)) timestamp = 'een paar minuten geleden'
                     else if (end.isToday()) timestamp = `vandaag om ${end.getFormattedTime()}`
                     else if (end.isYesterday()) timestamp = `gisteren om ${end.getFormattedTime()}`
-                    else if (now - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
-                    else if (now.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                    else if (networkTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
+                    else if (networkTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
                 element.innerText = timestamp
                 break
 
             case 'style-hours':
-                element.style.setProperty('--relative-start', now.getHoursWithDecimals())
+                element.style.setProperty('--relative-start', networkTime.getHoursWithDecimals())
                 break
 
             case 'ongoing-check':
-                element.dataset.ongoing = (start <= now && end >= now)
+                element.dataset.ongoing = (start <= networkTime && end >= networkTime)
                 break
 
             case 'style-progress':
-                let progress = (now - start) / (end - start)
+                let progress = (networkTime - start) / (end - start)
                 element.style.setProperty('--progress', Math.min(Math.max(0, progress), 1))
                 element.dataset.done = progress >= 1
                 break
 
             case 'current-time-long':
-                element.innerText = now.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
                 break
 
             case 'current-time-short':
-                element.innerText = now.toLocaleTimeString('nl-NL', { hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                break
+
+            case 'current-time-disclaimer':
+                if (timeZoneDifference === 0) return element.style.display = 'none'
+                else element.style.removeProperty('style')
+                element.innerText = timeZoneDifference > 0
+                    ? `Tijd in Nederland (${timeZoneDifference} uur later)`
+                    : `Tijd in Nederland (${-timeZoneDifference} uur eerder)`
                 break
 
             default:
                 break
         }
-
     })
 }
-setIntervalImmediately(updateTemporalBindings, 1000)
+
+let timeOffset = 0
+let timeZoneDifference = 0
+fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
+    .then(response => response.json())
+    .then(data => {
+        timeOffset = (new Date(data?.datetime) - new Date()) || 0 // timeOffset is the difference between the system time and the network time.
+        let amsterdamTimeZoneOffset = (parseInt(data?.datetime.slice(-5, -3), 10) * 60 +
+            parseInt(data?.datetime.slice(-2), 10)) * -1
+        timeZoneDifference = ((new Date().getTimezoneOffset() - amsterdamTimeZoneOffset) / 60)
+    })
+setIntervalImmediately(updateTemporalBindings, 500)
 
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
@@ -258,16 +278,21 @@ Date.prototype.getFormattedDay = function () {
     return weekDays[d.getDay()]
 }
 
-Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }
+Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
 Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + offset) && this < midnight(1 + offset) }
 Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
 Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
 
-Array.prototype.random = function () {
+Array.prototype.random = function (seed) {
+    let randomValue = Math.random()
+    if (seed) {
+        let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
+        randomValue = rand()
+    }
     const arr = this
-    const random = arr[Math.floor(Math.random() * arr.length)]
+    const random = arr[Math.floor(randomValue * arr.length)]
     return random
 }
 
@@ -452,30 +477,9 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
     switch (type) {
         case 'snackbar':
-            const snackbar = document.createElement('div'),
-                snackbarWrapper = await awaitElement('#st-snackbars')
-            snackbarWrapper.append(snackbar)
-            snackbar.innerText = body
-
-            if (buttons?.length > 0) buttons.forEach(button => {
-                let anchor = element('a', null, snackbar, button)
-                if (button.clickSelector) {
-                    anchor.addEventListener('click', event => {
-                        document.querySelector(button.clickSelector)?.click()
-                        event.stopPropagation()
-                    })
-                } else anchor.addEventListener('click', event => event.stopPropagation())
-            })
-            const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon snackbar-dismiss', innerText: '' })
-            snackbarDismiss.addEventListener('click', () => {
-                snackbar.classList.remove('open')
-                setTimeout(() => snackbar.remove(), 2000)
-            })
-            setTimeout(() => snackbar.classList.add('open'), 50)
-            if (duration !== 0) {
-                setTimeout(() => snackbar.classList.remove('open'), duration)
-                setTimeout(() => snackbar.remove(), duration + 2000)
-            }
+            const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 10000) }
+            snackbarQueue.push(snackbar)
+            if (!document.querySelector('.st-snackbar')) showSnackbar(snackbar)
             break
 
         case 'dialog':
@@ -484,7 +488,7 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                 dialog.showModal()
 
                 if (buttons?.length > 0) {
-                    const buttonsWrapper = element('div', null, dialog, { class: 'st-dialog-buttons' })
+                    const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                     buttons.forEach(item => {
                         const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
                         if (item.innerText) button.innerText = item.innerText
@@ -493,12 +497,16 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                                 document.querySelector(item.clickSelector)?.click()
                                 event.stopPropagation()
                             })
-                        }
-                        else button.addEventListener('click', event => event.stopPropagation())
+                        } else if (item.href) {
+                            button.addEventListener('click', event => {
+                                window.open(item.href, '_blank').focus()
+                                event.stopPropagation()
+                            })
+                        } else button.addEventListener('click', event => event.stopPropagation())
                     })
                 }
 
-                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '' })
+                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '', title: "Dialoogvenster verbergen" })
                 dialogDismiss.addEventListener('click', () => {
                     dialog.close()
                     dialog.remove()
@@ -510,7 +518,57 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
         default:
             break
     }
+}
 
+function showSnackbar(object) {
+    const { id, body, buttons, duration } = object
+    snackbarQueue.splice(snackbarQueue.findIndex(item => item.id === id), 1)
+
+    const snackbar = element('div', `st-snackbar-${id}`, document.body, { class: 'st-snackbar', innerText: body })
+
+    if (buttons?.length > 0) {
+        const buttonsWrapper = element('div', null, snackbar, { class: 'st-button-wrapper' })
+        buttons.forEach(item => {
+            const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
+            if (item.innerText) button.innerText = item.innerText
+            if (item.clickSelector) {
+                button.addEventListener('click', event => {
+                    document.querySelector(item.clickSelector)?.click()
+                    event.stopPropagation()
+                })
+            } else if (item.expandToDialog) {
+                button.addEventListener('click', event => {
+                    notify('dialog', item.expandToDialog)
+                    event.stopPropagation()
+                })
+            } else if (item.href) {
+                button.addEventListener('click', event => {
+                    window.open(item.href, '_blank').focus()
+                    event.stopPropagation()
+                })
+            } else button.addEventListener('click', event => event.stopPropagation())
+        })
+    }
+
+    const snackbarDismiss = element('button', null, snackbar, { class: 'st-button icon st-snackbar-dismiss', innerText: '', title: "Melding verbergen" })
+    snackbarDismiss.addEventListener('click', () => {
+        if (!snackbar?.parentElement) return
+        snackbar.classList.add('hiding')
+        setTimeout(() => {
+            if (!snackbar?.parentElement) return
+            snackbar.remove()
+            if (snackbarQueue[0]) showSnackbar(snackbarQueue[0])
+        }, 200)
+    })
+    setTimeout(() => {
+        if (!snackbar?.parentElement) return
+        snackbar.classList.add('hiding')
+        setTimeout(() => {
+            if (!snackbar?.parentElement) return
+            snackbar.remove()
+            if (snackbarQueue[0]) showSnackbar(snackbarQueue[0])
+        }, 200)
+    }, duration)
 }
 
 function createStyle(content, id) {
@@ -526,4 +584,35 @@ function createStyle(content, id) {
         document.head.append(styleElem)
         resolve(styleElem)
     })
+}
+
+// Seeded random numbers.
+function cyrb128(str) {
+    let h1 = 1779033703, h2 = 3144134277,
+        h3 = 1013904242, h4 = 2773480762;
+    for (let i = 0, k; i < str.length; i++) {
+        k = str.charCodeAt(i);
+        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+    }
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+    h1 ^= (h2 ^ h3 ^ h4), h2 ^= h1, h3 ^= h1, h4 ^= h1;
+    return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0];
+}
+function sfc32(a, b, c, d) {
+    return function () {
+        a |= 0; b |= 0; c |= 0; d |= 0;
+        var t = (a + b | 0) + d | 0;
+        d = d + 1 | 0;
+        a = b ^ b >>> 9;
+        b = c + (c << 3) | 0;
+        c = (c << 21 | c >>> 11);
+        c = c + t | 0;
+        return (t >>> 0) / 4294967296;
+    }
 }

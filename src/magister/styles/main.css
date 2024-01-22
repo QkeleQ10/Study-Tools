@@ -86,19 +86,6 @@ div.loading-overlay {
     color: var(--st-foreground-primary);
 }
 
-#st-snackbars:has(div.open) {
-    background: radial-gradient(at bottom left, rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 0.75) 0%, rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), 0) 70%) !important;
-}
-
-#st-snackbars>div {
-    font: 16px arboria, sans-serif !important;
-    background-color: var(--st-background-secondary) !important;
-    color: var(--st-foreground-primary) !important;
-    border: var(--st-border) !important;
-    border-radius: var(--st-border-radius) !important;
-    box-shadow: 0 0 16px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
-}
-
 .st-button-wrapper {
     display: flex;
     gap: 8px;
@@ -293,6 +280,50 @@ div.loading-overlay {
     content: none;
 }
 
+.st-snackbar {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    translate: -50%;
+    min-width: 400px;
+    max-width: 800px;
+    min-height: 48px;
+    padding: 8px 12px 8px 16px;
+
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    background-color: color-mix(in srgb, var(--st-background-secondary) 80%, transparent);
+    background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    font: 14px/20px var(--st-font-family-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    overflow: visible;
+    z-index: 9999999999999999999999;
+    animation: snackbarIn 300ms;
+}
+
+.st-snackbar.hiding {
+    animation: snackbarOut 200ms both;
+}
+
+.st-snackbar>*:first-child {
+    margin-left: auto;
+}
+
+.st-snackbar>.st-button-wrapper>.st-button {
+    padding-inline: 8px;
+    padding-block: 0;
+}
+
+.st-snackbar-dismiss {
+    min-width: 24px;
+    max-width: 24px;
+}
+
 .st-dialog {
     display: flex;
     flex-direction: column;
@@ -319,7 +350,7 @@ div.loading-overlay {
     background-color: var(--st-background-secondary) !important;
 }
 
-.st-dialog-buttons {
+.st-dialog>.st-button-wrapper {
     display: flex;
     gap: 8px;
     margin-left: auto;
@@ -1211,6 +1242,20 @@ a.st-keyboard-hint.clicked {
     from {
         opacity: 0;
         translate: 150px;
+    }
+}
+
+@keyframes snackbarIn {
+    from {
+        transform: translateY(64px) scale(0.75);
+        opacity: 0;
+    }
+}
+
+@keyframes snackbarOut {
+    to {
+        transform: scale(0.95);
+        opacity: 0;
     }
 }
 

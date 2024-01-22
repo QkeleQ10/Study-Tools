@@ -1,8 +1,8 @@
 import settings from '../popup/dist/settings.js'
 
-let apiUserId,
-    apiUserToken,
-    apiUserTokenDate
+let userId,
+    userToken,
+    userTokenDate
 
 const settingsToClear = [
     'openedPopup', 'updates', 'beta', 'magister-sw-period', 'magister-sw-display', 'magister-subjects', 'magister-appbar-hidePicture', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'magister-cf-calculator', 'magister-cf-statistics', 'magister-cf-backup', 'magister-cf-failred', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-subjects-display', 'teacher-names', 'version', 'hotkeys-today'
@@ -17,25 +17,33 @@ async function startListenCredentials() {
     chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' })
 
     // Initialise the three variables
-    apiUserId = (await chrome.storage.sync.get('user-id'))?.['user-id'] || null
-    apiUserToken = (await chrome.storage.session.get('token'))?.['token'] || null
-    apiUserTokenDate = (await chrome.storage.session.get('token-date'))?.['token-date'] || null
+    userId = (await chrome.storage.sync.get('user-id'))?.['user-id'] || null
+    userToken = (await chrome.storage.session.get('token'))?.['token'] || null
+    userTokenDate = (await chrome.storage.session.get('token-date'))?.['token-date'] || new Date(0)
 
     chrome.webRequest.onBeforeSendHeaders.addListener(async e => {
-        let userIdWas = apiUserId
-        let userTokenWas = apiUserToken
-        if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
-            apiUserId = e.url.split('/personen/')[1].split('/')[0]
-            chrome.storage.sync.set({ 'user-id': apiUserId })
-            if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
+        // Return if the request was made by Study Tools itself
+        if (Object.values(e.requestHeaders).find(header => header.name === 'X-Request-Source')?.value === 'study-tools') return
+
+        let userIdWas = userId
+        let userTokenWas = userToken
+        let userTokenDateWas = userTokenDate
+
+        let urlUserId = e.url.split('/personen/')[1]?.split('/')[0]
+        if (urlUserId?.length > 2 && !urlUserId.includes('undefined')) {
+            userId = urlUserId || userIdWas
+            chrome.storage.sync.set({ 'user-id': userId })
+            if (userIdWas !== userId) console.info(`User ID changed from ${userIdWas} to ${userId}.`)
         }
-        let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')
+
+        let authObject = Object.values(e.requestHeaders).find(header => header.name === 'Authorization')
         if (authObject) {
-            apiUserToken = authObject.value
-            apiUserTokenDate = new Date()
-            chrome.storage.session.set({ 'token': apiUserToken })
-            chrome.storage.session.set({ 'token-date': apiUserTokenDate.getTime() })
-            if (userTokenWas !== apiUserToken) console.info(`User token changed between ${new Date().toLocaleDateString()} and now.`)
+            userToken = authObject.value
+            userTokenDate = new Date()
+            chrome.storage.session.set({ 'token': userToken })
+            chrome.storage.session.set({ 'token-date': userTokenDate.getTime() })
+            if (userTokenWas !== userToken && userTokenDateWas.getTime() === 0) console.info(`User token gathered.`)
+            else if (userTokenWas !== userToken) console.info(`User token changed since ${userTokenDate - userTokenDateWas} ms ago.`)
         }
 
     }, { urls: ['*://*.magister.net/*'] }, ['requestHeaders'])

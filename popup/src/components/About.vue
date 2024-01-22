@@ -62,7 +62,7 @@ function openInNewTab(url) {
             <button class="button tonal" @click="openInNewTab('mailto:quinten@althues.nl?subject=Study Tools')">
                 <Icon>alternate_email</Icon><span>E-mail</span>
             </button>
-            <button class="button tonal" @click="openInNewTab('https://discord.gg/RVKXKyaS6y')">
+            <button class="button tonal" @click="openInNewTab('https://discord.gg/2rP7pfeAKf')">
                 <Icon>forum</Icon><span>Discord</span>
             </button>
             <button class="button tonal" @click="openInNewTab('https://paypal.me/QkeleQ10')">

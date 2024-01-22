@@ -4,12 +4,8 @@ let hiddenStudyguides = []
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    document.querySelectorAll('.st-button, [id^="st-cf"], .k-animation-container').forEach(e => e.remove())
-
-    const href = document.location.href.split('?')[0]
-
-    if (href.includes('/studiewijzer/')) studyguideIndividual()
-    else if (href.includes('/studiewijzer')) studyguideList()
+    if (document.location.href.split('?')[0].includes('/studiewijzer/')) studyguideIndividual()
+    else if (document.location.href.split('?')[0].includes('/studiewijzer')) studyguideList()
 }
 
 // Page 'Studiewijzers'
@@ -91,14 +87,14 @@ async function studyguideIndividual() {
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
-            notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 4000)
+            notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
             document.querySelector('.st-sw-selected').classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
-            notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 4000)
+            notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)
             document.querySelector('.st-sw-selected').classList.remove('hidden-item')
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')

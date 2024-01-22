@@ -377,7 +377,7 @@
     color: var(--st-accent-warn) !important;
 }
 
-#st-cc-open {
+#st-cc-open, #st-grades-pre-button-wrapper {
     position: absolute;
     top: 35px;
     right: 20px;

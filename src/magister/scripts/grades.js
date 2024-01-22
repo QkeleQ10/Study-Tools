@@ -4,12 +4,39 @@ let statsGrades = [],
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
-async function popstate() {
+function popstate() {
     if (document.location.href.includes('cijfers')) {
-        await saveToStorage('viewedGrades', new Date().getTime(), 'local')
+        if (document.location.href.includes('cijferoverzicht')) {
+            gradeOverview()
+        } else {
+            gradeList()
+        }
     }
-    if (document.location.href.includes('cijferoverzicht')) {
-        gradeOverview()
+}
+
+async function gradeList() {
+    await awaitElement('#cijferslaatstbehaalderesultaten-uitgebreideweergave')
+
+    saveToStorage('viewedGrades', new Date().getTime(), 'local')
+
+    const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
+
+    if (syncedStorage['cb']) {
+        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: "Cijferback-up", 'data-icon': '' })
+        cbPreOpen.addEventListener('click', async () => {
+            document.location.hash = '#/cijfers/cijferoverzicht'
+            const cbOpen = await awaitElement('#st-cb')
+            cbOpen.click()
+        })
+    }
+
+    if (syncedStorage['cc']) {
+        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: "Cijfercalculator", 'data-icon': '' })
+        ccPreOpen.addEventListener('click', async () => {
+            document.location.hash = '#/cijfers/cijferoverzicht'
+            const ccOpen = await awaitElement('#st-cc-open')
+            ccOpen.click()
+        })
     }
 }
 
@@ -143,7 +170,7 @@ async function gradeCalculator() {
             "Ervaar je problemen met de cijfercalculator?\n\nJe kunt nog steeds handmatig je cijfers toevoegen. Stuur me ook even een berichtje of een mailtje om me te laten weten wat er misgaat. Zo kan ik het oplossen!",
             [
                 { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
-                { innerText: "Discord", onclick: `window.open('https://discord.gg/RVKXKyaS6y')` }
+                { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
             ]
         )
     })
@@ -547,8 +574,8 @@ async function gradeBackup() {
 
                     let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
 
-                    let result = gradeBasis.CijferStr || gradeBasis.Cijfer
-                    let date = gradeBasis.DatumIngevoerd
+                    let result = gradeBasis?.CijferStr || gradeBasis?.Cijfer
+                    let date = gradeBasis?.DatumIngevoerd
 
                     if (Math.floor(i / 400) * 10000 >= 10000) {
                         bkModalExListTitle.dataset.description = `10 seconden wachten...`
@@ -562,7 +589,7 @@ async function gradeBackup() {
                     }
 
                     setTimeout(async () => {
-                        const gradeExtra = await MagisterApi.grades.columnInfo(year, gradeBasis.CijferKolom.Id)
+                        const gradeExtra = await MagisterApi.grades.columnInfo(year, gradeBasis?.CijferKolom?.Id)
 
                         let weight = Number(gradeExtra.Weging),
                             column = gradeExtra.KolomNaam,
@@ -866,7 +893,7 @@ async function gradeStatistics() {
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
             subjects = new Set([...subjects, ...yearSubjects])
-            
+
             buildSubjectFilter()
             displayStatistics()
         })
@@ -1015,7 +1042,7 @@ async function gradeStatistics() {
             url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-primary').replace('#', '%23')}' stroke-width='6.9'/%3e%3c/svg%3e")`
             scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 
-            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
             // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
 
             resolve()
