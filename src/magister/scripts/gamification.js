@@ -54,16 +54,8 @@ async function gamification() {
             years[year.id] = { grades: gradesJson, absences: absencesJson, assignments: assignmentsJson, name: year.studie.code }
         })
 
-        // Wait for the requests to finish, then continue calculating the points.
-        checkRequestsDone()
-        function checkRequestsDone() {
-            if (Object.keys(years).length !== yearsArray.length) {
-                setTimeout(checkRequestsDone, 100)
-            } else {
-                let points = calculatePoints(years)
-                displayScore(points)
-            }
-        }
+        let points = calculatePoints(years)
+        displayScore(points)
 
         // Commence calculating the points.
         function calculatePoints(years) {

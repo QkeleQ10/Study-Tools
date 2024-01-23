@@ -15,10 +15,6 @@ let eggs = [],
 
 window.addEventListener('DOMContentLoaded', async () => {
     handleAnnouncements()
-
-    setTimeout(() => {
-        saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
-    }, 500)
 })
 
 async function handleAnnouncements() {

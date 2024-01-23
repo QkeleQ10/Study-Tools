@@ -52,7 +52,7 @@ async function studyguideIndividual() {
     if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
+            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?0?(match)(?!\d)/i)
 
         list.parentElement.style.paddingTop = '8px !important'
         list.parentElement.style.paddingLeft = '8px !important'
