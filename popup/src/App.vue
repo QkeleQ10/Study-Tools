@@ -11,6 +11,7 @@ import SegmentedButton from './components/SegmentedButton.vue'
 import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
 import ColorPicker from './components/ColorPicker.vue'
+import ThemePicker from './components/setting-types/ThemePicker.vue'
 import DecorationPicker from './components/DecorationPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
@@ -23,7 +24,7 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, DecorationPicker, KeyPicker, ImageInput, SubjectEditor, ShortcutsEditor }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ColorPicker, ThemePicker, DecorationPicker, KeyPicker, ImageInput, SubjectEditor, ShortcutsEditor }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')
@@ -92,6 +93,7 @@ function openInNewTab(url) {
                                 <template v-for="setting in category.settings">
                                     <div class="setting-wrapper"
                                         :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
+                                        :data-setting-type="setting.type" :data-setting-id="setting.id"
                                         v-if="shouldShowSetting(setting)" :key="setting.id">
                                         <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
                                             :id="setting.id" v-model="syncedStorage[setting.id]">
@@ -160,10 +162,31 @@ main {
 
 .options-category {
     width: 450px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
 }
 
 .setting-wrapper {
     margin-inline: 16px;
+    grid-column: span 2;
+}
+
+.setting-wrapper[data-setting-type="ThemePicker"] {
+    border-top: none !important;
+}
+
+.setting-wrapper[data-setting-id="theme-day"],
+.setting-wrapper[data-setting-id="theme-night"] {
+    grid-column: auto;
+}
+
+.setting-wrapper[data-setting-id="theme-day"] {
+    margin-right: 6px;
+}
+
+.setting-wrapper[data-setting-id="theme-night"] {
+    margin-left: 6px;
 }
 
 .setting-wrapper~.setting-wrapper.visible {

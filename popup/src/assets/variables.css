@@ -49,6 +49,11 @@
     --mg-alt-pink: hsl(331deg, 51%, 41%);
     --mg-alt-purple: hsl(266deg, 51%, 41%);
 
+    --mg-bk-light-1: #ffffff;
+    --mg-bk-light-2: #ffffff;
+    --mg-bk-dark-1: #121212;
+    --mg-bk-dark-2: #161616;
+
     color-scheme: only light;
 }
 

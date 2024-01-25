@@ -48,7 +48,11 @@ async function setDefaults() {
     settings.forEach(category => {
         category.settings.forEach(setting => {
             if (typeof syncedStorage[setting.id] === 'undefined') {
-                diff[setting.id] = setting.default
+                if (setting.id === 'auto-theme' && syncedStorage['color']) diff[setting.id] = (syncedStorage['theme'] === 'auto')
+                else if (setting.id === 'theme-fixed' && syncedStorage['color']) diff[setting.id] = `light,${(Object.values(syncedStorage['color']).join(','))}`
+                else if (setting.id === 'theme-day' && syncedStorage['color']) diff[setting.id] = `light,${(Object.values(syncedStorage['color']).join(','))}`
+                else if (setting.id === 'theme-night' && syncedStorage['color']) diff[setting.id] = `dark,${(Object.values(syncedStorage['color']).join(','))}`
+                else diff[setting.id] = setting.default
             }
         })
     })
