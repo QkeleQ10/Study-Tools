@@ -96,6 +96,9 @@ export default [
                 min: 0.5,
                 max: 3,
                 step: 0.1,
+                conditions: [
+                    { settingId: 'decoration', operator: 'not equal', value: 'none' }
+                ],
             },
             {
                 id: "shape",

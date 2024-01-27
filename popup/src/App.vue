@@ -182,11 +182,11 @@ main {
 }
 
 .setting-wrapper[data-setting-id="theme-day"] {
-    margin-right: 6px;
+    margin-right: 5px;
 }
 
 .setting-wrapper[data-setting-id="theme-night"] {
-    margin-left: 6px;
+    margin-left: 5px;
 }
 
 .setting-wrapper~.setting-wrapper.visible {

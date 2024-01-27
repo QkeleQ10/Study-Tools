@@ -39,15 +39,19 @@ export function useSyncedStorage() {
     })
 
     function refreshTheme() {
-        if (syncedStorage.value.color) {
-            document.documentElement.style.setProperty('--palette-primary-hue', syncedStorage.value.color.h)
-            document.documentElement.style.setProperty('--palette-primary-saturation', `${syncedStorage.value.color.s}%`)
-            document.documentElement.style.setProperty('--palette-primary-luminance', `${syncedStorage.value.color.l}%`)
-        }
-        if (syncedStorage.value.theme) {
-            document.documentElement.setAttribute('theme', syncedStorage.value.theme)
-            if (syncedStorage.value.theme === 'auto' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('theme', 'auto dark')
-        }
+        const autoTheme = syncedStorage.value['auto-theme']
+        const themeFixed = syncedStorage.value['theme-fixed']?.split(',')
+        const themeDay = syncedStorage.value['theme-day']?.split(',')
+        const themeNight = syncedStorage.value['theme-night']?.split(',')
+        let currentTheme = themeFixed
+
+        if (autoTheme && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme = themeNight }
+        else if (autoTheme) currentTheme = themeDay
+
+        document.documentElement.setAttribute('theme', currentTheme?.[0])
+        document.documentElement.style.setProperty('--palette-primary-hue', currentTheme?.[1])
+        document.documentElement.style.setProperty('--palette-primary-saturation', `${currentTheme?.[2]}%`)
+        document.documentElement.style.setProperty('--palette-primary-luminance', `${currentTheme?.[3]}%`)
     }
 
     return syncedStorage
@@ -61,5 +65,5 @@ export function useManifest() {
             manifest.value = browser.runtime.getManifest()
     })
 
-    return {manifest}
+    return { manifest }
 }
