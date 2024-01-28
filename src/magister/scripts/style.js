@@ -1,36 +1,127 @@
+// Apply the styles instantly,
+// and whenever the settings change
+// and whenever the system theme changes
 document.addEventListener('DOMContentLoaded', applyStyles)
 chrome.storage.sync.onChanged.addListener(applyStyles)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyStyles)
 
-async function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
-    return new Promise((resolve, reject) => {
-        let hue, saturation, luminance
+// TODO: Use color-mix() for these things: color-mix(in hsl, hsl(<color here>), hsl(${h} ${correctionSL[scheme]['accent-secondary']}))
+// const correctionSL = {
+//     light: {
+//         'accent-primary': '95 55',
+//         'accent-secondary': '95 47',
+//         'foreground-accent': '78 43'
+//     },
+//     dark: {
+//         'accent-primary': '73 30',
+//         'accent-secondary': '73 22',
+//         'foreground-accent': '53 55'
+//     }
+// }
+function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOriginal = 55, hueWish = 0, saturationWish = 0, luminanceWish = 0, hueForce, saturationForce, luminanceForce) {
+    let hue, saturation, luminance
 
-        if (hueForce) hue = hueForce
-        else if (hueWish <= 207) hue = (hueOriginal / 207) * hueWish
-        else if (hueWish > 207) {
-            let a = (((360 - hueOriginal) / (360 - 207))),
-                b = hueOriginal - a * 207
-            hue = a * hueWish + b
-        }
+    if (hueForce) hue = hueForce
+    else if (hueWish <= 207) hue = (hueOriginal / 207) * hueWish
+    else if (hueWish > 207) {
+        let a = (((360 - hueOriginal) / (360 - 207))),
+            b = hueOriginal - a * 207
+        hue = a * hueWish + b
+    }
 
-        if (saturationForce) saturation = saturationForce
-        else if (saturationWish <= 95) saturation = (saturationOriginal / 95) * saturationWish
-        else if (saturationWish > 95) {
-            let a = (((100 - saturationOriginal) / (100 - 95))),
-                b = saturationOriginal - a * 95
-            saturation = a * saturationWish + b
-        }
+    if (saturationForce) saturation = saturationForce
+    else if (saturationWish <= 95) saturation = (saturationOriginal / 95) * saturationWish
+    else if (saturationWish > 95) {
+        let a = (((100 - saturationOriginal) / (100 - 95))),
+            b = saturationOriginal - a * 95
+        saturation = a * saturationWish + b
+    }
 
-        if (luminanceForce) luminance = luminanceForce
-        else if (luminanceWish <= 55) luminance = (luminanceOriginal / 55) * luminanceWish
-        else if (luminanceWish > 55) {
-            let a = (((100 - luminanceOriginal) / (100 - 55))),
-                b = luminanceOriginal - a * 55
-            luminance = a * luminanceWish + b
-        }
+    if (luminanceForce) luminance = luminanceForce
+    else if (luminanceWish <= 55) luminance = (luminanceOriginal / 55) * luminanceWish
+    else if (luminanceWish > 55) {
+        let a = (((100 - luminanceOriginal) / (100 - 55))),
+            b = luminanceOriginal - a * 55
+        luminance = a * luminanceWish + b
+    }
 
-        resolve(`hsl(${hue}, ${saturation}%, ${luminance}%)`)
-    })
+    return `hsl(${hue}, ${saturation}%, ${luminance}%)`
+}
+
+function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
+    switch (scheme) {
+        case 'dark':
+            return `
+    --st-background-primary: #121212;
+    --st-background-secondary: #161616;
+    --st-background-tertiary: #0c0c0c;
+    --st-background-overlay: #121212f7;
+    --st-background-transparent: #121212bb;
+    --st-background-overlaid: #00000030;
+    --st-highlight-primary: ${shiftedHslColor(207, 33, 20, color.h, color.s, color.l, undefined, undefined, 10)};
+    --st-highlight-subtle: #181f24;
+    --st-highlight-ok: #1a4c38;
+    --st-highlight-warn: #511f1f;
+    --st-highlight-info: #0f314d;
+    --st-foreground-primary: #fff;
+    --st-foreground-secondary: #dddddd;
+    --st-foreground-insignificant: #888;
+    --st-foreground-accent: ${shiftedHslColor(207, 53, 55, color.h, color.s, color.l, undefined, undefined, 55)};
+    --st-border-color: #2e2e2e;
+    --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
+    --st-accent-secondary: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
+    --st-accent-ok: #339e7c;
+    --st-accent-warn: #e94f4f;
+    --st-chip-info-border: #0565b4;
+    --st-chip-info-background: #022a4b;
+    --st-chip-ok-border: #13c4a3;
+    --st-chip-ok-background: #15363c;
+    --st-chip-warn-border: #953541;
+    --st-chip-warn-background: #2f1623;
+    --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
+    --st-decoration-fill: #77777711;
+    --st-decoration-fill-intense: #77777730;
+    --st-shadow-value: 0;
+    --st-shadow-alpha: .7;
+    --st-hover-brightness: 1.3;
+    `
+
+        default:
+            return `
+    --st-background-primary: #ffffff;
+    --st-background-secondary: #ffffff;
+    --st-background-tertiary: #fafafa;
+    --st-background-overlay: #fffffff7;
+    --st-background-transparent: #ffffffbb;
+    --st-background-overlaid: #12121210;
+    --st-highlight-primary: ${shiftedHslColor(207, 78, 96, color.h, color.s, color.l, undefined, undefined, 96)};
+    --st-highlight-subtle: #f2f9ff;
+    --st-highlight-ok: #b6fadf;
+    --st-highlight-warn: #ffd4e2;
+    --st-highlight-info: #dceefd;
+    --st-foreground-primary: #333333;
+    --st-foreground-secondary: #555555;
+    --st-foreground-insignificant: #888;
+    --st-foreground-accent: ${shiftedHslColor(207, 78, 43, color.h, color.s, color.l, undefined, undefined, 43)};
+    --st-border-color: #ededed;
+    --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
+    --st-accent-secondary: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
+    --st-accent-ok: #339e7c;
+    --st-accent-warn: #e94f4f;
+    --st-chip-info-border: #066ec2;
+    --st-chip-info-background: #ffffff;
+    --st-chip-ok-border: #19c5a5;
+    --st-chip-ok-background: #d0f3ed;
+    --st-chip-warn-border: #a53e52;
+    --st-chip-warn-background: #f7d4d2;
+    --st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
+    --st-decoration-fill: #dddddd11;
+    --st-decoration-fill-intense: #dddddd2a;
+    --st-shadow-value: 210;
+    --st-shadow-alpha: .5;
+    --st-hover-brightness: .9;
+    `
+    }
 }
 
 async function applyStyles() {
@@ -38,120 +129,60 @@ async function applyStyles() {
 
     let now = new Date()
 
-    let hueWish = syncedStorage.color.h,
-        saturationWish = syncedStorage.color.s,
-        luminanceWish = syncedStorage.color.l,
-        borderRadius = syncedStorage.shape
+    const autoTheme = syncedStorage['auto-theme']
+    const themeFixed = syncedStorage['theme-fixed']?.split(',')
+    const themeDay = syncedStorage['theme-day']?.split(',')
+    const themeNight = syncedStorage['theme-night']?.split(',')
+    let currentTheme = themeFixed
+    if (autoTheme && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme = themeNight }
+    else if (autoTheme) currentTheme = themeDay
 
-    const lightCssVars = `
---st-font-primary: 600 16px/44px 'arboria', sans-serif;
---st-font-family-primary: 'arboria', sans-serif;
---st-font-family-secondary: 'open-sans', sans-serif;
---st-background-primary: #ffffff;
---st-background-secondary: #ffffff;
---st-background-tertiary: #fafafa;
---st-background-overlay: #fffffff7;
---st-background-transparent: #ffffffbb;
---st-background-overlaid: #12121210;
---st-highlight-primary: ${await shiftedHslColor(207, 78, 96, hueWish, saturationWish, luminanceWish, undefined, undefined, 96)};
---st-highlight-subtle: #f2f9ff;
---st-highlight-ok: #b6fadf;
---st-highlight-warn: #ffd4e2;
---st-highlight-info: #dceefd;
---st-foreground-primary: #333333;
---st-foreground-secondary: #555555;
---st-foreground-insignificant: #888;
---st-foreground-accent: ${await shiftedHslColor(207, 78, 43, hueWish, saturationWish, luminanceWish, undefined, undefined, 43)};
---st-border-color: #ededed;
---st-border: 1px solid var(--st-border-color);
---st-border-radius: ${borderRadius}px;
---st-accent-primary: ${await shiftedHslColor(207, 95, 55, hueWish, saturationWish, luminanceWish)};
---st-accent-secondary: ${await shiftedHslColor(207, 95, 47, hueWish, saturationWish, luminanceWish)};
---st-accent-ok: #339e7c;
---st-accent-warn: #e94f4f;
---st-chip-info-border: #066ec2;
---st-chip-info-background: #ffffff;
---st-chip-ok-border: #19c5a5;
---st-chip-ok-background: #d0f3ed;
---st-chip-warn-border: #a53e52;
---st-chip-warn-background: #f7d4d2;
---st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
---st-decoration-fill: #dddddd11;
---st-decoration-fill-intense: #dddddd2a;
---st-shadow-value: 210;
---st-shadow-alpha: .5;
---st-hover-brightness: .9;
-    `,
-        lightCss = `:root { ${lightCssVars} } `
-    const darkCssVars = `
---st-font-primary: 600 16px/44px 'arboria', sans-serif;
---st-font-family-primary: 'arboria', sans-serif;
---st-font-family-secondary: 'open-sans', sans-serif;
---st-background-primary: #121212;
---st-background-secondary: #161616;
---st-background-tertiary: #0c0c0c;
---st-background-overlay: #121212f7;
---st-background-transparent: #121212bb;
---st-background-overlaid: #00000030;
---st-highlight-primary: ${await shiftedHslColor(207, 33, 20, hueWish, saturationWish, luminanceWish, undefined, undefined, 10)};
---st-highlight-subtle: #181f24;
---st-highlight-ok: #1a4c38;
---st-highlight-warn: #511f1f;
---st-highlight-info: #0f314d;
---st-foreground-primary: #fff;
---st-foreground-secondary: #dddddd;
---st-foreground-insignificant: #888;
---st-foreground-accent: ${await shiftedHslColor(207, 53, 55, hueWish, saturationWish, luminanceWish, undefined, undefined, 55)};
---st-border-color: #2e2e2e;
---st-border: 1px solid var(--st-border-color);
---st-border-radius: ${borderRadius}px;
---st-accent-primary: ${await shiftedHslColor(207, 73, 30, hueWish, saturationWish, luminanceWish)};
---st-accent-secondary: ${await shiftedHslColor(207, 73, 22, hueWish, saturationWish, luminanceWish)};
---st-accent-ok: #339e7c;
---st-accent-warn: #e94f4f;
---st-chip-info-border: #0565b4;
---st-chip-info-background: #022a4b;
---st-chip-ok-border: #13c4a3;
---st-chip-ok-background: #15363c;
---st-chip-warn-border: #953541;
---st-chip-warn-background: #2f1623;
---st-contrast-accent: #fff /*color-contrast(var(--st-accent-primary) vs #fff, #333333)*/;
---st-decoration-fill: #77777711;
---st-decoration-fill-intense: #77777730;
---st-shadow-value: 0;
---st-shadow-alpha: .7;
---st-hover-brightness: 1.3;
-color-scheme: dark;
-    `,
-        darkCss = `:root { ${darkCssVars} } * { color-scheme: dark; }`
-    const invertCss = `
-#studiewijzer-detail-container .clearfix.user-content {
-    background-color: var(--st-background-primary);
-    color: var(--st-foreground-primary);
-}
+    if (verbose) console.info(`STYLE START with theme ${currentTheme.join(', ')}`)
 
-#studiewijzer-detail-container .clearfix.user-content * {
-    color: var(--st-foreground-primary);
-}
+    const rootVarsGeneral = `
+    --st-font-primary: 600 16px/44px 'arboria', sans-serif;
+    --st-font-family-primary: 'arboria', sans-serif;
+    --st-font-family-secondary: 'open-sans', sans-serif;
+    --st-border: 1px solid var(--st-border-color);
+    --st-border-radius: ${syncedStorage.shape}px;`
 
-.block .content.background-white {
-    background-color: var(--st-background-secondary);
-}
+    const rootVarsInvert = `
+    #studiewijzer-detail-container .clearfix.user-content {
+        background-color: var(--st-background-primary);
+        color: var(--st-foreground-primary);
+    }
 
-.view>iframe, .view>.container>iframe {
-    filter: invert(1) hue-rotate(180deg);
-}
-        `
+    #studiewijzer-detail-container .clearfix.user-content * {
+        color: var(--st-foreground-primary);
+    }
 
-    const cssVars = `${lightCss}
-${syncedStorage.theme === 'auto' ? '@media (prefers-color-scheme: dark) {' : ''}
-${syncedStorage.theme !== 'light' ? darkCss : ''}
-${(syncedStorage['darken-content'] && syncedStorage.theme !== 'light') ? invertCss : ''}
-${syncedStorage.theme === 'auto' ? '}' : ''}
+    .block .content.background-white {
+        background-color: var(--st-background-secondary);
+    }
 
-.st-force-dark { ${darkCssVars} } .st-force-light { ${lightCssVars} }`
+    .view>iframe, .view>.container>iframe {
+        filter: invert(1) hue-rotate(180deg);
+    }`
 
-    createStyle(cssVars, 'study-tools-vars')
+    createStyle(`
+    :root { 
+        ${rootVarsForTheme(currentTheme?.[0], { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsGeneral}
+        ${(syncedStorage['darken-content'] && currentTheme?.[0] === 'dark') ? rootVarsInvert : ''}
+    }
+    
+    .st-force-dark {
+        ${rootVarsForTheme('dark', { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+    }
+    
+    .st-force-light {
+        ${rootVarsForTheme('light', { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+    }
+
+    :root, html, body, * {
+        color-scheme: ${currentTheme?.[0]} !important;
+    }
+    `, 'study-tools-vars')
 
     now = new Date()
 

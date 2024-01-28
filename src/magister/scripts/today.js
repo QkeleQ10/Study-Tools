@@ -97,6 +97,7 @@ nav.menu.ng-scope {
 
     // Random thank you
     if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
+    if (Math.random() < 0.0001) notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven.")
 
     async function todayHeader() {
         let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),

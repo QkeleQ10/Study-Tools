@@ -51,8 +51,10 @@
 
     --mg-bk-light-1: #ffffff;
     --mg-bk-light-2: #ffffff;
+    --mg-fg-light: #000;
     --mg-bk-dark-1: #121212;
     --mg-bk-dark-2: #161616;
+    --mg-fg-dark: #fff;
 
     color-scheme: only light;
 }

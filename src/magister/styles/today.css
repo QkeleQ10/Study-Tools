@@ -785,6 +785,7 @@
     padding-inline: 16px;
     padding-block: 12px;
     background-color: var(--background-color);
+    color: var(--st-foreground-primary);
     border: none;
     font: 11px var(--st-font-family-secondary);
     text-align: start;
@@ -798,7 +799,7 @@
     left: 16px;
     width: calc(100% - 32px);
     height: 1px;
-    background: var(--st-border-color);
+    background-color: var(--st-border-color);
 }
 
 .st-list-title {

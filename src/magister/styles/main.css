@@ -682,6 +682,7 @@ a.st-metric:focus-visible {
 .st-tile {
     position: relative;
     background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
     padding: 32px;
