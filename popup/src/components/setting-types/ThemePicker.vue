@@ -43,14 +43,14 @@ const themePresets = [
 
 const correctionSL = {
     light: {
-        'accent-primary': '95 55',
-        'accent-secondary': '95 47',
-        'foreground-accent': '78 43'
+        'accent-primary': '95% 55%',
+        'accent-secondary': '95% 47%',
+        'foreground-accent': '78% 43%'
     },
     dark: {
-        'accent-primary': '73 30',
-        'accent-secondary': '73 22',
-        'foreground-accent': '53 55'
+        'accent-primary': '73% 30%',
+        'accent-secondary': '73% 22%',
+        'foreground-accent': '53% 55%'
     }
 }
 
@@ -91,16 +91,16 @@ function themesMatch(theme1, theme2 = value.value) {
         </div>
         <button class="theme-picker-example" :style="{ 'background-color': `var(--mg-bk-${value.scheme}-1)` }">
             <div style="position: absolute; left: 0; top: 0; width: 5%; height: 100%"
-                :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s} ${value.color.l}), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']}))` }">
+                :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']}))` }">
             </div>
             <div style="position: absolute; left: 5%; top: 0; width: 22%; height: 100%"
-                :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s} ${value.color.l}), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-primary']}))` }">
+                :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-primary']}))` }">
             </div>
             <div
                 style="position: absolute; left: 9%; top: 10%; width: 14%; height: 7%; border-radius: 100vmax; background-color: #ffffff88;">
             </div>
             <div style="position: absolute; left: 32%; top: 10%; width: 20%; height: 7%; border-radius: 100vmax;"
-                :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s} ${value.color.l}), hsl(${value.color.h} ${correctionSL[value.scheme]['foreground-accent']}))` }">
+                :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['foreground-accent']}))` }">
             </div>
             <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%"
                 :style="{ 'background-color': `var(--mg-bk-${value.scheme}-2)` }"></div>
@@ -116,10 +116,10 @@ function themesMatch(theme1, theme2 = value.value) {
                 <div class="theme-picker-swatch-example" style="transform: rotate(45deg);"
                     :style="{ 'background-color': `var(--mg-bk-${swatch.scheme}-1)` }">
                     <div style="position: absolute; right: 0; top: 0; width: 50%; height: 100%;"
-                        :style="{ 'background-color': `color-mix(in hsl, hsl(${swatch.color.h} ${swatch.color.s} ${swatch.color.l}), hsl(${swatch.color.h} ${correctionSL[swatch.scheme]['accent-primary']}))` }">
+                        :style="{ 'background-color': `color-mix(in hsl, hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%), hsl(${swatch.color.h} ${correctionSL[swatch.scheme]['accent-primary']}))` }">
                     </div>
                     <div style="position: absolute; right: 0; bottom: 0; width: 50%; height: 50%;"
-                        :style="{ 'background-color': `color-mix(in hsl, hsl(${swatch.color.h} ${swatch.color.s} ${swatch.color.l}), hsl(${swatch.color.h} ${correctionSL[swatch.scheme]['accent-secondary']}))` }">
+                        :style="{ 'background-color': `color-mix(in hsl, hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%), hsl(${swatch.color.h} ${correctionSL[swatch.scheme]['accent-secondary']}))` }">
                     </div>
                 </div>
             </button>
@@ -252,7 +252,7 @@ function themesMatch(theme1, theme2 = value.value) {
 }
 
 .theme-picker-swatch.current .theme-picker-swatch-example,
-.theme-picker-swatch:hover .theme-picker-swatch-example ,
+.theme-picker-swatch:hover .theme-picker-swatch-example,
 .theme-picker-swatch:focus-visible .theme-picker-swatch-example {
     scale: 0.75;
 }
