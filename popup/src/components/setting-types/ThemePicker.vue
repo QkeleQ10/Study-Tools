@@ -1,9 +1,13 @@
 <script setup>
 import { ref, computed, defineProps, defineEmits } from 'vue'
 import Icon from '../Icon.vue';
+import BottomSheet from '../BottomSheet.vue';
+import ColorPicker from '../ColorPicker.vue';
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
+
+const pickerOpen = ref(false)
 
 const value = computed({
     get() {
@@ -54,20 +58,9 @@ const correctionSL = {
     }
 }
 
-// const colorPresets = [
-//     { name: "Azuurblauw", h: 207, s: 95, l: 55 }, // default blue
-//     { name: "Zeegroen", h: 161, s: 51, l: 41 }, // green
-//     { name: "Mosgroen", h: 90, s: 41, l: 41 }, // lime
-//     { name: "Oranjegeel", h: 40, s: 51, l: 41 }, // yellow
-//     { name: "Bloedrood", h: 1, s: 51, l: 41 }, // red
-//     { name: "Rozerood", h: 341, s: 61, l: 41 }, // pink
-//     { name: "Lavendelpaars", h: 290, s: 41, l: 41 }, // purple
-//     { name: "Bosbespaars", h: 240, s: 41, l: 41 }, // indigo
-// ]
-
-function clickSwatch(swatch) {
+function clickSwatch(swatch = value.value) {
     value.value = swatch
-    if (themesMatch(swatch)) alert(("Invoke customiser"))
+    if (themesMatch(swatch)) pickerOpen.value = true
 }
 
 function themesMatch(theme1, theme2 = value.value) {
@@ -89,7 +82,8 @@ function themesMatch(theme1, theme2 = value.value) {
                 v-if="(id === 'theme-night' && prefersDarkColorScheme) || (id === 'theme-day' && !prefersDarkColorScheme)">
                 check</Icon>
         </div>
-        <button class="theme-picker-example" :style="{ 'background-color': `var(--mg-bk-${value.scheme}-1)` }">
+        <button class="theme-picker-example" :style="{ 'background-color': `var(--mg-bk-${value.scheme}-1)` }"
+            @click="clickSwatch()">
             <div style="position: absolute; left: 0; top: 0; width: 5%; height: 100%"
                 :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']}))` }">
             </div>
@@ -124,6 +118,11 @@ function themesMatch(theme1, theme2 = value.value) {
                 </div>
             </button>
         </div>
+        <BottomSheet v-model:active="pickerOpen" :handle="true">
+            <template #content>
+                <ColorPicker v-model="value.color" />
+            </template>
+        </BottomSheet>
     </div>
 </template>
 
@@ -175,7 +174,7 @@ function themesMatch(theme1, theme2 = value.value) {
     transition: background-color 150ms;
 }
 
-.theme-picker-example:focus {
+.theme-picker-example:focus-visible {
     outline-width: 2px;
     outline-color: var(--color-on-surface);
 }
