@@ -63,7 +63,8 @@
                 "src/magister/scripts/gamification.js",
                 "src/magister/scripts/today.js",
                 "src/magister/scripts/grades.js",
-                "src/magister/scripts/studyguide.js"
+                "src/magister/scripts/studyguide.js",
+                "src/magister/scripts/books.js"
             ],
             "run_at": "document_end"
         },

@@ -1078,6 +1078,19 @@ h3:active> .icon-up-arrow:before {
     max-width: calc(100vw - 469px);
 }
 
+#leermiddelen-container tr[data-ng-repeat="leermiddel in items"] td {
+    position: relative;
+}
+
+table.table-grid-layout>tbody>tr.selected::after {
+    content: none;
+}
+
+table.table-grid-layout>tbody>tr.selected {
+    filter: brightness(var(--st-hover-brightness));
+    box-shadow: none;
+}
+
 .kwt-widget table {
     display: block;
 }
