@@ -14,12 +14,13 @@ async function today() {
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
         zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
         teacherNamesSetting = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {},
-        widgetsOrder = await getFromStorage('start-widgets', 'local') || ['counters', 'grades', 'messages', 'homework', 'assignments', 'EXCLUDE', 'digitalClock'],
+        widgetsOrder = await getFromStorage('start-widgets', 'local') || ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments'],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
         schedule = element('div', 'st-start-schedule', container),
-        widgets = element('div', 'st-start-widgets', container, { 'data-working': true })
+        widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
+        widgetsList = element('div', 'st-start-widgets-list', widgets)
 
     let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
@@ -247,7 +248,6 @@ nav.menu.ng-scope {
             editor = element('dialog', 'st-start-editor', document.body, { class: 'st-overlay' })
             let editorHeading = element('div', 'st-start-editor-heading', editor),
                 editorTitle = element('span', 'st-start-editor-title', editorHeading, { class: 'st-title', innerText: "Opties" }),
-                editorSubtitle = element('span', 'st-start-editor-subtitle', editorHeading, { class: 'st-subtitle', innerText: "Andere opties vind je in het configuratiepaneel van Study Tools." }),
                 editorClose = element('button', 'st-start-editor-close', editorHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
                 editorTeachers = element('div', 'st-start-editor-teachers', editor, { class: 'st-list st-tile' }),
                 editorTeachersTitle = element('span', 'st-start-editor-teachers-title', editorTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Bijnamen" }),
@@ -294,28 +294,39 @@ nav.menu.ng-scope {
 
             // Widgets editor
             {
-                let includedWidgetsHeading = element('span', 'st-start-edit-include', editorWidgets, { innerText: "Ingeschakelde widgets" })
                 let sortableList = element('ul', 'st-start-edit-wrapper', editorWidgets, { class: 'st-sortable-list' })
 
                 Object.keys(widgetFunctions).forEach(key => {
                     if (!widgetsOrder.find(e => e === key)) widgetsOrder.push(key)
                 })
 
-                let exclusionIndex = widgetsOrder.findIndex(e => e === 'EXCLUDE')
-                widgetsOrder.forEach((key, i) => {
-                    if (i === exclusionIndex) {
-                        let excludedWidgetsHeading = element('span', 'st-start-edit-exclude', sortableList, { innerText: "Uitgeschakelde widgets", 'data-value': "EXCLUDE" })
-                        return
+                for (const key of widgetsOrder) {
+                    const widgetName = widgetFunctions?.[key]?.title
+                    if (!widgetName) continue
+
+                    const listItem = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', draggable: true, 'aria-roledescription': "Sleepbaar item. Gebruik spatie om op te tillen.", 'data-value': key })
+                    const listItemTitle = element('span', `st-start-edit-${key}-title`, listItem, { class: 'st-sortable-list-item-title', innerText: widgetName })
+
+                    const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, listItem, { class: 'st-segmented-control' })
+                    if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
+                        syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
+                        saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
                     }
 
-                    let widgetName = widgetFunctions[key].title
-                    let item = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', innerText: widgetName, draggable: true, 'aria-roledescription': "Sleepbaar item. Gebruik spatie om op te tillen.", 'data-value': key })
-
-                    if (i > exclusionIndex) item.classList.add('excluded')
+                    ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen'), 'Verborgen']).forEach(type => {
+                        const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: type })
+                        if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
+                        widgetTypeButton.addEventListener('click', () => {
+                            syncedStorage[`widget-${key}-type`] = type
+                            saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                            widgetTypeSelector.querySelectorAll('.st-button.segment').forEach(b => b.classList.remove('active'))
+                            widgetTypeButton.classList.add('active')
+                        })
+                    })
 
                     if (widgetFunctions[key].options) {
                         widgetFunctions[key].options.forEach(option => {
-                            let optionWrapper = element('div', `st-start-edit-${option.key}`, item, { class: 'st-sortable-list-item-option' })
+                            let optionWrapper = element('div', `st-start-edit-${option.key}`, listItem, { class: 'st-sortable-list-item-option' })
                             let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
                             switch (option.type) {
                                 case 'select':
@@ -340,32 +351,32 @@ nav.menu.ng-scope {
                         })
                     }
 
-                    item.addEventListener('dragstart', event => {
+                    listItem.addEventListener('dragstart', event => {
                         setTimeout(() => {
-                            item.classList.add('dragging')
+                            listItem.classList.add('dragging')
                         }, 0)
 
-                        let dragGhost = item.cloneNode(true)
+                        let dragGhost = listItem.cloneNode(true)
                         dragGhost.id += '-ghost'
                         dragGhost.classList.add('st-sortable-list-ghost')
                         dragGhost.classList.remove('dragging')
-                        dragGhost.setAttribute('style', `top: ${item.getBoundingClientRect().top + editor.scrollTop}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
+                        dragGhost.setAttribute('style', `top: ${listItem.getBoundingClientRect().top + editor.scrollTop}px; left: ${listItem.getBoundingClientRect().left}px; width: ${listItem.getBoundingClientRect().width}px; height: ${listItem.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
                         editor.append(dragGhost)
                     })
-                    item.addEventListener('dragend', () => {
-                        item.classList.remove('dragging')
-                        item.classList.add('dragging-return')
+                    listItem.addEventListener('dragend', () => {
+                        listItem.classList.remove('dragging')
+                        listItem.classList.add('dragging-return')
                         document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
                             e.classList.add('returning')
-                            e.setAttribute('style', `top: ${item.getBoundingClientRect().top + editor.scrollTop}px; left: ${item.getBoundingClientRect().left}px; width: ${item.getBoundingClientRect().width}px; height: ${item.getBoundingClientRect().height}px;`)
+                            e.setAttribute('style', `top: ${listItem.getBoundingClientRect().top + editor.scrollTop}px; left: ${listItem.getBoundingClientRect().left}px; width: ${listItem.getBoundingClientRect().width}px; height: ${listItem.getBoundingClientRect().height}px;`)
                             setTimeout(() => {
                                 e.remove()
-                                item.classList.remove('dragging-return')
+                                listItem.classList.remove('dragging-return')
                             }, 200)
                         })
                     })
+                }
 
-                })
                 sortableList.addEventListener('dragover', (event) => {
                     event.preventDefault()
 
@@ -384,15 +395,6 @@ nav.menu.ng-scope {
 
                     widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
                     saveToStorage('start-widgets', widgetsOrder, 'local')
-
-                    if (Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('.dragging')) > Array.prototype.indexOf.call(sortableList.children, sortableList.querySelector('#st-start-edit-exclude'))) {
-                        draggingGhost.classList.add('excluded')
-                        draggingItem.classList.add('excluded')
-                    }
-                    else {
-                        draggingGhost.classList.remove('excluded')
-                        draggingItem.classList.remove('excluded')
-                    }
                 })
                 sortableList.addEventListener('dragenter', e => e.preventDefault())
             }
@@ -691,7 +693,7 @@ nav.menu.ng-scope {
 
     async function todayWidgets() {
         widgets.dataset.working = true
-        widgets.innerText = ''
+        widgetsList.innerText = ''
 
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
@@ -699,12 +701,11 @@ nav.menu.ng-scope {
 
         now = new Date()
 
-        let widgetsShown = widgetsOrder.slice(0, widgetsOrder.findIndex(item => item === 'EXCLUDE'))
-
         widgetFunctions = {
 
             counters: {
                 title: "Beknopte notificaties",
+                types: ['Tegel', 'Lijst'],
                 options: [
                     {
                         title: "Tellertjes die overige informatie (activiteiten, logboeken, etc.) weergeven indien beschikbaar.",
@@ -712,11 +713,11 @@ nav.menu.ng-scope {
                         type: 'description'
                     }
                 ],
-                render: async () => {
+                render: async (type) => {
                     return new Promise(async resolve => {
                         let elems = []
 
-                        if (!widgetsShown.includes('grades')) {
+                        if (syncedStorage[`widget-grades-type`] === 'Verborgen') {
                             widgetsProgressText.innerText = `Cijfers ophalen...`
                             let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
                             let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
@@ -735,7 +736,7 @@ nav.menu.ng-scope {
                             }
                         }
 
-                        if (!widgetsShown.includes('messages')) {
+                        if (syncedStorage[`widget-messages-type`] === 'Verborgen') {
                             widgetsProgressText.innerText = `Berichten ophalen...`
                             const messages = await MagisterApi.messages()
                                 .catch(() => { return })
@@ -750,7 +751,7 @@ nav.menu.ng-scope {
                             }
                         }
 
-                        if (!widgetsShown.includes('homework')) {
+                        if (syncedStorage[`widget-homework-type`] === 'Verborgen') {
                             widgetsProgressText.innerText = `Huiswerk ophalen...`
                             const events = await MagisterApi.events()
                                 .catch(() => { return })
@@ -764,7 +765,7 @@ nav.menu.ng-scope {
                             }
                         }
 
-                        if (!widgetsShown.includes('assignments')) {
+                        if (syncedStorage[`widget-assignments-type`] === 'Verborgen') {
                             widgetsProgressText.innerText = `Opdrachten ophalen...`
                             const assignments = await MagisterApi.assignments.top()
                                 .catch(() => { return })
@@ -808,6 +809,15 @@ nav.menu.ng-scope {
                         if (elems.length < 1) return resolve()
 
                         let widgetElement = element('div', 'st-start-widget-counters', null, { class: 'st-tile st-widget' })
+
+                        if (type === 'Lijst') {
+                            elems.forEach(elem => {
+                                elem.setAttribute('class', 'st-widget-title')
+                                elem.dataset.amount = elem.innerText
+                                elem.innerText = elem.dataset.description
+                            })
+                        }
+
                         widgetElement.append(...elems)
 
                         resolve(widgetElement)
@@ -817,6 +827,7 @@ nav.menu.ng-scope {
 
             grades: {
                 title: "Cijfers",
+                types: ['Tegel', 'Lijst'],
                 options: [
                     {
                         title: "Widget weergeven",
@@ -868,7 +879,7 @@ nav.menu.ng-scope {
                         ]
                     }
                 ],
-                render: async () => {
+                render: async (type) => {
                     return new Promise(async resolve => {
                         let viewWidget = await getFromStorage('start-widget-cf-widget', 'local') || 'always'
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
@@ -891,11 +902,9 @@ nav.menu.ng-scope {
 
                         if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
-                        let widgetElement = element('button', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken" })
-                        widgetElement.addEventListener('click', () => {
-                            window.location.hash = '#/cijfers'
-                        })
+                        let widgetElement = element('a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
                         let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: "Laatste cijfer" })
+                        if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.length
 
                         let mostRecentItem = recentGrades[0]
                         if (mostRecentItem.unread) widgetElement.classList.add('st-unread')
@@ -907,7 +916,9 @@ nav.menu.ng-scope {
                         let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { 'data-temporal-type': 'timestamp', 'data-temporal-start': mostRecentItem.date })
                         let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
                         lastGradeHide.addEventListener('click', (event) => {
+                            event.preventDefault()
                             event.stopPropagation()
+                            event.stopImmediatePropagation()
                             if (lastGrade.style.display === 'none') {
                                 lastGradeHide.dataset.icon = ''
                                 lastGrade.style.display = 'block'
@@ -919,7 +930,13 @@ nav.menu.ng-scope {
                                 hiddenItems.push(mostRecentItem.kolomId)
                                 saveToStorage('hiddenGrades', hiddenItems, 'local')
                             }
+                            return false
                         })
+
+                        if (type === 'Lijst') {
+                            widgetTitle.innerText = "Recente cijfers"
+                            return resolve(widgetElement)
+                        }
 
                         let moreUnreadItems = recentGrades.filter(item => item.unread)
                         moreUnreadItems.shift()
@@ -941,18 +958,22 @@ nav.menu.ng-scope {
 
             messages: {
                 title: "Berichten",
-                render: async () => {
+                types: ['Tegel', 'Lijst'],
+                render: async (type) => {
                     return new Promise(async resolve => {
                         const unreadMessages = await MagisterApi.messages()
                             .catch(() => { return reject() })
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: "Berichten", 'data-amount': unreadMessages.length })
+                        let widgetTitle = element('a', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: "Berichten", 'data-amount': unreadMessages.length, href: '#/berichten' })
+
+                        if (type === 'Lijst') {
+                            return resolve(widgetElement)
+                        }
 
                         unreadMessages.forEach(item => {
-                            let messageElement = element('button', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item' })
-                            messageElement.addEventListener('click', () => window.location.hash = `#/berichten`)
+                            let messageElement = element('a', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item', href: `#/berichten` })
 
                             let row1 = element('span', `st-start-widget-messages-${item.id}-row1`, messageElement, { class: 'st-list-row' })
                             let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-list-title', innerText: item.afzender.naam })
@@ -980,6 +1001,7 @@ nav.menu.ng-scope {
 
             homework: {
                 title: "Huiswerk",
+                types: ['Tegel', 'Lijst'],
                 options: [
                     {
                         title: "Afgeronde items tonen",
@@ -997,7 +1019,7 @@ nav.menu.ng-scope {
                         ]
                     }
                 ],
-                render: async () => {
+                render: async (type) => {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
                         const events = await MagisterApi.events()
@@ -1013,6 +1035,8 @@ nav.menu.ng-scope {
                         let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
                         let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: "Huiswerk", 'data-amount': homeworkEvents.length })
 
+                        if (type === 'Lijst') return resolve(widgetElement)
+
                         homeworkEvents.forEach(item => {
                             let subjectNames = item.Vakken?.map((e, i, a) => {
                                 if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
@@ -1020,8 +1044,7 @@ nav.menu.ng-scope {
                             }) || [item.Omschrijving]
                             if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
 
-                            let eventElement = element('button', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item' })
-                            eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                            let eventElement = element('a', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item', href: `#/agenda/huiswerk/${item.Id}` })
 
                             let row1 = element('span', `st-start-widget-homework-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
                             let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-list-title', innerText: subjectNames.join(', ') })
@@ -1050,7 +1073,8 @@ nav.menu.ng-scope {
 
             assignments: {
                 title: "Opdrachten",
-                render: async () => {
+                types: ['Tegel', 'Lijst'],
+                render: async (type) => {
                     return new Promise(async (resolve) => {
                         const assignments = await MagisterApi.assignments.top()
                             .catch(() => { return reject() })
@@ -1058,11 +1082,14 @@ nav.menu.ng-scope {
 
                         if (relevantAssignments.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: "Opdrachten", 'data-amount': relevantAssignments.length })
+                        let widgetTitle = element('a', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: "Opdrachten", 'data-amount': relevantAssignments.length, href: '#/elo/opdrachten' })
+
+                        if (type === 'Lijst') {
+                            return resolve(widgetElement)
+                        }
 
                         relevantAssignments.forEach(item => {
-                            let assignmentElement = element('button', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item' })
-                            assignmentElement.addEventListener('click', () => window.location.hash = `#/elo/opdrachten/${item.Id}`)
+                            let assignmentElement = element('a', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item', href: `#/elo/opdrachten/${item.Id}` })
 
                             let row1 = element('span', `st-start-widget-assignments-${item.Id}-row1`, assignmentElement, { class: 'st-list-row' })
                             let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
@@ -1092,6 +1119,7 @@ nav.menu.ng-scope {
 
             digitalClock: {
                 title: "Digitale klok",
+                types: ['Verborgen', 'Tegel'],
                 options: [
                     {
                         title: "Seconden tonen",
@@ -1191,10 +1219,21 @@ nav.menu.ng-scope {
         }
 
         // Draw the selected widgets in the specified order
-        for (const functionName of widgetsShown) {
-            widgetsProgressText.innerText = `Widget '${widgetFunctions[functionName].title}' laden...`
-            let widgetElement = await widgetFunctions[functionName].render()
-            if (widgetElement) widgets.append(widgetElement)
+        for (const key of widgetsOrder) {
+            if (!widgetFunctions?.[key]) continue
+
+            if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
+                syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
+                saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`], 'local')
+            }
+            if (syncedStorage[`widget-${key}-type`] === 'Verborgen') continue
+
+            widgetsProgressText.innerText = `Widget '${widgetFunctions[key].title}' laden...`
+            let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`])
+            if (widgetElement) {
+                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`]
+                widgetsList.append(widgetElement)
+            }
             updateTemporalBindings()
         }
 
@@ -1228,7 +1267,7 @@ function checkCollision(eventArr) {
 
 function eventChips(item) {
     let chips = []
-    
+
     if (item.Status === 5) chips.push({ name: "Vervallen", type: 'warn' })
     if (item.InfoType === 1 && item.Afgerond) chips.push({ name: "Huiswerk", type: 'ok' })
     else if (item.InfoType === 1) chips.push({ name: "Huiswerk", type: 'info' })

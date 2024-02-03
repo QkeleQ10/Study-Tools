@@ -401,7 +401,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button, .st-metric, .st-keyboard-hint), table.table-grid-layout td a,
+a:not(.user-content a, .st-button, .st-metric, .st-keyboard-hint, .st-widget, .st-widget-title, .st-list-item), table.table-grid-layout td a,
 .k-calendar .k-header .k-nav-fast {
     color: var(--st-foreground-accent);
     text-decoration: none;

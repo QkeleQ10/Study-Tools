@@ -1,4 +1,5 @@
 let syncedStorage = {},
+    localStorage = {},
     verbose = false,
     apiUserId,
     apiUserToken,
@@ -9,7 +10,10 @@ let eggs = [],
     snackbarQueue = [];
 
 (async () => {
-    if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+    if (chrome?.storage) {
+        syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+        localStorage = await getFromStorageMultiple(null, 'local', true)
+    }
     verbose = syncedStorage['verbosity']
 })()
 
@@ -247,7 +251,7 @@ fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
             parseInt(data?.datetime.slice(-2), 10)) * -1
         timeZoneDifference = ((new Date().getTimezoneOffset() - amsterdamTimeZoneOffset) / 60)
     })
-setIntervalImmediately(updateTemporalBindings, 500)
+setIntervalImmediately(updateTemporalBindings, 1000)
 
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
