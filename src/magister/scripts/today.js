@@ -1092,7 +1092,7 @@ nav.menu.ng-scope {
                             let assignmentElement = element('a', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item', href: `#/elo/opdrachten/${item.Id}` })
 
                             let row1 = element('span', `st-start-widget-assignments-${item.Id}-row1`, assignmentElement, { class: 'st-list-row' })
-                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? [item.Vak, item.Titel].join(': ') : item.Titel })
+                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? `${item.Titel} (${item.Vak})` : item.Titel })
                             let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
                                 'data-temporal-type': 'timestamp', 'data-temporal-start': item.InleverenVoor
