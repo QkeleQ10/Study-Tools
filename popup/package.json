@@ -8,7 +8,7 @@
         "dev": "vue-cli-service serve"
     },
     "dependencies": {
-        "@vueuse/core": "^10.3.0",
+        "@vueuse/core": "^10.7.2",
         "core-js": "^3.8.3",
         "vue": "^3.2.13",
         "vue-slider-component": "^4.1.0-beta.7"

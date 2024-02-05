@@ -1,9 +1,9 @@
 <script setup>
-import Icon from './Icon.vue';
+import Icon from '../Icon.vue';
 
 import { computed, defineProps, defineEmits } from 'vue'
 
-const props = defineProps(['modelValue', 'id', 'setting'])
+const props = defineProps(['modelValue', 'options', 'density'])
 const emit = defineEmits(['update:modelValue'])
 
 const value = computed({
@@ -17,53 +17,40 @@ const value = computed({
 </script>
 
 <template>
-    <div class="setting segmented-button">
-        <div>
-            <h3 class="setting-title">
-                <slot name="title"></slot>
-            </h3>
-            <span class="setting-subtitle">
-                <slot name="subtitle"></slot>
-            </span>
-        </div>
-        <div class="button-wrapper">
-            <button v-for="option in setting.options" :key="option.value" class="button-segment"
-                @click="value = option.value" :data-state="option.value === value" :data-has-icon="!!option.icon">
-                <div class="button-segment-icon-wrapper">
-                    <Transition name="icon">
-                        <Icon key="selected" v-if="option.value === value" class="button-segment-icon selected">check
-                        </Icon>
-                        <Icon key="icon" v-else-if="option.icon" class="button-segment-icon">{{ option.icon }}
-                        </Icon>
-                    </Transition>
-                </div>
-                <span class="button-segment-text">{{ option.title }}</span>
-                <div class="button-segment-state-layer"></div>
-            </button>
-        </div>
+    <div class="segmented-button">
+        <button v-for="option in options" :key="option.value" class="button-segment" @click="value = option.value"
+            :data-state="option.value === value" :data-has-icon="!!option.icon"
+            :style="{ 'height': `${40 + (4 * (density || 0))}px` }">
+            <div class="button-segment-icon-wrapper"
+                :class="{ 'hidden': !(option.value === value || (option.icon && option.title)) }">
+                <Transition name="icon">
+                    <Icon key="selected" v-if="option.value === value" class="button-segment-icon selected">check
+                    </Icon>
+                    <Icon key="icon" v-else-if="option.icon && option.title" class="button-segment-icon">{{ option.icon }}
+                    </Icon>
+                </Transition>
+            </div>
+            <span v-if="option.title" class="button-segment-text">{{ option.title }}</span>
+            <div v-else-if="option.icon" class="button-segment-icon-wrapper last">
+                <Icon key="icon" class="button-segment-icon">{{ option.icon }}
+                </Icon>
+            </div>
+            <div class="button-segment-state-layer"></div>
+        </button>
     </div>
 </template>
 
 <style scoped>
-.setting.segmented-button {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    gap: 6px;
-}
-
-.button-wrapper {
+.segmented-button {
     display: flex;
-    width: 100%;
     box-sizing: border-box;
 }
 
 .button-segment {
     position: relative;
-    display: grid;
+    display: flex;
     align-items: center;
     justify-content: center;
-    grid-template-columns: 0px auto;
-    gap: 8px;
     flex: 1 1 0px;
     height: 40px;
     min-width: 48px;
@@ -75,7 +62,7 @@ const value = computed({
     outline: none;
     cursor: pointer;
     overflow: hidden;
-    transition: background-color 200ms, grid-template-columns 200ms;
+    transition: background-color 200ms;
 }
 
 .button-segment:first-of-type {
@@ -93,15 +80,20 @@ const value = computed({
     background-color: var(--color-secondary-container);
 }
 
-.button-segment[data-has-icon=true],
-.button-segment[data-state=true] {
-    grid-template-columns: 18px auto;
-}
-
 .button-segment-icon-wrapper {
     position: relative;
     width: 18px;
     height: 18px;
+    margin-right: 8px;
+    transition: margin-right 200ms;
+}
+
+.button-segment-icon-wrapper.last {
+    margin-right: 0;
+}
+
+.button-segment-icon-wrapper.hidden {
+    margin-right: -18px;
 }
 
 .button-segment-icon {

@@ -1,17 +1,16 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
-import Icon from '../Icon.vue';
-import BottomSheet from '../BottomSheet.vue';
-import ColorPicker from '../ColorPicker.vue';
+import { ref, computed, defineProps, defineEmits } from 'vue';
+import { useElementSize } from '@vueuse/core';
+
+import ColorPicker from '../inputs/ColorPicker.vue';
+import SegmentedButton from '../inputs/SegmentedButton.vue';
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
 
-const pickerOpen = ref(false)
-
 const value = computed({
     get() {
-        let v = props.modelValue || themePresets[0].codepoint
+        let v = props.modelValue || defaultTheme.codepoint
         let [scheme, h, s, l] = v.split(',')
         return { scheme, color: { h, s, l } }
     },
@@ -20,30 +19,16 @@ const value = computed({
     }
 })
 
+const setting = ref(null)
+const { width } = useElementSize(setting)
+
 const prefersDarkColorScheme = ref(window.matchMedia?.('(prefers-color-scheme: dark)').matches)
 
-const themePresets = [
-    {
-        scheme: 'light',
-        color: { h: 207, s: 95, l: 55 },
-        codepoint: 'light,207,95,55'
-    },
-    {
-        scheme: 'light',
-        color: { h: 161, s: 51, l: 41 },
-        codepoint: 'light,161,51,41'
-    },
-    {
-        scheme: 'dark',
-        color: { h: 207, s: 95, l: 55 },
-        codepoint: 'dark,207,95,55'
-    },
-    {
-        scheme: 'dark',
-        color: { h: 161, s: 51, l: 41 },
-        codepoint: 'dark,161,51,41'
-    },
-]
+const defaultTheme = {
+    scheme: 'light',
+    color: { h: 207, s: 95, l: 55 },
+    codepoint: 'light,207,95,55'
+}
 
 const correctionSL = {
     light: {
@@ -58,32 +43,32 @@ const correctionSL = {
     }
 }
 
-function clickSwatch(swatch = value.value) {
-    value.value = swatch
-    if (themesMatch(swatch)) pickerOpen.value = true
+function updateScheme(newScheme) {
+    value.value = { ...value.value, scheme: newScheme }
 }
 
-function themesMatch(theme1, theme2 = value.value) {
-    return (`${theme1.scheme},${theme1.color.h},${theme1.color.s},${theme1.color.l}` === `${theme2.scheme},${theme2.color.h},${theme2.color.s},${theme2.color.l}`)
+function updateColor(newColor) {
+    value.value = { ...value.value, color: newColor }
 }
 </script>
 
 <template>
-    <div class="setting theme-picker">
+    <div class="setting theme-picker" ref="setting" :class="{ 'wide': width > 300 }">
+
         <div class="theme-picker-title"
             :class="{ current: (id === 'theme-night' && prefersDarkColorScheme) || (id === 'theme-day' && !prefersDarkColorScheme) || id === 'theme-fixed' }">
             <h3 class="setting-title">
                 <slot name="title"></slot>
+                <span
+                    v-if="(id === 'theme-night' && prefersDarkColorScheme) || (id === 'theme-day' && !prefersDarkColorScheme)">
+                    (huidig)</span>
             </h3>
             <span class="setting-subtitle">
                 <slot name="subtitle"></slot>
             </span>
-            <Icon class="theme-picker-current"
-                v-if="(id === 'theme-night' && prefersDarkColorScheme) || (id === 'theme-day' && !prefersDarkColorScheme)">
-                check</Icon>
         </div>
-        <button class="theme-picker-example" :style="{ 'background-color': `var(--mg-bk-${value.scheme}-1)` }"
-            @click="clickSwatch()">
+
+        <div class="theme-picker-example" :style="{ 'background-color': `var(--mg-bk-${value.scheme}-1)` }">
             <div style="position: absolute; left: 0; top: 0; width: 5%; height: 100%"
                 :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']}))` }">
             </div>
@@ -98,38 +83,31 @@ function themesMatch(theme1, theme2 = value.value) {
             </div>
             <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%"
                 :style="{ 'background-color': `var(--mg-bk-${value.scheme}-2)` }"></div>
-            <div class="theme-picker-customise">
-                <div></div>
-                <Icon>edit</Icon>
-                <span>Aanpassen</span>
+            <div style="position: absolute; right: 3%; top: 6%; width: 24%; height: 20%; border-radius: 10%;"
+                :style="{ 'background-image': `linear-gradient(color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-primary']})), color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']})))` }">
             </div>
-        </button>
-        <div class="theme-picker-swatches-list">
-            <button v-for="swatch in themePresets" :key="swatch.codepoint" class="theme-picker-swatch"
-                :class="{ current: themesMatch(swatch) }" @click="clickSwatch(swatch)">
-                <div class="theme-picker-swatch-example" style="transform: rotate(45deg);"
-                    :style="{ 'background-color': `var(--mg-bk-${swatch.scheme}-1)` }">
-                    <div style="position: absolute; right: 0; top: 0; width: 50%; height: 100%;"
-                        :style="{ 'background-color': `color-mix(in hsl, hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%), hsl(${swatch.color.h} ${correctionSL[swatch.scheme]['accent-primary']}))` }">
-                    </div>
-                    <div style="position: absolute; right: 0; bottom: 0; width: 50%; height: 50%;"
-                        :style="{ 'background-color': `color-mix(in hsl, hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%), hsl(${swatch.color.h} ${correctionSL[swatch.scheme]['accent-secondary']}))` }">
-                    </div>
-                </div>
-            </button>
         </div>
-        <BottomSheet v-model:active="pickerOpen" :handle="true">
-            <template #content>
-                <ColorPicker v-model="value.color" />
-            </template>
-        </BottomSheet>
+
+        <SegmentedButton class="theme-picker-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
+            :options="[
+                { value: 'light', icon: 'light_mode' },
+                { value: 'dark', icon: 'dark_mode' }
+            ]" density="-1" />
+
+        <ColorPicker class="theme-picker-color" :model-value="value.color" @update:model-value="updateColor" />
+
     </div>
 </template>
 
-<style>
-.setting.theme-picker {
-    display: flex;
-    flex-direction: column;
+<style scoped>
+.theme-picker {
+    display: grid;
+    grid-template:
+        'title' auto
+        'example' auto
+        'scheme' auto
+        'color' auto
+        / 1fr;
     padding-top: 0;
     margin-bottom: 12px;
     background-color: var(--color-surface);
@@ -138,7 +116,17 @@ function themesMatch(theme1, theme2 = value.value) {
     overflow: hidden;
 }
 
+.theme-picker.wide {
+    grid-template:
+        'title title' auto
+        'example scheme' auto
+        'example color' auto
+        / auto 1fr;
+}
+
 .theme-picker-title {
+    grid-area: title;
+
     position: relative;
     padding: 10px 16px;
     border-bottom: 1px solid var(--color-outline-variant);
@@ -149,15 +137,11 @@ function themesMatch(theme1, theme2 = value.value) {
     background-color: var(--color-surface-container);
 }
 
-.theme-picker-current {
-    position: absolute;
-    top: 10px;
-    right: 16px;
-}
-
 .theme-picker-example {
+    grid-area: example;
+
     position: relative;
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
     margin: 12px;
@@ -166,8 +150,12 @@ function themesMatch(theme1, theme2 = value.value) {
     border: none;
     border-radius: 8px;
     overflow: hidden;
-    cursor: pointer;
     transition: background-color 150ms;
+}
+
+.theme-picker.wide .theme-picker-example {
+    min-height: 100px;
+    margin-bottom: 0;
 }
 
 .theme-picker-example * {
@@ -179,85 +167,25 @@ function themesMatch(theme1, theme2 = value.value) {
     outline-color: var(--color-on-surface);
 }
 
-.theme-picker-customise {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 150ms;
+.theme-picker-scheme {
+    grid-area: scheme;
+
+    margin-inline: 12px;
+    /* width: calc(100% - 24px); */
 }
 
-.theme-picker-example:hover>.theme-picker-customise,
-.theme-picker-example:focus>.theme-picker-customise {
-    opacity: 1;
+.theme-picker.wide .theme-picker-scheme {
+    margin-left: 0;
+    margin-top: 8px;
 }
 
-.theme-picker-customise>div {
-    position: absolute;
-    inset: 0;
-    background-color: var(--color-scrim);
-    opacity: .5;
-}
+.theme-picker-color {
+    grid-area: color;
 
-.theme-picker-customise>.icon,
-.theme-picker-customise>span {
-    z-index: 1;
-    color: #fff;
-}
-
-.theme-picker-customise>span:not(.icon) {
-    font: var(--typescale-body-medium);
-}
-
-.theme-picker-swatches-list {
-    display: flex;
-    justify-content: stretch;
-    gap: 8px;
     margin-inline: 12px;
 }
 
-.theme-picker-swatch {
-    position: relative;
-    width: 32px;
-    aspect-ratio: 1;
-
-    background-color: transparent;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    outline: 1px solid var(--color-outline-variant);
-    overflow: hidden;
-    cursor: pointer;
-    transition: scale 150ms, outline-color 150ms;
-}
-
-.theme-picker-swatch.current {
-    outline-width: 2px;
-    outline-color: var(--color-primary);
-}
-
-.theme-picker-swatch-example {
-    position: relative;
-    width: 100%;
-    height: 100%;
-
-    border-radius: 50%;
-    outline: 1px solid var(--color-outline-variant);
-    overflow: hidden;
-    transition: scale 150ms;
-}
-
-.theme-picker-swatch.current .theme-picker-swatch-example,
-.theme-picker-swatch:hover .theme-picker-swatch-example,
-.theme-picker-swatch:focus-visible .theme-picker-swatch-example {
-    scale: 0.75;
-}
-
-.theme-picker-swatch:focus-visible {
-    outline-width: 2px;
-    outline-color: var(--color-on-surface);
+.theme-picker.wide .theme-picker-color {
+    margin-left: 0;
 }
 </style>
