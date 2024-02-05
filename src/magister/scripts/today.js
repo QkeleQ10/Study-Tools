@@ -14,13 +14,14 @@ async function today() {
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
         zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
         teacherNamesSetting = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {},
-        widgetsOrder = await getFromStorage('start-widgets', 'local') || ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments'],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
         schedule = element('div', 'st-start-schedule', container),
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets)
+
+    if (!syncedStorage['start-widgets']?.length > 0) syncedStorage['start-widgets'] = ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments']
 
     let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
@@ -297,10 +298,10 @@ nav.menu.ng-scope {
                 let sortableList = element('ul', 'st-start-edit-wrapper', editorWidgets, { class: 'st-sortable-list' })
 
                 Object.keys(widgetFunctions).forEach(key => {
-                    if (!widgetsOrder.find(e => e === key)) widgetsOrder.push(key)
+                    if (!syncedStorage['start-widgets'].find(e => e === key)) syncedStorage['start-widgets'].push(key)
                 })
 
-                for (const key of widgetsOrder) {
+                for (const key of syncedStorage['start-widgets']) {
                     const widgetName = widgetFunctions?.[key]?.title
                     if (!widgetName) continue
 
@@ -393,8 +394,8 @@ nav.menu.ng-scope {
 
                     sortableList.insertBefore(draggingItem, nextSibling)
 
-                    widgetsOrder = [...sortableList.children].map(element => element.dataset.value)
-                    saveToStorage('start-widgets', widgetsOrder, 'local')
+                    syncedStorage['start-widgets'] = [...sortableList.children].map(element => element.dataset.value)
+                    saveToStorage('start-widgets', syncedStorage['start-widgets'])
                 })
                 sortableList.addEventListener('dragenter', e => e.preventDefault())
             }
@@ -904,7 +905,8 @@ nav.menu.ng-scope {
 
                         let widgetElement = element('a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
                         let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: "Laatste cijfer" })
-                        if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.length
+
+                        if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
                         let mostRecentItem = recentGrades[0]
                         if (mostRecentItem.unread) widgetElement.classList.add('st-unread')
@@ -934,14 +936,14 @@ nav.menu.ng-scope {
                         })
 
                         if (type === 'Lijst') {
-                            widgetTitle.innerText = "Recente cijfers"
+                            widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? "Nieuwe cijfers" : "Laatste cijfer"
                             return resolve(widgetElement)
                         }
 
                         let moreUnreadItems = recentGrades.filter(item => item.unread)
                         moreUnreadItems.shift()
 
-                        widgetTitle.innerText = moreUnreadItems.length > 0 ? "Laatste cijfers" : "Laatste cijfer"
+                        widgetTitle.innerText = moreUnreadItems.length > 0 ? "Nieuwe cijfers" : recentGrades.filter(item => item.unread).length > 0 ? "Nieuw cijfer" : "Laatste cijfer"
 
                         if (moreUnreadItems.length === 1) {
                             let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].item.vak.code}` })
@@ -1219,7 +1221,7 @@ nav.menu.ng-scope {
         }
 
         // Draw the selected widgets in the specified order
-        for (const key of widgetsOrder) {
+        for (const key of syncedStorage['start-widgets']) {
             if (!widgetFunctions?.[key]) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
