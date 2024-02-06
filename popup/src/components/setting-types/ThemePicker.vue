@@ -81,10 +81,18 @@ function updateColor(newColor) {
             <div style="position: absolute; left: 32%; top: 10%; width: 20%; height: 7%; border-radius: 100vmax;"
                 :style="{ 'background-color': `color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['foreground-accent']}))` }">
             </div>
+            <div style="position: absolute; right: 30%; top: 0; width: 0.2%; height: 100%"
+                :style="{ 'background-color': `var(--mg-br-${value.scheme})` }"></div>
             <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%"
                 :style="{ 'background-color': `var(--mg-bk-${value.scheme}-2)` }"></div>
-            <div style="position: absolute; right: 3%; top: 6%; width: 24%; height: 20%; border-radius: 10%;"
-                :style="{ 'background-image': `linear-gradient(color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-primary']})), color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']})))` }">
+            <div style="position: absolute; right: 2.5%; top: 6%; width: 24%; height: 20%; border-radius: 10%; border: 0.2vmax solid transparent;"
+                :style="{ 'border-color': `var(--mg-br-${value.scheme})`, 'background-image': `linear-gradient(color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-primary']})), color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']})))` }">
+            </div>
+            <div style="position: absolute; right: 2.5%; top: 30%; width: 24%; height: 28%; border-radius: 10%; border: 0.2vmax solid transparent;"
+                :style="{ 'border-color': `var(--mg-br-${value.scheme})` }">
+            </div>
+            <div style="position: absolute; right: 2.5%; top: 62%; width: 24%; height: 24%; border-radius: 10%; border: 0.2vmax solid transparent;"
+                :style="{ 'border-color': `var(--mg-br-${value.scheme})` }">
             </div>
         </div>
 
@@ -171,7 +179,7 @@ function updateColor(newColor) {
     grid-area: scheme;
 
     margin-inline: 12px;
-    /* width: calc(100% - 24px); */
+    margin-top: -4px;
 }
 
 .theme-picker.wide .theme-picker-scheme {

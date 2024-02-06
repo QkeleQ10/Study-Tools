@@ -99,7 +99,7 @@ nav.menu.ng-scope {
 
     // Random thank you
     if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
-    if (Math.random() < 0.0001) notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven.")
+    if (Math.random() < 0.0002) notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
 
     async function todayHeader() {
         let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),
@@ -108,13 +108,13 @@ nav.menu.ng-scope {
 
         // Greeting system
         const greetingsByHour = [
-            [22, 'Goedenavond#', 'Goedenavond, nachtuil.', `Fijne ${formattedWeekday}avond!`, 'Bonsoir!', 'Buenas noches!', 'Guten Abend!'], // 22:00 - 23:59
-            [18, 'Goedenavond#', `Fijne ${formattedWeekday}avond!`, 'Bonsoir!', 'Buenas tardes!', 'Guten Abend!'], // 18:00 - 21:59
-            [12, 'Goedemiddag#', `Fijne ${formattedWeekday}middag!`, 'Bonjour!', 'Buenas tardes!', 'Guten Mittag!'], // 12:00 - 17:59
-            [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'], // 6:00 - 11:59
-            [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil.', 'Goedemorgen, vroege vogel!', `Fijne ${formattedWeekday}ochtend!`, 'Bonjour!', 'Buenos días!', 'Guten Morgen!'] // 0:00 - 5:59
+            [22, 'Goedenavond#', 'Goedenavond, nachtuil#', `Fijne ${formattedWeekday}avond#`, 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
+            [18, 'Goedenavond#', `Fijne ${formattedWeekday}avond#`, 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
+            [12, 'Goedemiddag#', `Fijne ${formattedWeekday}middag#`, 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
+            [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${formattedWeekday}ochtend#`, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
+            [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil#', 'Goedemorgen, vroege vogel#', `Fijne ${formattedWeekday}ochtend#`, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
         ],
-            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, `Hey, ${firstName}#`, 'Welkom terug#', 'Goedendag!', 'Yooo!', 'Hello, handsome.', 'Guten Tag!', 'Greetings!', 'Hey!', 'Hoi!', '¡Hola!', 'Ahoy!', 'Bonjour!', 'Buongiorno!', 'Namasté!', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut!', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia!', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
+            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, `Hey, ${firstName}#`, 'Welkom terug#', 'Goedendag#', 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
 
         let possibleGreetings = []
         for (let i = 0; i < greetingsByHour.length; i++) {

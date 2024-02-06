@@ -1,19 +1,22 @@
 <script setup>
-import { computed, defineProps, defineEmits } from 'vue'
+import { ref, computed, defineProps, defineEmits } from 'vue'
+import BottomSheet from '../BottomSheet.vue';
 
 const props = defineProps(['modelValue'])
 const emit = defineEmits(['update:modelValue'])
 
 const value = computed({
     get() {
-        return props.modelValue || colorPresets[0].color
+        return props.modelValue || swatches[0].color
     },
     set(value) {
         emit('update:modelValue', value)
     }
 })
 
-const colorPresets = [
+const pickerOpen = ref(false)
+
+const swatches = [
     { name: "Azuurblauw", color: { h: 207, s: 95, l: 55 } }, // default blue
     { name: "Zeegroen", color: { h: 161, s: 51, l: 41 } }, // green
     { name: "Mosgroen", color: { h: 90, s: 41, l: 41 } }, // lime
@@ -39,13 +42,49 @@ const colorPresets = [
 
 <template>
     <div class="color-picker">
-        color picker
-        {{ value }}
+        <div class="swatches">
+            <button v-for="swatch in swatches" class="swatch" :key="swatch.name" :title="swatch.name"
+                :style="{ 'background-color': `hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%` }"
+                @click="value = swatch.color"></button>
+            <button class="custom"
+                style="background-image: radial-gradient(var(--color-surface-container) 56%, transparent calc(56% + 2px)), conic-gradient(in hsl longer hue, hsl(0 75% 50%) 0 0);"
+                @click="pickerOpen = true"></button>
+        </div>
+        <BottomSheet v-model:active="pickerOpen" :handle=true>
+            <template #content>
+                <div class="color-wheel"
+                    style="background-image: radial-gradient(var(--color-surface-container) 56%, transparent calc(56% + 2px)), conic-gradient(in hsl longer hue, hsl(0 75% 50%) 0 0);">
+                </div>
+            </template>
+        </BottomSheet>
     </div>
 </template>
 
-<style>
+<style scoped>
 .color-picker {
-    background-color: red;
+    margin-block: 4px;
+}
+
+.swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.swatches>button {
+    min-width: 30px;
+    min-height: 30px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid var(--color-outline-variant);
+    flex: 1 1 18%;
+}
+
+.color-wheel {
+    width: 50%;
+    max-height: 20%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid var(--color-outline-variant);
 }
 </style>
