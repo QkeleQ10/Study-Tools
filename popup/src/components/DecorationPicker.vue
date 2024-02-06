@@ -127,4 +127,13 @@ const decorations = [
     opacity: 0;
     font-variation-settings: 'WGHT' 0;
 }
+
+.setting-wrapper[data-setting-id="decoration-size"] {
+    border-top: none !important;
+    margin-top: -12px;
+}
+
+.setting-wrapper[data-setting-id="decoration-size"] .setting-title {
+    display: none;
+}
 </style>

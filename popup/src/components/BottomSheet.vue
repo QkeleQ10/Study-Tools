@@ -47,6 +47,7 @@ watch(() => props.active, async (value) => {
     bottom: 0;
     left: 0;
     width: 100%;
+    max-width: 530px;
     box-sizing: border-box;
     translate: 0 24px;
     padding: 24px 24px 48px;

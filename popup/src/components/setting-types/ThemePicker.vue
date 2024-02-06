@@ -85,13 +85,13 @@ function updateColor(newColor) {
                 :style="{ 'background-color': `var(--mg-br-${value.scheme})` }"></div>
             <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%"
                 :style="{ 'background-color': `var(--mg-bk-${value.scheme}-2)` }"></div>
-            <div style="position: absolute; right: 2.5%; top: 6%; width: 24%; height: 20%; border-radius: 10%; border: 0.2vmax solid transparent;"
+            <div style="position: absolute; right: 2.5%; top: 6%; width: 24%; height: 20%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${value.scheme})`, 'background-image': `linear-gradient(color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-primary']})), color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctionSL[value.scheme]['accent-secondary']})))` }">
             </div>
-            <div style="position: absolute; right: 2.5%; top: 30%; width: 24%; height: 28%; border-radius: 10%; border: 0.2vmax solid transparent;"
+            <div style="position: absolute; right: 2.5%; top: 30%; width: 24%; height: 28%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${value.scheme})` }">
             </div>
-            <div style="position: absolute; right: 2.5%; top: 62%; width: 24%; height: 24%; border-radius: 10%; border: 0.2vmax solid transparent;"
+            <div style="position: absolute; right: 2.5%; top: 62%; width: 24%; height: 24%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${value.scheme})` }">
             </div>
         </div>

@@ -81,14 +81,14 @@ export default [
             },
             {
                 id: "decoration",
-                title: "Decoratiestijl",
-                subtitle: "Wordt weergegeven in de zijbalk.",
+                title: "Zijbalkdecoratie",
                 type: "DecorationPicker",
                 default: 'none',
             },
             {
                 id: "decoration-size",
-                title: "Decoratiegrootte",
+                title: "Zijbalkdecoratieformaat",
+                subtitle: "Grootte",
                 type: "SlideInput",
                 default: 1,
                 format: "percent",
