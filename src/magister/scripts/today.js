@@ -21,7 +21,7 @@ async function today() {
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets)
 
-    if (!syncedStorage['start-widgets']?.length > 0) syncedStorage['start-widgets'] = ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments']
+    if (!(syncedStorage['widgets-order']?.length > 0)) syncedStorage['widgets-order'] = ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments']
 
     let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
@@ -298,10 +298,10 @@ nav.menu.ng-scope {
                 let sortableList = element('ul', 'st-start-edit-wrapper', editorWidgets, { class: 'st-sortable-list' })
 
                 Object.keys(widgetFunctions).forEach(key => {
-                    if (!syncedStorage['start-widgets'].find(e => e === key)) syncedStorage['start-widgets'].push(key)
+                    if (!syncedStorage['widgets-order'].find(e => e === key)) syncedStorage['widgets-order'].push(key)
                 })
 
-                for (const key of syncedStorage['start-widgets']) {
+                for (const key of syncedStorage['widgets-order']) {
                     const widgetName = widgetFunctions?.[key]?.title
                     if (!widgetName) continue
 
@@ -394,8 +394,8 @@ nav.menu.ng-scope {
 
                     sortableList.insertBefore(draggingItem, nextSibling)
 
-                    syncedStorage['start-widgets'] = [...sortableList.children].map(element => element.dataset.value)
-                    saveToStorage('start-widgets', syncedStorage['start-widgets'])
+                    syncedStorage['widgets-order'] = [...sortableList.children].map(element => element.dataset.value)
+                    saveToStorage('widgets-order', syncedStorage['widgets-order'])
                 })
                 sortableList.addEventListener('dragenter', e => e.preventDefault())
             }
@@ -1221,7 +1221,7 @@ nav.menu.ng-scope {
         }
 
         // Draw the selected widgets in the specified order
-        for (const key of syncedStorage['start-widgets']) {
+        for (const key of syncedStorage['widgets-order']) {
             if (!widgetFunctions?.[key]) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
