@@ -88,14 +88,14 @@ async function studyguideIndividual() {
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
             notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
-            document.querySelector('.st-sw-selected').classList.add('hidden-item')
+            document.querySelector('.st-sw-selected')?.classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
             hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
             notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)
-            document.querySelector('.st-sw-selected').classList.remove('hidden-item')
+            document.querySelector('.st-sw-selected')?.classList.remove('hidden-item')
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
     })
@@ -147,7 +147,7 @@ async function renderStudyguideList() {
         if (!object[subject]) object[subject] = []
         object[subject].push({ elem, title, period })
 
-        if (subject === "Geen vak") {
+        if (subject === "Geen vak" && document.querySelector('#st-sw-help')) {
             document.querySelector('#st-sw-help').style.display = 'flex'
         }
     })
