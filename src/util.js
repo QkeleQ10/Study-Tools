@@ -576,18 +576,16 @@ function showSnackbar(object) {
 }
 
 function createStyle(content, id) {
-    return new Promise((resolve, reject) => {
-        let styleElem
-        if (!id) {
-            styleElem = document.createElement('style')
-        } else {
-            styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
-            styleElem.id = id
-        }
-        styleElem.textContent = content
-        document.head.append(styleElem)
-        resolve(styleElem)
-    })
+    let styleElem
+    if (!id) {
+        styleElem = document.createElement('style')
+    } else {
+        styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
+        styleElem.id = id
+    }
+    styleElem.textContent = content
+    document.head.append(styleElem)
+    return styleElem
 }
 
 // Seeded random numbers.

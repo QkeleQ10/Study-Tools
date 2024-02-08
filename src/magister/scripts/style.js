@@ -216,14 +216,13 @@ async function applyStyles() {
     }
     decorations()
 
-    // Christmas mode!!!
+    // Christmas mode
     if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {
-        createStyle(`nav.menu.ng-scope {
-    background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/christmas.svg");
-    background-size: 240px 480px;
-    background-position: bottom 64px center;
-    background-repeat: no-repeat;
-}`, 'st-christmas')
+        handleSpecialDecoration('christmas')
+    }
+    // Valentine's day mode
+    if (now.getMonth() === 1 && [14].includes(now.getDate())) {
+        handleSpecialDecoration('valentine')
     }
 
     createStyle(`.block h3,
@@ -1381,4 +1380,21 @@ table.table-grid-layout>tbody>tr.selected {
     } else {
         createStyle('', 'study-tools-pfp')
     }
+}
+
+async function handleSpecialDecoration(type) {
+    if ((await getFromStorage('no-special-decorations', 'session') ?? '') === type) return
+    const decoration = createStyle(`nav.menu.ng-scope {
+            background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/${type}.svg");
+            background-size: 240px 480px;
+            background-position: bottom 64px center;
+            background-repeat: no-repeat;
+        }`, `st-special-decoration`)
+    const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Deze decoratie verbergen" })
+    disableButton.addEventListener('click', () => {
+        decoration.remove()
+        disableButton.remove()
+        saveToStorage('no-special-decorations', type, 'session')
+        if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
+    })
 }

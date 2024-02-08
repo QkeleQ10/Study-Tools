@@ -80,18 +80,18 @@ async function studyguideIndividual() {
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
     let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
     let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
-    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
+    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
     hideItemButton.addEventListener('click', () => {
         if (!studyguideIsHidden) {
             studyguideIsHidden = true
-            hideItemButton.dataset.icon = ''
+            hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
             notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
             document.querySelector('.st-sw-selected')?.classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
-            hideItemButton.dataset.icon = ''
+            hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
             notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)

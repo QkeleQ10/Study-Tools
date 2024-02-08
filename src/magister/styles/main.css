@@ -141,6 +141,11 @@ div.loading-overlay {
     outline: none;
 }
 
+.st-button.text {
+    background-color: transparent;
+    outline: none;
+}
+
 .st-button.icon {
     display: flex;
     align-items: center;
@@ -230,9 +235,9 @@ div.loading-overlay {
 
 .st-chips-wrapper {
     display: flex;
-    flex-direction: column;
     flex-wrap: wrap;
     align-items: flex-end;
+    justify-content: flex-end;
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);
@@ -241,6 +246,7 @@ div.loading-overlay {
 }
 
 .st-start-event .st-chips-wrapper {
+    flex-direction: column;
     position: absolute;
     bottom: 12px;
     right: 12px;
@@ -1076,6 +1082,17 @@ a.st-keyboard-hint.clicked {
     width: 100%;
     height: 1px;
     background-color: var(--color);
+}
+
+#st-decoration-disable {
+    position: absolute;
+    bottom: 64px;
+    left: -32px;
+    rotate: -90deg;
+    color: var(--st-contrast-accent);
+    font-size: 12px;
+    font-weight: normal;
+    opacity: .15;
 }
 
 @keyframes rotation {

@@ -23,6 +23,7 @@ async function today() {
 
     if (!(syncedStorage['widgets-order']?.length > 0)) syncedStorage['widgets-order'] = ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments']
 
+    let todayCollapseWidgets
     let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
     let agendaStartDate, agendaEndDate
@@ -54,52 +55,13 @@ async function today() {
     verifyDisplayMode()
     window.addEventListener('resize', () => {
         widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
+        if (widgets.classList.contains('editing')) widgetsCollapsed = false
         verifyDisplayMode()
     })
 
     todayHeader()
     todaySchedule()
     todayWidgets()
-
-    // Birthday party mode!
-    const accountInfo = await MagisterApi.accountInfo(),
-        dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
-        birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
-        isBirthdayToday = birthday.isToday(),
-        isBirthdayYesterday = todayDate.getDay() === 1 && birthday.isYesterday(),
-        isBirthdayTomorrow = todayDate.getDay() === 5 && birthday.isTomorrow()
-
-    if (isBirthdayToday || isBirthdayYesterday || isBirthdayTomorrow) {
-        createStyle(`
-nav.menu.ng-scope {
-    background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/birthday.svg");
-    background-size: 240px 480px;
-    background-position: bottom 64px center;
-    background-repeat: no-repeat;
-}
-
-.menu-host, .appbar-host {
-    animation: rainbow 5s linear 0s 3, red-accent 500ms 15s both;
-}
-
-@keyframes red-accent {
-    from {
-        --st-accent-primary: hsl(0, 50%, 60%);
-        --st-accent-secondary: hsl(0, 50%, 55%);
-    }
-}
-`, 'st-party-mode')
-        if (isBirthdayTomorrow)
-            notify('snackbar', `Alvast van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
-        else if (isBirthdayYesterday)
-            notify('snackbar', `Nog van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
-        else if (isBirthdayToday)
-            notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
-    }
-
-    // Random thank you
-    if (Math.random() < 0.01) notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
-    if (Math.random() < 0.0002) notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
 
     async function todayHeader() {
         let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),
@@ -195,6 +157,7 @@ nav.menu.ng-scope {
             todayViewDay.classList.add('active')
             todayViewWeek.classList.remove('active')
             widgetsCollapsed = window.innerWidth < 1100
+            if (widgets.classList.contains('editing')) widgetsCollapsed = false
             verifyDisplayMode()
             if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
             weekView = false
@@ -207,6 +170,7 @@ nav.menu.ng-scope {
             todayViewDay.classList.remove('active')
             todayViewWeek.classList.add('active')
             widgetsCollapsed = true
+            if (widgets.classList.contains('editing')) widgetsCollapsed = false
             verifyDisplayMode()
             if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
             weekView = true
@@ -217,8 +181,9 @@ nav.menu.ng-scope {
         })
 
         // Controls (bottom right of page)
-        let widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container)
+        let widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' })
         let widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
+        setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
 
         // Zoom buttons
         let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
@@ -294,6 +259,7 @@ nav.menu.ng-scope {
             }
 
             // Widgets editor
+            // TODO: integrate this into the actual widgets list
             {
                 let sortableList = element('ul', 'st-start-edit-wrapper', editorWidgets, { class: 'st-sortable-list' })
 
@@ -473,14 +439,33 @@ nav.menu.ng-scope {
             })
         }
 
+        let editWidgetsButton = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
+        editWidgetsButton.addEventListener('click', () => {
+            editWidgets()
+        })
+
         // Side panel collapse/expand button
-        let todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
+        todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
         todayCollapseWidgets.addEventListener('click', () => {
             widgetsCollapsed = !widgetsCollapsed
+            if (widgets.classList.contains('editing')) widgetsCollapsed = false
             widgetsCollapsedSetting = widgetsCollapsed
             saveToStorage('start-widgets-collapsed', widgetsCollapsedSetting, 'local')
             verifyDisplayMode()
         })
+
+        if (widgetsCollapsed && !(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false)) {
+            const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen." })
+            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
+            todayCollapseWidgets.addEventListener('click', () => {
+                tooltip.classList.add('st-hidden')
+                saveToStorage('start-widgets-collapsed-known', true, 'local')
+            })
+            setTimeout(() => {
+                tooltip.classList.add('st-hidden')
+                saveToStorage('start-widgets-collapsed-known', true, 'local')
+            }, 20000)
+        }
 
         // Allow for keyboard navigation
         document.addEventListener('keydown', event => {
@@ -882,18 +867,57 @@ nav.menu.ng-scope {
                         ]
                     }
                 ],
-                render: async (type) => {
+                render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         let viewWidget = await getFromStorage('start-widget-cf-widget', 'local') || 'always'
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
                         let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
-                        let hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
-                        let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
+
+                        let grades, hiddenItems, lastViewMs
+                        if (placeholder) {
+                            grades = [
+                                {
+                                    "omschrijving": "Voorbeeld",
+                                    "ingevoerdOp": new Date(now - 172800000),
+                                    "vak": {
+                                        "code": "netl",
+                                        "omschrijving": "Nederlandse taal"
+                                    },
+                                    "waarde": "6,9",
+                                    "weegfactor": 0
+                                },
+                                {
+                                    "omschrijving": "Baguette",
+                                    "ingevoerdOp": new Date(now - 691200000),
+                                    "vak": {
+                                        "code": "fatl",
+                                        "omschrijving": "Franse taal"
+                                    },
+                                    "waarde": "U",
+                                    "weegfactor": 0
+                                },
+                                {
+                                    "omschrijving": "Grade mockery",
+                                    "ingevoerdOp": new Date(now - 691200000),
+                                    "vak": {
+                                        "code": "entl",
+                                        "omschrijving": "Engelse taal"
+                                    },
+                                    "waarde": "5,4",
+                                    "weegfactor": 0
+                                }
+                            ]
+                            hiddenItems = []
+                            lastViewMs = 0
+                        } else {
+                            grades = await MagisterApi.grades.recent()
+                                .catch(() => { return reject() })
+                            hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
+                            lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
+                        }
                         let lastViewDate = new Date(lastViewMs)
                         if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
-                        const grades = await MagisterApi.grades.recent()
-                            .catch(() => { return reject() })
                         const recentGrades = grades.map(item => {
                             return {
                                 ...item,
@@ -905,7 +929,7 @@ nav.menu.ng-scope {
 
                         if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
-                        let widgetElement = element('a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
+                        let widgetElement = element(placeholder ? 'div' : 'a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
                         let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: "Laatste cijfer" })
 
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
@@ -916,20 +940,20 @@ nav.menu.ng-scope {
                         let lastGrade = element('span', 'st-start-widget-grades-last', widgetElement, { innerText: mostRecentItem.waarde })
                         if (mostRecentItem.hidden) lastGrade.style.display = 'none'
                         let lastGradeSubj = element('span', 'st-start-widget-grades-last-subj', widgetElement, { innerText: mostRecentItem.vak.omschrijving.charAt(0).toUpperCase() + mostRecentItem.vak.omschrijving.slice(1) })
-                        let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: mostRecentItem.weegfactor > 0 && mostRecentItem.teltMee ? `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor}×)` : mostRecentItem.omschrijving })
+                        let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor || 0}×)` })
                         let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { 'data-temporal-type': 'timestamp', 'data-temporal-start': mostRecentItem.date })
-                        let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
+                        let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
                         lastGradeHide.addEventListener('click', (event) => {
                             event.preventDefault()
                             event.stopPropagation()
                             event.stopImmediatePropagation()
                             if (lastGrade.style.display === 'none') {
-                                lastGradeHide.dataset.icon = ''
+                                lastGradeHide.dataset.icon = ''
                                 lastGrade.style.display = 'block'
                                 hiddenItems = hiddenItems.filter(item => item !== mostRecentItem.kolomId)
                                 saveToStorage('hiddenGrades', hiddenItems, 'local')
                             } else {
-                                lastGradeHide.dataset.icon = ''
+                                lastGradeHide.dataset.icon = ''
                                 lastGrade.style.display = 'none'
                                 hiddenItems.push(mostRecentItem.kolomId)
                                 saveToStorage('hiddenGrades', hiddenItems, 'local')
@@ -948,7 +972,7 @@ nav.menu.ng-scope {
                         widgetTitle.innerText = moreUnreadItems.length > 0 ? "Nieuwe cijfers" : recentGrades.filter(item => item.unread).length > 0 ? "Nieuw cijfer" : "Laatste cijfer"
 
                         if (moreUnreadItems.length === 1) {
-                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].item.vak.code}` })
+                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].vak.code}` })
                         } else if (moreUnreadItems.length > 10) {
                             element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${new Intl.ListFormat('nl-NL').format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
                         } else if (moreUnreadItems.length > 1) {
@@ -963,10 +987,33 @@ nav.menu.ng-scope {
             messages: {
                 title: "Berichten",
                 types: ['Tegel', 'Lijst'],
-                render: async (type) => {
+                render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        const unreadMessages = await MagisterApi.messages()
-                            .catch(() => { return reject() })
+                        let unreadMessages
+
+                        if (placeholder) {
+                            unreadMessages = [
+                                {
+                                    "onderwerp": "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️",
+                                    "afzender": {
+                                        "naam": "Quinten Althues (V6E)"
+                                    },
+                                    "heeftBijlagen": true,
+                                    "verzondenOp": new Date(now - 3032000000)
+                                },
+                                {
+                                    "onderwerp": "Wie gebruikt Berichten in vredesnaam?",
+                                    "afzender": {
+                                        "naam": "Quinten Althues (V6E)"
+                                    },
+                                    "heeftPrioriteit": true,
+                                    "verzondenOp": new Date(now - 1000000)
+                                }
+                            ]
+                        } else {
+                            unreadMessages = await MagisterApi.messages()
+                                .catch(() => { return reject() })
+                        }
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
@@ -991,6 +1038,7 @@ nav.menu.ng-scope {
 
                             let chips = []
                             if (item.heeftPrioriteit) chips.push({ name: "Belangrijk", type: 'warn' })
+                            if (item.heeftBijlagen) chips.push({ name: "Bijlagen", type: 'info' })
 
                             let messageChipsWrapper = element('div', `st-start-widget-messages-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
@@ -1023,11 +1071,57 @@ nav.menu.ng-scope {
                         ]
                     }
                 ],
-                render: async (type) => {
+                render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
-                        const events = await MagisterApi.events()
-                            .catch(() => { return reject() })
+
+                        let events
+                        if (placeholder) {
+                            events = [
+                                {
+                                    "Start": new Date(new Date().setHours(0, 0, 0, 0) + 122400000),
+                                    "Einde": new Date(new Date().setHours(0, 0, 0, 0) + 125100000),
+                                    "Inhoud": "<p>Dit is een onvoltooid huiswerkitem.</p>",
+                                    "Opmerking": null,
+                                    "InfoType": 1,
+                                    "Afgerond": false,
+                                    "Vakken": [
+                                        {
+                                            "Naam": "Niet-bestaand vak"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Start": new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
+                                    "Einde": new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
+                                    "Inhoud": "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>",
+                                    "Opmerking": null,
+                                    "InfoType": 2,
+                                    "Afgerond": false,
+                                    "Vakken": [
+                                        {
+                                            "Naam": "Lichamelijke opvoeding"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Start": new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
+                                    "Einde": new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
+                                    "Inhoud": "<p>Dit item heb je al wel voltooid. Good job.</p>",
+                                    "Opmerking": null,
+                                    "InfoType": 1,
+                                    "Afgerond": true,
+                                    "Vakken": [
+                                        {
+                                            "Naam": "Jouw favoriete vak"
+                                        }
+                                    ]
+                                }
+                            ]
+                        } else {
+                            events = await MagisterApi.events()
+                                .catch(() => { return reject() })
+                        }
                         const homeworkEvents = events.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
@@ -1078,10 +1172,28 @@ nav.menu.ng-scope {
             assignments: {
                 title: "Opdrachten",
                 types: ['Tegel', 'Lijst'],
-                render: async (type) => {
+                render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
-                        const assignments = await MagisterApi.assignments.top()
-                            .catch(() => { return reject() })
+                        let assignments
+                        if (placeholder) {
+                            assignments = [
+                                {
+                                    "Titel": "Praktische opdracht",
+                                    "Vak": "sk",
+                                    "InleverenVoor": new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
+                                    "Omschrijving": "Zorg ervoor dat je toestemming hebt van de TOA voordat je begint met je experiment."
+                                },
+                                {
+                                    "Titel": "Boekverslag",
+                                    "Vak": "netl",
+                                    "InleverenVoor": new Date(new Date().setHours(0, 0, 0, 0) + 400500000)
+                                }
+                            ]
+                        } else {
+                            assignments = await MagisterApi.assignments.top()
+                                .catch(() => { return reject() })
+                        }
+
                         const relevantAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
 
                         if (relevantAssignments.length < 1) return resolve()
@@ -1104,7 +1216,7 @@ nav.menu.ng-scope {
 
                             let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })
                             let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-list-content' })
-                            assignmentContent.innerHTML = item.Omschrijving.replace(/(<br ?\/?>)/gi, '') //assignmentContent.setHTML(item.Omschrijving)
+                            assignmentContent.innerHTML = item.Omschrijving?.replace(/(<br ?\/?>)/gi, '') || '' //assignmentContent.setHTML(item.Omschrijving)
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
@@ -1141,11 +1253,11 @@ nav.menu.ng-scope {
                         ]
                     }
                 ],
-                render: () => {
+                render: (type, placeholder) => {
                     return new Promise(async resolve => {
                         const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
 
-                        const widgetElement = element('button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" })
+                        const widgetElement = element(placeholder ? 'div' : 'button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" })
                         const timeDisclaimer = element('p', 'st-start-widget-digital-clock-disclaimer', widgetElement, { 'data-temporal-type': 'current-time-disclaimer' })
                         const timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
                             'data-temporal-type': secondsOption === 'show'
@@ -1153,7 +1265,7 @@ nav.menu.ng-scope {
                                 : 'current-time-short'
                         })
 
-                        widgetElement.addEventListener('click', () => {
+                        if (!placeholder) widgetElement.addEventListener('click', () => {
                             if (!document.fullscreenElement) {
                                 widgetElement.requestFullscreen()
                                 widgetElement.removeAttribute('title')
@@ -1171,8 +1283,14 @@ nav.menu.ng-scope {
 
                         // Aditionally, show the progress of the day. Widget will be rendered even before this is available!
 
-                        const events = await MagisterApi.events()
-                            .catch(() => { return reject() })
+                        let events
+                        if (placeholder) {
+                            events = []
+                        } else {
+                            events = await MagisterApi.events()
+                                .catch(() => { return reject() })
+                        }
+
                         const todaysEvents = events.filter(item => new Date(item.Start).isToday())
                         if (!todaysEvents?.length > 0) return
                         const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
@@ -1223,7 +1341,7 @@ nav.menu.ng-scope {
         }
 
         // Draw the selected widgets in the specified order
-        for (const key of syncedStorage['widgets-order']) {
+        for (const key of Object.values(syncedStorage['widgets-order'])) {
             if (!widgetFunctions?.[key]) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
@@ -1244,6 +1362,35 @@ nav.menu.ng-scope {
         widgets.dataset.working = false
         widgetsProgress.remove()
         widgetsProgressText.remove()
+
+    }
+
+    async function editWidgets() {
+        widgetsList.innerText = ''
+
+        if (widgets.classList.contains('editing')) {
+            todayWidgets()
+            widgets.classList.remove('editing')
+            return
+        }
+
+        widgets.classList.add('editing')
+        if (widgetsCollapsed) todayCollapseWidgets.click()
+
+        // Draw the selected widgets in the specified order
+        for (const key of Object.values(syncedStorage['widgets-order'])) {
+            if (!widgetFunctions?.[key]) continue
+
+            let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
+            if (widgetElement) {
+                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`]
+                widgetElement.setAttribute('disabled', true)
+                widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
+                widgetElement.setAttribute('draggable', true)
+                widgetsList.append(widgetElement)
+            }
+            updateTemporalBindings()
+        }
     }
 
     function verifyDisplayMode() {
