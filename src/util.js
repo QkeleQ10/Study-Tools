@@ -202,7 +202,7 @@ function updateTemporalBindings() {
                     else if (networkTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
                     else if (networkTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
-                element.innerText = timestamp
+                if (element.dataset.time != timestamp) element.dataset.time = timestamp
                 break
 
             case 'style-hours':
@@ -219,13 +219,17 @@ function updateTemporalBindings() {
                 element.dataset.done = progress >= 1
                 break
 
-            case 'current-time-long':
-                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+            case 'current-time-long': {
+                const timef = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                element.dataset.time = timef
                 break
+            }
 
-            case 'current-time-short':
-                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+            case 'current-time-short': {
+                const timef = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                element.dataset.time = timef
                 break
+            }
 
             case 'current-time-disclaimer':
                 if (timeZoneDifference === 0) return element.style.display = 'none'

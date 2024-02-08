@@ -561,25 +561,25 @@ nav.menu.ng-scope {
                 }
             }
 
-            agendaDays.forEach((item, i, a) => {
+            agendaDays.forEach((day, i, a) => {
                 // If the date falls outside the agenda range, don't proceed.
-                if (item.date < agendaStartDate || item.date > agendaEndDate) return
+                if (day.date < agendaStartDate || day.date > agendaEndDate) return
 
                 // Create a column for the day
                 let column = element('div', `st-start-col-${i}`, scheduleWrapper, {
                     class: 'st-start-col',
-                    'data-today': item.today,
-                    'data-tomorrow': item.tomorrow,
-                    'data-irrelevant': item.irrelevant
+                    'data-today': day.today,
+                    'data-tomorrow': day.tomorrow,
+                    'data-irrelevant': day.irrelevant
                 }),
                     columnLabel = element('div', `st-start-col-${i}-head`, column, { class: 'st-start-col-label' }),
-                    columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'long' }) }),
-                    columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric' }) })
-                if (item.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', month: 'long' }) })
-                if (item.date.getDate() === 1 && item.date.getMonth() === 0) element('span', `st-start-col-${i}-head-span-3`, columnLabel, { innerText: item.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', year: 'numeric' }) })
+                    columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: day.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'long' }) }),
+                    columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: day.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric' }) })
+                if (day.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: day.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', month: 'long' }) })
+                if (day.date.getDate() === 1 && day.date.getMonth() === 0) element('span', `st-start-col-${i}-head-span-3`, columnLabel, { innerText: day.date.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', year: 'numeric' }) })
 
                 // Loop through all events of the day
-                item.events.forEach((item, i) => {
+                day.events.forEach((item, i) => {
                     let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
                     // Render the event element
@@ -591,6 +591,8 @@ nav.menu.ng-scope {
                         'data-temporal-type': 'ongoing-check',
                         'data-temporal-start': item.Start,
                         'data-temporal-end': item.Einde,
+                        'data-start-connecting': day.events.some(el => el.Einde === item.Start),
+                        'data-end-connecting': day.events.some(el => el.Start === item.Einde),
                         style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
                         title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).getFormattedTime()}–${new Date(item.Einde).getFormattedTime()}`
                     })
@@ -663,7 +665,7 @@ nav.menu.ng-scope {
                     })
                 })
 
-                if (!listViewEnabled && item.today) {
+                if (!listViewEnabled && day.today) {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
                     let currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' })
                     updateTemporalBindings()
@@ -671,8 +673,8 @@ nav.menu.ng-scope {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
                         if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                         if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
-                        schedule.scrollTop -= 1 // Scroll back one pixel to ensure the border looks nice.
                         currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
+                        schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                     }
                 }
             })
@@ -1121,7 +1123,7 @@ nav.menu.ng-scope {
 
             digitalClock: {
                 title: "Digitale klok",
-                types: ['Verborgen', 'Tegel'],
+                types: ['Verborgen', 'Tegel', 'Lijst'],
                 options: [
                     {
                         title: "Seconden tonen",

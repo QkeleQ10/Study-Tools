@@ -277,8 +277,8 @@
     --cols: 1;
     --background-color: var(--st-background-secondary);
     position: absolute;
-    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour) + 2px);
-    height: calc(var(--duration) * var(--hour-zoom) * var(--px-per-hour) - 3px);
+    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour));
+    height: calc(var(--duration) * var(--hour-zoom) * var(--px-per-hour));
     min-height: 48px;
     width: calc(100% / var(--cols));
     left: calc(100% / var(--cols) * var(--cols-before));
@@ -355,6 +355,16 @@
 
 .st-start-event[data-ongoing=true] {
     --background-color: var(--st-highlight-primary);
+}
+
+.st-start-event[data-start-connecting=true] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.st-start-event[data-end-connecting=true] {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 .st-start-event-school-hours {
@@ -591,7 +601,7 @@
 
 .st-widget {
     flex-shrink: 0;
-    max-height: 325px;
+    max-height: 300px;
     padding: 0;
     margin-block: 24px;
     margin-bottom: 0;
@@ -609,6 +619,10 @@
 
 .st-widget[data-render-type="Tegel"]+.st-widget[data-render-type="Tegel"] {
     margin-top: 16px;
+}
+
+.st-widget[data-render-type="Tegel"]:last-child {
+    margin-bottom: 16px;
 }
 
 .st-widget[data-render-type="Lijst"] {
@@ -823,6 +837,14 @@ a.st-widget-title {
     overflow: hidden;
 }
 
+#st-start-widget-digital-clock-time:after {
+    content: attr(data-time)
+}
+
+[data-render-type="Lijst"] #st-start-widget-digital-clock-time {
+    margin-block: 20px;
+}
+
 #st-start-widget-digital-clock-wrapper {
     display: flex;
     gap: 3px;
@@ -911,6 +933,10 @@ a.st-widget-title {
     z-index: 2;
     font-weight: 600;
     color: var(--st-foreground-insignificant);
+}
+
+.st-list-timestamp:after {
+    content: attr(data-time);
 }
 
 .st-list-content {
