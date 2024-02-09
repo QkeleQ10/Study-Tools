@@ -662,6 +662,10 @@
     overflow-x: hidden;
 }
 
+.st-widget.dragging {
+    visibility: hidden;
+}
+
 #st-start-widgets[data-working=true] .st-widget {
     animation: floatLeft 200ms both, expandIn 400ms cubic-bezier(0.5, 1.2, .8, 1) both;
 }
@@ -1200,8 +1204,8 @@ a.st-widget-title {
 }
 
 .st-sortable-list-ghost.returning {
-    transition-property: top, left, transform, translate;
-    transition-duration: 200ms;
+    transition-property: top, right, transform, translate;
+    transition-duration: 150ms;
 }
 
 .st-sortable-list-item .st-sortable-list-item-title {

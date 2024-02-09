@@ -1387,10 +1387,57 @@ async function today() {
                 widgetElement.setAttribute('disabled', true)
                 widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
                 widgetElement.setAttribute('draggable', true)
+                widgetElement.dataset.value = key
                 widgetsList.append(widgetElement)
+
+                widgetElement.addEventListener('dragstart', event => {
+                    setTimeout(() => {
+                        widgetElement.classList.add('dragging')
+                    }, 0)
+
+                    let dragGhost = widgetElement.cloneNode(true)
+                    dragGhost.id += '-ghost'
+                    dragGhost.classList.add('st-sortable-list-ghost')
+                    dragGhost.classList.remove('dragging')
+                    dragGhost.setAttribute('style', `top: ${widgetElement.getBoundingClientRect().top}px; right: 32px; width: ${widgetElement.getBoundingClientRect().width}px; height: ${widgetElement.getBoundingClientRect().height}px; translate: 0 ${event.clientY}px; transform: translateY(-${event.clientY}px);`)
+                    document.body.append(dragGhost)
+                })
+                widgetElement.addEventListener('dragend', () => {
+                    widgetElement.classList.remove('dragging')
+                    widgetElement.classList.add('dragging-return')
+                    document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
+                        e.classList.add('returning')
+                        console.log(widgetElement.getBoundingClientRect())
+                        e.setAttribute('style', `top: ${widgetElement.getBoundingClientRect().top}px; right: ${window.innerWidth - widgetElement.getBoundingClientRect().right}px; width: ${widgetElement.getBoundingClientRect().width}px; height: ${widgetElement.getBoundingClientRect().height}px;`)
+                        setTimeout(() => {
+                            e.remove()
+                            widgetElement.classList.remove('dragging-return')
+                        }, 200)
+                    })
+
+                    syncedStorage['widgets-order'] = [...widgetsList.children].map(element => element.dataset.value)
+                    saveToStorage('widgets-order', syncedStorage['widgets-order'])
+                })
             }
             updateTemporalBindings()
         }
+
+        widgetsList.addEventListener('dragover', (event) => {
+            event.preventDefault()
+
+            const draggedItem = document.querySelector('.dragging')
+
+            document.querySelector('.st-sortable-list-ghost').style.translate = `0 ${event.clientY}px`
+
+            let siblings = [...draggedItem.parentElement.children].filter(child => child !== draggedItem)
+
+            let nextSibling = siblings.find(sibling => {
+                return (event.clientY) <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
+            })
+
+            widgetsList.insertBefore(draggedItem, nextSibling)
+        })
+        widgetsList.addEventListener('dragenter', e => e.preventDefault())
     }
 
     function verifyDisplayMode() {
