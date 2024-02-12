@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.6.6",
+    "version": "3.7.2",
     "default_locale": "nl",
     "icons": {
         "16": "icons/icon@16px.png",
@@ -57,7 +57,8 @@
                 "src/magister/scripts/gamification.js",
                 "src/magister/scripts/today.js",
                 "src/magister/scripts/grades.js",
-                "src/magister/scripts/studyguide.js"
+                "src/magister/scripts/studyguide.js",
+                "src/magister/scripts/books.js"
             ],
             "run_at": "document_end"
         },

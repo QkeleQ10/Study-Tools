@@ -52,7 +52,7 @@ async function studyguideIndividual() {
     if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?(match){1}.*/i)
+            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?0?(match)(?!\d)/i)
 
         list.parentElement.style.paddingTop = '8px !important'
         list.parentElement.style.paddingLeft = '8px !important'
@@ -80,22 +80,22 @@ async function studyguideIndividual() {
     let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
     let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
     let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
-    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
+    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
     hideItemButton.addEventListener('click', () => {
         if (!studyguideIsHidden) {
             studyguideIsHidden = true
-            hideItemButton.dataset.icon = ''
+            hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer niet langer verbergen"
             hiddenStudyguides.push(studyguideTitle)
             notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
-            document.querySelector('.st-sw-selected').classList.add('hidden-item')
+            document.querySelector('.st-sw-selected')?.classList.add('hidden-item')
         } else {
             studyguideIsHidden = false
-            hideItemButton.dataset.icon = ''
+            hideItemButton.dataset.icon = ''
             hideItemButton.title = "Studiewijzer verbergen"
             hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
             notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)
-            document.querySelector('.st-sw-selected').classList.remove('hidden-item')
+            document.querySelector('.st-sw-selected')?.classList.remove('hidden-item')
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
     })
@@ -147,7 +147,7 @@ async function renderStudyguideList() {
         if (!object[subject]) object[subject] = []
         object[subject].push({ elem, title, period })
 
-        if (subject === "Geen vak") {
+        if (subject === "Geen vak" && document.querySelector('#st-sw-help')) {
             document.querySelector('#st-sw-help').style.display = 'flex'
         }
     })

@@ -3,12 +3,11 @@
 // Run when the extension and page are loaded
 main()
 async function main() {
+    const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+
     let appbar = await awaitElement('.appbar'),
         logos = await awaitElement('img.logo-expanded, img.logo-collapsed', true),
-        key = syncedStorage['magister-overlay-hotkey'] || 'S',
-        keyDisplay = key?.charAt(0).toUpperCase() + key?.slice(1) || 'S'
-
-    // subjects = syncedStorage['subjects']
+        key = syncedStorage['magister-overlay-hotkey'] || 'S'
 
     let shortcuts = Object.values(syncedStorage.shortcuts),
         spacer = await awaitElement('.appbar>.spacer')
@@ -18,6 +17,7 @@ async function main() {
         let vandaagText = await awaitElement('a#menu-vandaag span')
         vandaagText.innerText = "Start"
         if (Math.random() < 0.009) createStyle(`.fa-home:before { content: '' !important; }`)
+        if (Math.random() < 0.004) vandaagText.innerText = "Eind"
     }
 
     // Appbar metrics
@@ -27,7 +27,11 @@ async function main() {
 
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: new Date().getWeek(), href: '#/agenda/werkweek' })
+        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: new Date().getWeek(), href: '#/vandaag' })
+        appbarWeek.addEventListener('click', async () => {
+            let weekSel = await awaitElement('#st-start-today-view-week')
+            if (weekSel) weekSel.click()
+        })
     }
 
     // Custom shortcuts
@@ -58,8 +62,40 @@ async function main() {
     })
 
     // Easter egg
-    if (Math.random() < 0.006) setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
-    if (Math.random() < 0.008) setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg'), 2000)
+    if (Math.random() < 0.006) /* 0,6% */ setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
+    if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg'), 2000)
+    if (Math.random() < 0.010) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
+    if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
+
+    // Birthday party mode!
+    const accountInfo = await MagisterApi.accountInfo(),
+        dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
+        birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
+        firstName = accountInfo.Persoon.Roepnaam || accountInfo.Persoon.OfficieleVoornamen,
+        isBirthdayToday = birthday.isToday(),
+        isBirthdayYesterday = todayDate.getDay() === 1 && birthday.isYesterday(),
+        isBirthdayTomorrow = todayDate.getDay() === 5 && birthday.isTomorrow()
+
+    if (isBirthdayToday || isBirthdayYesterday || isBirthdayTomorrow) {
+        handleSpecialDecoration('birthday')
+        createStyle(`
+        .menu-host, .appbar-host {
+            animation: rainbow 5s linear 0s 3, red-accent 500ms 15s both;
+        }
+
+        @keyframes red-accent {
+            from {
+                --st-accent-primary: hsl(0, 50%, 60%);
+                --st-accent-secondary: hsl(0, 50%, 55%);
+            }
+        }`, 'st-party-mode')
+        if (isBirthdayTomorrow)
+            notify('snackbar', `Alvast van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+        else if (isBirthdayYesterday)
+            notify('snackbar', `Nog van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+        else if (isBirthdayToday)
+            notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
+    }
 
     // Hotkeys
     if (syncedStorage['hotkeys-enabled']) {

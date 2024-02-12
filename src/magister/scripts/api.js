@@ -341,13 +341,13 @@ async function updateApiCredentials(identifier = 'unknown') {
                 } else {
                     if (isCancelled) return reject(new Error("Timed out"))
                     if (verbose) console.info(`CREDS WARN: Data too old! Retrying... (@ ${identifier})`)
-                    getApiCredentialsMemory(resolve, reject)
+                    setTimeout(() => getApiCredentialsMemory(resolve, reject), 200)
                 }
             }
         } else {
             if (isCancelled) return reject(new Error("Timed out"))
-            if (verbose) console.info("CREDS INFO: Data incomplete! Retrying...")
-            getApiCredentialsMemory(resolve, reject)
+            if (verbose) console.info(`CREDS INFO: Data incomplete! Retrying... (@ ${identifier})\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length}\nuserTokenDate: ${new Date(magisterApiUserTokenDate).toTimeString().split(' ')[0]} (${Math.abs(now - new Date(magisterApiUserTokenDate))} ms ago)`)
+            setTimeout(() => getApiCredentialsMemory(resolve, reject), 200)
         }
     }
 }

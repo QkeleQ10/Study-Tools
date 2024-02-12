@@ -48,46 +48,47 @@ export default [
         id: "appearance",
         settings: [
             {
-                id: "theme",
-                title: "Kleurenschema",
-                type: "SegmentedButton",
-                wizard: "Kies in welk kleurenthema Magister moet worden weergegeven.",
-                default: "auto",
-                options: [
-                    {
-                        value: "auto",
-                        title: "Systeem",
-                        icon: "brightness_auto"
-                    },
-                    {
-                        value: "light",
-                        title: "Licht",
-                        icon: "light_mode"
-                    },
-                    {
-                        value: "dark",
-                        title: "Donker",
-                        icon: "dark_mode"
-                    },
-                ]
+                id: "auto-theme",
+                title: "Thema synchroniseren met systeem",
+                default: true,
             },
             {
-                id: "color",
-                title: "Accentkleur",
-                type: "ColorPicker",
-                default: { h: 207, s: 95, l: 55 },
-                wizard: "Wil je een alternatieve accentkleur kiezen?",
+                id: "theme-fixed",
+                title: "Thema",
+                type: "ThemePicker",
+                conditions: [
+                    { settingId: 'auto-theme', operator: 'equal', value: false }
+                ],
+                default: 'light,207,95,55',
+            },
+            {
+                id: "theme-day",
+                title: "Dagthema",
+                type: "ThemePicker",
+                conditions: [
+                    { settingId: 'auto-theme', operator: 'equal', value: true }
+                ],
+                default: 'light,207,95,55',
+            },
+            {
+                id: "theme-night",
+                title: "Nachtthema",
+                type: "ThemePicker",
+                conditions: [
+                    { settingId: 'auto-theme', operator: 'equal', value: true }
+                ],
+                default: 'dark,207,95,55',
             },
             {
                 id: "decoration",
-                title: "Decoratiestijl",
-                subtitle: "Wordt weergegeven in de zijbalk.",
+                title: "Zijbalkdecoratie",
                 type: "DecorationPicker",
                 default: 'none',
             },
             {
                 id: "decoration-size",
-                title: "Decoratiegrootte",
+                title: "Zijbalkdecoratieformaat",
+                subtitle: "Grootte",
                 type: "SlideInput",
                 default: 1,
                 format: "percent",
@@ -95,6 +96,9 @@ export default [
                 min: 0.5,
                 max: 3,
                 step: 0.1,
+                conditions: [
+                    { settingId: 'decoration', operator: 'not equal', value: 'none' }
+                ],
             },
             {
                 id: "shape",

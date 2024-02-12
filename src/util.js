@@ -1,4 +1,5 @@
 let syncedStorage = {},
+    localStorage = {},
     verbose = false,
     apiUserId,
     apiUserToken,
@@ -9,16 +10,15 @@ let eggs = [],
     snackbarQueue = [];
 
 (async () => {
-    if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+    if (chrome?.storage) {
+        syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+        localStorage = await getFromStorageMultiple(null, 'local', true)
+    }
     verbose = syncedStorage['verbosity']
 })()
 
 window.addEventListener('DOMContentLoaded', async () => {
     handleAnnouncements()
-
-    setTimeout(() => {
-        saveToStorage('usedExtension', chrome.runtime.getManifest().version, 'local')
-    }, 500)
 })
 
 async function handleAnnouncements() {
@@ -202,7 +202,7 @@ function updateTemporalBindings() {
                     else if (networkTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
                     else if (networkTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
-                element.innerText = timestamp
+                if (element.dataset.time != timestamp) element.dataset.time = timestamp
                 break
 
             case 'style-hours':
@@ -219,13 +219,17 @@ function updateTemporalBindings() {
                 element.dataset.done = progress >= 1
                 break
 
-            case 'current-time-long':
-                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+            case 'current-time-long': {
+                const timef = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                element.dataset.time = timef
                 break
+            }
 
-            case 'current-time-short':
-                element.innerText = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+            case 'current-time-short': {
+                const timef = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                element.dataset.time = timef
                 break
+            }
 
             case 'current-time-disclaimer':
                 if (timeZoneDifference === 0) return element.style.display = 'none'
@@ -251,7 +255,7 @@ fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
             parseInt(data?.datetime.slice(-2), 10)) * -1
         timeZoneDifference = ((new Date().getTimezoneOffset() - amsterdamTimeZoneOffset) / 60)
     })
-setIntervalImmediately(updateTemporalBindings, 500)
+setIntervalImmediately(updateTemporalBindings, 1000)
 
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
@@ -572,18 +576,16 @@ function showSnackbar(object) {
 }
 
 function createStyle(content, id) {
-    return new Promise((resolve, reject) => {
-        let styleElem
-        if (!id) {
-            styleElem = document.createElement('style')
-        } else {
-            styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
-            styleElem.id = id
-        }
-        styleElem.textContent = content
-        document.head.append(styleElem)
-        resolve(styleElem)
-    })
+    let styleElem
+    if (!id) {
+        styleElem = document.createElement('style')
+    } else {
+        styleElem = document.querySelector(`style#${id}`) || document.createElement('style')
+        styleElem.id = id
+    }
+    styleElem.textContent = content
+    document.head.append(styleElem)
+    return styleElem
 }
 
 // Seeded random numbers.

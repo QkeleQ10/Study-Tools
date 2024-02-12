@@ -141,6 +141,11 @@ div.loading-overlay {
     outline: none;
 }
 
+.st-button.text {
+    background-color: transparent;
+    outline: none;
+}
+
 .st-button.icon {
     display: flex;
     align-items: center;
@@ -160,6 +165,7 @@ div.loading-overlay {
 .st-button.icon:hover {
     color: var(--st-foreground-accent);
     filter: none;
+    font-weight: 600;
 }
 
 .st-button.icon:active {
@@ -223,6 +229,10 @@ div.loading-overlay {
     margin-right: 10px;
 }
 
+.st-button[data-icon]:hover:before {
+    font-weight: 600;
+}
+
 .st-button[disabled]:not([disabled=false]) {
     pointer-events: none;
     opacity: .4;
@@ -230,9 +240,9 @@ div.loading-overlay {
 
 .st-chips-wrapper {
     display: flex;
-    flex-direction: column;
     flex-wrap: wrap;
     align-items: flex-end;
+    justify-content: flex-end;
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);
@@ -241,6 +251,7 @@ div.loading-overlay {
 }
 
 .st-start-event .st-chips-wrapper {
+    flex-direction: column;
     position: absolute;
     bottom: 12px;
     right: 12px;
@@ -434,88 +445,6 @@ div.loading-overlay {
     border-width: 3px;
 }
 
-.st-sortable-list {
-    width: 100%;
-    padding-bottom: 16px;
-}
-
-.st-sortable-list-item {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: stretch;
-    position: relative;
-    width: 100%;
-    margin-bottom: 10px;
-    padding-inline: 12px;
-    border-radius: var(--st-border-radius);
-    background: var(--st-background-secondary);
-    border: var(--st-border);
-    color: var(--st-foreground-primary);
-    font: 14px/40px var(--st-font-family-secondary);
-    cursor: grab;
-}
-
-.st-sortable-list-item:active {
-    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    cursor: grabbing !important;
-}
-
-.st-sortable-list-item:after {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    content: '';
-    font: 500 16px "Font Awesome 6 Pro";
-    color: var(--st-foreground-insignificant);
-}
-
-.st-sortable-list-item-option {
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font: 12px var(--st-font-family-secondary);
-}
-
-.st-sortable-list-item-option select {
-    min-width: 128px;
-    max-width: 256px;
-    padding: 4px 8px;
-    background-color: var(--st-background-secondary);
-    border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) * 0.75);
-    font: 12px var(--st-font-family-secondary);
-}
-
-.st-sortable-list-item.dragging,
-.st-sortable-list-item.dragging-return {
-    opacity: 0 !important;
-}
-
-.st-sortable-list-item.dragging {
-    cursor: grabbing !important;
-}
-
-.st-sortable-list-item.excluded {
-    opacity: .75;
-}
-
-.st-sortable-list-ghost {
-    position: absolute;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 10000000;
-    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    cursor: grabbing !important;
-    animation: fadeIn 200ms;
-}
-
-.st-sortable-list-ghost.returning {
-    transition-property: top, left, transform, translate;
-    transition-duration: 200ms;
-}
-
 .st-number-ghost {
     position: absolute;
     width: 32px;
@@ -682,6 +611,7 @@ a.st-metric:focus-visible {
 .st-tile {
     position: relative;
     background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
     padding: 32px;
@@ -1157,6 +1087,17 @@ a.st-keyboard-hint.clicked {
     width: 100%;
     height: 1px;
     background-color: var(--color);
+}
+
+#st-decoration-disable {
+    position: absolute;
+    bottom: 64px;
+    left: -32px;
+    rotate: -90deg;
+    color: var(--st-contrast-accent);
+    font-size: 12px;
+    font-weight: normal;
+    opacity: .15;
 }
 
 @keyframes rotation {

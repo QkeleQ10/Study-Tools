@@ -3,23 +3,22 @@ login()
 async function login() {
     if (!syncedStorage['magisterLogin-enabled']) return
 
-    const forceLogoutTimestamp = await getFromStorage('force-logout', 'local'),
-        footer = document.querySelector('.bottom')
+    const username = syncedStorage['magisterLogin-username']
 
+    const footer = document.querySelector('.bottom')
     footer.style.translate = '0 -2rem'
-    if (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000)
-        return footer.innerText = "Automatisch inloggen is tijdelijk gepauzeerd. De volgende keer zal er weer automatisch worden ingelogd."
+    footer.innerText = "Automatisch inloggen is ingeschakeld. Je kunt de instellingen aanpassen via de pop-up van Study Tools."
 
-    footer.innerText = "Automatisch inloggen is ingeschakeld. Je kunt de instellingen aanpassen via de extensie van Study Tools."
+    const forceLogoutTimestamp = await getFromStorage('force-logout', 'local')
+    if (forceLogoutTimestamp && Math.abs(new Date().getTime() - forceLogoutTimestamp) <= 30000) {
+        footer.innerText = "Automatisch inloggen is tijdelijk gepauzeerd. De volgende keer zal er weer automatisch worden ingelogd."
+        return
+    }
 
-    let usernameField = await awaitElement('#username'),
-        username = syncedStorage['magisterLogin-username']
-    usernameField.value = username
-    usernameField.dispatchEvent(new Event('input'))
+    const usernameInput = await awaitElement('#username')
+    usernameInput.value = username
+    usernameInput.dispatchEvent(new Event('input'))
 
-    let usernameSubmit = await awaitElement('#username_submit')
+    const usernameSubmit = await awaitElement('#username_submit')
     usernameSubmit.click()
-
-    let passwordField = await awaitElement('#rswp_password')
-    if (passwordField) notify('snackbar', "Om privacyredenen ondersteunt Study Tools niet langer het inloggen met een wachtwoord. Vul je wachtwoord zelf in.")
 }

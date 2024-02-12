@@ -135,6 +135,7 @@ function openInNewTab(url) {
     padding-top: 12px;
     color: var(--color-on-surface);
     font: var(--typescale-body-large);
+    grid-column: span 2;
 }
 
 #about-hero {
