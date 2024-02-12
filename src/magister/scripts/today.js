@@ -21,7 +21,12 @@ async function today() {
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets)
 
-    if (!(syncedStorage['widgets-order']?.length > 0)) syncedStorage['widgets-order'] = ['digitalClock', 'grades', 'counters', 'messages', 'homework', 'assignments']
+    const defaultOrder = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
+    if (!(syncedStorage['widgets-order']?.length > 0) || !defaultOrder.every(key => Object.values(syncedStorage['widgets-order']).includes(key))) {
+        console.info(`Changing widgets-order`, syncedStorage['widgets-order'], defaultOrder)
+        syncedStorage['widgets-order'] = defaultOrder
+        saveToStorage('widgets-order', syncedStorage['widgets-order'])
+    }
 
     let todayCollapseWidgets
     let widgetFunctions
@@ -156,7 +161,7 @@ async function today() {
         todayViewDay.addEventListener('click', () => {
             todayViewDay.classList.add('active')
             todayViewWeek.classList.remove('active')
-            widgetsCollapsed = window.innerWidth < 1100
+            widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
             if (widgets.classList.contains('editing')) widgetsCollapsed = false
             verifyDisplayMode()
             if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
@@ -206,173 +211,6 @@ async function today() {
                 setTimeout(() => ghost.remove(), 1000)
             }
         }
-
-        let editor
-        (async () => {
-
-            // Editor overlay
-            editor = element('dialog', 'st-start-editor', document.body, { class: 'st-overlay' })
-            let editorHeading = element('div', 'st-start-editor-heading', editor),
-                editorTitle = element('span', 'st-start-editor-title', editorHeading, { class: 'st-title', innerText: "Opties" }),
-                editorClose = element('button', 'st-start-editor-close', editorHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
-                editorTeachers = element('div', 'st-start-editor-teachers', editor, { class: 'st-list st-tile' }),
-                editorTeachersTitle = element('span', 'st-start-editor-teachers-title', editorTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Bijnamen" }),
-                editorWidgets = element('div', 'st-start-editor-widgets', editor, { class: 'st-list st-tile' }),
-                editorWidgetsTitle = element('span', 'st-start-editor-widgets-title', editorWidgets, { class: 'st-section-title', 'data-icon': '', innerText: "Widgets" })
-            editorClose.addEventListener('click', () => {
-                editor.close()
-                todayWidgets()
-                renderSchedule()
-            })
-
-            // Nicknames editor 
-            {
-                const events = await MagisterApi.events()
-
-                const eventsTeachers = events.flatMap(item => item.Docenten).filter((value, index, self) =>
-                    index === self.findIndex((t) => (
-                        t.Docentcode === value.Docentcode
-                    ))
-                )
-
-                const allTeacherNames = {
-                    ...teacherNamesSetting,
-                    ...eventsTeachers.reduce((obj, item) => (obj[item.Docentcode] = teacherNamesSetting[item.Docentcode] || null, obj), {})
-                }
-
-                let nicknamesList = element('div', 'st-start-edit-nicknames-list', editorTeachers)
-
-                for (const key in allTeacherNames) {
-                    if (Object.hasOwnProperty.call(allTeacherNames, key)) {
-                        const value = allTeacherNames[key],
-                            teacherName = eventsTeachers.find(item => item.Docentcode === key)?.Naam
-                        let wrapper = element('div', `st-start-edit-nicknames-list-${key}`, nicknamesList)
-                        let label = element('label', `st-start-edit-nicknames-list-${key}-label`, wrapper, { innerText: key, style: `text-decoration: ${teacherName ? 'underline' : 'none'}`, title: teacherName ? (value ? `Je hebt ${key} (${teacherName}) een bijnaam gegeven en\ndeze docent komt ook voor in je rooster van de komende 6 weken.` : `Je hebt ${key} (${teacherName}) geen bijnaam gegeven, maar\ndeze docent komt wel voor in je rooster van de komende 6 weken.`) : `Je hebt ${key} eerder een bijnaam gegeven, maar\ndeze docent komt niet voor in je rooster van de komende 6 weken.` })
-                        let input = element('input', `st-start-edit-nicknames-list-${key}-input`, wrapper, { class: 'st-input', value: value || '', placeholder: teacherName || '' })
-                        input.addEventListener('change', async () => {
-                            teacherNamesSetting[key] = input.value
-                            teacherNamesSetting = Object.fromEntries(Object.entries(teacherNamesSetting).filter(([_, v]) => v != null && v.length > 0))
-                            await saveToStorage('start-teacher-names', teacherNamesSetting)
-                        })
-                    }
-                }
-            }
-
-            // Widgets editor
-            // TODO: integrate this into the actual widgets list
-            {
-                let sortableList = element('ul', 'st-start-edit-wrapper', editorWidgets, { class: 'st-sortable-list' })
-
-                Object.keys(widgetFunctions).forEach(key => {
-                    if (!syncedStorage['widgets-order'].find(e => e === key)) syncedStorage['widgets-order'].push(key)
-                })
-
-                for (const key of syncedStorage['widgets-order']) {
-                    const widgetName = widgetFunctions?.[key]?.title
-                    if (!widgetName) continue
-
-                    const listItem = element('li', `st-start-edit-${key}`, sortableList, { class: 'st-sortable-list-item', draggable: true, 'aria-roledescription': "Sleepbaar item. Gebruik spatie om op te tillen.", 'data-value': key })
-                    const listItemTitle = element('span', `st-start-edit-${key}-title`, listItem, { class: 'st-sortable-list-item-title', innerText: widgetName })
-
-                    const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, listItem, { class: 'st-segmented-control' })
-                    if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
-                        syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
-                        saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                    }
-
-                    ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen'), 'Verborgen']).forEach(type => {
-                        const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: type })
-                        if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
-                        widgetTypeButton.addEventListener('click', () => {
-                            syncedStorage[`widget-${key}-type`] = type
-                            saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                            widgetTypeSelector.querySelectorAll('.st-button.segment').forEach(b => b.classList.remove('active'))
-                            widgetTypeButton.classList.add('active')
-                        })
-                    })
-
-                    if (widgetFunctions[key].options) {
-                        widgetFunctions[key].options.forEach(option => {
-                            let optionWrapper = element('div', `st-start-edit-${option.key}`, listItem, { class: 'st-sortable-list-item-option' })
-                            let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
-                            switch (option.type) {
-                                case 'select':
-                                    let optionInput = element('select', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title })
-                                    option.choices.forEach(async choice => {
-                                        let optionChoice = element('option', `st-start-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
-                                        if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
-                                    })
-                                    optionInput.addEventListener('change', event => {
-                                        saveToStorage(option.key, event.target.value, 'local')
-                                    })
-                                    break
-
-                                case 'description':
-                                    let optionText = element('span', `st-start-edit-${option.key}-text`, optionWrapper, { name: option.title })
-                                    break
-
-                                default:
-                                    // Implement other option types as necessary
-                                    break
-                            }
-                        })
-                    }
-
-                    listItem.addEventListener('dragstart', event => {
-                        setTimeout(() => {
-                            listItem.classList.add('dragging')
-                        }, 0)
-
-                        let dragGhost = listItem.cloneNode(true)
-                        dragGhost.id += '-ghost'
-                        dragGhost.classList.add('st-sortable-list-ghost')
-                        dragGhost.classList.remove('dragging')
-                        dragGhost.setAttribute('style', `top: ${listItem.getBoundingClientRect().top + editor.scrollTop}px; left: ${listItem.getBoundingClientRect().left}px; width: ${listItem.getBoundingClientRect().width}px; height: ${listItem.getBoundingClientRect().height}px; translate: ${event.clientX}px ${event.clientY}px; transform: translateX(-${event.clientX}px) translateY(-${event.clientY}px);`)
-                        editor.append(dragGhost)
-                    })
-                    listItem.addEventListener('dragend', () => {
-                        listItem.classList.remove('dragging')
-                        listItem.classList.add('dragging-return')
-                        document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
-                            e.classList.add('returning')
-                            e.setAttribute('style', `top: ${listItem.getBoundingClientRect().top + editor.scrollTop}px; left: ${listItem.getBoundingClientRect().left}px; width: ${listItem.getBoundingClientRect().width}px; height: ${listItem.getBoundingClientRect().height}px;`)
-                            setTimeout(() => {
-                                e.remove()
-                                listItem.classList.remove('dragging-return')
-                            }, 200)
-                        })
-                    })
-                }
-
-                sortableList.addEventListener('dragover', (event) => {
-                    event.preventDefault()
-
-                    const draggingItem = document.querySelector('.dragging')
-
-                    const draggingGhost = document.querySelector('.st-sortable-list-ghost')
-                    draggingGhost.style.translate = `${event.clientX}px ${event.clientY}px`
-
-                    let siblings = [...draggingItem.parentElement.children].filter(child => child !== draggingItem)
-
-                    let nextSibling = siblings.find(sibling => {
-                        return (event.clientY) <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
-                    })
-
-                    sortableList.insertBefore(draggingItem, nextSibling)
-
-                    syncedStorage['widgets-order'] = [...sortableList.children].map(element => element.dataset.value)
-                    saveToStorage('widgets-order', syncedStorage['widgets-order'])
-                })
-                sortableList.addEventListener('dragenter', e => e.preventDefault())
-            }
-
-        })()
-
-        // Editor invoke button
-        let invokeEditor = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Opties\nPas bijnamen aan en personaliseer het widgetpaneel" })
-        invokeEditor.addEventListener('click', async () => {
-            editor.showModal()
-        })
 
         if (syncedStorage['start-stats']) {
             let stats
@@ -439,9 +277,71 @@ async function today() {
             })
         }
 
-        let editWidgetsButton = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
-        editWidgetsButton.addEventListener('click', () => {
+        let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
+        invokeEditWidgets.addEventListener('click', () => {
             editWidgets()
+        })
+
+        if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('start-widgets-edit-known', 'local') ?? false)) {
+            const tooltip = element('div', 'st-start-widgets-edit-tooltip', document.body, { class: 'st-hidden', innerText: "Onder deze knop kun je het widgetpaneel compleet aanpassen. Probeer de nieuwe lijstweergave-optie voor widgets uit!" })
+            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
+            invokeEditWidgets.addEventListener('click', () => {
+                tooltip.classList.add('st-hidden')
+                saveToStorage('start-widgets-edit-known', true, 'local')
+            })
+            setTimeout(() => {
+                tooltip.classList.add('st-hidden')
+                saveToStorage('start-widgets-edit-known', true, 'local')
+            }, 20000)
+        }
+
+        let editTeachers
+        (async () => {
+            editTeachers = element('dialog', 'st-start-edit-teachers', document.body, { class: 'st-overlay' })
+            let editTeachersHeading = element('div', 'st-start-edit-teachers-heading', editTeachers),
+                editTeachersTitle = element('span', 'st-start-edit-teachers-title', editTeachersHeading, { class: 'st-title', innerText: "Bijnamen docenten" }),
+                editTeachersClose = element('button', 'st-start-edit-teachers-close', editTeachersHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+                editTeachersWrapper = element('div', 'st-start-edit-teachers-wrapper', editTeachers, { class: 'st-list st-tile' }),
+                editTeachersList = element('div', 'st-start-edit-teachers-list', editTeachersWrapper)
+            editTeachersClose.addEventListener('click', () => {
+                editTeachers.close()
+                todayWidgets()
+                renderSchedule()
+            })
+
+            const events = await MagisterApi.events()
+
+            const eventsTeachers = events.flatMap(item => item.Docenten).filter((value, index, self) =>
+                index === self.findIndex((t) => (
+                    t.Docentcode === value.Docentcode
+                ))
+            )
+
+            const allTeacherNames = {
+                ...teacherNamesSetting,
+                ...eventsTeachers.reduce((obj, item) => (obj[item.Docentcode] = teacherNamesSetting[item.Docentcode] || null, obj), {})
+            }
+
+            for (const key in allTeacherNames) {
+                if (Object.hasOwnProperty.call(allTeacherNames, key)) {
+                    const value = allTeacherNames[key],
+                        teacherName = eventsTeachers.find(item => item.Docentcode === key)?.Naam
+                    let wrapper = element('div', `st-start-edit-teachers-list-${key}`, editTeachersList)
+                    let label = element('label', `st-start-edit-teachers-list-${key}-label`, wrapper, { innerText: key, style: `text-decoration: ${teacherName ? 'underline' : 'none'}`, title: teacherName ? (value ? `Je hebt ${key} (${teacherName}) een bijnaam gegeven en\ndeze docent komt ook voor in je rooster van de komende 6 weken.` : `Je hebt ${key} (${teacherName}) geen bijnaam gegeven, maar\ndeze docent komt wel voor in je rooster van de komende 6 weken.`) : `Je hebt ${key} eerder een bijnaam gegeven, maar\ndeze docent komt niet voor in je rooster van de komende 6 weken.` })
+                    let input = element('input', `st-start-edit-teachers-list-${key}-input`, wrapper, { class: 'st-input', value: value || '', placeholder: teacherName || '' })
+                    input.addEventListener('change', async () => {
+                        teacherNamesSetting[key] = input.value
+                        teacherNamesSetting = Object.fromEntries(Object.entries(teacherNamesSetting).filter(([_, v]) => v != null && v.length > 0))
+                        await saveToStorage('start-teacher-names', teacherNamesSetting)
+                    })
+                }
+            }
+        })()
+
+        // Editor invoke button
+        let invokeEditTeachers = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Docentennamen aanpassen" })
+        invokeEditTeachers.addEventListener('click', async () => {
+            editTeachers.showModal()
         })
 
         // Side panel collapse/expand button
@@ -683,6 +583,10 @@ async function today() {
         widgets.dataset.working = true
         widgetsList.innerText = ''
 
+        if (document.getElementById('st-start-edit-widgets-options')) document.getElementById('st-start-edit-widgets-options').remove()
+        if (document.getElementById('st-start-edit-widgets-hidden')) document.getElementById('st-start-edit-widgets-hidden').remove()
+        if (document.getElementById('st-start-edit-widgets-prot')) document.getElementById('st-start-edit-widgets-prot').remove()
+
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
         let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
@@ -690,123 +594,54 @@ async function today() {
         now = new Date()
 
         widgetFunctions = {
-
-            counters: {
-                title: "Beknopte notificaties",
+            logs: {
+                title: "Logboeken",
                 types: ['Tegel', 'Lijst'],
-                options: [
-                    {
-                        title: "Tellertjes die overige informatie (activiteiten, logboeken, etc.) weergeven indien beschikbaar.",
-                        key: 'start-widget-misc-widget',
-                        type: 'description'
-                    }
-                ],
-                render: async (type) => {
+                render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        let elems = []
+                        let logs
 
-                        if (syncedStorage[`widget-grades-type`] === 'Verborgen') {
-                            widgetsProgressText.innerText = `Cijfers ophalen...`
-                            let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
-                            let lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
-                            let lastViewDate = new Date(lastViewMs)
-                            if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
-                            const grades = await MagisterApi.grades.recent()
-                                .catch(() => { return })
-                            const unreadGradesNum = grades.filter(item => new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7))).length
-                            if (unreadGradesNum > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-grades', null, {
-                                    class: 'st-metric',
-                                    innerText: unreadGradesNum > 11 ? "10+" : unreadGradesNum,
-                                    'data-description': unreadGradesNum > 1 ? "Cijfers" : "Cijfer",
-                                    href: '#/cijfers'
-                                }))
-                            }
+                        if (placeholder) {
+                            logs = [null]
+                        } else {
+                            logs = await MagisterApi.logs()
+                                .catch(() => { return reject() })
                         }
 
-                        if (syncedStorage[`widget-messages-type`] === 'Verborgen') {
-                            widgetsProgressText.innerText = `Berichten ophalen...`
-                            const messages = await MagisterApi.messages()
-                                .catch(() => { return })
-                            const unreadMessagesNum = messages.length
-                            if (unreadMessagesNum > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-messages', null, {
-                                    class: 'st-metric',
-                                    innerText: unreadMessagesNum,
-                                    'data-description': unreadMessagesNum > 1 ? "Berichten" : "Bericht",
-                                    href: '#/berichten'
-                                }))
-                            }
-                        }
-
-                        if (syncedStorage[`widget-homework-type`] === 'Verborgen') {
-                            widgetsProgressText.innerText = `Huiswerk ophalen...`
-                            const events = await MagisterApi.events()
-                                .catch(() => { return })
-                            const homeworkEvents = events.filter(item => item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
-                            if (homeworkEvents.length > 0) {
-                                elems.push(element('div', 'st-start-widget-counters-homework', null, {
-                                    class: 'st-metric',
-                                    innerText: homeworkEvents.length,
-                                    'data-description': homeworkEvents.length > 1 ? "Huiswerk" : "Huiswerk"
-                                }))
-                            }
-                        }
-
-                        if (syncedStorage[`widget-assignments-type`] === 'Verborgen') {
-                            widgetsProgressText.innerText = `Opdrachten ophalen...`
-                            const assignments = await MagisterApi.assignments.top()
-                                .catch(() => { return })
-                            const dueAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
-                            if (dueAssignments.length > 0) {
-                                elems.push(element('a', 'st-start-widget-counters-assignments', null, {
-                                    class: 'st-metric',
-                                    innerText: dueAssignments.length,
-                                    'data-description': dueAssignments.length > 1 ? "Opdrachten" : "Opdracht",
-                                    href: '#/elo/opdrachten'
-                                }))
-                            }
-                        }
-
-                        widgetsProgressText.innerText = `Activiteiten ophalen...`
-                        const activities = await MagisterApi.activities()
-                            .catch(() => { return })
-                        const activitiesNum = activities.length
-                        if (activitiesNum > 0) {
-                            elems.push(element('a', 'st-start-widget-counters-activities', null, {
-                                class: 'st-metric',
-                                innerText: activitiesNum,
-                                'data-description': activitiesNum > 1 ? "Activiteiten" : "Activiteit",
-                                href: '#/elo/activiteiten'
-                            }))
-                        }
-
-                        widgetsProgressText.innerText = `Logboeken ophalen...`
-                        const logs = await MagisterApi.logs()
-                            .catch(() => { return })
-                        const logsNum = logs.length
-                        if (logsNum > 0) {
-                            elems.push(element('a', 'st-start-widget-counters-logs', null, {
-                                class: 'st-metric',
-                                innerText: logsNum,
-                                'data-description': logsNum > 1 ? "Logboeken" : "Logboek",
-                                href: '#/lvs-logboeken'
-                            }))
-                        }
-
-                        if (elems.length < 1) return resolve()
-
-                        let widgetElement = element('div', 'st-start-widget-counters', null, { class: 'st-tile st-widget' })
+                        if (logs.length < 1) return resolve()
+                        let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('a', 'st-start-widget-logs-title', widgetElement, { class: 'st-widget-title', innerText: "Logboeken", 'data-amount': logs.length, href: '#/lvs-logboeken' })
 
                         if (type === 'Lijst') {
-                            elems.forEach(elem => {
-                                elem.setAttribute('class', 'st-widget-title')
-                                elem.dataset.amount = elem.innerText
-                                elem.innerText = elem.dataset.description
-                            })
+                            return resolve(widgetElement)
                         }
 
-                        widgetElement.append(...elems)
+                        resolve(widgetElement)
+                    })
+                }
+            },
+
+            activities: {
+                title: "Activiteiten",
+                types: ['Tegel', 'Lijst'],
+                render: async (type, placeholder) => {
+                    return new Promise(async resolve => {
+                        let activities
+
+                        if (placeholder) {
+                            activities = [null]
+                        } else {
+                            activities = await MagisterApi.activities()
+                                .catch(() => { return reject() })
+                        }
+
+                        if (activities.length < 1) return resolve()
+                        let widgetElement = element('div', 'st-start-widget-activities', null, { class: 'st-tile st-widget' })
+                        let widgetTitle = element('a', 'st-start-widget-activities-title', widgetElement, { class: 'st-widget-title', innerText: "Activiteiten", 'data-amount': activities.length, href: '#/elo/activiteiten' })
+
+                        if (type === 'Lijst') {
+                            return resolve(widgetElement)
+                        }
 
                         resolve(widgetElement)
                     })
@@ -827,22 +662,22 @@ async function today() {
                                 value: 'always'
                             },
                             {
-                                title: "Bij nieuw cijfer",
+                                title: "Bij ongelezen cijfer",
                                 value: 'new'
                             }
                         ]
                     },
                     {
-                        title: "Als nieuw beschouwen indien",
+                        title: "Als gelezen beschouwen",
                         key: 'start-widget-cf-new',
                         type: 'select',
                         choices: [
                             {
-                                title: "Cijferlijst niet geopend",
+                                title: "Na openen cijferlijst",
                                 value: 'unread'
                             },
                             {
-                                title: "Minder dan week oud",
+                                title: "Na een week",
                                 value: 'week'
                             }
                         ]
@@ -898,7 +733,7 @@ async function today() {
                                 },
                                 {
                                     "omschrijving": "Grade mockery",
-                                    "ingevoerdOp": new Date(now - 691200000),
+                                    "ingevoerdOp": new Date(now - 6891200000),
                                     "vak": {
                                         "code": "entl",
                                         "omschrijving": "Engelse taal"
@@ -1368,6 +1203,16 @@ async function today() {
     async function editWidgets() {
         widgetsList.innerText = ''
 
+        const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body)
+        const editWidgetsHidden = element('div', 'st-start-edit-widgets-hidden', document.body, { innerText: '' })
+        const editWidgetsProt = element('div', 'st-start-edit-widgets-prot', document.body)
+        const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: "Bewerken voltooien" })
+        editWidgetsDone.addEventListener('click', () => {
+            widgetsList.innerText = ''
+            widgets.classList.remove('editing')
+            todayWidgets()
+        })
+
         if (widgets.classList.contains('editing')) {
             todayWidgets()
             widgets.classList.remove('editing')
@@ -1378,8 +1223,21 @@ async function today() {
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
         // Draw the selected widgets in the specified order
+        syncedStorage['widgets-order'] = await getFromStorage('widgets-order')
+
         for (const key of Object.values(syncedStorage['widgets-order'])) {
             if (!widgetFunctions?.[key]) continue
+            if (syncedStorage[`widget-${key}-type`] === 'Verborgen') {
+                const widgetPlaceholder = element('button', `st-start-edit-${key}-hidden`, editWidgetsHidden, { class: 'st-button secondary', 'data-icon': '', innerText: `Widget '${widgetFunctions[key].title}' weergeven` })
+                widgetPlaceholder.addEventListener('click', () => {
+                    syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
+                    saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                    widgetsList.innerText = ''
+                    widgets.classList.remove('editing')
+                    editWidgets()
+                })
+                continue
+            }
 
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
             if (widgetElement) {
@@ -1394,29 +1252,64 @@ async function today() {
                     setTimeout(() => {
                         widgetElement.classList.add('dragging')
                     }, 0)
-
-                    let dragGhost = widgetElement.cloneNode(true)
-                    dragGhost.id += '-ghost'
-                    dragGhost.classList.add('st-sortable-list-ghost')
-                    dragGhost.classList.remove('dragging')
-                    dragGhost.setAttribute('style', `top: ${widgetElement.getBoundingClientRect().top}px; right: 32px; width: ${widgetElement.getBoundingClientRect().width}px; height: ${widgetElement.getBoundingClientRect().height}px; translate: 0 ${event.clientY}px; transform: translateY(-${event.clientY}px);`)
-                    document.body.append(dragGhost)
                 })
                 widgetElement.addEventListener('dragend', () => {
                     widgetElement.classList.remove('dragging')
-                    widgetElement.classList.add('dragging-return')
-                    document.querySelectorAll('.st-sortable-list-ghost').forEach(e => {
-                        e.classList.add('returning')
-                        console.log(widgetElement.getBoundingClientRect())
-                        e.setAttribute('style', `top: ${widgetElement.getBoundingClientRect().top}px; right: ${window.innerWidth - widgetElement.getBoundingClientRect().right}px; width: ${widgetElement.getBoundingClientRect().width}px; height: ${widgetElement.getBoundingClientRect().height}px;`)
-                        setTimeout(() => {
-                            e.remove()
-                            widgetElement.classList.remove('dragging-return')
-                        }, 200)
-                    })
 
                     syncedStorage['widgets-order'] = [...widgetsList.children].map(element => element.dataset.value)
                     saveToStorage('widgets-order', syncedStorage['widgets-order'])
+                })
+
+                widgetElement.addEventListener('mouseenter', () => {
+                    if (widgetsList.querySelector('.dragging')) return
+
+                    editWidgetsOptions.innerText = "Widgetopties: " + widgetFunctions[key].title
+
+                    const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editWidgetsOptions, { class: 'st-segmented-control' })
+                    if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
+                        syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
+                        saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                    }
+
+                    ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen'), 'Verborgen']).forEach(type => {
+                        const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: type })
+                        if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
+                        widgetTypeButton.addEventListener('click', () => {
+                            syncedStorage[`widget-${key}-type`] = type
+                            saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                            widgetTypeSelector.querySelectorAll('.st-button.segment').forEach(b => b.classList.remove('active'))
+                            widgetTypeButton.classList.add('active')
+                            widgetsList.innerText = ''
+                            widgets.classList.remove('editing')
+                            editWidgets()
+                        })
+                    })
+
+                    if (widgetFunctions[key].options) {
+                        widgetFunctions[key].options.forEach(option => {
+                            let optionWrapper = element('div', `st-start-edit-${option.key}`, editWidgetsOptions, { class: 'st-option' })
+                            let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
+                            switch (option.type) {
+                                case 'select':
+                                    let optionInput = element('select', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title })
+                                    option.choices.forEach(async choice => {
+                                        let optionChoice = element('option', `st-start-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
+                                        if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
+                                    })
+                                    optionInput.addEventListener('change', event => {
+                                        saveToStorage(option.key, event.target.value, 'local')
+                                        widgetsList.innerText = ''
+                                        widgets.classList.remove('editing')
+                                        editWidgets()
+                                    })
+                                    break
+
+                                default:
+                                    // Implement other option types as necessary
+                                    break
+                            }
+                        })
+                    }
                 })
             }
             updateTemporalBindings()
@@ -1425,15 +1318,13 @@ async function today() {
         widgetsList.addEventListener('dragover', (event) => {
             event.preventDefault()
 
-            const draggedItem = document.querySelector('.dragging')
+            const draggedItem = widgetsList.querySelector('.dragging')
+            if (!draggedItem) return
 
-            document.querySelector('.st-sortable-list-ghost').style.translate = `0 ${event.clientY}px`
-
-            let siblings = [...draggedItem.parentElement.children].filter(child => child !== draggedItem)
-
-            let nextSibling = siblings.find(sibling => {
-                return (event.clientY) <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
-            })
+            let nextSibling = [...widgetsList.children].find(sibling => (
+                sibling !== draggedItem &&
+                event.clientY <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
+            ))
 
             widgetsList.insertBefore(draggedItem, nextSibling)
         })
