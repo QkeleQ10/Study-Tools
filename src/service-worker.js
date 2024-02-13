@@ -11,6 +11,11 @@ const settingsToClear = [
 startListenCredentials()
 setDefaults()
 console.info("Service worker running!")
+addEventListener('activate', () => {
+    startListenCredentials()
+    setDefaults()
+    console.info("Service worker running!")
+})
 
 async function startListenCredentials() {
     // Allow any context to use chrome.storage.session
@@ -82,7 +87,7 @@ async function setDefaults() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'popstateDetected':
-            console.info("Popstate detected, service worker revived for 30 seconds.")
+            console.info("Popstate detected, service worker revived.")
             break
 
         case 'waitForRequestCompleted':
@@ -100,6 +105,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         default:
             break
     }
+})
+
+chrome.runtime.onStartup.addListener(() => {
+    console.info("Browser started, service worker revived.")
 })
 
 async function sleepUntil(f, timeoutMs) {

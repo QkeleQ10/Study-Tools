@@ -1,4 +1,4 @@
-// let subjects
+chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service worker
 
 // Run when the extension and page are loaded
 main()
