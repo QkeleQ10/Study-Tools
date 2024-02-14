@@ -16,15 +16,10 @@
     initial-value: 0;
 }
 
-#st-start button.st-list-item,
-#st-start button.st-start-event {
-    transition: filter 200ms;
-}
-
 #st-start button.st-list-item:hover,
-#st-start button.st-start-event:hover {
+#st-start button.st-start-event:hover,
+#st-start .st-list-item[href]:hover {
     filter: brightness(var(--st-hover-brightness));
-    transition: filter 0;
 }
 
 #st-start button.st-list-item:focus-visible,
@@ -299,7 +294,7 @@
     cursor: pointer;
     container-type: size;
     z-index: 1;
-    transition: filter 200ms, top 200ms, left 200ms, height 200ms, width 200ms;
+    transition: top 200ms, left 200ms, height 200ms, width 200ms;
 }
 
 .week-view .st-start-event {
@@ -669,7 +664,6 @@
     margin-bottom: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: filter 200ms;
 }
 
 #st-start-widgets[data-working=true] .st-widget {
@@ -929,6 +923,10 @@ a.st-widget-title {
     margin-bottom: 28px;
 }
 
+#st-start-widget-grades-last-date:after {
+    content: attr(data-time);
+}
+
 #st-start-widget-grades-more {
     display: block;
     width: 100%;
@@ -948,7 +946,7 @@ a.st-widget-title {
     top: 12px;
     right: 16px;
     opacity: 0;
-    transition: opacity 200ms, filter 200ms, transform 200ms, background-color 200ms, color 200ms;
+    transition: none;
 }
 
 .st-widget[data-render-type="Lijst"] #st-start-widget-grades-last-hide {

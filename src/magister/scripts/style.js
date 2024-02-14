@@ -517,7 +517,7 @@ input[type=radio]~label:hover,
 .collapsed-menu .popup-menu ul li a:hover,
 div.ngRow:hover>:not(.unselectable) {
     filter: brightness(var(--st-hover-brightness));
-    transition: filter 200ms, transform 200ms;
+    transition: transform 200ms;
 }
 
 .widget .list li.no-data a:hover,
@@ -647,7 +647,6 @@ a.appbar-button,
 .main-menu>li.active>a,
 .main-menu>li>a:hover {
     background: var(--st-accent-secondary);
-    transition: background 200ms;
 }
 
 aside, aside .block,
@@ -685,7 +684,7 @@ aside, aside .block,
 .cijfers-k-grid.k-grid .grade {
     box-shadow: inset -0.5px 0 0 0 transparent;
     user-select: none;
-    transition: filter 200ms, box-shadow 200ms, color 200ms, opacity 200ms;
+    transition: box-shadow 200ms, color 200ms, opacity 200ms;
 }
 
 .cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
@@ -791,7 +790,6 @@ aside .tabs li {
     width: auto;
     flex-shrink: 1;
     flex-grow: 1;
-    transition: filter 200ms;
 }
 
 aside .tabs li.active, aside .tabs li:hover {
@@ -1249,7 +1247,6 @@ table.table-grid-layout>tbody>tr.selected {
 .podium button {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
-    transition: filter 200ms;
 }
 
 .podium button:hover {

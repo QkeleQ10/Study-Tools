@@ -983,7 +983,7 @@ async function today() {
                             let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-list-title', innerText: subjectNames.join(', ') })
                             let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, row1, {
                                 class: 'st-list-timestamp',
-                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.End
+                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.Einde
                             })
 
                             let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-list-row' })
