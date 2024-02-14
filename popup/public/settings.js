@@ -48,36 +48,10 @@ export default [
         id: "appearance",
         settings: [
             {
-                id: "auto-theme",
-                title: "Thema synchroniseren met systeem",
-                default: true,
-            },
-            {
-                id: "theme-fixed",
+                id: "ptheme",
                 title: "Thema",
                 type: "ThemePicker",
-                conditions: [
-                    { settingId: 'auto-theme', operator: 'equal', value: false }
-                ],
-                default: 'light,207,95,55',
-            },
-            {
-                id: "theme-day",
-                title: "Dagthema",
-                type: "ThemePicker",
-                conditions: [
-                    { settingId: 'auto-theme', operator: 'equal', value: true }
-                ],
-                default: 'light,207,95,55',
-            },
-            {
-                id: "theme-night",
-                title: "Nachtthema",
-                type: "ThemePicker",
-                conditions: [
-                    { settingId: 'auto-theme', operator: 'equal', value: true }
-                ],
-                default: 'dark,207,95,55',
+                default: 'auto,207,95,55',
             },
             {
                 id: "decoration",

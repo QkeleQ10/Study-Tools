@@ -1227,7 +1227,7 @@ async function today() {
 
         for (const key of Object.values(syncedStorage['widgets-order'])) {
             if (!widgetFunctions?.[key]) continue
-            if (syncedStorage[`widget-${key}-type`] === 'Verborgen') {
+            if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
                 const widgetPlaceholder = element('button', `st-start-edit-${key}-hidden`, editWidgetsHidden, { class: 'st-button secondary', 'data-icon': '', innerText: `Widget '${widgetFunctions[key].title}' weergeven` })
                 widgetPlaceholder.addEventListener('click', () => {
                     syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]

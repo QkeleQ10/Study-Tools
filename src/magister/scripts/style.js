@@ -129,13 +129,11 @@ async function applyStyles() {
 
     let now = new Date()
 
-    const autoTheme = syncedStorage['auto-theme']
-    const themeFixed = syncedStorage['theme-fixed']?.split(',')
-    const themeDay = syncedStorage['theme-day']?.split(',')
-    const themeNight = syncedStorage['theme-night']?.split(',')
+    const themeFixed = syncedStorage['ptheme']?.split(',')
+    const themeAuto = themeFixed[0] === 'auto'
     let currentTheme = themeFixed
-    if (autoTheme && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme = themeNight }
-    else if (autoTheme) currentTheme = themeDay
+    if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
+    else if (themeAuto) currentTheme[0] = 'light'
 
     if (verbose) console.info(`STYLE START with theme ${currentTheme.join(', ')}`)
 

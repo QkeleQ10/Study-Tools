@@ -39,14 +39,12 @@ export function useSyncedStorage() {
     })
 
     function refreshTheme() {
-        const autoTheme = syncedStorage.value['auto-theme']
-        const themeFixed = syncedStorage.value['theme-fixed']?.split(',')
-        const themeDay = syncedStorage.value['theme-day']?.split(',')
-        const themeNight = syncedStorage.value['theme-night']?.split(',')
+        const themeFixed = syncedStorage.value['ptheme']?.split(',')
+        const themeAuto = themeFixed[0] === 'auto'
         let currentTheme = themeFixed
 
-        if (autoTheme && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme = themeNight }
-        else if (autoTheme) currentTheme = themeDay
+        if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
+        else if (themeAuto) currentTheme[0] = 'light'
 
         document.documentElement.setAttribute('theme', currentTheme?.[0])
         document.documentElement.style.setProperty('--palette-primary-hue', currentTheme?.[1])
