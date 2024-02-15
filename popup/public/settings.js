@@ -94,6 +94,29 @@ export default [
                 ],
                 default: true,
             },
+            {
+                id: 'language',
+                title: "Taal",
+                type: "SegmentedButton",
+                default: 'nl-NL',
+                options: [
+                    {
+                        value: "nl-NL",
+                        title: "Nederlands"
+                    },
+                    {
+                        value: "en-GB",
+                        title: "English"
+                    },
+                    {
+                        value: "fr-FR",
+                        title: "Français"
+                    },
+                ],
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+            },
         ]
     },
     {

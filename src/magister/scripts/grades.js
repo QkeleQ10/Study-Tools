@@ -270,7 +270,7 @@ async function gradeCalculator() {
 
             let addedElement = element('span', null, clAddedList, {
                 class: 'st-cc-added-element',
-                innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
+                innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
                 'data-insufficient': result < 5.5,
                 'data-type': 'table',
                 'data-id': id
@@ -314,7 +314,7 @@ async function gradeCalculator() {
 
         let addedElement = element('span', null, clAddedList, {
             class: 'st-cc-added-element',
-            innerText: `${result.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — handmatig ingevoerd\n`,
+            innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — handmatig ingevoerd\n`,
             'data-insufficient': result < 5.5,
             'data-type': 'manual',
             'data-id': id
@@ -354,15 +354,15 @@ async function gradeCalculator() {
 
         let hypotheticalMean = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][Math.round(0.9 * mouseLeftPart * 100)]
 
-        hoverY.dataset.grade = hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        hoverY.dataset.grade = hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         hoverY.style.setProperty('--grade', hypotheticalMean)
 
         if (hypotheticalMean.toFixed(2) === calcMean.toFixed(2)) {
-            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan blijf je gemiddeld een ${hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
+            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan blijf je gemiddeld een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
         } else if (hypotheticalMean > calcMean) {
-            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan stijgt je gemiddelde tot een ${hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan stijgt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
         } else {
-            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan daalt je gemiddelde tot een ${hypotheticalMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan daalt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
         }
         clFutureDesc.style.color = hypotheticalMean < 5.5 ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
     })
@@ -378,10 +378,10 @@ async function gradeCalculator() {
         calcMedian = calculateMedian(addedToCalculation.map(item => item.result))
         clMean.innerText = isNaN(calcMean)
             ? '?'
-            : calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : calcMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         clMedian.innerText = isNaN(calcMedian)
             ? '?'
-            : calcMedian.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            : calcMedian.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
         clWeight.innerText = addedToCalculation.map(item => item.weight).reduce((acc, curr) => acc + curr, 0) + '×'
 
         clAdded.dataset.amount = addedToCalculation.length
@@ -405,15 +405,15 @@ async function gradeCalculator() {
             maxGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][90]
 
         const line = element('div', 'st-cc-canvas-line', clCanvas, {
-            'data-min-grade': minGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'data-min-grade': minGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             'data-min-grade-insufficient': minGrade < 5.5,
-            'data-max-grade': maxGrade.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'data-max-grade': maxGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             'data-max-grade-insufficient': maxGrade < 5.5,
             style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
         })
 
         const currentMean = element('div', 'st-cc-canvas-mean', clCanvas, {
-            'data-grade': calcMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'data-grade': calcMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             style: `--grade: ${calcMean}`
         })
 
@@ -451,9 +451,9 @@ async function gradeCalculator() {
                 gradeH = hypotheticalGrades[i] || 1.0
             if (meanH >= 5.495) {
                 color = 'normal'
-                text = `Haal een ${gradeH.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
+                text = `Haal een ${gradeH.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
                 if (gradeH <= 1.0) {
-                    text = `Met een cijfer dat ${weight}× meetelt\nkun je niet lager komen te staan dan een ${minimumMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+                    text = `Met een cijfer dat ${weight}× meetelt\nkun je niet lager komen te staan dan een ${minimumMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
                 } else if (gradeH > 9.9) {
                     text = `Haal een 10,0 die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
                 }
@@ -670,7 +670,7 @@ async function gradeBackup() {
 
             bkIHeading.dataset.amount = list.filter(grade => grade.result?.length > 1).length
 
-            bkIInfo.innerText = "Geïmporteerd uit back-up van \n" + new Date(json.date).toLocaleString('nl-NL', {
+            bkIInfo.innerText = "Geïmporteerd uit back-up van \n" + new Date(json.date).toLocaleString(locale, {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -904,7 +904,7 @@ async function gradeStatistics() {
 
         subjects = new Set([...subjects]
             .filter(subject => statsGrades.filter(e => includedYears.has(e.year)).find(e => e.Vak.Omschrijving === subject))
-            .sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' })))
+            .sort((a, b) => a.localeCompare(b, locale, { sensitivity: 'base' })))
 
         let subjectsArray = [...subjects]
         subjectsArray.forEach(subjectName => {
@@ -958,7 +958,7 @@ async function gradeStatistics() {
 
             let includedSubjects = [...subjects]
                 .filter(subject => !excludedSubjects.has(subject))
-                .sort((a, b) => a.localeCompare(b, 'nl-NL', { sensitivity: 'base' }))
+                .sort((a, b) => a.localeCompare(b, locale, { sensitivity: 'base' }))
 
             let filteredGrades = []
 
@@ -1001,15 +1001,15 @@ async function gradeStatistics() {
 
 
             let unweightedMean = calculateMean(filteredResults)
-            scUnweightedMean.innerText = unweightedMean.toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+            scUnweightedMean.innerText = unweightedMean.toLocaleString(locale, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
             scCentralTendencies.dataset.great = unweightedMean >= 7.0 ? true : false
 
             let median = calculateMedian(filteredResults)
-            scMedian.innerText = median.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMedian.innerText = median.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
             let { modes, occurrences } = calculateMode(filteredResults)
-            scMode.innerText = modes.map(e => e.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join(' & ')
+            scMode.innerText = modes.map(e => e.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join(' & ')
             scMode.dataset.extra = occurrences + '×'
             scMode.dataset.description = modes.length <= 1 ? "Modus" : "Modi"
             if (scMode.innerText.length < 1) {
@@ -1018,14 +1018,14 @@ async function gradeStatistics() {
             }
 
             let variance = calculateVariance(filteredResults)
-            scVariance.innerText = variance.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            scVariance.innerText = variance.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
             let minResult = Math.min(...filteredResults)
-            scMin.innerText = minResult.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMin.innerText = minResult.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
             scMin.dataset.extra = filteredResults.filter(result => result === minResult).length + '×'
 
             let maxResult = Math.max(...filteredResults)
-            scMax.innerText = maxResult.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            scMax.innerText = maxResult.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
             scMax.dataset.extra = filteredResults.filter(result => result === maxResult).length + '×'
 
             let resultsSufficient = filteredResults.filter((e) => { return e >= 5.5 })
@@ -1040,9 +1040,9 @@ async function gradeStatistics() {
             scSufInsufChart.style.backgroundImage = `
             url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-warn').replace('#', '%23')}' stroke-width='7' stroke-dasharray='${(resultsInsufficient.length / filteredResults.length) * 278}%25%2c 10000%25' stroke-dashoffset='0'/%3e%3c/svg%3e"),
             url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-primary').replace('#', '%23')}' stroke-width='6.9'/%3e%3c/svg%3e")`
-            scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
+            scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 
-            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
             // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
 
             resolve()
@@ -1063,7 +1063,7 @@ async function gradeStatistics() {
                     filteredGrades
                         .filter(grade => grade.weight > 0)
                         .map(grade => grade.weight)
-                ).toLocaleString('nl-NL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                ).toLocaleString(locale, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
 
                 scContainer.classList.add('with-weights')

@@ -10,8 +10,6 @@ async function booksList() {
 
     const bookEntries = await awaitElement('#leermiddelen-container tr[data-ng-repeat="leermiddel in items"]', true)
 
-    console.log(bookEntries)
-
     bookEntries.forEach(bookEntry => {
         const ean = bookEntry.querySelector('td[data-ng-bind="leermiddel.EAN"]').innerText
         const titleCell = bookEntry.querySelector('td>a[data-ng-bind="leermiddel.Titel"]')

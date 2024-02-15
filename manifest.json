@@ -81,6 +81,18 @@
             "run_at": "document_end"
         }
     ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "_locales/nl/strings.json",
+                "_locales/en/strings.json",
+                "_locales/fr/strings.json"
+            ],
+            "matches": [
+                "*://*.magister.net/*"
+            ]
+        }
+    ],
     "action": {
         "default_icon": {
             "16": "icons/icon@16px.png",
