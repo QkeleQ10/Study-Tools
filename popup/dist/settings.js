@@ -112,6 +112,13 @@ export default [
                         value: "fr-FR",
                         title: "Français"
                     },
+                    {
+                        value: "no-NO",
+                        title: "Norsk"
+                    },
+                ],
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
         ]

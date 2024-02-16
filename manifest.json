@@ -86,7 +86,8 @@
             "resources": [
                 "_locales/nl/strings.json",
                 "_locales/en/strings.json",
-                "_locales/fr/strings.json"
+                "_locales/fr/strings.json",
+                "_locales/no/strings.json"
             ],
             "matches": [
                 "*://*.magister.net/*"
