@@ -2,6 +2,7 @@
 import { ref, computed, defineProps, defineEmits } from 'vue'
 import BottomSheet from '../BottomSheet.vue';
 import Icon from '../Icon.vue';
+import { useEyeDropper } from '@vueuse/core';
 
 const props = defineProps(['modelValue'])
 const emit = defineEmits(['update:modelValue'])
@@ -14,6 +15,8 @@ const value = computed({
         emit('update:modelValue', value)
     }
 })
+
+const { isSupported: eyeDropperSupported, open: openEyeDropper, sRGBHex: eyeDropperHEX } = useEyeDropper()
 
 const hueWheel = ref(null)
 
@@ -29,18 +32,6 @@ const swatches = [
     { name: "Lavendelpaars", color: { h: 290, s: 41, l: 41 } }, // purple
     { name: "Bosbespaars", color: { h: 240, s: 41, l: 41 } }, // indigo
 ]
-// const supportsEyeDropper = window.EyeDropper
-
-// function eyeDropper() {
-//     // eslint-disable-next-line
-//     const eyeDropper = new EyeDropper()
-
-//     eyeDropper
-//         .open()
-//         .then((result) => {
-//             value.value = result.sRGBHex
-//         })
-// }
 
 function isSelected(color) {
     return (color.h == value.value.h && color.s == value.value.s && color.l == value.value.l)
@@ -75,6 +66,58 @@ function luminanceBarClick(event) {
     const rect = event.currentTarget.getBoundingClientRect()
     const offsetX = (event.clientX - rect.left) / rect.width * 100
     value.value = { ...value.value, l: Math.floor(offsetX) }
+}
+
+async function invokeEyeDropper() {
+    await openEyeDropper()
+    if (eyeDropperHEX.value) {
+        value.value = hexToHSL(eyeDropperHEX.value)
+    }
+}
+
+function hexToHSL(H) {
+    // Convert hex to RGB first
+    let r = 0, g = 0, b = 0;
+    if (H.length == 4) {
+        r = "0x" + H[1] + H[1];
+        g = "0x" + H[2] + H[2];
+        b = "0x" + H[3] + H[3];
+    } else if (H.length == 7) {
+        r = "0x" + H[1] + H[2];
+        g = "0x" + H[3] + H[4];
+        b = "0x" + H[5] + H[6];
+    }
+    // Then to HSL
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    let cmin = Math.min(r, g, b),
+        cmax = Math.max(r, g, b),
+        delta = cmax - cmin,
+        h = 0,
+        s = 0,
+        l = 0;
+
+    if (delta == 0)
+        h = 0;
+    else if (cmax == r)
+        h = ((g - b) / delta) % 6;
+    else if (cmax == g)
+        h = (b - r) / delta + 2;
+    else
+        h = (r - g) / delta + 4;
+
+    h = Math.round(h * 60);
+
+    if (h < 0)
+        h += 360;
+
+    l = (cmax + cmin) / 2;
+    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+
+    return ({ h, s, l });
 }
 </script>
 
@@ -132,6 +175,9 @@ function luminanceBarClick(event) {
                                 :style="{ 'left': `${value.l}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                             </div>
                         </div>
+                        <button v-if="eyeDropperSupported" class="button tonal invoke-eyedropper" @click="invokeEyeDropper">
+                            <Icon>colorize</Icon><span>Pipet</span>
+                        </button>
                     </div>
                 </div>
             </template>
@@ -173,9 +219,11 @@ function luminanceBarClick(event) {
     justify-content: center;
 
     color: var(--color-on-surface-variant);
+    outline: 0px solid var(--color-on-secondary-container);
     border: none;
     border-radius: 2px;
     cursor: pointer;
+    transition: margin 50ms, outline 50ms;
 }
 
 .swatch:nth-child(1) {
@@ -251,6 +299,8 @@ function luminanceBarClick(event) {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+
+    color: #ffffff;
 }
 
 .col-right {
@@ -273,5 +323,9 @@ function luminanceBarClick(event) {
 .color-bar-knob {
     top: 50%;
     translate: -50% -50%;
+}
+
+.invoke-eyedropper {
+    width: max-content;
 }
 </style>

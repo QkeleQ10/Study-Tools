@@ -1,5 +1,7 @@
 let syncedStorage = {},
     localStorage = {},
+    locale = 'nl-NL',
+    i18n = {},
     verbose = false,
     apiUserId,
     apiUserToken,
@@ -12,8 +14,16 @@ let eggs = [],
 (async () => {
     if (chrome?.storage) {
         syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+
+        if (chrome?.runtime) {
+            locale = syncedStorage['language']
+            const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
+            i18n = await req.json()
+        }
+        
         localStorage = await getFromStorageMultiple(null, 'local', true)
     }
+
     verbose = syncedStorage['verbosity']
 })()
 
@@ -181,26 +191,38 @@ function updateTemporalBindings() {
 
         switch (type) {
             case 'timestamp':
-                let timestamp = start.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
+                let timestamp = start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
                 if (start <= networkTime && end >= networkTime) {
                     // Start date is in the past and End date is in the future
-                    timestamp = 'nu'
+                    i18n.dates['now']
                 } else if (start >= networkTime) {
                     // Start date is in the future
-                    if (start - networkTime < minToMs(15)) timestamp = 'zometeen'
-                    else if (start.isToday()) timestamp = `vandaag om ${start.getFormattedTime()}`
-                    else if (start.isTomorrow()) timestamp = `morgen om ${start.getFormattedTime()}`
-                    else if (start - networkTime < daysToMs(5)) timestamp = `${start.getFormattedDay()} om ${start.getFormattedTime()}`
-                    else if (start - networkTime < daysToMs(90)) timestamp = `week ${start.getWeek()}, ${start.getFormattedDay()}`
-                    else timestamp = start.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                    if (start - networkTime < minToMs(15)) timestamp =
+                        i18n.dates['soon']
+                    else if (start.isToday()) timestamp =
+                        i18n.dates['todayAtTime'].replace('%s', start.getFormattedTime())
+                    else if (start.isTomorrow()) timestamp =
+                        i18n.dates['tomorrowAtTime'].replace('%s', start.getFormattedTime())
+                    else if (start - networkTime < daysToMs(5)) timestamp =
+                        i18n.dates['weekdayAtTime'].replace('%s1', start.getFormattedDay()).replace('%s2', start.getFormattedTime())
+                    else if (start - networkTime < daysToMs(90)) timestamp =
+                        i18n.dates['weekdayInWeek'].replace('%s1', start.getWeek()).replace('%s2', start.getFormattedDay())
+                    else timestamp =
+                        start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 } else if (end <= networkTime) {
                     // End date is in the past
-                    if (networkTime - end < minToMs(5)) timestamp = 'zojuist'
-                    else if (networkTime - end < minToMs(15)) timestamp = 'een paar minuten geleden'
-                    else if (end.isToday()) timestamp = `vandaag om ${end.getFormattedTime()}`
-                    else if (end.isYesterday()) timestamp = `gisteren om ${end.getFormattedTime()}`
-                    else if (networkTime - end < daysToMs(5)) timestamp = `afgelopen ${end.getFormattedDay()}`
-                    else if (networkTime.getFullYear() !== end.getFullYear()) timestamp = end.toLocaleDateString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                    if (networkTime - end < minToMs(5)) timestamp =
+                        i18n.dates['justNow']
+                    else if (networkTime - end < minToMs(15)) timestamp =
+                        i18n.dates['fewMinsAgo']
+                    else if (end.isToday()) timestamp =
+                        i18n.dates['todayAtTime'].replace('%s', end.getFormattedTime())
+                    else if (end.isYesterday()) timestamp =
+                        i18n.dates['yesterdayAtTime'].replace('%s', end.getFormattedTime())
+                    else if (networkTime - end < daysToMs(5)) timestamp =
+                        i18n.dates['lastWeekday'].replace('%s', end.getFormattedDay())
+                    else if (networkTime.getFullYear() !== end.getFullYear()) timestamp =
+                        end.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
                 if (element.dataset.time != timestamp) element.dataset.time = timestamp
                 break
@@ -220,13 +242,13 @@ function updateTemporalBindings() {
                 break
 
             case 'current-time-long': {
-                const timef = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                const timef = networkTime.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
                 element.dataset.time = timef
                 break
             }
 
             case 'current-time-short': {
-                const timef = networkTime.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                const timef = networkTime.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
                 element.dataset.time = timef
                 break
             }
@@ -278,11 +300,11 @@ Date.prototype.getWeek = function () {
 
 Date.prototype.getFormattedDay = function () {
     let d = this
-    const weekDays = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag']
+    const weekDays = i18n.dates.weekdays
     return weekDays[d.getDay()]
 }
 
-Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
+Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
 Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + offset) && this < midnight(1 + offset) }
@@ -348,7 +370,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             class: 'st-bar-chart-col',
             title: remainingItems.length === 1
                 ? labels?.[remainingItems[0][0]] ?? remainingItems[0][0]
-                : "Overige",
+                : i18n['remainder'],
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
             'data-y-tight': (remainderFrequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
@@ -436,7 +458,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
         }
 
         if (key === 'remainder') {
-            aboutLabel.innerText = "Overige"
+            aboutLabel.innerText = i18n['remainder']
             aboutMore.innerText = remainingItems.map(([key, frequency]) => `${key}: ${frequency}× (${Math.round(frequency / totalFrequency * 1000) / 10}%)`).join('\n')
         } else {
             aboutLabel.innerText = labels?.[key] || key

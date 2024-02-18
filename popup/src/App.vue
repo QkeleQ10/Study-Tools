@@ -175,17 +175,13 @@ main {
     border-top: none !important;
 }
 
-.setting-wrapper[data-setting-id="theme-day"],
-.setting-wrapper[data-setting-id="theme-night"] {
-    grid-column: auto;
+.setting-wrapper[data-setting-id="decoration-size"] {
+    border-top: none !important;
+    margin-top: -10px;
 }
 
-.setting-wrapper[data-setting-id="theme-day"] {
-    margin-right: 5px;
-}
-
-.setting-wrapper[data-setting-id="theme-night"] {
-    margin-left: 5px;
+.setting-wrapper[data-setting-id="decoration-size"] .setting-title {
+    display: none;
 }
 
 .setting-wrapper~.setting-wrapper.visible {

@@ -48,36 +48,10 @@ export default [
         id: "appearance",
         settings: [
             {
-                id: "auto-theme",
-                title: "Thema synchroniseren met systeem",
-                default: true,
-            },
-            {
-                id: "theme-fixed",
+                id: "ptheme",
                 title: "Thema",
                 type: "ThemePicker",
-                conditions: [
-                    { settingId: 'auto-theme', operator: 'equal', value: false }
-                ],
-                default: 'light,207,95,55',
-            },
-            {
-                id: "theme-day",
-                title: "Dagthema",
-                type: "ThemePicker",
-                conditions: [
-                    { settingId: 'auto-theme', operator: 'equal', value: true }
-                ],
-                default: 'light,207,95,55',
-            },
-            {
-                id: "theme-night",
-                title: "Nachtthema",
-                type: "ThemePicker",
-                conditions: [
-                    { settingId: 'auto-theme', operator: 'equal', value: true }
-                ],
-                default: 'dark,207,95,55',
+                default: 'auto,207,95,55',
             },
             {
                 id: "decoration",
@@ -387,6 +361,37 @@ export default [
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
                 default: false,
+            },
+            {
+                id: 'language',
+                title: "Taal",
+                type: "SegmentedButton",
+                default: 'nl-NL',
+                options: [
+                    {
+                        value: "nl-NL",
+                        title: "Nederlands"
+                    },
+                    {
+                        value: "en-GB",
+                        title: "English"
+                    },
+                    {
+                        value: "fr-FR",
+                        title: "Français"
+                    },
+                    {
+                        value: "de-DE",
+                        title: "Deutsch"
+                    },
+                    {
+                        value: "no-NO",
+                        title: "Norsk"
+                    },
+                ],
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
             {
                 id: 'gamification-enabled',

@@ -24,7 +24,7 @@ const decorations = [
         id: 'waves',
         name: "Golven",
         style: {
-            'background-image': 'repeating-radial-gradient( circle at 0 0, transparent 0, var(--palette-primary) 20px ), repeating-linear-gradient( #ffffff66, #ffffff88 )'
+            'background-image': 'repeating-radial-gradient( circle at 0 0, transparent 0, var(--palette-primary) 19px, transparent 20px ), repeating-linear-gradient( #ffffff66, #ffffff88 )'
         }
     },
     {
@@ -32,22 +32,23 @@ const decorations = [
         name: "Zigzag",
         style: {
             'background-image': 'linear-gradient(135deg, #ffffff66 25%, transparent 25%), linear-gradient(225deg, #ffffff66 25%, transparent 25%), linear-gradient(45deg, #ffffff66 25%, transparent 25%), linear-gradient(315deg, #ffffff66 25%, var(--palette-primary) 25%)',
-            'background-position': '25px 0, 25px 0, 0 0, 0 0',
-            'background-size': '50px 50px; background-repeat: repeat'
+            'background-position': '15px 0, 15px 0, 0 0, 0 0',
+            'background-size': '30px 30px',
+            'background-repeat': 'repeat'
         }
     },
     {
         id: 'polka-dot',
-        name: "Grote stippen",
+        name: "Stippen",
         style: {
-            'background-image': 'radial-gradient(#ffffff66 30%, transparent 31.2%), radial-gradient(#ffffff66 30%, transparent 31.2%)', 'background-position': '0px 0px, 52px 52px', 'background-size': '104px 104px'
+            'background-image': 'radial-gradient(#ffffff66 30%, transparent 31.2%), radial-gradient(#ffffff66 30%, transparent 31.2%)', 'background-position': '0px 0px, 15px 15px', 'background-size': '30px 30px'
         }
     },
     {
         id: 'stripes',
-        name: "Grote strepen",
+        name: "Strepen",
         style: {
-            'background-image': 'repeating-linear-gradient(45deg, transparent, transparent 30px, #ffffff66 30px, #ffffff66 60px)'
+            'background-image': 'repeating-linear-gradient(45deg, transparent, transparent 10px, #ffffff66 10px, #ffffff66 20px)'
         }
     },
 ]
@@ -68,14 +69,17 @@ const decorations = [
             <button v-for="(decoration, i) in decorations" :key="i" class="swatch" :style="decoration.style"
                 :title="decoration.name" @click="value = decoration.id" :data-state="value === decoration.id">
                 <Transition name="swatch-check">
-                    <Icon v-if="value === decoration.id">check</Icon>
+                    <div v-if="value === decoration.id">
+                        <div class="state-layer"></div>
+                        <Icon>check</Icon>
+                    </div>
                 </Transition>
             </button>
         </div>
     </div>
 </template>
 
-<style>
+<style scoped>
 .setting.decoration-picker {
     display: grid;
     grid-template-rows: 1fr auto;
@@ -88,11 +92,14 @@ const decorations = [
     gap: 6px;
 }
 
-.swatches-wrapper>* {
-    flex-grow: 1;
+.swatch {
+    position: relative;
+    min-width: 40px;
     border: none;
     border-radius: 28px;
     cursor: pointer;
+    outline: 1px solid var(--color-outline);
+    overflow: hidden;
     transition: border-radius 200ms, flex-grow 200ms, background-color 200ms;
 }
 
@@ -101,18 +108,23 @@ const decorations = [
     background-color: var(--palette-primary);
 }
 
-.swatches-wrapper>*[data-state=true] {
-    flex-grow: 3;
-}
-
-.swatches-wrapper>*:hover,
-.swatches-wrapper>*:focus-visible {
+.swatch:hover,
+.swatch:focus-visible {
     border-radius: 10px;
 }
 
-.swatches-wrapper>* .icon {
-    width: 0;
-    translate: -12px;
+.swatch .state-layer {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-scrim);
+    opacity: .3;
+}
+
+.swatch .icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
     font-size: 24px;
     color: color-contrast(hsl(var(--h) calc(var(--s) * 1%) calc(var(--l) * 1%)) vs #fff, #000);
 }
@@ -126,14 +138,5 @@ const decorations = [
 .swatch-check-leave-to {
     opacity: 0;
     font-variation-settings: 'WGHT' 0;
-}
-
-.setting-wrapper[data-setting-id="decoration-size"] {
-    border-top: none !important;
-    margin-top: -12px;
-}
-
-.setting-wrapper[data-setting-id="decoration-size"] .setting-title {
-    display: none;
 }
 </style>

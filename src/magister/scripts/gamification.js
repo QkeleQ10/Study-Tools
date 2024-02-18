@@ -27,7 +27,7 @@ async function gamification() {
         gmWrap = element('div', 'st-gm-wrap', gmOverlay),
         gmCard = element('div', 'st-gm-card', gmWrap),
         gmCardTitle = element('span', 'st-gm-card-title', gmCard, { class: 'st-title', innerText: photo.alt }),
-        gmCardSubtitle = element('span', 'st-gm-card-subtitle', gmCard, { class: 'st-subtitle', innerText: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) }),
+        gmCardSubtitle = element('span', 'st-gm-card-subtitle', gmCard, { class: 'st-subtitle', innerText: new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }),
         gmCardLevel = element('div', 'st-gm-card-level', gmCard, { innerText: "..." }),
         gmCardProgress = element('div', 'st-gm-card-progress', gmCard),
         gmCardProgressFilled = element('div', 'st-gm-card-progress-filled', gmCardProgress),
@@ -156,13 +156,13 @@ async function gamification() {
 
         categories.forEach(category => {
             let categoryElement = element('div', `st-gm-${category[0]}`, gmBreakdown)
-            let categoryTitle = element('div', `st-gm-${category[0]}-t`, categoryElement, { innerText: category[1], 'data-value': points[category[0]].sum.toLocaleString('nl-NL', { maximumFractionDigits: 2 }), onclick: `this.parentElement.classList.toggle('expand')` })
+            let categoryTitle = element('div', `st-gm-${category[0]}-t`, categoryElement, { innerText: category[1], 'data-value': points[category[0]].sum.toLocaleString(locale, { maximumFractionDigits: 2 }), onclick: `this.parentElement.classList.toggle('expand')` })
             Object.keys(points[category[0]]).forEach(yearKey => {
                 let value = points[category[0]][yearKey].v,
                     count = points[category[0]][yearKey].n,
                     title = category[2] + points[category[0]][yearKey].g
                 if (!value || !count || !title || count < 1) return
-                let yearElement = element('div', `st-gm-${category[0]}-${yearKey}`, categoryElement, { innerText: `${title} (${count}×)`, 'data-value': value.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) })
+                let yearElement = element('div', `st-gm-${category[0]}-${yearKey}`, categoryElement, { innerText: `${title} (${count}×)`, 'data-value': value.toLocaleString(locale, { maximumFractionDigits: 2 }) })
             })
             let categoryExplanation = element('div', `st-gm-${category[0]}-e`, categoryElement, { innerText: category[3] })
         })
@@ -171,7 +171,7 @@ async function gamification() {
         gmBreakdown.append(total)
         total.innerText = "Totaal"
         total.classList.add('total')
-        total.dataset.value = points.total.toLocaleString('nl-NL', { maximumFractionDigits: 2 })
+        total.dataset.value = points.total.toLocaleString(locale, { maximumFractionDigits: 2 })
     }
 
     let key = syncedStorage['magister-overlay-hotkey'] || 'S'
@@ -475,7 +475,7 @@ async function wrapped() {
                 element('span', null, moreAbsences, { class: 'st-metric-small', innerText: absences.filter(item => (item.Omschrijving.toLowerCase() + (item.Geoorloofd ? ' (geoorloofd)' : ' (ongeoorloofd)')) === type).length + '×' })
                 element('span', null, moreAbsences, { class: 'st-metric-medium-sub', innerText: type })
             })
-            const dayMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => new Date(item.Start).toLocaleDateString('nl-NL', { weekday: 'long' }).toLowerCase()).mode()
+            const dayMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => new Date(item.Start).toLocaleDateString(locale, { weekday: 'long' }).toLowerCase()).mode()
             const hourMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => `lesuur ${item.Afspraak.LesuurVan}`).mode()
             if (dayMostOftenTooLate && hourMostOftenTooLate) {
                 element('div', null, moreAbsences)
@@ -504,10 +504,10 @@ async function wrapped() {
             element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
             element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
             const tileGradesB = element('div', 'st-wrapped-tiles-grades-b', tileGrades)
-            element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
+            element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
             element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
             const tileGradesChart = element('div', 'st-wrapped-tiles-grades-chart', tileGrades, { class: 'st-force-light' })
-            tileGradesChart.createLineChart(grades.map(grade => Number(grade.CijferStr.replace(',', '.'))), grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+            tileGradesChart.createLineChart(grades.map(grade => Number(grade.CijferStr.replace(',', '.'))), grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
             const tileGradesPromo = element('span', 'st-wrapped-tiles-grades-promo', tileGrades, { class: 'st-metric-large-sub', innerText: "Vernieuwd: Cijferstatistieken\n" })
             element('u', null, tileGradesPromo, { innerText: "Nu bekijken" })
             tileGrades.addEventListener('click', async (event) => { event.stopPropagation(); wrapped.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })

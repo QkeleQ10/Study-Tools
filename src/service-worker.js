@@ -5,12 +5,17 @@ let userId,
     userTokenDate
 
 const settingsToClear = [
-    'openedPopup', 'updates', 'beta', 'magister-shortcuts', 'magister-shortcuts-today', 'magister-sw-grid', 'magister-sw-sort', 'magister-sw-period', 'magister-sw-display', 'magister-ag-large', 'magister-subjects', 'magister-appbar-hidePicture', 'appbar-hide-actions', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magister-vd-deblue', 'magister-vd-gradewidget', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'magister-cf-calculator', 'magister-cf-statistics', 'magister-cf-backup', 'magister-cf-failred', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-schedule-days', 'vd-schedule-extra-day', 'vd-schedule-zoom', 'vd-subjects-display', 'teacher-names', 'version', 'disable-css', 'hotkeys-today', 'start-widgets'
+    'auto-theme', 'theme-fixed', 'theme-day', 'theme-night', 'openedPopup', 'updates', 'beta', 'magister-shortcuts', 'magister-shortcuts-today', 'magister-sw-grid', 'magister-sw-sort', 'magister-sw-period', 'magister-sw-display', 'magister-ag-large', 'magister-subjects', 'magister-appbar-hidePicture', 'appbar-hide-actions', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magister-vd-deblue', 'magister-vd-gradewidget', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'magister-cf-calculator', 'magister-cf-statistics', 'magister-cf-backup', 'magister-cf-failred', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-schedule-days', 'vd-schedule-extra-day', 'vd-schedule-zoom', 'vd-subjects-display', 'teacher-names', 'version', 'disable-css', 'hotkeys-today', 'start-widgets'
 ]
 
 startListenCredentials()
 setDefaults()
 console.info("Service worker running!")
+addEventListener('activate', () => {
+    startListenCredentials()
+    setDefaults()
+    console.info("Service worker running!")
+})
 
 async function startListenCredentials() {
     // Allow any context to use chrome.storage.session
@@ -59,10 +64,7 @@ async function setDefaults() {
     settings.forEach(category => {
         category.settings.forEach(setting => {
             if (typeof syncedStorage[setting.id] === 'undefined') {
-                if (setting.id === 'auto-theme' && syncedStorage['color']) diff[setting.id] = (syncedStorage['theme'] === 'auto')
-                else if (setting.id === 'theme-fixed' && syncedStorage['color']) diff[setting.id] = `light,${(Object.values(syncedStorage['color']).join(','))}`
-                else if (setting.id === 'theme-day' && syncedStorage['color']) diff[setting.id] = `light,${(Object.values(syncedStorage['color']).join(','))}`
-                else if (setting.id === 'theme-night' && syncedStorage['color']) diff[setting.id] = `dark,${(Object.values(syncedStorage['color']).join(','))}`
+                if (setting.id === 'ptheme' && syncedStorage['color']) diff[setting.id] = `${syncedStorage['theme']},${(Object.values(syncedStorage['color']).join(','))}`
                 else diff[setting.id] = setting.default
             }
         })
@@ -82,7 +84,7 @@ async function setDefaults() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'popstateDetected':
-            console.info("Popstate detected, service worker revived for 30 seconds.")
+            console.info("Popstate detected, service worker revived.")
             break
 
         case 'waitForRequestCompleted':
@@ -100,6 +102,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         default:
             break
     }
+})
+
+chrome.runtime.onStartup.addListener(() => {
+    console.info("Browser started, service worker revived.")
 })
 
 async function sleepUntil(f, timeoutMs) {

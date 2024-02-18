@@ -129,13 +129,11 @@ async function applyStyles() {
 
     let now = new Date()
 
-    const autoTheme = syncedStorage['auto-theme']
-    const themeFixed = syncedStorage['theme-fixed']?.split(',')
-    const themeDay = syncedStorage['theme-day']?.split(',')
-    const themeNight = syncedStorage['theme-night']?.split(',')
+    const themeFixed = syncedStorage['ptheme']?.split(',')
+    const themeAuto = themeFixed[0] === 'auto'
     let currentTheme = themeFixed
-    if (autoTheme && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme = themeNight }
-    else if (autoTheme) currentTheme = themeDay
+    if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
+    else if (themeAuto) currentTheme[0] = 'light'
 
     if (verbose) console.info(`STYLE START with theme ${currentTheme.join(', ')}`)
 
@@ -193,7 +191,7 @@ async function applyStyles() {
             css
         switch (style) {
             case 'waves':
-                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
+                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 29px), transparent calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
                 break;
 
             case 'zig-zag':
@@ -517,7 +515,7 @@ input[type=radio]~label:hover,
 .collapsed-menu .popup-menu ul li a:hover,
 div.ngRow:hover>:not(.unselectable) {
     filter: brightness(var(--st-hover-brightness));
-    transition: filter 200ms, transform 200ms;
+    transition: transform 200ms;
 }
 
 .widget .list li.no-data a:hover,
@@ -647,7 +645,6 @@ a.appbar-button,
 .main-menu>li.active>a,
 .main-menu>li>a:hover {
     background: var(--st-accent-secondary);
-    transition: background 200ms;
 }
 
 aside, aside .block,
@@ -685,7 +682,7 @@ aside, aside .block,
 .cijfers-k-grid.k-grid .grade {
     box-shadow: inset -0.5px 0 0 0 transparent;
     user-select: none;
-    transition: filter 200ms, box-shadow 200ms, color 200ms, opacity 200ms;
+    transition: box-shadow 200ms, color 200ms, opacity 200ms;
 }
 
 .cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
@@ -791,7 +788,6 @@ aside .tabs li {
     width: auto;
     flex-shrink: 1;
     flex-grow: 1;
-    transition: filter 200ms;
 }
 
 aside .tabs li.active, aside .tabs li:hover {
@@ -1249,7 +1245,6 @@ table.table-grid-layout>tbody>tr.selected {
 .podium button {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
-    transition: filter 200ms;
 }
 
 .podium button:hover {

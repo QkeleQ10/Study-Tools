@@ -1,4 +1,4 @@
-// let subjects
+chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service worker
 
 // Run when the extension and page are loaded
 main()
@@ -20,6 +20,13 @@ async function main() {
         if (Math.random() < 0.004) vandaagText.innerText = "Eind"
     }
 
+    const allMenuItemSpans = await awaitElement('.main-menu a span, .main-menu .popup-menu a', true)
+    allMenuItemSpans.forEach(span => {
+        span.innerText = i18n.views[span.innerText] || span.innerText
+    })
+
+    document.querySelector('.menu-footer > a > span').innerText = i18n['Inklappen']
+
     // Appbar metrics
     let appbarMetrics = element('div', 'st-appbar-metrics', appbar)
     if (spacer) spacer.before(appbarMetrics)
@@ -27,7 +34,7 @@ async function main() {
 
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': "Week", innerText: new Date().getWeek(), href: '#/vandaag' })
+        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': i18n.dates['week'], innerText: new Date().getWeek(), href: '#/vandaag' })
         appbarWeek.addEventListener('click', async () => {
             let weekSel = await awaitElement('#st-start-today-view-week')
             if (weekSel) weekSel.click()
@@ -203,6 +210,13 @@ function popstate() {
         e.remove()
     })
     document.querySelectorAll('.st-overlay').forEach(e => { if (e.open) e.close?.() })
+
+    setTimeout(async () => {
+        const header = (await awaitElement('dna-page-header', false, 500))
+        if (!header) return
+        const title = header.shadowRoot.querySelector("div.container div.title")
+        title.innerText = i18n.views[title.innerText] || title.innerText
+    }, 100)
 }
 
 function parseSubject(string, enabled, subjects) {

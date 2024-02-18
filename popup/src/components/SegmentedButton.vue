@@ -37,7 +37,8 @@ const value = computed({
                         </Icon>
                     </Transition>
                 </div>
-                <span class="button-segment-text">{{ option.title }}</span>
+                <span class="button-segment-text"
+                    :style="{ 'margin-left': (option.value === value || option.icon) ? '0' : '-8px' }">{{ option.title }}</span>
                 <div class="button-segment-state-layer"></div>
             </button>
         </div>
@@ -121,7 +122,8 @@ const value = computed({
 .button-segment-text {
     font: var(--typescale-label-large);
     color: var(--color-on-surface);
-    transition: color 200ms;
+    margin-left: 0;
+    transition: color 200ms, margin-left 200ms;
 }
 
 .button-segment[data-state=true] .button-segment-text {
