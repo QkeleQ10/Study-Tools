@@ -113,6 +113,10 @@ export default [
                         title: "Français"
                     },
                     {
+                        value: "de-DE",
+                        title: "Deutsch"
+                    },
+                    {
                         value: "no-NO",
                         title: "Norsk"
                     },
