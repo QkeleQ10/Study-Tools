@@ -94,37 +94,6 @@ export default [
                 ],
                 default: true,
             },
-            {
-                id: 'language',
-                title: "Taal",
-                type: "SegmentedButton",
-                default: 'nl-NL',
-                options: [
-                    {
-                        value: "nl-NL",
-                        title: "Nederlands"
-                    },
-                    {
-                        value: "en-GB",
-                        title: "English"
-                    },
-                    {
-                        value: "fr-FR",
-                        title: "Français"
-                    },
-                    {
-                        value: "de-DE",
-                        title: "Deutsch"
-                    },
-                    {
-                        value: "no-NO",
-                        title: "Norsk"
-                    },
-                ],
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
         ]
     },
     {
@@ -392,6 +361,37 @@ export default [
                 title: "Experimentele opties",
                 subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
                 default: false,
+            },
+            {
+                id: 'language',
+                title: "Taal",
+                type: "SegmentedButton",
+                default: 'nl-NL',
+                options: [
+                    {
+                        value: "nl-NL",
+                        title: "Nederlands"
+                    },
+                    {
+                        value: "en-GB",
+                        title: "English"
+                    },
+                    {
+                        value: "fr-FR",
+                        title: "Français"
+                    },
+                    {
+                        value: "de-DE",
+                        title: "Deutsch"
+                    },
+                    {
+                        value: "no-NO",
+                        title: "Norsk"
+                    },
+                ],
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
             {
                 id: 'gamification-enabled',

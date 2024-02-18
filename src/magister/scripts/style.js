@@ -191,7 +191,7 @@ async function applyStyles() {
             css
         switch (style) {
             case 'waves':
-                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
+                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 29px), transparent calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
                 break;
 
             case 'zig-zag':

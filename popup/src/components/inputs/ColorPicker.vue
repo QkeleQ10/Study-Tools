@@ -18,8 +18,6 @@ const value = computed({
 
 const { isSupported: eyeDropperSupported, open: openEyeDropper, sRGBHex: eyeDropperHEX } = useEyeDropper()
 
-console.log(eyeDropperSupported)
-
 const hueWheel = ref(null)
 
 const pickerOpen = ref(false)
@@ -221,9 +219,11 @@ function hexToHSL(H) {
     justify-content: center;
 
     color: var(--color-on-surface-variant);
+    outline: 0px solid var(--color-on-secondary-container);
     border: none;
     border-radius: 2px;
     cursor: pointer;
+    transition: margin 50ms, outline 50ms;
 }
 
 .swatch:nth-child(1) {
