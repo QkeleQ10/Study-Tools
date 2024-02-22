@@ -70,6 +70,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-border-color: #2e2e2e;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-accent-secondary: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
+    --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-chip-info-border: #0565b4;
@@ -106,6 +107,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-border-color: #ededed;
     --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
     --st-accent-secondary: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
+    --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-chip-info-border: #066ec2;
@@ -641,17 +643,46 @@ a.appbar-button,
     transition: background-color 200ms, width 200ms, min-width 200ms;
 }
 
-.appbar-host,
-.main-menu>li.active>a,
-.main-menu>li>a:hover {
-    background: var(--st-accent-secondary);
+.appbar-host {
+    background-color: var(--st-accent-secondary);
 }
 
 aside, aside .block,
 .main-menu>li.active>a,
-.main-menu>li>a:hover,
-.opdracht-versions ul li {
+.opdracht-versions ul li,
+.main-menu>li>a,
+.main-menu li.children li.submenu>a {
     border-radius: var(--st-border-radius);
+}
+
+.main-menu>li.active>a, .main-menu>li.active>a:hover {
+    background-color: var(--st-accent-secondary);
+}
+
+.main-menu>li>a:hover {
+    background-color: var(--st-accent-tertiary);
+}
+
+.main-menu>li.children.expanded>a, .main-menu>li.children.expanded>a:hover {
+    background-color: var(--st-accent-tertiary);
+}
+
+.main-menu li.children li.submenu {
+    width: auto;
+    margin-left: -10px;
+}
+
+.main-menu li.children li.submenu>a {
+    padding-left: 10px;
+}
+
+.main-menu li.children li.submenu.active>a, .main-menu li.children li.submenu.active>a:hover {
+    background-color: var(--st-accent-secondary);
+    font-weight: normal;
+}
+
+.main-menu li.children li.submenu>a:hover {
+    background-color: var(--st-accent-tertiary);
 }
 
 .main-menu li.children>a::after {

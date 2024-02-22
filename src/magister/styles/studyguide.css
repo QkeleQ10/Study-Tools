@@ -96,7 +96,6 @@
     color: var(--st-foreground-primary);
     text-align: left;
     cursor: pointer;
-    transition: filter 200ms;
 }
 
 .st-sw-item-default,
@@ -129,7 +128,6 @@
     left: 12px;
     background-color: var(--st-highlight-primary);
     opacity: 0;
-    transition: opacity 200ms;
 }
 
 .st-sw-item-default:hover .st-sw-item-default-desc[data-2nd]:after {
@@ -153,7 +151,6 @@
     padding: 10px 12px;
     background-color: var(--st-background-secondary);
     opacity: 0;
-    transition: opacity 200ms;
 }
 
 .st-sw-item[data-2nd]:hover:after {

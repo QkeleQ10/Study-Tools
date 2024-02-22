@@ -31,34 +31,6 @@ div.loading-overlay {
     background: none;
 }
 
-.st-banner-ad {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 12px;
-    margin-top: 16px;
-    place-content: center;
-    place-items: center;
-    gap: 24px;
-    background: var(--st-linear-gradient-study-tools);
-    color: #fff;
-    font: 16px var(--st-font-family-secondary);
-    z-index: 9999;
-    animation: floatUp 200ms both;
-}
-
-.st-banner-ad.hide {
-    animation: floatDownOut 200ms both;
-}
-
-.st-banner-ad>.st-button {
-    padding: 6px 16px;
-    background: #fff;
-    color: hsl(209, 36%, 30%);
-}
-
 .st-shortcut-icon {
     font: 20px 'Font Awesome 6 Pro';
 }
@@ -166,6 +138,7 @@ div.loading-overlay {
     color: var(--st-foreground-accent);
     filter: none;
     font-weight: 600;
+    transition: none;
 }
 
 .st-button.icon:active {
@@ -210,6 +183,7 @@ div.loading-overlay {
 
 .st-button:hover {
     filter: brightness(var(--st-hover-brightness));
+    transition: none;
 }
 
 .st-button:active {
@@ -698,7 +672,7 @@ a.st-metric:focus-visible {
 }
 
 li.children .submenu .st-hotkey-label {
-    left: -25px;
+    left: -14px;
 }
 
 [data-hotkeys-visible="true"] .st-hotkey-label {

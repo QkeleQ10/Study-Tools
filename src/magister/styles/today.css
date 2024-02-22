@@ -64,6 +64,10 @@
     transition: opacity 300ms;
 }
 
+#st-start-header-text.italic {
+    font-style: italic;
+}
+
 #st-start-header[data-transition]>span {
     opacity: 0
 }
@@ -679,6 +683,16 @@
     user-select: none;
 }
 
+#st-start-widgets.editing:has(.focused) .st-widget {
+    opacity: .5;
+}
+
+#st-start-widgets.editing .st-widget.focused {
+    opacity: 1 !important;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    z-index: 2;
+}
+
 .st-widget[data-render-type="Tegel"] {
     margin-inline: 24px;
 }
@@ -1152,7 +1166,8 @@ a.st-widget-title {
 
 #st-start-edit-teachers-list {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(20, auto);
     column-gap: 32px;
 }
 
