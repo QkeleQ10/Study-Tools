@@ -244,8 +244,8 @@ export default [
             },
             {
                 id: "start-schedule-extra-day",
-                title: "Extra dag weergeven in Start",
-                subtitle: "Aan het eind van de schooldag alvast de volgende schooldag weergeven.",
+                title: "Volgende dag tonen in Start",
+                subtitle: "Springen naar de eerstvolgende dag met lessen wanneer er vandaag geen lessen (meer) zijn.",
                 default: true,
                 conditions: [
                     { settingId: 'start-enabled', operator: 'equal', value: true },

@@ -22,7 +22,7 @@ async function today() {
         widgetsList = element('div', 'st-start-widgets-list', widgets)
 
     const defaultOrder = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
-    if (!(Object.values(syncedStorage['widgets-order'])?.length > 0) || !defaultOrder.every(key => Object.values(syncedStorage['widgets-order']).includes(key))) {
+    if (!syncedStorage['widgets-order'] || !(Object.values(syncedStorage['widgets-order'] || [])?.length > 0) || !defaultOrder.every(key => Object.values(syncedStorage['widgets-order'] || []).includes(key))) {
         console.info(`Changing widgets-order`, syncedStorage['widgets-order'], defaultOrder)
         syncedStorage['widgets-order'] = defaultOrder
         saveToStorage('widgets-order', syncedStorage['widgets-order'])
@@ -34,13 +34,14 @@ async function today() {
     let agendaStartDate, agendaEndDate
 
     const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
-    const showExtraDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
+    const showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
     const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
 
     let listViewEnabled = listViewEnabledSetting
 
     let weekView = false // False for day view, true for week view
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
+    let agendaDayOffsetChanged = false
 
     now = new Date()
 
@@ -113,15 +114,22 @@ async function today() {
 
         updateHeaderText = () => {
             // Update the header text accordingly
+
             if (weekView) {
                 if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
                     headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
                 else
                     headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
-            }
-            else {
+            } else {
                 headerText.innerText = agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })
             }
+
+            if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) {
+                headerText.classList.remove('italic')
+            } else {
+                headerText.classList.add('italic')
+            }
+
             headerText.dataset.lastLetter = '.'
         }
 
@@ -132,6 +140,7 @@ async function today() {
             if (weekView) agendaDayOffset -= 7
             else agendaDayOffset--
             if (agendaDayOffset < 0) agendaDayOffset = 0
+            agendaDayOffsetChanged = true
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -140,6 +149,7 @@ async function today() {
         todayResetOffset.addEventListener('click', () => {
             if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
+            agendaDayOffsetChanged = true
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -150,6 +160,7 @@ async function today() {
             if (weekView) agendaDayOffset += 7
             else agendaDayOffset++
             if (agendaDayOffset > 41) agendaDayOffset = 41
+            agendaDayOffsetChanged = true
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -416,10 +427,18 @@ async function today() {
                 } else {
                     let daysToShow = daysToShowSetting
 
-                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)
-                    let todayEvents = agendaDays.find(item => item.today).events
+                    let todayIndex = agendaDays.findIndex(item => item.today)
+                    let todayEvents = agendaDays[todayIndex].events
+                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
+                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
                     let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
-                    if ((new Date() >= todayEndTime || todayEvents.length < 1) && showExtraDaySetting && daysToShow === 1 && agendaDayOffset === (todayDate.getDay() || 7) - 1) daysToShow++
+
+                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
+                    if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
+                        notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                        agendaDayOffset = nextRelevantDayIndex
+                        agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                    }
 
                     agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
                 }
@@ -550,7 +569,7 @@ async function today() {
                     })
                 })
 
-                if (!listViewEnabled && day.today) {
+                if (!listViewEnabled && !agendaDayOffsetChanged) {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
                     let currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' })
                     updateTemporalBindings()
@@ -1190,7 +1209,7 @@ async function today() {
             widgetsProgressText.innerText = `Widget '${widgetFunctions[key].title}' laden...`
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`])
             if (widgetElement) {
-                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`]
+                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
                 widgetsList.append(widgetElement)
             }
             updateTemporalBindings()
@@ -1243,7 +1262,7 @@ async function today() {
 
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
             if (widgetElement) {
-                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`]
+                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
                 widgetElement.setAttribute('disabled', true)
                 widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
                 widgetElement.setAttribute('draggable', true)
@@ -1265,7 +1284,10 @@ async function today() {
                 widgetElement.addEventListener('mouseenter', () => {
                     if (widgetsList.querySelector('.dragging')) return
 
+                    widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
+
                     editWidgetsOptions.innerText = "Widgetopties: " + widgetFunctions[key].title
+                    widgetElement.classList.add('focused')
 
                     const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editWidgetsOptions, { class: 'st-segmented-control' })
                     if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {

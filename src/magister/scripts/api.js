@@ -286,7 +286,7 @@ async function fetchWrapper(url, options, identifier = 'unknown') {
             )
             console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
             console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
-            return resolve({})
+            return ({})
         })
 }
 

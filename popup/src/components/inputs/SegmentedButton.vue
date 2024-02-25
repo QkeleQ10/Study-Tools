@@ -19,7 +19,7 @@ const value = computed({
 <template>
     <div class="segmented-button">
         <button v-for="option in options" :key="option.value" class="button-segment" @click="value = option.value"
-            :data-state="option.value === value" :data-has-icon="!!option.icon"
+            :data-state="option.value === value" :data-has-icon="!!option.icon" :title="option.tooltip"
             :style="{ 'height': `${40 + (4 * (density || 0))}px` }">
             <div class="button-segment-icon-wrapper"
                 :class="{ 'hidden': !(option.value === value || (option.icon && option.title)) }">

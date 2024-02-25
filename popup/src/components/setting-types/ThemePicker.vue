@@ -86,24 +86,24 @@ function updateColor(newColor) {
             </div>
             <div style="position: absolute; right: 30%; top: 0; width: 0.2%; height: 100%"
                 :style="{ 'background-color': `var(--mg-br-${parsedScheme})` }"></div>
-            <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%"
-                :style="{ 'background-color': `var(--mg-bk-${parsedScheme}-2)` }"></div>
-            <div style="position: absolute; right: 2.5%; top: 6%; width: 24%; height: 20%; border-radius: 10%; border: 0.1vmax solid transparent;"
+            <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%; border: 0.1vmax solid transparent;"
+                :style="{ 'background-color': `var(--mg-bk-${parsedScheme}-2)`, 'border-color': `var(--mg-br-${parsedScheme})` }"></div>
+            <div style="position: absolute; right: 3%; top: 6%; width: 24%; height: 20%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${parsedScheme})`, 'background-image': `linear-gradient(color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctColor()['accent-primary']})), color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctColor()['accent-secondary']})))` }">
             </div>
-            <div style="position: absolute; right: 2.5%; top: 30%; width: 24%; height: 28%; border-radius: 10%; border: 0.1vmax solid transparent;"
+            <div style="position: absolute; right: 3%; top: 30%; width: 24%; height: 28%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${parsedScheme})` }">
             </div>
-            <div style="position: absolute; right: 2.5%; top: 62%; width: 24%; height: 24%; border-radius: 10%; border: 0.1vmax solid transparent;"
+            <div style="position: absolute; right: 3%; top: 62%; width: 24%; height: 24%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${parsedScheme})` }">
             </div>
         </div>
 
         <SegmentedButton class="theme-picker-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
             :options="[
-                { value: 'auto', icon: prefersDarkColorScheme ? 'night_sight_auto' : 'brightness_auto' },
-                { value: 'light', icon: 'light_mode' },
-                { value: 'dark', icon: 'dark_mode' }
+                { value: 'auto', icon: prefersDarkColorScheme ? 'night_sight_auto' : 'brightness_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
+                { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
+                { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
             ]" density="-1" />
 
         <ColorPicker class="theme-picker-color" :model-value="value.color" @update:model-value="updateColor" />
