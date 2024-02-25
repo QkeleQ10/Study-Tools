@@ -433,12 +433,8 @@ async function today() {
                     let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
                     let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
 
-                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)
-                    if ((new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && daysToShow === 1 && agendaDayOffset === (todayDate.getDay() || 7) - 1) {
-                        daysToShow++
-                    }
-                    
-                    if ((nextRelevantDayIndex - todayIndex) > 1 && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
+                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
+                    if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                         notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
                         agendaDayOffset = nextRelevantDayIndex
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
@@ -1213,7 +1209,7 @@ async function today() {
             widgetsProgressText.innerText = `Widget '${widgetFunctions[key].title}' laden...`
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`])
             if (widgetElement) {
-                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`]
+                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
                 widgetsList.append(widgetElement)
             }
             updateTemporalBindings()
@@ -1266,7 +1262,7 @@ async function today() {
 
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
             if (widgetElement) {
-                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`]
+                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
                 widgetElement.setAttribute('disabled', true)
                 widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
                 widgetElement.setAttribute('draggable', true)
