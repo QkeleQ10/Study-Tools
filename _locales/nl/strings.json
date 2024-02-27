@@ -48,6 +48,7 @@
     "dates": {
         "day": "Dag",
         "week": "Week",
+        "workweek": "Werkweek",
         "now": "nu",
         "justNow": "zojuist",
         "soon": "zometeen",

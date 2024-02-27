@@ -39,7 +39,7 @@ async function today() {
 
     let listViewEnabled = listViewEnabledSetting
 
-    let weekView = false // False for day view, true for week view
+    let agendaView = 'day' // False for day view, true for week view
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
     let agendaDayOffsetChanged = false
 
@@ -105,26 +105,37 @@ async function today() {
             let todayDecreaseOffset = document.querySelector('#st-start-today-offset-minus')
             let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
             if (todayDecreaseOffset && todayIncreaseOffset) {
-                todayResetOffset.disabled = (weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1
+                todayResetOffset.disabled = (agendaView === 'week' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1
                 todayResetOffset.dataset.icon = todayResetOffset.disabled ? '' : ''
-                todayDecreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0
-                todayIncreaseOffset.disabled = (weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41
+                todayDecreaseOffset.disabled = (agendaView === 'week' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0
+                todayIncreaseOffset.disabled = (agendaView === 'week' && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41
             }
         }
 
         updateHeaderText = () => {
             // Update the header text accordingly
 
-            if (weekView) {
-                if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
-                    headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
-                else
-                    headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
-            } else {
-                headerText.innerText = agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })
+            switch (agendaView) {
+                case 'week':
+                    if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
+                        headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
+                    else
+                        headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
+                    break;
+
+                case 'workweek':
+                    if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
+                        headerText.innerText = `${i18n.dates['workweek']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
+                    else
+                        headerText.innerText = `${i18n.dates['workweek']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
+                    break;
+
+                default:
+                    headerText.innerText = agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })
+                    break;
             }
 
-            if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) {
+            if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) {
                 headerText.classList.remove('italic')
             } else {
                 headerText.classList.add('italic')
@@ -136,8 +147,8 @@ async function today() {
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
         let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Achteruit" })
         todayDecreaseOffset.addEventListener('click', () => {
-            if ((weekView && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
-            if (weekView) agendaDayOffset -= 7
+            if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
+            if (agendaView !== 'day') agendaDayOffset -= 7
             else agendaDayOffset--
             if (agendaDayOffset < 0) agendaDayOffset = 0
             agendaDayOffsetChanged = true
@@ -147,7 +158,7 @@ async function today() {
         })
         let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
         todayResetOffset.addEventListener('click', () => {
-            if ((weekView && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
+            if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
             agendaDayOffsetChanged = true
             renderSchedule()
@@ -156,8 +167,8 @@ async function today() {
         })
         let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vooruit" })
         todayIncreaseOffset.addEventListener('click', () => {
-            if ((weekView && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
-            if (weekView) agendaDayOffset += 7
+            if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
+            if (agendaView !== 'day') agendaDayOffset += 7
             else agendaDayOffset++
             if (agendaDayOffset > 41) agendaDayOffset = 41
             agendaDayOffsetChanged = true
@@ -168,16 +179,32 @@ async function today() {
 
         let todayViewMode = element('div', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' })
         let todayViewDay = element('button', 'st-start-today-view-day', todayViewMode, { class: 'st-button segment active', innerText: i18n.dates['day'] })
+        let todayViewWorkweek = element('button', 'st-start-today-view-workweek', todayViewMode, { class: 'st-button segment', innerText: i18n.dates['workweek'] })
         let todayViewWeek = element('button', 'st-start-today-view-week', todayViewMode, { class: 'st-button segment', innerText: i18n.dates['week'] })
         todayViewDay.addEventListener('click', () => {
             todayViewDay.classList.add('active')
             todayViewWeek.classList.remove('active')
+            todayViewWorkweek.classList.remove('active')
             widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
             if (widgets.classList.contains('editing')) widgetsCollapsed = false
             verifyDisplayMode()
             if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
-            weekView = false
+            agendaView = 'day'
             listViewEnabled = listViewEnabledSetting
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
+        todayViewWorkweek.addEventListener('click', () => {
+            todayViewDay.classList.remove('active')
+            todayViewWeek.classList.remove('active')
+            todayViewWorkweek.classList.add('active')
+            widgetsCollapsed = true
+            if (widgets.classList.contains('editing')) widgetsCollapsed = false
+            verifyDisplayMode()
+            if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+            agendaView = 'workweek'
+            listViewEnabled = false
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
@@ -185,11 +212,12 @@ async function today() {
         todayViewWeek.addEventListener('click', () => {
             todayViewDay.classList.remove('active')
             todayViewWeek.classList.add('active')
+            todayViewWorkweek.classList.remove('active')
             widgetsCollapsed = true
             if (widgets.classList.contains('editing')) widgetsCollapsed = false
             verifyDisplayMode()
             if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-            weekView = true
+            agendaView = 'week'
             listViewEnabled = false
             renderSchedule()
             updateHeaderButtons()
@@ -417,38 +445,49 @@ async function today() {
         // Start rendering
         renderSchedule = async () => {
 
-            // Select which days to show based on view mode
-            if (!weekView) {
-                // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                if (listViewEnabled) {
-                    schedule.classList.add('list-view')
-                    agendaEndDate = new Date(new Date(agendaStartDate))
-                } else {
-                    let daysToShow = daysToShowSetting
+            switch (agendaView) {
+                case 'week':
+                    // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
+                    agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
+                    agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
+                    schedule.classList.add('week-view')
+                    schedule.classList.remove('list-view')
+                    break;
 
-                    let todayIndex = agendaDays.findIndex(item => item.today)
-                    let todayEvents = agendaDays[todayIndex].events
-                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
-                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
-                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
+                case 'workweek':
+                    // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
+                    agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
+                    agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 4))
+                    schedule.classList.add('week-view')
+                    schedule.classList.remove('list-view')
+                    break;
 
-                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
-                    if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
-                        notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
-                        agendaDayOffset = nextRelevantDayIndex
-                        agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                default:
+                    // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
+                    agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                    if (listViewEnabled) {
+                        schedule.classList.add('list-view')
+                        agendaEndDate = new Date(new Date(agendaStartDate))
+                    } else {
+                        let daysToShow = daysToShowSetting
+
+                        let todayIndex = agendaDays.findIndex(item => item.today)
+                        let todayEvents = agendaDays[todayIndex].events
+                        let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
+                        let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
+                        let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
+
+                        // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
+                        if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
+                            notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                            agendaDayOffset = nextRelevantDayIndex
+                            agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                        }
+
+                        agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
                     }
-
-                    agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
-                }
-                schedule.classList.remove('week-view')
-            } else {
-                // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
-                agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
-                schedule.classList.add('week-view')
-                schedule.classList.remove('list-view')
+                    schedule.classList.remove('week-view')
+                    break;
             }
 
             now = new Date()
@@ -573,7 +612,7 @@ async function today() {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
                     let currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' })
                     updateTemporalBindings()
-                    if (schedule.scrollTop === 0 && (!weekView || listViewEnabledSetting && weekView)) {
+                    if (schedule.scrollTop === 0 && (agendaView === 'day' || listViewEnabledSetting && agendaView !== 'day')) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
                         if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                         if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
