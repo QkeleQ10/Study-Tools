@@ -37,6 +37,8 @@ async function today() {
     const showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
     const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
 
+    let daysToShow = daysToShowSetting
+
     let listViewEnabled = listViewEnabledSetting
 
     let agendaView = 'day' // False for day view, true for week view
@@ -75,29 +77,49 @@ async function today() {
             formattedWeekday = now.toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long' })
 
         // Greeting system
-        const greetingsByHour = [
-            [22, 'Goedenavond#', 'Goedenavond, nachtuil#', `Fijne ${formattedWeekday}avond#`, 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
-            [18, 'Goedenavond#', `Fijne ${formattedWeekday}avond#`, 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
-            [12, 'Goedemiddag#', `Fijne ${formattedWeekday}middag#`, 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
-            [6, 'Goedemorgen#', 'Goeiemorgen#', `Fijne ${formattedWeekday}ochtend#`, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
-            [0, 'Goedemorgen#', 'Goeiemorgen#', 'Goedemorgen, nachtuil#', 'Goedemorgen, vroege vogel#', `Fijne ${formattedWeekday}ochtend#`, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
-        ],
-            greetingsGeneric = ['Welkom#', 'Hallo!', `Welkom terug, ${firstName}#`, `Hey, ${firstName}#`, 'Welkom terug#', 'Goedendag#', 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
+        greetUser()
+        headerText.addEventListener('click', () => {
+            if (header.dataset.greet) return
+            header.dataset.transition = true
+            setTimeout(async () => {
+                greetUser()
+                header.removeAttribute('data-transition')
+            }, 300)
+            setTimeout(() => {
+                header.dataset.transition = true
+                setTimeout(async () => {
+                    updateHeaderText()
+                    header.removeAttribute('data-transition')
+                    header.removeAttribute('data-greet')
+                }, 300)
+            }, 2000)
+        })
+        function greetUser() {
+            header.dataset.greet = true
+            const greetingsByHour = [
+                [22, ...i18n.greetings.lateNight, 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
+                [18, ...i18n.greetings.evening, 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
+                [12, ...i18n.greetings.afternoon, 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
+                [6, ...i18n.greetings.morning, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
+                [0, ...i18n.greetings.earlyNight, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
+            ],
+                greetingsGeneric = [...i18n.greetings.generic, 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
 
-        let possibleGreetings = []
-        for (let i = 0; i < greetingsByHour.length; i++) {
-            const e = greetingsByHour[i]
-            if (now.getHours() >= e[0]) {
-                e.shift()
-                possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
-                break
+            let possibleGreetings = []
+            for (let i = 0; i < greetingsByHour.length; i++) {
+                const e = greetingsByHour[i]
+                if (now.getHours() >= e[0]) {
+                    e.shift()
+                    possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
+                    break
+                }
             }
+            possibleGreetings.push(...greetingsGeneric)
+            const punctuation = Math.random() < 0.7 ? '.' : '!',
+                greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation).replace('%s', formattedWeekday).replace('%n', firstName)
+            headerText.innerText = greeting.slice(0, -1)
+            headerText.dataset.lastLetter = greeting.slice(-1)
         }
-        possibleGreetings.push(...greetingsGeneric)
-        const punctuation = Math.random() < 0.7 ? '.' : '!',
-            greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation)
-        headerText.innerText = greeting.slice(0, -1)
-        headerText.dataset.lastLetter = greeting.slice(-1)
 
         updateHeaderButtons = () => {
             // Update the week offset buttons accordingly
@@ -106,7 +128,6 @@ async function today() {
             let todayIncreaseOffset = document.querySelector('#st-start-today-offset-plus')
             if (todayDecreaseOffset && todayIncreaseOffset) {
                 todayResetOffset.disabled = (agendaView === 'week' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1
-                todayResetOffset.dataset.icon = todayResetOffset.disabled ? '' : ''
                 todayDecreaseOffset.disabled = (agendaView === 'week' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0
                 todayIncreaseOffset.disabled = (agendaView === 'week' && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41
             }
@@ -156,7 +177,7 @@ async function today() {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
         todayResetOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
@@ -177,52 +198,32 @@ async function today() {
             updateHeaderText()
         })
 
-        let todayViewMode = element('div', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' })
-        let todayViewDay = element('button', 'st-start-today-view-day', todayViewMode, { class: 'st-button segment active', innerText: i18n.dates['day'] })
-        let todayViewWorkweek = element('button', 'st-start-today-view-workweek', todayViewMode, { class: 'st-button segment', innerText: i18n.dates['workweek'] })
-        let todayViewWeek = element('button', 'st-start-today-view-week', todayViewMode, { class: 'st-button segment', innerText: i18n.dates['week'] })
-        todayViewDay.addEventListener('click', () => {
-            todayViewDay.classList.add('active')
-            todayViewWeek.classList.remove('active')
-            todayViewWorkweek.classList.remove('active')
-            widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
-            if (widgets.classList.contains('editing')) widgetsCollapsed = false
-            verifyDisplayMode()
-            if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
-            agendaView = 'day'
-            listViewEnabled = listViewEnabledSetting
+        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n.dates['day'] : i18n.dates['xDays'].replace('%s', daysToShowSetting), 'workweek': i18n.dates['workweek'], 'week': i18n.dates['week'] }, 'day', clickCallback, selectedCallback)
+
+        function clickCallback(currentValue) {
+            if (currentValue === 'day') todayViewModeDropdown.changeValue('week')
+            else todayViewModeDropdown.changeValue('day')
+        }
+
+        function selectedCallback(newValue) {
+            agendaView = newValue
+            if (newValue === 'day') {
+                widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
+                if (widgets.classList.contains('editing')) widgetsCollapsed = false
+                verifyDisplayMode()
+                if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
+                listViewEnabled = listViewEnabledSetting
+            } else {
+                widgetsCollapsed = true
+                if (widgets.classList.contains('editing')) widgetsCollapsed = false
+                verifyDisplayMode()
+                if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+                listViewEnabled = false
+            }
             renderSchedule()
             updateHeaderButtons()
             updateHeaderText()
-        })
-        todayViewWorkweek.addEventListener('click', () => {
-            todayViewDay.classList.remove('active')
-            todayViewWeek.classList.remove('active')
-            todayViewWorkweek.classList.add('active')
-            widgetsCollapsed = true
-            if (widgets.classList.contains('editing')) widgetsCollapsed = false
-            verifyDisplayMode()
-            if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-            agendaView = 'workweek'
-            listViewEnabled = false
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
-        })
-        todayViewWeek.addEventListener('click', () => {
-            todayViewDay.classList.remove('active')
-            todayViewWeek.classList.add('active')
-            todayViewWorkweek.classList.remove('active')
-            widgetsCollapsed = true
-            if (widgets.classList.contains('editing')) widgetsCollapsed = false
-            verifyDisplayMode()
-            if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-            agendaView = 'week'
-            listViewEnabled = false
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
-        })
+        }
 
         // Controls (bottom right of page)
         let widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' })
@@ -249,71 +250,6 @@ async function today() {
                 let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${Math.round(zoomSetting * 100)}%`, style: `top: ${source.getBoundingClientRect().top}px; left: ${source.getBoundingClientRect().left}px;` })
                 setTimeout(() => ghost.remove(), 1000)
             }
-        }
-
-        if (syncedStorage['start-stats']) {
-            let stats
-            (async () => {
-
-                // stats overlay
-                stats = element('dialog', 'st-start-stats', document.body, { class: 'st-overlay' })
-                let statsHeading = element('div', 'st-start-stats-heading', stats),
-                    statsTitle = element('span', 'st-start-stats-title', statsHeading, { class: 'st-title', innerText: "Statistieken" }),
-                    statsSubtitle = element('span', 'st-start-stats-subtitle', statsHeading, { class: 'st-subtitle', innerText: `Voor de periode ${gatherStart.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long' })}–${gatherEnd.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long' })}.\nStatistieken zijn nog in de bètafase. Binnenkort komt er dus meer!` }),
-                    statsButtonWrapper = element('div', 'st-start-stats-button-wrapper', statsHeading, { class: 'st-button-wrapper' }),
-                    statsViewMode = element('div', 'st-start-stats-view', statsButtonWrapper, { class: 'st-segmented-control' }),
-                    statsViewPie = element('button', 'st-start-stats-view-pie', statsViewMode, { class: 'st-button segment active', innerText: "Taart", 'data-icon': '' }),
-                    statsViewBar = element('button', 'st-start-stats-view-bar', statsViewMode, { class: 'st-button segment', innerText: "Staaf", 'data-icon': '' }),
-                    statsClose = element('button', 'st-start-stats-close', statsButtonWrapper, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
-                    statsTeachers = element('div', 'st-start-stats-teachers', stats, { class: 'st-list st-tile' }),
-                    statsTeachersTitle = element('span', 'st-start-stats-teachers-title', statsTeachers, { class: 'st-section-title', 'data-icon': '', innerText: "Docenten" }),
-                    statsClassrooms = element('div', 'st-start-stats-classrooms', stats, { class: 'st-list st-tile' }),
-                    statsClassroomsTitle = element('span', 'st-start-stats-classrooms-title', statsClassrooms, { class: 'st-section-title', 'data-icon': '', innerText: "Lokalen" })
-                statsClose.addEventListener('click', () => {
-                    stats.close()
-                })
-
-                const events = await MagisterApi.events()
-
-                // Teacher stats 
-                const eventsTeachers = events.flatMap(item => item.Docenten)
-                let teachersFrequencyMap = {}
-                eventsTeachers.map(teacher => teacher.Docentcode).forEach(teacherCode => {
-                    teachersFrequencyMap[teacherCode] ??= 0
-                    teachersFrequencyMap[teacherCode]++
-                })
-                let teachersChartArea = element('div', 'st-start-stats-teacher-chart', statsTeachers).createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
-
-                // Classroom stats 
-                const eventsClassrooms = events.flatMap(item => item.Lokalen)
-                let classroomsFrequencyMap = {}
-                eventsClassrooms.map(classroom => classroom.Naam).forEach(classroomName => {
-                    classroomsFrequencyMap[classroomName] ??= 0
-                    classroomsFrequencyMap[classroomName]++
-                })
-                let classroomsChartArea = element('div', 'st-start-stats-classroom-chart', statsClassrooms).createPieChart(classroomsFrequencyMap, null, 3)
-
-                // Switch chart type
-                statsViewPie.addEventListener('click', () => {
-                    statsViewPie.classList.add('active')
-                    statsViewBar.classList.remove('active')
-
-                    teachersChartArea.createPieChart(teachersFrequencyMap, teacherNamesSetting, 3)
-                    classroomsChartArea.createPieChart(classroomsFrequencyMap, null, 3)
-                })
-                statsViewBar.addEventListener('click', () => {
-                    statsViewBar.classList.add('active')
-                    statsViewPie.classList.remove('active')
-
-                    teachersChartArea.createBarChart(teachersFrequencyMap, teacherNamesSetting, 3)
-                    classroomsChartArea.createBarChart(classroomsFrequencyMap, null, 3)
-                })
-            })()
-
-            let invokeStats = element('button', 'st-start-invoke-stats', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Statistieken\nKrijg meer inzicht in je rooster" })
-            invokeStats.addEventListener('click', async () => {
-                stats.showModal()
-            })
         }
 
         let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
@@ -469,8 +405,6 @@ async function today() {
                         schedule.classList.add('list-view')
                         agendaEndDate = new Date(new Date(agendaStartDate))
                     } else {
-                        let daysToShow = daysToShowSetting
-
                         let todayIndex = agendaDays.findIndex(item => item.today)
                         let todayEvents = agendaDays[todayIndex].events
                         let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
@@ -479,9 +413,9 @@ async function today() {
 
                         // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
                         if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
-                            notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
                             agendaDayOffset = nextRelevantDayIndex
                             agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                            notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
                         }
 
                         agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
@@ -632,6 +566,7 @@ async function today() {
             setTimeout(async () => {
                 updateHeaderText()
                 header.removeAttribute('data-transition')
+                header.removeAttribute('data-greet')
             }, 300)
         }, 2000)
 

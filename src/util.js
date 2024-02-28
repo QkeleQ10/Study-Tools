@@ -17,10 +17,11 @@ let eggs = [],
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
+            if (!['nl-NL', 'en-GB'].includes(locale)) locale = 'nl-NL'
             const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
             i18n = await req.json()
         }
-        
+
         localStorage = await getFromStorageMultiple(null, 'local', true)
     }
 
@@ -331,6 +332,68 @@ Array.prototype.mode = function () {
     ).at(-1)
 }
 
+Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeholder' }, selectedOption = 'placeholder', onClick, onChange) {
+    const dropdown = this
+    dropdown.classList.add('st-dropdown')
+    dropdown.innerText = ''
+
+    const selectedOptionElement = element('button', null, dropdown, { innerText: options[selectedOption] })
+    if (onClick) {
+        selectedOptionElement.addEventListener('click', event => {
+            if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
+            onClick(selectedOption)
+        })
+    }
+
+    const dropdownPopover = element('div', null, document.body, { class: 'st-dropdown-popover' })
+
+    for (const key in options) {
+        if (Object.hasOwnProperty.call(options, key)) {
+            const title = options[key]
+            const optionElement = element('button', null, dropdownPopover, {
+                class: 'st-button segment st-dropdown-segment',
+                innerText: title,
+                'data-key': key
+            })
+
+            if (selectedOption === key) optionElement.classList.add('active')
+            else optionElement.classList.remove('active')
+
+            optionElement.addEventListener('click', event => {
+                dropdown.changeValue(key)
+            })
+        }
+    }
+
+    dropdown.addEventListener('click', (event) => {
+        if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
+        const rect = dropdown.getBoundingClientRect()
+        dropdownPopover.setAttribute('style', `top: ${rect.top + rect.height + 8}px; right: ${window.innerWidth - rect.right}px;`)
+        dropdownPopover.classList.remove('st-hidden')
+        dropdownPopover.classList.add('st-visible')
+        dropdown.classList.add('active')
+
+        window.addEventListener('click', () => {
+            setTimeout(() => {
+                dropdownPopover.classList.remove('st-visible')
+                dropdownPopover.classList.add('st-hidden')
+                dropdown.classList.remove('active')
+            }, 5)
+        }, { once: true })
+    })
+
+    dropdown.changeValue = function (newValue) {
+        onChange(newValue)
+        selectedOption = newValue
+        selectedOptionElement.innerText = options[selectedOption]
+        dropdownPopover.querySelectorAll('.st-dropdown-segment').forEach(e => {
+            if (selectedOption === e.dataset.key) e.classList.add('active')
+            else e.classList.remove('active')
+        })
+    }
+
+    return dropdown
+}
 
 Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
     const chartArea = this

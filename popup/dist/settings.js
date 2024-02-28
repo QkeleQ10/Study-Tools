@@ -253,15 +253,6 @@ export default [
                     { settingId: 'start-schedule-days', operator: 'equal', value: 1 }
                 ],
             },
-            {
-                id: "start-stats",
-                title: "Statistieken in Start",
-                subtitle: "Knop voor statistieken weergeven.",
-                default: false,
-                conditions: [
-                    { settingId: 'start-enabled', operator: 'equal', value: true }
-                ],
-            },
         ]
     },
     {
@@ -376,31 +367,10 @@ export default [
                         value: "en-GB",
                         title: "English"
                     },
-                    {
-                        value: "fr-FR",
-                        title: "Français"
-                    },
-                    {
-                        value: "de-DE",
-                        title: "Deutsch"
-                    },
-                    {
-                        value: "no-NO",
-                        title: "Norsk"
-                    },
                 ],
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
-            },
-            {
-                id: 'gamification-enabled',
-                title: "Puntensysteem",
-                subtitle: "Oproepen met de activatietoets voor de sneltoetsen.",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ]
             },
             {
                 id: "verbosity",

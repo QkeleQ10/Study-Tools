@@ -47,7 +47,9 @@
     },
     "dates": {
         "day": "Day",
+        "xDays": "%s days",
         "week": "Week",
+        "workweek": "Working week",
         "now": "Now",
         "justNow": "Just now",
         "soon": "Soon",
@@ -57,7 +59,7 @@
         "lastWeekday": "Last %s",
         "tomorrowAtTime": "Tomorrow at %s",
         "weekdayAtTime": "Next %s1 at %s2",
-        "weekdayInWeek": "%s2 in week %s1",
+        "weekdayInWeek": "%s2 of week %s1",
         "weekdays": [
             "Sunday",
             "Monday",
@@ -66,6 +68,42 @@
             "Thursday",
             "Friday",
             "Saturday"
+        ]
+    },
+    "greetings": {
+        "lateNight": [
+            "Good evening#",
+            "Good evening, night owl#",
+            "Happy %s night#"
+        ],
+        "evening": [
+            "Good evening#",
+            "Happy %s evening#"
+        ],
+        "afternoon": [
+            "Good day#",
+            "Happy %s#"
+        ],
+        "morning": [
+            "Good morning#",
+            "Happy %s#",
+            "Happy %s morning#"
+        ],
+        "earlyNight": [
+            "Good morning#",
+            "Good morning, night owl#",
+            "Good morning, early bird#",
+            "Happy %s#",
+            "Happy %s morning#"
+        ],
+        "generic": [
+            "Welcome#",
+            "Hello!",
+            "Hi!",
+            "Welcome back, %n#",
+            "Hey, %n#",
+            "Welcome back#",
+            "Good day#"
         ]
     },
     "remainder": "Other",

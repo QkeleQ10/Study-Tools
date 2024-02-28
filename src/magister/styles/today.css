@@ -85,7 +85,11 @@
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+}
+
+#st-start-header-buttons .st-button[data-icon]:before {
+    font-weight: 600;
 }
 
 #st-start-today-view {

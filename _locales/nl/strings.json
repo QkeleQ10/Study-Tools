@@ -47,6 +47,7 @@
     },
     "dates": {
         "day": "Dag",
+        "xDays": "%s dagen",
         "week": "Week",
         "workweek": "Werkweek",
         "now": "nu",
@@ -67,6 +68,41 @@
             "donderdag",
             "vrijdag",
             "zaterdag"
+        ]
+    },
+    "greetings": {
+        "lateNight": [
+            "Goedenavond#",
+            "Goedenavond, nachtuil#",
+            "Fijne %savond#"
+        ],
+        "evening": [
+            "Goedenavond#",
+            "Fijne %savond#"
+        ],
+        "afternoon": [
+            "Goedemiddag#",
+            "Fijne %smiddag#"
+        ],
+        "morning": [
+            "Goedemorgen#",
+            "Goeiemorgen#",
+            "Fijne %sochtend#"
+        ],
+        "earlyNight": [
+            "Goedemorgen#",
+            "Goeiemorgen#",
+            "Goedemorgen, nachtuil#",
+            "Goedemorgen, vroege vogel#",
+            "Fijne %sochtend#"
+        ],
+        "generic": [
+            "Welkom#",
+            "Hallo!",
+            "Welkom terug, %n#",
+            "Hey, %n#",
+            "Welkom terug#",
+            "Goedendag#"
         ]
     },
     "remainder": "Overige",
