@@ -1,3 +1,5 @@
+let currentTheme
+
 // Apply the styles instantly,
 // and whenever the settings change
 // and whenever the system theme changes
@@ -135,7 +137,7 @@ async function applyStyles() {
 
     const themeFixed = syncedStorage['ptheme']?.split(',')
     const themeAuto = themeFixed[0] === 'auto'
-    let currentTheme = themeFixed
+    currentTheme = themeFixed
     if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
     else if (themeAuto) currentTheme[0] = 'light'
 
@@ -162,7 +164,7 @@ async function applyStyles() {
         background-color: var(--st-background-secondary);
     }
 
-    .view>iframe, .view>.container>iframe {
+    .view>iframe:not(.st-approve), .view>.container>iframe:not(.st-approve) {
         filter: invert(1) hue-rotate(180deg);
     }`
 
@@ -1414,34 +1416,112 @@ table.table-grid-layout>tbody>tr.selected {
     }
 }
 
-// popstate()
-// window.addEventListener('popstate', popstate)
-// async function popstate() {
-//     setTimeout(async () => {
-//         const frame = await awaitElement('.view iframe')
-//         if (!frame) return
+popstate()
+window.addEventListener('popstate', popstate)
+async function popstate() {
+    const frame = await awaitElement('.view iframe')
+    if (!frame) return
 
-//         element('style', 'study-tools-style-inject', frame.contentDocument.head, {
-//             innerHTML: document.querySelector('#study-tools-vars').innerHTML +
-//                 `
-// body, .nieuw-bericht-container, .header, app-bericht-details {
-//     background-color: var(--st-background-primary) !important;
-//     color: var(--st-foreground-primary);
-// }
+    const iframeStyleInject = document.querySelector('#study-tools-vars').innerHTML +
+        `
+${currentTheme[0] === 'dark' ? '.no-selection-container object, .no-messages-container object { opacity: .75; filter: invert(1) hue-rotate(180deg) contrast(.86); }' : ''}
 
-// cdk-virtual-scroll-viewport .cdk-virtual-scroll-content-wrapper, div {
-//     background-color: var(--st-background-secondary) !important;
-//     color: var(--st-foreground-primary);
-// }
+*, html, body, :root, :host, html *, body *, :root *, :host * {
+    --dna-primary: var(--st-accent-primary) !important;
+    --primary: var(--st-accent-primary) !important;
+    --background: var(--st-foreground-accent) !important;
+    --title-color: var(--st-foreground-accent) !important;
+    --separator-color: var(--st-foreground-accent) !important;
+    --dna-background: var(--st-background-primary) !important;
+    --dna-text-color-dark: var(--st-foreground-primary) !important;
+    --dna-control-border: var(--st-border-color) !important;
+}
 
-// #nieuw-bericht {
-//     --background: var(--st-accent-primary) !important;
-//     background-color: var(--st-accent-primary) !important;
-// }
-//             `
-//         })
-//     }, 2000)
-// }
+dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
+    --title-color: var(--st-foreground-accent);
+    --color: var(--st-foreground-accent);
+    --background: var(--st-foreground-accent);
+    --dna-text-color: var(--st-foreground-accent);
+    --separator-color: var(--st-foreground-accent);
+    --background-secondary: var(--st-foreground-accent);
+    --radius: var(--st-border-radius);
+}
+
+dna-button[fill=solid] {
+    --color: var(--st-contrast-accent) !important;
+    --background: var(--st-accent-primary) !important;
+    border-color: var(--st-accent-primary) !important;
+}
+
+dna-button[fill=outline] {
+    --color: var(--st-foreground-primary) !important;
+    --background: transparent !important;
+    border: 1px solid var(--st-accent-primary) !important;
+}
+
+html:root body dna-breadcrumbs, html:root body .action-buttons, .action-buttons * {
+    --dna-primary: var(--st-foreground-accent) !important;
+    --color: var(--st-foreground-accent) !important;
+    --primary: var(--st-foreground-accent) !important;
+}
+
+html:root body dna-search-input, html:root body dna-card, html:root body app-logbook-item {
+    --background: var(--st-background-secondary) !important;
+    --border-color: var(--st-border-color) !important;
+}
+
+html:root body dna-card, html:root body dna-card *, html:root body app-logbook-item {
+    color: var(--st-foreground-primary) !important;
+}
+
+body, .nieuw-bericht-container, .header, app-bericht-details {
+    background-color: var(--st-background-primary) !important;
+    color: var(--st-foreground-primary);
+}
+
+.bericht-item, .dna-tree, .dna-tree-node, .dna-input-group, .dna-text-input, dna-editor, .dna-editor {
+    background-color: var(--st-background-secondary) !important;
+    color: var(--st-foreground-primary);
+    border-color: var(--st-border-color) !important;
+}
+
+.container, .folders-container, #berichtenlijst, app-bericht-list, dna-file-preview, .recipients {
+    border-color: var(--st-border-color) !important;
+}
+
+.dna-tree, .dna-tree-node, .folderName-container, .folderName-container * {
+    color: var(--st-foreground-primary) !important;
+}
+
+.dna-tree-selectable .dna-tree-node-wrapper:hover, .dna-tree-selectable .dna-tree-node-selected, .dna-tree-selectable .dna-tree-node-selected:hover, .bericht-item.active, .bericht-item:hover {
+    background-color: var(--st-highlight-primary) !important;
+    color: var(--st-foreground-primary) !important;
+}
+
+h2 {
+    color: var(--st-foreground-primary) !important;
+}
+
+.bijlagen a {
+    color: var(--st-foreground-accent) !important;
+}
+            `
+
+    let interval = setIntervalImmediately(async () => {
+        if (!frame) {
+            frame = await awaitElement('.view iframe', false, 500)
+        }
+        if (!(frame?.contentDocument?.head || frame?.contentDocument?.querySelector('head'))) {
+            frame.classList.remove('st-approve')
+            return
+        }
+        if (!frame.contentDocument.querySelector('#study-tools-iframe-style-inject')) {
+            element('style', 'study-tools-iframe-style-inject', frame.contentDocument.head || frame.contentDocument.querySelector('head'), { innerHTML: iframeStyleInject })
+            frame.classList.add('st-approve')
+        }
+    }, 50)
+    setTimeout(() => clearInterval(interval), 5000)
+}
 
 async function handleSpecialDecoration(type) {
     if ((await getFromStorage('no-special-decorations', 'session') ?? '') === type) return

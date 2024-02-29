@@ -1,0 +1,133 @@
+{
+    "widgets": {
+        "logs": "Journaux",
+        "activities": "Activités",
+        "messages": "Messages",
+        "homework": "Devoirs",
+        "assignments": "Missions",
+        "grades": "Notes",
+        "digitalClock": "Horloge numérique",
+        "newGrades": "Nouvelles notes",
+        "newGrade": "Nouvelle note",
+        "latestGrade": "Dernière note"
+    },
+    "views": {
+        "Start": "Accueil",
+        "Vandaag": "Aujourd'hui",
+        "Agenda": "Programme",
+        "To Do": "Tâches",
+        "Lijst": "Liste",
+        "Afwezigheid": "Absences",
+        "Cijfers": "Notes",
+        "Laatste cijfers": "Dernières notes",
+        "Cijferoverzicht": "Bulletin scolaire",
+        "Examen": "Examens finaux",
+        "LVS": "SGA",
+        "Logboeken": "Journaux",
+        "Toetsen": "Examens",
+        "OPP": "Plans",
+        "ELO": "Espace numérique",
+        "Bronnen": "Sources",
+        "Studiewijzers": "Guide d'étude",
+        "Opdrachten": "Missions",
+        "Portfolio": "Portefeuille",
+        "Profiel": "Profil",
+        "Portfoliodocumenten": "Docum. portefeuille",
+        "Beoordeelde producten": "Produits évalués",
+        "Activiteiten": "Activités",
+        "Leermiddelen": "Ressources"
+    },
+    "chips": {
+        "cancelled": "Annulé",
+        "hw": "Devoirs",
+        "pw": "Test",
+        "kwt": "Choix",
+        "kwtregistered": "Inscrit",
+        "info": "Informations",
+        "important": "Important",
+        "attachments": "Pièces jointes",
+        "graded": "Noté"
+    },
+    "dates": {
+        "day": "Jour",
+        "xDays": "%s jours",
+        "week": "Semaine",
+        "workweek": "Sem. de travail",
+        "now": "maintenant",
+        "justNow": "il y a quelques instants",
+        "soon": "bientôt",
+        "fewMinsAgo": "il y a quelques minutes",
+        "todayAtTime": "aujourd'hui à %s",
+        "yesterdayAtTime": "hier à %s",
+        "lastWeekday": "%s dernier",
+        "tomorrowAtTime": "demain à %s",
+        "weekdayAtTime": "%s1 prochain à %s2",
+        "weekdayInWeek": "semaine %s1, %s2",
+        "weekdays": [
+            "dimanche",
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi",
+            "samedi"
+        ]
+    },
+    "greetings": {
+        "lateNight": [
+            "Bonsoir#",
+            "Bonne soirée#",
+            "Bonsoir, oiseau de nuit#",
+            "Bon % soir #"
+        ],
+        "evening": [
+            "Bonsoir#",
+            "Bonne soirée#",
+            "Bon % soir#"
+        ],
+        "afternoon": [
+            "Bon après-midi#",
+            "Bon % après-midi#"
+        ],
+        "morning": [
+            "Bonjour#",
+            "Bon % matin#"
+        ],
+        "earlyNight": [
+            "Bonjour#",
+            "Bonjour, oiseau de nuit#",
+            "Bonjour, lève-tôt#",
+            "Bon % matin#"
+        ],
+        "generic": [
+            "Bienvenue#",
+            "Bonjour#",
+            "Bon retour, %n#",
+            "Content de te revoir#",
+            "Salut#"
+        ]
+    },
+    "toasts": {
+        "jumpedToNextRelevantDay": "Affichage du lendemain avec des événements"
+    },
+    "close": "Fermer",
+    "remainder": "Autres",
+    "Inklappen": "Réduire",
+    "Verborgen": "Masqué",
+    "Lijst": "Liste",
+    "Tegel": "Carreau",
+    "scaleUp": "Augmenter l'échelle",
+    "scaleDown": "Réduire l'échelle",
+    "editWidgets": "Modifier les widgets",
+    "widgetOptions": "Options des widgets",
+    "editTeachers": "Changer les noms des enseignants",
+    "teacherNicknames": "Noms d'enseignants personnalisés",
+    "editFinish": "Terminer l'édition",
+    "collapseWidgets": "Afficher ou masquer le panneau des widgets",
+    "Vooruit": "En avant",
+    "Achteruit": "En arrière",
+    "Vandaag": "Aujourd'hui",
+    "moreGradesSingular": "et une autre note pour %s",
+    "moreGradesPlural": "%s1 autres notes pour %s2",
+    "moreGradesMany": "plus de notes: %s, entre autres"
+}

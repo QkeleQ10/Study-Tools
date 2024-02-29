@@ -367,6 +367,10 @@ export default [
                         value: "en-GB",
                         title: "English"
                     },
+                    {
+                        value: "fr-FR",
+                        title: "Français"
+                    },
                 ],
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }

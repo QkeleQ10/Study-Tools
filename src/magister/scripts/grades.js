@@ -477,7 +477,7 @@ async function gradeBackup() {
         bkInvoke = element('button', 'st-cb', document.body, { class: 'st-button', 'data-icon': '', innerText: "Cijferback-up" }),
         // TODO: Give this modal the same treatment as the today.js edit modal.
         bkModal = element('dialog', 'st-cb-modal', document.body, { class: 'st-overlay' }),
-        bkModalClose = element('button', 'st-cb-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+        bkModalClose = element('button', 'st-cb-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: i18n['close'] }),
         bkModalTitle = element('span', 'st-cb-title', bkModal, { class: 'st-title', innerText: "Cijferback-up" }),
         bkModalSubtitle = element('span', 'st-cb-subtitle', bkModal, { class: 'st-subtitle', innerText: "Exporteer of importeer je cijferlijst zodat je er altijd bij kunt." }),
         bkModalWrapper = element('div', 'st-cb-modal-wrapper', bkModal),

@@ -19,6 +19,8 @@
         "Lijst": "Lijst",
         "Afwezigheid": "Afwezigheid",
         "Cijfers": "Cijfers",
+        "Laatste cijfers": "Laatste cijfers",
+        "Cijferoverzicht": "Cijferoverzicht",
         "Examen": "Examen",
         "LVS": "LVS",
         "Logboeken": "Logboeken",
@@ -43,7 +45,8 @@
         "kwtregistered": "Ingeschreven",
         "info": "Informatie",
         "important": "Belangrijk",
-        "attachments": "Bijlagen"
+        "attachments": "Bijlagen",
+        "graded": "Beoordeeld"
     },
     "dates": {
         "day": "Dag",
@@ -105,9 +108,27 @@
             "Goedendag#"
         ]
     },
+    "toasts": {
+        "jumpedToNextRelevantDay": "Gesprongen naar eerstvolgende dag met afspraken"
+    },
+    "close": "Sluiten",
     "remainder": "Overige",
     "Inklappen": "Inklappen",
     "Verborgen": "Verborgen",
     "Lijst": "Lijst",
-    "Tegel": "Tegel"
+    "Tegel": "Tegel",
+    "scaleUp": "Schaal vergroten",
+    "scaleDown": "Schaal verkleinen",
+    "editWidgets": "Widgets bewerken",
+    "widgetOptions": "Widgetopties",
+    "editTeachers": "Docentennamen aanpassen",
+    "teacherNicknames": "Bijnamen docenten",
+    "editFinish": "Bewerken voltooien",
+    "collapseWidgets": "Widgetpaneel weergeven of verbergen",
+    "Vooruit": "Vooruit",
+    "Achteruit": "Achteruit",
+    "Vandaag": "Vandaag",
+    "moreGradesSingular": "en een ander cijfer voor %s",
+    "moreGradesPlural": "%s1 andere cijfers voor %s2",
+    "moreGradesMany": "nog meer cijfers voor o.a. %s"
 }

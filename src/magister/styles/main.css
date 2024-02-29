@@ -163,32 +163,42 @@ div.loading-overlay {
     cursor: pointer;
 }
 
-.st-dropdown>button {
+.st-dropdown>.st-dropdown-current {
+    display: flex;
+    align-items: center;
     height: 32px;
     padding: 0 12px;
     font: 600 14px var(--st-font-family-secondary);
     background-color: transparent;
     color: var(--st-foreground-secondary);
     border: none;
-    border-right: var(--st-border);
     outline: none;
     cursor: pointer;
+    user-select: none;
+}
+
+.st-dropdown[data-click-function=true]>.st-dropdown-current {
+    border-right: var(--st-border);
 }
 
 .st-dropdown:after {
     content: '';
     font: 600 16px/32px 'Font Awesome 6 Pro';
     height: 32px;
-    padding-inline: 12px;
+    padding-right: 12px;
     transition: transform 200ms;
+}
+
+.st-dropdown[data-click-function=true]:after {
+    padding-left: 12px;
 }
 
 .st-dropdown.active:after {
     transform: rotateX(180deg);
 }
 
-.st-dropdown>button:hover,
-.st-dropdown:hover:not(:has(button:hover)):after {
+.st-dropdown>button.st-dropdown-current:hover,
+.st-dropdown:hover:not(:has(button.st-dropdown-current:hover)):after {
     color: var(--st-foreground-accent);
 }
 

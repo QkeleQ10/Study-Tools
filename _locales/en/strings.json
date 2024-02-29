@@ -19,6 +19,8 @@
         "Lijst": "List",
         "Afwezigheid": "Absences",
         "Cijfers": "Grades",
+        "Laatste cijfers": "Recent grades",
+        "Cijferoverzicht": "Report card",
         "Examen": "Finals",
         "LVS": "LMS",
         "Logboeken": "Logs",
@@ -43,7 +45,8 @@
         "kwtregistered": "Registered",
         "info": "Information",
         "important": "Important",
-        "attachments": "Attachments"
+        "attachments": "Attachments",
+        "graded": "Graded"
     },
     "dates": {
         "day": "Day",
@@ -106,9 +109,27 @@
             "Good day#"
         ]
     },
+    "toasts": {
+        "jumpedToNextRelevantDay": "Viewing next day with calendar events"
+    },
+    "close": "Close",
     "remainder": "Other",
     "Inklappen": "Collapse",
     "Verborgen": "Hidden",
     "Lijst": "List",
-    "Tegel": "Tile"
+    "Tegel": "Tile",
+    "scaleUp": "Increase scale",
+    "scaleDown": "Decrease scale",
+    "editWidgets": "Edit widgets",
+    "widgetOptions": "Widget options",
+    "editTeachers": "Edit teacher names",
+    "teacherNicknames": "Teacher nicknames",
+    "editFinish": "Finish editing",
+    "collapseWidgets": "Show/hide widget panel",
+    "Vooruit": "Forwards",
+    "Achteruit": "Backwards",
+    "Vandaag": "Today",
+    "moreGradesSingular": "and another grade for %s",
+    "moreGradesPlural": "%s1 more grades for %s2",
+    "moreGradesMany": "more grades, including ones for %s"
 }

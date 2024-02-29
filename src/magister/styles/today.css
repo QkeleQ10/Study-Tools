@@ -802,7 +802,7 @@ a.st-widget-title {
 }
 
 #st-start-edit-widgets-options:empty:before {
-    content: "Widgetopties";
+    content: attr(data-i18n-widget-options);
     font: 500 16px/24px var(--st-font-family-primary);
 }
 
@@ -819,7 +819,7 @@ a.st-widget-title {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font: 12px var(--st-font-family-secondary);
+    font: 14px var(--st-font-family-secondary);
 }
 
 #st-start-edit-widgets-options .st-option select {

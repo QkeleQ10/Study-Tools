@@ -17,6 +17,12 @@ addEventListener('activate', () => {
     console.info("Service worker running!")
 })
 
+chrome.runtime.onStartup.addListener(() => {
+    startListenCredentials()
+    setDefaults()
+    console.info("Browser started, service worker revived.")
+})
+
 async function startListenCredentials() {
     // Allow any context to use chrome.storage.session
     chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' })
@@ -102,10 +108,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         default:
             break
     }
-})
-
-chrome.runtime.onStartup.addListener(() => {
-    console.info("Browser started, service worker revived.")
 })
 
 async function sleepUntil(f, timeoutMs) {

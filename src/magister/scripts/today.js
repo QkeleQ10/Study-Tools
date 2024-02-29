@@ -48,7 +48,7 @@ async function today() {
     now = new Date()
 
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
-    firstName = (await awaitElement("#user-menu > figure > img")).alt.split(' ')[0]
+    firstName = (await awaitElement('#user-menu > figure > img')).alt.split(' ')[0]
 
     const gatherStart = new Date()
     gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
@@ -117,6 +117,7 @@ async function today() {
             possibleGreetings.push(...greetingsGeneric)
             const punctuation = Math.random() < 0.7 ? '.' : '!',
                 greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation).replace('%s', formattedWeekday).replace('%n', firstName)
+            if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, " $1")
             headerText.innerText = greeting.slice(0, -1)
             headerText.dataset.lastLetter = greeting.slice(-1)
         }
@@ -166,7 +167,7 @@ async function today() {
         }
 
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
-        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Achteruit" })
+        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Achteruit'] })
         todayDecreaseOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
             if (agendaView !== 'day') agendaDayOffset -= 7
@@ -177,7 +178,7 @@ async function today() {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vandaag", disabled: true })
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Vandaag'], disabled: true })
         todayResetOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
@@ -186,7 +187,7 @@ async function today() {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: "Vooruit" })
+        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Vooruit'] })
         todayIncreaseOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
             if (agendaView !== 'day') agendaDayOffset += 7
@@ -198,11 +199,13 @@ async function today() {
             updateHeaderText()
         })
 
-        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n.dates['day'] : i18n.dates['xDays'].replace('%s', daysToShowSetting), 'workweek': i18n.dates['workweek'], 'week': i18n.dates['week'] }, 'day', clickCallback, selectedCallback)
+        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n.dates['day'] : i18n.dates['xDays'].replace('%s', daysToShowSetting), 'workweek': i18n.dates['workweek'], 'week': i18n.dates['week'] }, 'day', selectedCallback, clickCallback)
 
         function clickCallback(currentValue) {
-            if (currentValue === 'day') todayViewModeDropdown.changeValue('week')
-            else todayViewModeDropdown.changeValue('day')
+            // When the current option is selected, cycle to the next one.
+            const choices = Object.keys(todayViewModeDropdown.options)
+            const index = choices.findIndex(e => e === currentValue) ?? -1
+            todayViewModeDropdown.changeValue(choices[(index + 1) % 3])
         }
 
         function selectedCallback(newValue) {
@@ -231,8 +234,8 @@ async function today() {
         setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
 
         // Zoom buttons
-        let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "uitzoomen" })
-        let zoomIn = element('button', 'st-start-edit-zoom-in', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Inzoomen" })
+        let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['scaleDown'] })
+        let zoomIn = element('button', 'st-start-edit-zoom-in', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['scaleUp'] })
         zoomOut.addEventListener('click', () => {
             zoomSetting -= .1
             effectuateZoom(zoomOut)
@@ -252,7 +255,7 @@ async function today() {
             }
         }
 
-        let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgets bewerken" })
+        let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['editWidgets'] })
         invokeEditWidgets.addEventListener('click', () => {
             editWidgets()
         })
@@ -274,8 +277,8 @@ async function today() {
         (async () => {
             editTeachers = element('dialog', 'st-start-edit-teachers', document.body, { class: 'st-overlay' })
             let editTeachersHeading = element('div', 'st-start-edit-teachers-heading', editTeachers),
-                editTeachersTitle = element('span', 'st-start-edit-teachers-title', editTeachersHeading, { class: 'st-title', innerText: "Bijnamen docenten" }),
-                editTeachersClose = element('button', 'st-start-edit-teachers-close', editTeachersHeading, { class: 'st-button', 'data-icon': '', innerText: "Sluiten" }),
+                editTeachersTitle = element('span', 'st-start-edit-teachers-title', editTeachersHeading, { class: 'st-title', innerText: i18n['teacherNicknames'] }),
+                editTeachersClose = element('button', 'st-start-edit-teachers-close', editTeachersHeading, { class: 'st-button', 'data-icon': '', innerText: i18n['close'] }),
                 editTeachersWrapper = element('div', 'st-start-edit-teachers-wrapper', editTeachers, { class: 'st-list st-tile' }),
                 editTeachersList = element('div', 'st-start-edit-teachers-list', editTeachersWrapper)
             editTeachersClose.addEventListener('click', () => {
@@ -314,13 +317,13 @@ async function today() {
         })()
 
         // Editor invoke button
-        let invokeEditTeachers = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Docentennamen aanpassen" })
+        let invokeEditTeachers = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['editTeachers'] })
         invokeEditTeachers.addEventListener('click', async () => {
             editTeachers.showModal()
         })
 
         // Side panel collapse/expand button
-        todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: "Widgetpaneel weergeven of verbergen" })
+        todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['collapseWidgets'] })
         todayCollapseWidgets.addEventListener('click', () => {
             widgetsCollapsed = !widgetsCollapsed
             if (widgets.classList.contains('editing')) widgetsCollapsed = false
@@ -415,7 +418,7 @@ async function today() {
                         if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                             agendaDayOffset = nextRelevantDayIndex
                             agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                            notify('snackbar', `Gesprongen naar eerstvolgende dag met afspraken (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                            notify('snackbar', `${i18n.toasts.jumpedToNextRelevantDay} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
                         }
 
                         agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
@@ -705,34 +708,34 @@ async function today() {
                         if (placeholder) {
                             grades = [
                                 {
-                                    "omschrijving": "Voorbeeld",
-                                    "ingevoerdOp": new Date(now - 172800000),
-                                    "vak": {
-                                        "code": "netl",
-                                        "omschrijving": "Nederlandse taal"
+                                    omschrijving: "Voorbeeld",
+                                    ingevoerdOp: new Date(now - 172800000),
+                                    vak: {
+                                        code: "netl",
+                                        omschrijving: "Nederlandse taal"
                                     },
-                                    "waarde": "6,9",
-                                    "weegfactor": 0
+                                    waarde: "6,9",
+                                    weegfactor: 0
                                 },
                                 {
-                                    "omschrijving": "Baguette",
-                                    "ingevoerdOp": new Date(now - 691200000),
-                                    "vak": {
-                                        "code": "fatl",
-                                        "omschrijving": "Franse taal"
+                                    omschrijving: "Baguette",
+                                    ingevoerdOp: new Date(now - 691200000),
+                                    vak: {
+                                        code: "fatl",
+                                        omschrijving: "Franse taal"
                                     },
-                                    "waarde": "U",
-                                    "weegfactor": 0
+                                    waarde: "U",
+                                    weegfactor: 0
                                 },
                                 {
-                                    "omschrijving": "Grade mockery",
-                                    "ingevoerdOp": new Date(now - 6891200000),
-                                    "vak": {
-                                        "code": "entl",
-                                        "omschrijving": "Engelse taal"
+                                    omschrijving: "Grade mockery",
+                                    ingevoerdOp: new Date(now - 6891200000),
+                                    vak: {
+                                        code: "entl",
+                                        omschrijving: "Engelse taal"
                                     },
-                                    "waarde": "5,4",
-                                    "weegfactor": 0
+                                    waarde: "5,4",
+                                    weegfactor: 0
                                 }
                             ]
                             hiddenItems = []
@@ -758,7 +761,7 @@ async function today() {
                         if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
                         let widgetElement = element(placeholder ? 'div' : 'a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
-                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: "Laatste cijfer" })
+                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['latestGrade'] })
 
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
@@ -802,11 +805,17 @@ async function today() {
                         widgetTitle.innerText = moreUnreadItems.length > 0 ? i18n.widgets['newGrades'] : recentGrades.filter(item => item.unread).length > 0 ? i18n.widgets['newGrade'] : i18n.widgets['latestGrade']
 
                         if (moreUnreadItems.length === 1) {
-                            let moreGrades = element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En een ander cijfer voor ${moreUnreadItems[0].vak.code}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, {
+                                innerText: i18n.moreGradesSingular.replace('%s', moreUnreadItems[0].vak.code)
+                            })
                         } else if (moreUnreadItems.length > 10) {
-                            element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog meer cijfers voor o.a. ${new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, {
+                                innerText: i18n.moreGradesMany.replace('%s', new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]))
+                            })
                         } else if (moreUnreadItems.length > 1) {
-                            element('span', 'st-start-widget-grades-more', widgetElement, { innerText: `En nog ${moreUnreadItems.length} cijfers voor ${new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))])}` })
+                            element('span', 'st-start-widget-grades-more', widgetElement, {
+                                innerText: i18n.moreGradesPlural.replace('%s1', moreUnreadItems.length).replace('%s2', new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]))
+                            })
                         }
 
                         resolve(widgetElement)
@@ -824,20 +833,20 @@ async function today() {
                         if (placeholder) {
                             unreadMessages = [
                                 {
-                                    "onderwerp": "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️",
-                                    "afzender": {
-                                        "naam": "Quinten Althues (V6E)"
+                                    onderwerp: "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️",
+                                    afzender: {
+                                        naam: "Quinten Althues (V6E)"
                                     },
-                                    "heeftBijlagen": true,
-                                    "verzondenOp": new Date(now - 3032000000)
+                                    heeftBijlagen: true,
+                                    verzondenOp: new Date(now - 3032000000)
                                 },
                                 {
-                                    "onderwerp": "Wie gebruikt Berichten in vredesnaam?",
-                                    "afzender": {
-                                        "naam": "Quinten Althues (V6E)"
+                                    onderwerp: "Wie gebruikt Berichten in vredesnaam?",
+                                    afzender: {
+                                        naam: "Quinten Althues (V6E)"
                                     },
-                                    "heeftPrioriteit": true,
-                                    "verzondenOp": new Date(now - 1000000)
+                                    heeftPrioriteit: true,
+                                    verzondenOp: new Date(now - 1000000)
                                 }
                             ]
                         } else {
@@ -909,41 +918,41 @@ async function today() {
                         if (placeholder) {
                             events = [
                                 {
-                                    "Start": new Date(new Date().setHours(0, 0, 0, 0) + 122400000),
-                                    "Einde": new Date(new Date().setHours(0, 0, 0, 0) + 125100000),
-                                    "Inhoud": "<p>Dit is een onvoltooid huiswerkitem.</p>",
-                                    "Opmerking": null,
-                                    "InfoType": 1,
-                                    "Afgerond": false,
-                                    "Vakken": [
+                                    Start: new Date(new Date().setHours(0, 0, 0, 0) + 122400000),
+                                    Einde: new Date(new Date().setHours(0, 0, 0, 0) + 125100000),
+                                    Inhoud: "<p>Dit is een onvoltooid huiswerkitem.</p>",
+                                    Opmerking: null,
+                                    InfoType: 1,
+                                    Afgerond: false,
+                                    Vakken: [
                                         {
-                                            "Naam": "Niet-bestaand vak"
+                                            Naam: "Niet-bestaand vak"
                                         }
                                     ]
                                 },
                                 {
-                                    "Start": new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
-                                    "Einde": new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
-                                    "Inhoud": "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>",
-                                    "Opmerking": null,
-                                    "InfoType": 2,
-                                    "Afgerond": false,
-                                    "Vakken": [
+                                    Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
+                                    Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
+                                    Inhoud: "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>",
+                                    Opmerking: null,
+                                    InfoType: 2,
+                                    Afgerond: false,
+                                    Vakken: [
                                         {
-                                            "Naam": "Lichamelijke opvoeding"
+                                            Naam: "Lichamelijke opvoeding"
                                         }
                                     ]
                                 },
                                 {
-                                    "Start": new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
-                                    "Einde": new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
-                                    "Inhoud": "<p>Dit item heb je al wel voltooid. Good job.</p>",
-                                    "Opmerking": null,
-                                    "InfoType": 1,
-                                    "Afgerond": true,
-                                    "Vakken": [
+                                    Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
+                                    Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
+                                    Inhoud: "<p>Dit item heb je al wel voltooid. Good job.</p>",
+                                    Opmerking: null,
+                                    InfoType: 1,
+                                    Afgerond: true,
+                                    Vakken: [
                                         {
-                                            "Naam": "Jouw favoriete vak"
+                                            Naam: "Jouw favoriete vak"
                                         }
                                     ]
                                 }
@@ -1008,15 +1017,15 @@ async function today() {
                         if (placeholder) {
                             assignments = [
                                 {
-                                    "Titel": "Praktische opdracht",
-                                    "Vak": "sk",
-                                    "InleverenVoor": new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
-                                    "Omschrijving": "Zorg ervoor dat je toestemming hebt van de TOA voordat je begint met je experiment."
+                                    Titel: "Praktische opdracht",
+                                    Vak: "sk",
+                                    InleverenVoor: new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
+                                    Omschrijving: "Zorg ervoor dat je toestemming hebt van de TOA voordat je begint met je experiment."
                                 },
                                 {
-                                    "Titel": "Boekverslag",
-                                    "Vak": "netl",
-                                    "InleverenVoor": new Date(new Date().setHours(0, 0, 0, 0) + 400500000)
+                                    Titel: "Boekverslag",
+                                    Vak: "netl",
+                                    InleverenVoor: new Date(new Date().setHours(0, 0, 0, 0) + 400500000)
                                 }
                             ]
                         } else {
@@ -1050,7 +1059,7 @@ async function today() {
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
-                            if (item.BeoordeeldOp) chips.push({ name: "Beoordeeld", type: 'ok' })
+                            if (item.BeoordeeldOp) chips.push({ name: i18n.chips['graded'], type: 'ok' })
 
                             let assignmentChipsWrapper = element('div', `st-start-widget-assignments-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
@@ -1198,10 +1207,10 @@ async function today() {
     async function editWidgets() {
         widgetsList.innerText = ''
 
-        const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body)
+        const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body, { 'data-i18n-widget-options': i18n['widgetOptions'] })
         const editWidgetsHidden = element('div', 'st-start-edit-widgets-hidden', document.body, { innerText: '' })
         const editWidgetsProt = element('div', 'st-start-edit-widgets-prot', document.body)
-        const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: "Bewerken voltooien" })
+        const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: i18n['editFinish'] })
         editWidgetsDone.addEventListener('click', () => {
             widgetsList.innerText = ''
             widgets.classList.remove('editing')
@@ -1260,7 +1269,7 @@ async function today() {
 
                     widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
 
-                    editWidgetsOptions.innerText = "Widgetopties: " + widgetFunctions[key].title
+                    editWidgetsOptions.innerText = `${i18n['widgetOptions']}: ${widgetFunctions[key].title}`
                     widgetElement.classList.add('focused')
 
                     const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editWidgetsOptions, { class: 'st-segmented-control' })
@@ -1284,18 +1293,16 @@ async function today() {
                     })
 
                     if (widgetFunctions[key].options) {
-                        widgetFunctions[key].options.forEach(option => {
+                        widgetFunctions[key].options.forEach(async option => {
                             let optionWrapper = element('div', `st-start-edit-${option.key}`, editWidgetsOptions, { class: 'st-option' })
                             let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
                             switch (option.type) {
                                 case 'select':
-                                    let optionInput = element('select', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title })
-                                    option.choices.forEach(async choice => {
-                                        let optionChoice = element('option', `st-start-edit-${option.key}-${choice.value}`, optionInput, { value: choice.value, innerText: choice.title })
-                                        if (await getFromStorage(option.key, 'local') === choice.value) optionChoice.setAttribute('selected', true)
-                                    })
-                                    optionInput.addEventListener('change', event => {
-                                        saveToStorage(option.key, event.target.value, 'local')
+                                    let choices = option.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
+                                    let selectedChoice = await getFromStorage(option.key, 'local') || Object.keys(choices)[0]
+                                    console.log(choices, selectedChoice)
+                                    element('div', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title }).createDropdown(choices, selectedChoice, (newValue) => {
+                                        saveToStorage(option.key, newValue, 'local')
                                         widgetsList.innerText = ''
                                         widgets.classList.remove('editing')
                                         editWidgets()

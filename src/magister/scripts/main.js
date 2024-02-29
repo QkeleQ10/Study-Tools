@@ -36,14 +36,14 @@ async function main() {
     if (syncedStorage['magister-appbar-week']) {
         let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': i18n.dates['week'], innerText: new Date().getWeek(), href: '#/vandaag' })
         appbarWeek.addEventListener('click', async () => {
-            let weekSel = await awaitElement('#st-start-today-view-week')
+            let weekSel = await awaitElement('#st-start-today-view-popover>button:nth-child(2)')
             if (weekSel) weekSel.click()
         })
     }
 
     // Custom shortcuts
     shortcuts.slice().reverse().forEach((shortcut, i, a) => {
-        let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
+        let url = shortcut.href.startsWith('https://') ? shortcut.href : `https://${shortcut.href}`
         url = url.replace('$SCHOOLNAAM', window.location.hostname.split('.')[0])
         saveToStorage('schoolName', window.location.hostname.split('.')[0], 'local')
         let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
@@ -214,7 +214,7 @@ function popstate() {
     setTimeout(async () => {
         const header = (await awaitElement('dna-page-header', false, 500))
         if (!header) return
-        const title = header.shadowRoot.querySelector("div.container div.title")
+        const title = header.shadowRoot.querySelector('div.container div.title')
         title.innerText = i18n.views[title.innerText] || title.innerText
     }, 100)
 }
