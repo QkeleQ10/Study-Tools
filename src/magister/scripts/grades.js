@@ -473,6 +473,7 @@ async function gradeCalculator() {
 async function gradeBackup() {
     if (!syncedStorage['cb']) return
     const aside = await awaitElement('#cijfers-container > aside'),
+        asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         bkInvoke = element('button', 'st-cb', document.body, { class: 'st-button', 'data-icon': '', innerText: "Cijferback-up" }),
         // TODO: Give this modal the same treatment as the today.js edit modal.
@@ -660,9 +661,11 @@ async function gradeBackup() {
                 if (bkTabClicked) {
                     bkTab.classList.add('active')
                     bkI.dataset.visible = true
+                    asideContent.style.display = 'none'
                 } else {
                     bkTab.classList.remove('active')
                     bkI.dataset.visible = false
+                    asideContent.style.display = ''
                 }
             })
 
@@ -777,6 +780,7 @@ async function gradeBackup() {
 async function gradeStatistics() {
     if (!syncedStorage['cs']) return
     const aside = await awaitElement('#cijfers-container > aside'),
+        asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
         scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" })
@@ -829,9 +833,11 @@ async function gradeStatistics() {
         if (scTabClicked) {
             scTab.classList.add('active')
             scContainer.dataset.visible = true
+            asideContent.style.display = 'none'
         } else {
             scTab.classList.remove('active')
             scContainer.dataset.visible = false
+            asideContent.style.display = ''
         }
     })
 

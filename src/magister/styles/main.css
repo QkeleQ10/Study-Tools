@@ -362,8 +362,7 @@ div.loading-overlay {
     gap: 12px;
     align-items: center;
 
-    background-color: color-mix(in srgb, var(--st-background-secondary) 80%, transparent);
-    background-color: var(--st-background-secondary);
+    background-color: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     font: 14px/20px var(--st-font-family-secondary);
     border: var(--st-border);

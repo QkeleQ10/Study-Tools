@@ -13,7 +13,8 @@ async function today() {
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
         zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
-        teacherNamesSetting = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {},
+        teacherNamesSetting = syncedStorage['start-teacher-names'] || await getFromStorage('teacher-names', 'local') || {},
+        widgetsOrderSetting = Object.values(syncedStorage['widgets-order'] || []) || [],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
@@ -21,11 +22,12 @@ async function today() {
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets)
 
-    const defaultOrder = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
-    if (!syncedStorage['widgets-order'] || !(Object.values(syncedStorage['widgets-order'] || [])?.length > 0) || !defaultOrder.every(key => Object.values(syncedStorage['widgets-order'] || []).includes(key))) {
-        console.info(`Changing widgets-order`, syncedStorage['widgets-order'], defaultOrder)
-        syncedStorage['widgets-order'] = defaultOrder
-        saveToStorage('widgets-order', syncedStorage['widgets-order'])
+    const widgetsOrderDefault = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
+    if (!widgetsOrderSetting || widgetsOrderSetting.length < 1 || !widgetsOrderDefault.every(key => widgetsOrderSetting.includes(key))) {
+        console.info(`Changing widgets-order`, widgetsOrderSetting, widgetsOrderDefault)
+        widgetsOrderSetting = widgetsOrderDefault
+        syncedStorage['widgets-order'] = widgetsOrderSetting
+        saveToStorage('widgets-order', widgetsOrderSetting)
     }
 
     let todayCollapseWidgets
@@ -1180,7 +1182,7 @@ async function today() {
         }
 
         // Draw the selected widgets in the specified order
-        for (const key of Object.values(syncedStorage['widgets-order'])) {
+        for (const key of widgetsOrderSetting) {
             if (!widgetFunctions?.[key]) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
@@ -1226,10 +1228,7 @@ async function today() {
         widgets.classList.add('editing')
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
-        // Draw the selected widgets in the specified order
-        syncedStorage['widgets-order'] = await getFromStorage('widgets-order')
-
-        for (const key of Object.values(syncedStorage['widgets-order'])) {
+        for (const key of widgetsOrderSetting) {
             if (!widgetFunctions?.[key]) continue
             if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
                 const widgetPlaceholder = element('button', `st-start-edit-${key}-hidden`, editWidgetsHidden, { class: 'st-button secondary', 'data-icon': '', innerText: `Widget '${widgetFunctions[key].title}' weergeven` })
@@ -1260,8 +1259,9 @@ async function today() {
                 widgetElement.addEventListener('dragend', () => {
                     widgetElement.classList.remove('dragging')
 
-                    syncedStorage['widgets-order'] = [...widgetsList.children].map(element => element.dataset.value)
-                    saveToStorage('widgets-order', syncedStorage['widgets-order'])
+                    widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
+                    syncedStorage['widgets-order'] = widgetsOrderSetting
+                    saveToStorage('widgets-order', widgetsOrderSetting)
                 })
 
                 widgetElement.addEventListener('mouseenter', () => {
@@ -1300,7 +1300,6 @@ async function today() {
                                 case 'select':
                                     let choices = option.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
                                     let selectedChoice = await getFromStorage(option.key, 'local') || Object.keys(choices)[0]
-                                    console.log(choices, selectedChoice)
                                     element('div', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title }).createDropdown(choices, selectedChoice, (newValue) => {
                                         saveToStorage(option.key, newValue, 'local')
                                         widgetsList.innerText = ''

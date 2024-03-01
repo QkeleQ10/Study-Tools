@@ -52,10 +52,12 @@ function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOr
 
 function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     switch (scheme) {
-        case 'dark':
+        case 'dark': {
+            let backgroundImage = syncedStorage['dark-image'] || ''
             return `
+    --st-background: ${backgroundImage ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage + '\'), linear-gradient(#000, #000)' : '#111111'};
     --st-background-primary: #121212;
-    --st-background-secondary: #161616;
+    --st-background-secondary: ${backgroundImage ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f7;
     --st-background-transparent: #121212bb;
@@ -69,7 +71,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-secondary: #dddddd;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${shiftedHslColor(207, 53, 55, color.h, color.s, color.l, undefined, undefined, 55)};
-    --st-border-color: #2e2e2e;
+    --st-border-color: #2e2e2eaa;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-accent-secondary: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
@@ -88,12 +90,14 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 0;
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.3;
-    `
+    `}
 
-        default:
+        default: {
+            let backgroundImage = syncedStorage['light-image'] || ''
             return `
+    --st-background: ${backgroundImage ? 'linear-gradient(#ffffffcc, #ffffffcc), url(\'' + backgroundImage + '\'), linear-gradient(#fff, #fff)' : '#ffffff'};
     --st-background-primary: #ffffff;
-    --st-background-secondary: #ffffff;
+    --st-background-secondary: ${backgroundImage ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff7;
     --st-background-transparent: #ffffffbb;
@@ -107,7 +111,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-secondary: #555555;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${shiftedHslColor(207, 78, 43, color.h, color.s, color.l, undefined, undefined, 43)};
-    --st-border-color: #ededed;
+    --st-border-color: #edededaa;
     --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
     --st-accent-secondary: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
@@ -126,7 +130,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 210;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .9;
-    `
+    `}
     }
 }
 
@@ -266,14 +270,32 @@ html {
     box-sizing: border-box;
 }
 
+body {
+    background: var(--st-background) !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+aside {
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+}
+
+aside > .content-container {
+    border-color: transparent;
+}
+
 .k-block,
 .k-widget,
-body,
 div.loading-overlay,
 input[type=switch]+label span,
 .agenda-lesdashboard .lesvak-prev-next .content-auto .list li:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto .list a:hover,
 .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.prev:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.next:hover {
     background: var(--st-background-primary) !important
+}
+
+#cijferoverzichtgrid {
+    background: transparent !important;
 }
 
 .block h3 b {
@@ -733,7 +755,7 @@ aside, aside .block,
 }
 
 .cijfers-k-grid.k-grid .k-grid-content, .cijfers-k-grid.k-grid .k-grid-content tr, .cijfers-k-grid.k-grid .k-grid-content tr.k-alt {
-    background: var(--st-background-primary);
+    background: transparent;
 }
 
 .cijfers-k-grid.k-grid .grade.herkansingKolom.heeftonderliggendekolommen, .cijfers-k-grid.k-grid .grade.vrijstellingcolumn {
@@ -922,7 +944,11 @@ dna-card {
     --dna-text-color: var(--st-foreground-accent);
     --separator-color: var(--st-foreground-accent);
     --background-secondary: var(--st-foreground-accent);
-    --radius: var(--st-border-radius);
+    --radius: calc(var(--st-border-radius) * 0.75);
+}
+
+dna-button {
+    border-width: 1px;
 }
 
 dna-button[variant=primary] {
@@ -1322,6 +1348,10 @@ table.table-grid-layout>tbody>tr.selected {
     width: 96px;
     content: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/load-animation.svg");
 }
+
+.shell-blocker {
+    background-color: var(--st-background-overlay) !important;
+}
 `, 'study-tools')
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
@@ -1429,12 +1459,29 @@ ${currentTheme[0] === 'dark' ? '.no-selection-container object, .no-messages-con
 *, html, body, :root, :host, html *, body *, :root *, :host * {
     --dna-primary: var(--st-accent-primary) !important;
     --primary: var(--st-accent-primary) !important;
-    --background: var(--st-foreground-accent) !important;
+    --background: var(--st-background-secondary) !important;
     --title-color: var(--st-foreground-accent) !important;
     --separator-color: var(--st-foreground-accent) !important;
     --dna-background: var(--st-background-primary) !important;
     --dna-text-color-dark: var(--st-foreground-primary) !important;
     --dna-control-border: var(--st-border-color) !important;
+    --backdrop-dark: var(--st-background-overlay) !important;
+    --backdrop-light: var(--st-background-overlay) !important;
+}
+
+body, .nieuw-bericht-container, .header, cdk-virtual-scroll-viewport .cdk-virtual-scroll-content-wrapper {
+    background-color: transparent !important;
+    color: var(--st-foreground-primary);
+}
+
+app-bericht-details, .dna-cell, .dna-header-cell, .dna-footer-cell {
+    background-color: var(--st-background-secondary) !important;
+    border-color: var(--st-border-color) !important;
+}
+
+.dna-header-cell {
+    background-color: var(--st-background-tertiary) !important;
+    border-color: var(--st-border-color) !important;
 }
 
 dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
@@ -1474,11 +1521,6 @@ html:root body dna-card, html:root body dna-card *, html:root body app-logbook-i
     color: var(--st-foreground-primary) !important;
 }
 
-body, .nieuw-bericht-container, .header, app-bericht-details {
-    background-color: var(--st-background-primary) !important;
-    color: var(--st-foreground-primary);
-}
-
 .bericht-item, .dna-tree, .dna-tree-node, .dna-input-group, .dna-text-input, dna-editor, .dna-editor {
     background-color: var(--st-background-secondary) !important;
     color: var(--st-foreground-primary);
@@ -1490,6 +1532,7 @@ body, .nieuw-bericht-container, .header, app-bericht-details {
 }
 
 .dna-tree, .dna-tree-node, .folderName-container, .folderName-container * {
+    background-color: transparent !important;
     color: var(--st-foreground-primary) !important;
 }
 

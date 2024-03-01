@@ -468,7 +468,6 @@
     top: 125px;
     right: 302px;
     font: 700 18px 'Font Awesome 6 Pro';
-    background-color: var(--st-background-primary);
     color: var(--st-foreground-insignificant);
     cursor: col-resize;
     user-select: none;
@@ -483,7 +482,6 @@
 
     display: none;
 
-    background-color: var(--st-background-primary);
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
     z-index: 999999;
@@ -576,7 +574,7 @@
     flex-direction: column;
     gap: 8px;
     padding: 12px;
-    background-color: var(--st-background-secondary);
+    background-color: var(--st-background-overlay);
     border-top: var(--st-border);
     overflow-y: auto;
 
@@ -596,7 +594,6 @@
     position: relative;
     height: 100%;
     padding: 12px;
-    background-color: var(--st-background-primary);
     overflow-y: auto;
     overflow-x: hidden;
     container: stats / size;
@@ -739,6 +736,7 @@
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     margin-inline: -4px;
     padding: 12px;
+    background-color: var(--st-background-secondary);
     border-radius: var(--st-border-radius);
     border: var(--st-border);
 }

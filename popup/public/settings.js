@@ -94,6 +94,24 @@ export default [
                 ],
                 default: true,
             },
+            {
+                id: "dark-image",
+                title: "dark-image",
+                type: "TextInput",
+                default: '',
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "light-image",
+                title: "light-image",
+                type: "TextInput",
+                default: '',
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+            },
         ]
     },
     {
