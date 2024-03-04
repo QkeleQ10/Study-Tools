@@ -130,5 +130,8 @@
     "Vandaag": "Aujourd'hui",
     "moreGradesSingular": "et une autre note pour %s",
     "moreGradesPlural": "%s1 autres notes pour %s2",
-    "moreGradesMany": "plus de notes: %s, entre autres"
+    "moreGradesMany": "plus de notes: %s, entre autres",
+    "hb": {
+        "title": "Ressources"
+    }
 }

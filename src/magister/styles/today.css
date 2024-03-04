@@ -229,8 +229,9 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    background-color: var(--st-background-primary);
-    border-bottom: var(--st-border);
+    /* background-color: var(--st-background-primary); */
+    /* border-bottom: var(--st-border); */
+    /* the col labels should really be in st-start-header */
     font: 12px var(--st-font-family-secondary);
     z-index: 999;
 }
@@ -276,7 +277,6 @@
     --font-size-modifier: 1;
     --relative-start: 0;
     --cols: 1;
-    --background-color: var(--st-background-secondary);
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour));
     height: calc(var(--duration) * var(--hour-zoom) * var(--px-per-hour));
@@ -290,7 +290,7 @@
         'timeslot details' auto
         '. .' 1fr
         / auto 1fr;
-    background-color: var(--background-color);
+    background-color: var(--st-background-secondary);
     color: var(--st-foreground-primary);
     border-radius: calc(var(--st-border-radius) * 0.75);
     border: none;
@@ -356,7 +356,7 @@
 }
 
 .st-start-event[data-ongoing=true] {
-    --background-color: var(--st-highlight-primary);
+    background-color: var(--st-highlight-primary);
 }
 
 .st-start-event[data-start-connecting=true] {
@@ -1045,7 +1045,6 @@ a.st-widget-title {
 }
 
 .st-list-item {
-    --background-color: var(--st-background-secondary);
     position: relative;
     width: 100%;
     display: flex;
@@ -1053,7 +1052,7 @@ a.st-widget-title {
     gap: 6px;
     padding-inline: 16px;
     padding-block: 12px;
-    background-color: var(--background-color);
+    background-color: transparent;
     color: var(--st-foreground-primary);
     border: none;
     font: 11px var(--st-font-family-secondary);
@@ -1062,8 +1061,7 @@ a.st-widget-title {
 }
 
 .st-list-item[href]:hover, .st-start-event:hover {
-    --background-color: var(--st-highlight-primary);
-    background-color: var(--background-color);
+    background-color: var(--st-highlight-primary);
 }
 
 .st-list-item+.st-list-item:before {

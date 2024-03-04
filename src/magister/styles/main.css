@@ -303,8 +303,8 @@ div.loading-overlay {
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);
-    background-color: var(--background-color);
-    box-shadow: 0 0 12px 12px var(--background-color);
+    /* background-color: var(--background-color); */
+    /* box-shadow: 0 0 12px 12px var(--background-color); */
 }
 
 .st-start-event .st-chips-wrapper {
@@ -512,6 +512,29 @@ div.loading-overlay {
     animation: ghostUp 1000ms both;
 }
 
+.st-aside-sheet {
+    position: absolute;
+    width: calc(100% - 2px);
+    height: calc(100% - 42px);
+    inset: 1px;
+    margin-top: 40px;
+
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+
+    background-color: transparent;
+    border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
+    overflow: hidden;
+    z-index: 999999;
+}
+
+.st-aside-sheet[data-visible=true] {
+    display: flex;
+}
+
 @keyframes ghostUp {
     0% {
         opacity: 0;
@@ -685,7 +708,7 @@ a.st-metric:focus-visible {
     align-items: center;
     gap: 8px;
     color: var(--st-foreground-primary);
-    font: 700 20px/2rem var(--st-font-family-primary);
+    font: 600 20px/2rem var(--st-font-family-primary);
     margin-bottom: 20px;
 }
 
@@ -700,6 +723,11 @@ a.st-metric:focus-visible {
     font: 14px var(--st-font-family-secondary);
     text-align: center;
     white-space: pre;
+    text-wrap: pretty;
+}
+
+.st-anchor {
+    font: 12px var(--st-font-family-secondary);
 }
 
 .st-tip {

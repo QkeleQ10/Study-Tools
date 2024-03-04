@@ -53,7 +53,7 @@ function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOr
 function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     switch (scheme) {
         case 'dark': {
-            let backgroundImage = syncedStorage['dark-image'] || ''
+            let backgroundImage = syncedStorage['backdrop'] || ''
             return `
     --st-background: ${backgroundImage ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage + '\'), linear-gradient(#000, #000)' : '#111111'};
     --st-background-primary: #121212;
@@ -93,7 +93,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     `}
 
         default: {
-            let backgroundImage = syncedStorage['light-image'] || ''
+            let backgroundImage = syncedStorage['backdrop'] || ''
             return `
     --st-background: ${backgroundImage ? 'linear-gradient(#ffffffcc, #ffffffcc), url(\'' + backgroundImage + '\'), linear-gradient(#fff, #fff)' : '#ffffff'};
     --st-background-primary: #ffffff;
@@ -625,6 +625,28 @@ div.faux.popup-menu>ul>li.submenu>a,
     color: var(--st-foreground-primary) !important
 }
 
+.appbar .popup-menu {
+    background-color: var(--st-background-overlay);
+    color: var(--st-foreground-primary);
+    border-color: var(--st-border-color);
+}
+
+.appbar .popup-menu>h3 {
+    color: var(--st-foreground-accent) !important;
+}
+
+.appbar .popup-menu div, .appbar .popup-menu a {
+    color: var(--st-foreground-primary) !important;
+    font-size: 12px;
+    font-family: var(--st-font-family-secondary);
+    border-color: var(--st-border-color);
+}
+
+.appbar .popup-menu ul li a:hover {
+    background-color: var(--st-highlight-primary);
+    color: var(--st-foreground-primary) !important;
+}
+
 .menu a,
 .menu a span {
     color: var(--st-contrast-accent) !important
@@ -643,6 +665,8 @@ span.nrblock {
     padding: 2px;
     text-align: center;
 }
+
+.k-scheduler .k-event {border-radius: calc(var(--st-border-radius) * 0.75);}
 
 .endlink a:first-letter {
     text-transform: uppercase
@@ -1449,7 +1473,7 @@ table.table-grid-layout>tbody>tr.selected {
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    const frame = await awaitElement('.view iframe')
+    const frame = await awaitElement('.view iframe', false, 2000, true)
     if (!frame) return
 
     const iframeStyleInject = document.querySelector('#study-tools-vars').innerHTML +
@@ -1552,7 +1576,7 @@ h2 {
 
     let interval = setIntervalImmediately(async () => {
         if (!frame) {
-            frame = await awaitElement('.view iframe', false, 500)
+            frame = await awaitElement('.view iframe', false, 500, true)
         }
         if (!(frame?.contentDocument?.head || frame?.contentDocument?.querySelector('head'))) {
             frame.classList.remove('st-approve')

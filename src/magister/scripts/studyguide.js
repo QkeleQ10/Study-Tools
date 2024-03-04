@@ -99,6 +99,55 @@ async function studyguideIndividual() {
         }
         saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
     })
+
+    // Resources (hb module)
+    resources()
+    async function resources() {
+        const availableResources = (await (await fetch('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/studyguide-resources.json'))?.json())?.filter(resource => studyguideTitle?.includes(resource.conditions?.studyguideTitleIncludes))
+        if (!(availableResources?.length > 0)) return
+
+        const aside = await awaitElement('#studiewijzer-detail-container > aside'),
+            asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
+
+        const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
+            hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: "Verwante hulpbronnen", 'data-description': "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen." })
+
+        availableResources.forEach(resource => {
+            switch (resource.type) {
+                case 'spotifyIframe': {
+                    const container = element('div', null, hbSheet)
+                    const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (Spotify)', href: resource.href, target: '_blank' })
+
+                    const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: resource.src, width: '100%', height: 352, frameBorder: 0, allowFullscreen: '', allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
+                }
+
+                default:
+                    break;
+            }
+        })
+
+        const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
+            existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
+            hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
+            hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n.hb.title })
+
+        tabs.addEventListener('click', (event) => {
+            let bkTabClicked = event.target.id.startsWith('st-hb-tab')
+            if (bkTabClicked) {
+                hbTab.classList.add('active')
+                hbSheet.dataset.visible = true
+                asideContent.style.display = 'none'
+            } else {
+                hbTab.classList.remove('active')
+                hbSheet.dataset.visible = false
+                asideContent.style.display = ''
+            }
+        })
+
+        if (!syncedStorage['sw-resources-auto']) return
+
+        hbTab.click()
+    }
 }
 
 // Render studyguide list

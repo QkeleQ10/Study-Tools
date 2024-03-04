@@ -131,5 +131,8 @@
     "Vandaag": "Vandaag",
     "moreGradesSingular": "en een ander cijfer voor %s",
     "moreGradesPlural": "%s1 andere cijfers voor %s2",
-    "moreGradesMany": "nog meer cijfers voor o.a. %s"
+    "moreGradesMany": "nog meer cijfers voor o.a. %s",
+    "hb": {
+        "title": "Hulpbronnen"
+    }
 }

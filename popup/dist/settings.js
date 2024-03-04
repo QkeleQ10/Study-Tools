@@ -95,17 +95,8 @@ export default [
                 default: true,
             },
             {
-                id: "dark-image",
-                title: "dark-image",
-                type: "TextInput",
-                default: '',
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "light-image",
-                title: "light-image",
+                id: "backdrop",
+                title: "backdrop",
                 type: "TextInput",
                 default: '',
                 conditions: [
@@ -359,6 +350,12 @@ export default [
                         icon: "block"
                     },
                 ]
+            },
+            {
+                id: "sw-resources-auto",
+                title: "Verwante hulpbronnen",
+                subtitle: "Wanneer van toepassing wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
+                default: true,
             },
         ]
     },

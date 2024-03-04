@@ -116,7 +116,7 @@ function element(tagName, id, parent, attributes) {
  * @param {number} [duration=10000] 
  * @returns 
  */
-function awaitElement(querySelector, all = false, duration = 10000) {
+function awaitElement(querySelector, all = false, duration = 10000, quiet = false) {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             if (document.querySelector(querySelector)) {
@@ -128,7 +128,7 @@ function awaitElement(querySelector, all = false, duration = 10000) {
 
         let timeout = setTimeout(() => {
             clearInterval(interval)
-            console.warn("Could not find element: ", querySelector, all, duration)
+            if (!quiet) console.warn("Could not find element: ", querySelector, all, duration)
             return resolve(undefined)
         }, duration)
     })

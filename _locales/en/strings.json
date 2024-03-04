@@ -132,5 +132,8 @@
     "Vandaag": "Today",
     "moreGradesSingular": "and another grade for %s",
     "moreGradesPlural": "%s1 more grades for %s2",
-    "moreGradesMany": "more grades, including ones for %s"
+    "moreGradesMany": "more grades, including ones for %s",
+    "hb": {
+        "title": "Resources"
+    }
 }
