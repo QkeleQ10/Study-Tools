@@ -79,26 +79,26 @@
             "Bonsoir#",
             "Bonne soirée#",
             "Bonsoir, oiseau de nuit#",
-            "Bon % soir #"
+            "Bon %s soir #"
         ],
         "evening": [
             "Bonsoir#",
             "Bonne soirée#",
-            "Bon % soir#"
+            "Bon %s soir#"
         ],
         "afternoon": [
             "Bon après-midi#",
-            "Bon % après-midi#"
+            "Bon %s après-midi#"
         ],
         "morning": [
             "Bonjour#",
-            "Bon % matin#"
+            "Bon %s matin#"
         ],
         "earlyNight": [
             "Bonjour#",
             "Bonjour, oiseau de nuit#",
             "Bonjour, lève-tôt#",
-            "Bon % matin#"
+            "Bon %s matin#"
         ],
         "generic": [
             "Bienvenue#",

@@ -76,9 +76,9 @@ async function main() {
 
     // Birthday party mode!
     const accountInfo = await MagisterApi.accountInfo(),
-        dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
+        dateOfBirth = new Date(new Date(accountInfo?.Persoon?.Geboortedatum)?.setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
-        firstName = accountInfo.Persoon.Roepnaam || accountInfo.Persoon.OfficieleVoornamen,
+        firstName = accountInfo?.Persoon?.Roepnaam || accountInfo?.Persoon?.OfficieleVoornamen,
         isBirthdayToday = birthday.isToday(),
         isBirthdayYesterday = todayDate.getDay() === 1 && birthday.isYesterday(),
         isBirthdayTomorrow = todayDate.getDay() === 5 && birthday.isTomorrow()

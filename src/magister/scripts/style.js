@@ -294,8 +294,22 @@ input[type=switch]+label span,
     background: var(--st-background-primary) !important
 }
 
-#cijferoverzichtgrid {
+div.loading-overlay {
+    background: radial-gradient(at -150% -50%, var(--st-highlight-primary), transparent), radial-gradient(at top right, var(--st-background-primary), var(--st-background-tertiary)) !important;
+}
+
+div.loading-overlay * {
+    color: var(--st-foreground-primary) !important;
+    font: 14px var(--st-font-family-secondary) !important;
+}
+
+div.loading-overlay>div:before {
+    color: var(--st-foreground-primary) !important;
+}
+
+#cijferoverzichtgrid, .afsprakenlijst-container .main>.content-container, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid {
     background: transparent !important;
+    border-color: var(--st-border-color) !important;
 }
 
 .block h3 b {
@@ -319,6 +333,7 @@ input[type=switch]+label span,
 
 .k-scheduler-weekview .k-scheduler-table .k-today,
 .k-scheduler-workWeekview .k-scheduler-table .k-today,
+.k-scheduler .k-today,
 .ng-scope td.vrijstelling,
 .versions li.selected,
 .versions li:hover,
@@ -481,7 +496,7 @@ form input[type=text], form input[type=password], form input[type=search], form 
 table:not(.clearfix.user-content table),
 table.table-grid-layout td,
 .ngGrid {
-    background: var(--st-background-primary) !important;
+    background: transparent !important;
     color: var(--st-foreground-primary);
     border-color: var(--st-border-color) !important
 }
