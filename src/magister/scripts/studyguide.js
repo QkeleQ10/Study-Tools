@@ -103,7 +103,7 @@ async function studyguideIndividual() {
     // Resources (hb module)
     resources()
     async function resources() {
-        const availableResources = (await (await fetch('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/studyguide-resources.json'))?.json())?.filter(resource => studyguideTitle?.includes(resource.conditions?.studyguideTitleIncludes))
+        const availableResources = (await (await fetch('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/studyguide-resources.json'))?.json())?.filter(resource => studyguideTitle?.toLowerCase().includes(resource.conditions?.studyguideTitleIncludes?.toLowerCase()))
         if (!(availableResources?.length > 0)) return
 
         const aside = await awaitElement('#studiewijzer-detail-container > aside'),
