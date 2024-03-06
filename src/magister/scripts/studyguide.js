@@ -15,7 +15,7 @@ async function studyguideList() {
     renderStudyguideList()
 
     hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
-    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: "Studiewijzers zoeken" })
+    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n.sw.searchPlaceholder })
     // searchBar.focus()
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
@@ -37,7 +37,7 @@ async function studyguideList() {
         let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
     })
 
-    let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: "Verborgen items weergeven", 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
+    let showHiddenItemsLabel = element('label', 'st-sw-show-hidden-items-label', document.body, { class: "st-checkbox-label", innerText: i18n.sw.showHiddenItems, 'data-disabled': hiddenStudyguides?.length < 1, title: hiddenStudyguides?.length < 1 ? "Er zijn geen verborgen items. Verberg items door in een studiewijzer op het oog-icoon te klikken." : "Studiewijzers die je hebt verborgen toch in de lijst tonen" })
     let showHiddenItemsInput = element('input', 'st-sw-show-hidden-items', showHiddenItemsLabel, { type: 'checkbox', class: "st-checkbox-input" })
     showHiddenItemsInput.addEventListener('input', appendStudyguidesToList)
 
@@ -49,16 +49,16 @@ async function studyguideList() {
 
 // Page 'Studiewijzer'
 async function studyguideIndividual() {
-    if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') {
+
+    if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') highlightWeek()
+    async function highlightWeek() {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
             titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
             regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?0?(match)(?!\d)/i)
 
-        list.parentElement.style.paddingTop = '8px !important'
-        list.parentElement.style.paddingLeft = '8px !important'
-        list.parentElement.setAttribute('style', 'border: none !important; padding: 8px 0 0 8px !important;')
+        list.parentElement.setAttribute('style', 'padding: 8px 0 0 8px !important;')
 
-        titles.forEach(async title => {
+        titles?.forEach(async title => {
             if (list.childElementCount === 1 || regex.exec(title.innerText.replace(new Date().getWeek(), 'match'))) {
                 let top = title.parentElement,
                     bottom = top.nextElementSibling.lastElementChild.previousElementSibling,
@@ -73,32 +73,136 @@ async function studyguideIndividual() {
         })
     }
 
-    if (!syncedStorage['sw-enabled']) return
+    if (syncedStorage['sw-enabled']) formatStudyguideList()
+    async function formatStudyguideList() {
+        renderStudyguideList()
 
-    renderStudyguideList()
+        let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+        let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
+        let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
+        let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
+        hideItemButton.addEventListener('click', () => {
+            if (!studyguideIsHidden) {
+                studyguideIsHidden = true
+                hideItemButton.dataset.icon = ''
+                hideItemButton.title = "Studiewijzer niet langer verbergen"
+                hiddenStudyguides.push(studyguideTitle)
+                notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
+                document.querySelector('.st-sw-selected')?.classList.add('hidden-item')
+            } else {
+                studyguideIsHidden = false
+                hideItemButton.dataset.icon = ''
+                hideItemButton.title = "Studiewijzer verbergen"
+                hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
+                notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)
+                document.querySelector('.st-sw-selected')?.classList.remove('hidden-item')
+            }
+            saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
+        })
+    }
 
-    let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
-    let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
-    let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
-    let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
-    hideItemButton.addEventListener('click', () => {
-        if (!studyguideIsHidden) {
-            studyguideIsHidden = true
-            hideItemButton.dataset.icon = ''
-            hideItemButton.title = "Studiewijzer niet langer verbergen"
-            hiddenStudyguides.push(studyguideTitle)
-            notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
-            document.querySelector('.st-sw-selected')?.classList.add('hidden-item')
-        } else {
-            studyguideIsHidden = false
-            hideItemButton.dataset.icon = ''
-            hideItemButton.title = "Studiewijzer verbergen"
-            hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
-            notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)
-            document.querySelector('.st-sw-selected')?.classList.remove('hidden-item')
+    setTimeout(() => { resources() }, 500)
+    async function resources() {
+        const availableResources = (await (await fetch('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/studyguide-resources.json'))?.json())
+
+        await awaitElement('dna-page-header.ng-binding')
+        setTimeout(async () => {
+            const studyguideTitle = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
+
+            const filteredResources = availableResources?.filter(resource =>
+                resource.conditions.some(condition =>
+                    studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())
+                )
+            )
+            if (!(filteredResources?.length > 0)) return
+
+            const aside = await awaitElement('#studiewijzer-detail-container > aside'),
+                asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
+
+            const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
+                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n.hb.title, 'data-description': i18n.hb.subtitle })
+
+            filteredResources.forEach(resource => {
+                switch (resource.type) {
+                    case 'spotifyIframe': {
+                        const container = element('div', null, hbSheet)
+                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (Spotify)', href: resource.href, target: '_blank' })
+
+                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: resource.src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
+                        break
+                    }
+
+                    case 'youtubeIframe': {
+                        const container = element('div', null, hbSheet)
+                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (YouTube)', href: resource.href, target: '_blank' })
+
+                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: resource.src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy' })
+                        // <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/GTLFifnk4vI?si=eV9x8_jxZMt5Jthj" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        break
+                    }
+
+                    default:
+                        break
+                }
+            })
+
+            const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
+                existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
+                hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
+                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n.hb.title })
+
+            tabs.addEventListener('click', (event) => {
+                let bkTabClicked = event.target.id.startsWith('st-hb-tab')
+                if (bkTabClicked) {
+                    hbTab.classList.add('active')
+                    hbSheet.dataset.visible = true
+                    asideContent.style.display = 'none'
+                } else {
+                    hbTab.classList.remove('active')
+                    hbSheet.dataset.visible = false
+                    asideContent.style.display = ''
+                }
+            })
+
+            if (!syncedStorage['sw-resources-auto']) return
+
+            hbTab.click()
+        }, 500)
+    }
+
+    allowAsideResize()
+    async function allowAsideResize() {
+        // Allow resizing aside
+        let m_pos,
+            asidePreferenceWidth = 294,
+            asideDisplayWidth = 294
+
+        const contentContainer = await awaitElement('#studiewijzer-detail-container'),
+            aside = await awaitElement('#studiewijzer-detail-container > aside'),
+            asideResizer = element('div', 'st-aside-resize', document.body, { innerText: '' })
+
+        function asideResize(e) {
+            let dx = m_pos - e.x
+            m_pos = e.x
+            asidePreferenceWidth += dx
+
+            asideDisplayWidth = Math.max(Math.min(600, asidePreferenceWidth), 294)
+            if (asidePreferenceWidth < 100) asideDisplayWidth = 0
+
+            aside.style.width = (asideDisplayWidth) + 'px'
+            contentContainer.style.paddingRight = (20 + asideDisplayWidth) + 'px'
+            asideResizer.style.right = (asideDisplayWidth + 8) + 'px'
         }
-        saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
-    })
+
+        asideResizer.addEventListener("mousedown", function (e) {
+            m_pos = e.x
+            document.addEventListener("mousemove", asideResize, false)
+        }, false)
+        document.addEventListener("mouseup", function () {
+            asidePreferenceWidth = asideDisplayWidth
+            document.removeEventListener("mousemove", asideResize, false)
+        }, false)
+    }
 }
 
 // Render studyguide list

@@ -69,9 +69,7 @@ div.loading-overlay {
     height: 32px;
     padding: 6px 16px;
     background-color: var(--st-accent-primary);
-    font-family: var(--st-font-family-secondary);
-    font-size: 14px;
-    font-weight: 600;
+    font: 600 14px var(--st-font-family-secondary);
     border: none;
     outline: none;
     border-radius: calc(var(--st-border-radius) * 0.75);
@@ -151,6 +149,90 @@ div.loading-overlay {
     margin-right: 0;
 }
 
+.st-dropdown,
+.st-dropdown:focus {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    padding-inline: 2px;
+    height: 36px;
+    background-color: var(--st-background-tertiary);
+    border: none;
+    outline: var(--st-border);
+    border-radius: var(--st-border-radius);
+    cursor: pointer;
+}
+
+.st-dropdown>.st-dropdown-current {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    font: 600 14px var(--st-font-family-secondary);
+    background-color: transparent;
+    color: var(--st-foreground-secondary);
+    border: none;
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+.st-dropdown[data-click-function=true]>.st-dropdown-current {
+    border-right: var(--st-border);
+}
+
+.st-dropdown:after {
+    content: '';
+    font: 600 16px/32px 'Font Awesome 6 Pro';
+    height: 32px;
+    padding-right: 12px;
+    transition: transform 200ms;
+}
+
+.st-dropdown[data-click-function=true]:after {
+    padding-left: 12px;
+}
+
+.st-dropdown.active:after {
+    transform: rotateX(180deg);
+}
+
+.st-dropdown>button.st-dropdown-current:hover,
+.st-dropdown:hover:not(:has(button.st-dropdown-current:hover)):after {
+    color: var(--st-foreground-accent);
+}
+
+.st-dropdown-popover {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+
+    background-color: var(--st-background-tertiary);
+    outline: var(--st-border);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    z-index: 1000000;
+
+    display: none;
+}
+
+.st-dropdown-popover.st-visible {
+    display: flex;
+    animation: dropdownIn 150ms both;
+}
+
+.st-dropdown-popover.st-hidden {
+    display: flex;
+    animation: dropdownOut 150ms both;
+}
+
+.st-dropdown-segment {
+    width: 100%;
+}
+
 .st-segmented-control {
     display: flex;
     flex-wrap: nowrap;
@@ -169,6 +251,10 @@ div.loading-overlay {
     border: 1px solid transparent;
 }
 
+.st-button.segment:hover {
+    color: var(--st-foreground-accent);
+}
+
 .st-button.segment.active {
     background-color: var(--st-highlight-primary);
     color: var(--st-foreground-accent);
@@ -177,7 +263,9 @@ div.loading-overlay {
     filter: none !important;
 }
 
-.st-button:focus-visible {
+.st-button:focus-visible,
+.st-dropdown:focus-visible,
+.st-dropdown>button:focus-visible {
     outline: 2px solid var(--st-foreground-primary);
 }
 
@@ -197,14 +285,9 @@ div.loading-overlay {
     overflow: visible;
     text-align: center;
     font-family: 'Font Awesome 6 Pro';
-    font-weight: 500;
     font-size: 18px;
     vertical-align: -2px;
     margin-right: 10px;
-}
-
-.st-button[data-icon]:hover:before {
-    font-weight: 600;
 }
 
 .st-button[disabled]:not([disabled=false]) {
@@ -220,8 +303,8 @@ div.loading-overlay {
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);
-    background-color: var(--background-color);
-    box-shadow: 0 0 12px 12px var(--background-color);
+    /* background-color: var(--background-color); */
+    /* box-shadow: 0 0 12px 12px var(--background-color); */
 }
 
 .st-start-event .st-chips-wrapper {
@@ -279,8 +362,7 @@ div.loading-overlay {
     gap: 12px;
     align-items: center;
 
-    background-color: color-mix(in srgb, var(--st-background-secondary) 80%, transparent);
-    background-color: var(--st-background-secondary);
+    background-color: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     font: 14px/20px var(--st-font-family-secondary);
     border: var(--st-border);
@@ -343,14 +425,18 @@ div.loading-overlay {
 
 .st-input {
     width: 200px;
-    height: 32px;
+    height: 36px;
     font-family: var(--st-font-family-secondary);
     font-size: 14px;
-    padding: 6px;
-    background: var(--st-background-secondary);
+    padding-inline: 12px;
+    background: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) * 0.75);
+    border-radius: var(--st-border-radius);
+}
+
+.st-input::placeholder {
+    font-style: normal !important;
 }
 
 .st-input[type=number] {
@@ -383,6 +469,7 @@ div.loading-overlay {
     padding-top: 4px;
     font: 16px 'Font Awesome 6 Pro';
     text-align: center;
+    background-color: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
@@ -428,6 +515,29 @@ div.loading-overlay {
     pointer-events: none;
     z-index: 10000000;
     animation: ghostUp 1000ms both;
+}
+
+.st-aside-sheet {
+    position: absolute;
+    width: calc(100% - 2px);
+    height: calc(100% - 42px);
+    inset: 1px;
+    margin-top: 40px;
+
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+
+    background-color: transparent;
+    border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
+    overflow: hidden;
+    z-index: 999999;
+}
+
+.st-aside-sheet[data-visible=true] {
+    display: flex;
 }
 
 @keyframes ghostUp {
@@ -603,7 +713,7 @@ a.st-metric:focus-visible {
     align-items: center;
     gap: 8px;
     color: var(--st-foreground-primary);
-    font: 700 20px/2rem var(--st-font-family-primary);
+    font: 600 20px/2rem var(--st-font-family-primary);
     margin-bottom: 20px;
 }
 
@@ -618,6 +728,11 @@ a.st-metric:focus-visible {
     font: 14px var(--st-font-family-secondary);
     text-align: center;
     white-space: pre;
+    text-wrap: pretty;
+}
+
+.st-anchor {
+    font: 12px var(--st-font-family-secondary);
 }
 
 .st-tip {
@@ -1169,6 +1284,30 @@ a.st-keyboard-hint.clicked {
 
 @keyframes snackbarOut {
     to {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+}
+
+@keyframes dropdownIn {
+    from {
+        transform: translateY(-32px) scale(0.75);
+        opacity: 0;
+    }
+}
+
+@keyframes dropdownOut {
+    0% {
+        transform: none;
+        opacity: 1;
+    }
+
+    99% {
+        display: flex;
+    }
+
+    100% {
+        display: none;
         transform: scale(0.95);
         opacity: 0;
     }

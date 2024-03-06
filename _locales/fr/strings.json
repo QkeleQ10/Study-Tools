@@ -19,6 +19,8 @@
         "Lijst": "Liste",
         "Afwezigheid": "Absences",
         "Cijfers": "Notes",
+        "Laatste cijfers": "Dernières notes",
+        "Cijferoverzicht": "Bulletin scolaire",
         "Examen": "Examens finaux",
         "LVS": "SGA",
         "Logboeken": "Journaux",
@@ -33,7 +35,9 @@
         "Portfoliodocumenten": "Docum. portefeuille",
         "Beoordeelde producten": "Produits évalués",
         "Activiteiten": "Activités",
-        "Leermiddelen": "Ressources"
+        "Inschrijven": "S'inscrire",
+        "Leermiddelen": "Ressources",
+        "Berichten": "Messages"
     },
     "chips": {
         "cancelled": "Annulé",
@@ -43,11 +47,14 @@
         "kwtregistered": "Inscrit",
         "info": "Informations",
         "important": "Important",
-        "attachments": "Pièces jointes"
+        "attachments": "Pièces jointes",
+        "graded": "Noté"
     },
     "dates": {
         "day": "Jour",
+        "xDays": "%s jours",
         "week": "Semaine",
+        "workweek": "Sem. de travail",
         "now": "maintenant",
         "justNow": "il y a quelques instants",
         "soon": "bientôt",
@@ -68,9 +75,75 @@
             "samedi"
         ]
     },
+    "greetings": {
+        "lateNight": [
+            "Bonsoir#",
+            "Bonne soirée#",
+            "Bonsoir, oiseau de nuit#",
+            "Bon %s soir #"
+        ],
+        "evening": [
+            "Bonsoir#",
+            "Bonne soirée#",
+            "Bon %s soir#"
+        ],
+        "afternoon": [
+            "Bon après-midi#",
+            "Bon %s après-midi#"
+        ],
+        "morning": [
+            "Bonjour#",
+            "Bon %s matin#"
+        ],
+        "earlyNight": [
+            "Bonjour#",
+            "Bonjour, oiseau de nuit#",
+            "Bonjour, lève-tôt#",
+            "Bon %s matin#"
+        ],
+        "generic": [
+            "Bienvenue#",
+            "Bonjour#",
+            "Bon retour, %n#",
+            "Content de te revoir#",
+            "Salut#"
+        ]
+    },
+    "toasts": {
+        "jumpedToNextRelevantDay": "Affichage du lendemain avec des événements"
+    },
+    "close": "Fermer",
     "remainder": "Autres",
     "Inklappen": "Réduire",
     "Verborgen": "Masqué",
     "Lijst": "Liste",
-    "Tegel": "Carreau"
+    "Tegel": "Carreau",
+    "scaleUp": "Augmenter l'échelle",
+    "scaleDown": "Réduire l'échelle",
+    "editWidgets": "Modifier les widgets",
+    "widgetOptions": "Options des widgets",
+    "editTeachers": "Changer les noms des enseignants",
+    "teacherNicknames": "Noms d'enseignants personnalisés",
+    "editFinish": "Terminer l'édition",
+    "collapseWidgets": "Afficher ou masquer le panneau des widgets",
+    "Vooruit": "En avant",
+    "Achteruit": "En arrière",
+    "Vandaag": "Aujourd'hui",
+    "moreGradesSingular": "et une autre note pour %s",
+    "moreGradesPlural": "%s1 autres notes pour %s2",
+    "moreGradesMany": "plus de notes: %s, entre autres",
+    "hb": {
+        "title": "Recommandations",
+        "subtitle": "Une collection de ressources constituée pour t'aider à maîtriser le matériel"
+    },
+    "cc": {
+        "title": "Calculatrice notes"
+    },
+    "cb": {
+        "title": "Sauvegarde bulletin"
+    },
+    "sw": {
+        "searchPlaceholder": "Rechercher",
+        "showHiddenItems": "Afficher les éléments cachés"
+    }
 }

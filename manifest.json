@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.7.6",
+    "version": "3.8.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/icon@16px.png",
@@ -15,7 +15,7 @@
         "300": "icons/icon@300px.png",
         "512": "icons/icon@512px.png"
     },
-    "minimum_chrome_version": "102",
+    "minimum_chrome_version": "109",
     "background": {
         "service_worker": "src/service-worker.js",
         "type": "module"
@@ -86,9 +86,7 @@
             "resources": [
                 "_locales/nl/strings.json",
                 "_locales/en/strings.json",
-                "_locales/fr/strings.json",
-                "_locales/de/strings.json",
-                "_locales/no/strings.json"
+                "_locales/fr/strings.json"
             ],
             "matches": [
                 "*://*.magister.net/*"

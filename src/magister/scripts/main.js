@@ -36,14 +36,14 @@ async function main() {
     if (syncedStorage['magister-appbar-week']) {
         let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': i18n.dates['week'], innerText: new Date().getWeek(), href: '#/vandaag' })
         appbarWeek.addEventListener('click', async () => {
-            let weekSel = await awaitElement('#st-start-today-view-week')
+            let weekSel = await awaitElement('#st-start-today-view-popover>button:nth-child(2)')
             if (weekSel) weekSel.click()
         })
     }
 
     // Custom shortcuts
     shortcuts.slice().reverse().forEach((shortcut, i, a) => {
-        let url = shortcut.href.startsWith("https://") ? shortcut.href : `https://${shortcut.href}`
+        let url = shortcut.href.startsWith('https://') ? shortcut.href : `https://${shortcut.href}`
         url = url.replace('$SCHOOLNAAM', window.location.hostname.split('.')[0])
         saveToStorage('schoolName', window.location.hostname.split('.')[0], 'local')
         let shortcutDiv = element('div', `st-shortcut-${i}`, appbar, { class: 'menu-button' }),
@@ -76,9 +76,9 @@ async function main() {
 
     // Birthday party mode!
     const accountInfo = await MagisterApi.accountInfo(),
-        dateOfBirth = new Date(new Date(accountInfo.Persoon.Geboortedatum).setHours(0, 0, 0, 0)),
+        dateOfBirth = new Date(new Date(accountInfo?.Persoon?.Geboortedatum)?.setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
-        firstName = accountInfo.Persoon.Roepnaam || accountInfo.Persoon.OfficieleVoornamen,
+        firstName = accountInfo?.Persoon?.Roepnaam || accountInfo?.Persoon?.OfficieleVoornamen,
         isBirthdayToday = birthday.isToday(),
         isBirthdayYesterday = todayDate.getDay() === 1 && birthday.isYesterday(),
         isBirthdayTomorrow = todayDate.getDay() === 5 && birthday.isTomorrow()
@@ -212,10 +212,37 @@ function popstate() {
     document.querySelectorAll('.st-overlay').forEach(e => { if (e.open) e.close?.() })
 
     setTimeout(async () => {
-        const header = (await awaitElement('dna-page-header', false, 500))
-        if (!header) return
-        const title = header.shadowRoot.querySelector("div.container div.title")
-        title.innerText = i18n.views[title.innerText] || title.innerText
+        const header = await awaitElement('dna-page-header', false, 1000, true)
+        if (header) {
+            const title = header.shadowRoot.querySelector('div.container div.title')
+            if (!(title?.innerText?.length > 1)) return
+            title.innerText = i18n.views[title.innerText] || title.innerText
+        }
+
+        const breadcrumbs = await awaitElement('dna-breadcrumb', true, 1000, true)
+        if (breadcrumbs?.length > 0) {
+            breadcrumbs.forEach(e => {
+                const title = e
+                if (!(title?.innerText?.length > 1)) return
+                title.innerText = i18n.views[title.innerText] || title.innerText
+            })
+        }
+
+        let frame = await awaitElement('.view iframe', false, 1000, true)
+        if (frame) {
+            let interval = setIntervalImmediately(async () => {
+                if (!frame?.contentDocument) {
+                    frame = (await awaitElement('.view iframe', false, 500, true))
+                    return
+                }
+                const header = frame.contentDocument.querySelector('dna-page-header')
+                if (header) {
+                    const title = header.shadowRoot.querySelector('div.container div.title')
+                    title.innerText = i18n.views[title.innerText] || title.innerText
+                }
+            }, 50)
+            setTimeout(() => clearInterval(interval), 5000)
+        }
     }, 100)
 }
 

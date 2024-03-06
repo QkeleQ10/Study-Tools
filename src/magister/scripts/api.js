@@ -299,7 +299,6 @@ async function updateApiCredentials(identifier = 'unknown') {
 
     now = new Date()
     const calledAt = new Date()
-    if (verbose) console.info(`CREDS START (@ ${identifier})`)
 
     const timeInit = new Date()
 

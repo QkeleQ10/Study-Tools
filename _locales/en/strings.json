@@ -19,6 +19,8 @@
         "Lijst": "List",
         "Afwezigheid": "Absences",
         "Cijfers": "Grades",
+        "Laatste cijfers": "Recent grades",
+        "Cijferoverzicht": "Report card",
         "Examen": "Finals",
         "LVS": "LMS",
         "Logboeken": "Logs",
@@ -33,7 +35,9 @@
         "Portfoliodocumenten": "Portfolio Files",
         "Beoordeelde producten": "Assessed Products",
         "Activiteiten": "Activities",
-        "Leermiddelen": "Resources"
+        "Inschrijven": "Registration",
+        "Leermiddelen": "Resources",
+        "Berichten": "Messages"
     },
     "chips": {
         "cancelled": "Cancelled",
@@ -43,11 +47,14 @@
         "kwtregistered": "Registered",
         "info": "Information",
         "important": "Important",
-        "attachments": "Attachments"
+        "attachments": "Attachments",
+        "graded": "Graded"
     },
     "dates": {
         "day": "Day",
+        "xDays": "%s days",
         "week": "Week",
+        "workweek": "Working week",
         "now": "Now",
         "justNow": "Just now",
         "soon": "Soon",
@@ -57,7 +64,7 @@
         "lastWeekday": "Last %s",
         "tomorrowAtTime": "Tomorrow at %s",
         "weekdayAtTime": "Next %s1 at %s2",
-        "weekdayInWeek": "%s2 in week %s1",
+        "weekdayInWeek": "%s2 of week %s1",
         "weekdays": [
             "Sunday",
             "Monday",
@@ -68,9 +75,77 @@
             "Saturday"
         ]
     },
+    "greetings": {
+        "lateNight": [
+            "Good evening#",
+            "Good evening, night owl#",
+            "Happy %s night#"
+        ],
+        "evening": [
+            "Good evening#",
+            "Happy %s evening#"
+        ],
+        "afternoon": [
+            "Good day#",
+            "Happy %s#"
+        ],
+        "morning": [
+            "Good morning#",
+            "Happy %s#",
+            "Happy %s morning#"
+        ],
+        "earlyNight": [
+            "Good morning#",
+            "Good morning, night owl#",
+            "Good morning, early bird#",
+            "Happy %s#",
+            "Happy %s morning#"
+        ],
+        "generic": [
+            "Welcome#",
+            "Hello!",
+            "Hi!",
+            "Welcome back, %n#",
+            "Hey, %n#",
+            "Welcome back#",
+            "Good day#"
+        ]
+    },
+    "toasts": {
+        "jumpedToNextRelevantDay": "Viewing next day with calendar events"
+    },
+    "close": "Close",
     "remainder": "Other",
     "Inklappen": "Collapse",
     "Verborgen": "Hidden",
     "Lijst": "List",
-    "Tegel": "Tile"
+    "Tegel": "Tile",
+    "scaleUp": "Increase scale",
+    "scaleDown": "Decrease scale",
+    "editWidgets": "Edit widgets",
+    "widgetOptions": "Widget options",
+    "editTeachers": "Edit teacher names",
+    "teacherNicknames": "Teacher nicknames",
+    "editFinish": "Finish editing",
+    "collapseWidgets": "Show/hide widget panel",
+    "Vooruit": "Forwards",
+    "Achteruit": "Backwards",
+    "Vandaag": "Today",
+    "moreGradesSingular": "and another grade for %s",
+    "moreGradesPlural": "%s1 more grades for %s2",
+    "moreGradesMany": "more grades, including ones for %s",
+    "hb": {
+        "title": "Recommended",
+        "subtitle": "A curated collection of helpful resources to help you master the subject matter"
+    },
+    "cc": {
+        "title": "Grade calculation"
+    },
+    "cb": {
+        "title": "Grade backup"
+    },
+    "sw": {
+        "searchPlaceholder": "Search",
+        "showHiddenItems": "Show hidden items"
+    }
 }
