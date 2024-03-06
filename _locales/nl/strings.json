@@ -35,6 +35,7 @@
         "Portfoliodocumenten": "Portfoliodocumenten",
         "Beoordeelde producten": "Beoordeelde producten",
         "Activiteiten": "Activiteiten",
+        "Inschrijven": "Inschrijven",
         "Leermiddelen": "Leermiddelen",
         "Berichten": "Berichten"
     },
@@ -133,6 +134,17 @@
     "moreGradesPlural": "%s1 andere cijfers voor %s2",
     "moreGradesMany": "nog meer cijfers voor o.a. %s",
     "hb": {
-        "title": "Hulpbronnen"
+        "title": "Aanbevelingen",
+        "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
+    },
+    "cc": {
+        "title": "Cijfercalculator"
+    },
+    "cb": {
+        "title": "Cijferback-up"
+    },
+    "sw": {
+        "searchPlaceholder": "Zoeken",
+        "showHiddenItems": "Verborgen items tonen"
     }
 }

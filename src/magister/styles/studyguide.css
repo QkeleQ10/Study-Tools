@@ -19,7 +19,7 @@
 
 #st-sw-search {
     position: absolute;
-    top: 40px;
+    top: 38px;
     right: 25px;
     z-index: 99999;
 }
@@ -192,17 +192,18 @@
     flex-direction: column;
     gap: 6px;
     padding: 8px;
-    margin: -6px;
+    margin-inline: -4px;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     background-color: var(--st-background-secondary);
-    border: var(--st-border);
     border-radius: var(--st-border-radius);
+    border: var(--st-border);
 }
 
 #st-hb-sheet-heading {
     align-items: start;
     gap: 4px;
     font-size: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 #st-hb-sheet-heading[data-description]:after {

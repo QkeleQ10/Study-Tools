@@ -35,6 +35,7 @@
         "Portfoliodocumenten": "Docum. portefeuille",
         "Beoordeelde producten": "Produits évalués",
         "Activiteiten": "Activités",
+        "Inschrijven": "S'inscrire",
         "Leermiddelen": "Ressources",
         "Berichten": "Messages"
     },
@@ -132,6 +133,17 @@
     "moreGradesPlural": "%s1 autres notes pour %s2",
     "moreGradesMany": "plus de notes: %s, entre autres",
     "hb": {
-        "title": "Ressources"
+        "title": "Recommandations",
+        "subtitle": "Une collection de ressources constituée pour t'aider à maîtriser le matériel"
+    },
+    "cc": {
+        "title": "Calculatrice notes"
+    },
+    "cb": {
+        "title": "Sauvegarde bulletin"
+    },
+    "sw": {
+        "searchPlaceholder": "Rechercher",
+        "showHiddenItems": "Afficher les éléments cachés"
     }
 }

@@ -425,14 +425,18 @@ div.loading-overlay {
 
 .st-input {
     width: 200px;
-    height: 32px;
+    height: 36px;
     font-family: var(--st-font-family-secondary);
     font-size: 14px;
-    padding: 6px;
-    background: var(--st-background-secondary);
+    padding-inline: 12px;
+    background: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
-    border-radius: calc(var(--st-border-radius) * 0.75);
+    border-radius: var(--st-border-radius);
+}
+
+.st-input::placeholder {
+    font-style: normal !important;
 }
 
 .st-input[type=number] {
@@ -465,6 +469,7 @@ div.loading-overlay {
     padding-top: 4px;
     font: 16px 'Font Awesome 6 Pro';
     text-align: center;
+    background-color: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);

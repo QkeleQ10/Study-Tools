@@ -377,17 +377,11 @@
     color: var(--st-accent-warn) !important;
 }
 
-#st-cc-open, #st-grades-pre-button-wrapper {
+#st-grades-pre-button-wrapper, #st-grades-button-wrapper {
     position: absolute;
     top: 35px;
     right: 20px;
     z-index: 99999;
-}
-
-#st-cb {
-    position: absolute;
-    top: 35px;
-    right: 192px;
 }
 
 #st-cb-modal-close {

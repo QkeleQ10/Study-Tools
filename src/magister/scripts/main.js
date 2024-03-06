@@ -212,13 +212,23 @@ function popstate() {
     document.querySelectorAll('.st-overlay').forEach(e => { if (e.open) e.close?.() })
 
     setTimeout(async () => {
-        const header = (await awaitElement('dna-page-header', false, 500, true))
+        const header = await awaitElement('dna-page-header', false, 1000, true)
         if (header) {
             const title = header.shadowRoot.querySelector('div.container div.title')
+            if (!(title?.innerText?.length > 1)) return
             title.innerText = i18n.views[title.innerText] || title.innerText
         }
 
-        let frame = (await awaitElement('.view iframe', false, 500, true))
+        const breadcrumbs = await awaitElement('dna-breadcrumb', true, 1000, true)
+        if (breadcrumbs?.length > 0) {
+            breadcrumbs.forEach(e => {
+                const title = e
+                if (!(title?.innerText?.length > 1)) return
+                title.innerText = i18n.views[title.innerText] || title.innerText
+            })
+        }
+
+        let frame = await awaitElement('.view iframe', false, 1000, true)
         if (frame) {
             let interval = setIntervalImmediately(async () => {
                 if (!frame?.contentDocument) {

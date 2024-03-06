@@ -22,7 +22,7 @@ async function gradeList() {
     const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
 
     if (syncedStorage['cb']) {
-        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: "Cijferback-up", 'data-icon': '' })
+        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n.cb.title, 'data-icon': '' })
         cbPreOpen.addEventListener('click', async () => {
             document.location.hash = '#/cijfers/cijferoverzicht'
             const cbOpen = await awaitElement('#st-cb')
@@ -31,7 +31,7 @@ async function gradeList() {
     }
 
     if (syncedStorage['cc']) {
-        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: "Cijfercalculator", 'data-icon': '' })
+        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: i18n.cc.title, 'data-icon': '' })
         ccPreOpen.addEventListener('click', async () => {
             document.location.hash = '#/cijfers/cijferoverzicht'
             const ccOpen = await awaitElement('#st-cc-open')
@@ -41,9 +41,11 @@ async function gradeList() {
 }
 
 async function gradeOverview() {
+    const buttons = element('div', 'st-grades-button-wrapper', document.body, { class: 'st-button-wrapper' })
+
     allowAsideResize()
-    gradeCalculator()
-    gradeBackup()
+    gradeCalculator(buttons)
+    gradeBackup(buttons)
     gradeStatistics()
 
     // Set grade type to All
@@ -93,7 +95,7 @@ async function allowAsideResize() {
 }
 
 // Grade calculator
-async function gradeCalculator() {
+async function gradeCalculator(buttonWrapper) {
     if (!syncedStorage['cc']) return
 
     let accessedBefore = await getFromStorage('cf-calc-accessed', 'local') || false
@@ -102,9 +104,9 @@ async function gradeCalculator() {
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl')
 
-    const clOpen = element('button', 'st-cc-open', document.body, { class: 'st-button', innerText: "Cijfercalculator", 'data-icon': '' }),
+    const clOpen = element('button', 'st-cc-open', buttonWrapper, { class: 'st-button', innerText: i18n.cc.title, 'data-icon': '' }),
         clOverlay = element('div', 'st-cc', document.body, { class: 'st-overlay' }),
-        clTitle = element('span', 'st-cc-title', clOverlay, { class: 'st-title', innerText: "Cijfercalculator" }),
+        clTitle = element('span', 'st-cc-title', clOverlay, { class: 'st-title', innerText: i18n.cc.title }),
         clSubtitle = element('span', 'st-cc-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt." }),
         clButtons = element('div', 'st-cc-buttons', clOverlay),
         clBugReport = element('button', 'st-cc-bugs', clButtons, { class: 'st-button icon', title: "Ervaar je problemen?", 'data-icon': '' }),
@@ -126,6 +128,8 @@ async function gradeCalculator() {
         clFutureWeightInput = element('input', 'st-cc-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
         clFutureDesc = element('p', 'st-cc-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
         clCanvas = element('div', 'st-cc-canvas', clPredictionWrapper)
+    
+    buttonWrapper.append(clOpen)
 
     let years = await MagisterApi.years()
 
@@ -470,16 +474,16 @@ async function gradeCalculator() {
 }
 
 // Grade backup
-async function gradeBackup() {
+async function gradeBackup(buttonWrapper) {
     if (!syncedStorage['cb']) return
     const aside = await awaitElement('#cijfers-container > aside'),
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-        bkInvoke = element('button', 'st-cb', document.body, { class: 'st-button', 'data-icon': '', innerText: "Cijferback-up" }),
+        bkInvoke = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n.cb.title }),
         // TODO: Give this modal the same treatment as the today.js edit modal.
         bkModal = element('dialog', 'st-cb-modal', document.body, { class: 'st-overlay' }),
         bkModalClose = element('button', 'st-cb-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: i18n['close'] }),
-        bkModalTitle = element('span', 'st-cb-title', bkModal, { class: 'st-title', innerText: "Cijferback-up" }),
+        bkModalTitle = element('span', 'st-cb-title', bkModal, { class: 'st-title', innerText: i18n.cb.title }),
         bkModalSubtitle = element('span', 'st-cb-subtitle', bkModal, { class: 'st-subtitle', innerText: "Exporteer of importeer je cijferlijst zodat je er altijd bij kunt." }),
         bkModalWrapper = element('div', 'st-cb-modal-wrapper', bkModal),
         bkModalEx = element('div', 'st-cb-ex', bkModalWrapper, { class: 'st-list st-tile' }),
@@ -491,6 +495,8 @@ async function gradeBackup() {
         bkModalImMagister = element('label', 'st-cb-import', bkModalIm, { class: 'st-button secondary', 'data-icon': '', innerText: "Importeren in Magister" }),
         bkModalImMagTip = element('span', 'st-cb-im-mag-tip', bkModalIm, { class: 'st-tip', innerText: "Niet aanbevolen" }),
         bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' })
+    
+    buttonWrapper.prepend(bkInvoke)
 
     const bkI = element('div', 'st-cb-i', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-up", 'data-amount': 0 }),

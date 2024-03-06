@@ -1164,17 +1164,18 @@ h3:active> .icon-up-arrow:before {
 }
 
 #studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container {
+    border: none !important;
     padding: 8px 0 0 8px !important;
     margin-left: -8px;
     margin-top: -8px;
-    max-width: calc(100vw - 647px);
+    max-width: none;
     width: calc(100% + 8px);
     max-height: none;
     height: calc(100% + 8px);
 }
 
-#studiewijzer-detail-container .content-container.widget-container.studiewijzer-content-container.menu-is-collapsed {
-    max-width: calc(100vw - 469px);
+.table-block {
+    background-color: transparent !important;
 }
 
 #leermiddelen-container tr[data-ng-repeat="leermiddel in items"] td {

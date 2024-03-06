@@ -1,9 +1,9 @@
 let events = []
 
 // Run at start and when the URL changes
-if (document.location.href.split('?')[0].endsWith('/vandaag')) today()
+if (document.location.href.includes('/vandaag') && !document.location.href.includes('to-do')) today()
 window.addEventListener('popstate', () => {
-    if (document.location.href.split('?')[0].endsWith('/vandaag')) today()
+    if (document.location.href.includes('/vandaag') && !document.location.href.includes('to-do')) today()
 })
 
 // Page 'Vandaag'

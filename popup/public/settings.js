@@ -86,6 +86,13 @@ export default [
                 step: 1,
             },
             {
+                id: "backdrop",
+                title: "Achtergrondafbeelding",
+                subtitle: "De URL van een afbeelding die je als achtergrond wilt gebruiken.",
+                type: "TextInput",
+                default: '',
+            },
+            {
                 id: "darken-content",
                 title: "Inhoud donker maken",
                 subtitle: "Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
@@ -93,15 +100,6 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
                 default: true,
-            },
-            {
-                id: "backdrop",
-                title: "backdrop",
-                type: "TextInput",
-                default: '',
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
             },
         ]
     },
@@ -353,8 +351,8 @@ export default [
             },
             {
                 id: "sw-resources-auto",
-                title: "Verwante hulpbronnen",
-                subtitle: "Wanneer van toepassing wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
+                title: "Aanbevelingen",
+                subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
                 default: true,
             },
         ]
@@ -369,8 +367,18 @@ export default [
                 default: false,
             },
             {
+                id: "verbosity",
+                title: "Uitgebreide consoleberichten",
+                subtitle: "Er worden meer activiteiten geplaatst in de console.",
+                default: false,
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+            },
+            {
                 id: 'language',
                 title: "Taal",
+                subtitle: "Sommige onderdelen van de interface zullen veranderen van taal.",
                 type: "SegmentedButton",
                 default: 'nl-NL',
                 options: [
@@ -387,15 +395,6 @@ export default [
                         title: "Français"
                     },
                 ],
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "verbosity",
-                title: "Uitgebreide consoleberichten",
-                subtitle: "Er worden meer activiteiten geplaatst in de console.",
-                default: false,
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
