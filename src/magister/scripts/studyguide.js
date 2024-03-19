@@ -136,8 +136,16 @@ async function studyguideIndividual() {
                         const container = element('div', null, hbSheet)
                         const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (YouTube)', href: resource.href, target: '_blank' })
 
-                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: resource.src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy' })
-                        // <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/GTLFifnk4vI?si=eV9x8_jxZMt5Jthj" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: resource.src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
+
+                        window.addEventListener('blur', () => {
+                            setTimeout(() => {
+                                if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === resource.src) {
+                                    iframe.requestFullscreen()
+                                    document.addEventListener('fullscreenchange', () => window.focus())
+                                }
+                            })
+                        })
                         break
                     }
 
