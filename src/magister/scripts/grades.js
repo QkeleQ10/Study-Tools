@@ -128,7 +128,7 @@ async function gradeCalculator(buttonWrapper) {
         clFutureWeightInput = element('input', 'st-cc-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
         clFutureDesc = element('p', 'st-cc-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
         clCanvas = element('div', 'st-cc-canvas', clPredictionWrapper)
-    
+
     buttonWrapper.append(clOpen)
 
     let years = await MagisterApi.years()
@@ -495,11 +495,11 @@ async function gradeBackup(buttonWrapper) {
         bkModalImMagister = element('label', 'st-cb-import', bkModalIm, { class: 'st-button secondary', 'data-icon': '', innerText: "Importeren in Magister" }),
         bkModalImMagTip = element('span', 'st-cb-im-mag-tip', bkModalIm, { class: 'st-tip', innerText: "Niet aanbevolen" }),
         bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' })
-    
+
     buttonWrapper.prepend(bkInvoke)
 
     const bkI = element('div', 'st-cb-i', aside, { class: 'st-sheet', 'data-visible': 'false' }),
-        bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-up", 'data-amount': 0 }),
+        bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-upinformatie", 'data-amount': 0 }),
         bkIInfo = element('span', 'st-cb-i-info', bkI, { innerText: "Laden..." }),
         bkIMetrics = element('div', 'st-cb-i-metrics', bkI),
         bkIResult = element('div', 'st-cb-i-result', bkIMetrics, { class: 'st-metric', 'data-description': "Resultaat", innerText: "?" }),
@@ -671,7 +671,7 @@ async function gradeBackup(buttonWrapper) {
                 } else {
                     bkTab.classList.remove('active')
                     bkI.dataset.visible = false
-                    asideContent.style.display = ''
+                    if (!tabs.querySelector('.st-tab.active')) asideContent.style.display = ''
                 }
             })
 
@@ -843,7 +843,7 @@ async function gradeStatistics() {
         } else {
             scTab.classList.remove('active')
             scContainer.dataset.visible = false
-            asideContent.style.display = ''
+            if (!tabs.querySelector('.st-tab.active')) asideContent.style.display = ''
         }
     })
 
@@ -976,7 +976,7 @@ async function gradeStatistics() {
 
             if (fromBackup) {
                 filteredGrades = statsGrades
-                    .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn')
+                    .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn' && grade.result >= 1 && grade.result <= 10)
                     .sort((a, b) => new Date(a.date) - new Date(b.date))
                 scStatsHeading.dataset.amount = filteredGrades.length
 

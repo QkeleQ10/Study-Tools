@@ -427,8 +427,7 @@
     align-items: stretch;
     gap: 12px;
     padding: 12px;
-
-    background-color: var(--st-background-primary);
+    
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
     z-index: 999999;

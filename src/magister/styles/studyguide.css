@@ -81,8 +81,10 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
-    gap: 1px;
-    background-color: var(--st-border-color);
+}
+
+.st-sw-items-wrapper>*:not(:first-child) {
+    border-top: var(--st-border);
 }
 
 .st-sw-items-wrapper[data-flex-row=true] {
@@ -141,6 +143,10 @@
     background-color: var(--st-background-secondary);
 }
 
+.st-sw-item[data-2nd]:hover {
+    color: transparent;
+}
+
 .st-sw-item[data-2nd]:after {
     content: attr(data-2nd);
     position: absolute;
@@ -150,6 +156,7 @@
     left: 0;
     padding: 10px 12px;
     background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
     opacity: 0;
 }
 

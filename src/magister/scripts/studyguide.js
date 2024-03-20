@@ -1,4 +1,5 @@
 let hiddenStudyguides = []
+let savedStudyguideSubjects = syncedStorage?.['sw-subjects'] || {}
 
 // Run at start and when the URL changes
 popstate()
@@ -15,6 +16,7 @@ async function studyguideList() {
     renderStudyguideList()
 
     hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+    savedStudyguideSubjects = await getFromStorage('sw-subjects') || {}
     let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n.sw.searchPlaceholder })
     // searchBar.focus()
     searchBar.addEventListener('keyup', e => {
@@ -73,32 +75,25 @@ async function studyguideIndividual() {
         })
     }
 
-    if (syncedStorage['sw-enabled']) formatStudyguideList()
-    async function formatStudyguideList() {
-        renderStudyguideList()
+    if (syncedStorage['sw-enabled']) handleStudyguideIndividual()
+    async function handleStudyguideIndividual() {
+        let studyguideTitle = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
 
-        let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
-        let studyguideTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.trim()
-        let studyguideIsHidden = hiddenStudyguides.indexOf(studyguideTitle) >= 0
-        let hideItemButton = element('button', 'st-sw-item-hider', document.body, { class: "st-button icon", 'data-icon': studyguideIsHidden ? '' : '', title: studyguideIsHidden ? "Studiewijzer niet langer verbergen" : "Studiewijzer verbergen", tabindex: 100 })
-        hideItemButton.addEventListener('click', () => {
-            if (!studyguideIsHidden) {
-                studyguideIsHidden = true
-                hideItemButton.dataset.icon = ''
-                hideItemButton.title = "Studiewijzer niet langer verbergen"
-                hiddenStudyguides.push(studyguideTitle)
-                notify('snackbar', `Studiewijzer '${studyguideTitle}' verborgen op dit apparaat`, null, 3000)
-                document.querySelector('.st-sw-selected')?.classList.add('hidden-item')
-            } else {
-                studyguideIsHidden = false
-                hideItemButton.dataset.icon = ''
-                hideItemButton.title = "Studiewijzer verbergen"
-                hiddenStudyguides.splice(hiddenStudyguides.indexOf(studyguideTitle), 1)
-                notify('snackbar', `Studiewijzer '${studyguideTitle}' niet langer verborgen op dit apparaat`, null, 3000)
-                document.querySelector('.st-sw-selected')?.classList.remove('hidden-item')
-            }
-            saveToStorage('hidden-studyguides', hiddenStudyguides, 'local')
-        })
+        await renderStudyguideList()
+
+        savedStudyguideSubjects = await getFromStorage('sw-subjects') || {}
+
+        if (!savedStudyguideSubjects[studyguideTitle]) {
+            savedStudyguideSubjects[studyguideTitle] = getStudyguideSubject(studyguideTitle)
+            // await saveToStorage('sw-subjects', savedStudyguideSubjects)
+        }
+        saveToStorage('sw-subjects', {})
+        console.log(savedStudyguideSubjects[studyguideTitle])
+
+        let allSubjects = Object.fromEntries([...(Object.entries(savedStudyguideSubjects).map(([k, v]) => [v, v])), ['none', "Geen vak"], ['addNew', "Nieuw vak toevoegen"], ['hidden', "Verborgen"]])
+
+        let studyguideSubjectDropdown = element('button', 'st-sw-item-select', document.body, { style: 'position: absolute; top: 70px; right: 140px; z-index: 9999999;', class: 'st-segmented-control' })
+            .createDropdown(allSubjects, savedStudyguideSubjects[studyguideTitle] || 'none')
     }
 
     setTimeout(() => { resources() }, 500)
@@ -215,121 +210,124 @@ async function studyguideIndividual() {
 
 // Render studyguide list
 async function renderStudyguideList() {
-    if (!syncedStorage['sw-enabled']) return
+    return new Promise(async (resolve) => {
+        if (!syncedStorage['sw-enabled']) return resolve()
 
-    let mainView = document.querySelector('div.view'),
-        widget = document.querySelector('div.full-height.widget'),
-        gridContainer = widget || mainView
+        let mainView = document.querySelector('div.view'),
+            widget = document.querySelector('div.full-height.widget'),
+            gridContainer = widget || mainView
 
-    let hiddenStudyguides = await getFromStorage('hidden-studyguides', 'local') || []
+        savedStudyguideSubjects = await getFromStorage('sw-subjects') || {}
 
-    const settingCols = syncedStorage['sw-cols'],
-        settingShowPeriod = syncedStorage['sw-period'],
-        subjectsArray = Object.values(syncedStorage['subjects']),
-        viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-        originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
-        gridWrapper = element('div', 'st-sw-container', gridContainer)
+        const settingCols = syncedStorage['sw-cols'],
+            settingShowPeriod = syncedStorage['sw-period'],
+            subjectsArray = Object.values(syncedStorage['subjects']),
+            viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
+            originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
+            gridWrapper = element('div', 'st-sw-container', gridContainer)
 
-    let cols = [],
-        object = {}
+        let cols = [],
+            object = {}
 
-    for (let i = 1; i <= Number(settingCols); i++) {
-        cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
-    }
+        for (let i = 1; i <= Number(settingCols); i++) {
+            cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
+        }
 
-    originalItems.forEach(elem => {
-        let title = elem.firstElementChild.firstElementChild.innerText,
-            subject = "Geen vak",
-            period = 0,
-            periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
+        originalItems.forEach(elem => {
+            let title = elem.firstElementChild.firstElementChild.innerText,
+                subject = "Geen vak",
+                period = 0,
+                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
-        subjectsArray.forEach(subjectEntry => {
-            testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
-            testArray.forEach(testString => {
-                if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name
+            subjectsArray.forEach(subjectEntry => {
+                testArray = `${subjectEntry.name},${subjectEntry.aliases} `.split(',')
+                testArray.forEach(testString => {
+                    if ((new RegExp(`^(${testString.trim()})$|^(${testString.trim()})[^a-z]|[^a-z](${testString.trim()})$|[^a-z](${testString.trim()})[^a-z]`, 'i')).test(title)) subject = subjectEntry.name
+                })
             })
+
+            if (periodTextIndex > 0) {
+                let periodNumberSearchString = title.slice(periodTextIndex),
+                    periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
+                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
+            }
+
+            if (!object[subject]) object[subject] = []
+            object[subject].push({ elem, title, period })
+
+            if (subject === "Geen vak" && document.querySelector('#st-sw-help')) {
+                document.querySelector('#st-sw-help').style.display = 'flex'
+            }
         })
 
-        if (periodTextIndex > 0) {
-            let periodNumberSearchString = title.slice(periodTextIndex),
-                periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
-            if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
-        }
+        let tiles = []
+        let tempTilesHolder = element('div', 'st-sw-tiles-holder', document.body, { style: 'display: none;' })
 
-        if (!object[subject]) object[subject] = []
-        object[subject].push({ elem, title, period })
+        Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
+            let items = object[subject]
 
-        if (subject === "Geen vak" && document.querySelector('#st-sw-help')) {
-            document.querySelector('#st-sw-help').style.display = 'flex'
-        }
-    })
+            let subjectTile = element('div', `st-sw-subject-${subject}`, tempTilesHolder, { class: 'st-sw-subject', 'data-subject': subject }) //cols[Math.floor((i / a.length) * Number(settingCols))]
 
-    let tiles = []
-    let tempTilesHolder = element('div', 'st-sw-tiles-holder', document.body, { style: 'display: none;' })
+            if (items.length > 1) {
+                let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
+                let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
+                for (let i = 0; i < items.length; i++) {
+                    const item = items.sort((a, b) => a.period - b.period)[i]
 
-    Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
-        let items = object[subject]
+                    let periodText = `Periode ${item.period}`
+                    if (item.period < 1) periodText = "Geen periode"
 
-        let subjectTile = element('div', `st-sw-subject-${subject}`, tempTilesHolder, { class: 'st-sw-subject', 'data-subject': subject }) //cols[Math.floor((i / a.length) * Number(settingCols))]
+                    let itemButton = element('button', `st-sw-item-${item.title}`, itemsWrapper, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': periodText })
+                    itemButton.addEventListener('click', () => {
+                        for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
+                            if (e.textContent.includes(item.title)) e.click()
+                        }
+                    })
 
-        if (items.length > 1) {
-            let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
-            let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
-            for (let i = 0; i < items.length; i++) {
-                const item = items.sort((a, b) => a.period - b.period)[i]
+                    if (savedStudyguideSubjects[item.title] === 'hidden') itemButton.classList.add('hidden-item', 'hidden')
 
-                let periodText = `Periode ${item.period}`
-                if (item.period < 1) periodText = "Geen periode"
+                    if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
+                        itemButton.classList.add('st-sw-selected')
+                        itemButton.classList.remove('hidden')
+                    }
+                }
+            } else if (items[0]) {
+                let item = items[0]
 
-                let itemButton = element('button', `st-sw-item-${item.title}`, itemsWrapper, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': periodText })
-                itemButton.addEventListener('click', () => {
+                let defaultItemButton = element('button', `st-sw-item-${item.title}`, subjectTile, { innerText: subject, class: 'st-sw-item-default', 'data-title': item.title })
+                defaultItemButton.addEventListener('click', () => {
                     for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
                         if (e.textContent.includes(item.title)) e.click()
                     }
                 })
 
-                if (hiddenStudyguides.includes(item.title)) itemButton.classList.add('hidden-item', 'hidden')
+                let periodText = `Periode ${item.period}`
+                if (item.period < 1) periodText = "Geen periode"
+
+                let defaultItemDescription = element('span', `st-sw-item-${item.title}-desc`, defaultItemButton, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': periodText })
+
+                if (savedStudyguideSubjects[item.title] === 'hidden') defaultItemButton.classList.add('hidden-item', 'hidden')
 
                 if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
-                    itemButton.classList.add('st-sw-selected')
-                    itemButton.classList.remove('hidden')
+                    defaultItemButton.classList.add('st-sw-selected')
+                    defaultItemButton.classList.remove('hidden')
                 }
             }
-        } else if (items[0]) {
-            let item = items[0]
+        })
 
-            let defaultItemButton = element('button', `st-sw-item-${item.title}`, subjectTile, { innerText: subject, class: 'st-sw-item-default', 'data-title': item.title })
-            defaultItemButton.addEventListener('click', () => {
-                for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
-                    if (e.textContent.includes(item.title)) e.click()
-                }
-            })
-
-            let periodText = `Periode ${item.period}`
-            if (item.period < 1) periodText = "Geen periode"
-
-            let defaultItemDescription = element('span', `st-sw-item-${item.title}-desc`, defaultItemButton, settingShowPeriod ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': item.title } : { innerText: item.title, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': periodText })
-
-            if (hiddenStudyguides.includes(item.title)) defaultItemButton.classList.add('hidden-item', 'hidden')
-
-            if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
-                defaultItemButton.classList.add('st-sw-selected')
-                defaultItemButton.classList.remove('hidden')
-            }
+        if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
+            mainView = await awaitElement('div.view')
+            widget = document.querySelector('div.full-height.widget')
+            gridContainer = widget || mainView
+            gridContainer.appendChild(gridWrapper)
         }
+        if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
+            gridWrapper.remove()
+        }
+
+        appendStudyguidesToList(tiles)
+        resolve()
     })
-
-    if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
-        mainView = await awaitElement('div.view')
-        widget = document.querySelector('div.full-height.widget')
-        gridContainer = widget || mainView
-        gridContainer.appendChild(gridWrapper)
-    }
-    if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
-        gridWrapper.remove()
-    }
-
-    appendStudyguidesToList(tiles)
 }
 
 // Append the study guides to the list
@@ -369,4 +367,46 @@ function appendStudyguidesToList() {
     visibleSubjectTiles.sort((a, b) => a.dataset.subject.localeCompare(b.dataset.subject)).forEach((studyguide, i, a) => {
         cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
     })
+}
+
+function getStudyguideSubject(title) {
+console.log(title)
+    if (savedStudyguideSubjects[title]) return savedStudyguideSubjects[title]
+    else {
+        const subjectMap = [
+            { 'name': "Aardrijkskunde", 'aliases': ["aardrijkskunde", "ak"] },
+            { 'name': "Bedrijfseconomie", 'aliases': ["bedrijfseconomie", "beco", "bec"] },
+            { 'name': "Beeldende vorming", 'aliases': ["beeldend", "beeldende", "kubv", "be", "bv"] },
+            { 'name': "Biologie", 'aliases': ["biologie", "bio", "bi", "biol"] },
+            { 'name': "Cult. en kunstz. vorming", 'aliases': ["ckv"] },
+            { 'name': "Drama", 'aliases': ["drama", "kudr", "dr"] },
+            { 'name': "Duits", 'aliases': ["duits", "dutl", "du", "de", "duitse", "deutsch"] },
+            { 'name': "Economie", 'aliases': ["economie", "eco", "ec", "econ"] },
+            { 'name': "Examentraining", 'aliases': ["examentraining"] },
+            { 'name': "Engels", 'aliases': ["engels", "entl", "en", "engelse", "english"] },
+            { 'name': "Frans", 'aliases': ["frans", "fatl", "fa", "fr", "franse", "français"] },
+            { 'name': "Geschiedenis", 'aliases': ["geschiedenis", "gs", "ges"] },
+            { 'name': "Grieks", 'aliases': ["grieks", "gtc", "gr", "grkc", "grtl", "griekse"] },
+            { 'name': "Kunst algemeen", 'aliases': ["kunst algemeen", "ku", "kua"] },
+            { 'name': "Latijn", 'aliases': ["latijn", "ltc", "la", "lakc", "latl", "latijnse"] },
+            { 'name': "Levensbeschouwing", 'aliases': ["levensbeschouwing", "lv"] },
+            { 'name': "Sport", 'aliases': ["sport", "lo", "s&b", "lichamelijke opvoeding", "gym"] },
+            { 'name': "Loopbaan­oriëntatie en -begeleiding", 'aliases': ["loopbaan", "lob"] },
+            { 'name': "Maatschappijleer", 'aliases': ["maatschappijleer", "ma", "malv", "maat"] },
+            { 'name': "Maatschappij­wetenschappen", 'aliases': ["maatschappijwetenschappen", "maw"] },
+            { 'name': "Mens en maatschappij", 'aliases': ["mens en maatschappij", "m&m", "mm"] },
+            { 'name': "Mens en natuur", 'aliases': ["mens en natuur", "m&n", "mn"] },
+            { 'name': "Mentor", 'aliases': ["mentor", "mentoruur", "mentoraat"] },
+            { 'name': "Muziek", 'aliases': ["muziek", "kumu", "mu"] },
+            { 'name': "Natuurkunde", 'aliases': ["natuurkunde", "na", "nat", "nask1"] },
+            { 'name': "Nederlands", 'aliases': ["nederlands", "netl", "ne", "nl", "nederlandse"] },
+            { 'name': "Scheikunde", 'aliases': ["scheikunde", "sk", "sch", "schk", "nask2"] },
+            { 'name': "Spaans", 'aliases': ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
+            { 'name': "Wiskunde", 'aliases': ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen"] }
+        ]
+
+        const resultingSubject = subjectMap.find((subjectObject) => title.split(/\s|-|_|\d/gi).some(titleWord => subjectObject.aliases.includes(titleWord.toLowerCase())))
+
+        return resultingSubject?.name || 'none'
+    }
 }
