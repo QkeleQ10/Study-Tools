@@ -144,11 +144,17 @@
     "cb": {
         "title": "Cijferback-up"
     },
+    "cs": {
+        "title": "Statistieken",
+        "filters": "Filters",
+        "years": "Leerjaren", 
+        "subjects": "Vakken"
+    },
     "sw": {
         "searchPlaceholder": "Zoeken",
         "showHiddenItems": "Verborgen items",
         "customSubject": "Ander vak...",
-        "autoSubject": "Vak automatisch afleiden",
+        "autoSubject": "Vak intelligent afleiden",
         "subjectPrompt": "Geef de naam van het vak op",
         "hideStudyguide": "Studiewijzer verbergen",
         "hidden": "Verborgen",

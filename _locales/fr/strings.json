@@ -143,11 +143,17 @@
     "cb": {
         "title": "Sauvegarde bulletin"
     },
+    "cs": {
+        "title": "Statistiques",
+        "filters": "Filtrer",
+        "years": "Années",
+        "subjects": "Matières"
+    },
     "sw": {
         "searchPlaceholder": "Rechercher",
         "showHiddenItems": "Éléments cachés",
         "customSubject": "Ajouter une matière...",
-        "autoSubject": "Dériver matière autom.",
+        "autoSubject": "Dériver matière intelligemment",
         "subjectPrompt": "Tape le nom de la matière",
         "hideStudyguide": "Cacher l'élément",
         "hidden": "Caché",

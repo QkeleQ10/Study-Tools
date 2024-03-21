@@ -377,7 +377,8 @@
     color: var(--st-accent-warn) !important;
 }
 
-#st-grades-pre-button-wrapper, #st-grades-button-wrapper {
+#st-grades-pre-button-wrapper,
+#st-grades-button-wrapper {
     position: absolute;
     top: 35px;
     right: 20px;
@@ -427,7 +428,7 @@
     align-items: stretch;
     gap: 12px;
     padding: 12px;
-    
+
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
     z-index: 999999;
@@ -677,12 +678,45 @@
     translate: 0 6px;
 }
 
-#st-cs-year-filter:before,
 #st-cs-subject-filter:before {
     content: "Leerjaren";
     position: absolute;
     top: -28px;
     font: 500 14px var(--st-font-family-primary);
+}
+
+#st-cs-year-filter-heading {
+    font: 500 14px var(--st-font-family-primary);
+}
+
+#st-cs-year-filter {
+    flex-direction: row;
+    gap: 2px;
+}
+
+#st-cs-year-filter .st-checkbox-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0;
+    background-color: var(--st-background-tertiary);
+    border: var(--st-border);
+    border-radius: calc(var(--st-border-radius) * 0.75);
+    font-weight: 600;
+    font-size: 13.5px;
+    transition: background-color 200ms, color 200ms;
+}
+
+#st-cs-year-filter .st-checkbox-label:before {
+    display: none;
+}
+
+#st-cs-year-filter .st-checkbox-label:has(.st-checkbox-input:checked) {
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
 }
 
 #st-cs-subject-filter:before {

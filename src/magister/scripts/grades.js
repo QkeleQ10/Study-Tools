@@ -789,14 +789,14 @@ async function gradeStatistics() {
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
-        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" })
+        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: i18n.cs.title })
 
     const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
         scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Selecteer hier welke vakken en leerjaren worden getoond!" })
 
     const scStats = element('div', 'st-cs-stats', scContainer),
-        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: "Statistieken", 'data-amount': 0 }),
+        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: i18n.cs.title, 'data-amount': 0 }),
         scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
 
     const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
@@ -821,9 +821,9 @@ async function gradeStatistics() {
         scLineChart = element('div', 'st-cs-history-chart', scHistory)
 
     const scFilters = element('div', 'st-cs-filters', scContainer),
-        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: "Filters" }),
-        scYearFilterAll = element('button', 'st-cs-year-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
-        scYearFilter = element('div', 'st-cs-year-filter', scFilters),
+        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n.cs.filters }),
+        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n.cs.years })
+    scYearFilter = element('div', 'st-cs-year-filter', scFilters),
         scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)
 
@@ -856,21 +856,20 @@ async function gradeStatistics() {
         }
     })
 
-    scYearFilterAll.addEventListener('click', () => {
-        [...scYearFilter.children].forEach(e => e.click())
-    })
-
     scSubjectFilterAll.addEventListener('click', () => {
         [...scSubjectFilter.children].forEach(e => e.click())
     })
 
     // Gather all years and populate the year filter
-    years = await MagisterApi.years()
-    years.forEach(async (year, i) => {
-        let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
+    years = (await MagisterApi.years()).reverse()
+    years.forEach(async (year, i, a) => {
+        console.log(year)
+        let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.replace(/\D/gi, ''), title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
+        if (!(label.innerText?.length > 0)) label.innerText = i + 1
         let input = element('input', `st-cs-year-${year.id}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
 
-        if (i === 0) {
+
+        if (i === a.length - 1) {
             input.checked = true
             let yearGrades = (await MagisterApi.grades.forYear(year))
             statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))

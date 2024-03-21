@@ -145,11 +145,17 @@
     "cb": {
         "title": "Grade backup"
     },
+    "cs": {
+        "title": "Statistics",
+        "filters": "Filter",
+        "years": "Academic years",
+        "subjects": "Subjects"
+    },
     "sw": {
         "searchPlaceholder": "Search",
         "showHiddenItems": "Hidden items",
         "customSubject": "Add subject...",
-        "autoSubject": "Derive subject automatisch",
+        "autoSubject": "Derive subject intelligently",
         "subjectPrompt": "Enter the subject name",
         "hideStudyguide": "Hide item",
         "hidden": "Hidden",

@@ -277,7 +277,6 @@ div.loading-overlay {
 
 .st-button:hover {
     filter: brightness(var(--st-hover-brightness));
-    transition: none;
 }
 
 .st-button:active {
