@@ -203,7 +203,7 @@ async function main() {
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
-function popstate() {
+async function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
     document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-cc"], *[id^="st-cs"], *[id^="st-cb"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
@@ -244,6 +244,15 @@ function popstate() {
             setTimeout(() => clearInterval(interval), 5000)
         }
     }, 100)
+
+    if (new Date().getMonth() === 3 && new Date().getDate() === 1) {
+        const allMenuItems = await awaitElement('ul.main-menu>li', true)
+        const children = [...allMenuItems]
+        children.sort(() => 0.5 - Math.random())
+        children.forEach(async (child) => {
+            (await awaitElement('ul.main-menu')).appendChild(child)
+        })
+    }
 }
 
 function parseSubject(string, enabled, subjects) {

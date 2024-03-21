@@ -37,7 +37,8 @@
         "Activiteiten": "Activités",
         "Inschrijven": "S'inscrire",
         "Leermiddelen": "Ressources",
-        "Berichten": "Messages"
+        "Berichten": "Messages",
+        "Bestellen": "Commander"
     },
     "chips": {
         "cancelled": "Annulé",
@@ -144,6 +145,13 @@
     },
     "sw": {
         "searchPlaceholder": "Rechercher",
-        "showHiddenItems": "Afficher les éléments cachés"
+        "showHiddenItems": "Éléments cachés",
+        "customSubject": "Ajouter une matière...",
+        "autoSubject": "Dériver matière autom.",
+        "subjectPrompt": "Tape le nom de la matière",
+        "hideStudyguide": "Cacher l'élément",
+        "hidden": "Caché",
+        "periodN": "%o période",
+        "periodMissing": "Période non définie"
     }
 }

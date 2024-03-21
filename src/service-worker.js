@@ -91,7 +91,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'popstateDetected':
             console.info("Popstate detected, service worker revived.")
-            return true
+            return 0
 
         case 'waitForRequestCompleted':
             console.info(`Request completion notification requested by ${sender.url}.`)
@@ -106,7 +106,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true
 
         default:
-            return true
+            return 0
     }
 })
 

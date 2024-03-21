@@ -37,7 +37,8 @@
         "Activiteiten": "Activities",
         "Inschrijven": "Registration",
         "Leermiddelen": "Resources",
-        "Berichten": "Messages"
+        "Berichten": "Messages",
+        "Bestellen": "Order"
     },
     "chips": {
         "cancelled": "Cancelled",
@@ -146,6 +147,13 @@
     },
     "sw": {
         "searchPlaceholder": "Search",
-        "showHiddenItems": "Show hidden items"
+        "showHiddenItems": "Hidden items",
+        "customSubject": "Add subject...",
+        "autoSubject": "Derive subject automatisch",
+        "subjectPrompt": "Enter the subject name",
+        "hideStudyguide": "Hide item",
+        "hidden": "Hidden",
+        "periodN": "%o term",
+        "periodMissing": "Term not defined"
     }
 }

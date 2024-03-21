@@ -152,6 +152,7 @@ div.loading-overlay {
 .st-dropdown,
 .st-dropdown:focus {
     display: flex;
+    justify-content: space-between;
     flex-wrap: nowrap;
     align-items: center;
     padding-inline: 2px;
@@ -232,6 +233,10 @@ div.loading-overlay {
 .st-dropdown-segment {
     width: 100%;
     text-align: left;
+}
+
+.st-line.horizontal {
+    border-top: var(--st-border);
 }
 
 .st-segmented-control {
@@ -1188,6 +1193,26 @@ a.st-keyboard-hint.clicked {
     font-size: 12px;
     font-weight: normal;
     opacity: .15;
+}
+
+@keyframes displayIn {
+    0% {
+        display: none;
+    }
+
+    1% {
+        display: unset;
+    }
+}
+
+@keyframes displayOut {
+    99% {
+        display: unset;
+    }
+
+    100% {
+        display: none;
+    }
 }
 
 @keyframes rotation {

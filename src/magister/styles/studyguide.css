@@ -19,7 +19,7 @@
 
 #st-sw-search {
     position: absolute;
-    top: 38px;
+    top: 70px;
     right: 25px;
     z-index: 99999;
 }
@@ -46,21 +46,39 @@
     z-index: 99999;
 }
 
-#st-sw-show-hidden-items-label {
+#st-sw-hidden-items {
+    display: none;
+    flex-direction: column;
     position: absolute;
-    top: 85px;
-    right: 32px;
-    z-index: 99999;
+    bottom: 20px;
+    right: 25px;
+    width: 300px;
+    border-radius: var(--st-border-radius);
+    overflow: hidden;
 }
 
-#st-sw-show-hidden-items-label[data-disabled=true] {
+#st-sw-hidden-items.st-expanded {
+    display: flex;
+    border: var(--st-border);
+    animation: expandIn 150ms both;
+}
+
+#st-sw-hidden-items-button {
+    position: absolute;
+    bottom: 20px;
+    right: 25px;
+    border: none;
+    background-color: transparent;
     opacity: .5;
+    font: 14px var(--st-font-family-secondary);
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    transition: background-color 200ms, color 200ms, border 200ms, padding 200ms, margin 200ms, transform 200ms;
 }
 
-#st-sw-help {
-    position: absolute;
-    top: 40px;
-    right: 233px;
+#st-sw-hidden-items-button.st-collapsed {
+    animation: shrinkOut 150ms, displayOut 150ms both;
+    pointer-events: none;
 }
 
 .st-sw-subject {
@@ -91,7 +109,8 @@
     flex-direction: row;
 }
 
-.st-sw-subject button {
+.st-sw-subject button,
+#st-sw-hidden-items button {
     position: relative;
     outline: 0;
     border: none;

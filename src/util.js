@@ -338,7 +338,7 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     dropdown.innerText = ''
     dropdown.dataset.clickFunction = !!onClick
 
-    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption] })
+    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption].replace(i18n.sw.hideStudyguide, i18n.sw.hidden) })
     if (onClick) {
         selectedOptionElement.addEventListener('click', event => {
             if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
@@ -347,9 +347,14 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     }
 
     const dropdownPopover = element('div', dropdown.id ? `${dropdown.id}-popover` : null, document.body, { class: 'st-dropdown-popover' })
+    dropdownPopover.innerText = ''
 
     for (const key in options) {
-        if (Object.hasOwnProperty.call(options, key)) {
+        if (key === 'divider') {
+            const dividerElement = element('div', null, dropdownPopover, {
+                class: 'st-line horizontal'
+            })
+        } else if (Object.hasOwnProperty.call(options, key)) {
             const title = options[key]
             const optionElement = element('button', null, dropdownPopover, {
                 class: 'st-button segment st-dropdown-segment',
@@ -388,10 +393,10 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     dropdown.selectedOption = selectedOption
 
     dropdown.changeValue = function (newValue) {
-        onChange(newValue)
+        onChange?.(newValue)
         selectedOption = newValue
         dropdown.selectedOption = selectedOption
-        selectedOptionElement.innerText = options[selectedOption]
+        selectedOptionElement.innerText = options[selectedOption].replace(i18n.sw.hideStudyguide, i18n.sw.hidden)
         dropdownPopover.querySelectorAll('.st-dropdown-segment').forEach(e => {
             if (selectedOption === e.dataset.key) e.classList.add('active')
             else e.classList.remove('active')
@@ -677,6 +682,31 @@ function createStyle(content, id) {
     styleElem.textContent = content
     document.head.append(styleElem)
     return styleElem
+}
+
+function formatOrdinals(number, feminine) {
+    const pr = new Intl.PluralRules(locale, { type: 'ordinal' })
+
+    const suffixes = {
+        'nl-NL': new Map([
+            ['other', 'e']
+        ]),
+        'en-GB': new Map([
+            ['one', 'st'],
+            ['two', 'nd'],
+            ['few', 'rd'],
+            ['other', 'th'],
+        ]),
+        'fr-FR': new Map([
+            ['zero', 'e'],
+            ['one', feminine ? 're' : 'er'],
+            ['other', 'e'],
+        ])
+    }
+
+    const rule = pr.select(number)
+    const suffix = suffixes[locale].get(rule) || suffixes[locale].get('other') || '.'
+    return `${number}${suffix}`
 }
 
 // Seeded random numbers.

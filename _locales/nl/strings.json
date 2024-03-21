@@ -37,7 +37,8 @@
         "Activiteiten": "Activiteiten",
         "Inschrijven": "Inschrijven",
         "Leermiddelen": "Leermiddelen",
-        "Berichten": "Berichten"
+        "Berichten": "Berichten",
+        "Bestellen": "Bestellen"
     },
     "chips": {
         "cancelled": "Vervallen",
@@ -145,6 +146,13 @@
     },
     "sw": {
         "searchPlaceholder": "Zoeken",
-        "showHiddenItems": "Verborgen items tonen"
+        "showHiddenItems": "Verborgen items",
+        "customSubject": "Ander vak...",
+        "autoSubject": "Vak automatisch afleiden",
+        "subjectPrompt": "Geef de naam van het vak op",
+        "hideStudyguide": "Studiewijzer verbergen",
+        "hidden": "Verborgen",
+        "periodN": "Periode %s",
+        "periodMissing": "Geen periode"
     }
 }

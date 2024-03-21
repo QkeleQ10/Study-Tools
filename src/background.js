@@ -69,7 +69,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case 'popstateDetected':
             console.info("Popstate detected, service worker revived for 30 seconds.")
-            return true
+            return 0
 
         case 'waitForRequestCompleted':
             console.info(`Request completion notification requested by ${sender.url}.`)
@@ -84,7 +84,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true
 
         default:
-            return true
+            return 0
     }
 })
 
