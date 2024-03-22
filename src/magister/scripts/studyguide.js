@@ -1,4 +1,4 @@
-let savedStudyguides = Object.values(syncedStorage?.['sw-list']) || []
+let savedStudyguides = Object.values(syncedStorage?.['sw-list'] || []) || []
 
 // Run at start and when the URL changes
 popstate()
