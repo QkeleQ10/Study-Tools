@@ -46,7 +46,6 @@ async function studyguideList() {
 
 // Page 'Studiewijzer'
 async function studyguideIndividual() {
-
     if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') highlightWeek()
     async function highlightWeek() {
         let list = await awaitElement('.studiewijzer-content-container>ul'),
@@ -73,6 +72,18 @@ async function studyguideIndividual() {
     if (syncedStorage['sw-enabled']) setTimeout(handleStudyguideIndividual, 100)
     async function handleStudyguideIndividual() {
         await renderStudyguideList()
+
+        const buttons = element('div', 'st-sw-button-wrapper', document.body, { class: 'st-button-wrapper', style: 'position: absolute; top: 70px; right: 20px; z-index: 9999999;' })
+        const expandCollapseAll = element('button', 'st-sw-expand-all', buttons, { class: 'st-button icon tertiary', 'data-icon': '' })
+        expandCollapseAll.addEventListener('click', () => {
+            if (expandCollapseAll.dataset.icon === '') { // Is set to expand mode 
+                expandCollapseAll.dataset.icon = ''
+                document.querySelectorAll('li.studiewijzer-onderdeel .block.fold h3 b').forEach(e => e.click())
+            } else { // Is set to collapse mode 
+                expandCollapseAll.dataset.icon = ''
+                document.querySelectorAll('li.studiewijzer-onderdeel .block:not(.fold) h3 b').forEach(e => e.click())
+            }
+        })
 
         let id = window.location.href.split('studiewijzer/')[1].split('?')[0],
             title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim(),
@@ -118,7 +129,7 @@ async function studyguideIndividual() {
                 }
             }
 
-            dropdown = element('button', 'st-sw-subject-dropdown', document.body, { style: 'position: absolute; top: 70px; right: 20px; z-index: 9999999; min-width: 112px;', class: 'st-segmented-control', title: i18n.sw.subjectPrompt })
+            dropdown = element('button', 'st-sw-subject-dropdown', buttons, { class: 'st-segmented-control', title: i18n.sw.subjectPrompt })
                 .createDropdown(
                     allSubjects,
                     savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
@@ -365,7 +376,12 @@ async function renderStudyguideList(hiddenItemsDestination) {
         }
 
         appendStudyguidesToList(tiles)
+
         resolve()
+
+        if (document.getElementById('st-sw-hidden-items-button') && !(document.getElementById('st-sw-hidden-items-button')?.children.length > 0)) {
+            document.getElementById('st-sw-hidden-items-button')?.remove()
+        }
     })
 }
 

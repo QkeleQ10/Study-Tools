@@ -224,7 +224,7 @@ async function popstate() {
             breadcrumbs.forEach(e => {
                 const title = e
                 if (!(title?.innerText?.length > 1)) return
-                title.innerText = i18n.views[title.innerText] || title.innerText
+                title.innerHTML = title.innerHTML.replace(title.innerText, i18n.views[title.innerText] || title.innerText)
             })
         }
 

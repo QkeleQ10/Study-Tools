@@ -63,13 +63,17 @@
     animation: expandIn 150ms both;
 }
 
+#studiewijzer-detail-container dna-page-header {
+    clip-path: inset(0 15% 0 0);
+}
+
 #st-sw-hidden-items-button {
     position: absolute;
     bottom: 20px;
     right: 25px;
     border: none;
     background-color: transparent;
-    opacity: .5;
+    opacity: .75;
     font: 14px var(--st-font-family-secondary);
     background-color: var(--st-background-secondary);
     border: var(--st-border);
