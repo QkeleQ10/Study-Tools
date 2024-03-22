@@ -5,7 +5,9 @@ let syncedStorage = {},
     verbose = false,
     apiUserId,
     apiUserToken,
-    apiCache = {}
+    apiCache = {},
+    timeOffset,
+    timeZoneDifference;
 
 let eggs = [],
     announcements = [],
@@ -185,7 +187,7 @@ function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
     elementsWithTemporalBinding.forEach(element => {
 
-        let networkTime = new Date(new Date() - (timeOffset || 0)),
+        let networkTime = new Date(new Date().getTime() + (timeOffset || 0)),
             type = element.dataset.temporalType,
             start = new Date(element.dataset.temporalStart || networkTime),
             end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || networkTime)
@@ -268,8 +270,8 @@ function updateTemporalBindings() {
     })
 }
 
-let timeOffset = 0
-let timeZoneDifference = 0
+timeOffset = 0
+timeZoneDifference = 0
 fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
     .then(response => response.json())
     .then(data => {
