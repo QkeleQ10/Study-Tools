@@ -1,39 +1,3 @@
-const subjects = {
-    id: "subjects",
-    title: "Vaknamen bewerken",
-    subtitle: "Geef vaknamen en de bijbehorende afkortingen en aliassen op, zodat Study Tools weet welke studiewijzers bij elkaar horen.",
-    type: "SubjectEditor",
-    inline: true,
-    default: [
-        { name: "Aardrijkskunde", aliases: "ak" },
-        { name: "Bedrijfseconomie", aliases: "beco, bec" },
-        { name: "Beeldende vorming", aliases: "kubv, be, bv" },
-        { name: "Biologie", aliases: "bio, bi" },
-        { name: "Cult. en kunstz. vorming", aliases: "ckv" },
-        { name: "Drama", aliases: "kudr, dr" },
-        { name: "Duits", aliases: "dutl, du, Duitse, Deutsch" },
-        { name: "Economie", aliases: "eco, ec, econ" },
-        { name: "Engels", aliases: "entl, en, Engels, English" },
-        { name: "Frans", aliases: "fatl, fa, Franse, Français" },
-        { name: "Geschiedenis", aliases: "gs" },
-        { name: "Grieks", aliases: "gtc, gr, grkc, grtl, Griekse" },
-        { name: "Kunst algemeen", aliases: "ku, kua" },
-        { name: "Latijn", aliases: "ltc, la, lakc, latl, Latijnse" },
-        { name: "Levensbeschouwing", aliases: "lv" },
-        { name: "Sport", aliases: "lo, s&b, lichamelijke opvoeding, gym" },
-        { name: "Loopbaan­oriëntatie en -begeleiding", aliases: "lob" },
-        { name: "Maatschappijleer", aliases: "ma, malv" },
-        { name: "Maatschappij­wetenschappen", aliases: "maw" },
-        { name: "Mentor", aliases: "mentoruur, mentoraat" },
-        { name: "Muziek", aliases: "kumu, mu" },
-        { name: "Natuurkunde", aliases: "nat, na" },
-        { name: "Nederlands", aliases: "netl, ne, Nederlandse" },
-        { name: "Scheikunde", aliases: "sk, sch" },
-        { name: "Spaans", aliases: "sptl, sp, Spaanse, Español" },
-        { name: "Wiskunde", aliases: "wi, wa, wb, wc, wd, wisa, wisb, wisc, wisd" }
-    ]
-}
-
 const shortcuts = {
     id: "shortcuts",
     title: "Snelkoppelingen zijbalk",
@@ -303,7 +267,6 @@ export default [
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },
-            subjects,
             {
                 id: "sw-cols",
                 title: "Aantal kolommen",
