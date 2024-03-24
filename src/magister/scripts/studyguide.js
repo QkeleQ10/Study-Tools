@@ -117,7 +117,13 @@ async function studyguideIndividual() {
                         saveToStorage('sw-list', savedStudyguides)
                         createDropdown()
                         setTimeout(() => dropdown.changeValue(result), 10)
-                    } else { dropdown.changeValue(savedStudyguides.find(e => e.id === id || e.title === title).subject) }
+                    } else {
+                        title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
+                        savedStudyguides.find(e => e.id === id || e.title === title).subject = autoStudyguideSubject(title)
+                        saveToStorage('sw-list', savedStudyguides)
+                        createDropdown()
+                        setTimeout(() => dropdown.changeValue(autoStudyguideSubject(title)), 10)
+                    }
                 } if (newValue === 'autoSet') {
                     title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
                     savedStudyguides.find(e => e.id === id || e.title === title).subject = autoStudyguideSubject(title)
@@ -379,7 +385,8 @@ async function renderStudyguideList(hiddenItemsDestination) {
 
         resolve()
 
-        if (document.getElementById('st-sw-hidden-items-button') && !(document.getElementById('st-sw-hidden-items-button')?.children.length > 0)) {
+        console.log()
+        if (document.getElementById('st-sw-hidden-items-button') && !(document.getElementById('st-sw-hidden-items')?.children.length > 0)) {
             document.getElementById('st-sw-hidden-items-button')?.remove()
         }
     })

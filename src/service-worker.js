@@ -23,6 +23,10 @@ chrome.runtime.onStartup.addListener(() => {
     console.info("Browser started, service worker revived.")
 })
 
+const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20e3)
+chrome.runtime.onStartup.addListener(keepAlive)
+keepAlive()
+
 async function startListenCredentials() {
     // Allow any context to use chrome.storage.session
     chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' })

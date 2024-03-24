@@ -576,7 +576,7 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
     return chartArea
 }
 
-async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
+async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
     switch (type) {
         case 'snackbar':
             const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 10000) }
@@ -589,8 +589,8 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                 const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
                 dialog.showModal()
 
+                const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                 if (buttons?.length > 0) {
-                    const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                     buttons.forEach(item => {
                         const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
                         if (item.innerText) button.innerText = item.innerText
@@ -608,7 +608,12 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                     })
                 }
 
-                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '', title: "Dialoogvenster verbergen" })
+                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': '', innerText: "Sluiten" })
+                if (options?.index && options?.length) {
+                    dialogDismiss.classList.add('st-step')
+                    dialogDismiss.innerText = `${options.index} / ${options.length}`
+                    if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                }
                 dialogDismiss.addEventListener('click', () => {
                     dialog.close()
                     dialog.remove()

@@ -41,9 +41,9 @@ async function wrapped() {
     close.addEventListener('click', () => wrapped.close())
 
     help.addEventListener('click', async () => {
-        await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze generieke kloon van het Wrapped-/Rewind-concept zie je sinds eind 2023 elk jaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)")
+        await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze generieke kloon van het Wrapped-/Rewind-concept zie je sinds eind 2023 elk jaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)", null, null, { index: 1, length: 3 })
 
-        await notify('dialog', "Om naar de volgende dia te gaan, klik je op de dia.\nOm een dia terug te gaan, kun je rechtsklikken.\n\nAls je op de tegelweergave uitgebreide statistieken wil zien, klik je op een tegel.\nJe kunt dan ook terugkeren met de rechtermuisknop.")
+        await notify('dialog', "Om naar de volgende dia te gaan, klik je op de dia.\nOm een dia terug te gaan, kun je rechtsklikken.\n\nAls je op de tegelweergave uitgebreide statistieken wil zien, klik je op een tegel.\nJe kunt dan ook terugkeren met de rechtermuisknop.", null, null, { index: 2, length: 3 })
 
         await notify(
             'dialog',
@@ -51,7 +51,7 @@ async function wrapped() {
             [
                 { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
                 { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
-            ])
+            ], null, { index: 3, length: 3 })
     })
 
     wrappedInvoke.addEventListener('click', async () => {

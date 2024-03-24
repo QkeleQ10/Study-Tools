@@ -401,12 +401,13 @@ div.loading-overlay {
     flex-direction: column;
     gap: 16px;
     min-width: 400px;
-    background-color: var(--st-background-secondary);
+    padding: 24px;
+    background-color: var(--st-background-overlay);
     color: var(--st-foreground-primary);
     font: 14px/18px var(--st-font-family-secondary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    padding: 24px;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     overflow: visible;
     animation: floatDown 300ms;
 }
@@ -415,17 +416,36 @@ div.loading-overlay {
     backdrop-filter: blur(3px);
 }
 
-.st-dialog-dismiss {
-    position: absolute;
-    top: 0;
-    right: -40px;
-    background-color: var(--st-background-secondary) !important;
-}
-
 .st-dialog>.st-button-wrapper {
     display: flex;
     gap: 8px;
-    margin-left: auto;
+    position: absolute;
+    bottom: -40px;
+    right: 0;
+}
+
+.st-dialog>.st-button-wrapper>.st-button,
+.st-dialog-dismiss {
+    background-color: var(--st-background-overlay) !important;
+    border: var(--st-border);
+    color: var(--st-foreground-secondary);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+
+.st-dialog-dismiss.st-step[data-icon]::before {
+    content: none;
+}
+
+.st-dialog-dismiss.st-step[data-icon]::after {
+    content: attr(data-icon);
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    font-family: "Font Awesome 6 Pro";
+    font-size: 18px;
+    vertical-align: -2px;
+    margin-left: 10px;
+    overflow: visible;
 }
 
 .st-input {
