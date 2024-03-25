@@ -381,6 +381,8 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
         dropdownPopover.classList.add('st-visible')
         dropdown.classList.add('active')
 
+        dropdownPopover.style.bottom = (window.innerHeight - dropdownPopover.getBoundingClientRect().bottom) < 100 ? '15px' : 'auto'
+
         window.addEventListener('click', () => {
             setTimeout(() => {
                 dropdownPopover.classList.remove('st-visible')

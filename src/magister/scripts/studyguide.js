@@ -438,7 +438,6 @@ function autoStudyguideSubject(title) {
         { 'name': "Drama", 'aliases': ["drama", "kudr", "dr"] },
         { 'name': "Duits", 'aliases': ["duits", "dutl", "du", "de", "duitse", "deutsch"] },
         { 'name': "Economie", 'aliases': ["economie", "eco", "ec", "econ"] },
-        { 'name': "Engels", 'aliases': ["engels", "entl", "en", "engelse", "english"] },
         { 'name': "Frans", 'aliases': ["frans", "fatl", "fa", "fr", "franse", "français"] },
         { 'name': "Geschiedenis", 'aliases': ["geschiedenis", "gs", "ges"] },
         { 'name': "Grieks", 'aliases': ["grieks", "gtc", "gr", "grkc", "grtl", "griekse"] },
@@ -458,7 +457,8 @@ function autoStudyguideSubject(title) {
         { 'name': "Spaans", 'aliases': ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
         { 'name': "Wiskunde", 'aliases': ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen"] },
         { 'name': "Examentraining", 'aliases': ["examentraining"] },
-        { 'name': "Loopbaan­oriëntatie en -begeleiding", 'aliases': ["loopbaan", "lob"] }
+        { 'name': "Loopbaan­oriëntatie en -begeleiding", 'aliases': ["loopbaan", "lob"] },
+        { 'name': "Engels", 'aliases': ["engels", "entl", "en", "engelse", "english"] }
     ]
 
     const resultingSubject = subjectMap.find((subjectObject) => title?.split(/\s|-|_|\d/gi)?.some(titleWord => subjectObject.aliases.includes(titleWord.toLowerCase())))

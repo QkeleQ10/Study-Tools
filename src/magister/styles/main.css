@@ -206,8 +206,8 @@ div.loading-overlay {
 .st-dropdown-popover {
     position: absolute;
 
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-auto-rows: auto;
     gap: 4px;
     padding: 4px;
 
@@ -216,17 +216,18 @@ div.loading-overlay {
     border-radius: var(--st-border-radius);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 1000000;
+    overflow-y: auto;
 
     display: none;
 }
 
 .st-dropdown-popover.st-visible {
-    display: flex;
+    display: grid;
     animation: dropdownIn 150ms both;
 }
 
 .st-dropdown-popover.st-hidden {
-    display: flex;
+    display: grid;
     animation: dropdownOut 150ms both;
 }
 
