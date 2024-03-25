@@ -37,7 +37,8 @@
         "Activiteiten": "Activities",
         "Inschrijven": "Registration",
         "Leermiddelen": "Resources",
-        "Berichten": "Messages"
+        "Berichten": "Messages",
+        "Bestellen": "Order"
     },
     "chips": {
         "cancelled": "Cancelled",
@@ -144,8 +145,21 @@
     "cb": {
         "title": "Grade backup"
     },
+    "cs": {
+        "title": "Statistics",
+        "filters": "Filter",
+        "years": "Academic years",
+        "subjects": "Subjects"
+    },
     "sw": {
         "searchPlaceholder": "Search",
-        "showHiddenItems": "Show hidden items"
+        "showHiddenItems": "Hidden items",
+        "customSubject": "Add subject...",
+        "autoSubject": "Derive subject intelligently",
+        "subjectPrompt": "Enter the subject name",
+        "hideStudyguide": "Hide item",
+        "hidden": "Hidden",
+        "periodN": "%o term",
+        "periodMissing": "Term not defined"
     }
 }

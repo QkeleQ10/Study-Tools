@@ -128,7 +128,7 @@ async function gradeCalculator(buttonWrapper) {
         clFutureWeightInput = element('input', 'st-cc-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
         clFutureDesc = element('p', 'st-cc-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
         clCanvas = element('div', 'st-cc-canvas', clPredictionWrapper)
-    
+
     buttonWrapper.append(clOpen)
 
     let years = await MagisterApi.years()
@@ -180,11 +180,11 @@ async function gradeCalculator(buttonWrapper) {
     })
 
     clHelp.addEventListener('click', async () => {
-        await notify('dialog', "Welkom in de cijfercalculator!\n\nMet de cijfercalculator kun je gemakkelijk zien wat je moet halen of wat je gemiddelde zou kunnen worden.")
+        await notify('dialog', "Welkom in de cijfercalculator!\n\nMet de cijfercalculator kun je gemakkelijk zien wat je moet halen of wat je gemiddelde zou kunnen worden.", null, null, { index: 1, length: 3 })
 
-        await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.")
+        await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.", null, null, { index: 2, length: 3 })
 
-        await notify('dialog', "In het zijpaneel zie je alle cijfers die je hebt toegevoegd, samen met wat centrummaten.\n\nHelemaal onderin zie je een diagram. Die geeft op de x-as de cijfers 1 t/m 10 weer, met op de y-as de \ngemiddelden die je zou kunnen komen te staan als je voor je volgende cijfer x haalt. Vergeet niet \nom de weegfactor goed in te stellen.")
+        await notify('dialog', "In het zijpaneel zie je alle cijfers die je hebt toegevoegd, samen met wat centrummaten.\n\nHelemaal onderin zie je een diagram. Die geeft op de x-as de cijfers 1 t/m 10 weer, met op de y-as de \ngemiddelden die je zou kunnen komen te staan als je voor je volgende cijfer x haalt. Vergeet niet \nom de weegfactor goed in te stellen.", null, null, { index: 3, length: 3 })
     })
 
     gradesContainer.addEventListener('click', async (event) => {
@@ -495,11 +495,11 @@ async function gradeBackup(buttonWrapper) {
         bkModalImMagister = element('label', 'st-cb-import', bkModalIm, { class: 'st-button secondary', 'data-icon': '', innerText: "Importeren in Magister" }),
         bkModalImMagTip = element('span', 'st-cb-im-mag-tip', bkModalIm, { class: 'st-tip', innerText: "Niet aanbevolen" }),
         bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' })
-    
+
     buttonWrapper.prepend(bkInvoke)
 
     const bkI = element('div', 'st-cb-i', aside, { class: 'st-sheet', 'data-visible': 'false' }),
-        bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-up", 'data-amount': 0 }),
+        bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-upinformatie", 'data-amount': 0 }),
         bkIInfo = element('span', 'st-cb-i-info', bkI, { innerText: "Laden..." }),
         bkIMetrics = element('div', 'st-cb-i-metrics', bkI),
         bkIResult = element('div', 'st-cb-i-result', bkIMetrics, { class: 'st-metric', 'data-description': "Resultaat", innerText: "?" }),
@@ -671,7 +671,7 @@ async function gradeBackup(buttonWrapper) {
                 } else {
                     bkTab.classList.remove('active')
                     bkI.dataset.visible = false
-                    asideContent.style.display = ''
+                    if (!tabs.querySelector('.st-tab.active')) asideContent.style.display = ''
                 }
             })
 
@@ -789,14 +789,14 @@ async function gradeStatistics() {
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
-        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: "Statistieken" })
+        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: i18n.cs.title })
 
     const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
         scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Selecteer hier welke vakken en leerjaren worden getoond!" })
 
     const scStats = element('div', 'st-cs-stats', scContainer),
-        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: "Statistieken", 'data-amount': 0 }),
+        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: i18n.cs.title, 'data-amount': 0 }),
         scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
 
     const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
@@ -821,9 +821,9 @@ async function gradeStatistics() {
         scLineChart = element('div', 'st-cs-history-chart', scHistory)
 
     const scFilters = element('div', 'st-cs-filters', scContainer),
-        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: "Filters" }),
-        scYearFilterAll = element('button', 'st-cs-year-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
-        scYearFilter = element('div', 'st-cs-year-filter', scFilters),
+        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n.cs.filters }),
+        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n.cs.years })
+    scYearFilter = element('div', 'st-cs-year-filter', scFilters),
         scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)
 
@@ -843,7 +843,7 @@ async function gradeStatistics() {
         } else {
             scTab.classList.remove('active')
             scContainer.dataset.visible = false
-            asideContent.style.display = ''
+            if (!tabs.querySelector('.st-tab.active')) asideContent.style.display = ''
         }
     })
 
@@ -856,21 +856,19 @@ async function gradeStatistics() {
         }
     })
 
-    scYearFilterAll.addEventListener('click', () => {
-        [...scYearFilter.children].forEach(e => e.click())
-    })
-
     scSubjectFilterAll.addEventListener('click', () => {
         [...scSubjectFilter.children].forEach(e => e.click())
     })
 
     // Gather all years and populate the year filter
-    years = await MagisterApi.years()
-    years.forEach(async (year, i) => {
-        let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
+    years = (await MagisterApi.years()).reverse()
+    years.forEach(async (year, i, a) => {
+        let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.replace(/\D/gi, ''), title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
+        if (!(label.innerText?.length > 0)) label.innerText = i + 1
         let input = element('input', `st-cs-year-${year.id}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
 
-        if (i === 0) {
+
+        if (i === a.length - 1) {
             input.checked = true
             let yearGrades = (await MagisterApi.grades.forYear(year))
             statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
@@ -976,7 +974,7 @@ async function gradeStatistics() {
 
             if (fromBackup) {
                 filteredGrades = statsGrades
-                    .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn')
+                    .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn' && grade.result >= 1 && grade.result <= 10)
                     .sort((a, b) => new Date(a.date) - new Date(b.date))
                 scStatsHeading.dataset.amount = filteredGrades.length
 

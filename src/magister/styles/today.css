@@ -312,7 +312,7 @@
     align-content: flex-start;
 }
 
-@container (height < 64px) {
+@container (height < 56px) {
     #st-start-schedule:not(.list-view) .st-start-event>* {
         transform: translateY(-2px);
         line-height: normal;
@@ -423,28 +423,25 @@
     transform: none !important;
 }
 
-.st-start-event.cancelled .st-start-event-subject-wrapper,
+.st-start-event.cancelled .st-start-event-subject,
 .st-start-event.cancelled .st-list-row {
     opacity: .75;
 }
 
-.st-start-event-subject-wrapper {
-    grid-area: subject;
-    display: flex;
-    gap: 4px;
-    width: max-content;
-    line-height: calc(26px * var(--font-size-modifier));
-}
-
 .st-start-event-subject {
+    grid-area: subject;
     display: inline-block;
-    font: 600 16px/26px var(--st-font-family-secondary);
+    font: 16px/26px var(--st-font-family-secondary);
     font-size: calc(16px * var(--font-size-modifier));
     line-height: inherit;
 }
 
 #st-start-schedule.list-view .st-start-event-subject {
-    font: 600 16px/24px var(--st-font-family-primary);
+    font: 16px/24px var(--st-font-family-primary);
+}
+
+.st-bold {
+    font-weight: 600;
 }
 
 .st-start-event-teacher {
@@ -1060,7 +1057,8 @@ a.st-widget-title {
     cursor: pointer;
 }
 
-.st-list-item[href]:hover, .st-start-event:hover {
+.st-list-item[href]:hover,
+.st-start-event:hover {
     background-color: var(--st-highlight-primary);
 }
 

@@ -152,6 +152,7 @@ div.loading-overlay {
 .st-dropdown,
 .st-dropdown:focus {
     display: flex;
+    justify-content: space-between;
     flex-wrap: nowrap;
     align-items: center;
     padding-inline: 2px;
@@ -205,8 +206,8 @@ div.loading-overlay {
 .st-dropdown-popover {
     position: absolute;
 
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-auto-rows: auto;
     gap: 4px;
     padding: 4px;
 
@@ -215,22 +216,28 @@ div.loading-overlay {
     border-radius: var(--st-border-radius);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 1000000;
+    overflow-y: auto;
 
     display: none;
 }
 
 .st-dropdown-popover.st-visible {
-    display: flex;
+    display: grid;
     animation: dropdownIn 150ms both;
 }
 
 .st-dropdown-popover.st-hidden {
-    display: flex;
+    display: grid;
     animation: dropdownOut 150ms both;
 }
 
 .st-dropdown-segment {
     width: 100%;
+    text-align: left;
+}
+
+.st-line.horizontal {
+    border-top: var(--st-border);
 }
 
 .st-segmented-control {
@@ -271,7 +278,6 @@ div.loading-overlay {
 
 .st-button:hover {
     filter: brightness(var(--st-hover-brightness));
-    transition: none;
 }
 
 .st-button:active {
@@ -396,12 +402,13 @@ div.loading-overlay {
     flex-direction: column;
     gap: 16px;
     min-width: 400px;
-    background-color: var(--st-background-secondary);
+    padding: 24px;
+    background-color: var(--st-background-overlay);
     color: var(--st-foreground-primary);
     font: 14px/18px var(--st-font-family-secondary);
     border: var(--st-border);
     border-radius: var(--st-border-radius);
-    padding: 24px;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     overflow: visible;
     animation: floatDown 300ms;
 }
@@ -410,17 +417,36 @@ div.loading-overlay {
     backdrop-filter: blur(3px);
 }
 
-.st-dialog-dismiss {
-    position: absolute;
-    top: 0;
-    right: -40px;
-    background-color: var(--st-background-secondary) !important;
-}
-
 .st-dialog>.st-button-wrapper {
     display: flex;
     gap: 8px;
-    margin-left: auto;
+    position: absolute;
+    bottom: -40px;
+    right: 0;
+}
+
+.st-dialog>.st-button-wrapper>.st-button,
+.st-dialog-dismiss {
+    background-color: var(--st-background-overlay) !important;
+    border: var(--st-border);
+    color: var(--st-foreground-secondary);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+
+.st-dialog-dismiss.st-step[data-icon]::before {
+    content: none;
+}
+
+.st-dialog-dismiss.st-step[data-icon]::after {
+    content: attr(data-icon);
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    font-family: "Font Awesome 6 Pro";
+    font-size: 18px;
+    vertical-align: -2px;
+    margin-left: 10px;
+    overflow: visible;
 }
 
 .st-input {
@@ -1187,6 +1213,26 @@ a.st-keyboard-hint.clicked {
     font-size: 12px;
     font-weight: normal;
     opacity: .15;
+}
+
+@keyframes displayIn {
+    0% {
+        display: none;
+    }
+
+    1% {
+        display: unset;
+    }
+}
+
+@keyframes displayOut {
+    99% {
+        display: unset;
+    }
+
+    100% {
+        display: none;
+    }
 }
 
 @keyframes rotation {

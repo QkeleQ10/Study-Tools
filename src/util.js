@@ -5,7 +5,9 @@ let syncedStorage = {},
     verbose = false,
     apiUserId,
     apiUserToken,
-    apiCache = {}
+    apiCache = {},
+    timeOffset,
+    timeZoneDifference;
 
 let eggs = [],
     announcements = [],
@@ -185,7 +187,7 @@ function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
     elementsWithTemporalBinding.forEach(element => {
 
-        let networkTime = new Date(new Date() - (timeOffset || 0)),
+        let networkTime = new Date(new Date().getTime() + (timeOffset || 0)),
             type = element.dataset.temporalType,
             start = new Date(element.dataset.temporalStart || networkTime),
             end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || networkTime)
@@ -268,8 +270,8 @@ function updateTemporalBindings() {
     })
 }
 
-let timeOffset = 0
-let timeZoneDifference = 0
+timeOffset = 0
+timeZoneDifference = 0
 fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
     .then(response => response.json())
     .then(data => {
@@ -338,7 +340,7 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     dropdown.innerText = ''
     dropdown.dataset.clickFunction = !!onClick
 
-    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption] })
+    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption].replace(i18n.sw.hideStudyguide, i18n.sw.hidden) })
     if (onClick) {
         selectedOptionElement.addEventListener('click', event => {
             if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
@@ -347,9 +349,14 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     }
 
     const dropdownPopover = element('div', dropdown.id ? `${dropdown.id}-popover` : null, document.body, { class: 'st-dropdown-popover' })
+    dropdownPopover.innerText = ''
 
     for (const key in options) {
-        if (Object.hasOwnProperty.call(options, key)) {
+        if (key === 'divider') {
+            const dividerElement = element('div', null, dropdownPopover, {
+                class: 'st-line horizontal'
+            })
+        } else if (Object.hasOwnProperty.call(options, key)) {
             const title = options[key]
             const optionElement = element('button', null, dropdownPopover, {
                 class: 'st-button segment st-dropdown-segment',
@@ -374,6 +381,8 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
         dropdownPopover.classList.add('st-visible')
         dropdown.classList.add('active')
 
+        dropdownPopover.style.bottom = (window.innerHeight - dropdownPopover.getBoundingClientRect().bottom) < 100 ? '15px' : 'auto'
+
         window.addEventListener('click', () => {
             setTimeout(() => {
                 dropdownPopover.classList.remove('st-visible')
@@ -388,10 +397,10 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     dropdown.selectedOption = selectedOption
 
     dropdown.changeValue = function (newValue) {
-        onChange(newValue)
+        onChange?.(newValue)
         selectedOption = newValue
         dropdown.selectedOption = selectedOption
-        selectedOptionElement.innerText = options[selectedOption]
+        selectedOptionElement.innerText = options[selectedOption].replace(i18n.sw.hideStudyguide, i18n.sw.hidden)
         dropdownPopover.querySelectorAll('.st-dropdown-segment').forEach(e => {
             if (selectedOption === e.dataset.key) e.classList.add('active')
             else e.classList.remove('active')
@@ -569,7 +578,7 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
     return chartArea
 }
 
-async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000) {
+async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
     switch (type) {
         case 'snackbar':
             const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 10000) }
@@ -582,8 +591,8 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                 const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
                 dialog.showModal()
 
+                const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                 if (buttons?.length > 0) {
-                    const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                     buttons.forEach(item => {
                         const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
                         if (item.innerText) button.innerText = item.innerText
@@ -601,7 +610,12 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                     })
                 }
 
-                const dialogDismiss = element('button', null, dialog, { class: 'st-button icon st-dialog-dismiss', innerText: '', title: "Dialoogvenster verbergen" })
+                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': '', innerText: "Sluiten" })
+                if (options?.index && options?.length) {
+                    dialogDismiss.classList.add('st-step')
+                    dialogDismiss.innerText = `${options.index} / ${options.length}`
+                    if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                }
                 dialogDismiss.addEventListener('click', () => {
                     dialog.close()
                     dialog.remove()
@@ -677,6 +691,31 @@ function createStyle(content, id) {
     styleElem.textContent = content
     document.head.append(styleElem)
     return styleElem
+}
+
+function formatOrdinals(number, feminine) {
+    const pr = new Intl.PluralRules(locale, { type: 'ordinal' })
+
+    const suffixes = {
+        'nl-NL': new Map([
+            ['other', 'e']
+        ]),
+        'en-GB': new Map([
+            ['one', 'st'],
+            ['two', 'nd'],
+            ['few', 'rd'],
+            ['other', 'th'],
+        ]),
+        'fr-FR': new Map([
+            ['zero', 'e'],
+            ['one', feminine ? 're' : 'er'],
+            ['other', 'e'],
+        ])
+    }
+
+    const rule = pr.select(number)
+    const suffix = suffixes[locale].get(rule) || suffixes[locale].get('other') || '.'
+    return `${number}${suffix}`
 }
 
 // Seeded random numbers.

@@ -1191,6 +1191,10 @@ table.table-grid-layout>tbody>tr.selected {
     box-shadow: none;
 }
 
+#examen-resultaten-widget dna-card {
+    --color: var(--st-foreground-primary);
+}
+
 .kwt-widget table {
     display: block;
 }

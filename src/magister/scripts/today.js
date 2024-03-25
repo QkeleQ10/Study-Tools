@@ -521,11 +521,14 @@ async function today() {
 
                     // Render the subject and location label
                     if (listViewEnabled) {
-                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
+                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject st-bold', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
-                        let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject-wrapper' })
-                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventSubjectWrapper, { class: 'st-start-event-subject', innerText: subjectNames.join(', ') })
-                        let eventLocation = element('span', `st-start-event-${item.Id}-location`, eventSubjectWrapper, { class: 'st-start-event-location', innerText: locationNames.join(', ') })
+                        let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject' })
+                        let eventSubject = element('b', null, eventSubjectWrapper, { class: 'st-bold', innerText: subjectNames.join(', ') })
+                        if (locationNames?.join(', ')?.length > 0) {
+                            let eventLocation = document.createTextNode('  (' + locationNames.join(', ') + ')')
+                            eventSubjectWrapper.appendChild(eventLocation)
+                        }
                     }
 
                     let row = element('div', `st-start-event-${item.Id}-row1`, eventElement, { class: 'st-list-row' })

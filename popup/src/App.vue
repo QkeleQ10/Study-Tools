@@ -14,7 +14,6 @@ import ThemePicker from './components/setting-types/ThemePicker.vue'
 import DecorationPicker from './components/DecorationPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
-import SubjectEditor from './components/SubjectEditor.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
 import About from './components/About.vue'
 import Chip from './components/Chip.vue'
@@ -23,7 +22,7 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, DecorationPicker, KeyPicker, ImageInput, SubjectEditor, ShortcutsEditor }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, DecorationPicker, KeyPicker, ImageInput, ShortcutsEditor }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')

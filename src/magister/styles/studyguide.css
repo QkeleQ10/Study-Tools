@@ -19,7 +19,7 @@
 
 #st-sw-search {
     position: absolute;
-    top: 38px;
+    top: 70px;
     right: 25px;
     z-index: 99999;
 }
@@ -46,21 +46,43 @@
     z-index: 99999;
 }
 
-#st-sw-show-hidden-items-label {
+#st-sw-hidden-items {
+    display: none;
+    flex-direction: column;
     position: absolute;
-    top: 85px;
-    right: 32px;
-    z-index: 99999;
+    bottom: 20px;
+    right: 25px;
+    width: 300px;
+    border-radius: var(--st-border-radius);
+    overflow: hidden;
 }
 
-#st-sw-show-hidden-items-label[data-disabled=true] {
-    opacity: .5;
+#st-sw-hidden-items.st-expanded {
+    display: flex;
+    border: var(--st-border);
+    animation: expandIn 150ms both;
 }
 
-#st-sw-help {
+#studiewijzer-detail-container dna-page-header {
+    clip-path: inset(0 15% 0 0);
+}
+
+#st-sw-hidden-items-button {
     position: absolute;
-    top: 40px;
-    right: 233px;
+    bottom: 20px;
+    right: 25px;
+    border: none;
+    background-color: transparent;
+    opacity: .75;
+    font: 14px var(--st-font-family-secondary);
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    transition: background-color 200ms, color 200ms, border 200ms, padding 200ms, margin 200ms, transform 200ms;
+}
+
+#st-sw-hidden-items-button.st-collapsed {
+    animation: shrinkOut 150ms, displayOut 150ms both;
+    pointer-events: none;
 }
 
 .st-sw-subject {
@@ -81,15 +103,18 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
-    gap: 1px;
-    background-color: var(--st-border-color);
+}
+
+.st-sw-items-wrapper>*:not(:first-child) {
+    border-top: var(--st-border);
 }
 
 .st-sw-items-wrapper[data-flex-row=true] {
     flex-direction: row;
 }
 
-.st-sw-subject button {
+.st-sw-subject button,
+#st-sw-hidden-items button {
     position: relative;
     outline: 0;
     border: none;
@@ -141,6 +166,10 @@
     background-color: var(--st-background-secondary);
 }
 
+.st-sw-item[data-2nd]:hover {
+    color: transparent;
+}
+
 .st-sw-item[data-2nd]:after {
     content: attr(data-2nd);
     position: absolute;
@@ -150,6 +179,7 @@
     left: 0;
     padding: 10px 12px;
     background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
     opacity: 0;
 }
 
