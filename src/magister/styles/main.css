@@ -94,7 +94,7 @@ div.loading-overlay {
 
 .st-button.primary:hover,
 .st-button.primary.icon:hover {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
     color: var(--st-contrast-accent);
     filter: none;
 }
@@ -803,7 +803,7 @@ a.st-metric:focus-visible {
     align-items: center;
     justify-content: center;
     border-radius: calc(var(--st-border-radius) * 0.5);
-    background: var(--st-accent-secondary);
+    background: var(--st-accent-primary-dark);
     color: var(--st-contrast-accent);
     font: 600 14px var(--st-font-family-secondary);
     border: 1px solid var(--st-foreground-accent);
@@ -1349,7 +1349,7 @@ a.st-keyboard-hint.clicked {
     }
 
     99% {
-        display: flex;
+        display: grid;
     }
 
     100% {

@@ -169,21 +169,21 @@ async function today() {
         }
 
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Vandaag'], disabled: true })
+        todayResetOffset.addEventListener('click', () => {
+            if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
+            agendaDayOffset = (todayDate.getDay() || 7) - 1
+            agendaDayOffsetChanged = true
+            renderSchedule()
+            updateHeaderButtons()
+            updateHeaderText()
+        })
         let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Achteruit'] })
         todayDecreaseOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
             if (agendaView !== 'day') agendaDayOffset -= 7
             else agendaDayOffset--
             if (agendaDayOffset < 0) agendaDayOffset = 0
-            agendaDayOffsetChanged = true
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
-        })
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Vandaag'], disabled: true })
-        todayResetOffset.addEventListener('click', () => {
-            if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
-            agendaDayOffset = (todayDate.getDay() || 7) - 1
             agendaDayOffsetChanged = true
             renderSchedule()
             updateHeaderButtons()
@@ -709,7 +709,7 @@ async function today() {
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
                         let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
 
-                        let grades, hiddenItems, lastViewMs
+                        let grades, assignments, hiddenItems, lastViewMs
                         if (placeholder) {
                             grades = [
                                 {
@@ -743,25 +743,44 @@ async function today() {
                                     weegfactor: 0
                                 }
                             ]
+                            assignments = []
                             hiddenItems = []
                             lastViewMs = 0
                         } else {
                             grades = await MagisterApi.grades.recent()
                                 .catch(() => { return reject() })
+                            assignments = await MagisterApi.assignments.top()
+                                .catch(() => { return reject() })
+
                             hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
                             lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
                         }
                         let lastViewDate = new Date(lastViewMs)
                         if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
-                        const recentGrades = grades.map(item => {
-                            return {
+                        const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
+                            {
+                                ...item,
+                                omschrijving: item.Titel,
+                                ingevoerdOp: item.BeoordeeldOp,
+                                vak: {
+                                    code: item.Vak ? item.Vak + " (opdr.)" : "opdr.",
+                                    omschrijving: item.Vak? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
+                                },
+                                waarde: item.Beoordeling || '?',
+                                isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= 5.5,
+                                weegfactor: 0,
+                                assignment: true
+                            }
+                        ))
+                        const recentGrades = [...grades, ...relevantAssignments].map(item => (
+                            {
                                 ...item,
                                 date: new Date(item.ingevoerdOp),
                                 unread: new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7)),
                                 hidden: (hiddenItems.includes(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
                             }
-                        })
+                        ))
 
                         if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
@@ -778,7 +797,7 @@ async function today() {
                         let lastGrade = element('span', 'st-start-widget-grades-last', widgetElement, { innerText: mostRecentItemGrade })
                         if (mostRecentItem.hidden) lastGrade.style.display = 'none'
                         let lastGradeSubj = element('span', 'st-start-widget-grades-last-subj', widgetElement, { innerText: mostRecentItem.vak.omschrijving.charAt(0).toUpperCase() + mostRecentItem.vak.omschrijving.slice(1) })
-                        let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor || 0}×)` })
+                        let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: mostRecentItem.assignment ? mostRecentItem.omschrijving : `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor || 0}×)` })
                         let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { 'data-temporal-type': 'timestamp', 'data-temporal-start': mostRecentItem.date })
                         let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
                         lastGradeHide.addEventListener('click', (event) => {
@@ -1038,7 +1057,7 @@ async function today() {
                                 .catch(() => { return reject() })
                         }
 
-                        const relevantAssignments = assignments.filter(item => (!item.Afgesloten && !item.IngeleverdOp) || item.BeoordeeldOp)
+                        const relevantAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
 
                         if (relevantAssignments.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })

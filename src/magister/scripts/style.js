@@ -73,7 +73,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-accent: ${shiftedHslColor(207, 53, 55, color.h, color.s, color.l, undefined, undefined, 55)};
     --st-border-color: #2e2e2eaa;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
-    --st-accent-secondary: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
+    --st-accent-primary-dark: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
@@ -113,7 +113,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-accent: ${shiftedHslColor(207, 78, 43, color.h, color.s, color.l, undefined, undefined, 43)};
     --st-border-color: #edededaa;
     --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
-    --st-accent-secondary: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
+    --st-accent-primary-dark: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
@@ -713,7 +713,7 @@ a.appbar-button,
 }
 
 .appbar-host {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
 }
 
 aside, aside .block,
@@ -725,7 +725,7 @@ aside, aside .block,
 }
 
 .main-menu>li.active>a, .main-menu>li.active>a:hover {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
 }
 
 .main-menu>li>a:hover {
@@ -746,7 +746,7 @@ aside, aside .block,
 }
 
 .main-menu li.children li.submenu.active>a, .main-menu li.children li.submenu.active>a:hover {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
     font-weight: normal;
 }
 
@@ -957,7 +957,7 @@ aside .tabs li a {
 }
 
 .menu-footer>a:hover {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
 }
 
 .collapsed-menu .menu-footer i {
