@@ -160,12 +160,41 @@
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour));
     left: -8px;
-    right: -8px;
+    right: -6px;
     height: 1px;
     padding-bottom: 64px;
-    border-top: 1px solid var(--st-accent-primary);
+    border-top: 1px solid var(--st-foreground-accent);
     z-index: 0;
     pointer-events: none;
+}
+
+#st-start-now-label {
+    position: absolute;
+    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour) - 8px);
+    right: -6px;
+    padding-block: 2px;
+    padding-right: 4px;
+    height: 16px;
+    font: 600 9px var(--st-font-family-secondary);
+    background-color: var(--st-foreground-accent);
+    border-top-right-radius: calc(var(--st-border-radius) * 0.5);
+    border-bottom-right-radius: calc(var(--st-border-radius) * 0.5);
+    color: var(--st-contrast-accent);
+    z-index: 2;
+    pointer-events: none;
+}
+
+#st-start-now-label:before {
+    content: '';
+    position: absolute;
+    display: block;
+    left: -8px;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid var(--st-foreground-accent);
 }
 
 #st-start-schedule:not(.week-view) .st-start-col:first-child {
@@ -180,8 +209,26 @@
     margin-left: -24px;
 }
 
-#st-start-schedule:not(.week-view) .st-start-col:last-child #st-start-now {
-    margin-right: -24px;
+#st-start-schedule:not(.week-view) .st-start-col:last-child #st-start-now,
+#st-start-schedule:not(.week-view) .st-start-col:last-child #st-start-now-label {
+    margin-right: -22px;
+}
+
+#st-start-schedule.week-view #st-start-now-label {
+    display: none;
+}
+
+#st-start-schedule.week-view #st-start-now:after {
+    content: '';
+    position: absolute;
+    display: block;
+    right: -2px;
+    top: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid var(--st-foreground-accent);
 }
 
 .st-start-col {

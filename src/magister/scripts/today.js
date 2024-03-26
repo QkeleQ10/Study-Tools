@@ -550,11 +550,21 @@ async function today() {
                     })
                 })
 
+
+                // Ensure a nice scrolling position if the date shown is not today
+                if (schedule.scrollTop === 0 && (agendaView === 'day' || (listViewEnabledSetting && agendaView !== 'day')) && !agendaDayOffsetChanged) {
+                    schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
+                    if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
+                    if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                    schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
+                }
+
                 if (!listViewEnabled && day.today) {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
-                    let currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' })
+                    const currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' }),
+                        currentTimeMarkerLabel = element('div', `st-start-now-label`, column, { 'data-temporal-type': 'style-hours', innerText: i18n.dates.nowBrief?.toUpperCase() })
                     updateTemporalBindings()
-                    if (schedule.scrollTop === 0 && (agendaView === 'day' || listViewEnabledSetting && agendaView !== 'day')) {
+                    if (schedule.scrollTop === 0 && (agendaView === 'day' || (listViewEnabledSetting && agendaView !== 'day'))) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
                         if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                         if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
@@ -765,7 +775,7 @@ async function today() {
                                 ingevoerdOp: item.BeoordeeldOp,
                                 vak: {
                                     code: item.Vak ? item.Vak + " (opdr.)" : "opdr.",
-                                    omschrijving: item.Vak? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
+                                    omschrijving: item.Vak ? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
                                 },
                                 waarde: item.Beoordeling || '?',
                                 isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= 5.5,

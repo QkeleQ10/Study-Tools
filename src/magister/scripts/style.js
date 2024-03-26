@@ -71,7 +71,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-secondary: #dddddd;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${shiftedHslColor(207, 53, 55, color.h, color.s, color.l, undefined, undefined, 55)};
-    --st-border-color: #2e2e2ea;
+    --st-border-color: #2e2e2eaa;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-accent-primary-dark: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
