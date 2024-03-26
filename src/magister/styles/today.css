@@ -1034,6 +1034,7 @@ a.st-widget-title {
     border-radius: 0;
     border: none;
     cursor: none;
+    background-color: var(--st-background-primary);
 }
 
 #st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-time {
