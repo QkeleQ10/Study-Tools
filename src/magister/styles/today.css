@@ -205,16 +205,20 @@
     background-color: var(--st-border-color);
 }
 
+#st-start-schedule.list-view .st-start-col:before {
+    display: none;
+}
+
 .st-start-col[data-irrelevant=true] {
-    flex-basis: 10%;
+    flex-basis: 9%;
 }
 
 .st-start-col[data-today=true] {
-    flex-basis: 21%;
+    flex-basis: 22%;
 }
 
 .st-start-col[data-tomorrow=true] {
-    flex-basis: 18%;
+    flex-basis: 19%;
 }
 
 .st-start-col-label {
@@ -378,6 +382,7 @@
     justify-content: center;
     align-items: center;
     background-color: var(--st-highlight-primary);
+    border: var(--st-border);
     border-radius: calc(var(--st-border-radius) * 0.75);
     font: 600 16px/40px var(--st-font-family-primary);
 }
@@ -386,6 +391,7 @@
     height: 24px;
     width: 24px;
     background-color: transparent;
+    border: none;
 }
 
 .st-start-event-school-hours.icon {
@@ -432,12 +438,12 @@
     grid-area: subject;
     display: inline-block;
     font: 16px/26px var(--st-font-family-secondary);
-    font-size: calc(16px * var(--font-size-modifier));
+    font-size: calc(15px * var(--font-size-modifier));
     line-height: inherit;
 }
 
 #st-start-schedule.list-view .st-start-event-subject {
-    font: 16px/24px var(--st-font-family-primary);
+    font: 500 15px/24px var(--st-font-family-primary);
 }
 
 .st-bold {
