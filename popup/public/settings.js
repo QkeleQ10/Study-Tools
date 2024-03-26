@@ -209,8 +209,7 @@ export default [
                 max: 5,
                 step: 1,
                 conditions: [
-                    { settingId: 'start-enabled', operator: 'equal', value: true },
-                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' }
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
                 ],
             },
             {

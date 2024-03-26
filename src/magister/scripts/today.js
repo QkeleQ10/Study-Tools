@@ -408,23 +408,23 @@ async function today() {
                     agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                     if (listViewEnabled) {
                         schedule.classList.add('list-view')
-                        agendaEndDate = new Date(new Date(agendaStartDate))
-                    } else {
-                        let todayIndex = agendaDays.findIndex(item => item.today)
-                        let todayEvents = agendaDays[todayIndex].events
-                        let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
-                        let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
-                        let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
-
-                        // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
-                        if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
-                            agendaDayOffset = nextRelevantDayIndex
-                            agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                            notify('snackbar', `${i18n.toasts.jumpedToNextRelevantDay} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
-                        }
-
-                        agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
                     }
+
+                    let todayIndex = agendaDays.findIndex(item => item.today)
+                    let todayEvents = agendaDays[todayIndex].events
+                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
+                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
+                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
+
+                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
+                    if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
+                        agendaDayOffset = nextRelevantDayIndex
+                        agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
+                        notify('snackbar', `${i18n.toasts.jumpedToNextRelevantDay} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                    }
+
+                    agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
+
                     schedule.classList.remove('week-view')
                     break;
             }
@@ -448,13 +448,13 @@ async function today() {
                 if (day.date < agendaStartDate || day.date > agendaEndDate) return
 
                 // Create a column for the day
-                let column = element('div', `st-start-col-${i}`, scheduleWrapper, {
+                const column = element('div', `st-start-col-${i}`, scheduleWrapper, {
                     class: 'st-start-col',
                     'data-today': day.today,
                     'data-tomorrow': day.tomorrow,
                     'data-irrelevant': day.irrelevant
-                }),
-                    columnLabel = element('div', `st-start-col-${i}-head`, column, { class: 'st-start-col-label' }),
+                })
+                const columnLabel = element('div', `st-start-col-${i}-head`, column, { class: 'st-start-col-label' }),
                     columnLabelSpan = element('span', `st-start-col-${i}-head-span`, columnLabel, { innerText: day.date.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long' }) }),
                     columnLabelDiv = element('div', `st-start-col-${i}-head-div`, columnLabel, { innerText: day.date.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric' }) })
                 if (day.date.getDate() === 1) element('span', `st-start-col-${i}-head-span-2`, columnLabel, { innerText: day.date.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' }) })
@@ -550,7 +550,7 @@ async function today() {
                     })
                 })
 
-                if (!listViewEnabled && !agendaDayOffsetChanged) {
+                if (!listViewEnabled && day.today) {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
                     let currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' })
                     updateTemporalBindings()

@@ -71,7 +71,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-secondary: #dddddd;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${shiftedHslColor(207, 53, 55, color.h, color.s, color.l, undefined, undefined, 55)};
-    --st-border-color: #2e2e2eaa;
+    --st-border-color: #2e2e2ea;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-accent-secondary: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
@@ -111,7 +111,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-foreground-secondary: #555555;
     --st-foreground-insignificant: #888;
     --st-foreground-accent: ${shiftedHslColor(207, 78, 43, color.h, color.s, color.l, undefined, undefined, 43)};
-    --st-border-color: #edededaa;
+    --st-border-color: #dfdfdfaa;
     --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
     --st-accent-secondary: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
     --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
