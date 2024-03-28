@@ -365,8 +365,8 @@ async function today() {
         // Display 'no events' if necessary
         // TODO: use req status
         if (!(events?.length > 0)) {
-            element('i', `st-start-fa`, container, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
-            element('span', `st-start-disclaimer`, container, { class: 'st-start-disclaimer', innerText: i18n.error })
+            element('i', `st-start-fa`, schedule, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
+            element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n.error })
             return
         }
 

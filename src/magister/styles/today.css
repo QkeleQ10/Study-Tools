@@ -330,6 +330,8 @@
     top: 50%;
     left: 50%;
     translate: -50% calc(-50% - 32px);
+    width: max-content;
+    height: max-content;
     font-size: 90px;
     opacity: .5;
     color: var(--st-accent-primary);
@@ -341,6 +343,8 @@
     top: 50%;
     left: 50%;
     translate: -50% calc(-50% + 32px);
+    width: max-content;
+    height: max-content;
     font: 600 14px var(--st-font-family-secondary);
     opacity: .5;
     color: var(--st-foreground-secondary);
