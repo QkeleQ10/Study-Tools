@@ -485,7 +485,7 @@ function autoStudyguideSubject(title) {
         { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
         { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen"] },
         { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] },
-        { name: "Examentraining", aliases: ["examentraining"] },
+        { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
         { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] }
     ]
 

@@ -136,6 +136,8 @@
     "moreGradesSingular": "and another grade for %s",
     "moreGradesPlural": "%s1 more grades for %s2",
     "moreGradesMany": "more grades, including ones for %s",
+    "noEvents": "No events on this day",
+    "error": "Something went wrong",
     "hb": {
         "title": "Recommended",
         "subtitle": "A curated collection of helpful resources to help you master the subject matter"

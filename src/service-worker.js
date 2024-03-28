@@ -40,6 +40,8 @@ async function startListenCredentials() {
         // Return if the request was made by Study Tools itself
         if (Object.values(e.requestHeaders).find(header => header.name === 'X-Request-Source')?.value === 'study-tools') return
 
+        console.info('Request caught!')
+
         let userIdWas = userId
         let userTokenWas = userToken
         let userTokenDateWas = userTokenDate
@@ -57,7 +59,7 @@ async function startListenCredentials() {
             userTokenDate = new Date()
             chrome.storage.session.set({ 'token': userToken })
             chrome.storage.session.set({ 'token-date': userTokenDate.getTime() })
-            if (userTokenWas !== userToken && userTokenDateWas.getTime() === 0) console.info(`User token gathered.`)
+            if (userTokenWas !== userToken && userTokenDateWas.getTime() == 0) console.info(`User token gathered.`)
             else if (userTokenWas !== userToken) console.info(`User token changed since ${userTokenDate - userTokenDateWas} ms ago.`)
         }
 

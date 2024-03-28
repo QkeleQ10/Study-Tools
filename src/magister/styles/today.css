@@ -324,6 +324,28 @@
     margin-right: -32px;
 }
 
+.st-start-icon {
+    display: inline-block;
+    position: sticky !important;
+    top: 50%;
+    left: 50%;
+    translate: -50% calc(-50% - 32px);
+    font-size: 90px;
+    opacity: .5;
+    color: var(--st-accent-primary);
+}
+
+.st-start-disclaimer {
+    display: inline-block;
+    position: sticky;
+    top: 50%;
+    left: 50%;
+    translate: -50% calc(-50% + 32px);
+    font: 600 14px var(--st-font-family-secondary);
+    opacity: .5;
+    color: var(--st-foreground-secondary);
+}
+
 .st-start-event {
     --font-size-modifier: 1;
     --relative-start: 0;

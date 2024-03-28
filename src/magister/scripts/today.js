@@ -362,6 +362,14 @@ async function today() {
 
         const events = await MagisterApi.events()
 
+        // Display 'no events' if necessary
+        // TODO: use req status
+        if (!(events?.length > 0)) {
+            element('i', `st-start-fa`, container, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
+            element('span', `st-start-disclaimer`, container, { class: 'st-start-disclaimer', innerText: i18n.error })
+            return
+        }
+
         // Create an array with 42 days (6 weeks) containing events of those days
         let agendaDays = []
         for (let i = 0; i < 42; i++) {
@@ -550,6 +558,11 @@ async function today() {
                     })
                 })
 
+                // Display 'no events' if necessary
+                if (day.events?.length < 1) {
+                    element('i', `st-start-col-${i}-fa`, column, { class: 'st-start-icon fa-duotone fa-island-tropical' })
+                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: i18n.noEvents })
+                }
 
                 // Ensure a nice scrolling position if the date shown is not today
                 if (schedule.scrollTop === 0 && (agendaView === 'day' || (listViewEnabledSetting && agendaView !== 'day')) && !agendaDayOffsetChanged) {

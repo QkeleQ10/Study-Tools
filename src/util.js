@@ -1,3 +1,5 @@
+chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service worker
+
 let syncedStorage = {},
     localStorage = {},
     locale = 'nl-NL',
