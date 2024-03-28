@@ -78,40 +78,12 @@
         ]
     },
     "greetings": {
-        "lateNight": [
-            "Good evening#",
-            "Good evening, night owl#",
-            "Happy %s night#"
-        ],
-        "evening": [
-            "Good evening#",
-            "Happy %s evening#"
-        ],
-        "afternoon": [
-            "Good day#",
-            "Happy %s#"
-        ],
-        "morning": [
-            "Good morning#",
-            "Happy %s#",
-            "Happy %s morning#"
-        ],
-        "earlyNight": [
-            "Good morning#",
-            "Good morning, night owl#",
-            "Good morning, early bird#",
-            "Happy %s#",
-            "Happy %s morning#"
-        ],
-        "generic": [
-            "Welcome#",
-            "Hello!",
-            "Hi!",
-            "Welcome back, %n#",
-            "Hey, %n#",
-            "Welcome back#",
-            "Good day#"
-        ]
+        "lateNight": "Good evening#;Good evening, night owl#;Happy %s night#",
+        "evening": "Good evening#;Happy %s evening#",
+        "afternoon": "Good day#;Happy %s#",
+        "morning": "Good morning#;Happy %s#;Happy %s morning#",
+        "earlyNight": "Good morning#;Good morning, night owl#;Good morning, early bird#;Happy %s#;Happy %s morning#",
+        "generic": "Welcome#;Hello!;Hi!;Welcome back, %n#;Hey, %n#;Welcome back#;Good day#"
     },
     "toasts": {
         "jumpedToNextRelevantDay": "Viewing next day with calendar events"

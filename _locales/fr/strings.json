@@ -78,38 +78,12 @@
         ]
     },
     "greetings": {
-        "lateNight": [
-            "Bonsoir#",
-            "Bonne soirée#",
-            "Bonsoir, oiseau de nuit#",
-            "Bon %s soir #"
-        ],
-        "evening": [
-            "Bonsoir#",
-            "Bonne soirée#",
-            "Bon %s soir#"
-        ],
-        "afternoon": [
-            "Bon après-midi#",
-            "Bon %s après-midi#"
-        ],
-        "morning": [
-            "Bonjour#",
-            "Bon %s matin#"
-        ],
-        "earlyNight": [
-            "Bonjour#",
-            "Bonjour, oiseau de nuit#",
-            "Bonjour, lève-tôt#",
-            "Bon %s matin#"
-        ],
-        "generic": [
-            "Bienvenue#",
-            "Bonjour#",
-            "Bon retour, %n#",
-            "Content de te revoir#",
-            "Salut#"
-        ]
+        "lateNight": "Bonsoir#;Bonne soirée#;Bonsoir, oiseau de nuit#;Bon %s soir #",
+        "evening": "Bonsoir#;Bonne soirée#;Bon %s soir#",
+        "afternoon": "Bon après-midi#;Bon %s après-midi#",
+        "morning": "Bonjour#;Bon %s matin#",
+        "earlyNight": "Bonjour#;Bonjour, oiseau de nuit#;Bonjour, lève-tôt#;Bon %s matin#",
+        "generic": "Bienvenue#;Bonjour#;Bon retour, %n#;Content de te revoir#;Salut#"
     },
     "toasts": {
         "jumpedToNextRelevantDay": "Affichage du lendemain avec des événements"

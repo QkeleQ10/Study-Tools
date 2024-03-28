@@ -78,39 +78,12 @@
         ]
     },
     "greetings": {
-        "lateNight": [
-            "Goedenavond#",
-            "Goedenavond, nachtuil#",
-            "Fijne %savond#"
-        ],
-        "evening": [
-            "Goedenavond#",
-            "Fijne %savond#"
-        ],
-        "afternoon": [
-            "Goedemiddag#",
-            "Fijne %smiddag#"
-        ],
-        "morning": [
-            "Goedemorgen#",
-            "Goeiemorgen#",
-            "Fijne %sochtend#"
-        ],
-        "earlyNight": [
-            "Goedemorgen#",
-            "Goeiemorgen#",
-            "Goedemorgen, nachtuil#",
-            "Goedemorgen, vroege vogel#",
-            "Fijne %sochtend#"
-        ],
-        "generic": [
-            "Welkom#",
-            "Hallo!",
-            "Welkom terug, %n#",
-            "Hey, %n#",
-            "Welkom terug#",
-            "Goedendag#"
-        ]
+        "lateNight": "Goedenavond#;Goedenavond, nachtuil#;Fijne %savond#",
+        "evening": "Goedenavond#;Fijne %savond#",
+        "afternoon": "Goedemiddag#;Fijne %smiddag#",
+        "morning": "Goedemorgen#;Goeiemorgen#;Fijne %sochtend#",
+        "earlyNight": "Goedemorgen#;Goeiemorgen#;Goedemorgen, nachtuil#;Goedemorgen, vroege vogel#;Fijne %sochtend#",
+        "generic": "Welkom#;Hallo!;Welkom terug, %n#;Hey, %n#;Welkom terug#;Goedendag#"
     },
     "toasts": {
         "jumpedToNextRelevantDay": "Gesprongen naar eerstvolgende dag met afspraken"
