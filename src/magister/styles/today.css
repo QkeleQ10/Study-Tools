@@ -329,12 +329,13 @@
     position: sticky !important;
     top: 50%;
     left: 50%;
-    translate: -50% calc(-50% - 32px);
-    width: max-content;
+    translate: -50% calc(-50% - 48px);
+    width: 120px;
     height: max-content;
     font-size: 90px;
+    text-align: center;
     opacity: .5;
-    color: var(--st-accent-primary);
+    color: var(--st-foreground-secondary);
 }
 
 .st-start-disclaimer {
@@ -346,6 +347,7 @@
     width: max-content;
     height: max-content;
     font: 600 14px var(--st-font-family-secondary);
+    text-align: center;
     opacity: .5;
     color: var(--st-foreground-secondary);
 }

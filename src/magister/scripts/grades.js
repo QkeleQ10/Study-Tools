@@ -22,7 +22,7 @@ async function gradeList() {
     const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
 
     if (syncedStorage['cb']) {
-        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n.cb.title, 'data-icon': '' })
+        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
         cbPreOpen.addEventListener('click', async () => {
             document.location.hash = '#/cijfers/cijferoverzicht'
             const cbOpen = await awaitElement('#st-cb')
@@ -31,7 +31,7 @@ async function gradeList() {
     }
 
     if (syncedStorage['cc']) {
-        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: i18n.cc.title, 'data-icon': '' })
+        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: i18n('cc.title'), 'data-icon': '' })
         ccPreOpen.addEventListener('click', async () => {
             document.location.hash = '#/cijfers/cijferoverzicht'
             const ccOpen = await awaitElement('#st-cc-open')
@@ -104,9 +104,9 @@ async function gradeCalculator(buttonWrapper) {
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl')
 
-    const clOpen = element('button', 'st-cc-open', buttonWrapper, { class: 'st-button', innerText: i18n.cc.title, 'data-icon': '' }),
+    const clOpen = element('button', 'st-cc-open', buttonWrapper, { class: 'st-button', innerText: i18n('cc.title'), 'data-icon': '' }),
         clOverlay = element('div', 'st-cc', document.body, { class: 'st-overlay' }),
-        clTitle = element('span', 'st-cc-title', clOverlay, { class: 'st-title', innerText: i18n.cc.title }),
+        clTitle = element('span', 'st-cc-title', clOverlay, { class: 'st-title', innerText: i18n('cc.title') }),
         clSubtitle = element('span', 'st-cc-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt." }),
         clButtons = element('div', 'st-cc-buttons', clOverlay),
         clBugReport = element('button', 'st-cc-bugs', clButtons, { class: 'st-button icon', title: "Ervaar je problemen?", 'data-icon': '' }),
@@ -479,11 +479,11 @@ async function gradeBackup(buttonWrapper) {
     const aside = await awaitElement('#cijfers-container > aside'),
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-        bkInvoke = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n.cb.title }),
+        bkInvoke = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') }),
         // TODO: Give this modal the same treatment as the today.js edit modal.
         bkModal = element('dialog', 'st-cb-modal', document.body, { class: 'st-overlay' }),
         bkModalClose = element('button', 'st-cb-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: i18n['close'] }),
-        bkModalTitle = element('span', 'st-cb-title', bkModal, { class: 'st-title', innerText: i18n.cb.title }),
+        bkModalTitle = element('span', 'st-cb-title', bkModal, { class: 'st-title', innerText: i18n('cb.title') }),
         bkModalSubtitle = element('span', 'st-cb-subtitle', bkModal, { class: 'st-subtitle', innerText: "Exporteer of importeer je cijferlijst zodat je er altijd bij kunt." }),
         bkModalWrapper = element('div', 'st-cb-modal-wrapper', bkModal),
         bkModalEx = element('div', 'st-cb-ex', bkModalWrapper, { class: 'st-list st-tile' }),
@@ -789,14 +789,14 @@ async function gradeStatistics() {
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
         scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
-        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: i18n.cs.title })
+        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: i18n('cs.title') })
 
     const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
         scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
         scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Selecteer hier welke vakken en leerjaren worden getoond!" })
 
     const scStats = element('div', 'st-cs-stats', scContainer),
-        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: i18n.cs.title, 'data-amount': 0 }),
+        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: i18n('cs.title'), 'data-amount': 0 }),
         scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
 
     const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
@@ -821,8 +821,8 @@ async function gradeStatistics() {
         scLineChart = element('div', 'st-cs-history-chart', scHistory)
 
     const scFilters = element('div', 'st-cs-filters', scContainer),
-        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n.cs.filters }),
-        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n.cs.years })
+        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n('cs.filters') }),
+        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n('cs.years') })
     scYearFilter = element('div', 'st-cs-year-filter', scFilters),
         scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)

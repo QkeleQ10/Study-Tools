@@ -3,7 +3,8 @@ chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service
 let syncedStorage = {},
     localStorage = {},
     locale = 'nl-NL',
-    i18n = {},
+    i18nData = {},
+    i18nDataNl = {},
     verbose = false,
     apiUserId,
     apiUserToken,
@@ -23,7 +24,9 @@ let eggs = [],
             locale = syncedStorage['language']
             if (!['nl-NL', 'en-GB', 'fr-FR'].includes(locale)) locale = 'nl-NL'
             const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
-            i18n = await req.json()
+            i18nData = await req.json()
+            const reqNl = await fetch(chrome.runtime.getURL(`_locales/nl/strings.json`))
+            i18nDataNl = await reqNl.json()
         }
 
         localStorage = await getFromStorageMultiple(null, 'local', true)
@@ -199,33 +202,33 @@ function updateTemporalBindings() {
                 let timestamp = start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
                 if (start <= networkTime && end >= networkTime) {
                     // Start date is in the past and End date is in the future
-                    i18n.dates['now']
+                    i18n('dates.now')
                 } else if (start >= networkTime) {
                     // Start date is in the future
                     if (start - networkTime < minToMs(15)) timestamp =
-                        i18n.dates['soon']
+                        i18n('dates.soon')
                     else if (start.isToday()) timestamp =
-                        i18n.dates['todayAtTime'].replace('%s', start.getFormattedTime())
+                        i18n('dates.todayAtTime', { time: start.getFormattedTime() })
                     else if (start.isTomorrow()) timestamp =
-                        i18n.dates['tomorrowAtTime'].replace('%s', start.getFormattedTime())
+                        i18n('dates.tomorrowAtTime', { time: start.getFormattedTime() })
                     else if (start - networkTime < daysToMs(5)) timestamp =
-                        i18n.dates['weekdayAtTime'].replace('%s1', start.getFormattedDay()).replace('%s2', start.getFormattedTime())
+                        i18n('dates.weekdayAtTime', { weekday: start.getFormattedDay(), time: start.getFormattedTime() })
                     else if (start - networkTime < daysToMs(90)) timestamp =
-                        i18n.dates['weekdayInWeek'].replace('%s1', start.getWeek()).replace('%s2', start.getFormattedDay())
+                        i18n('dates.weekdayInWeek', { weekday: start.getFormattedDay(), week: start.getWeek() })
                     else timestamp =
                         start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 } else if (end <= networkTime) {
                     // End date is in the past
                     if (networkTime - end < minToMs(5)) timestamp =
-                        i18n.dates['justNow']
+                        i18n('dates.justNow')
                     else if (networkTime - end < minToMs(15)) timestamp =
-                        i18n.dates['fewMinsAgo']
+                        i18n('dates.fewMinsAgo')
                     else if (end.isToday()) timestamp =
-                        i18n.dates['todayAtTime'].replace('%s', end.getFormattedTime())
+                        i18n('dates.todayAtTime', { time: end.getFormattedTime() })
                     else if (end.isYesterday()) timestamp =
-                        i18n.dates['yesterdayAtTime'].replace('%s', end.getFormattedTime())
+                        i18n('dates.yesterdayAtTime', { time: end.getFormattedTime() })
                     else if (networkTime - end < daysToMs(5)) timestamp =
-                        i18n.dates['lastWeekday'].replace('%s', end.getFormattedDay())
+                        i18n('dates.lastWeekday', { weekday: end.getFormattedDay() })
                     else if (networkTime.getFullYear() !== end.getFullYear()) timestamp =
                         end.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
                 }
@@ -305,7 +308,7 @@ Date.prototype.getWeek = function () {
 
 Date.prototype.getFormattedDay = function () {
     let d = this
-    const weekDays = i18n.dates.weekdays
+    const weekDays = i18n('dates.weekdays')
     return weekDays[d.getDay()]
 }
 
@@ -342,7 +345,7 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     dropdown.innerText = ''
     dropdown.dataset.clickFunction = !!onClick
 
-    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption].replace(i18n.sw.hideStudyguide, i18n.sw.hidden) })
+    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption].replace(i18n('sw.hideStudyguide'), i18n('sw.hidden')) })
     if (onClick) {
         selectedOptionElement.addEventListener('click', event => {
             if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
@@ -402,7 +405,7 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
         onChange?.(newValue)
         selectedOption = newValue
         dropdown.selectedOption = selectedOption
-        selectedOptionElement.innerText = options[selectedOption].replace(i18n.sw.hideStudyguide, i18n.sw.hidden)
+        selectedOptionElement.innerText = options[selectedOption].replace(i18n('sw.hideStudyguide'), i18n('sw.hidden'))
         dropdownPopover.querySelectorAll('.st-dropdown-segment').forEach(e => {
             if (selectedOption === e.dataset.key) e.classList.add('active')
             else e.classList.remove('active')
@@ -693,6 +696,29 @@ function createStyle(content, id) {
     styleElem.textContent = content
     document.head.append(styleElem)
     return styleElem
+}
+
+function i18n(key, variables = {}, useDefaultLanguage = false) {
+    if (!(key.length > 0)) return ''
+
+    const keys = key.split('.')
+    let value = useDefaultLanguage ? i18nDataNl : i18nData
+
+    for (const k of keys) {
+        value = value[k]
+        if (!value) value = useDefaultLanguage ? key : i18n(key, variables, true)
+    }
+
+    if (value) {
+        for (const variableName in variables) {
+            if (Object.hasOwnProperty.call(variables, variableName)) {
+                const variableContent = variables[variableName]
+                value = value.replace(new RegExp(`{${variableName}}`, 'g'), variableContent)
+            }
+        }
+    }
+
+    return value || ''
 }
 
 function formatOrdinals(number, feminine) {

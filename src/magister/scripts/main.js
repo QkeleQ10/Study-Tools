@@ -22,7 +22,7 @@ async function main() {
 
     const allMenuItemSpans = await awaitElement('.main-menu a span, .main-menu .popup-menu a', true)
     allMenuItemSpans.forEach(span => {
-        span.innerText = i18n.views[span.innerText] || span.innerText
+        span.innerText = i18n(`views.${span.innerText}`) || span.innerText
     })
 
     document.querySelector('.menu-footer > a > span').innerText = i18n['Inklappen']
@@ -34,7 +34,7 @@ async function main() {
 
     // Week number indicator
     if (syncedStorage['magister-appbar-week']) {
-        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': i18n.dates['week'], innerText: new Date().getWeek(), href: '#/vandaag' })
+        let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': i18n('dates.week'), innerText: new Date().getWeek(), href: '#/vandaag' })
         appbarWeek.addEventListener('click', async () => {
             let weekSel = await awaitElement('#st-start-today-view-popover>button:nth-child(2)')
             if (weekSel) weekSel.click()
@@ -216,7 +216,7 @@ async function popstate() {
         if (header) {
             const title = header.shadowRoot.querySelector('div.container div.title')
             if (!(title?.innerText?.length > 1)) return
-            title.innerText = i18n.views[title.innerText] || title.innerText
+            title.innerText = i18n(`views.${title.innerText}`) || title.innerText
         }
 
         const breadcrumbs = await awaitElement('dna-breadcrumb', true, 1000, true)
@@ -224,7 +224,7 @@ async function popstate() {
             breadcrumbs.forEach(e => {
                 const title = e
                 if (!(title?.innerText?.length > 1)) return
-                title.innerHTML = title.innerHTML.replace(title.innerText, i18n.views[title.innerText] || title.innerText)
+                title.innerHTML = title.innerHTML.replace(title.innerText, i18n(`views.${title.innerText}`) || title.innerText)
             })
         }
 
@@ -238,7 +238,7 @@ async function popstate() {
                 const header = frame.contentDocument.querySelector('dna-page-header')
                 if (header) {
                     const title = header.shadowRoot.querySelector('div.container div.title')
-                    title.innerText = i18n.views[title.innerText] || title.innerText
+                    title.innerText = i18n(`views.${title.innerText}`) || title.innerText
                 }
             }, 50)
             setTimeout(() => clearInterval(interval), 5000)

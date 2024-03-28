@@ -13,7 +13,7 @@ async function studyguideList() {
     if (!syncedStorage['sw-enabled']) return
 
     let hiddenItemsContainer = element('div', 'st-sw-hidden-items', document.body),
-        hiddenItemsButton = element('button', 'st-sw-hidden-items-button', document.body, { class: 'st-button tertiary', innerText: i18n.sw.showHiddenItems })
+        hiddenItemsButton = element('button', 'st-sw-hidden-items-button', document.body, { class: 'st-button tertiary', innerText: i18n('sw.showHiddenItems') })
 
     hiddenItemsButton.addEventListener('click', () => {
         hiddenItemsContainer.classList.toggle('st-expanded')
@@ -22,7 +22,7 @@ async function studyguideList() {
 
     renderStudyguideList(hiddenItemsContainer)
 
-    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n.sw.searchPlaceholder })
+    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n('sw.searchPlaceholder') })
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
             document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
@@ -107,11 +107,17 @@ async function studyguideIndividual() {
         } else createDropdown()
 
         function createDropdown() {
-            let allSubjects = Object.fromEntries([...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))), ['divider', 'divider'], ['addNew', i18n.sw.customSubject], ['autoSet', i18n.sw.autoSubject], ['hidden', i18n.sw.hideStudyguide]])
+            let allSubjects = Object.fromEntries([
+                ...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))),
+                ['divider', 'divider'],
+                ['addNew', i18n('sw.customSubject')],
+                ['autoSet', i18n('sw.customSubject')],
+                ['hidden', i18n('sw.hideStudyguide')]
+            ])
 
             async function dropdownChange(newValue) {
                 if (newValue === 'addNew') {
-                    let result = prompt(i18n.sw.subjectPrompt)
+                    let result = prompt(i18n('sw.subjectPrompt'))
                     if (result?.length > 1) {
                         savedStudyguides.find(e => e.id === id || e.title === title).subject = result
                         saveToStorage('sw-list', savedStudyguides)
@@ -135,7 +141,7 @@ async function studyguideIndividual() {
                 }
             }
 
-            dropdown = element('button', 'st-sw-subject-dropdown', buttons, { class: 'st-segmented-control', title: i18n.sw.subjectPrompt })
+            dropdown = element('button', 'st-sw-subject-dropdown', buttons, { class: 'st-segmented-control', title: i18n('sw.subjectPrompt') })
                 .createDropdown(
                     allSubjects,
                     savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
@@ -162,7 +168,7 @@ async function studyguideIndividual() {
                 asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
 
             const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
-                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n.hb.title, 'data-description': i18n.hb.subtitle })
+                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), 'data-description': i18n('hb.title') })
 
             filteredResources.forEach(resource => {
                 switch (resource.type) {
@@ -199,7 +205,7 @@ async function studyguideIndividual() {
             const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
                 existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
                 hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
-                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n.hb.title })
+                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n('hb.title') })
 
             tabs.addEventListener('click', (event) => {
                 let bkTabClicked = event.target.id.startsWith('st-hb-tab')
@@ -320,8 +326,8 @@ async function renderStudyguideList(hiddenItemsDestination) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items.sort((a, b) => a.period - b.period)[i]
 
-                    let periodText = i18n.sw.periodN.replace('%s', item.period).replace('%o', formatOrdinals(item.period, true))
-                    if (item.period < 1) periodText = i18n.sw.periodMissing
+                    let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
+                    if (item.period < 1) periodText = i18n('sw.periodMissing')
 
                     let itemButton = element(
                         'button',
@@ -354,8 +360,8 @@ async function renderStudyguideList(hiddenItemsDestination) {
                     }
                 })
 
-                let periodText = i18n.sw.periodN.replace('%s', item.period).replace('%o', formatOrdinals(item.period, true))
-                if (item.period < 1) periodText = i18n.sw.periodMissing
+                let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
+                if (item.period < 1) periodText = i18n('sw.periodMissing')
 
                 let defaultItemDescription = element(
                     'span',

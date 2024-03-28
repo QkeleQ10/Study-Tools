@@ -53,7 +53,7 @@
     },
     "dates": {
         "day": "Day",
-        "xDays": "%s days",
+        "nDays": "{days} days",
         "week": "Week",
         "workweek": "Working week",
         "now": "Now",
@@ -61,12 +61,12 @@
         "justNow": "Just now",
         "soon": "Soon",
         "fewMinsAgo": "A few minutes ago",
-        "todayAtTime": "Today at %s",
-        "yesterdayAtTime": "Yesterday at %s",
-        "lastWeekday": "Last %s",
-        "tomorrowAtTime": "Tomorrow at %s",
-        "weekdayAtTime": "Next %s1 at %s2",
-        "weekdayInWeek": "%s2 of week %s1",
+        "todayAtTime": "Today at {time}",
+        "yesterdayAtTime": "Yesterday at {time}",
+        "lastWeekday": "Last {weekday}",
+        "tomorrowAtTime": "Tomorrow at {time}",
+        "weekdayAtTime": "Next {weekday} at {time}",
+        "weekdayInWeek": "{weekday} of week {week}",
         "weekdays": [
             "Sunday",
             "Monday",
@@ -133,9 +133,9 @@
     "Vooruit": "Forwards",
     "Achteruit": "Backwards",
     "Vandaag": "Today",
-    "moreGradesSingular": "and another grade for %s",
-    "moreGradesPlural": "%s1 more grades for %s2",
-    "moreGradesMany": "more grades, including ones for %s",
+    "moreGradesSingular": "and another grade for {subject}",
+    "moreGradesPlural": "{num} more grades for {subjects}",
+    "moreGradesMany": "more grades, including ones for {subjects}",
     "noEvents": "No events on this day",
     "error": "Something went wrong",
     "hb": {
@@ -162,7 +162,7 @@
         "subjectPrompt": "Enter the subject name",
         "hideStudyguide": "Hide item",
         "hidden": "Hidden",
-        "periodN": "%o term",
+        "periodN": "{periodOrdinal} term",
         "periodMissing": "Term not defined"
     }
 }

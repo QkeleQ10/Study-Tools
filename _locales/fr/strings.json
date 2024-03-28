@@ -53,7 +53,7 @@
     },
     "dates": {
         "day": "Jour",
-        "xDays": "%s jours",
+        "nDays": "{days} jours",
         "week": "Semaine",
         "workweek": "Sem. de travail",
         "now": "maintenant",
@@ -61,12 +61,12 @@
         "justNow": "il y a quelques instants",
         "soon": "bientôt",
         "fewMinsAgo": "il y a quelques minutes",
-        "todayAtTime": "aujourd'hui à %s",
-        "yesterdayAtTime": "hier à %s",
-        "lastWeekday": "%s dernier",
-        "tomorrowAtTime": "demain à %s",
-        "weekdayAtTime": "%s1 prochain à %s2",
-        "weekdayInWeek": "semaine %s1, %s2",
+        "todayAtTime": "aujourd'hui à {time}",
+        "yesterdayAtTime": "hier à {time}",
+        "lastWeekday": "{weekday} dernier",
+        "tomorrowAtTime": "demain à {time}",
+        "weekdayAtTime": "{weekday} prochain à {time}",
+        "weekdayInWeek": "semaine {week}, {weekday}",
         "weekdays": [
             "dimanche",
             "lundi",
@@ -131,9 +131,9 @@
     "Vooruit": "En avant",
     "Achteruit": "En arrière",
     "Vandaag": "Aujourd'hui",
-    "moreGradesSingular": "et une autre note pour %s",
-    "moreGradesPlural": "%s1 autres notes pour %s2",
-    "moreGradesMany": "plus de notes: %s, entre autres",
+    "moreGradesSingular": "et une autre note pour {subject}",
+    "moreGradesPlural": "{num} autres notes pour {subjects}",
+    "moreGradesMany": "plus de notes: {subjects}, entre autres",
     "noEvents": "Aucun événement ce jour",
     "error": "Une erreur s'est produite",
     "hb": {
@@ -160,7 +160,7 @@
         "subjectPrompt": "Tape le nom de la matière",
         "hideStudyguide": "Cacher l'élément",
         "hidden": "Caché",
-        "periodN": "%o période",
+        "periodN": "{periodOrdinal} période",
         "periodMissing": "Période non définie"
     }
 }

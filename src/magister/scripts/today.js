@@ -99,13 +99,13 @@ async function today() {
         function greetUser() {
             header.dataset.greet = true
             const greetingsByHour = [
-                [22, ...i18n.greetings.lateNight, 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
-                [18, ...i18n.greetings.evening, 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
-                [12, ...i18n.greetings.afternoon, 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
-                [6, ...i18n.greetings.morning, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
-                [0, ...i18n.greetings.earlyNight, 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
+                [22, ...i18n('greetings.lateNight'), 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
+                [18, ...i18n('greetings.evening'), 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
+                [12, ...i18n('greetings.afternoon'), 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
+                [6, ...i18n('greetings.morning'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
+                [0, ...i18n('greetings.earlyNight'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
             ],
-                greetingsGeneric = [...i18n.greetings.generic, 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
+                greetingsGeneric = [...i18n('greetings.generic'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
 
             let possibleGreetings = []
             for (let i = 0; i < greetingsByHour.length; i++) {
@@ -142,16 +142,16 @@ async function today() {
             switch (agendaView) {
                 case 'week':
                     if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
-                        headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
+                        headerText.innerText = `${i18n('dates.week')} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
                     else
-                        headerText.innerText = `${i18n.dates['week']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
+                        headerText.innerText = `${i18n('dates.week')} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
                     break;
 
                 case 'workweek':
                     if (agendaStartDate.getMonth() === agendaEndDate.getMonth())
-                        headerText.innerText = `${i18n.dates['workweek']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
+                        headerText.innerText = `${i18n('dates.workweek')} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'long' })})`
                     else
-                        headerText.innerText = `${i18n.dates['workweek']} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
+                        headerText.innerText = `${i18n('dates.workweek')} ${agendaStartDate.getWeek()} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })}–${agendaEndDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', month: 'short' })})`
                     break;
 
                 default:
@@ -201,7 +201,7 @@ async function today() {
             updateHeaderText()
         })
 
-        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n.dates['day'] : i18n.dates['xDays'].replace('%s', daysToShowSetting), 'workweek': i18n.dates['workweek'], 'week': i18n.dates['week'] }, 'day', selectedCallback, clickCallback)
+        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n('dates.day') : i18n('nDays', { days: daysToShowSetting }), 'workweek': i18n('dates.workweek'), 'week': i18n('dates.week') }, 'day', selectedCallback, clickCallback)
 
         function clickCallback(currentValue) {
             // When the current option is selected, cycle to the next one.
@@ -366,7 +366,7 @@ async function today() {
         // TODO: use req status
         if (!(events?.length > 0)) {
             element('i', `st-start-fa`, schedule, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
-            element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n.error })
+            element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n('error') })
             return
         }
 
@@ -428,7 +428,7 @@ async function today() {
                     if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                         agendaDayOffset = nextRelevantDayIndex
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                        notify('snackbar', `${i18n.toasts.jumpedToNextRelevantDay} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                        notify('snackbar', `${i18n('toasts.jumpedToNextRelevantDay')} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
                     }
 
                     agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
@@ -559,9 +559,10 @@ async function today() {
                 })
 
                 // Display 'no events' if necessary
-                if (day.events?.length < 1) {
-                    element('i', `st-start-col-${i}-fa`, column, { class: 'st-start-icon fa-duotone fa-island-tropical' })
-                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: i18n.noEvents })
+                if (day.events?.length < 1 && daysToShow < 3 && !listViewEnabled && agendaView === 'day') {
+                    let seed = cyrb128(String(day.date.getTime()))
+                    element('i', `st-start-col-${i}-fa`, column, { class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed'].random(seed)}` })
+                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: i18n('noEvents') })
                 }
 
                 // Ensure a nice scrolling position if the date shown is not today
@@ -575,7 +576,7 @@ async function today() {
                 if (!listViewEnabled && day.today) {
                     // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
                     const currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' }),
-                        currentTimeMarkerLabel = element('div', `st-start-now-label`, column, { 'data-temporal-type': 'style-hours', innerText: i18n.dates.nowBrief?.toUpperCase() })
+                        currentTimeMarkerLabel = element('div', `st-start-now-label`, column, { 'data-temporal-type': 'style-hours', innerText: i18n('dates.nowBrief')?.toUpperCase() })
                     updateTemporalBindings()
                     if (schedule.scrollTop === 0 && (agendaView === 'day' || (listViewEnabledSetting && agendaView !== 'day'))) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
@@ -619,7 +620,7 @@ async function today() {
 
         widgetFunctions = {
             logs: {
-                title: i18n.widgets['logs'],
+                title: i18n('widgets.logs'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -634,7 +635,7 @@ async function today() {
 
                         if (logs.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-logs-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['logs'], 'data-amount': logs.length, href: '#/lvs-logboeken' })
+                        let widgetTitle = element('a', 'st-start-widget-logs-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.logs'), 'data-amount': logs.length, href: '#/lvs-logboeken' })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
@@ -646,7 +647,7 @@ async function today() {
             },
 
             activities: {
-                title: i18n.widgets['activities'],
+                title: i18n('widgets.activities'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -661,7 +662,7 @@ async function today() {
 
                         if (activities.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-activities', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-activities-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['activities'], 'data-amount': activities.length, href: '#/elo/activiteiten' })
+                        let widgetTitle = element('a', 'st-start-widget-activities-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.activities'), 'data-amount': activities.length, href: '#/elo/activiteiten' })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
@@ -673,7 +674,7 @@ async function today() {
             },
 
             grades: {
-                title: i18n.widgets['grades'],
+                title: i18n('widgets.grades'),
                 types: ['Tegel', 'Lijst'],
                 options: [
                     {
@@ -808,7 +809,7 @@ async function today() {
                         if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
 
                         let widgetElement = element(placeholder ? 'div' : 'a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
-                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['latestGrade'] })
+                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
 
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
@@ -842,26 +843,26 @@ async function today() {
                         })
 
                         if (type === 'Lijst') {
-                            widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? i18n.widgets['newGrades'] : i18n.widgets['latestGrade']
+                            widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
                             return resolve(widgetElement)
                         }
 
                         let moreUnreadItems = recentGrades.filter(item => item.unread)
                         moreUnreadItems.shift()
 
-                        widgetTitle.innerText = moreUnreadItems.length > 0 ? i18n.widgets['newGrades'] : recentGrades.filter(item => item.unread).length > 0 ? i18n.widgets['newGrade'] : i18n.widgets['latestGrade']
+                        widgetTitle.innerText = moreUnreadItems.length > 0 ? i18n('widgets.newGrades') : recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
 
                         if (moreUnreadItems.length === 1) {
                             element('span', 'st-start-widget-grades-more', widgetElement, {
-                                innerText: i18n.moreGradesSingular.replace('%s', moreUnreadItems[0].vak.code)
+                                innerText: i18n('moreGradesSingular', { subject: moreUnreadItems[0].vak.code })
                             })
                         } else if (moreUnreadItems.length > 10) {
                             element('span', 'st-start-widget-grades-more', widgetElement, {
-                                innerText: i18n.moreGradesMany.replace('%s', new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]))
+                                innerText: i18n('moreGradesMany', { subjects: new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]) })
                             })
                         } else if (moreUnreadItems.length > 1) {
                             element('span', 'st-start-widget-grades-more', widgetElement, {
-                                innerText: i18n.moreGradesPlural.replace('%s1', moreUnreadItems.length).replace('%s2', new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]))
+                                innerText: i18n('moreGradesPlural', { num: moreUnreadItems.length, subjects: new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]) })
                             })
                         }
 
@@ -871,7 +872,7 @@ async function today() {
             },
 
             messages: {
-                title: i18n.widgets['messages'],
+                title: i18n('widgets.messages'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -903,7 +904,7 @@ async function today() {
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['messages'], 'data-amount': unreadMessages.length, href: '#/berichten' })
+                        let widgetTitle = element('a', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.messages'), 'data-amount': unreadMessages.length, href: '#/berichten' })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
@@ -923,8 +924,8 @@ async function today() {
                             let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, row2, { class: 'st-list-content', innerText: item.onderwerp })
 
                             let chips = []
-                            if (item.heeftPrioriteit) chips.push({ name: i18n.chips['important'], type: 'warn' })
-                            if (item.heeftBijlagen) chips.push({ name: i18n.chips['attachments'], type: 'info' })
+                            if (item.heeftPrioriteit) chips.push({ name: i18n('chips.important'), type: 'warn' })
+                            if (item.heeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
 
                             let messageChipsWrapper = element('div', `st-start-widget-messages-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
@@ -938,7 +939,7 @@ async function today() {
             },
 
             homework: {
-                title: i18n.widgets['homework'],
+                title: i18n('widgets.homework'),
                 types: ['Tegel', 'Lijst'],
                 options: [
                     {
@@ -1017,7 +1018,7 @@ async function today() {
 
                         if (homeworkEvents.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['homework'], 'data-amount': homeworkEvents.length })
+                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.homework'), 'data-amount': homeworkEvents.length })
 
                         if (type === 'Lijst') return resolve(widgetElement)
 
@@ -1056,7 +1057,7 @@ async function today() {
             },
 
             assignments: {
-                title: i18n.widgets['assignments'],
+                title: i18n('widgets.assignments'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
@@ -1084,7 +1085,7 @@ async function today() {
 
                         if (relevantAssignments.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: i18n.widgets['assignments'], 'data-amount': relevantAssignments.length, href: '#/elo/opdrachten' })
+                        let widgetTitle = element('a', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.assignments'), 'data-amount': relevantAssignments.length, href: '#/elo/opdrachten' })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
@@ -1106,7 +1107,7 @@ async function today() {
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
                             let chips = []
-                            if (item.BeoordeeldOp) chips.push({ name: i18n.chips['graded'], type: 'ok' })
+                            if (item.BeoordeeldOp) chips.push({ name: i18n('chips.graded'), type: 'ok' })
 
                             let assignmentChipsWrapper = element('div', `st-start-widget-assignments-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
                             chips.forEach(chip => {
@@ -1120,7 +1121,7 @@ async function today() {
             },
 
             digitalClock: {
-                title: i18n.widgets['digitalClock'],
+                title: i18n('widgets.digitalClock'),
                 types: ['Verborgen', 'Tegel', 'Lijst'],
                 options: [
                     {
@@ -1406,15 +1407,15 @@ function checkCollision(eventArr) {
 function getEventChips(event) {
     let chips = []
 
-    if (event.Status === 5) chips.push({ name: i18n.chips['cancelled'], type: 'warn' })
-    if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n.chips['hw'], type: 'ok' })
-    else if (event.InfoType === 1) chips.push({ name: i18n.chips['hw'], type: 'info' })
-    if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n.chips['pw'], type: 'ok' })
-    else if (event.InfoType === 2) chips.push({ name: i18n.chips['pw'], type: 'important' })
-    if (event.InfoType === 6 && event.Afgerond) chips.push({ name: i18n.chips['info'], type: 'ok' })
-    else if (event.InfoType === 6) chips.push({ name: i18n.chips['info'], type: 'info' })
-    if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n.chips['kwtregistered'], type: 'ok' })
-    else if (event.Type === 7) chips.push({ name: i18n.chips['kwt'], type: 'info' })
+    if (event.Status === 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
+    if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
+    else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
+    if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })
+    else if (event.InfoType === 2) chips.push({ name: i18n('chips.pw'), type: 'important' })
+    if (event.InfoType === 6 && event.Afgerond) chips.push({ name: i18n('chips.info'), type: 'ok' })
+    else if (event.InfoType === 6) chips.push({ name: i18n('chips.info'), type: 'info' })
+    if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n('chips.kwtregistered'), type: 'ok' })
+    else if (event.Type === 7) chips.push({ name: i18n('chips.kwt'), type: 'info' })
 
     return chips
 }
