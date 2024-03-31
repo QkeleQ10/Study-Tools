@@ -25,7 +25,7 @@ async function main() {
         span.innerText = i18n(`views.${span.innerText}`) || span.innerText
     })
 
-    document.querySelector('.menu-footer > a > span').innerText = i18n['Inklappen']
+    document.querySelector('.menu-footer > a > span').innerText = i18n('Inklappen')
 
     // Appbar metrics
     let appbarMetrics = element('div', 'st-appbar-metrics', appbar)

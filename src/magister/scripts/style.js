@@ -102,7 +102,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-background-overlay: #fffffff7;
     --st-background-transparent: #ffffffbb;
     --st-background-overlaid: #12121210;
-    --st-highlight-primary: ${shiftedHslColor(207, 78, 96, color.h, color.s, color.l, undefined, undefined, 96)};
+    --st-highlight-primary: ${shiftedHslColor(207, 85, 82, color.h, color.s, color.l, undefined, undefined, 96)};
     --st-highlight-subtle: #f2f9ff;
     --st-highlight-ok: #b6fadf;
     --st-highlight-warn: #ffd4e2;

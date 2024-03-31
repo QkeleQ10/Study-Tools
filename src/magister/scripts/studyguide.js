@@ -168,7 +168,7 @@ async function studyguideIndividual() {
                 asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
 
             const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
-                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), 'data-description': i18n('hb.title') })
+                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), 'data-description': i18n('hb.subtitle') })
 
             filteredResources.forEach(resource => {
                 switch (resource.type) {

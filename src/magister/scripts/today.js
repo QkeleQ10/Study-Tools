@@ -169,7 +169,7 @@ async function today() {
         }
 
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
-        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Vandaag'], disabled: true })
+        let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
         todayResetOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
             agendaDayOffset = (todayDate.getDay() || 7) - 1
@@ -178,7 +178,7 @@ async function today() {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Achteruit'] })
+        let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
         todayDecreaseOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
             if (agendaView !== 'day') agendaDayOffset -= 7
@@ -189,7 +189,7 @@ async function today() {
             updateHeaderButtons()
             updateHeaderText()
         })
-        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n['Vooruit'] })
+        let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
         todayIncreaseOffset.addEventListener('click', () => {
             if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
             if (agendaView !== 'day') agendaDayOffset += 7
@@ -236,8 +236,8 @@ async function today() {
         setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
 
         // Zoom buttons
-        let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['scaleDown'] })
-        let zoomIn = element('button', 'st-start-edit-zoom-in', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['scaleUp'] })
+        let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('scaleDown') })
+        let zoomIn = element('button', 'st-start-edit-zoom-in', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('scaleUp') })
         zoomOut.addEventListener('click', () => {
             zoomSetting -= .1
             effectuateZoom(zoomOut)
@@ -257,7 +257,7 @@ async function today() {
             }
         }
 
-        let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['editWidgets'] })
+        let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editWidgets') })
         invokeEditWidgets.addEventListener('click', () => {
             editWidgets()
         })
@@ -279,8 +279,8 @@ async function today() {
         (async () => {
             editTeachers = element('dialog', 'st-start-edit-teachers', document.body, { class: 'st-overlay' })
             let editTeachersHeading = element('div', 'st-start-edit-teachers-heading', editTeachers),
-                editTeachersTitle = element('span', 'st-start-edit-teachers-title', editTeachersHeading, { class: 'st-title', innerText: i18n['teacherNicknames'] }),
-                editTeachersClose = element('button', 'st-start-edit-teachers-close', editTeachersHeading, { class: 'st-button', 'data-icon': '', innerText: i18n['close'] }),
+                editTeachersTitle = element('span', 'st-start-edit-teachers-title', editTeachersHeading, { class: 'st-title', innerText: i18n('teacherNicknames') }),
+                editTeachersClose = element('button', 'st-start-edit-teachers-close', editTeachersHeading, { class: 'st-button', 'data-icon': '', innerText: i18n('close') }),
                 editTeachersWrapper = element('div', 'st-start-edit-teachers-wrapper', editTeachers, { class: 'st-list st-tile' }),
                 editTeachersList = element('div', 'st-start-edit-teachers-list', editTeachersWrapper)
             editTeachersClose.addEventListener('click', () => {
@@ -319,13 +319,13 @@ async function today() {
         })()
 
         // Editor invoke button
-        let invokeEditTeachers = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['editTeachers'] })
+        let invokeEditTeachers = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editTeachers') })
         invokeEditTeachers.addEventListener('click', async () => {
             editTeachers.showModal()
         })
 
         // Side panel collapse/expand button
-        todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n['collapseWidgets'] })
+        todayCollapseWidgets = element('button', 'st-start-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
         todayCollapseWidgets.addEventListener('click', () => {
             widgetsCollapsed = !widgetsCollapsed
             if (widgets.classList.contains('editing')) widgetsCollapsed = false
@@ -610,6 +610,7 @@ async function today() {
 
         if (document.getElementById('st-start-edit-widgets-options')) document.getElementById('st-start-edit-widgets-options').remove()
         if (document.getElementById('st-start-edit-widgets-hidden')) document.getElementById('st-start-edit-widgets-hidden').remove()
+        if (document.getElementById('st-start-edit-widgets-disclaimer')) document.getElementById('st-start-edit-widgets-disclaimer').remove()
         if (document.getElementById('st-start-edit-widgets-prot')) document.getElementById('st-start-edit-widgets-prot').remove()
 
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
@@ -1255,10 +1256,11 @@ async function today() {
     async function editWidgets() {
         widgetsList.innerText = ''
 
-        const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body, { 'data-i18n-widget-options': i18n['widgetOptions'] })
+        const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body, { 'data-i18n-widget-options': i18n('widgetOptions') })
         const editWidgetsHidden = element('div', 'st-start-edit-widgets-hidden', document.body, { innerText: '' })
+        const editWidgetsDisclaimer = element('div', 'st-start-edit-widgets-disclaimer', document.body, {class: 'st-disclaimer', innerText: i18n('widgetDisclaimer')})
         const editWidgetsProt = element('div', 'st-start-edit-widgets-prot', document.body)
-        const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: i18n['editFinish'] })
+        const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: i18n('editFinish') })
         editWidgetsDone.addEventListener('click', () => {
             widgetsList.innerText = ''
             widgets.classList.remove('editing')
@@ -1315,7 +1317,7 @@ async function today() {
 
                     widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
 
-                    editWidgetsOptions.innerText = `${i18n['widgetOptions']}: ${widgetFunctions[key].title}`
+                    editWidgetsOptions.innerText = `${i18n('widgetOptions') }: ${widgetFunctions[key].title}`
                     widgetElement.classList.add('focused')
 
                     const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editWidgetsOptions, { class: 'st-segmented-control' })
@@ -1325,7 +1327,7 @@ async function today() {
                     }
 
                     ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen'), 'Verborgen']).forEach(type => {
-                        const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: i18n[type] })
+                        const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: i18n(type) })
                         if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
                         widgetTypeButton.addEventListener('click', () => {
                             syncedStorage[`widget-${key}-type`] = type

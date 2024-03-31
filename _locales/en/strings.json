@@ -98,6 +98,7 @@
     "scaleDown": "Decrease scale",
     "editWidgets": "Edit widgets",
     "widgetOptions": "Widget options",
+    "widgetDisclaimer": "Only widgets that contain currently relevant information will be shown in Start.",
     "editTeachers": "Edit teacher names",
     "teacherNicknames": "Teacher nicknames",
     "editFinish": "Finish editing",

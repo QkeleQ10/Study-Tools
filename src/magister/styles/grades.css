@@ -448,6 +448,7 @@
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     margin-inline: -4px;
     padding: 12px;
+    background-color: var(--st-background-secondary);
     border-radius: var(--st-border-radius);
     border: var(--st-border);
 }

@@ -874,11 +874,6 @@ a.st-widget-title {
     animation: floatLeft 200ms;
 }
 
-#st-start-edit-widgets-options:after {
-    content: "De widget wordt enkel weergegeven als deze relevante informatie bevat, tenzij anders ingesteld.";
-    font: 14px/24px var(--st-font-family-secondary);
-}
-
 #st-start-edit-widgets-options:empty:before {
     content: attr(data-i18n-widget-options);
     font: 500 16px/24px var(--st-font-family-primary);
@@ -886,6 +881,8 @@ a.st-widget-title {
 
 #st-start-edit-widgets-options:empty:after {
     content: "Verplaats widgets door te slepen of pas opties aan door eroverheen te bewegen met de muis.";
+    opacity: .75;
+    font: 14px/24px var(--st-font-family-secondary);
 }
 
 #st-start-edit-widgets-options .st-segmented-control {
@@ -905,6 +902,7 @@ a.st-widget-title {
     right: 400px;
     bottom: 0;
     width: 400px;
+    height: 35vh;
     padding: 24px;
 
     display: flex;
@@ -912,6 +910,7 @@ a.st-widget-title {
     gap: 16px;
 
     font: 500 16px/24px var(--st-font-family-primary);
+    border-top: var(--st-border);
     animation: floatLeft 200ms;
 }
 
@@ -923,6 +922,16 @@ a.st-widget-title {
 #st-start-edit-widgets-hidden:empty:after {
     content: "Er zijn geen widgets verborgen. Verberg widgets door 'Verborgen' te kiezen in de opties hierboven.";
     font: 14px/24px var(--st-font-family-secondary);
+    opacity: .75;
+}
+
+#st-start-edit-widgets-disclaimer {
+    position: absolute;
+    right: 400px;
+    width: calc(400px - 32px);
+    margin: 16px;
+    bottom: 35vh;
+    animation: floatLeft 200ms;
 }
 
 #st-start-edit-widgets-prot {

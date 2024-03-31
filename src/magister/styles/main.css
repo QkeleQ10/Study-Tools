@@ -767,6 +767,26 @@ a.st-metric:focus-visible {
     color: var(--st-foreground-insignificant);
 }
 
+.st-disclaimer {
+    padding: 12px 16px;
+    padding-left: 42px;
+    background-color: var(--st-highlight-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    font: 12px var(--st-font-family-secondary);
+    text-wrap: balance;
+    opacity: 0.875;
+}
+
+.st-disclaimer:before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    font: 600 18px 'Font Awesome 6 Pro';
+    opacity: .75;
+    color: var(--st-foreground-accent);
+}
+
 #st-cs-tab.active:after {
     width: calc(100% - 24px);
     height: 3px;

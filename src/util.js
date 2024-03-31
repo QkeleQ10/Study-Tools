@@ -22,7 +22,7 @@ let eggs = [],
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
-            if (!['nl-NL', 'en-GB', 'fr-FR'].includes(locale)) locale = 'nl-NL'
+            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE'].includes(locale)) locale = 'nl-NL'
             const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
             i18nData = await req.json()
             const reqNl = await fetch(chrome.runtime.getURL(`_locales/nl/strings.json`))
@@ -453,7 +453,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             class: 'st-bar-chart-col',
             title: remainingItems.length === 1
                 ? labels?.[remainingItems[0][0]] ?? remainingItems[0][0]
-                : i18n['remainder'],
+                : i18n('remainder'),
             'data-value': remainderFrequency,
             'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
             'data-y-tight': (remainderFrequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
@@ -541,7 +541,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
         }
 
         if (key === 'remainder') {
-            aboutLabel.innerText = i18n['remainder']
+            aboutLabel.innerText = i18n('remainder')
             aboutMore.innerText = remainingItems.map(([key, frequency]) => `${key}: ${frequency}× (${Math.round(frequency / totalFrequency * 1000) / 10}%)`).join('\n')
         } else {
             aboutLabel.innerText = labels?.[key] || key
@@ -738,6 +738,9 @@ function formatOrdinals(number, feminine) {
             ['zero', 'e'],
             ['one', feminine ? 're' : 'er'],
             ['other', 'e'],
+        ]),
+        'de-DE': new Map([
+            ['other', '.']
         ])
     }
 

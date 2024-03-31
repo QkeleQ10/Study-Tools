@@ -36,7 +36,7 @@ async function wrapped() {
         viewBar = element('button', 'st-wrapped-view-bar', viewOpts, { class: 'st-button segment active', innerText: "Staaf", 'data-icon': '' }),
         viewPie = element('button', 'st-wrapped-view-pie', viewOpts, { class: 'st-button segment', innerText: "Taart", 'data-icon': '' }),
         help = element('button', 'st-wrapped-help', buttons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
-        close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: i18n['close'], 'data-icon': '' })
+        close = element('button', 'st-wrapped-close', buttons, { class: 'st-button', innerText: i18n('close'), 'data-icon': '' })
 
     close.addEventListener('click', () => wrapped.close())
 
