@@ -22,7 +22,7 @@ async function main() {
 
     const allMenuItemSpans = await awaitElement('.main-menu a span, .main-menu .popup-menu a', true)
     allMenuItemSpans.forEach(span => {
-        span.innerText = i18n(`views.${span.innerText}`) || span.innerText
+        span.innerText = i18n(`views.${span.innerText}`, {}, false, true) || span.innerText
     })
 
     document.querySelector('.menu-footer > a > span').innerText = i18n('Inklappen')
@@ -216,7 +216,7 @@ async function popstate() {
         if (header) {
             const title = header.shadowRoot.querySelector('div.container div.title')
             if (!(title?.innerText?.length > 1)) return
-            title.innerText = i18n(`views.${title.innerText}`) || title.innerText
+            title.innerText = i18n(`views.${title.innerText}`, {}, false, true) || title.innerText
         }
 
         const breadcrumbs = await awaitElement('dna-breadcrumb', true, 1000, true)
@@ -224,7 +224,7 @@ async function popstate() {
             breadcrumbs.forEach(e => {
                 const title = e
                 if (!(title?.innerText?.length > 1)) return
-                title.innerHTML = title.innerHTML.replace(title.innerText, i18n(`views.${title.innerText}`) || title.innerText)
+                title.innerHTML = title.innerHTML.replace(title.innerText, i18n(`views.${title.innerText}`, {}, false, true) || title.innerText)
             })
         }
 
@@ -238,7 +238,7 @@ async function popstate() {
                 const header = frame.contentDocument.querySelector('dna-page-header')
                 if (header) {
                     const title = header.shadowRoot.querySelector('div.container div.title')
-                    title.innerText = i18n(`views.${title.innerText}`) || title.innerText
+                    title.innerText = i18n(`views.${title.innerText}`, {}, false, true) || title.innerText
                 }
             }, 50)
             setTimeout(() => clearInterval(interval), 5000)

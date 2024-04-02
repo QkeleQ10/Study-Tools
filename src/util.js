@@ -698,7 +698,7 @@ function createStyle(content, id) {
     return styleElem
 }
 
-function i18n(key, variables = {}, useDefaultLanguage = false) {
+function i18n(key, variables = {}, useDefaultLanguage = false, fallBackToNull = false) {
     if (!(key.length > 0)) return ''
 
     const keys = key.split('.')
@@ -706,7 +706,7 @@ function i18n(key, variables = {}, useDefaultLanguage = false) {
 
     for (const k of keys) {
         value = value[k]
-        if (!value) value = useDefaultLanguage ? key : i18n(key, variables, true)
+        if (!value) value = fallBackToNull ? null : useDefaultLanguage ? key : i18n(key, variables, true)
     }
 
     if (value) {

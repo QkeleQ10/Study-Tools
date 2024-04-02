@@ -111,7 +111,7 @@ async function studyguideIndividual() {
                 ...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))),
                 ['divider', 'divider'],
                 ['addNew', i18n('sw.customSubject')],
-                ['autoSet', i18n('sw.customSubject')],
+                ['autoSet', i18n('sw.autoSubject')],
                 ['hidden', i18n('sw.hideStudyguide')]
             ])
 
