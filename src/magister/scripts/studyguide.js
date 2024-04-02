@@ -159,7 +159,8 @@ async function studyguideIndividual() {
 
             const filteredResources = availableResources?.filter(resource =>
                 resource.conditions.some(condition =>
-                    studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())
+                    (!condition.studyguideTitleIncludes || studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())) &&
+                    (!condition.studyguideSubjectEquals || savedStudyguides.find(e => e.title === studyguideTitle).subject === condition.studyguideSubjectEquals || autoStudyguideSubject(studyguideTitle) === condition.studyguideSubjectEquals)
                 )
             )
             if (!(filteredResources?.length > 0)) return
@@ -174,7 +175,7 @@ async function studyguideIndividual() {
                 switch (resource.type) {
                     case 'spotifyIframe': {
                         const container = element('div', null, hbSheet)
-                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (Spotify)', href: resource.href, target: '_blank' })
+                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
 
                         const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: resource.src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
                         break
@@ -182,7 +183,7 @@ async function studyguideIndividual() {
 
                     case 'youtubeIframe': {
                         const container = element('div', null, hbSheet)
-                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (YouTube)', href: resource.href, target: '_blank' })
+                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
 
                         const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: resource.src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
 

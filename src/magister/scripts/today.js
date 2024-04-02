@@ -201,7 +201,7 @@ async function today() {
             updateHeaderText()
         })
 
-        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n('dates.day') : i18n('nDays', { days: daysToShowSetting }), 'workweek': i18n('dates.workweek'), 'week': i18n('dates.week') }, 'day', selectedCallback, clickCallback)
+        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n('dates.day') : i18n('dates.nDays', { num: daysToShowSetting }), 'workweek': i18n('dates.workweek'), 'week': i18n('dates.week') }, 'day', selectedCallback, clickCallback)
 
         function clickCallback(currentValue) {
             // When the current option is selected, cycle to the next one.
