@@ -169,44 +169,48 @@ async function studyguideIndividual() {
                 asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
 
             const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
-                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), 'data-description': i18n('hb.subtitle') })
+                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
 
             filteredResources.forEach(resource => {
-                switch (resource.type) {
-                    case 'spotifyIframe': {
-                        const container = element('div', null, hbSheet)
-                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
+                let srcs = Array.isArray(resource.src) ? resource.src : [resource.src]
 
-                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: resource.src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
-                        break
-                    }
+                const container = element('div', `st-sw-resource-${resource.title.slice(0, 26)}`, hbSheet)
 
-                    case 'youtubeIframe': {
-                        const container = element('div', null, hbSheet)
-                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
+                srcs.forEach(src => {
+                    switch (resource.type) {
+                        case 'spotifyIframe': {
+                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
 
-                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: resource.src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
+                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
+                            break
+                        }
 
-                        window.addEventListener('blur', () => {
-                            setTimeout(() => {
-                                if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === resource.src) {
-                                    iframe.requestFullscreen()
-                                    document.addEventListener('fullscreenchange', () => window.focus())
-                                }
+                        case 'youtubeIframe': {
+                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
+
+                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
+
+                            window.addEventListener('blur', () => {
+                                setTimeout(() => {
+                                    if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === src) {
+                                        iframe.requestFullscreen()
+                                        document.addEventListener('fullscreenchange', () => window.focus())
+                                    }
+                                })
                             })
-                        })
-                        break
-                    }
+                            break
+                        }
 
-                    default:
-                        break
-                }
+                        default:
+                            break
+                    }
+                })
             })
 
             const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
                 existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
                 hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
-                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n('hb.title') })
+                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
 
             tabs.addEventListener('click', (event) => {
                 let bkTabClicked = event.target.id.startsWith('st-hb-tab')
