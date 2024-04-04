@@ -290,12 +290,11 @@ async function renderStudyguideList(hiddenItemsDestination) {
             cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
         }
 
-
         originalItems.forEach(elem => {
             let title = elem.firstElementChild.firstElementChild.innerText,
                 subject = savedStudyguides.find(e => e.title === title)?.subject,
                 period = 0,
-                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
+                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
             if (!subject) {
                 savedStudyguides.push({ title: title, subject: autoStudyguideSubject(title) })
@@ -500,7 +499,7 @@ function autoStudyguideSubject(title) {
         { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
         { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
         { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen", "re"] },
-        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] },
+        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'English'
         { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
         { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] }
     ]
