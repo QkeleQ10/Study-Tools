@@ -13,7 +13,7 @@ async function studyguideList() {
     if (!syncedStorage['sw-enabled']) return
 
     let hiddenItemsContainer = element('div', 'st-sw-hidden-items', document.body),
-        hiddenItemsButton = element('button', 'st-sw-hidden-items-button', document.body, { class: 'st-button tertiary', innerText: i18n.sw.showHiddenItems })
+        hiddenItemsButton = element('button', 'st-sw-hidden-items-button', document.body, { class: 'st-button tertiary', innerText: i18n('sw.showHiddenItems') })
 
     hiddenItemsButton.addEventListener('click', () => {
         hiddenItemsContainer.classList.toggle('st-expanded')
@@ -22,7 +22,7 @@ async function studyguideList() {
 
     renderStudyguideList(hiddenItemsContainer)
 
-    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n.sw.searchPlaceholder })
+    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n('sw.searchPlaceholder') })
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
             document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
@@ -107,11 +107,17 @@ async function studyguideIndividual() {
         } else createDropdown()
 
         function createDropdown() {
-            let allSubjects = Object.fromEntries([...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))), ['divider', 'divider'], ['addNew', i18n.sw.customSubject], ['autoSet', i18n.sw.autoSubject], ['hidden', i18n.sw.hideStudyguide]])
+            let allSubjects = Object.fromEntries([
+                ...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))),
+                ['divider', 'divider'],
+                ['addNew', i18n('sw.customSubject')],
+                ['autoSet', i18n('sw.autoSubject')],
+                ['hidden', i18n('sw.hideStudyguide')]
+            ])
 
             async function dropdownChange(newValue) {
                 if (newValue === 'addNew') {
-                    let result = prompt(i18n.sw.subjectPrompt)
+                    let result = prompt(i18n('sw.subjectPrompt'))
                     if (result?.length > 1) {
                         savedStudyguides.find(e => e.id === id || e.title === title).subject = result
                         saveToStorage('sw-list', savedStudyguides)
@@ -135,7 +141,7 @@ async function studyguideIndividual() {
                 }
             }
 
-            dropdown = element('button', 'st-sw-subject-dropdown', buttons, { class: 'st-segmented-control', title: i18n.sw.subjectPrompt })
+            dropdown = element('button', 'st-sw-subject-dropdown', buttons, { class: 'st-segmented-control', title: i18n('sw.subjectPrompt') })
                 .createDropdown(
                     allSubjects,
                     savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
@@ -153,7 +159,8 @@ async function studyguideIndividual() {
 
             const filteredResources = availableResources?.filter(resource =>
                 resource.conditions.some(condition =>
-                    studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())
+                    (!condition.studyguideTitleIncludes || studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())) &&
+                    (!condition.studyguideSubjectEquals || savedStudyguides.find(e => e.title === studyguideTitle).subject === condition.studyguideSubjectEquals || autoStudyguideSubject(studyguideTitle) === condition.studyguideSubjectEquals)
                 )
             )
             if (!(filteredResources?.length > 0)) return
@@ -162,44 +169,48 @@ async function studyguideIndividual() {
                 asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
 
             const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
-                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n.hb.title, 'data-description': i18n.hb.subtitle })
+                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
 
             filteredResources.forEach(resource => {
-                switch (resource.type) {
-                    case 'spotifyIframe': {
-                        const container = element('div', null, hbSheet)
-                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (Spotify)', href: resource.href, target: '_blank' })
+                let srcs = Array.isArray(resource.src) ? resource.src : [resource.src]
 
-                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: resource.src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
-                        break
-                    }
+                const container = element('div', `st-sw-resource-${resource.title.slice(0, 26)}`, hbSheet)
 
-                    case 'youtubeIframe': {
-                        const container = element('div', null, hbSheet)
-                        const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title + ' (YouTube)', href: resource.href, target: '_blank' })
+                srcs.forEach(src => {
+                    switch (resource.type) {
+                        case 'spotifyIframe': {
+                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
 
-                        const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: resource.src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
+                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
+                            break
+                        }
 
-                        window.addEventListener('blur', () => {
-                            setTimeout(() => {
-                                if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === resource.src) {
-                                    iframe.requestFullscreen()
-                                    document.addEventListener('fullscreenchange', () => window.focus())
-                                }
+                        case 'youtubeIframe': {
+                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
+
+                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
+
+                            window.addEventListener('blur', () => {
+                                setTimeout(() => {
+                                    if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === src) {
+                                        iframe.requestFullscreen()
+                                        document.addEventListener('fullscreenchange', () => window.focus())
+                                    }
+                                })
                             })
-                        })
-                        break
-                    }
+                            break
+                        }
 
-                    default:
-                        break
-                }
+                        default:
+                            break
+                    }
+                })
             })
 
             const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
                 existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
                 hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
-                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n.hb.title })
+                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
 
             tabs.addEventListener('click', (event) => {
                 let bkTabClicked = event.target.id.startsWith('st-hb-tab')
@@ -278,7 +289,7 @@ async function renderStudyguideList(hiddenItemsDestination) {
             let title = elem.firstElementChild.firstElementChild.innerText,
                 subject = savedStudyguides.find(e => e.title === title)?.subject,
                 period = 0,
-                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
+                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
 
             if (!subject) {
                 savedStudyguides.push({ title: title, subject: autoStudyguideSubject(title) })
@@ -313,8 +324,8 @@ async function renderStudyguideList(hiddenItemsDestination) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items.sort((a, b) => a.period - b.period)[i]
 
-                    let periodText = i18n.sw.periodN.replace('%s', item.period).replace('%o', formatOrdinals(item.period, true))
-                    if (item.period < 1) periodText = i18n.sw.periodMissing
+                    let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
+                    if (item.period < 1) periodText = i18n('sw.periodMissing')
 
                     let itemButton = element(
                         'button',
@@ -347,8 +358,8 @@ async function renderStudyguideList(hiddenItemsDestination) {
                     }
                 })
 
-                let periodText = i18n.sw.periodN.replace('%s', item.period).replace('%o', formatOrdinals(item.period, true))
-                if (item.period < 1) periodText = i18n.sw.periodMissing
+                let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
+                if (item.period < 1) periodText = i18n('sw.periodMissing')
 
                 let defaultItemDescription = element(
                     'span',
@@ -416,66 +427,75 @@ function appendStudyguidesToList() {
     // Next, define which subject tiles have visible children.
     let visibleSubjectTiles = [...tiles].filter(element => element.querySelector('button:not(.hidden)'))
 
-    distributeElements(visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)))
-    // Finally, sort the subject tiles and equally distribute them across columns.
-    // visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
-    //     grid[Math.floor((i / a.length) * grid.length)].appendChild(studyguide)
-    // })
+    visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
+        cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
+    })
 
-    function distributeElements(elements) {
-        const columns = [[], [], []] // Array of arrays to store elements for each column
-        const columnHeights = [0, 0, 0] // Initial heights for each column
+    // distributeElements(visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)))
+    // // Finally, sort the subject tiles and equally distribute them across columns.
+    // // visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
+    // //     grid[Math.floor((i / a.length) * grid.length)].appendChild(studyguide)
+    // // })
 
-        elements.forEach((element) => {
-            // Find the shortest column
-            const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights))
-            // Add element to the shortest column
-            columns[shortestColumnIndex].push(element)
-            // Update height of the shortest column
-            columnHeights[shortestColumnIndex] += element.offsetHeight // Use offsetHeight for variable height
-        })
+    // function distributeElements(elements) {
+    //     const columns = [[], [], []] // Array of arrays to store elements for each column
+    //     const columnHeights = [0, 0, 0] // Initial heights for each column
 
-        // Distribute elements to the columns in the DOM
-        columns.forEach((column, index) => {
-            column.forEach((element) => {
-                element.style.gridColumn = index + 1 // Set grid column using inline CSS
-                grid.appendChild(element)
-            })
-        })
-    }
+    //     elements.forEach((element) => {
+    //         // Find the shortest column
+    //         const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights))
+    //         // Add element to the shortest column
+    //         columns[shortestColumnIndex].push(element)
+    //         // Update height of the shortest column
+    //         columnHeights[shortestColumnIndex] += element.offsetHeight // Use offsetHeight for variable height
+    //     })
+
+    //     // Distribute elements to the columns in the DOM
+    //     columns.forEach((column, index) => {
+    //         column.forEach((element) => {
+    //             element.style.gridColumn = index + 1 // Set grid column using inline CSS
+    //             grid.appendChild(element)
+    //         })
+    //     })
+    // }
 }
 
 function autoStudyguideSubject(title) {
     const subjectMap = [
-        { 'name': "Aardrijkskunde", 'aliases': ["aardrijkskunde", "ak"] },
-        { 'name': "Bedrijfseconomie", 'aliases': ["bedrijfseconomie", "beco", "bec"] },
-        { 'name': "Beeldende vorming", 'aliases': ["beeldend", "beeldende", "kubv", "be", "bv"] },
-        { 'name': "Biologie", 'aliases': ["biologie", "bio", "bi", "biol"] },
-        { 'name': "Cult. en kunstz. vorming", 'aliases': ["ckv"] },
-        { 'name': "Drama", 'aliases': ["drama", "kudr", "dr"] },
-        { 'name': "Duits", 'aliases': ["duits", "dutl", "du", "de", "duitse", "deutsch"] },
-        { 'name': "Economie", 'aliases': ["economie", "eco", "ec", "econ"] },
-        { 'name': "Frans", 'aliases': ["frans", "fatl", "fa", "fr", "franse", "français"] },
-        { 'name': "Geschiedenis", 'aliases': ["geschiedenis", "gs", "ges"] },
-        { 'name': "Grieks", 'aliases': ["grieks", "gtc", "gr", "grkc", "grtl", "griekse"] },
-        { 'name': "Kunst algemeen", 'aliases': ["kunst algemeen", "ku", "kua"] },
-        { 'name': "Latijn", 'aliases': ["latijn", "ltc", "la", "lakc", "latl", "latijnse"] },
-        { 'name': "Levensbeschouwing", 'aliases': ["levensbeschouwing", "lv"] },
-        { 'name': "Sport", 'aliases': ["sport", "lo", "s&b", "lichamelijke opvoeding", "gym"] },
-        { 'name': "Maatschappijleer", 'aliases': ["maatschappijleer", "ma", "malv", "maat"] },
-        { 'name': "Maatschappij­wetenschappen", 'aliases': ["maatschappijwetenschappen", "maw"] },
-        { 'name': "Mens en maatschappij", 'aliases': ["mens en maatschappij", "m&m", "mm"] },
-        { 'name': "Mens en natuur", 'aliases': ["mens en natuur", "m&n", "mn"] },
-        { 'name': "Mentor", 'aliases': ["mentor", "mentoruur", "mentoraat"] },
-        { 'name': "Muziek", 'aliases': ["muziek", "kumu", "mu"] },
-        { 'name': "Natuurkunde", 'aliases': ["natuurkunde", "na", "nat", "nask1"] },
-        { 'name': "Nederlands", 'aliases': ["nederlands", "netl", "ne", "nl", "nederlandse"] },
-        { 'name': "Scheikunde", 'aliases': ["scheikunde", "sk", "sch", "schk", "nask2"] },
-        { 'name': "Spaans", 'aliases': ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
-        { 'name': "Wiskunde", 'aliases': ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen"] },
-        { 'name': "Examentraining", 'aliases': ["examentraining"] },
-        { 'name': "Loopbaan­oriëntatie en -begeleiding", 'aliases': ["loopbaan", "lob"] },
-        { 'name': "Engels", 'aliases': ["engels", "entl", "en", "engelse", "english"] }
+        { name: "Aardrijkskunde", aliases: ["aardrijkskunde", "ak"] },
+        { name: "Bedrijfseconomie", aliases: ["bedrijfseconomie", "beco", "bec"] },
+        { name: "Beeldende vorming", aliases: ["beeldend", "beeldende", "kubv", "be", "bv", "bha", "kbv", "ha", "tw"] },
+        { name: "Biologie", aliases: ["biologie", "bio", "bi", "biol"] },
+        { name: "Cult. en kunstz. vorming", aliases: ["ckv"] },
+        { name: "Drama", aliases: ["drama", "kudr", "dr", "kdr", "da", "kda"] },
+        { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] },
+        { name: "Economie", aliases: ["economie", "eco", "ec", "econ", "eo"] },
+        { name: "Frans", aliases: ["frans", "fatl", "fa", "fr", "franse", "français"] },
+        { name: "Geschiedenis", aliases: ["geschiedenis", "gs", "ges", "gst", "gm"] },
+        { name: "Godsdienst", aliases: ["godsdienst", "religie", "god", "gd", "gds"] },
+        { name: "Grieks", aliases: ["grieks", "gtc", "gr", "grkc", "grtl", "griekse"] },
+        { name: "Informatica", aliases: ["informatica", "in", "ict"] },
+        { name: "Kunst algemeen", aliases: ["kunst algemeen", "ku", "kua", "kv1"] },
+        { name: "Latijn", aliases: ["latijn", "ltc", "la", "lakc", "latl", "latijnse"] },
+        { name: "Levensbeschouwing", aliases: ["levensbeschouwing", "lv"] },
+        { name: "Sport", aliases: ["sport", "lo", "s&b", "lichamelijke opvoeding", "gym", "bsm"] },
+        { name: "Maatschappijleer", aliases: ["maatschappijleer", "ma", "malv", "maat"] },
+        { name: "Maatschappij­wetenschappen", aliases: ["maatschappijwetenschappen", "ma", "maat", "maw", "mask"] },
+        { name: "Mens en maatschappij", aliases: ["mens en maatschappij", "m&m", "mm"] },
+        { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn"] },
+        { name: "Mentor", aliases: ["mentor", "mentoruur", "mentoraat", "mr"] },
+        { name: "Muziek", aliases: ["muziek", "kumu", "mu", "kmu"] },
+        { name: "Natuurkunde", aliases: ["natuurkunde", "na", "nat", "nask1", "nsk1"] },
+        { name: "Nederlands", aliases: ["nederlands", "netl", "ne", "nl", "nederlandse"] },
+        { name: "Ontmoeten en verbinden", aliases: ["ontmoeten en verbinden", "o&v", "ov"] },
+        { name: "Scheikunde", aliases: ["scheikunde", "sk", "sch", "schk", "nask2", "nsk2"] },
+        { name: "Natuur- en scheikunde", aliases: ["natuur- en scheikunde", "natuur en scheikunde", "natuurkunde en scheikunde", "nask", "ns"] },
+        { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
+        { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
+        { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen", "re"] },
+        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'English'
+        { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
+        { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] }
     ]
 
     const resultingSubject = subjectMap.find((subjectObject) => title?.split(/\s|-|_|\d/gi)?.some(titleWord => subjectObject.aliases.includes(titleWord.toLowerCase())))

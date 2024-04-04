@@ -94,7 +94,7 @@ div.loading-overlay {
 
 .st-button.primary:hover,
 .st-button.primary.icon:hover {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
     color: var(--st-contrast-accent);
     filter: none;
 }
@@ -559,6 +559,7 @@ div.loading-overlay {
     background-color: transparent;
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
+    overflow-y: auto;
     z-index: 999999;
 }
 
@@ -767,6 +768,26 @@ a.st-metric:focus-visible {
     color: var(--st-foreground-insignificant);
 }
 
+.st-disclaimer {
+    padding: 12px 16px;
+    padding-left: 42px;
+    background-color: var(--st-highlight-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    font: 12px var(--st-font-family-secondary);
+    text-wrap: balance;
+    opacity: 0.875;
+}
+
+.st-disclaimer:before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    font: 600 18px 'Font Awesome 6 Pro';
+    opacity: .75;
+    color: var(--st-foreground-accent);
+}
+
 #st-cs-tab.active:after {
     width: calc(100% - 24px);
     height: 3px;
@@ -803,7 +824,7 @@ a.st-metric:focus-visible {
     align-items: center;
     justify-content: center;
     border-radius: calc(var(--st-border-radius) * 0.5);
-    background: var(--st-accent-secondary);
+    background: var(--st-accent-primary-dark);
     color: var(--st-contrast-accent);
     font: 600 14px var(--st-font-family-secondary);
     border: 1px solid var(--st-foreground-accent);
@@ -1349,7 +1370,7 @@ a.st-keyboard-hint.clicked {
     }
 
     99% {
-        display: flex;
+        display: grid;
     }
 
     100% {

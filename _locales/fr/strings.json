@@ -53,19 +53,20 @@
     },
     "dates": {
         "day": "Jour",
-        "xDays": "%s jours",
+        "nDays": "{days} jours",
         "week": "Semaine",
         "workweek": "Sem. de travail",
         "now": "maintenant",
+        "nowBrief": "mtn",
         "justNow": "il y a quelques instants",
         "soon": "bientôt",
         "fewMinsAgo": "il y a quelques minutes",
-        "todayAtTime": "aujourd'hui à %s",
-        "yesterdayAtTime": "hier à %s",
-        "lastWeekday": "%s dernier",
-        "tomorrowAtTime": "demain à %s",
-        "weekdayAtTime": "%s1 prochain à %s2",
-        "weekdayInWeek": "semaine %s1, %s2",
+        "todayAtTime": "aujourd'hui à {time}",
+        "yesterdayAtTime": "hier à {time}",
+        "lastWeekday": "{weekday} dernier",
+        "tomorrowAtTime": "demain à {time}",
+        "weekdayAtTime": "{weekday} prochain à {time}",
+        "weekdayInWeek": "semaine {week}, {weekday}",
         "weekdays": [
             "dimanche",
             "lundi",
@@ -77,38 +78,12 @@
         ]
     },
     "greetings": {
-        "lateNight": [
-            "Bonsoir#",
-            "Bonne soirée#",
-            "Bonsoir, oiseau de nuit#",
-            "Bon %s soir #"
-        ],
-        "evening": [
-            "Bonsoir#",
-            "Bonne soirée#",
-            "Bon %s soir#"
-        ],
-        "afternoon": [
-            "Bon après-midi#",
-            "Bon %s après-midi#"
-        ],
-        "morning": [
-            "Bonjour#",
-            "Bon %s matin#"
-        ],
-        "earlyNight": [
-            "Bonjour#",
-            "Bonjour, oiseau de nuit#",
-            "Bonjour, lève-tôt#",
-            "Bon %s matin#"
-        ],
-        "generic": [
-            "Bienvenue#",
-            "Bonjour#",
-            "Bon retour, %n#",
-            "Content de te revoir#",
-            "Salut#"
-        ]
+        "lateNight": "Bonsoir#;Bonne soirée#;Bonsoir, oiseau de nuit#;Bon %s soir #",
+        "evening": "Bonsoir#;Bonne soirée#;Bon %s soir#",
+        "afternoon": "Bon après-midi#;Bon %s après-midi#",
+        "morning": "Bonjour#;Bon %s matin#",
+        "earlyNight": "Bonjour#;Bonjour, oiseau de nuit#;Bonjour, lève-tôt#;Bon %s matin#",
+        "generic": "Bienvenue#;Bonjour#;Bon retour, %n#;Content de te revoir#;Salut#"
     },
     "toasts": {
         "jumpedToNextRelevantDay": "Affichage du lendemain avec des événements"
@@ -123,6 +98,7 @@
     "scaleDown": "Réduire l'échelle",
     "editWidgets": "Modifier les widgets",
     "widgetOptions": "Options des widgets",
+    "widgetDisclaimer": "Seuls les widgets contenant des informations pertinentes sont affichés sur ton écran d'accueil.",
     "editTeachers": "Changer les noms des enseignants",
     "teacherNicknames": "Noms d'enseignants personnalisés",
     "editFinish": "Terminer l'édition",
@@ -130,9 +106,11 @@
     "Vooruit": "En avant",
     "Achteruit": "En arrière",
     "Vandaag": "Aujourd'hui",
-    "moreGradesSingular": "et une autre note pour %s",
-    "moreGradesPlural": "%s1 autres notes pour %s2",
-    "moreGradesMany": "plus de notes: %s, entre autres",
+    "moreGradesSingular": "et une autre note pour {subject}",
+    "moreGradesPlural": "{num} autres notes pour {subjects}",
+    "moreGradesMany": "plus de notes: {subjects}, entre autres",
+    "noEvents": "Aucun événement ce jour",
+    "error": "Une erreur s'est produite",
     "hb": {
         "title": "Recommandations",
         "subtitle": "Une collection de ressources constituée pour t'aider à maîtriser le matériel"
@@ -157,7 +135,7 @@
         "subjectPrompt": "Tape le nom de la matière",
         "hideStudyguide": "Cacher l'élément",
         "hidden": "Caché",
-        "periodN": "%o période",
+        "periodN": "{periodOrdinal} période",
         "periodMissing": "Période non définie"
     }
 }

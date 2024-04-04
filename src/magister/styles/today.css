@@ -160,12 +160,41 @@
     position: absolute;
     top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour));
     left: -8px;
-    right: -8px;
+    right: -6px;
     height: 1px;
     padding-bottom: 64px;
-    border-top: 1px solid var(--st-accent-primary);
+    border-top: 1px solid var(--st-foreground-accent);
     z-index: 0;
     pointer-events: none;
+}
+
+#st-start-now-label {
+    position: absolute;
+    top: calc(var(--relative-start) * var(--hour-zoom) * var(--px-per-hour) - 8px);
+    right: -6px;
+    padding-block: 2px;
+    padding-right: 4px;
+    height: 16px;
+    font: 600 9px var(--st-font-family-secondary);
+    background-color: var(--st-foreground-accent);
+    border-top-right-radius: calc(var(--st-border-radius) * 0.5);
+    border-bottom-right-radius: calc(var(--st-border-radius) * 0.5);
+    color: var(--st-contrast-accent);
+    z-index: 2;
+    pointer-events: none;
+}
+
+#st-start-now-label:before {
+    content: '';
+    position: absolute;
+    display: block;
+    left: -8px;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid var(--st-foreground-accent);
 }
 
 #st-start-schedule:not(.week-view) .st-start-col:first-child {
@@ -180,8 +209,26 @@
     margin-left: -24px;
 }
 
-#st-start-schedule:not(.week-view) .st-start-col:last-child #st-start-now {
-    margin-right: -24px;
+#st-start-schedule:not(.week-view) .st-start-col:last-child #st-start-now,
+#st-start-schedule:not(.week-view) .st-start-col:last-child #st-start-now-label {
+    margin-right: -22px;
+}
+
+#st-start-schedule.week-view #st-start-now-label {
+    display: none;
+}
+
+#st-start-schedule.week-view #st-start-now:after {
+    content: '';
+    position: absolute;
+    display: block;
+    right: -2px;
+    top: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid var(--st-foreground-accent);
 }
 
 .st-start-col {
@@ -275,6 +322,34 @@
 
 #st-start-schedule:not(.week-view) .st-start-col:last-child .st-start-col-label {
     margin-right: -32px;
+}
+
+.st-start-icon {
+    display: inline-block;
+    position: sticky !important;
+    top: 50%;
+    left: 50%;
+    translate: -50% calc(-50% - 48px);
+    width: 120px;
+    height: max-content;
+    font-size: 90px;
+    text-align: center;
+    opacity: .5;
+    color: var(--st-foreground-secondary);
+}
+
+.st-start-disclaimer {
+    display: inline-block;
+    position: sticky;
+    top: 50%;
+    left: 50%;
+    translate: -50% calc(-50% + 32px);
+    width: max-content;
+    height: max-content;
+    font: 600 14px var(--st-font-family-secondary);
+    text-align: center;
+    opacity: .5;
+    color: var(--st-foreground-secondary);
 }
 
 .st-start-event {
@@ -799,11 +874,6 @@ a.st-widget-title {
     animation: floatLeft 200ms;
 }
 
-#st-start-edit-widgets-options:after {
-    content: "De widget wordt enkel weergegeven als deze relevante informatie bevat, tenzij anders ingesteld.";
-    font: 14px/24px var(--st-font-family-secondary);
-}
-
 #st-start-edit-widgets-options:empty:before {
     content: attr(data-i18n-widget-options);
     font: 500 16px/24px var(--st-font-family-primary);
@@ -811,6 +881,8 @@ a.st-widget-title {
 
 #st-start-edit-widgets-options:empty:after {
     content: "Verplaats widgets door te slepen of pas opties aan door eroverheen te bewegen met de muis.";
+    opacity: .75;
+    font: 14px/24px var(--st-font-family-secondary);
 }
 
 #st-start-edit-widgets-options .st-segmented-control {
@@ -830,6 +902,7 @@ a.st-widget-title {
     right: 400px;
     bottom: 0;
     width: 400px;
+    height: 35vh;
     padding: 24px;
 
     display: flex;
@@ -837,6 +910,7 @@ a.st-widget-title {
     gap: 16px;
 
     font: 500 16px/24px var(--st-font-family-primary);
+    border-top: var(--st-border);
     animation: floatLeft 200ms;
 }
 
@@ -848,6 +922,16 @@ a.st-widget-title {
 #st-start-edit-widgets-hidden:empty:after {
     content: "Er zijn geen widgets verborgen. Verberg widgets door 'Verborgen' te kiezen in de opties hierboven.";
     font: 14px/24px var(--st-font-family-secondary);
+    opacity: .75;
+}
+
+#st-start-edit-widgets-disclaimer {
+    position: absolute;
+    right: 400px;
+    width: calc(400px - 32px);
+    margin: 16px;
+    bottom: 35vh;
+    animation: floatLeft 200ms;
 }
 
 #st-start-edit-widgets-prot {
@@ -879,7 +963,7 @@ a.st-widget-title {
 }
 
 #st-start-widget-grades.st-unread {
-    background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-secondary));
+    background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-primary-dark));
 }
 
 #st-start-widget-grades.st-unread * {
@@ -936,7 +1020,7 @@ a.st-widget-title {
     width: 100%;
     padding-inline: 16px;
     text-align: center;
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
     font: 600 12px/44px var(--st-font-family-secondary);
     margin-top: -8px;
     border-top: var(--st-border);
@@ -1025,7 +1109,7 @@ a.st-widget-title {
 }
 
 #st-start-widget-digital-clock-wrapper>div[data-done=true]:after {
-    background-color: var(--st-accent-secondary);
+    background-color: var(--st-accent-primary-dark);
 }
 
 #st-start-widget-digital-clock:fullscreen {
