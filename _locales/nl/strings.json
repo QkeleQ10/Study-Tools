@@ -9,7 +9,7 @@
         "digitalClock": "Digitale klok",
         "newGrades": "Nieuwe cijfers",
         "newGrade": "Nieuw cijfer",
-        "latestGrade": "Laatste cijfer"
+        "latestGrade": "Laatste cijfers"
     },
     "views": {
         "Start": "Start",
@@ -107,11 +107,13 @@
     "Vooruit": "Vooruit",
     "Achteruit": "Achteruit",
     "Vandaag": "Vandaag",
-    "moreGradesSingular": "en een ander cijfer voor {subject}",
-    "moreGradesPlural": "{num} andere cijfers voor {subjects}",
-    "moreGradesMany": "nog meer cijfers voor o.a. {subjects}",
+    "Nieuwer": "Nieuwer",
+    "Ouder": "Ouder",
     "noEvents": "Geen afspraken deze dag",
     "error": "Er is iets misgegaan",
+    "loading": "Laden...",
+    "loadingWidgets": "Widgets laden...",
+    "loadingWidget": "Widget '{title}' laden...",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"

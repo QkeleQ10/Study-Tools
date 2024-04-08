@@ -9,7 +9,7 @@
         "digitalClock": "Horloge numérique",
         "newGrades": "Nouvelles notes",
         "newGrade": "Nouvelle note",
-        "latestGrade": "Dernière note"
+        "latestGrade": "Dernières notes"
     },
     "views": {
         "Start": "Accueil",
@@ -29,6 +29,7 @@
         "ELO": "Espace numérique",
         "Bronnen": "Sources",
         "Studiewijzers": "Guide d'étude",
+        "Studiewijzer details": "Details de guide d'étude",
         "Opdrachten": "Missions",
         "Portfolio": "Portefeuille",
         "Profiel": "Profil",
@@ -106,11 +107,13 @@
     "Vooruit": "En avant",
     "Achteruit": "En arrière",
     "Vandaag": "Aujourd'hui",
-    "moreGradesSingular": "et une autre note pour {subject}",
-    "moreGradesPlural": "{num} autres notes pour {subjects}",
-    "moreGradesMany": "plus de notes: {subjects}, entre autres",
+    "Nieuwer": "Plus récent",
+    "Ouder": "Plus ancien",
     "noEvents": "Aucun événement ce jour",
     "error": "Une erreur s'est produite",
+    "loading": "Chargement...",
+    "loadingWidgets": "Chargement des widgets...",
+    "loadingWidget": "Chargement de widget «{title}»...",
     "hb": {
         "title": "Recommandations",
         "subtitle": "Une collection de ressources constituée pour t'aider à maîtriser le matériel"

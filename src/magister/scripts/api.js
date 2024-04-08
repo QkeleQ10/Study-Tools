@@ -10,6 +10,10 @@ const gatherStart = new Date()
 gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
 gatherStart.setHours(0, 0, 0, 0)
 
+const gatherEarlyStart = new Date()
+gatherEarlyStart.setDate(now.getDate() - 42)
+gatherEarlyStart.setHours(0, 0, 0, 0)
+
 const gatherEnd = new Date()
 gatherEnd.setDate(now.getDate() + 42)
 gatherEnd.setHours(0, 0, 0, 0)
@@ -76,7 +80,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.gradesRecent ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/cijfers/laatste?top=12&skip=0`, null, 'grades.recent'
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/cijfers/laatste?top=20&skip=0`, null, 'grades.recent'
                     )
                 resolve(
                     (await magisterApiCache.gradesRecent)?.items || []
@@ -111,7 +115,7 @@ const MagisterApi = {
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.assignments ??=
                     fetchWrapper(
-                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=12&skip=0&startdatum=${gatherStart.toISOString().substring(0, 10)}&einddatum=${gatherEnd.toISOString().substring(0, 10)}`, null, 'assignments.top'
+                        `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/opdrachten?top=20&skip=0&startdatum=${gatherEarlyStart.toISOString().substring(0, 10)}&einddatum=${gatherEnd.toISOString().substring(0, 10)}`, null, 'assignments.top'
                     )
                 resolve(
                     (await magisterApiCache.assignments)?.Items || []
@@ -134,7 +138,7 @@ const MagisterApi = {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.messages ??=
                 fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/berichten/postvakin/berichten?top=12&skip=0&gelezenStatus=ongelezen`, null, 'messages'
+                    `https://${magisterApiSchoolName}.magister.net/api/berichten/postvakin/berichten?top=20&skip=0&gelezenStatus=ongelezen`, null, 'messages'
                 )
             resolve(
                 (await magisterApiCache.messages)?.items || []

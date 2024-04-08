@@ -962,96 +962,163 @@ a.st-widget-title {
     outline-offset: -4px;
 }
 
-#st-start-widget-grades.st-unread {
-    background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-primary-dark));
-}
-
-#st-start-widget-grades.st-unread * {
-    color: var(--st-contrast-accent);
+#st-start-widget-grades-title {
+    background-color: transparent;
+    border-bottom-color: transparent;
+    z-index: 2;
+    position: relative;
+    transition: color 200ms;
 }
 
 .st-widget[data-render-type="Tegel"] #st-start-widget-grades-title {
     justify-content: center;
-    border-bottom-color: transparent;
-    background-color: transparent;
 }
 
-.st-widget[data-render-type="Lijst"] #st-start-widget-grades-title {
-    padding-bottom: 6px;
-    background-color: transparent;
+#st-start-widget-grades-scroll-back,
+#st-start-widget-grades-scroll-forw {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    right: auto;
+    translate: 0 -50%;
+    transform: translateX(-200%);
+    opacity: 0;
+    transition: color 200ms, opacity 200ms, transform 200ms;
 }
 
-#st-start-widget-grades-last {
+#st-start-widget-grades-scroll-forw {
+    left: auto;
+    right: 16px;
+    transform: translateX(200%);
+}
+
+#st-start-widget-grades[data-unread=true] #st-start-widget-grades-title,
+#st-start-widget-grades[data-unread=true] #st-start-widget-grades-scroll-back,
+#st-start-widget-grades[data-unread=true] #st-start-widget-grades-scroll-forw {
+    color: var(--st-contrast-accent);
+}
+
+#st-start-widget-grades-items {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    margin-top: -64px;
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+}
+
+.st-start-widget-grades-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    padding-inline: 64px;
+    padding-top: 48px;
+    padding-bottom: 32px;
+    overflow: hidden;
+    scroll-snap-align: start;
+}
+
+.st-widget[data-render-type="Tegel"] .st-start-widget-grades-item {
+    padding-bottom: 26px;
+    padding-top: 58px;
+}
+
+.st-start-widget-grades-item[data-unread=true] {
+    background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-primary-dark));
+}
+
+.st-start-widget-grades-item[data-unread=true] *,
+.st-start-widget-grades-item[data-unread=true] .st-button.icon {
+    color: var(--st-contrast-accent);
+}
+
+.st-start-widget-grades-item-rslt {
     display: block;
     font: 500 28px/42px var(--st-font-family-primary);
     text-align: center;
-    padding-inline: 32px;
     white-space: nowrap;
+    max-width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
+    opacity: 1;
+    transition: opacity 200ms;
 }
 
-#st-start-widget-grades-last-subj,
-#st-start-widget-grades-last-date,
-#st-start-widget-grades-last-info {
-    display: block;
+.st-start-widget-grades-item[data-hidden=true] .st-start-widget-grades-item-rslt {
+    opacity: 0;
+}
+
+.st-start-widget-grades-item[data-assignment=true] .st-start-widget-grades-item-rslt {
+    color: var(--st-foreground-accent);
+}
+
+.st-start-widget-grades-item-rslt[data-great=true] {
+    background: linear-gradient(in hsl longer hue, hsl(0, 100%, 60%) 0 0) 0 0/100% 200%;
+    background-clip: text;
+    color: transparent;
+    animation: great-grade 2s linear infinite;
+}
+
+.st-start-widget-grades-item[data-unread=true] .st-start-widget-grades-item-rslt[data-great=true] {
+    background: linear-gradient(in hsl longer hue, hsl(0, 100%, 80%) 0 0) 0 0/100% 200%;
+    background-clip: text;
+    color: transparent;
+    animation: great-grade 2s linear infinite;
+}
+
+@keyframes great-grade {
+    to {
+        background-position: 0 -200%
+    }
+}
+
+.st-start-widget-grades-item-subj,
+.st-start-widget-grades-item-date,
+.st-start-widget-grades-item-info {
     font: 500 11px/16px var(--st-font-family-secondary);
-    text-align: center;
-    padding-inline: 32px;
     white-space: nowrap;
+    max-width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
+    translate: 0;
+    transition: translate 200ms;
 }
 
-#st-start-widget-grades-last-subj {
+.st-start-widget-grades-item[data-hidden=true] .st-start-widget-grades-item-subj,
+.st-start-widget-grades-item[data-hidden=true] .st-start-widget-grades-item-date,
+.st-start-widget-grades-item[data-hidden=true] .st-start-widget-grades-item-info {
+    translate: 0 -16px;
+}
+
+.st-start-widget-grades-item-subj {
     font: 600 12px/22px var(--st-font-family-secondary);
 }
 
-#st-start-widget-grades-last-date {
-    margin-bottom: 28px;
-}
-
-#st-start-widget-grades-last-date:after {
+.st-start-widget-grades-item-date:after {
     content: attr(data-time);
 }
 
-#st-start-widget-grades-more {
-    display: block;
-    width: 100%;
-    padding-inline: 16px;
-    text-align: center;
-    background-color: var(--st-accent-primary-dark);
-    font: 600 12px/44px var(--st-font-family-secondary);
-    margin-top: -8px;
-    border-top: var(--st-border);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
-#st-start-widget-grades-last-hide {
+.st-start-widget-grades-item-hide {
     position: absolute;
-    top: 12px;
-    right: 16px;
-    opacity: 0;
-    transition: none;
-}
-
-.st-widget[data-render-type="Lijst"] #st-start-widget-grades-last-hide {
-    top: auto;
     bottom: 16px;
     right: 16px;
+    opacity: 0;
+    transform: translateX(200%);
+    transition: color 200ms, opacity 200ms, transform 200ms;
 }
 
-#st-start-widget-grades-last-hide:hover,
-#st-start-widget-grades-last-hide:focus-visible {
+#st-start-widget-grades .st-button.icon:hover,
+#st-start-widget-grades .st-button.icon:focus-visible {
     background-color: #ffffff33;
 }
 
-#st-start-widgets:not(.editing) #st-start-widget-grades:hover #st-start-widget-grades-last-hide,
-#st-start-widget-grades:focus-visible #st-start-widget-grades-last-hide,
-#st-start-widget-grades-last-hide:focus-visible {
+#st-start-widgets:not(.editing) #st-start-widget-grades:hover .st-button.icon,
+#st-start-widget-grades:focus-visible .st-button.icon,
+.st-button.icon:focus-visible {
     opacity: 1;
+    transform: none;
 }
 
 #st-start-widget-digital-clock {

@@ -9,7 +9,7 @@
         "digitalClock": "Digital clock",
         "newGrades": "New grades",
         "newGrade": "New grade",
-        "latestGrade": "Latest grade"
+        "latestGrade": "Recent grades"
     },
     "views": {
         "Start": "Start",
@@ -29,6 +29,7 @@
         "ELO": "Virtual Learning",
         "Bronnen": "Sources",
         "Studiewijzers": "Study Guide",
+        "Studiewijzer details": "Study Guide details",
         "Opdrachten": "Assignments",
         "Portfolio": "Portfolio",
         "Profiel": "Profile",
@@ -106,11 +107,13 @@
     "Vooruit": "Forwards",
     "Achteruit": "Backwards",
     "Vandaag": "Today",
-    "moreGradesSingular": "and another grade for {subject}",
-    "moreGradesPlural": "{num} more grades for {subjects}",
-    "moreGradesMany": "more grades, including ones for {subjects}",
+    "Nieuwer": "Newer",
+    "Ouder": "Older",
     "noEvents": "No events on this day",
     "error": "Something went wrong",
+    "loading": "Loading...",
+    "loadingWidgets": "Loading widgets...",
+    "loadingWidget": "Loading widget \"{title}\"...",
     "hb": {
         "title": "Recommended",
         "subtitle": "A curated collection of helpful resources to help you master the subject matter"

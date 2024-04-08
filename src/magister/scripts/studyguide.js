@@ -277,13 +277,18 @@ async function renderStudyguideList(hiddenItemsDestination) {
 
         savedStudyguides = Object.values(await getFromStorage('sw-list') || [])
 
-        const settingShowPeriod = syncedStorage['sw-period'],
+        const settingCols = syncedStorage['sw-cols'],
+            settingShowPeriod = syncedStorage['sw-period'],
             viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
             originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
             gridWrapper = element('div', 'st-sw-container', gridContainer)
 
-        let grid = element('div', 'st-sw-grid', gridWrapper, { class: 'st-sw-grid' }),
+        let cols = [],
             object = {}
+
+        for (let i = 1; i <= Number(settingCols); i++) {
+            cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
+        }
 
         originalItems.forEach(elem => {
             let title = elem.firstElementChild.firstElementChild.innerText,
@@ -312,11 +317,11 @@ async function renderStudyguideList(hiddenItemsDestination) {
         Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
             let items = object[subject]
 
-            let subjectTile = element('div', `st-sw-subject-${subject}`, grid, { class: 'st-sw-subject', 'data-subject': subject })
+            let subjectTile = element('div', `st-sw-subject-${subject}`, cols[0], { class: 'st-sw-subject', 'data-subject': subject })
 
             if (items.length > 1 || subject === 'hidden') {
                 let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
-                let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper' })
+                let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
                 if (subject === 'hidden') {
                     subjectHeadline.remove()
                     itemsWrapper.remove()
@@ -390,7 +395,6 @@ async function renderStudyguideList(hiddenItemsDestination) {
 
         resolve()
 
-        console.log()
         if (document.getElementById('st-sw-hidden-items-button') && !(document.getElementById('st-sw-hidden-items')?.children.length > 0)) {
             document.getElementById('st-sw-hidden-items-button')?.remove()
         }
@@ -403,8 +407,8 @@ function appendStudyguidesToList() {
     let items = document.querySelectorAll('.st-sw-item, .st-sw-item-default')
     let searchBar = document.querySelector('#st-sw-search')
     let gridContainer = document.querySelector('#st-sw-container')
-    let grid = document.querySelector('#st-sw-container .st-sw-grid')
-    if (!gridContainer || !grid?.[0]) return
+    let cols = document.querySelectorAll('#st-sw-container .st-sw-col')
+    if (!gridContainer || !cols?.[0]) return
 
     // First, define which study guide items should be shown.
     items.forEach(studyguide => {
