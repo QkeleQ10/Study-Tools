@@ -668,17 +668,20 @@ div.faux.popup-menu>ul>li.submenu>a,
 }
 
 .k-scheduler .afspraak .afspraak-info>.title .schoolHour,
-span.nrblock {
+span.nrblock, 
+#afsprakenlijst-container .nrblock {
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    height: 20px !important;
+    aspect-ratio: 1 !important;
+    padding: 0 !important;
+    margin-right: 2px !important;
     background: var(--st-foreground-primary) !important;
-    color: var(--st-background-secondary) !important;
-    font-family: var(--st-font-family-secondary);
+    color: var(--st-background-tertiary) !important;
+    font-family: var(--st-font-family-secondary) !important;
     font-weight: 700 !important;
-    border-radius: calc(var(--st-border-radius) * 0.75);
-    aspect-ratio: 1;
-    width: auto;
-    height: 15px;
-    padding: 2px;
-    text-align: center;
+    border-radius: calc(var(--st-border-radius) * 0.5) !important;
 }
 
 .k-scheduler .k-event {border-radius: calc(var(--st-border-radius) * 0.75);}

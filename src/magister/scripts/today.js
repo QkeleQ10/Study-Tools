@@ -33,14 +33,15 @@ async function today() {
     let todayCollapseWidgets
     let widgetFunctions
     let renderSchedule, updateHeaderButtons, updateHeaderText
+
     let agendaStartDate, agendaEndDate
 
     const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
-    const showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
-    const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
-
     let daysToShow = daysToShowSetting
 
+    const showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
+
+    const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
     let listViewEnabled = listViewEnabledSetting
 
     let agendaView = 'day' // False for day view, true for week view
@@ -75,29 +76,22 @@ async function today() {
 
     async function todayHeader() {
         let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),
+            headerGreeting = element('span', 'st-start-header-greeting', header, { class: 'st-title' }),
             headerButtons = element('div', 'st-start-header-buttons', header),
             formattedWeekday = now.toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long' })
 
         // Greeting system
         greetUser()
         headerText.addEventListener('click', () => {
-            if (header.dataset.greet) return
-            header.dataset.transition = true
-            setTimeout(async () => {
-                greetUser()
-                header.removeAttribute('data-transition')
-            }, 300)
+            greetUser()
             setTimeout(() => {
-                header.dataset.transition = true
-                setTimeout(async () => {
-                    updateHeaderText()
-                    header.removeAttribute('data-transition')
-                    header.removeAttribute('data-greet')
-                }, 300)
+                headerGreeting.dataset.state = 'hidden'
+                headerText.dataset.state = 'visible'
             }, 2000)
         })
         function greetUser() {
-            header.dataset.greet = true
+            headerGreeting.dataset.state = 'visible'
+            headerText.dataset.state = 'hidden'
             const greetingsByHour = [
                 [22, ...i18n('greetings.lateNight').split(';'), 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
                 [18, ...i18n('greetings.evening').split(';'), 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
@@ -120,8 +114,8 @@ async function today() {
             const punctuation = Math.random() < 0.7 ? '.' : '!',
                 greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation).replace('%s', formattedWeekday).replace('%n', firstName)
             if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
-            headerText.innerText = greeting.slice(0, -1)
-            headerText.dataset.lastLetter = greeting.slice(-1)
+            headerGreeting.innerText = greeting.slice(0, -1)
+            headerGreeting.dataset.lastLetter = greeting.slice(-1)
         }
 
         updateHeaderButtons = () => {
@@ -160,9 +154,9 @@ async function today() {
             }
 
             if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) {
-                headerText.classList.remove('italic')
+                headerText.classList.remove('de-emphasis')
             } else {
-                headerText.classList.add('italic')
+                headerText.classList.add('de-emphasis')
             }
 
             headerText.dataset.lastLetter = '.'
@@ -594,14 +588,10 @@ async function today() {
         updateHeaderButtons()
 
         setTimeout(() => {
-            header.dataset.transition = true
-            setTimeout(async () => {
-                updateHeaderText()
-                header.removeAttribute('data-transition')
-                header.removeAttribute('data-greet')
-            }, 300)
+            updateHeaderText()
+            document.getElementById('st-start-header-greeting').dataset.state = 'hidden'
+            document.getElementById('st-start-header-text').dataset.state = 'visible'
         }, 2000)
-
     }
 
     async function todayWidgets() {
@@ -855,18 +845,18 @@ async function today() {
                             widgetElement.dataset.unread = children[visibleChildIndex].dataset.unread
                             if (!reverse) {
                                 if (children[visibleChildIndex + 1]) {
-                                    children[visibleChildIndex + 1].scrollIntoView({ behavior: 'smooth' })
+                                    widgetItemsContainer.scroll((visibleChildIndex + 1) * 400, 0)
                                     widgetElement.dataset.unread = children[visibleChildIndex + 1].dataset.unread
                                 } else {
-                                    children[0].scrollIntoView({ behavior: 'smooth' })
+                                    widgetItemsContainer.scroll(0, 0)
                                     widgetElement.dataset.unread = children[0].dataset.unread
                                 }
                             } else {
                                 if (children[visibleChildIndex - 1]) {
-                                    children[visibleChildIndex - 1].scrollIntoView({ behavior: 'smooth' })
+                                    widgetItemsContainer.scroll((visibleChildIndex - 1) * 400, 0)
                                     widgetElement.dataset.unread = children[visibleChildIndex - 1].dataset.unread
                                 } else {
-                                    children.at(-1).scrollIntoView({ behavior: 'smooth' })
+                                    widgetItemsContainer.scroll(widgetItemsContainer.scrollWidth, 0)
                                     widgetElement.dataset.unread = children.at(-1).dataset.unread
                                 }
                             }

@@ -1303,6 +1303,18 @@ a.st-keyboard-hint.clicked {
     }
 }
 
+@keyframes flipUpOut {
+    to {
+        transform: rotateX(-90deg);
+    }
+}
+
+@keyframes flipDownIn {
+    from {
+        transform: rotateX(90deg);
+    }
+}
+
 @keyframes popIn {
     0% {
         display: none;
