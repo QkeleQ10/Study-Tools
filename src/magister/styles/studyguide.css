@@ -8,11 +8,11 @@
     overflow-y: auto;
 }
 
-.st-sw-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    row-gap: 8px;
-    column-gap: 12px;
+.st-sw-col {
+    flex: 1 1 0px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     padding: 1px;
     width: 100%;
 }

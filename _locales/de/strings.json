@@ -9,7 +9,7 @@
         "digitalClock": "Digitaluhr",
         "newGrades": "Neue Noten",
         "newGrade": "Neue Note",
-        "latestGrade": "Letzte Note"
+        "latestGrade": "Letzte Noten"
     },
     "views": {
         "Start": "Start",
@@ -29,6 +29,7 @@
         "ELO": "E-Lernen",
         "Bronnen": "Quellen",
         "Studiewijzers": "Studiewijzers",
+        "Studiewijzer details": "Studiewijzerdetails",
         "Opdrachten": "Aufgaben",
         "Portfolio": "Portfolio",
         "Profiel": "Profil",
@@ -56,8 +57,8 @@
         "nDays": "{num} Tage",
         "week": "Woche",
         "workweek": "Werkweek",
-        "now": "nu",
-        "nowBrief": "nu",
+        "now": "jetzt",
+        "nowBrief": "jetzt",
         "justNow": "zojuist",
         "soon": "zometeen",
         "fewMinsAgo": "een paar minuten geleden",
@@ -65,16 +66,16 @@
         "yesterdayAtTime": "gisteren om {time}",
         "lastWeekday": "afgelopen {weekday}",
         "tomorrowAtTime": "morgen om {time}",
-        "weekdayAtTime": "{weekday} om time",
+        "weekdayAtTime": "{weekday} om {time}",
         "weekdayInWeek": "week {week}, {weekday}",
         "weekdays": [
-            "zondag",
-            "maandag",
-            "dinsdag",
-            "woensdag",
-            "donderdag",
-            "vrijdag",
-            "zaterdag"
+            "Sonntag",
+            "Montag",
+            "Dienstag",
+            "Mittwoch",
+            "Donnerstag",
+            "Freitag",
+            "Samstag"
         ]
     },
     "greetings": {
@@ -106,11 +107,13 @@
     "Vooruit": "Vooruit",
     "Achteruit": "Achteruit",
     "Vandaag": "Heute",
-    "moreGradesSingular": "en een ander cijfer voor {subject}",
-    "moreGradesPlural": "{num} andere cijfers voor {subjects}",
-    "moreGradesMany": "nog meer cijfers voor o.a. {subjects}",
+    "Nieuwer": "Nieuwer",
+    "Ouder": "Ouder",
     "noEvents": "Geen afspraken deze dag",
     "error": "Er is iets misgegaan",
+    "loading": "Laden...",
+    "loadingWidgets": "Widgets laden...",
+    "loadingWidget": "Widget '{title}' laden...",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"

@@ -119,7 +119,7 @@ async function today() {
             possibleGreetings.push(...greetingsGeneric)
             const punctuation = Math.random() < 0.7 ? '.' : '!',
                 greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation).replace('%s', formattedWeekday).replace('%n', firstName)
-            if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, " $1")
+            if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
             headerText.innerText = greeting.slice(0, -1)
             headerText.dataset.lastLetter = greeting.slice(-1)
         }
@@ -615,7 +615,7 @@ async function today() {
 
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
-        let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: "Widgets laden..." })
+        let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: i18n('loadingWidgets') })
 
         now = new Date()
 
@@ -679,32 +679,17 @@ async function today() {
                 types: ['Tegel', 'Lijst'],
                 options: [
                     {
-                        title: "Widget weergeven",
-                        key: 'start-widget-cf-widget',
+                        title: "Automatisch rouleren",
+                        key: 'start-widget-cf-rotate',
                         type: 'select',
                         choices: [
                             {
-                                title: "Altijd",
-                                value: 'always'
+                                title: "Elke 20 seconden",
+                                value: 'true'
                             },
                             {
-                                title: "Bij ongelezen cijfer",
-                                value: 'new'
-                            }
-                        ]
-                    },
-                    {
-                        title: "Als gelezen beschouwen",
-                        key: 'start-widget-cf-new',
-                        type: 'select',
-                        choices: [
-                            {
-                                title: "Na openen cijferlijst",
-                                value: 'unread'
-                            },
-                            {
-                                title: "Na een week",
-                                value: 'week'
+                                title: "Uit",
+                                value: 'false'
                             }
                         ]
                     },
@@ -730,11 +715,10 @@ async function today() {
                 ],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        let viewWidget = await getFromStorage('start-widget-cf-widget', 'local') || 'always'
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
-                        let newWhen = await getFromStorage('start-widget-cf-new', 'local') || 'unread'
+                        let autoRotate = await getFromStorage('start-widget-cf-rotate', 'local') || 'true'
 
-                        let grades, assignments, hiddenItems, lastViewMs
+                        let grades, assignments, hiddenItems
                         if (placeholder) {
                             grades = [
                                 {
@@ -769,19 +753,15 @@ async function today() {
                                 }
                             ]
                             assignments = []
-                            hiddenItems = []
-                            lastViewMs = 0
+                            hiddenItems = new Set()
                         } else {
                             grades = await MagisterApi.grades.recent()
                                 .catch(() => { return reject() })
                             assignments = await MagisterApi.assignments.top()
                                 .catch(() => { return reject() })
 
-                            hiddenItems = await getFromStorage('hiddenGrades', 'local') || []
-                            lastViewMs = await getFromStorage('viewedGrades', 'local') || 0
+                            hiddenItems = new Set((await getFromStorage('hiddenGrades', 'local') || []))
                         }
-                        let lastViewDate = new Date(lastViewMs)
-                        if (!lastViewDate || !(lastViewDate instanceof Date) || isNaN(lastViewDate)) lastViewDate = new Date().setDate(now.getDate() - 7)
 
                         const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
                             {
@@ -795,6 +775,7 @@ async function today() {
                                 waarde: item.Beoordeling || '?',
                                 isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= 5.5,
                                 weegfactor: 0,
+                                kolomId: item.Id,
                                 assignment: true
                             }
                         ))
@@ -802,69 +783,98 @@ async function today() {
                             {
                                 ...item,
                                 date: new Date(item.ingevoerdOp),
-                                unread: new Date(item.ingevoerdOp) > lastViewDate || (newWhen === 'week' && new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7)),
-                                hidden: (hiddenItems.includes(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
+                                unread: new Date(item.ingevoerdOp) > Date.now() - (1000 * 60 * 60 * 24 * 7),
+                                hidden: (hiddenItems.has(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
                             }
-                        ))
+                        )).sort((a, b) => b.date - a.date)
 
-                        if (recentGrades.length < 1 || (viewWidget === 'new' && recentGrades.filter(item => item.unread).length < 1)) return resolve() // Stop if no grades, or if no new grades and user has set widget to new grades only.
+                        if (recentGrades.length < 1) return resolve() // Stop if no grades.
 
                         let widgetElement = element(placeholder ? 'div' : 'a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
                         let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
+                        let widgetItemsContainer = element('div', 'st-start-widget-grades-items', widgetElement)
+
+                        let children = []
 
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
-                        let mostRecentItem = recentGrades[0]
-                        if (mostRecentItem.unread) widgetElement.classList.add('st-unread')
-                        let mostRecentItemGrade = mostRecentItem.waarde
-                        if (!isNaN(Number(mostRecentItem.waarde.replace(',', '.')))) mostRecentItemGrade = Number(mostRecentItem.waarde.replace(',', '.')).toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })
+                        recentGrades.forEach((item, i) => {
+                            const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, { class: 'st-start-widget-grades-item', 'data-unread': item.unread, 'data-hidden': item.hidden, 'data-assignment': item.assignment })
+                            children.push(gradeElement)
+                            if (i === 0) widgetElement.dataset.unread = item.unread
 
-                        let lastGrade = element('span', 'st-start-widget-grades-last', widgetElement, { innerText: mostRecentItemGrade })
-                        if (mostRecentItem.hidden) lastGrade.style.display = 'none'
-                        let lastGradeSubj = element('span', 'st-start-widget-grades-last-subj', widgetElement, { innerText: mostRecentItem.vak.omschrijving.charAt(0).toUpperCase() + mostRecentItem.vak.omschrijving.slice(1) })
-                        let lastGradeInfo = element('span', 'st-start-widget-grades-last-info', widgetElement, { innerText: mostRecentItem.assignment ? mostRecentItem.omschrijving : `${mostRecentItem.omschrijving} (${mostRecentItem.weegfactor || 0}×)` })
-                        let lastGradeDate = element('span', 'st-start-widget-grades-last-date', widgetElement, { 'data-temporal-type': 'timestamp', 'data-temporal-start': mostRecentItem.date })
-                        let lastGradeHide = element('button', 'st-start-widget-grades-last-hide', widgetElement, { class: 'st-button icon', 'data-icon': mostRecentItem.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
-                        lastGradeHide.addEventListener('click', (event) => {
+                            let formattedResult = item.waarde
+                            if (!isNaN(Number(item.waarde.replace(',', '.')))) formattedResult = Number(item.waarde.replace(',', '.')).toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })
+
+                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: formattedResult, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) >= 9 })
+                            let itemSubj = element('span', `st-start-widget-grades-${i}-subj`, gradeElement, { class: 'st-start-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
+                            let itemInfo = element('span', `st-start-widget-grades-${i}-info`, gradeElement, { class: 'st-start-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
+                            let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', 'data-temporal-type': 'timestamp', 'data-temporal-start': item.date })
+                            let itemHide = element('button', `st-start-widget-grades-${i}-hide`, gradeElement, { class: 'st-start-widget-grades-item-hide st-button icon tertiary', 'data-icon': item.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
+                            itemHide.addEventListener('click', (event) => {
+                                event.preventDefault()
+                                event.stopPropagation()
+                                event.stopImmediatePropagation()
+                                if (gradeElement.dataset.hidden == 'true') {
+                                    itemHide.dataset.icon = ''
+                                    gradeElement.dataset.hidden = false
+                                    hiddenItems.delete(item.kolomId)
+                                    saveToStorage('hiddenGrades', [...hiddenItems], 'local')
+                                } else {
+                                    itemHide.dataset.icon = ''
+                                    gradeElement.dataset.hidden = true
+                                    hiddenItems.add(item.kolomId)
+                                    saveToStorage('hiddenGrades', [...hiddenItems], 'local')
+                                }
+                                return false
+                            })
+                        })
+
+                        const scrollBack = element('button', 'st-start-widget-grades-scroll-back', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Nieuwer') })
+                        scrollBack.addEventListener('click', (event) => {
                             event.preventDefault()
                             event.stopPropagation()
                             event.stopImmediatePropagation()
-                            if (lastGrade.style.display === 'none') {
-                                lastGradeHide.dataset.icon = ''
-                                lastGrade.style.display = 'block'
-                                hiddenItems = hiddenItems.filter(item => item !== mostRecentItem.kolomId)
-                                saveToStorage('hiddenGrades', hiddenItems, 'local')
-                            } else {
-                                lastGradeHide.dataset.icon = ''
-                                lastGrade.style.display = 'none'
-                                hiddenItems.push(mostRecentItem.kolomId)
-                                saveToStorage('hiddenGrades', hiddenItems, 'local')
-                            }
-                            return false
+                            scrollWidget(true)
                         })
+                        const scrollForw = element('button', 'st-start-widget-grades-scroll-forw', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Ouder') })
+                        scrollForw.addEventListener('click', (event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            event.stopImmediatePropagation()
+                            scrollWidget(false)
+                        })
+
+                        if (autoRotate == 'true') setInterval(() => {
+                            if (widgetElement.matches(':hover')) return
+                            scrollWidget()
+                        }, 20000)
+
+                        function scrollWidget(reverse = false) {
+                            let visibleChildIndex = Math.round(widgetItemsContainer.scrollLeft / children[0].offsetWidth) || 0
+                            widgetElement.dataset.unread = children[visibleChildIndex].dataset.unread
+                            if (!reverse) {
+                                if (children[visibleChildIndex + 1]) {
+                                    children[visibleChildIndex + 1].scrollIntoView({ behavior: 'smooth' })
+                                    widgetElement.dataset.unread = children[visibleChildIndex + 1].dataset.unread
+                                } else {
+                                    children[0].scrollIntoView({ behavior: 'smooth' })
+                                    widgetElement.dataset.unread = children[0].dataset.unread
+                                }
+                            } else {
+                                if (children[visibleChildIndex - 1]) {
+                                    children[visibleChildIndex - 1].scrollIntoView({ behavior: 'smooth' })
+                                    widgetElement.dataset.unread = children[visibleChildIndex - 1].dataset.unread
+                                } else {
+                                    children.at(-1).scrollIntoView({ behavior: 'smooth' })
+                                    widgetElement.dataset.unread = children.at(-1).dataset.unread
+                                }
+                            }
+                        }
 
                         if (type === 'Lijst') {
                             widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
                             return resolve(widgetElement)
-                        }
-
-                        let moreUnreadItems = recentGrades.filter(item => item.unread)
-                        moreUnreadItems.shift()
-
-                        widgetTitle.innerText = moreUnreadItems.length > 0 ? i18n('widgets.newGrades') : recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
-
-                        if (moreUnreadItems.length === 1) {
-                            element('span', 'st-start-widget-grades-more', widgetElement, {
-                                innerText: i18n('moreGradesSingular', { subject: moreUnreadItems[0].vak.code })
-                            })
-                        } else if (moreUnreadItems.length > 10) {
-                            element('span', 'st-start-widget-grades-more', widgetElement, {
-                                innerText: i18n('moreGradesMany', { subjects: new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]) })
-                            })
-                        } else if (moreUnreadItems.length > 1) {
-                            element('span', 'st-start-widget-grades-more', widgetElement, {
-                                innerText: i18n('moreGradesPlural', { num: moreUnreadItems.length, subjects: new Intl.ListFormat(locale).format([...new Set(moreUnreadItems.map(item => item.vak.code))]) })
-                            })
                         }
 
                         resolve(widgetElement)
@@ -1179,7 +1189,7 @@ async function today() {
                                 .catch(() => { return reject() })
                         }
 
-                        const todaysEvents = events.filter(item => new Date(item.Start).isToday())
+                        const todaysEvents = events.filter(item => new Date(item.Start).isToday() && item.Omschrijving != 'amablok_bb')
                         if (!todaysEvents?.length > 0) return
                         const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
 
@@ -1238,7 +1248,7 @@ async function today() {
             }
             if (syncedStorage[`widget-${key}-type`] === 'Verborgen') continue
 
-            widgetsProgressText.innerText = `Widget '${widgetFunctions[key].title}' laden...`
+            widgetsProgressText.innerText = i18n('loadingWidget', { title: widgetFunctions[key].title })
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`])
             if (widgetElement) {
                 widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
@@ -1258,7 +1268,7 @@ async function today() {
 
         const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body, { 'data-i18n-widget-options': i18n('widgetOptions') })
         const editWidgetsHidden = element('div', 'st-start-edit-widgets-hidden', document.body, { innerText: '' })
-        const editWidgetsDisclaimer = element('div', 'st-start-edit-widgets-disclaimer', document.body, {class: 'st-disclaimer', innerText: i18n('widgetDisclaimer')})
+        const editWidgetsDisclaimer = element('div', 'st-start-edit-widgets-disclaimer', document.body, { class: 'st-disclaimer', innerText: i18n('widgetDisclaimer') })
         const editWidgetsProt = element('div', 'st-start-edit-widgets-prot', document.body)
         const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: i18n('editFinish') })
         editWidgetsDone.addEventListener('click', () => {
@@ -1317,7 +1327,7 @@ async function today() {
 
                     widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
 
-                    editWidgetsOptions.innerText = `${i18n('widgetOptions') }: ${widgetFunctions[key].title}`
+                    editWidgetsOptions.innerText = `${i18n('widgetOptions')}: ${widgetFunctions[key].title}`
                     widgetElement.classList.add('focused')
 
                     const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editWidgetsOptions, { class: 'st-segmented-control' })
