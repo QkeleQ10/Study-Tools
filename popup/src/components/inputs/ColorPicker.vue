@@ -136,6 +136,7 @@ function hexToHSL(H) {
                 <Icon>palette</Icon>
             </button>
         </div>
+
         <BottomSheet v-model:active="pickerOpen" :handle=true>
             <template #content>
                 <div class="color-maker">
@@ -175,7 +176,8 @@ function hexToHSL(H) {
                                 :style="{ 'left': `${value.l}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                             </div>
                         </div>
-                        <button v-if="eyeDropperSupported" class="button tonal invoke-eyedropper" @click="invokeEyeDropper">
+                        <button v-if="eyeDropperSupported" class="button tonal invoke-eyedropper"
+                            @click="invokeEyeDropper">
                             <Icon>colorize</Icon><span>Pipet</span>
                         </button>
                     </div>

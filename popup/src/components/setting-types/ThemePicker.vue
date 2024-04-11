@@ -87,7 +87,8 @@ function updateColor(newColor) {
             <div style="position: absolute; right: 30%; top: 0; width: 0.2%; height: 100%"
                 :style="{ 'background-color': `var(--mg-br-${parsedScheme})` }"></div>
             <div style="position: absolute; right: 0; top: 0; width: 30%; height: 100%; border: 0.1vmax solid transparent;"
-                :style="{ 'background-color': `var(--mg-bk-${parsedScheme}-2)`, 'border-color': `var(--mg-br-${parsedScheme})` }"></div>
+                :style="{ 'background-color': `var(--mg-bk-${parsedScheme}-2)`, 'border-color': `var(--mg-br-${parsedScheme})` }">
+            </div>
             <div style="position: absolute; right: 3%; top: 6%; width: 24%; height: 20%; border-radius: 10%; border: 0.1vmax solid transparent;"
                 :style="{ 'border-color': `var(--mg-br-${parsedScheme})`, 'background-image': `linear-gradient(color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctColor()['accent-primary']})), color-mix(in hsl, hsl(${value.color.h} ${value.color.s}% ${value.color.l}%), hsl(${value.color.h} ${correctColor()['accent-secondary']})))` }">
             </div>
@@ -106,7 +107,8 @@ function updateColor(newColor) {
                 { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
             ]" density="-1" />
 
-        <ColorPicker class="theme-picker-color" :model-value="value.color" @update:model-value="updateColor" />
+        <ColorPicker class="theme-picker-color" :model-value="value.color" @update:model-value="updateColor"
+            :swatches-enabled="true" />
 
     </div>
 </template>
@@ -119,6 +121,11 @@ function updateColor(newColor) {
         'example scheme' auto
         'example color' auto
         / auto 1fr;
+
+    padding: 16px;
+
+    background-color: var(--color-surface-container);
+    border-radius: 12px;
 }
 
 .theme-picker-title {
@@ -130,7 +137,7 @@ function updateColor(newColor) {
 
 .theme-picker-example {
     grid-area: example;
-    min-height: 100px;
+    min-height: 115px;
 
     position: relative;
     aspect-ratio: 16 / 9;
@@ -158,14 +165,10 @@ function updateColor(newColor) {
 
 .theme-picker-scheme {
     grid-area: scheme;
-
-    margin-right: 12px;
     margin-top: 8px;
 }
 
 .theme-picker-color {
     grid-area: color;
-
-    margin-right: 12px;
 }
 </style>

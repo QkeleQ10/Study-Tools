@@ -15,6 +15,7 @@ import DecorationPicker from './components/DecorationPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
+import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
 import About from './components/About.vue'
 import Chip from './components/Chip.vue'
 
@@ -22,7 +23,7 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, DecorationPicker, KeyPicker, ImageInput, ShortcutsEditor }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, DecorationPicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')
@@ -83,19 +84,20 @@ function openInNewTab(url) {
         <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" :data-scrolled="y > 16" />
         <main id="main" ref="main">
             <Transition name="fade">
-                
+
             </Transition>
             <div id="options-container">
                 <TransitionGroup name="fade">
                     <template v-for="category in settings">
                         <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
                             <TransitionGroup :name="transitionName">
-                                <About v-if="category.id === 'about'" key="about" @reset-settings="resetSettingDefaults" />
+                                <About v-if="category.id === 'about'" key="about"
+                                    @reset-settings="resetSettingDefaults" />
                                 <template v-for="setting in category.settings">
                                     <div class="setting-wrapper"
                                         :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
                                         :data-setting-type="setting.type" :data-setting-id="setting.id"
-                                        v-if="shouldShowSetting(setting)" :key="setting.id">
+                                        v-if="shouldShowSetting(setting)" :key="setting.id" :data-scrolled="y > 16">
                                         <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
                                             :id="setting.id" v-model="syncedStorage[setting.id]">
                                             <template #title>{{ setting.title }}</template>
@@ -174,19 +176,32 @@ main {
 }
 
 .setting-wrapper[data-setting-type="ThemePicker"] {
+    position: sticky;
+    top: 16px;
+    z-index: 6;
     border-top: none !important;
+    margin-inline: 8px 12px;
 }
 
-.setting-wrapper[data-setting-id="decoration-size"] {
+.setting-wrapper[data-setting-type="ThemePicker"]+.setting-wrapper.visible {
+    border-top: 0px solid transparent;
+}
+
+.setting-wrapper[data-setting-id="decoration"],
+.setting-wrapper[data-setting-id="decoration-size"],
+.setting-wrapper[data-setting-id="backdrop"],
+.setting-wrapper[data-setting-id="backdrop-size"] {
     border-top: none !important;
     margin-top: -10px;
 }
 
-.setting-wrapper[data-setting-id="decoration-size"] .setting-title {
+.setting-wrapper[data-setting-id="decoration"] .setting-title,
+.setting-wrapper[data-setting-id="decoration-size"] .setting-title ,
+.setting-wrapper[data-setting-id="backdrop-size"] .setting-title{
     display: none;
 }
 
-.setting-wrapper~.setting-wrapper.visible {
+.setting-wrapper+.setting-wrapper.visible {
     border-top: 1px solid var(--color-surface-variant);
 }
 
@@ -206,7 +221,6 @@ main {
     padding-block: 12px;
     min-height: 56px;
     box-sizing: border-box;
-    background-color: var(--color-surface);
     transition: background-color 200ms;
 }
 

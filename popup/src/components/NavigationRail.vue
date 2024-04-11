@@ -84,15 +84,10 @@ function navClick(id) {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    z-index: 9999;
     border-right: 1px solid transparent;
     background-color: var(--color-surface);
     transition: background-color 200ms, border 200ms;
 }
-
-/* #navigation-rail[data-scrolled=true] {
-    border-right-color: var(--color-outline-variant);
-} */
 
 .navigation-item {
     position: relative;
