@@ -9,10 +9,16 @@ const emit = defineEmits(['update:modelValue', 'update:pickerOpen'])
 
 const value = computed({
     get() {
-        return props.modelValue
+        if (typeof props.modelValue === 'string')
+            return ({ h: props.modelValue.split()[0], s: props.modelValue.split()[1], l: props.modelValue.split()[2] })
+        else
+            return props.modelValue
     },
     set(value) {
-        emit('update:modelValue', value)
+        if (typeof props.modelValue === 'string')
+            emit('update:modelValue', value.join(','))
+        else
+            emit('update:modelValue', value)
     }
 })
 
@@ -28,10 +34,6 @@ const pickerOpen = computed({
 const { isSupported: eyeDropperSupported, open: openEyeDropper, sRGBHex: eyeDropperHEX } = useEyeDropper()
 
 const hueWheel = ref(null)
-
-function isSelected(color) {
-    return (color.h == value.value.h && color.s == value.value.s && color.l == value.value.l)
-}
 
 function hueWheelClick(event) {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -129,19 +131,19 @@ function hexToHSL(H) {
                     <div class="hue-wheel-example"
                         :style="{ 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                         {{ Number(value.h).toLocaleString('nl-NL', {
-                            style: 'unit', unit: 'degree', unitDisplay: 'short',
-                            maximumFractionDigits: 0
-                        }) }}
+        style: 'unit', unit: 'degree', unitDisplay: 'short',
+        maximumFractionDigits: 0
+    }) }}
                         <br>
                         {{ Number(value.s / 100).toLocaleString('nl-NL', {
-                            style: 'percent',
-                            maximumFractionDigits: 0
-                        }) }}
+        style: 'percent',
+        maximumFractionDigits: 0
+    }) }}
                         <br>
                         {{ Number(value.l / 100).toLocaleString('nl-NL', {
-                            style: 'percent',
-                            maximumFractionDigits: 0
-                        }) }}
+        style: 'percent',
+        maximumFractionDigits: 0
+    }) }}
                     </div>
                 </div>
                 <div class="col-right">

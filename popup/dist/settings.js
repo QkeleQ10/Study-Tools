@@ -19,8 +19,8 @@ export default [
             },
             {
                 id: "pagecolor",
-                title: "Pagina",
-                subtitle: "Kleur",
+                title: "Paginakleur",
+                subtitle: "Pagina",
                 type: "ColorOverrideSetting",
                 default: 'inherit',
             },
@@ -48,8 +48,8 @@ export default [
             },
             {
                 id: "sidecolor",
-                title: "Zijbalk",
-                subtitle: "Kleur",
+                title: "Zijbalkkleur",
+                subtitle: "Zijbalk",
                 type: "ColorOverrideSetting",
                 default: 'inherit',
             },
