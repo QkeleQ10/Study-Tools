@@ -55,7 +55,11 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
         case 'dark': {
             let backgroundImage = syncedStorage['backdrop'] || ''
             return `
-    --st-background: ${backgroundImage ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage + '\'), linear-gradient(#000, #000)' : '#111111'};
+    --st-background: ${backgroundImage
+                    ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage + '\'), linear-gradient(#000, #000)'
+                    : syncedStorage['pagecolor']?.startsWith('true')
+                        ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                        : '#111111'};
     --st-background-primary: #121212;
     --st-background-secondary: ${backgroundImage ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;

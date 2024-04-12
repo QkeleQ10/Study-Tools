@@ -11,11 +11,13 @@ import SegmentedButton from './components/SegmentedButton.vue'
 import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
 import ThemePicker from './components/setting-types/ThemePicker.vue'
-import DecorationPicker from './components/DecorationPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
 import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
+import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
+import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
+import WallpaperSetting from './components/setting-types/WallpaperSetting.vue'
 import About from './components/About.vue'
 import Chip from './components/Chip.vue'
 
@@ -23,14 +25,12 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, DecorationPicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting, WallpaperSetting }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')
 
-setTimeout(() => {
-    transitionName.value = 'list'
-}, 200)
+setTimeout(() => transitionName.value = 'list', 200)
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -40,21 +40,18 @@ function shouldShowSetting(setting) {
             if (condition.settingId) value = syncedStorage.value[condition.settingId]
             switch (condition.operator) {
                 case 'equal':
-                    if (value !== condition.value) {
+                    if (value !== condition.value)
                         outcome = false
-                    }
                     break
 
                 case 'not equal':
-                    if (value === condition.value) {
+                    if (value === condition.value)
                         outcome = false
-                    }
                     break
 
                 case 'defined':
-                    if (!value) {
+                    if (!value)
                         outcome = false
-                    }
                     break
             }
         })
@@ -193,12 +190,6 @@ main {
 .setting-wrapper[data-setting-id="backdrop-size"] {
     border-top: none !important;
     margin-top: -10px;
-}
-
-.setting-wrapper[data-setting-id="decoration"] .setting-title,
-.setting-wrapper[data-setting-id="decoration-size"] .setting-title ,
-.setting-wrapper[data-setting-id="backdrop-size"] .setting-title{
-    display: none;
 }
 
 .setting-wrapper+.setting-wrapper.visible {

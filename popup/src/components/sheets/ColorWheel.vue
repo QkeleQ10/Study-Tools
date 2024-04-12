@@ -158,13 +158,15 @@ function hexToHSL(H) {
                     </div>
                 </div>
                 <div class="col-right">
-                    <div class="saturation-bar color-bar" ref="saturationBar" @mouseup="saturationBarClick" @mousemove="saturationBarClick"
+                    <div class="saturation-bar color-bar" ref="saturationBar" @mouseup="saturationBarClick"
+                        @mousemove="saturationBarClick"
                         :style="{ 'background-image': `linear-gradient(to left, hsl(${value.h} 100% ${value.l}%), hsl(${value.h} 50% ${value.l}%), hsl(${value.h} 0% ${value.l}%))` }">
                         <div class="saturation-bar-knob color-bar-knob knob"
                             :style="{ 'left': `${value.s}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                         </div>
                     </div>
-                    <div class="luminance-bar color-bar" ref="luminanceBar" @mouseup="luminanceBarClick" @mousemove="luminanceBarClick"
+                    <div class="luminance-bar color-bar" ref="luminanceBar" @mouseup="luminanceBarClick"
+                        @mousemove="luminanceBarClick"
                         :style="{ 'background-image': `linear-gradient(to left, hsl(${value.h} ${value.s}% 100%), hsl(${value.h} ${value.s}% 50%), hsl(${value.h} ${value.s}% 0%))` }">
                         <div class="luminance-bar-knob color-bar-knob knob"
                             :style="{ 'left': `${value.l}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
@@ -251,5 +253,7 @@ function hexToHSL(H) {
 
 .invoke-eyedropper {
     width: max-content;
+    margin-top: auto;
+    margin-left: auto;
 }
 </style>

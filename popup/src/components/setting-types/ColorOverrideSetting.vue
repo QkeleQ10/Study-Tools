@@ -35,15 +35,15 @@ function updatePickerOpen(newPickerOpenValue) {
 </script>
 
 <template>
-    <div class="setting color-override-setting">
+    <div class="setting color-override-setting" :title="setting.title">
         <h3 class="setting-title">
             {{ setting.subtitle }}
         </h3>
         <Icon class="setting-icon">format_color_fill</Icon>
         <SegmentedButton :model-value="value.override" @update:model-value="updateOverride" :options="[
-            { value: 'false', icon: 'brightness_auto', title: 'Automatisch' },
+            { value: 'false', icon: 'format_color_reset', title: 'Standaard' },
             { value: 'true', icon: 'palette', title: 'Aangepast' }
-        ]" />
+        ]" density="-1" />
 
         <ColorWheel :model-value="value.color" @update:model-value="updateColor" :pickerOpen="pickerOpen"
             @update:pickerOpen="updatePickerOpen" />
@@ -53,18 +53,18 @@ function updatePickerOpen(newPickerOpenValue) {
 <style scoped>
 .color-override-setting {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 26px 1fr;
     grid-template-rows: auto auto;
     align-items: center;
-    row-gap: 6px;
-    column-gap: 6px;
+    gap: 6px;
+    column-gap: 12px;
 }
 
 .color-override-setting>.setting-icon {
     font-size: 18px;
     scale: 1.2;
     color: var(--color-on-surface-variant);
-    margin: 6px;
+    justify-self: center;
 }
 
 .color-override-setting>h3.setting-title {

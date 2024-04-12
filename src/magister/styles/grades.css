@@ -731,6 +731,7 @@
     gap: 12px;
     place-items: baseline;
 
+    background-color: var(--st-background-secondary);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     margin-inline: -4px;
     padding: 12px;
