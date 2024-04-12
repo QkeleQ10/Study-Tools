@@ -2,7 +2,7 @@
 import { ref, computed, defineProps, defineEmits } from 'vue'
 import BottomSheet from '../BottomSheet.vue';
 import Icon from '../Icon.vue';
-import { useEyeDropper } from '@vueuse/core';
+import { useEyeDropper, useMousePressed } from '@vueuse/core';
 
 const props = defineProps(['modelValue', 'pickerOpen'])
 const emit = defineEmits(['update:modelValue', 'update:pickerOpen'])
@@ -31,11 +31,18 @@ const pickerOpen = computed({
     }
 })
 
+const hueWheel = ref(null),
+    saturationBar = ref(null),
+    luminanceBar = ref(null)
+const hueWheelMouse = useMousePressed({ target: hueWheel }),
+    saturationBarMouse = useMousePressed({ target: saturationBar }),
+    luminanceBarMouse = useMousePressed({ target: luminanceBar })
+
 const { isSupported: eyeDropperSupported, open: openEyeDropper, sRGBHex: eyeDropperHEX } = useEyeDropper()
 
-const hueWheel = ref(null)
-
 function hueWheelClick(event) {
+    if (event.type === 'mousemove' && !hueWheelMouse.pressed.value) return
+
     const rect = event.currentTarget.getBoundingClientRect()
 
     // Calculate the distance from the center of the circle
@@ -55,12 +62,16 @@ function hueWheelClick(event) {
 }
 
 function saturationBarClick(event) {
+    if (event.type === 'mousemove' && !saturationBarMouse.pressed.value) return
+
     const rect = event.currentTarget.getBoundingClientRect()
     const offsetX = (event.clientX - rect.left) / rect.width * 100
     value.value = { ...value.value, s: Math.floor(offsetX) }
 }
 
 function luminanceBarClick(event) {
+    if (event.type === 'mousemove' && !luminanceBarMouse.pressed.value) return
+
     const rect = event.currentTarget.getBoundingClientRect()
     const offsetX = (event.clientX - rect.left) / rect.width * 100
     value.value = { ...value.value, l: Math.floor(offsetX) }
@@ -123,7 +134,7 @@ function hexToHSL(H) {
     <BottomSheet v-model:active="pickerOpen" :handle=true>
         <template #content>
             <div class="color-maker">
-                <div class="hue-wheel" ref="hueWheel" @mouseup="hueWheelClick"
+                <div class="hue-wheel" ref="hueWheel" @mouseup="hueWheelClick" @mousemove="hueWheelClick"
                     :style="{ 'background-image': `radial-gradient(var(--color-surface-container) 56%, transparent calc(56% + 1px)), conic-gradient(in hsl longer hue, hsl(0 ${value.s}% ${value.l}%) 0 0)` }">
                     <div class="hue-wheel-knob knob"
                         :style="{ 'transform': `rotate(${value.h - 6}deg)`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
@@ -131,29 +142,29 @@ function hexToHSL(H) {
                     <div class="hue-wheel-example"
                         :style="{ 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                         {{ Number(value.h).toLocaleString('nl-NL', {
-        style: 'unit', unit: 'degree', unitDisplay: 'short',
-        maximumFractionDigits: 0
-    }) }}
+                            style: 'unit', unit: 'degree', unitDisplay: 'short',
+                            maximumFractionDigits: 0
+                        }) }}
                         <br>
                         {{ Number(value.s / 100).toLocaleString('nl-NL', {
-        style: 'percent',
-        maximumFractionDigits: 0
-    }) }}
+                            style: 'percent',
+                            maximumFractionDigits: 0
+                        }) }}
                         <br>
                         {{ Number(value.l / 100).toLocaleString('nl-NL', {
-        style: 'percent',
-        maximumFractionDigits: 0
-    }) }}
+                            style: 'percent',
+                            maximumFractionDigits: 0
+                        }) }}
                     </div>
                 </div>
                 <div class="col-right">
-                    <div class="saturation-bar color-bar" ref="saturationBar" @mouseup="saturationBarClick"
+                    <div class="saturation-bar color-bar" ref="saturationBar" @mouseup="saturationBarClick" @mousemove="saturationBarClick"
                         :style="{ 'background-image': `linear-gradient(to left, hsl(${value.h} 100% ${value.l}%), hsl(${value.h} 50% ${value.l}%), hsl(${value.h} 0% ${value.l}%))` }">
                         <div class="saturation-bar-knob color-bar-knob knob"
                             :style="{ 'left': `${value.s}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                         </div>
                     </div>
-                    <div class="luminance-bar color-bar" ref="luminanceBar" @mouseup="luminanceBarClick"
+                    <div class="luminance-bar color-bar" ref="luminanceBar" @mouseup="luminanceBarClick" @mousemove="luminanceBarClick"
                         :style="{ 'background-image': `linear-gradient(to left, hsl(${value.h} ${value.s}% 100%), hsl(${value.h} ${value.s}% 50%), hsl(${value.h} ${value.s}% 0%))` }">
                         <div class="luminance-bar-knob color-bar-knob knob"
                             :style="{ 'left': `${value.l}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">

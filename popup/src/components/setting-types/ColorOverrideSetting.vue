@@ -9,24 +9,28 @@ const emit = defineEmits(['update:modelValue'])
 
 const value = computed({
     get() {
-        return props.modelValue, props.setting.default
+        let v = props.modelValue || props.setting.default
+        let [override, h, s, l] = v.split(',')
+        return { override, color: { h, s, l } }
     },
     set(value) {
-        console.log(value)
-        emit('update:modelValue', value)
+        emit('update:modelValue', `${value.override},${value.color.h},${value.color.s},${value.color.l}`)
     }
 })
 
 const pickerOpen = ref(false)
 
-function updateValue(newValue) {
-    value.value = newValue
-    if (newValue !== 'inherit') pickerOpen.value = true
+function updateOverride(newOverride) {
+    value.value = { ...value.value, override: newOverride }
+    if (newOverride == 'true') pickerOpen.value = true
 }
 
 function updateColor(newColor) {
-    console.log(newColor, Object.values(newColor).join(','), value.value)
-    value.value = Object.values(newColor).join(',')
+    value.value = { ...value.value, color: newColor }
+}
+
+function updatePickerOpen(newPickerOpenValue) {
+    pickerOpen.value = newPickerOpenValue
 }
 </script>
 
@@ -36,15 +40,13 @@ function updateColor(newColor) {
             {{ setting.subtitle }}
         </h3>
         <Icon class="setting-icon">format_color_fill</Icon>
-        <SegmentedButton :model-value="value" @update:model-value="updateValue" :options="[
-                { value: 'inherit', icon: 'brightness_auto', title: 'Automatisch' },
-                { value: value === 'inherit' ? '207,95,55' : value, icon: 'palette', title: 'Aangepast' }
-            ]" />
+        <SegmentedButton :model-value="value.override" @update:model-value="updateOverride" :options="[
+            { value: 'false', icon: 'brightness_auto', title: 'Automatisch' },
+            { value: 'true', icon: 'palette', title: 'Aangepast' }
+        ]" />
 
-        <ColorWheel :model-value="value === 'inherit'
-                ? { h: 207, s: 95, l: 55 }
-                : (([h, s, l]) => ({ h, s, l }))(value.split`,`.map(Number))" @update:model-value="updateColor"
-            v-bind:pickerOpen="pickerOpen" />
+        <ColorWheel :model-value="value.color" @update:model-value="updateColor" :pickerOpen="pickerOpen"
+            @update:pickerOpen="updatePickerOpen" />
     </div>
 </template>
 

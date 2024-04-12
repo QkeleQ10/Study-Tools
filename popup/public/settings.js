@@ -22,7 +22,7 @@ export default [
                 title: "Paginakleur",
                 subtitle: "Pagina",
                 type: "ColorOverrideSetting",
-                default: 'inherit',
+                default: 'false,0,0,7',
             },
             {
                 id: "backdrop",
@@ -32,26 +32,11 @@ export default [
                 default: '',
             },
             {
-                id: "backdrop-size",
-                title: "Achtergrondformaat",
-                subtitle: "Achtergrondformaat",
-                type: "SlideInput",
-                default: 1,
-                format: "percent",
-                decimals: 0,
-                min: 0.5,
-                max: 3,
-                step: 0.1,
-                conditions: [
-                    { settingId: 'decoration', operator: 'not equal', value: 'none' }
-                ],
-            },
-            {
                 id: "sidecolor",
                 title: "Zijbalkkleur",
                 subtitle: "Zijbalk",
                 type: "ColorOverrideSetting",
-                default: 'inherit',
+                default: 'false,207,95,55',
             },
             {
                 id: "decoration",
