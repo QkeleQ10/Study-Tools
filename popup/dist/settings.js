@@ -33,7 +33,7 @@ export default [
             {
                 id: "sidecolor",
                 title: "Zijbalkkleur",
-                subtitle: "Zijbalk (INSTELLING NOG NIET IN WERKING)",
+                subtitle: "Zijbalk",
                 type: "ColorOverrideSetting",
                 default: 'false,207,95,55',
             },
@@ -274,7 +274,7 @@ export default [
         settings: [
             {
                 id: "sw-enabled",
-                title: "Studiewijzers ordenen",
+                title: "Studiewijzers rangschikken",
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },

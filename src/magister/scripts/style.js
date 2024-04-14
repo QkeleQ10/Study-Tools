@@ -55,11 +55,14 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
         case 'dark': {
             let backgroundImage = syncedStorage['backdrop'] || ''
             return `
-    --st-background: ${backgroundImage
+    --st-page-background: ${backgroundImage
                     ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage + '\'), linear-gradient(#000, #000)'
                     : syncedStorage['pagecolor']?.startsWith('true')
                         ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                         : '#111111'};
+    --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-background-primary: #121212;
     --st-background-secondary: ${backgroundImage ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
@@ -94,12 +97,20 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 0;
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.3;
+    --st-side-highlight: #ffffff0f;
     `}
 
         default: {
             let backgroundImage = syncedStorage['backdrop'] || ''
             return `
-    --st-background: ${backgroundImage ? 'linear-gradient(#ffffffcc, #ffffffcc), url(\'' + backgroundImage + '\'), linear-gradient(#fff, #fff)' : '#ffffff'};
+    --st-page-background: ${backgroundImage
+                    ? 'linear-gradient(#ffffffcc, #ffffffcc), url(\'' + backgroundImage + '\'), linear-gradient(#fff, #fff)'
+                    : syncedStorage['pagecolor']?.startsWith('true')
+                        ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                        : '#ffffff'};
+    --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
     --st-background-primary: #ffffff;
     --st-background-secondary: ${backgroundImage ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
@@ -134,6 +145,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 210;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .9;
+    --st-side-highlight: #00000022;
     `}
     }
 }
@@ -205,11 +217,11 @@ async function applyStyles() {
             css
         switch (style) {
             case 'waves':
-                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 29px), transparent calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
+                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-side-background) calc(${size} * 29px), transparent calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
                 break;
 
             case 'zig-zag':
-                css = `background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: calc(${size} * 25px) 0, calc(${size} * 25px) 0, 0 0, 0 0; background-size: calc(${size} * 50px) calc(${size} * 50px); background-repeat: repeat;`
+                css = `background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-side-background) 25%); background-position: calc(${size} * 25px) 0, calc(${size} * 25px) 0, 0 0, 0 0; background-size: calc(${size} * 50px) calc(${size} * 50px); background-repeat: repeat;`
                 break;
 
             case 'polka-dot':
@@ -275,7 +287,7 @@ html {
 }
 
 body {
-    background: var(--st-background) !important;
+    background: var(--st-page-background) !important;
     background-size: cover !important;
     background-position: center !important;
 }
@@ -715,7 +727,7 @@ span.nrblock,
 .appbar>div>a:not(.st-metric),
 a.appbar-button,
 .menu-host {
-    background-color: var(--st-accent-primary);
+    background-color: var(--st-side-background);
     transition: background-color 200ms, width 200ms, min-width 200ms;
 }
 
@@ -732,7 +744,7 @@ aside, aside .block,
 }
 
 .main-menu>li.active>a, .main-menu>li.active>a:hover {
-    background-color: var(--st-accent-primary-dark);
+    background-color: var(--st-side-highlight);
 }
 
 .main-menu>li>a:hover {
