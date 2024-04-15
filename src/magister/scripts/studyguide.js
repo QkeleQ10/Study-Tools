@@ -486,7 +486,7 @@ function autoStudyguideSubject(title) {
         { name: "Maatschappijleer", aliases: ["maatschappijleer", "ma", "malv", "maat"] },
         { name: "Maatschappij­wetenschappen", aliases: ["maatschappijwetenschappen", "ma", "maat", "maw", "mask"] },
         { name: "Mens en maatschappij", aliases: ["mens en maatschappij", "m&m", "mm"] },
-        { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn"] },
+        { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn", "groene vingers"] },
         { name: "Mentor", aliases: ["mentor", "mentoruur", "mentoraat", "mr"] },
         { name: "Muziek", aliases: ["muziek", "kumu", "mu", "kmu"] },
         { name: "Natuurkunde", aliases: ["natuurkunde", "na", "nat", "nask1", "nsk1"] },
