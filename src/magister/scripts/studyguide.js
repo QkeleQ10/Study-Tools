@@ -472,7 +472,6 @@ function autoStudyguideSubject(title) {
         { name: "Biologie", aliases: ["biologie", "bio", "bi", "biol"] },
         { name: "Cult. en kunstz. vorming", aliases: ["ckv"] },
         { name: "Drama", aliases: ["drama", "kudr", "dr", "kdr", "da", "kda"] },
-        { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] },
         { name: "Economie", aliases: ["economie", "eco", "ec", "econ", "eo"] },
         { name: "Frans", aliases: ["frans", "fatl", "fa", "fr", "franse", "français"] },
         { name: "Geschiedenis", aliases: ["geschiedenis", "gs", "ges", "gst", "gm"] },
@@ -497,7 +496,8 @@ function autoStudyguideSubject(title) {
         { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
         { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
         { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen", "re"] },
-        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'English'
+        { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] }, // Positioned very low to avoid 'de' being recognised as 'Duits'
+        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'Engels'
         { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
         { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] }
     ]
