@@ -31,13 +31,18 @@ async function studyguideList() {
     searchBar.addEventListener('input', appendStudyguidesToList)
     searchBar.addEventListener('input', e => {
         let egg = eggs.find(egg => egg.location === 'studyguidesSearch' && egg.input === e.target.value)
+        console.log(eggs, egg)
         if (!egg?.output) return
 
-        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-grid') || document.body, { class: 'st-sw-subject' })
-
+        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
+console.log(fakeSubjectTile)
         let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
         fakeDefaultItemButton.addEventListener('click', () => {
-            notify(egg.type || 'snackbar', egg.output, null, 3600000)
+            if (egg.type === 'applySettings') {
+                chrome.storage.sync.set(egg.output)
+            } else {
+                notify(egg.type || 'snackbar', egg.output, null, 3600000)
+            }
         })
 
         let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
@@ -421,7 +426,7 @@ function appendStudyguidesToList() {
 
         if (searchBar) {
             let query = searchBar.value.toLowerCase()
-            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject?.toLowerCase().includes(query))
+            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide?.closest('.st-sw-subject')?.dataset?.subject?.toLowerCase().includes(query))
         }
 
         if (matches) studyguide.classList.remove('hidden')

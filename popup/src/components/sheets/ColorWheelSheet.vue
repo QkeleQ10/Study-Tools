@@ -4,7 +4,7 @@ import BottomSheet from '../BottomSheet.vue';
 import Icon from '../Icon.vue';
 import { useEyeDropper, useMousePressed } from '@vueuse/core';
 
-const props = defineProps(['modelValue', 'pickerOpen'])
+const props = defineProps(['modelValue', 'pickerOpen', 'swatches'])
 const emit = defineEmits(['update:modelValue', 'update:pickerOpen'])
 
 const value = computed({
@@ -128,6 +128,10 @@ function hexToHSL(H) {
 
     return ({ h, s, l });
 }
+
+function isSelected(color) {
+    return (color.h == value.value.h && color.s == value.value.s && color.l == value.value.l)
+}
 </script>
 
 <template>
@@ -142,19 +146,19 @@ function hexToHSL(H) {
                     <div class="hue-wheel-example"
                         :style="{ 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                         {{ Number(value.h).toLocaleString('nl-NL', {
-                            style: 'unit', unit: 'degree', unitDisplay: 'short',
-                            maximumFractionDigits: 0
-                        }) }}
+        style: 'unit', unit: 'degree', unitDisplay: 'short',
+        maximumFractionDigits: 0
+    }) }}
                         <br>
                         {{ Number(value.s / 100).toLocaleString('nl-NL', {
-                            style: 'percent',
-                            maximumFractionDigits: 0
-                        }) }}
+        style: 'percent',
+        maximumFractionDigits: 0
+    }) }}
                         <br>
                         {{ Number(value.l / 100).toLocaleString('nl-NL', {
-                            style: 'percent',
-                            maximumFractionDigits: 0
-                        }) }}
+        style: 'percent',
+        maximumFractionDigits: 0
+    }) }}
                     </div>
                 </div>
                 <div class="col-right">
@@ -172,9 +176,21 @@ function hexToHSL(H) {
                             :style="{ 'left': `${value.l}%`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                         </div>
                     </div>
-                    <button v-if="eyeDropperSupported" class="button tonal invoke-eyedropper" @click="invokeEyeDropper">
-                        <Icon>colorize</Icon><span>Pipet</span>
-                    </button>
+                    <div v-if="swatches?.length > 0" class="swatches">
+                        <button v-for="swatch in swatches" class="swatch"
+                            :class="{ 'selected': isSelected(swatch.color) }" :key="swatch.name" :title="swatch.name"
+                            :style="{ 'background-color': `hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%` }"
+                            @click="value = swatch.color"></button>
+                    </div>
+                    <div class="flex">
+                        <button class="button" @click="pickerOpen = false">
+                            <span>Gereed</span>
+                        </button>
+                        <button v-if="eyeDropperSupported" class="button tonal invoke-eyedropper"
+                            @click="invokeEyeDropper">
+                            <Icon>colorize</Icon><span>Pipet</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </template>
@@ -186,13 +202,13 @@ function hexToHSL(H) {
     display: flex;
     align-items: stretch;
     justify-content: stretch;
-    gap: 30px;
+    gap: 28px;
 }
 
 .hue-wheel {
     position: relative;
     width: 200px;
-    aspect-ratio: 1;
+    height: 200px;
     border-radius: 50%;
     cursor: crosshair;
 }
@@ -219,14 +235,16 @@ function hexToHSL(H) {
     left: 50%;
     width: 65%;
     aspect-ratio: 1;
+    box-sizing: border-box;
     translate: -50% -50%;
+    padding-left: 25%;
 
     display: flex;
     align-items: center;
-    justify-content: center;
     border-radius: 50%;
 
     color: #ffffff;
+    font: var(--typescale-body-medium)
 }
 
 .col-right {
@@ -236,7 +254,20 @@ function hexToHSL(H) {
     flex-direction: column;
     align-items: stretch;
     justify-content: stretch;
-    gap: 30px;
+    gap: 28px;
+    padding-top: 30px;
+}
+
+.col-right:has(.swatches) {
+    padding-top: 10px;
+}
+
+.flex {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: auto;
 }
 
 .color-bar {
@@ -251,9 +282,42 @@ function hexToHSL(H) {
     translate: -50% -50%;
 }
 
-.invoke-eyedropper {
-    width: max-content;
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
     margin-top: auto;
-    margin-left: auto;
+}
+
+.swatch {
+    min-width: 20px;
+    min-height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--color-on-surface-variant);
+    outline: 0px solid var(--color-on-secondary-container);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: margin 50ms, outline 50ms;
+}
+
+.swatch:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.swatch:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.swatch.selected {
+    margin: -1px;
+    outline: 2px solid var(--color-on-secondary-container);
+    z-index: 2;
 }
 </style>

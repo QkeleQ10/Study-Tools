@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, defineProps, defineEmits } from 'vue'
-import ColorWheel from '../sheets/ColorWheel.vue';
+import ColorWheelSheet from '../sheets/ColorWheelSheet.vue';
 import Icon from '../Icon.vue';
 import SegmentedButton from '../inputs/SegmentedButton.vue';
 
@@ -41,16 +41,17 @@ function updatePickerOpen(newPickerOpenValue) {
         </h3>
         <Icon class="setting-icon">format_color_fill</Icon>
         <SegmentedButton :model-value="value.override" @update:model-value="updateOverride" :options="[
-            { value: 'false', icon: 'format_color_reset', title: 'Standaard' },
-            { value: 'true', icon: 'palette', title: 'Aangepast' }
-        ]" density="-1" />
+        { value: 'false', icon: 'format_color_reset', title: 'Standaard' },
+        { value: 'true', icon: 'palette', title: 'Aangepast' }
+    ]" density="-1"
+            :style="{ '--sel-color': value.override == 'true' ? `hsl(${value.color.h} ${value.color.s}% ${value.color.l}%)` : 'transparent' }" />
 
-        <ColorWheel :model-value="value.color" @update:model-value="updateColor" :pickerOpen="pickerOpen"
+        <ColorWheelSheet :model-value="value.color" @update:model-value="updateColor" :pickerOpen="pickerOpen"
             @update:pickerOpen="updatePickerOpen" />
     </div>
 </template>
 
-<style scoped>
+<style>
 .color-override-setting {
     display: grid;
     grid-template-columns: 26px 1fr;
@@ -69,5 +70,15 @@ function updatePickerOpen(newPickerOpenValue) {
 
 .color-override-setting>h3.setting-title {
     grid-column: span 2;
+}
+
+.color-override-setting .button-segment:last-of-type[data-state=true] {
+    background-color: var(--sel-color);
+}
+
+.color-override-setting .button-segment:last-of-type[data-state=true] .button-segment-text,
+.color-override-setting .button-segment:last-of-type[data-state=true] .button-segment-icon {
+    color: #fff;
+    /* color: color-contrast(var(--sel-color) vs #000, #fff); */
 }
 </style>

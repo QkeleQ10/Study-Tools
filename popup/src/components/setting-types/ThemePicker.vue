@@ -102,10 +102,10 @@ function updateColor(newColor) {
 
         <SegmentedButton class="theme-picker-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
             :options="[
-                { value: 'auto', icon: prefersDarkColorScheme ? 'night_sight_auto' : 'brightness_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
-                { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
-                { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
-            ]" density="-1" />
+            { value: 'auto', icon: 'hdr_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
+            { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
+            { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
+        ]" density="-1" />
 
         <ColorPicker class="theme-picker-color" :model-value="value.color" @update:model-value="updateColor"
             :swatches-enabled="true" />
@@ -122,6 +122,8 @@ function updateColor(newColor) {
         'example color' auto
         / auto 1fr;
 
+    gap: 10px;
+
     padding: 16px;
 
     background-color: var(--color-surface-container);
@@ -137,14 +139,12 @@ function updateColor(newColor) {
 
 .theme-picker-example {
     grid-area: example;
-    min-height: 115px;
+    min-height: 100px;
 
     position: relative;
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
-    margin-right: 12px;
-    margin-top: 12px;
 
     background-color: var(--color-surface);
     outline: 1px solid var(--color-outline-variant);
@@ -165,7 +165,7 @@ function updateColor(newColor) {
 
 .theme-picker-scheme {
     grid-area: scheme;
-    margin-top: 8px;
+    margin-top: -4px;
 }
 
 .theme-picker-color {

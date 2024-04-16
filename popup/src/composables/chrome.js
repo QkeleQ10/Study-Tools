@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { ref, onMounted, watchEffect, isProxy, toRaw } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 
 import settings from '../../public/settings.js'
 
@@ -29,16 +30,15 @@ export function useSyncedStorage() {
         }
     })
 
-    watchEffect(() => {
+    const debouncedFn = useDebounceFn(() => {
         if (browser?.storage?.sync) {
             let toStore = { ...syncedStorage.value }
             if (isProxy(toStore)) toStore = toRaw(toStore)
             browser.storage.sync.set(toStore)
         }
-        refreshTheme()
-    })
+    }, 250, { maxWait: 2000 })
 
-    function refreshTheme() {
+    const updateTheme = () => {
         const themeFixed = syncedStorage.value['ptheme']?.split(',')
         const themeAuto = themeFixed?.[0] === 'auto'
         let currentTheme = themeFixed
@@ -51,6 +51,12 @@ export function useSyncedStorage() {
         document.documentElement.style.setProperty('--palette-primary-saturation', `${currentTheme?.[2] || 95}%`)
         document.documentElement.style.setProperty('--palette-primary-luminance', `${currentTheme?.[3] || 55}%`)
     }
+
+    watchEffect(() => {
+        let toStore = { ...syncedStorage.value }
+        debouncedFn()
+        updateTheme()
+    })
 
     return syncedStorage
 }

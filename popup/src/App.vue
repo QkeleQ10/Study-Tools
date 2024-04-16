@@ -161,7 +161,6 @@ main {
 }
 
 .options-category {
-    width: 450px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: auto;
@@ -177,7 +176,7 @@ main {
     top: 16px;
     z-index: 6;
     border-top: none !important;
-    margin-inline: 8px 12px;
+    margin-inline: 8px;
 }
 
 .setting-wrapper[data-setting-type="ThemePicker"]+.setting-wrapper.visible {

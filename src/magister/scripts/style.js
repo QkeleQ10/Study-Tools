@@ -63,6 +63,9 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
+    --st-appbar-background: ${syncedStorage['appbarcolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-background-primary: #121212;
     --st-background-secondary: ${backgroundImage ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
@@ -97,7 +100,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 0;
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.3;
-    --st-side-highlight: #ffffff0f;
     `}
 
         default: {
@@ -111,6 +113,9 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
+    --st-appbar-background: ${syncedStorage['appbarcolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
     --st-background-primary: #ffffff;
     --st-background-secondary: ${backgroundImage ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
@@ -145,7 +150,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 210;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .9;
-    --st-side-highlight: #00000022;
     `}
     }
 }
@@ -212,7 +216,7 @@ async function applyStyles() {
 
     // Menu bar decorations
     function decorations() {
-        let style = syncedStorage['decoration'],
+        let style = syncedStorage['decoration']?.split(',')[0],
             size = syncedStorage['decoration-size'] ?? 1,
             css
         switch (style) {
@@ -732,27 +736,28 @@ a.appbar-button,
 }
 
 .appbar-host {
-    background-color: var(--st-accent-primary-dark);
+    background-color: var(--st-appbar-background);
 }
 
 aside, aside .block,
 .main-menu>li.active>a,
 .opdracht-versions ul li,
 .main-menu>li>a,
-.main-menu li.children li.submenu>a {
+.main-menu li.children li.submenu>a,
+.main-menu>li.active>a, .main-menu>li>a:hover {
     border-radius: var(--st-border-radius);
 }
 
 .main-menu>li.active>a, .main-menu>li.active>a:hover {
-    background-color: var(--st-side-highlight);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 90%);
 }
 
 .main-menu>li>a:hover {
-    background-color: var(--st-accent-tertiary);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 95%);
 }
 
 .main-menu>li.children.expanded>a, .main-menu>li.children.expanded>a:hover {
-    background-color: var(--st-accent-tertiary);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 95%);
 }
 
 .main-menu li.children li.submenu {
@@ -765,12 +770,12 @@ aside, aside .block,
 }
 
 .main-menu li.children li.submenu.active>a, .main-menu li.children li.submenu.active>a:hover {
-    background-color: var(--st-accent-primary-dark);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 90%);
     font-weight: normal;
 }
 
 .main-menu li.children li.submenu>a:hover {
-    background-color: var(--st-accent-tertiary);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 95%);
 }
 
 .main-menu li.children>a::after {
@@ -1418,6 +1423,25 @@ table.table-grid-layout>tbody>tr.selected {
 `, 'study-tools')
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
+
+    if (syncedStorage['special']?.includes('Discord-mode')) {
+        createStyle(`
+:root {
+    --st-background-secondary: #232428;
+}
+
+#st-start-widgets {
+    background-color: var(--st-side-background);
+    border-left: none;
+    box-shadow: none;
+}
+
+.menu-footer, #st-start-widget-controls-wrapper {
+    background-color: #232428;
+    border-top: none;
+}
+`, 'study-tools-discord-mode')
+    } else createStyle('', 'study-tools-discord-mode')
 
     if (syncedStorage['start-enabled']) {
         createStyle(`

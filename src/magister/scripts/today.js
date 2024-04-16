@@ -842,24 +842,30 @@ async function today() {
 
                         function scrollWidget(reverse = false) {
                             let visibleChildIndex = Math.round(widgetItemsContainer.scrollLeft / children[0].offsetWidth) || 0
-                            widgetElement.dataset.unread = children[visibleChildIndex].dataset.unread
+                            widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
+                            console.log(visibleChildIndex)
                             if (!reverse) {
                                 if (children[visibleChildIndex + 1]) {
                                     widgetItemsContainer.scroll((visibleChildIndex + 1) * 400, 0)
-                                    widgetElement.dataset.unread = children[visibleChildIndex + 1].dataset.unread
+                                    widgetElement.dataset.unread = children[visibleChildIndex + 1]?.dataset.unread || false
                                 } else {
                                     widgetItemsContainer.scroll(0, 0)
-                                    widgetElement.dataset.unread = children[0].dataset.unread
+                                    widgetElement.dataset.unread = children[0]?.dataset.unread || false
                                 }
                             } else {
                                 if (children[visibleChildIndex - 1]) {
                                     widgetItemsContainer.scroll((visibleChildIndex - 1) * 400, 0)
-                                    widgetElement.dataset.unread = children[visibleChildIndex - 1].dataset.unread
+                                    widgetElement.dataset.unread = children[visibleChildIndex - 1]?.dataset.unread || false
                                 } else {
                                     widgetItemsContainer.scroll(widgetItemsContainer.scrollWidth, 0)
-                                    widgetElement.dataset.unread = children.at(-1).dataset.unread
+                                    widgetElement.dataset.unread = children.at(-1)?.dataset.unread || false
                                 }
                             }
+                        }
+
+                        if (recentGrades.length < 2) {
+                            scrollBack.remove()
+                            scrollForw.remove()
                         }
 
                         if (type === 'Lijst') {

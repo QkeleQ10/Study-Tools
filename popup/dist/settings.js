@@ -41,7 +41,7 @@ export default [
                 id: "decoration",
                 title: "Zijbalkdecoratie",
                 type: "DecorationPickerSetting",
-                default: 'none',
+                default: 'none,',
             },
             {
                 id: "decoration-size",
@@ -56,6 +56,13 @@ export default [
                 conditions: [
                     { settingId: 'decoration', operator: 'not equal', value: 'none' }
                 ],
+            },
+            {
+                id: "appbarcolor",
+                title: "Appbalkkleur",
+                subtitle: "Appbalk",
+                type: "ColorOverrideSetting",
+                default: 'false,207,95,47',
             },
             {
                 id: "shape",
