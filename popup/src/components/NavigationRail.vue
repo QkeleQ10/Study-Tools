@@ -28,7 +28,7 @@ const tabs = [
     },
     {
         id: 'sidebar',
-        name: 'Zijbalk',
+        name: 'Menubalk',
         icon: 'thumbnail_bar'
     },
     {

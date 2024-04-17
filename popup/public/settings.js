@@ -1,12 +1,3 @@
-const shortcuts = {
-    id: "shortcuts",
-    title: "Snelkoppelingen zijbalk",
-    type: "ShortcutsEditor",
-    default: [
-        { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'z' }
-    ]
-}
-
 export default [
     {
         id: "appearance",
@@ -20,32 +11,32 @@ export default [
             {
                 id: "pagecolor",
                 title: "Achtergrondkleur",
-                subtitle: "Pagina",
+                subtitle: "Achtergrond",
                 type: "ColorOverrideSetting",
                 default: 'false,0,0,7',
             },
             {
-                id: "backdrop",
+                id: "wallpaper",
                 title: "Achtergrondafbeelding",
-                type: "WallpaperSetting",
-                default: '',
+                type: "DecorationPickerSetting",
+                default: 'none,',
             },
             {
                 id: "sidecolor",
-                title: "Zijbalkkleur",
-                subtitle: "Zijbalk",
+                title: "Menubalkkleur",
+                subtitle: "Menubalk",
                 type: "ColorOverrideSetting",
                 default: 'false,207,95,55',
             },
             {
                 id: "decoration",
-                title: "Zijbalkdecoratie",
+                title: "Menubalkdecoratie",
                 type: "DecorationPickerSetting",
                 default: 'none,',
             },
             {
                 id: "decoration-size",
-                title: "Zijbalkdecoratieformaat",
+                title: "Menubalkdecoratieformaat",
                 type: "DecorationSizeSetting",
                 default: 1,
                 format: "percent",
@@ -54,7 +45,7 @@ export default [
                 max: 3,
                 step: 0.1,
                 conditions: [
-                    { settingId: 'decoration', operator: 'not equal', value: 'none' }
+                    { settingId: 'decoration', operator: 'not starting with', value: 'none' }
                 ],
             },
             {
@@ -122,10 +113,17 @@ export default [
         settings: [
             {
                 id: "magister-appbar-week",
-                title: "Weeknummer in zijbalk",
+                title: "Weeknummer in menubalk",
                 default: true,
             },
-            shortcuts,
+            {
+                id: "shortcuts",
+                title: "Snelkoppelingen menubalk",
+                type: "ShortcutsEditor",
+                default: [
+                    { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'z' }
+                ]
+            },
             {
                 id: 'magister-picture',
                 title: "Profielfoto",

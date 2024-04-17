@@ -47,6 +47,7 @@ function formatValue(val) {
     align-items: center;
     gap: 6px;
     column-gap: 12px;
+    padding-top: 0;
 }
 
 .decoration-size-setting>.setting-icon {

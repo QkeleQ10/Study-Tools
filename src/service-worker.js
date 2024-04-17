@@ -5,7 +5,7 @@ let userId,
     userTokenDate
 
 const settingsToClear = [
-    'auto-theme', 'theme-fixed', 'theme-day', 'theme-night', 'openedPopup', 'updates', 'beta', 'magister-shortcuts', 'magister-shortcuts-today', 'magister-sw-grid', 'magister-sw-sort', 'magister-sw-period', 'magister-sw-display', 'magister-ag-large', 'magister-subjects', 'magister-appbar-hidePicture', 'appbar-hide-actions', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magister-vd-deblue', 'magister-vd-gradewidget', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'gamification-enabled', 'magister-cf-calculator', 'magister-cf-statistics', 'magister-cf-backup', 'magister-cf-failred', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-schedule-days', 'vd-schedule-extra-day', 'vd-schedule-zoom', 'vd-subjects-display', 'start-stats', 'teacher-names', 'version', 'disable-css', 'hotkeys-today', 'start-widgets', 'dark-image', 'light-image', 'subjects', 'hidden-studyguides'
+    'auto-theme', 'theme-fixed', 'theme-day', 'theme-night', 'openedPopup', 'updates', 'beta', 'magister-shortcuts', 'magister-shortcuts-today', 'magister-sw-grid', 'magister-sw-sort', 'magister-sw-period', 'magister-sw-display', 'magister-ag-large', 'magister-subjects', 'magister-appbar-hidePicture', 'appbar-hide-actions', 'magister-appbar-zermelo', 'magister-appbar-zermelo-url', 'magister-css-border-radius', 'magister-css-dark-invert', 'magister-css-experimental', 'magister-css-hue', 'magister-css-luminance', 'magister-css-saturation', 'magister-css-theme', 'magister-op-oldgrey', 'magister-periods', 'periods', 'magister-shortcut-keys', 'magister-shortcut-keys-master', 'magister-shortcut-keys-today', 'magister-subjects', 'magister-sw-thisWeek', 'magister-vd-overhaul', 'magister-vd-enabled', 'magister-vd-subjects', 'magister-vd-grade', 'magister-vd-agendaHeight', 'magister-vd-deblue', 'magister-vd-gradewidget', 'magisterLogin-password', 'magisterLogin-method', 'magister-gamification-beta', 'gamification-enabled', 'magister-cf-calculator', 'magister-cf-statistics', 'magister-cf-backup', 'magister-cf-failred', 'notes-enabled', 'notes', 'st-notes', 'vd-enabled', 'vd-schedule-days', 'vd-schedule-extra-day', 'vd-schedule-zoom', 'vd-subjects-display', 'start-stats', 'teacher-names', 'version', 'disable-css', 'hotkeys-today', 'start-widgets', 'dark-image', 'light-image', 'subjects', 'hidden-studyguides', 'color'
 ]
 
 startListenCredentials()
@@ -76,7 +76,7 @@ async function setDefaults() {
     settings.forEach(category => {
         category.settings.forEach(setting => {
             if (typeof syncedStorage[setting.id] === 'undefined') {
-                if (setting.id === 'ptheme' && syncedStorage['color']) diff[setting.id] = `${syncedStorage['theme']},${(Object.values(syncedStorage['color']).join(','))}`
+                if (setting.id === 'wallpaper' && syncedStorage['wallpaper']?.length > 5) diff[setting.id] = 'custom,' + syncedStorage['wallpaper']
                 else diff[setting.id] = setting.default
             }
         })

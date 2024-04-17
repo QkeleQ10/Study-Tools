@@ -18,7 +18,7 @@ const filled = computed(() => {
             <slot name="title"></slot>
         </div>
         <h3 class="text-title">
-            <slot name="title"></slot> {{ model }}
+            <slot name="title"></slot>
         </h3>
     </label>
 </template>

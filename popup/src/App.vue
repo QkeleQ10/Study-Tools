@@ -17,7 +17,6 @@ import ShortcutsEditor from './components/ShortcutsEditor.vue'
 import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
 import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
-import WallpaperSetting from './components/setting-types/WallpaperSetting.vue'
 import About from './components/About.vue'
 import Chip from './components/Chip.vue'
 
@@ -25,7 +24,7 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting, WallpaperSetting }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')
@@ -46,6 +45,16 @@ function shouldShowSetting(setting) {
 
                 case 'not equal':
                     if (value === condition.value)
+                        outcome = false
+                    break
+
+                case 'starting with':
+                    if (!value?.startsWith(condition.value))
+                        outcome = false
+                    break
+
+                case 'not starting with':
+                    if (value?.startsWith(condition.value))
                         outcome = false
                     break
 
@@ -185,8 +194,7 @@ main {
 
 .setting-wrapper[data-setting-id="decoration"],
 .setting-wrapper[data-setting-id="decoration-size"],
-.setting-wrapper[data-setting-id="backdrop"],
-.setting-wrapper[data-setting-id="backdrop-size"] {
+.setting-wrapper[data-setting-id="wallpaper"] {
     border-top: none !important;
     margin-top: -10px;
 }
