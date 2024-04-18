@@ -3,9 +3,9 @@ let currentTheme
 // Apply the styles instantly,
 // and whenever the settings change
 // and whenever the system theme changes
-document.addEventListener('DOMContentLoaded', applyStyles)
-chrome.storage.sync.onChanged.addListener(applyStyles)
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyStyles)
+document.addEventListener('DOMContentLoaded', () => applyStyles())
+chrome.storage.sync.onChanged.addListener(() => applyStyles())
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyStyles())
 
 // TODO: Use color-mix() for these things: color-mix(in hsl, hsl(<color here>), hsl(${h} ${correctionSL[scheme]['accent-secondary']}))
 // const correctionSL = {
@@ -57,10 +57,11 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
         case 'dark': {
             return `
     --st-page-background: ${backgroundImage[0] === 'custom'
-                    ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage[1] + '\'), linear-gradient(#000, #000)'
+                    ? 'linear-gradient(#121212cc, #121212cc), var(--st-page-wallpaper), linear-gradient(#000, #000)'
                     : syncedStorage['pagecolor']?.startsWith('true')
                         ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                         : '#111111'};
+    --st-page-wallpaper: ${backgroundImage[1]};
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
@@ -106,10 +107,11 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
         default: {
             return `
     --st-page-background: ${backgroundImage[0] === 'custom'
-                    ? 'linear-gradient(#ffffffcc, #ffffffcc), url(\'' + backgroundImage[1] + '\'), linear-gradient(#fff, #fff)'
+                    ? 'linear-gradient(#ffffffcc, #ffffffcc), var(--st-page-wallpaper), linear-gradient(#fff, #fff)'
                     : syncedStorage['pagecolor']?.startsWith('true')
                         ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                         : '#ffffff'};
+    --st-page-wallpaper: ${backgroundImage[1]};
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
@@ -154,7 +156,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     }
 }
 
-async function applyStyles() {
+async function applyStyles(varsOnly, overrideColor) {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
     let now = new Date()
@@ -194,23 +196,25 @@ async function applyStyles() {
 
     createStyle(`
     :root { 
-        ${rootVarsForTheme(currentTheme?.[0], { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsForTheme(currentTheme?.[0], overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
         ${rootVarsGeneral}
         ${(syncedStorage['darken-content'] && currentTheme?.[0] === 'dark') ? rootVarsInvert : ''}
     }
     
     .st-force-dark {
-        ${rootVarsForTheme('dark', { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsForTheme('dark', overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
     }
     
     .st-force-light {
-        ${rootVarsForTheme('light', { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsForTheme('light', overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
     }
 
     :root, html, body, * {
         color-scheme: ${currentTheme?.[0]} !important;
     }
     `, 'study-tools-vars')
+
+    if (varsOnly) return
 
     now = new Date()
 
@@ -259,6 +263,21 @@ async function applyStyles() {
     // Valentine's day mode
     if (now.getMonth() === 1 && [14].includes(now.getDate())) {
         handleSpecialDecoration('valentine')
+    }
+    // Examenstunt 4
+    if (now.getMonth() === 3 && [18, 24].includes(now.getDate())) {
+        handleSpecialDecoration('examenstunt4', `
+:root {
+    --st-page-wallpaper: url(\'https://cdn.steamstatic.com/steamcommunity/public/images/items/1048100/8a702b788e987f086c8b02ed2b1b98c925ac3fa2.jpg\');
+    --st-side-background: var(--st-accent-primary);
+    --st-appbar-background: var(--st-accent-primary-dark);
+}
+
+.menu-host {
+    background-image: url("https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg") !important;
+    background-size: cover;
+    background-position: center;
+}`, { h: 10, s: 80, l: 29 })
     }
 
     createStyle(`.block h3,
@@ -1660,17 +1679,20 @@ h2 {
     setTimeout(() => clearInterval(interval), 5000)
 }
 
-async function handleSpecialDecoration(type) {
+async function handleSpecialDecoration(type, customCss, customColor) {
     if ((await getFromStorage('no-special-decorations', 'session') ?? '') === type) return
-    const decoration = createStyle(`nav.menu.ng-scope {
+    const decoration = createStyle(customCss ||
+        `nav.menu.ng-scope {
             background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/${type}.svg");
             background-size: 240px 480px;
             background-position: bottom center;
             background-repeat: no-repeat;
         }`, `st-special-decoration`)
+    if (customColor) applyStyles(true, customColor)
     const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Deze decoratie verbergen" })
     disableButton.addEventListener('click', () => {
         decoration.remove()
+        applyStyles(true)
         disableButton.remove()
         saveToStorage('no-special-decorations', type, 'session')
         if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
