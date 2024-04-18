@@ -48,7 +48,7 @@ async function setDefaults() {
     settings.forEach(category => {
         category.settings.forEach(setting => {
             if (typeof syncedStorage[setting.id] === 'undefined') {
-                if (setting.id === 'wallpaper' && syncedStorage['wallpaper']?.length > 5) diff[setting.id] = 'custom,' + syncedStorage['wallpaper']
+                if (setting.id === 'wallpaper' && syncedStorage['backdrop']?.length > 5) diff[setting.id] = 'custom,' + syncedStorage['backdrop']
                 else diff[setting.id] = setting.default
             }
         })

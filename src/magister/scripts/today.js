@@ -843,7 +843,6 @@ async function today() {
                         function scrollWidget(reverse = false) {
                             let visibleChildIndex = Math.floor(widgetItemsContainer.scrollLeft / children[0].offsetWidth) || 0
                             widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
-                            console.log(visibleChildIndex)
                             if (!reverse) {
                                 if (children[visibleChildIndex + 1]) {
                                     widgetItemsContainer.scroll((visibleChildIndex + 1) * 400, 0)

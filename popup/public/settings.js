@@ -269,7 +269,7 @@ export default [
             {
                 id: "insuf-red",
                 title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht.",
+                subtitle: "Alleen in het cijferoverzicht en in de cijferwidget.",
                 default: true,
             },
         ]
