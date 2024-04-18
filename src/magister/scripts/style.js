@@ -156,13 +156,14 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     }
 }
 
-async function applyStyles(varsOnly, overrideColor) {
+async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
     let now = new Date()
 
-    const themeFixed = syncedStorage['ptheme']?.split(',')
-    const themeAuto = themeFixed[0] === 'auto'
+    let themeFixed = syncedStorage['ptheme']?.split(',')
+    if (overrideTheme) themeFixed[0] = overrideTheme
+    let themeAuto = themeFixed[0] === 'auto'
     currentTheme = themeFixed
     if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
     else if (themeAuto) currentTheme[0] = 'light'
@@ -237,7 +238,7 @@ async function applyStyles(varsOnly, overrideColor) {
                 break;
 
             case 'stripes':
-                css = `background-image: repeating-linear-gradient(45deg, transparent, transparent calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 20px), var(--st-decoration-fill-intense) calc(${size} * 40px));`
+                css = `background-image: repeating-linear-gradient(45deg, transparent, transparent calc(${size} * 15px), var(--st-decoration-fill) calc(${size} * 15px), var(--st-decoration-fill-intense) calc(${size} * 40px));`
                 break;
 
             case 'lego':
@@ -245,7 +246,7 @@ async function applyStyles(varsOnly, overrideColor) {
                 break;
 
             case 'custom':
-                css = `background-image: url(${syncedStorage['decoration']?.split(',')[1]}); background-size: cover; background-position: center;`
+                css = `background-image: url(${syncedStorage['decoration']?.split(',')[1]}); background-size: auto calc(${size} * 100vh); background-position: center;`
                 break;
 
             default:
@@ -264,11 +265,41 @@ async function applyStyles(varsOnly, overrideColor) {
     if (now.getMonth() === 1 && [14].includes(now.getDate())) {
         handleSpecialDecoration('valentine')
     }
-    // Examenstunt 4
-    if (now.getMonth() === 3 && [18, 24].includes(now.getDate())) {
+    // Examenstunt 2: Hawaï/ foute après-ski
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [22].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt2', `
+:root {
+    --st-page-wallpaper: url(\'https://cms.sno.co.uk/blog/wp-content/uploads/2021/05/55726469_10157327082343103_1871380008929329152_n-edited.jpg\') !important;
+    --st-side-background: var(--st-accent-primary);
+    --st-appbar-background: var(--st-accent-primary-dark);
+}
+
+.menu-host {
+    background-image: url("https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg") !important;
+    background-size: cover;
+    background-position: center;
+}`, 'dark', { h: 23, s: 80, l: 60 })
+    }
+    // Examenstunt 3: Neon 80's
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [23].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt3', `
+:root {
+    --st-page-wallpaper: url(\'https://wallpapers.com/images/hd/80s-neon-uevqe7pg20chynkw.jpg\') !important;
+    --st-side-background: var(--st-accent-primary);
+    --st-appbar-background: var(--st-accent-primary-dark);
+}
+
+.menu-host {
+    background-image: url("https://wallpapers.com/images/hd/80s-neon-veqvixadrbra13q4.jpg") !important;
+    background-size: cover;
+    background-position: center;
+}`, 'light', { h: 275, s: 85, l: 40 })
+    }
+    // Examenstunt 4: Western
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [24].includes(now.getDate()) && now.getFullYear() === 2024) {
         handleSpecialDecoration('examenstunt4', `
 :root {
-    --st-page-wallpaper: url(\'https://cdn.steamstatic.com/steamcommunity/public/images/items/1048100/8a702b788e987f086c8b02ed2b1b98c925ac3fa2.jpg\');
+    --st-page-wallpaper: url(\'https://cdn.steamstatic.com/steamcommunity/public/images/items/1048100/8a702b788e987f086c8b02ed2b1b98c925ac3fa2.jpg\') !important;
     --st-side-background: var(--st-accent-primary);
     --st-appbar-background: var(--st-accent-primary-dark);
 }
@@ -277,7 +308,7 @@ async function applyStyles(varsOnly, overrideColor) {
     background-image: url("https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg") !important;
     background-size: cover;
     background-position: center;
-}`, { h: 10, s: 80, l: 29 })
+}`, 'dark', { h: 10, s: 80, l: 29 })
     }
 
     createStyle(`.block h3,
@@ -1679,7 +1710,7 @@ h2 {
     setTimeout(() => clearInterval(interval), 5000)
 }
 
-async function handleSpecialDecoration(type, customCss, customColor) {
+async function handleSpecialDecoration(type, customCss, customTheme, customColor) {
     if ((await getFromStorage('no-special-decorations', 'session') ?? '') === type) return
     const decoration = createStyle(customCss ||
         `nav.menu.ng-scope {
@@ -1688,7 +1719,7 @@ async function handleSpecialDecoration(type, customCss, customColor) {
             background-position: bottom center;
             background-repeat: no-repeat;
         }`, `st-special-decoration`)
-    if (customColor) applyStyles(true, customColor)
+    if (customTheme && customColor) applyStyles(true, customTheme, customColor)
     const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Deze decoratie verbergen" })
     disableButton.addEventListener('click', () => {
         decoration.remove()

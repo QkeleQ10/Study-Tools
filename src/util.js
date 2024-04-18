@@ -22,7 +22,7 @@ let eggs = [],
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
-            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE'].includes(locale)) locale = 'nl-NL'
+            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'la-LA'].includes(locale)) locale = 'nl-NL'
             const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
             i18nData = await req.json()
             const reqNl = await fetch(chrome.runtime.getURL(`_locales/nl/strings.json`))

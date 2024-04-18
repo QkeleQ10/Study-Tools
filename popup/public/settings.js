@@ -377,6 +377,10 @@ export default [
                         value: "de-DE",
                         title: "Deutsch"
                     },
+                    {
+                        value: "la-LA",
+                        title: "Latina lingua"
+                    },
                 ],
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }

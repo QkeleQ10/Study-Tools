@@ -93,7 +93,8 @@
                 "_locales/nl/strings.json",
                 "_locales/en/strings.json",
                 "_locales/fr/strings.json",
-                "_locales/de/strings.json"
+                "_locales/de/strings.json",
+                "_locales/la/strings.json"
             ],
             "matches": [
                 "*://*.magister.net/*"
