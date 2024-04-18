@@ -986,7 +986,7 @@ async function gradeStatistics() {
                 let yearsText = [...includedYears]
                     .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
                     .map(id => years.find(y => y.id === id).studie.code).join(', ')
-                if (includedYears.size === 1 && includedYears.has(years.at(0).id)) yearsText = `Dit leerjaar (${years.at(0)?.studie?.code})`
+                if (includedYears.size === 1 && includedYears.has(years.at(-1).id)) yearsText = `Dit leerjaar (${years.at(0)?.studie?.code})`
                 if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
 
                 let subjectsText = includedSubjects.join(', ')

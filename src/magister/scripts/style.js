@@ -3,9 +3,9 @@ let currentTheme
 // Apply the styles instantly,
 // and whenever the settings change
 // and whenever the system theme changes
-document.addEventListener('DOMContentLoaded', applyStyles)
-chrome.storage.sync.onChanged.addListener(applyStyles)
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyStyles)
+document.addEventListener('DOMContentLoaded', () => applyStyles())
+chrome.storage.sync.onChanged.addListener(() => applyStyles())
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyStyles())
 
 // TODO: Use color-mix() for these things: color-mix(in hsl, hsl(<color here>), hsl(${h} ${correctionSL[scheme]['accent-secondary']}))
 // const correctionSL = {
@@ -51,13 +51,24 @@ function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOr
 }
 
 function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
+    let backgroundImage = syncedStorage['wallpaper'].split(',') || ['false', '']
+
     switch (scheme) {
         case 'dark': {
-            let backgroundImage = syncedStorage['backdrop'] || ''
             return `
-    --st-background: ${backgroundImage ? 'linear-gradient(#121212cc, #121212cc), url(\'' + backgroundImage + '\'), linear-gradient(#000, #000)' : '#111111'};
+    --st-page-background: ${syncedStorage['pagecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : '#111111'};
+    --st-page-wallpaper: ${syncedStorage['wallpaper']?.startsWith('custom') ? `var(--st-page-wallpaper-overlay), url(${syncedStorage['wallpaper'].replace('custom,', '')})` : 'none'};
+    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent 20%), color-mix(in srgb, var(--st-page-background), transparent 20%));
+    --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
+    --st-appbar-background: ${syncedStorage['appbarcolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-background-primary: #121212;
-    --st-background-secondary: ${backgroundImage ? '#0c0c0caa' : '#151515'};
+    --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f7;
     --st-background-transparent: #121212bb;
@@ -77,6 +88,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
+    --st-accent-info: #4ea3e9;
     --st-chip-info-border: #0565b4;
     --st-chip-info-background: #022a4b;
     --st-chip-ok-border: #13c4a3;
@@ -93,11 +105,20 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     `}
 
         default: {
-            let backgroundImage = syncedStorage['backdrop'] || ''
             return `
-    --st-background: ${backgroundImage ? 'linear-gradient(#ffffffcc, #ffffffcc), url(\'' + backgroundImage + '\'), linear-gradient(#fff, #fff)' : '#ffffff'};
+    --st-page-background: ${syncedStorage['pagecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : '#ffffff'};
+    --st-page-wallpaper: ${syncedStorage['wallpaper']?.startsWith('custom') ? `var(--st-page-wallpaper-overlay), url(${syncedStorage['wallpaper'].replace('custom,', '')})` : 'none'};
+    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent 20%), color-mix(in srgb, var(--st-page-background), transparent 20%));
+    --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
+    --st-appbar-background: ${syncedStorage['appbarcolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
     --st-background-primary: #ffffff;
-    --st-background-secondary: ${backgroundImage ? '#ffffffaa' : '#ffffff'};
+    --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff7;
     --st-background-transparent: #ffffffbb;
@@ -117,6 +138,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
+    --st-accent-info: #4ea3e9;
     --st-chip-info-border: #066ec2;
     --st-chip-info-background: #ffffff;
     --st-chip-ok-border: #19c5a5;
@@ -134,13 +156,14 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     }
 }
 
-async function applyStyles() {
+async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
     let now = new Date()
 
-    const themeFixed = syncedStorage['ptheme']?.split(',')
-    const themeAuto = themeFixed[0] === 'auto'
+    let themeFixed = syncedStorage['ptheme']?.split(',')
+    if (overrideTheme) themeFixed[0] = overrideTheme
+    let themeAuto = themeFixed[0] === 'auto'
     currentTheme = themeFixed
     if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
     else if (themeAuto) currentTheme[0] = 'light'
@@ -174,17 +197,17 @@ async function applyStyles() {
 
     createStyle(`
     :root { 
-        ${rootVarsForTheme(currentTheme?.[0], { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsForTheme(currentTheme?.[0], overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
         ${rootVarsGeneral}
         ${(syncedStorage['darken-content'] && currentTheme?.[0] === 'dark') ? rootVarsInvert : ''}
     }
     
     .st-force-dark {
-        ${rootVarsForTheme('dark', { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsForTheme('dark', overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
     }
     
     .st-force-light {
-        ${rootVarsForTheme('light', { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
+        ${rootVarsForTheme('light', overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })} 
     }
 
     :root, html, body, * {
@@ -192,20 +215,22 @@ async function applyStyles() {
     }
     `, 'study-tools-vars')
 
+    if (varsOnly) return
+
     now = new Date()
 
     // Menu bar decorations
     function decorations() {
-        let style = syncedStorage['decoration'],
+        let style = syncedStorage['decoration']?.split(',')[0],
             size = syncedStorage['decoration-size'] ?? 1,
             css
         switch (style) {
             case 'waves':
-                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-accent-primary) calc(${size} * 29px), transparent calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
+                css = `background-image: repeating-radial-gradient( circle at 0 0, transparent 0, var(--st-side-background) calc(${size} * 29px), transparent calc(${size} * 30px) ), repeating-linear-gradient( var(--st-decoration-fill), var(--st-decoration-fill-intense) );`
                 break;
 
             case 'zig-zag':
-                css = `background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-accent-primary) 25%); background-position: calc(${size} * 25px) 0, calc(${size} * 25px) 0, 0 0, 0 0; background-size: calc(${size} * 50px) calc(${size} * 50px); background-repeat: repeat;`
+                css = `background-image: linear-gradient(135deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(225deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(45deg, var(--st-decoration-fill) 25%, transparent 25%), linear-gradient(315deg, var(--st-decoration-fill) 25%, var(--st-side-background) 25%); background-position: calc(${size} * 25px) 0, calc(${size} * 25px) 0, 0 0, 0 0; background-size: calc(${size} * 50px) calc(${size} * 50px); background-repeat: repeat;`
                 break;
 
             case 'polka-dot':
@@ -213,11 +238,15 @@ async function applyStyles() {
                 break;
 
             case 'stripes':
-                css = `background-image: repeating-linear-gradient(45deg, transparent, transparent calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 20px), var(--st-decoration-fill) calc(${size} * 40px));`
+                css = `background-image: repeating-linear-gradient(45deg, transparent, transparent calc(${size} * 15px), var(--st-decoration-fill) calc(${size} * 15px), var(--st-decoration-fill-intense) calc(${size} * 40px));`
                 break;
 
             case 'lego':
                 css = `background-size: ${size * 120}%; background-position: center center; background-repeat: repeat repeat; background-image: url('data:image/svg+xml,<%3Fxml version="1.0" encoding="UTF-8"%3F><svg fill="none" viewBox="0 0 168 238" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(%23b)"><path d="m139.5-13.5h-13v41h13v-41zm1 41v-13h27v27h-13-14v-14zm28 14v-27h13.5 0.5v-15h-0.5l-41.5-2e-6v-14h-0.5-14-0.5v14h-13l-0.5-1e-6h-0.5l-13 1e-6v-14h-0.5-14-0.5-13.5-0.5v14l-55-3e-6v-14h-0.5-42-0.5v0.5 28 0.5h0.5 27.5v28 41h-14v0.5 28 0.5h14l-4e-6 55h-42v15h42v41h-28v0.5 28 0.5h43v-14h27 1 27v14h28.5 14 0.5v-0.5-13.5h13v27.5 0.5h0.5 14 0.5v-0.5-27.5h28v-56h14v-15h-14v-55h13.5 0.5v-29h-0.5-13.5v-41-1zm-168-27v13h13v-13h-13zm14 0v13h41 1 13v-27l-55-3e-6v13 1zm-1-15v-13h-41v27h27 0.5 13.5v-13.5-0.5zm127 14v-13l41 2e-6v13h-13-0.5-27.5zm27 224v-13h-27v13h27zm0-14v-13h-41v13h41zm-42 0v-13h-27v13h27zm0 14v-13h-13v13h13zm1 1v27h13v-27-14h-13v14zm-15-1v-13h-13v13h13zm-98-70h-13l4e-6 -55h13v27.5 0.5 14 13zm1 0.5v-0.5-13h13v41h-13v-13-1-13-0.5zm-14 14.5h13v13 1 13 0.5 13.5h-13v-41zm-0.5-1h-41.5v-13h41.5 13.5v13h-13.5zm167.5-14v-13h-55v13h55zm-42 1h-55v27h55v-27zm1 14v27h41v-27h-41zm42-1h13v-13h-55v13h42zm-43 15v13h-41v-13h41zm-14 42h-14v-14h-13v27h13.5 13.5v-13zm-41 13h13v-27h-13v27zm13-28h14v-13h-27v13h13zm-14 1v-14h-14-13v27h27v-13zm0-15h14v-13h-27v13h13zm0-27v13h-14-13v-13h27zm-27.5 14h0.5 13v13h-13-28v-13h27.5zm-0.5-15h-13v-27h41v27h-27-1zm29-14h41v-13h-41v13zm97-41h-27v27h27v-27zm-55 0h-14v27h41v-27h-27zm41-14v13h-41v-27h27 14v14zm14.5-1h-13.5v-27h14 13v27h-13-0.5zm-0.5 1v13h-13v-13h13zm-70 28v13h-27v-13h27zm0-14v13h-41v-13h41zm0.5-1h-41.5v-13h28 27v13h-13.5zm-69.5 28h41v-13h-14-27-1-13v13h13 1zm-28.5-42h-0.5-13v-27h13 0.5 13.5v27h-13.5zm14.5 28v-27h13v27h-13zm13-41.5v13.5h-13v-27h13v13.5zm28-14.5h-27v-27h27v27zm1 14v-13h13.5 0.5 13v13h-27zm-15 15h-13v27h27v-14-13h-13-1zm1-14v13h13 28v-13h-27-0.5-0.5-13zm69 13v-27h-27v27h27zm-84-55.5v27.5h-13-1-13v-41h14 13v13.5zm1-13.5v13h27v-13h-27zm28 0v13h27v-27h-13-0.5-0.5-13v13 1zm-43-1v-13h-13v13h13zm1-13h41v13h-28-13v-13zm42 41v-13h27v13h-13-14zm0 1v13h13v-13h-13zm55-1h14v-13h-14-27v13h27zm0-14v-41h-27v14 27h27zm-41 28v-13h13.5 27.5v13h-27-0.5-13.5zm42 0v-13h14 13v27h-27v-14zm-42-83.5v-13.5h13v27h-13v-13.5zm0 27.5v-13h13v13h-13zm41-14v-13h-13.5-0.5v-14h-13v27h27zm1 0.5v27.5h13v-41l-13-1e-6v13.5zm0 41.5v-13h13v13h-13zm14-14v-13h13v41h-13v-28zm27 56h-13v-27-28h13v41 14zm14-55v41h-13v-41h13zm-153 181v-13h27v27h-27v-13-1zm-1 15v-0.5-13.5h-13.5-27.5v27h41v-13zm28-56h-13v13h13v-13zm0-71v-14h0.5 13.5v-13h-27v27h13z" clip-rule="evenodd" fill="${getComputedStyle(document.documentElement).getPropertyValue('--st-decoration-fill-opaque').replace('#', '%23')}" fill-opacity=".08" fill-rule="evenodd"/><g filter="url(%23a)"><path d="m3 7c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm18 4c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm10-4c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm18 4c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm10-4c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm18 4c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm10-4c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm18 4c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm10-4c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm18 4c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm10-4c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm14 0c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm0 14c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-14-210c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm-14-210c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-14-210c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm-14-210c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.2091 1.791 4 4 4s4-1.7909 4-4-1.791-4-4-4-4 1.7909-4 4zm4 18c-2.209 0-4-1.7909-4-4s1.791-4 4-4 4 1.7909 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-4 10c0 2.209 1.791 4 4 4s4-1.791 4-4-1.791-4-4-4-4 1.791-4 4zm4 18c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm-14-210c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm-14-210c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-14-210c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm-14-210c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-14-210c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm-14-210c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-14-210c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.7909-4-4s1.7909-4 4-4 4 1.7909 4 4-1.7909 4-4 4zm-4 10c0 2.2091 1.7909 4 4 4s4-1.7909 4-4-1.7909-4-4-4-4 1.7909-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4zm4 18c-2.2091 0-4-1.791-4-4s1.7909-4 4-4 4 1.791 4 4-1.7909 4-4 4zm-4 10c0 2.209 1.7909 4 4 4s4-1.791 4-4-1.7909-4-4-4-4 1.791-4 4z" clip-rule="evenodd" fill="${getComputedStyle(document.documentElement).getPropertyValue('--st-decoration-fill-opaque').replace('#', '%23')}" fill-opacity=".08" fill-rule="evenodd" shape-rendering="crispEdges"/></g></g><defs><filter id="a" x="0" y="0" width="170" height="240" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset dx="1" dy="1"/><feGaussianBlur stdDeviation="2"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/><feBlend in2="BackgroundImageFix" result="effect1_dropShadow_13_3"/><feBlend in="SourceGraphic" in2="effect1_dropShadow_13_3" result="shape"/></filter><clipPath id="b"><rect width="168" height="238" fill="%23fff"/></clipPath></defs></svg>')`
+                break;
+
+            case 'custom':
+                css = `background-image: url(${syncedStorage['decoration']?.split(',')[1]}); background-size: auto calc(${size} * 100vh); background-position: center;`
                 break;
 
             default:
@@ -235,6 +264,71 @@ async function applyStyles() {
     // Valentine's day mode
     if (now.getMonth() === 1 && [14].includes(now.getDate())) {
         handleSpecialDecoration('valentine')
+    }
+    // Examenstunt 1: Kleur op wit
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [19].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt1', `
+.menu-host {
+    background-image: url("https://i.imgur.com/cTQ9FV2.png") !important;
+    background-size: cover;
+    background-position: left;
+}
+
+.menu-host img {
+    filter: invert() hue-rotate(180deg);
+}
+
+.menu-host li a span, .menu-host .menu-footer span, .menu-host .far, .menu-host li a:after {
+    color: #000 !important;
+}`)
+    }
+    // Examenstunt 2: Hawaï/ foute après-ski
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [22].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt2', `
+:root {
+    --st-page-wallpaper: linear-gradient(#ffffffcc, #ffffffcc), url(\'https://i.imgur.com/wWJAqG6.png\') !important;
+    --st-background-secondary: #ffffffaa  !important;
+    --st-side-background: var(--st-accent-primary);
+    --st-appbar-background: var(--st-accent-primary-dark);
+}
+
+.menu-host {
+    background-image: url("https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg") !important;
+    background-size: cover;
+    background-position: center;
+}`, 'light', { h: 180, s: 50, l: 40 })
+    }
+    // Examenstunt 3: Neon 80's
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [23].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt3', `
+:root {
+    --st-page-wallpaper: url(\'https://i.imgur.com/ss4ty9u.png\') !important;
+    --st-background-secondary: #0c0c0caa  !important;
+    --st-side-background: var(--st-accent-primary);
+    --st-appbar-background: var(--st-accent-primary-dark);
+}
+
+.menu-host {
+    background-image: url("https://wallpapers.com/images/hd/80s-neon-veqvixadrbra13q4.jpg") !important;
+    background-size: cover;
+    background-position: center;
+}`, 'dark', { h: 275, s: 100, l: 60 })
+    }
+    // Examenstunt 4: Western
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [24].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt4', `
+:root {
+    --st-page-wallpaper: url(\'https://i.imgur.com/UgMMNqN.png\') !important;
+    --st-background-secondary: #0c0c0caa  !important;
+    --st-side-background: var(--st-accent-primary);
+    --st-appbar-background: var(--st-accent-primary-dark);
+}
+
+.menu-host {
+    background-image: url("https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg") !important;
+    background-size: cover;
+    background-position: center;
+}`, 'dark', { h: 10, s: 80, l: 50 })
     }
 
     createStyle(`.block h3,
@@ -271,7 +365,8 @@ html {
 }
 
 body {
-    background: var(--st-background) !important;
+    background-color: var(--st-page-background) !important;
+    background-image: var(--st-page-wallpaper) !important;
     background-size: cover !important;
     background-position: center !important;
 }
@@ -668,17 +763,20 @@ div.faux.popup-menu>ul>li.submenu>a,
 }
 
 .k-scheduler .afspraak .afspraak-info>.title .schoolHour,
-span.nrblock {
+span.nrblock, 
+#afsprakenlijst-container .nrblock {
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    height: 20px !important;
+    aspect-ratio: 1 !important;
+    padding: 0 !important;
+    margin-right: 2px !important;
     background: var(--st-foreground-primary) !important;
-    color: var(--st-background-secondary) !important;
-    font-family: var(--st-font-family-secondary);
+    color: var(--st-background-tertiary) !important;
+    font-family: var(--st-font-family-secondary) !important;
     font-weight: 700 !important;
-    border-radius: calc(var(--st-border-radius) * 0.75);
-    aspect-ratio: 1;
-    width: auto;
-    height: 15px;
-    padding: 2px;
-    text-align: center;
+    border-radius: calc(var(--st-border-radius) * 0.5) !important;
 }
 
 .k-scheduler .k-event {border-radius: calc(var(--st-border-radius) * 0.75);}
@@ -704,36 +802,45 @@ span.nrblock {
     left: 2px
 }
 
-.menu-footer,
+.menu-footer {
+    background-color: transparent;
+    border-top: none;
+}
+
+.menu-footer:hover {
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 90%)
+}
+
 .appbar>div>a:not(.st-metric),
 a.appbar-button,
 .menu-host {
-    background-color: var(--st-accent-primary);
+    background-color: var(--st-side-background);
     transition: background-color 200ms, width 200ms, min-width 200ms;
 }
 
 .appbar-host {
-    background-color: var(--st-accent-primary-dark);
+    background-color: var(--st-appbar-background);
 }
 
 aside, aside .block,
 .main-menu>li.active>a,
 .opdracht-versions ul li,
 .main-menu>li>a,
-.main-menu li.children li.submenu>a {
+.main-menu li.children li.submenu>a,
+.main-menu>li.active>a, .main-menu>li>a:hover {
     border-radius: var(--st-border-radius);
 }
 
 .main-menu>li.active>a, .main-menu>li.active>a:hover {
-    background-color: var(--st-accent-primary-dark);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 85%);
 }
 
 .main-menu>li>a:hover {
-    background-color: var(--st-accent-tertiary);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 90%);
 }
 
 .main-menu>li.children.expanded>a, .main-menu>li.children.expanded>a:hover {
-    background-color: var(--st-accent-tertiary);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 90%);
 }
 
 .main-menu li.children li.submenu {
@@ -746,12 +853,12 @@ aside, aside .block,
 }
 
 .main-menu li.children li.submenu.active>a, .main-menu li.children li.submenu.active>a:hover {
-    background-color: var(--st-accent-primary-dark);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 85%);
     font-weight: normal;
 }
 
 .main-menu li.children li.submenu>a:hover {
-    background-color: var(--st-accent-tertiary);
+    background-color: color-mix(in srgb, var(--st-foreground-primary), transparent 90%);
 }
 
 .main-menu li.children>a::after {
@@ -953,11 +1060,6 @@ aside .tabs li a {
     gap: 8px;
     margin: 0;
     padding-left: 22px;
-    transition: background-color 200ms;
-}
-
-.menu-footer>a:hover {
-    background-color: var(--st-accent-primary-dark);
 }
 
 .collapsed-menu .menu-footer i {
@@ -1400,6 +1502,25 @@ table.table-grid-layout>tbody>tr.selected {
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
+    if (syncedStorage['special']?.includes('Discord-mode')) {
+        createStyle(`
+:root {
+    --st-background-secondary: #232428;
+}
+
+#st-start-widgets {
+    background-color: var(--st-side-background);
+    border-left: none;
+    box-shadow: none;
+}
+
+.menu-footer, #st-start-widget-controls-wrapper {
+    background-color: #232428;
+    border-top: none;
+}
+`, 'study-tools-discord-mode')
+    } else createStyle('', 'study-tools-discord-mode')
+
     if (syncedStorage['start-enabled']) {
         createStyle(`
 #vandaag-container .main .content-container, #vandaag-container dna-page-header {
@@ -1610,19 +1731,27 @@ h2 {
     setTimeout(() => clearInterval(interval), 5000)
 }
 
-async function handleSpecialDecoration(type) {
+async function handleSpecialDecoration(type, customCss, customTheme, customColor) {
     if ((await getFromStorage('no-special-decorations', 'session') ?? '') === type) return
-    const decoration = createStyle(`nav.menu.ng-scope {
+    const decoration = createStyle(customCss ||
+        `nav.menu.ng-scope {
             background-image: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/${type}.svg");
             background-size: 240px 480px;
-            background-position: bottom 64px center;
+            background-position: bottom center;
             background-repeat: no-repeat;
         }`, `st-special-decoration`)
-    const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Deze decoratie verbergen" })
+    if (customTheme && customColor) applyStyles(true, customTheme, customColor)
+    const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Speciaal thema..." })
     disableButton.addEventListener('click', () => {
-        decoration.remove()
-        disableButton.remove()
-        saveToStorage('no-special-decorations', type, 'session')
-        if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
+        notify('dialog', `Magister ziet er vandaag anders uit vanwege een speciale gelegenheid ('${type}').\n\nJe kunt dit speciale thema uitschakelen. Hierna verschijnt het niet meer totdat je je browser opnieuw opent.`, [{
+            innerText: "Thema uitschakelen", callback: () => {
+                decoration.remove()
+                applyStyles(true)
+                disableButton.remove()
+                saveToStorage('no-special-decorations', type, 'session')
+                if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
+                document.querySelector('.st-dialog-dismiss').click()
+            }, 'data-icon': ''
+        }], null, { closeIcon: '', closeText: "Thema behouden" })
     })
 }

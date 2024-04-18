@@ -33,11 +33,14 @@ async function studyguideList() {
         let egg = eggs.find(egg => egg.location === 'studyguidesSearch' && egg.input === e.target.value)
         if (!egg?.output) return
 
-        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-grid') || document.body, { class: 'st-sw-subject' })
-
+        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
         let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
         fakeDefaultItemButton.addEventListener('click', () => {
-            notify(egg.type || 'snackbar', egg.output, null, 3600000)
+            if (egg.type === 'applySettings') {
+                chrome.storage.sync.set(egg.output)
+            } else {
+                notify(egg.type || 'snackbar', egg.output, null, 3600000)
+            }
         })
 
         let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
@@ -421,7 +424,7 @@ function appendStudyguidesToList() {
 
         if (searchBar) {
             let query = searchBar.value.toLowerCase()
-            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide.closest('.st-sw-subject').dataset.subject?.toLowerCase().includes(query))
+            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide?.closest('.st-sw-subject')?.dataset?.subject?.toLowerCase().includes(query))
         }
 
         if (matches) studyguide.classList.remove('hidden')
@@ -472,7 +475,6 @@ function autoStudyguideSubject(title) {
         { name: "Biologie", aliases: ["biologie", "bio", "bi", "biol"] },
         { name: "Cult. en kunstz. vorming", aliases: ["ckv"] },
         { name: "Drama", aliases: ["drama", "kudr", "dr", "kdr", "da", "kda"] },
-        { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] },
         { name: "Economie", aliases: ["economie", "eco", "ec", "econ", "eo"] },
         { name: "Frans", aliases: ["frans", "fatl", "fa", "fr", "franse", "français"] },
         { name: "Geschiedenis", aliases: ["geschiedenis", "gs", "ges", "gst", "gm"] },
@@ -486,7 +488,7 @@ function autoStudyguideSubject(title) {
         { name: "Maatschappijleer", aliases: ["maatschappijleer", "ma", "malv", "maat"] },
         { name: "Maatschappij­wetenschappen", aliases: ["maatschappijwetenschappen", "ma", "maat", "maw", "mask"] },
         { name: "Mens en maatschappij", aliases: ["mens en maatschappij", "m&m", "mm"] },
-        { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn"] },
+        { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn", "groene vingers"] },
         { name: "Mentor", aliases: ["mentor", "mentoruur", "mentoraat", "mr"] },
         { name: "Muziek", aliases: ["muziek", "kumu", "mu", "kmu"] },
         { name: "Natuurkunde", aliases: ["natuurkunde", "na", "nat", "nask1", "nsk1"] },
@@ -497,7 +499,8 @@ function autoStudyguideSubject(title) {
         { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
         { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
         { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen", "re"] },
-        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'English'
+        { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] }, // Positioned very low to avoid 'de' being recognised as 'Duits'
+        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'Engels'
         { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
         { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] }
     ]

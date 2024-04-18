@@ -326,6 +326,7 @@ div.loading-overlay {
 
 .st-chip {
     display: inline-block;
+    min-width: max-content;
     padding-inline: 12px;
     border: 1px solid var(--st-chip-info-border);
     border-radius: 12px;
@@ -1227,13 +1228,13 @@ a.st-keyboard-hint.clicked {
 
 #st-decoration-disable {
     position: absolute;
-    bottom: 64px;
-    left: -32px;
+    bottom: 48px;
+    left: -8px;
     rotate: -90deg;
     color: var(--st-contrast-accent);
     font-size: 12px;
     font-weight: normal;
-    opacity: .15;
+    opacity: .3;
 }
 
 @keyframes displayIn {
@@ -1300,6 +1301,18 @@ a.st-keyboard-hint.clicked {
     from {
         opacity: 0;
         translate: 0 200px;
+    }
+}
+
+@keyframes flipUpOut {
+    to {
+        transform: rotateX(-90deg);
+    }
+}
+
+@keyframes flipDownIn {
+    from {
+        transform: rotateX(90deg);
     }
 }
 

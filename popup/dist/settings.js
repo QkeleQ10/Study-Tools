@@ -1,12 +1,3 @@
-const shortcuts = {
-    id: "shortcuts",
-    title: "Snelkoppelingen zijbalk",
-    type: "ShortcutsEditor",
-    default: [
-        { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'z' }
-    ]
-}
-
 export default [
     {
         id: "appearance",
@@ -18,16 +9,35 @@ export default [
                 default: 'auto,207,95,55',
             },
             {
+                id: "pagecolor",
+                title: "Achtergrondkleur",
+                subtitle: "Achtergrond",
+                type: "ColorOverrideSetting",
+                default: 'false,0,0,7',
+            },
+            {
+                id: "wallpaper",
+                title: "Achtergrondafbeelding",
+                type: "DecorationPickerSetting",
+                default: 'none,',
+            },
+            {
+                id: "sidecolor",
+                title: "Menubalkkleur",
+                subtitle: "Menubalk",
+                type: "ColorOverrideSetting",
+                default: 'false,207,95,55',
+            },
+            {
                 id: "decoration",
-                title: "Zijbalkdecoratie",
-                type: "DecorationPicker",
-                default: 'none',
+                title: "Menubalkdecoratie",
+                type: "DecorationPickerSetting",
+                default: 'none,',
             },
             {
                 id: "decoration-size",
-                title: "Zijbalkdecoratieformaat",
-                subtitle: "Grootte",
-                type: "SlideInput",
+                title: "Menubalkdecoratieformaat",
+                type: "DecorationSizeSetting",
                 default: 1,
                 format: "percent",
                 decimals: 0,
@@ -35,12 +45,19 @@ export default [
                 max: 3,
                 step: 0.1,
                 conditions: [
-                    { settingId: 'decoration', operator: 'not equal', value: 'none' }
+                    { settingId: 'decoration', operator: 'not starting with', value: 'none' }
                 ],
             },
             {
+                id: "appbarcolor",
+                title: "Appbalkkleur",
+                subtitle: "Appbalk",
+                type: "ColorOverrideSetting",
+                default: 'false,207,95,47',
+            },
+            {
                 id: "shape",
-                title: "Afgeronde hoeken",
+                title: "Hoekstraal",
                 type: "SlideInput",
                 default: 8,
                 format: "px",
@@ -50,16 +67,9 @@ export default [
                 step: 1,
             },
             {
-                id: "backdrop",
-                title: "Achtergrondafbeelding",
-                subtitle: "De URL van een afbeelding die je als achtergrond wilt gebruiken.",
-                type: "TextInput",
-                default: '',
-            },
-            {
                 id: "darken-content",
                 title: "Inhoud donker maken",
-                subtitle: "Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
+                subtitle: "Experimenteel. Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
@@ -103,10 +113,17 @@ export default [
         settings: [
             {
                 id: "magister-appbar-week",
-                title: "Weeknummer in zijbalk",
+                title: "Weeknummer in menubalk",
                 default: true,
             },
-            shortcuts,
+            {
+                id: "shortcuts",
+                title: "Snelkoppelingen menubalk",
+                type: "ShortcutsEditor",
+                default: [
+                    { icon: '', href: '$SCHOOLNAAM.zportal.nl/app', hotkey: 'z' }
+                ]
+            },
             {
                 id: 'magister-picture',
                 title: "Profielfoto",
@@ -252,7 +269,7 @@ export default [
             {
                 id: "insuf-red",
                 title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht.",
+                subtitle: "Alleen in het cijferoverzicht en in de cijferwidget.",
                 default: true,
             },
         ]
@@ -262,7 +279,7 @@ export default [
         settings: [
             {
                 id: "sw-enabled",
-                title: "Studiewijzers ordenen",
+                title: "Studiewijzers rangschikken",
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },
@@ -323,24 +340,9 @@ export default [
         id: "about",
         settings: [
             {
-                id: "beta-options",
-                title: "Experimentele opties",
-                subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
-                default: false,
-            },
-            {
-                id: "verbosity",
-                title: "Uitgebreide consoleberichten",
-                subtitle: "Er worden meer activiteiten geplaatst in de console.",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
                 id: 'language',
                 title: "Taal",
-                subtitle: "Sommige onderdelen van de interface zullen veranderen van taal.",
+                subtitle: "Experimenteel",
                 type: "SegmentedButton",
                 default: 'nl-NL',
                 options: [
@@ -360,7 +362,23 @@ export default [
                         value: "de-DE",
                         title: "Deutsch"
                     },
+                    {
+                        value: "la-LA",
+                        title: "Latina lingua"
+                    },
                 ],
+            },
+            {
+                id: "beta-options",
+                title: "Ontwikkelaarsopties",
+                subtitle: "Experimenteel",
+                default: false,
+            },
+            {
+                id: "verbosity",
+                title: "Uitgebreide consoleberichten",
+                subtitle: "Experimenteel. Er worden meer activiteiten geplaatst in de console.",
+                default: false,
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],

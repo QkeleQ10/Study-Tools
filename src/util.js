@@ -22,7 +22,7 @@ let eggs = [],
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
-            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE'].includes(locale)) locale = 'nl-NL'
+            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'la-LA'].includes(locale)) locale = 'nl-NL'
             const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
             i18nData = await req.json()
             const reqNl = await fetch(chrome.runtime.getURL(`_locales/nl/strings.json`))
@@ -611,11 +611,16 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                                 window.open(item.href, '_blank').focus()
                                 event.stopPropagation()
                             })
+                        } else if (item.callback) {
+                            button.addEventListener('click', event => {
+                                item.callback(event)
+                                event.stopPropagation()
+                            })
                         } else button.addEventListener('click', event => event.stopPropagation())
                     })
                 }
 
-                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': '', innerText: "Sluiten" })
+                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
                 if (options?.index && options?.length) {
                     dialogDismiss.classList.add('st-step')
                     dialogDismiss.innerText = `${options.index} / ${options.length}`
@@ -722,6 +727,10 @@ function i18n(key, variables = {}, useDefaultLanguage = false, fallBackToNull = 
 }
 
 function formatOrdinals(number, feminine) {
+    if (locale.startsWith('la')) {
+        return romanize(number)
+    }
+
     const pr = new Intl.PluralRules(locale, { type: 'ordinal' })
 
     const suffixes = {
@@ -745,8 +754,22 @@ function formatOrdinals(number, feminine) {
     }
 
     const rule = pr.select(number)
-    const suffix = suffixes[locale].get(rule) || suffixes[locale].get('other') || '.'
+    const suffix = suffixes[locale]?.get(rule) || suffixes[locale]?.get('other') || '.'
     return `${number}${suffix}`
+}
+
+function romanize(num) {
+    if (isNaN(num))
+        return NaN;
+    var digits = String(+num).split(""),
+        key = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM",
+            "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
+            "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"],
+        roman = "",
+        i = 3;
+    while (i--)
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
 }
 
 // Seeded random numbers.

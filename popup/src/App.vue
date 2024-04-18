@@ -11,10 +11,12 @@ import SegmentedButton from './components/SegmentedButton.vue'
 import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
 import ThemePicker from './components/setting-types/ThemePicker.vue'
-import DecorationPicker from './components/DecorationPicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
+import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
+import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
+import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
 import About from './components/About.vue'
 import Chip from './components/Chip.vue'
 
@@ -22,14 +24,12 @@ const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, DecorationPicker, KeyPicker, ImageInput, ShortcutsEditor }
+const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 
 let selectedCategory = ref('appearance')
 let transitionName = ref('')
 
-setTimeout(() => {
-    transitionName.value = 'list'
-}, 200)
+setTimeout(() => transitionName.value = 'list', 200)
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -39,21 +39,28 @@ function shouldShowSetting(setting) {
             if (condition.settingId) value = syncedStorage.value[condition.settingId]
             switch (condition.operator) {
                 case 'equal':
-                    if (value !== condition.value) {
+                    if (value !== condition.value)
                         outcome = false
-                    }
                     break
 
                 case 'not equal':
-                    if (value === condition.value) {
+                    if (value === condition.value)
                         outcome = false
-                    }
+                    break
+
+                case 'starting with':
+                    if (!value?.startsWith(condition.value))
+                        outcome = false
+                    break
+
+                case 'not starting with':
+                    if (value?.startsWith(condition.value))
+                        outcome = false
                     break
 
                 case 'defined':
-                    if (!value) {
+                    if (!value)
                         outcome = false
-                    }
                     break
             }
         })
@@ -83,19 +90,20 @@ function openInNewTab(url) {
         <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" :data-scrolled="y > 16" />
         <main id="main" ref="main">
             <Transition name="fade">
-                
+
             </Transition>
             <div id="options-container">
                 <TransitionGroup name="fade">
                     <template v-for="category in settings">
                         <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
                             <TransitionGroup :name="transitionName">
-                                <About v-if="category.id === 'about'" key="about" @reset-settings="resetSettingDefaults" />
+                                <About v-if="category.id === 'about'" key="about"
+                                    @reset-settings="resetSettingDefaults" />
                                 <template v-for="setting in category.settings">
                                     <div class="setting-wrapper"
                                         :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
                                         :data-setting-type="setting.type" :data-setting-id="setting.id"
-                                        v-if="shouldShowSetting(setting)" :key="setting.id">
+                                        v-if="shouldShowSetting(setting)" :key="setting.id" :data-scrolled="y > 16">
                                         <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
                                             :id="setting.id" v-model="syncedStorage[setting.id]">
                                             <template #title>{{ setting.title }}</template>
@@ -162,7 +170,6 @@ main {
 }
 
 .options-category {
-    width: 450px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: auto;
@@ -174,19 +181,25 @@ main {
 }
 
 .setting-wrapper[data-setting-type="ThemePicker"] {
+    position: sticky;
+    top: 16px;
+    z-index: 6;
     border-top: none !important;
+    margin-inline: 8px;
 }
 
-.setting-wrapper[data-setting-id="decoration-size"] {
+.setting-wrapper[data-setting-type="ThemePicker"]+.setting-wrapper.visible {
+    border-top: 0px solid transparent;
+}
+
+.setting-wrapper[data-setting-id="decoration"],
+.setting-wrapper[data-setting-id="decoration-size"],
+.setting-wrapper[data-setting-id="wallpaper"] {
     border-top: none !important;
     margin-top: -10px;
 }
 
-.setting-wrapper[data-setting-id="decoration-size"] .setting-title {
-    display: none;
-}
-
-.setting-wrapper~.setting-wrapper.visible {
+.setting-wrapper+.setting-wrapper.visible {
     border-top: 1px solid var(--color-surface-variant);
 }
 
@@ -206,7 +219,6 @@ main {
     padding-block: 12px;
     min-height: 56px;
     box-sizing: border-box;
-    background-color: var(--color-surface);
     transition: background-color 200ms;
 }
 

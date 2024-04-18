@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.9.5",
+    "version": "3.10.1",
     "default_locale": "nl",
     "icons": {
         "16": "icons/icon@16px.png",
@@ -93,7 +93,8 @@
                 "_locales/nl/strings.json",
                 "_locales/en/strings.json",
                 "_locales/fr/strings.json",
-                "_locales/de/strings.json"
+                "_locales/de/strings.json",
+                "_locales/la/strings.json"
             ],
             "matches": [
                 "*://*.magister.net/*"
