@@ -611,11 +611,16 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                                 window.open(item.href, '_blank').focus()
                                 event.stopPropagation()
                             })
+                        } else if (item.callback) {
+                            button.addEventListener('click', event => {
+                                item.callback(event)
+                                event.stopPropagation()
+                            })
                         } else button.addEventListener('click', event => event.stopPropagation())
                     })
                 }
 
-                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': '', innerText: "Sluiten" })
+                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
                 if (options?.index && options?.length) {
                     dialogDismiss.classList.add('st-step')
                     dialogDismiss.innerText = `${options.index} / ${options.length}`

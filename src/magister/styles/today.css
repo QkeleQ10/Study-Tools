@@ -1069,7 +1069,7 @@ a.st-widget-title {
 }
 
 .st-start-widget-grades-item[data-assignment=true] .st-start-widget-grades-item-rslt {
-    color: var(--st-foreground-accent);
+    color: var(--st-accent-info);
 }
 
 .st-start-widget-grades-item-rslt[data-great=true] {
@@ -1077,6 +1077,10 @@ a.st-widget-title {
     background-clip: text;
     color: transparent;
     animation: great-grade 2s linear infinite;
+}
+
+.st-start-widget-grades-item-rslt[data-insuf=true] {
+    color: var(--st-accent-warn);
 }
 
 .st-start-widget-grades-item[data-unread=true] .st-start-widget-grades-item-rslt[data-great=true] {

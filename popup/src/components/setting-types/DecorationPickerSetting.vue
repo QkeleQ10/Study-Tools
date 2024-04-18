@@ -165,6 +165,12 @@ function updatePickerOpen(newPickerOpenValue) {
     color: var(--color-on-surface);
 }
 
+.swatch:first-child:nth-last-child(2) .state-layer,
+.swatch:last-child:nth-child(2) .state-layer {
+    background-color: var(--color-secondary-container);
+    opacity: 1;
+}
+
 .swatch:hover,
 .swatch:focus-visible {
     border-radius: 10px;

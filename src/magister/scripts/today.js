@@ -796,7 +796,7 @@ async function today() {
                             let formattedResult = item.waarde
                             if (!isNaN(Number(item.waarde.replace(',', '.')))) formattedResult = Number(item.waarde.replace(',', '.')).toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })
 
-                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: formattedResult, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) >= 9 })
+                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: formattedResult, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) < 5.5 })
                             let itemSubj = element('span', `st-start-widget-grades-${i}-subj`, gradeElement, { class: 'st-start-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
                             let itemInfo = element('span', `st-start-widget-grades-${i}-info`, gradeElement, { class: 'st-start-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
                             let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', 'data-temporal-type': 'timestamp', 'data-temporal-start': item.date })
@@ -841,7 +841,7 @@ async function today() {
                         }, 20000)
 
                         function scrollWidget(reverse = false) {
-                            let visibleChildIndex = Math.round(widgetItemsContainer.scrollLeft / children[0].offsetWidth) || 0
+                            let visibleChildIndex = Math.floor(widgetItemsContainer.scrollLeft / children[0].offsetWidth) || 0
                             widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
                             console.log(visibleChildIndex)
                             if (!reverse) {

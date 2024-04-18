@@ -1228,13 +1228,13 @@ a.st-keyboard-hint.clicked {
 
 #st-decoration-disable {
     position: absolute;
-    bottom: 64px;
-    left: -32px;
+    bottom: 48px;
+    left: -8px;
     rotate: -90deg;
     color: var(--st-contrast-accent);
     font-size: 12px;
     font-weight: normal;
-    opacity: .15;
+    opacity: .3;
 }
 
 @keyframes displayIn {

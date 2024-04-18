@@ -57,7 +57,7 @@ export default [
             },
             {
                 id: "shape",
-                title: "Afgeronde hoeken",
+                title: "Hoekstraal",
                 type: "SlideInput",
                 default: 8,
                 format: "px",
@@ -69,7 +69,7 @@ export default [
             {
                 id: "darken-content",
                 title: "Inhoud donker maken",
-                subtitle: "Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
+                subtitle: "Experimenteel. Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
@@ -340,24 +340,9 @@ export default [
         id: "about",
         settings: [
             {
-                id: "beta-options",
-                title: "Experimentele opties",
-                subtitle: "Er verschijnen extra opties voor functies die nog niet af zijn.",
-                default: false,
-            },
-            {
-                id: "verbosity",
-                title: "Uitgebreide consoleberichten",
-                subtitle: "Er worden meer activiteiten geplaatst in de console.",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
                 id: 'language',
                 title: "Taal",
-                subtitle: "Sommige onderdelen van de interface zullen veranderen van taal.",
+                subtitle: "Experimenteel",
                 type: "SegmentedButton",
                 default: 'nl-NL',
                 options: [
@@ -382,6 +367,18 @@ export default [
                         title: "Latina lingua"
                     },
                 ],
+            },
+            {
+                id: "beta-options",
+                title: "Ontwikkelaarsopties",
+                subtitle: "Experimenteel",
+                default: false,
+            },
+            {
+                id: "verbosity",
+                title: "Uitgebreide consoleberichten",
+                subtitle: "Experimenteel. Er worden meer activiteiten geplaatst in de console.",
+                default: false,
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],

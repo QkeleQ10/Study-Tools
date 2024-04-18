@@ -56,12 +56,10 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     switch (scheme) {
         case 'dark': {
             return `
-    --st-page-background: ${backgroundImage[0] === 'custom'
-                    ? 'linear-gradient(#121212cc, #121212cc), var(--st-page-wallpaper), linear-gradient(#000, #000)'
-                    : syncedStorage['pagecolor']?.startsWith('true')
-                        ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
-                        : '#111111'};
-    --st-page-wallpaper: ${backgroundImage[1]};
+    --st-page-background: ${syncedStorage['pagecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : '#111111'};
+    --st-page-wallpaper: ${syncedStorage['wallpaper']?.startsWith('custom') ? `linear-gradient(#121212cc, #121212cc), url(${syncedStorage['wallpaper'].replace('custom,', '')})` : 'none'};
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
@@ -69,7 +67,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
                     ? `hsl(${syncedStorage['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
     --st-background-primary: #121212;
-    --st-background-secondary: ${backgroundImage[0] === 'custom' || syncedStorage['pagecolor']?.startsWith('true') ? '#0c0c0caa' : '#151515'};
+    --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
     --st-background-overlay: #121212f7;
     --st-background-transparent: #121212bb;
@@ -89,6 +87,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
+    --st-accent-info: #4ea3e9;
     --st-chip-info-border: #0565b4;
     --st-chip-info-background: #022a4b;
     --st-chip-ok-border: #13c4a3;
@@ -106,12 +105,10 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
 
         default: {
             return `
-    --st-page-background: ${backgroundImage[0] === 'custom'
-                    ? 'linear-gradient(#ffffffcc, #ffffffcc), var(--st-page-wallpaper), linear-gradient(#fff, #fff)'
-                    : syncedStorage['pagecolor']?.startsWith('true')
-                        ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
-                        : '#ffffff'};
-    --st-page-wallpaper: ${backgroundImage[1]};
+    --st-page-background: ${syncedStorage['pagecolor']?.startsWith('true')
+                    ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+                    : '#ffffff'};
+    --st-page-wallpaper: ${syncedStorage['wallpaper']?.startsWith('custom') ? `linear-gradient(#ffffffcc, #ffffffcc), url(${syncedStorage['wallpaper'].replace('custom,', '')})` : 'none'};
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
@@ -119,7 +116,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
                     ? `hsl(${syncedStorage['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
     --st-background-primary: #ffffff;
-    --st-background-secondary: ${backgroundImage[0] === 'custom' || syncedStorage['pagecolor']?.startsWith('true') ? '#ffffffaa' : '#ffffff'};
+    --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
     --st-background-overlay: #fffffff7;
     --st-background-transparent: #ffffffbb;
@@ -139,6 +136,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
+    --st-accent-info: #4ea3e9;
     --st-chip-info-border: #066ec2;
     --st-chip-info-background: #ffffff;
     --st-chip-ok-border: #19c5a5;
@@ -265,11 +263,29 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     if (now.getMonth() === 1 && [14].includes(now.getDate())) {
         handleSpecialDecoration('valentine')
     }
+    // Examenstunt 1: Kleur op wit
+    if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [19].includes(now.getDate()) && now.getFullYear() === 2024) {
+        handleSpecialDecoration('examenstunt1', `
+.menu-host {
+    background-image: url("https://i.imgur.com/cTQ9FV2.png") !important;
+    background-size: cover;
+    background-position: left;
+}
+
+.menu-host img {
+    filter: invert() hue-rotate(180deg);
+}
+
+.menu-host li a span, .menu-host .menu-footer span, .menu-host .far, .menu-host li a:after {
+    color: #000 !important;
+}`)
+    }
     // Examenstunt 2: Hawaï/ foute après-ski
     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [22].includes(now.getDate()) && now.getFullYear() === 2024) {
         handleSpecialDecoration('examenstunt2', `
 :root {
-    --st-page-wallpaper: url(\'https://cms.sno.co.uk/blog/wp-content/uploads/2021/05/55726469_10157327082343103_1871380008929329152_n-edited.jpg\') !important;
+    --st-page-wallpaper: linear-gradient(#ffffffcc, #ffffffcc), url(\'https://i.imgur.com/wWJAqG6.png\') !important;
+    --st-background-secondary: #ffffffaa  !important;
     --st-side-background: var(--st-accent-primary);
     --st-appbar-background: var(--st-accent-primary-dark);
 }
@@ -278,13 +294,14 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     background-image: url("https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg") !important;
     background-size: cover;
     background-position: center;
-}`, 'dark', { h: 23, s: 80, l: 60 })
+}`, 'light', { h: 180, s: 50, l: 40 })
     }
     // Examenstunt 3: Neon 80's
     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [23].includes(now.getDate()) && now.getFullYear() === 2024) {
         handleSpecialDecoration('examenstunt3', `
 :root {
-    --st-page-wallpaper: url(\'https://wallpapers.com/images/hd/80s-neon-uevqe7pg20chynkw.jpg\') !important;
+    --st-page-wallpaper: url(\'https://i.imgur.com/ss4ty9u.png\') !important;
+    --st-background-secondary: #0c0c0caa  !important;
     --st-side-background: var(--st-accent-primary);
     --st-appbar-background: var(--st-accent-primary-dark);
 }
@@ -293,13 +310,14 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     background-image: url("https://wallpapers.com/images/hd/80s-neon-veqvixadrbra13q4.jpg") !important;
     background-size: cover;
     background-position: center;
-}`, 'light', { h: 275, s: 85, l: 40 })
+}`, 'dark', { h: 275, s: 100, l: 60 })
     }
     // Examenstunt 4: Western
     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [24].includes(now.getDate()) && now.getFullYear() === 2024) {
         handleSpecialDecoration('examenstunt4', `
 :root {
-    --st-page-wallpaper: url(\'https://cdn.steamstatic.com/steamcommunity/public/images/items/1048100/8a702b788e987f086c8b02ed2b1b98c925ac3fa2.jpg\') !important;
+    --st-page-wallpaper: url(\'https://i.imgur.com/UgMMNqN.png\') !important;
+    --st-background-secondary: #0c0c0caa  !important;
     --st-side-background: var(--st-accent-primary);
     --st-appbar-background: var(--st-accent-primary-dark);
 }
@@ -308,7 +326,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     background-image: url("https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg") !important;
     background-size: cover;
     background-position: center;
-}`, 'dark', { h: 10, s: 80, l: 29 })
+}`, 'dark', { h: 10, s: 80, l: 50 })
     }
 
     createStyle(`.block h3,
@@ -345,7 +363,8 @@ html {
 }
 
 body {
-    background: var(--st-page-background) !important;
+    background-color: var(--st-page-background) !important;
+    background-image: var(--st-page-wallpaper) !important;
     background-size: cover !important;
     background-position: center !important;
 }
@@ -1720,12 +1739,17 @@ async function handleSpecialDecoration(type, customCss, customTheme, customColor
             background-repeat: no-repeat;
         }`, `st-special-decoration`)
     if (customTheme && customColor) applyStyles(true, customTheme, customColor)
-    const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Deze decoratie verbergen" })
+    const disableButton = element('button', 'st-decoration-disable', document.body, { class: 'st-button text', innerText: "Speciaal thema..." })
     disableButton.addEventListener('click', () => {
-        decoration.remove()
-        applyStyles(true)
-        disableButton.remove()
-        saveToStorage('no-special-decorations', type, 'session')
-        if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
+        notify('dialog', `Magister ziet er vandaag anders uit vanwege een speciale gelegenheid ('${type}').\n\nJe kunt dit speciale thema uitschakelen. Hierna verschijnt het niet meer totdat je je browser opnieuw opent.`, [{
+            innerText: "Thema uitschakelen", callback: () => {
+                decoration.remove()
+                applyStyles(true)
+                disableButton.remove()
+                saveToStorage('no-special-decorations', type, 'session')
+                if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
+                document.querySelector('.st-dialog-dismiss').click()
+            }, 'data-icon': ''
+        }], null, { closeIcon: '', closeText: "Thema behouden" })
     })
 }
