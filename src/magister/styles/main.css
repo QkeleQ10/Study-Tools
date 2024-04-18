@@ -326,6 +326,7 @@ div.loading-overlay {
 
 .st-chip {
     display: inline-block;
+    min-width: max-content;
     padding-inline: 12px;
     border: 1px solid var(--st-chip-info-border);
     border-radius: 12px;

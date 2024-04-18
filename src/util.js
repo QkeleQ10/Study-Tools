@@ -722,6 +722,10 @@ function i18n(key, variables = {}, useDefaultLanguage = false, fallBackToNull = 
 }
 
 function formatOrdinals(number, feminine) {
+    if (locale.startsWith('la')) {
+        return romanize(number)
+    }
+
     const pr = new Intl.PluralRules(locale, { type: 'ordinal' })
 
     const suffixes = {
@@ -745,8 +749,22 @@ function formatOrdinals(number, feminine) {
     }
 
     const rule = pr.select(number)
-    const suffix = suffixes[locale].get(rule) || suffixes[locale].get('other') || '.'
+    const suffix = suffixes[locale]?.get(rule) || suffixes[locale]?.get('other') || '.'
     return `${number}${suffix}`
+}
+
+function romanize(num) {
+    if (isNaN(num))
+        return NaN;
+    var digits = String(+num).split(""),
+        key = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM",
+            "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
+            "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"],
+        roman = "",
+        i = 3;
+    while (i--)
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
 }
 
 // Seeded random numbers.
