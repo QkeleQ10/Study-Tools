@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, provide } from 'vue'
 import { useScroll } from '@vueuse/core'
 import { useSyncedStorage } from './composables/chrome.js'
 
@@ -23,6 +23,8 @@ import Chip from './components/Chip.vue'
 const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
+
+provide('syncedStorage', syncedStorage)
 
 const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 

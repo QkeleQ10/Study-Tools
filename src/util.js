@@ -59,15 +59,15 @@ async function handleAnnouncements() {
 function isAnnouncementValid(announcement) {
     return new Promise(async (resolve, reject) => {
         let now = new Date()
-
-        if (announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
-        if (announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local'))) resolve(false)
-        if (announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
-        if (announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
-        if (announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
-        if (announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
-        if (announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
-        if (announcement.showOnceId && (await getFromStorage(`announcement-${announcement.showOnceId}`, 'local') || false)) resolve(false)
+        if (!!announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
+        if (!!announcement.onlyForStudents && !announcement.onlyForStudents.includes((await awaitElement('.menu-button figure img')).getAttribute('alt'))) resolve(false)
+        if (!!announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local')) && !announcement.onlyForSchools.includes('studentname')) resolve(false)
+        if (!!announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
+        if (!!announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
+        if (!!announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
+        if (!!announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
+        if (!!announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
+        if (!!announcement.showOnceId && (await getFromStorage(`announcement-${announcement.showOnceId}`, 'local') || false)) resolve(false)
 
         resolve(true)
     })

@@ -1009,10 +1009,42 @@ a.st-widget-title {
     transform: translateX(200%);
 }
 
+#st-start-widget-grades-scroll-pagn {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    transform: translateY(200%);
+    opacity: 0;
+    transition: color 200ms ease 0s, opacity 200ms ease 0s, transform 200ms ease 0s;
+}
+
 #st-start-widget-grades[data-unread=true] #st-start-widget-grades-title,
 #st-start-widget-grades[data-unread=true] #st-start-widget-grades-scroll-back,
-#st-start-widget-grades[data-unread=true] #st-start-widget-grades-scroll-forw {
+#st-start-widget-grades[data-unread=true] #st-start-widget-grades-scroll-forw,
+#st-start-widget-grades[data-unread=true] #st-start-widget-grades-scroll-pagn {
     color: var(--st-contrast-accent);
+}
+
+#st-start-widget-grades-scroll-pagn>div {
+    background-color: currentColor;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    opacity: .25;
+    transition: opacity 200ms;
+}
+
+#st-start-widget-grades-scroll-pagn>div:hover {
+    opacity: .75;
+    transition: none;
+}
+
+#st-start-widget-grades-scroll-pagn>div[data-current=true] {
+    opacity: 1;
 }
 
 #st-start-widget-grades-items {
@@ -1138,7 +1170,9 @@ a.st-widget-title {
 
 #st-start-widgets:not(.editing) #st-start-widget-grades:hover .st-button.icon,
 #st-start-widget-grades:focus-visible .st-button.icon,
-.st-button.icon:focus-visible {
+.st-button.icon:focus-visible,
+#st-start-widgets:not(.editing) #st-start-widget-grades:hover #st-start-widget-grades-scroll-pagn,
+#st-start-widget-grades:focus-visible #st-start-widget-grades-scroll-pagn {
     opacity: 1;
     transform: none;
 }

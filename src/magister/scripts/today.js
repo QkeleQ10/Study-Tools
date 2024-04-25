@@ -820,51 +820,69 @@ async function today() {
                             })
                         })
 
+                        visibleChildIndex = 0
+
                         const scrollBack = element('button', 'st-start-widget-grades-scroll-back', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Nieuwer') })
                         scrollBack.addEventListener('click', (event) => {
                             event.preventDefault()
                             event.stopPropagation()
                             event.stopImmediatePropagation()
-                            scrollWidget(true)
+                            scrollWidget('backwards')
                         })
                         const scrollForw = element('button', 'st-start-widget-grades-scroll-forw', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Ouder') })
                         scrollForw.addEventListener('click', (event) => {
                             event.preventDefault()
                             event.stopPropagation()
                             event.stopImmediatePropagation()
-                            scrollWidget(false)
+                            scrollWidget('forwards')
                         })
 
-                        if (autoRotate == 'true') setInterval(() => {
-                            if (widgetElement.matches(':hover')) return
-                            scrollWidget()
-                        }, 20000)
+                        const scrollPagn = element('div', 'st-start-widget-grades-scroll-pagn', widgetElement)
+                        children.forEach((child, i) => {
+                            const scrollPagnNode = element('div', undefined, scrollPagn, { 'data-current': i === 0 })
+                            scrollPagnNode.addEventListener('click', (event) => {
+                                event.preventDefault()
+                                event.stopPropagation()
+                                event.stopImmediatePropagation()
+                                scrollWidget('index', i)
+                            })
+                        })
 
-                        function scrollWidget(reverse = false) {
-                            let visibleChildIndex = Math.floor(widgetItemsContainer.scrollLeft / children[0].offsetWidth) || 0
+                        if (autoRotate == 'true') {
+                            let interval = setInterval(() => {
+                                if (!widgetItemsContainer?.children?.length>1) clearInterval(interval)
+                                if (widgetElement.matches(':hover')) return
+                                scrollWidget('forwards')
+                            }, 20000)
+                        }
+
+                        function scrollWidget(direction = 'forwards', targetIndex = 0) {
                             widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
-                            if (!reverse) {
-                                if (children[visibleChildIndex + 1]) {
-                                    widgetItemsContainer.scroll((visibleChildIndex + 1) * 400, 0)
-                                    widgetElement.dataset.unread = children[visibleChildIndex + 1]?.dataset.unread || false
-                                } else {
-                                    widgetItemsContainer.scroll(0, 0)
-                                    widgetElement.dataset.unread = children[0]?.dataset.unread || false
-                                }
-                            } else {
-                                if (children[visibleChildIndex - 1]) {
-                                    widgetItemsContainer.scroll((visibleChildIndex - 1) * 400, 0)
-                                    widgetElement.dataset.unread = children[visibleChildIndex - 1]?.dataset.unread || false
-                                } else {
-                                    widgetItemsContainer.scroll(widgetItemsContainer.scrollWidth, 0)
-                                    widgetElement.dataset.unread = children.at(-1)?.dataset.unread || false
-                                }
+                            if (direction === 'forwards') {
+                                if (children[visibleChildIndex + 1])
+                                    targetIndex = visibleChildIndex + 1
+                                else
+                                    targetIndex = 0
                             }
+                            if (direction === 'backwards') {
+                                if (children[visibleChildIndex - 1])
+                                    targetIndex = visibleChildIndex - 1
+                                else
+                                    targetIndex = children.length - 1
+                            }
+
+                            widgetItemsContainer.scroll((targetIndex) * 400, 0)
+                            widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
+                            visibleChildIndex = targetIndex
+
+                            document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach(d => d.dataset.current = false)
+                            document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).dataset.current = true
                         }
 
                         if (recentGrades.length < 2) {
                             scrollBack.remove()
                             scrollForw.remove()
+                            scrollPagn.remove()
                         }
 
                         if (type === 'Lijst') {
