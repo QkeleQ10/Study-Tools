@@ -18,6 +18,7 @@ import ColorOverrideSetting from './components/setting-types/ColorOverrideSettin
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
 import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
 import About from './components/About.vue'
+import ThemeHero from './components/ThemeHero.vue'
 import Chip from './components/Chip.vue'
 
 const main = ref(null)
@@ -101,6 +102,7 @@ function openInNewTab(url) {
                             <TransitionGroup :name="transitionName">
                                 <About v-if="category.id === 'about'" key="about"
                                     @reset-settings="resetSettingDefaults" />
+                                <ThemeHero v-if="category.id === 'appearance'" key="appearance" />
                                 <template v-for="setting in category.settings">
                                     <div class="setting-wrapper"
                                         :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
@@ -180,18 +182,6 @@ main {
 .setting-wrapper {
     margin-inline: 16px;
     grid-column: span 2;
-}
-
-.setting-wrapper[data-setting-type="ThemePicker"] {
-    position: sticky;
-    top: 16px;
-    z-index: 6;
-    border-top: none !important;
-    margin-inline: 8px;
-}
-
-.setting-wrapper[data-setting-type="ThemePicker"]+.setting-wrapper.visible {
-    border-top: 0px solid transparent;
 }
 
 .setting-wrapper[data-setting-id="decoration"],

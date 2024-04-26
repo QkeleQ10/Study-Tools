@@ -246,7 +246,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
                 break;
 
             case 'custom':
-                css = `background-image: url(${syncedStorage['decoration']?.split(',')[1]}); background-size: auto calc(${size} * 100vh); background-position: center;`
+                css = `background-image: url(${syncedStorage['decoration']?.split(',')[1]}); background-size: ${size === 1 ? 'cover' : `auto calc(${size} * 100vh)`}; background-position: center;`
                 break;
 
             default:
