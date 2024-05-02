@@ -1,6 +1,5 @@
 <script setup>
 import { inject } from 'vue'
-import MagisterThemePreview from './MagisterThemePreview.vue'
 
 const syncedStorage = inject('syncedStorage')
 
@@ -31,7 +30,7 @@ const presets = [
         thumbnail: 'url(\'https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg\')',
         'ptheme': 'light,180,50,40',
         'pagecolor': 'false,0,0,7',
-        'wallpaper': 'custom,https://i.imgur.com/wWJAqG6.png',
+        'wallpaper': 'custom,https://i.imgur.com/qY42IDh.png',
         'sidecolor': 'false,207,95,55',
         'decoration': 'custom,https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg',
         'decoration-size': 1,
@@ -49,55 +48,78 @@ const presets = [
         'decoration-size': 1,
         'appbarcolor': 'false,207,95,47',
         'shape': 8
+    },
+    {
+        name: "Wilde Westen",
+        thumbnail: 'url(\'https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg\')',
+        'ptheme': 'dark,10,80,50',
+        'pagecolor': 'false,0,0,7',
+        'wallpaper': 'custom,https://i.imgur.com/UgMMNqN.png',
+        'sidecolor': 'false,207,95,55',
+        'decoration': 'custom,https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg',
+        'decoration-size': 1,
+        'appbarcolor': 'false,207,95,47',
+        'shape': 8
     }
 ]
 </script>
 
 <template>
-    <div id="theme-hero">
-        <MagisterThemePreview id="theme-preview" />
-        <div id="theme-presets">
-            <div v-for="preset in presets" :title="preset.name" :style="{ '--thumbnail': preset.thumbnail }" @click="applyPreset(preset)">
+    <div class="setting-wrapper">
+        <div id="theme-presets-container">
+            <div>
+                <h3 class="setting-title">Themapakketten</h3>
+                <span class="setting-subtitle">Als je een vooraf ingesteld themapakket selecteert, dan worden al je voorkeuren voor het uiterlijk gewist.</span>
+            </div>
+            <div id="theme-presets">
+                <div v-for="preset in presets" :title="preset.name" :style="{ '--thumbnail': preset.thumbnail }"
+                    @click="applyPreset(preset)">
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-#theme-hero {
-    position: sticky;
-    top: 16px;
-    width: 100%;
-    margin-inline: 8px;
+#theme-presets-container {
+    position: relative;
+    margin-inline: -8px;
+    margin-top: 12px;
+    margin-bottom: 16px;
 
     display: grid;
-    grid-template-columns: 200px 1fr;
+    /* grid-template-columns: 1fr 144px; */
     gap: 16px;
 
-    z-index: 6;
     padding: 16px;
-    background-color: var(--color-surface-container);
+    background-color: var(--color-surface-container-lowest);
     border-radius: 12px;
 }
 
-#theme-preview {
-    width: 200px;
-    aspect-ratio: 16 / 9;
-    border-radius: 8px;
-    outline: 1px solid var(--color-outline-variant);
+#theme-presets-container:before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: -8px;
+    border-top: 1px solid var(--color-surface-variant);
+}
+
+.setting-subtitle {
+    text-wrap: balance;
 }
 
 #theme-presets {
-    display: grid;
-    grid-template-columns: repeat(3, 40px);
-    align-content: start;
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
+    padding: 6px;
 }
 
 #theme-presets>* {
     position: relative;
-    min-width: 40px;
-    aspect-ratio: 1;
+    width: 40px;
+    height: 40px;
     border: none;
     border-radius: 28px;
     cursor: pointer;

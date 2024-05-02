@@ -265,72 +265,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     if (now.getMonth() === 1 && [14].includes(now.getDate())) {
         handleSpecialTheme('valentine')
     }
-    // Examenstunt 1: Kleur op wit
-//     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [19].includes(now.getDate()) && now.getFullYear() === 2024) {
-//         handleSpecialTheme('examenstunt1', `
-// .menu-host {
-//     background-image: url("https://i.imgur.com/cTQ9FV2.png") !important;
-//     background-size: cover;
-//     background-position: left;
-// }
-
-// .menu-host img {
-//     filter: invert() hue-rotate(180deg);
-// }
-
-// .menu-host li a span, .menu-host .menu-footer span, .menu-host .far, .menu-host li a:after {
-//     color: #000 !important;
-// }`)
-//     }
-//     // Examenstunt 2: Hawaï/ foute après-ski
-//     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [22].includes(now.getDate()) && now.getFullYear() === 2024) {
-//         handleSpecialTheme('examenstunt2', `
-// :root {
-//     --st-page-wallpaper: linear-gradient(#ffffffcc, #ffffffcc), url(\'https://i.imgur.com/wWJAqG6.png\') !important;
-//     --st-background-secondary: #ffffffaa  !important;
-//     --st-side-background: var(--st-accent-primary);
-//     --st-appbar-background: var(--st-accent-primary-dark);
-// }
-
-// .menu-host {
-//     background-image: url("https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg") !important;
-//     background-size: cover;
-//     background-position: center;
-// }`, 'light', { h: 180, s: 50, l: 40 })
-//     }
-//     // Examenstunt 3: Neon 80's
-//     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [23].includes(now.getDate()) && now.getFullYear() === 2024) {
-//         handleSpecialTheme('examenstunt3', `
-// :root {
-//     --st-page-wallpaper: url(\'https://i.imgur.com/ss4ty9u.png\') !important;
-//     --st-background-secondary: #0c0c0caa  !important;
-//     --st-side-background: var(--st-accent-primary);
-//     --st-appbar-background: var(--st-accent-primary-dark);
-// }
-
-// .menu-host {
-//     background-image: url("https://wallpapers.com/images/hd/80s-neon-veqvixadrbra13q4.jpg") !important;
-//     background-size: cover;
-//     background-position: center;
-// }`, 'dark', { h: 275, s: 100, l: 60 })
-//     }
-//     // Examenstunt 4: Western
-//     if (window.location.href.includes('amadeus') && now.getMonth() === 3 && [24].includes(now.getDate()) && now.getFullYear() === 2024) {
-//         handleSpecialTheme('examenstunt4', `
-// :root {
-//     --st-page-wallpaper: url(\'https://i.imgur.com/UgMMNqN.png\') !important;
-//     --st-background-secondary: #0c0c0caa  !important;
-//     --st-side-background: var(--st-accent-primary);
-//     --st-appbar-background: var(--st-accent-primary-dark);
-// }
-
-// .menu-host {
-//     background-image: url("https://static.vecteezy.com/system/resources/previews/023/592/503/non_2x/american-desert-landscape-western-background-vector.jpg") !important;
-//     background-size: cover;
-//     background-position: center;
-// }`, 'dark', { h: 10, s: 80, l: 50 })
-//     }
-
+    
     createStyle(`.block h3,
 .view {
     position: relative;

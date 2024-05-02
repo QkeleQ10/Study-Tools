@@ -21,6 +21,7 @@
     --color-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 90%);
     --color-on-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 10%);
     --color-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 98%);
+    --color-surface-container-lowest: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 100%);
     --color-surface-container-low: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 96%);
     --color-surface-container: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 94%);
     --color-surface-container-high: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 92%);
@@ -70,6 +71,7 @@
     --color-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 30%);
     --color-on-secondary-container: hsl(var(--palette-secondary-hue) var(--palette-secondary-saturation) 90%);
     --color-surface: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 6%);
+    --color-surface-container-lowest: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 4%);
     --color-surface-container-low: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 10%);
     --color-surface-container: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 12%);
     --color-surface-container-high: hsl(var(--palette-neutral-hue) var(--palette-neutral-saturation) 17%);

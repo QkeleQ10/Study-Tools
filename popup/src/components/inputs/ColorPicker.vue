@@ -76,13 +76,12 @@ function updatePickerOpen(newPickerOpenValue) {
     align-items: stretch;
     justify-content: stretch;
     gap: 3px;
-    margin-left: 38px;
 }
 
 .swatches {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    /* grid-template-rows: repeat(2, 1fr); */
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
     gap: 3px;
 }
 
@@ -104,16 +103,11 @@ function updatePickerOpen(newPickerOpenValue) {
 
 .swatch:nth-child(1) {
     border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-}
-
-/* .swatch:nth-child(1) {
-    border-top-left-radius: 6px;
 }
 
 .swatch:nth-child(5) {
     border-bottom-left-radius: 6px;
-} */
+}
 
 .swatch.selected {
     margin: -1px;
@@ -125,7 +119,7 @@ function updatePickerOpen(newPickerOpenValue) {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 40px;
+    height: 100%;
     width: 48px;
     padding: 0;
     padding-right: 1px;

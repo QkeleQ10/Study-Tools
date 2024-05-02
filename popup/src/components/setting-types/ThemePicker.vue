@@ -3,6 +3,7 @@ import { ref, computed, defineProps, defineEmits } from 'vue'
 
 import ColorPicker from '../inputs/ColorPicker.vue'
 import SegmentedButton from '../inputs/SegmentedButton.vue'
+import MagisterThemePreview from '../MagisterThemePreview.vue';
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
@@ -36,60 +37,67 @@ function updateColor(newColor) {
 </script>
 
 <template>
-    <div class="setting theme-picker">
+    <div class="setting theme-picker" id="theme-picker">
 
-        <div class="theme-picker-title">
+        <MagisterThemePreview id="theme-preview" />
+
+        <!-- <div id="theme-title">
             <h3 class="setting-title">
                 <slot name="title"></slot>
             </h3>
-            <span class="setting-subtitle">
-                <slot name="subtitle"></slot>
-            </span>
-        </div>
+        </div> -->
 
-        <SegmentedButton class="theme-picker-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
+        <SegmentedButton id="theme-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
             :options="[
-            { value: 'auto', icon: 'hdr_auto', title: 'Systeem', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
-            { value: 'light', icon: 'light_mode', title: 'Licht', tooltip: 'Licht thema' },
-            { value: 'dark', icon: 'dark_mode', title: 'Donker', tooltip: 'Donker thema' }
-        ]"  />
+                { value: 'auto', icon: 'hdr_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
+                { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
+                { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
+            ]" />
 
-        <ColorPicker class="theme-picker-color" :model-value="value.color" @update:model-value="updateColor"
+        <ColorPicker id="theme-color" :model-value="value.color" @update:model-value="updateColor"
             :swatches-enabled="true" />
 
     </div>
 </template>
 
 <style scoped>
-.theme-picker {
+#theme-picker {
     display: grid;
     grid-template:
-        'title title' auto
-        'scheme scheme' auto
-        'color color' auto
+        /* 'preview title' auto */
+        'preview scheme' auto
+        'preview color' auto
         / auto 1fr;
 
-    gap: 10px;
+    gap: 16px;
 
-    /* padding: 16px; */
+    padding: 16px;
 
-    /* background-color: var(--color-surface-container);
-    border-radius: 12px; */
+    background-color: var(--color-surface-container);
+    border-radius: 12px;
 }
 
-.theme-picker-title {
+#theme-preview {
+    grid-area: preview;
+    width: 200px;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    outline: 1px solid var(--color-outline-variant);
+}
+
+#theme-title {
     grid-area: title;
 
     position: relative;
     transition: background-color 200ms, color 200ms;
 }
 
-.theme-picker-scheme {
+#theme-scheme {
     grid-area: scheme;
     margin-top: -4px;
 }
 
-.theme-picker-color {
+#theme-color {
     grid-area: color;
     margin-top: -4px;
 }
