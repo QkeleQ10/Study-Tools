@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, defineEmits } from 'vue'
-import { useManifest, useSyncedStorage } from '@/composables/chrome.js'
+import { ref, computed, defineEmits, inject } from 'vue'
+import { useManifest } from '@/composables/chrome.js'
 
 import Icon from './Icon.vue'
 import Dialog from './Dialog.vue'
@@ -9,7 +9,7 @@ import InputText from './InputText.vue'
 const emit = defineEmits(['resetSettings'])
 
 const { manifest } = useManifest()
-const syncedStorage = useSyncedStorage()
+const syncedStorage = inject('syncedStorage')
 
 const disclaimerOpen = ref(false)
 const resetDialogActive = ref(false)

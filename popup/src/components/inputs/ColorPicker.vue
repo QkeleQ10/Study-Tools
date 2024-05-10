@@ -119,7 +119,8 @@ function updatePickerOpen(newPickerOpenValue) {
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1;
+    height: 100%;
+    width: 48px;
     padding: 0;
     padding-right: 1px;
     background-color: transparent;

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, provide } from 'vue'
 import { useScroll } from '@vueuse/core'
 import { useSyncedStorage } from './composables/chrome.js'
 
@@ -18,11 +18,14 @@ import ColorOverrideSetting from './components/setting-types/ColorOverrideSettin
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
 import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
 import About from './components/About.vue'
+import ThemePresets from './components/ThemePresets.vue'
 import Chip from './components/Chip.vue'
 
 const main = ref(null)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
+
+provide('syncedStorage', syncedStorage)
 
 const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 
@@ -116,6 +119,7 @@ function openInNewTab(url) {
                                         </Chip>
                                     </div>
                                 </template>
+                                <ThemePresets v-if="category.id === 'appearance'" key="appearance" />
                             </TransitionGroup>
                         </div>
                     </template>
@@ -180,6 +184,17 @@ main {
     grid-column: span 2;
 }
 
+.setting-wrapper[data-setting-id="decoration"],
+.setting-wrapper[data-setting-id="decoration-size"],
+.setting-wrapper[data-setting-id="wallpaper"] {
+    border-top: none !important;
+    margin-top: -10px;
+}
+
+.setting-wrapper+.setting-wrapper.visible {
+    border-top: 1px solid var(--color-surface-variant);
+}
+
 .setting-wrapper[data-setting-type="ThemePicker"] {
     position: sticky;
     top: 16px;
@@ -190,17 +205,6 @@ main {
 
 .setting-wrapper[data-setting-type="ThemePicker"]+.setting-wrapper.visible {
     border-top: 0px solid transparent;
-}
-
-.setting-wrapper[data-setting-id="decoration"],
-.setting-wrapper[data-setting-id="decoration-size"],
-.setting-wrapper[data-setting-id="wallpaper"] {
-    border-top: none !important;
-    margin-top: -10px;
-}
-
-.setting-wrapper+.setting-wrapper.visible {
-    border-top: 1px solid var(--color-surface-variant);
 }
 
 .setting-wrapper.inline {

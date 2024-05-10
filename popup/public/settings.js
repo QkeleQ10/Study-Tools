@@ -4,7 +4,7 @@ export default [
         settings: [
             {
                 id: "ptheme",
-                title: "Thema",
+                title: "Algemeen",
                 type: "ThemePicker",
                 default: 'auto,207,95,55',
             },

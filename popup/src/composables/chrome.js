@@ -10,6 +10,7 @@ export function useSyncedStorage() {
     let syncedStorage = ref({})
 
     onMounted(() => {
+        console.log('mounted!')
         if (browser?.storage?.sync) {
             browser.storage.sync.get()
                 .then(value => {
