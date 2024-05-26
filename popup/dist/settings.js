@@ -216,28 +216,13 @@ export default [
                 ],
             },
             {
-                id: "start-schedule-days",
-                title: "Aantal dagen weergeven in Start",
-                type: "SlideInput",
-                default: 1,
-                format: " d",
-                decimals: 0,
-                min: 1,
-                max: 5,
-                step: 1,
-                conditions: [
-                    { settingId: 'start-enabled', operator: 'equal', value: true }
-                ],
-            },
-            {
                 id: "start-schedule-extra-day",
                 title: "Volgende dag tonen in Start",
-                subtitle: "Springen naar de eerstvolgende dag met lessen wanneer er vandaag geen lessen (meer) zijn.",
+                subtitle: "Springen naar de eerstvolgende dag met lessen wanneer er vandaag geen lessen (meer) zijn. Alleen in de weergavemodus 'Dag'.",
                 default: true,
                 conditions: [
                     { settingId: 'start-enabled', operator: 'equal', value: true },
-                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' },
-                    { settingId: 'start-schedule-days', operator: 'equal', value: 1 }
+                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' }
                 ],
             },
         ]
