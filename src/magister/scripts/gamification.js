@@ -1,14 +1,8 @@
 let now = new Date()
+let user = {}
+let years = []
 
-const wrappedTimeFrame = { start: new Date(now.getFullYear(), 4, 28), end: new Date(now.getFullYear(), 8, 15) }// May 28th - September 15th
-if (now >= wrappedTimeFrame.start || now <= wrappedTimeFrame.end) {
-    if (user.isFinalExamCandidate) {
-
-        // if exam year, continue regardless
-        // else if
-    }
-    wrapped()
-}
+checkWrapped()
 
 // async function wrapped() {
 //     let step = 0
@@ -455,9 +449,49 @@ if (now >= wrappedTimeFrame.start || now <= wrappedTimeFrame.end) {
 //     }
 // }
 
-async function wrapped() {
+async function checkWrapped() {
+    const checkRange = { start: new Date(now.getFullYear(), 4, 28), end: new Date(now.getFullYear(), 8, 15) } // May 28th - September 15th
+    // N: 06-20 to 08-01
+    // M: 06-13 to 07-25
+    // Z: 06-06 to 07-18
+    if (now >= checkRange.start || now <= checkRange.end) {
+        user = await MagisterApi.accountInfo(true)
+
+        years = (await MagisterApi.years())
+
+            .filter(year => Number(year.einde.split('-')[0]) <= now.getFullYear()) // Filter years to not include the upcoming school year
+            .sort((a, b) => new Date(a.begin) - new Date(b.begin))
+
+        years[years.length - 1] = { ...years.at(-1), exams: [...(await MagisterApi.exams(years.at(-1)))] }
+        console.log(years)
+
+        if (years.at(-1)?.exams?.length > 2 && years.at(-1).exams.some(exam => new Date(exam.einde) >= now)) { // If the student has completed all of their finals, commence regardless
+            commenceWrapped()
+        }
+    }
+
+}
+
+async function commenceWrapped() {
+
+    notify('snackbar', "Je komt nu in aanmerking voor Wrapped.", [], 500)
 
     async function constructWrappedForYear(year) {
+        // exams
+        // grade graph
+        // grade stats
+        // number of schedule items
+        // most common locations
+        // most common teachers
+        // times cancelled
+        // amadeusblokken
+        // aanwezigheid / lessen bijgewoond
+        // absenties
+        // telaatmeldingen
 
+        return new Promise((resolve) => {
+
+            resolve()
+        })
     }
 }

@@ -20,15 +20,42 @@ gatherEnd.setHours(0, 0, 0, 0)
 
 
 const MagisterApi = {
-    accountInfo: async () => {
+    accountInfo: async (parse = false) => {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.accountInfo ??=
                 fetchWrapper(
                     `https://${magisterApiSchoolName}.magister.net/api/account?noCache=0`, null, 'accountInfo'
                 )
-            resolve(
-                (await magisterApiCache.accountInfo)
-            )
+            if (parse) {
+                const obj = await magisterApiCache.accountInfo
+                resolve({
+                    id: obj.Persoon.Id,
+                    externalId: obj.Persoon.ExterneId,
+                    uuid: obj.Persoon.UuId,
+                    name: {
+                        official: {
+                            firstnames: obj.Persoon.OfficieleVoornamen || obj.Persoon.Roepnaam,
+                            affixes: obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.GeboortenaamTussenvoegsel || obj.Persoon.Tussenvoegsel,
+                            lastname: obj.Persoon.OfficieleAchternaam || obj.Persoon.GeboorteAchternaam || obj.Persoon.Achternaam
+                        },
+                        birth: {
+                            isPreferred: obj.Persoon.GebruikGeboortenaam === true,
+                            affix: obj.Persoon.GeboortenaamTussenvoegsel || obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.Tussenvoegsel,
+                            lastname: obj.Persoon.GeboorteAchternaam || obj.Persoon.OfficieleAchternaam || obj.Persoon.Achternaam
+                        },
+                        initials: obj.Persoon.Voorletters,
+                        firstname: obj.Persoon.Roepnaam || obj.Persoon.OfficieleVoornamen,
+                        affix: obj.Persoon.Tussenvoegsel || obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.GeboortenaamTussenvoegsel,
+                        lastname: obj.Persoon.Achternaam || obj.Persoon.GeboorteAchternaam || obj.Persoon.OfficieleAchternaam
+                    },
+                    dateOfBirth: new Date(obj.Persoon.Geboortedatum),
+                    permissions: obj.Groep[0].Privileges
+                })
+            } else {
+                resolve(
+                    (await magisterApiCache.accountInfo)
+                )
+            }
         })
     },
     years: async () => {
@@ -61,6 +88,17 @@ const MagisterApi = {
                 )
             resolve(
                 (await magisterApiCache['examInfo' + year?.id])
+            )
+        })
+    },
+    exams: async (year) => {
+        return new Promise(async (resolve, reject) => {
+            magisterApiCache['exams' + year?.id] ??=
+                fetchWrapper(
+                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examens`, null, 'exams'
+                )
+            resolve(
+                (await magisterApiCache['exams' + year?.id])?.items
             )
         })
     },

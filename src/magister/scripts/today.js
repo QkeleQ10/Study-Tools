@@ -605,7 +605,7 @@ async function today() {
                 // Ensure a nice scrolling position if the date shown is not today
                 if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day')) && !agendaDayOffsetChanged) {
                     schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                    if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'center', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
+                    if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                     if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
                     schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                 }
