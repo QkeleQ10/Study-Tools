@@ -476,6 +476,8 @@ async function commenceWrapped() {
 
     notify('snackbar', "Je komt nu in aanmerking voor Wrapped.", [], 500)
 
+    const dialog = element('dialog', 'st-wrapped', document.body)
+
     async function constructWrappedForYear(year) {
         // exams
         // grade graph

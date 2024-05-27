@@ -324,6 +324,10 @@ input[type=switch]+label span,
     background: var(--st-background-primary) !important
 }
 
+.new-appointment-block > fieldset > ul > li:nth-child(4) > div > span.check > label {
+    text-wrap: nowrap;
+}
+
 div.loading-overlay {
     background: radial-gradient(at -150% -50%, var(--st-highlight-primary), transparent), radial-gradient(at top right, var(--st-background-primary), var(--st-background-tertiary)) !important;
 }

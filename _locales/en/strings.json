@@ -54,7 +54,7 @@
     },
     "dates": {
         "day": "Day",
-        "nDays": "{days} days",
+        "nDays": "{num} days",
         "week": "Week",
         "workweek": "Working week",
         "now": "Now",
