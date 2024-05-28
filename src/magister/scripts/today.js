@@ -448,11 +448,11 @@ async function today() {
 
                     let todayIndex = agendaDays.findIndex(item => item.today)
                     let todayEvents = agendaDays[todayIndex].events
-                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
-                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
+                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || todayIndex || 0
+                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex]?.events
                     let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
 
-                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
+                    // Jump to the next relevant day if no (more) events will take place today (given the user hasn't opted out)
                     if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                         agendaDayOffset = nextRelevantDayIndex
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))

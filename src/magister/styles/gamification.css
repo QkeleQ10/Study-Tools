@@ -62,3 +62,66 @@
     transform: scale(0);
     opacity: 0;
 }
+
+#st-wrapped {
+    padding: 0;
+}
+
+#st-wrapped-years-wrapper {
+    width: 90vw;
+    height: 90vh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+
+    display: grid;
+    grid-auto-rows: auto;
+    grid-auto-columns: 100%;
+    gap: 32px;
+}
+
+.st-wrapped-year {
+    scroll-snap-align: start;
+    min-height: 90vh;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 40px 64px;
+    grid-auto-flow: row dense;
+    gap: 16px;
+
+    padding: 32px;
+    background-image: linear-gradient(to right, #485563, #29323c);
+    color: #ffffff;
+}
+
+.st-wrapped-year-title {
+    grid-column: span 3;
+    font: 500 28px/2rem arboria, sans-serif;
+}
+
+.st-wrapped-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+
+    font: 500 22px arboria, sans-serif;
+    color: #ffffff;
+    text-align: left;
+}
+
+.st-wrapped-card .st-w-text {
+    font: 500 22px arboria, sans-serif;
+    color: #ffffff;text-align: center;
+}
+
+.st-wrapped-card .st-w-text-small {
+    font: 500 18px arboria, sans-serif;
+    color: #ffffffcc;text-align: center;
+}

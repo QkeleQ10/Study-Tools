@@ -31,6 +31,45 @@ div.loading-overlay {
     background: none;
 }
 
+dialog.st-modal[open] {
+    opacity: 1;
+    transform: scale(1);
+}
+
+dialog.st-modal {
+    opacity: 0;
+    transform: scale(0.5) translateY(50px);
+    transition: opacity 200ms, transform 200ms, overlay 200ms allow-discrete, display 200ms allow-discrete;
+
+    background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    padding: 32px;
+    overflow: hidden;
+}
+
+dialog.st-modal::backdrop {
+    background-color: transparent;
+    transition: background-color 200ms, overlay 200ms allow-discrete, display 200ms allow-discrete;
+}
+
+dialog.st-modal[open]::backdrop {
+    background-color: var(--st-background-overlay);
+}
+
+@starting-style {
+    dialog.st-modal[open] {
+        opacity: 0;
+        transform: scale(0.5) translateY(50px);
+    }
+
+    dialog.st-modal[open]::backdrop {
+        background-color: transparent;
+    }
+}
+
+
 .st-shortcut-icon {
     font: 20px 'Font Awesome 6 Pro';
 }

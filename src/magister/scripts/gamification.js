@@ -458,14 +458,13 @@ async function checkWrapped() {
         user = await MagisterApi.accountInfo(true)
 
         years = (await MagisterApi.years())
-
             .filter(year => Number(year.einde.split('-')[0]) <= now.getFullYear()) // Filter years to not include the upcoming school year
             .sort((a, b) => new Date(a.begin) - new Date(b.begin))
 
         years[years.length - 1] = { ...years.at(-1), exams: [...(await MagisterApi.exams(years.at(-1)))] }
         console.log(years)
 
-        if (years.at(-1)?.exams?.length > 2 && years.at(-1).exams.some(exam => new Date(exam.einde) >= now)) { // If the student has completed all of their finals, commence regardless
+        if (years.at(-1)?.exams?.length > 2 && years.at(-1).exams.every(exam => new Date(exam.einde) <= now)) { // If the student has completed all of their finals, commence regardless
             commenceWrapped()
         }
     }
@@ -476,9 +475,21 @@ async function commenceWrapped() {
 
     notify('snackbar', "Je komt nu in aanmerking voor Wrapped.", [], 500)
 
-    const dialog = element('dialog', 'st-wrapped', document.body)
+    const dialog = element('dialog', 'st-wrapped', document.body, { class: 'st-modal' })
+    const yearsWrapper = element('div', 'st-wrapped-years-wrapper', dialog)
 
-    async function constructWrappedForYear(year) {
+    for (let i = 0; i < years.length; i++) {
+        const year = years[i]
+
+        const newElement = await constructWrappedForYear(year, i)
+        yearsWrapper.append(newElement)
+    }
+
+    dialog.showModal()
+
+    yearsWrapper.lastElementChild.scrollIntoView()
+
+    async function constructWrappedForYear(year, i) {
         // exams
         // grade graph
         // grade stats
@@ -491,9 +502,44 @@ async function commenceWrapped() {
         // absenties
         // telaatmeldingen
 
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
+            console.log(year)
+            const yearElement = element('div', null, null, { class: 'st-wrapped-year' })
+            const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: formatOrdinals(i + 1, true) + ' klas' })
+            let cards = []
 
-            resolve()
+            if (year.exams?.length > 0) {
+                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
+                element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je examen in ${year.exams.length} vakken.` })
+                let examLocationHashmap = {}
+                year.exams.map(exam => exam.lokalen?.[0]?.omschrijving).forEach(location => {
+                    examLocationHashmap[location] ??= 0
+                    examLocationHashmap[location]++
+                })
+                const mostCommonExamLocation = (Object.entries(examLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                element('span', null, card, { class: 'st-w-text-small', innerText: (mostCommonExamLocation[1] === year.exams.length ? 'Je maakte al je examens in ' : mostCommonExamLocation[1] + ' van je examens maakte je in ') + (mostCommonExamLocation[0] === 'Sporthal' ? 'de gymzaal' : mostCommonExamLocation[0]) + '.' })
+                cards.push(card)
+            }
+
+            year.grades = await MagisterApi.grades.forYear(year)
+            console.log(year.grades)
+            if (year.grades?.length > 0) {
+                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 6;', innerText: "Cijfers" })
+                // const tileGradesA = element('div', 'st-wrapped-tiles-grades-a', tileGrades)
+                // element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
+                // element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
+                // const tileGradesB = element('div', 'st-wrapped-tiles-grades-b', tileGrades)
+                // element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
+                // element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
+                const chart = element('div', null, card, { class: 'st-force-light' })
+                chart.createLineChart(year.grades.map(grade => Number(grade.CijferStr?.replace(',', '.'))), year.grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+            }
+
+            cards.forEach(card => {
+                yearElement.append(card)
+            })
+
+            resolve(yearElement)
         })
     }
 }
