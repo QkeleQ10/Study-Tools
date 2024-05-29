@@ -555,7 +555,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue) {
+Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue, showProgressiveMean = false) {
     const chartArea = this
     if (!chartArea.classList.contains('st-line-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
@@ -564,14 +564,34 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
     minValue ??= Math.min(...values)
     maxValue ??= Math.max(...values)
 
+    let progressiveMean = values[0]
+
     values.forEach((value, i) => {
         const hueRotate = 10 * i
 
+        const progressiveMeanPrev = progressiveMean
+        progressiveMean = calculateMean(values.slice(0, i + 1))
+
         const col = element('div', `${chartArea.id}-${i}`, chartArea, {
             class: 'st-line-chart-col',
-            title: `${labels?.[i] ?? i}\n${value}`,
-            'data-delta': values[i - 1] > value ? 'fall' : values[i - 1] < value ? 'rise' : values[i - 1] === value ? 'equal' : 'none',
-            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}`
+            title: `${labels?.[i] ?? i}\n${value.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}\n\nVoortschrijdend gemiddelde: ${progressiveMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            'data-delta': values[i - 1] > value
+                ? 'fall'
+                : values[i - 1] < value
+                    ? 'rise' : values[i - 1] === value
+                        ? 'equal'
+                        : 'none',
+            'data-mean-delta': !showProgressiveMean || i === 0
+                ? 'none'
+                : progressiveMeanPrev > progressiveMean
+                    ? 'fall'
+                    : progressiveMeanPrev < progressiveMean
+                        ? 'rise'
+                        : Math.abs((progressiveMean - progressiveMeanPrev) / (maxValue - minValue)) < 0.2
+                        // : progressiveMeanPrev === progressiveMean
+                            ? 'equal'
+                            : 'none',
+            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}; --mean-height: ${(progressiveMean - minValue) / (maxValue - minValue)}; --previous-mean-height: ${(progressiveMeanPrev - minValue) / (maxValue - minValue)};`
         }),
             bar = element('div', `${chartArea.id}-${i}-bar`, col, {
                 class: 'st-line-chart-point'

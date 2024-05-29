@@ -1501,6 +1501,7 @@ function getEventChips(event) {
     else if (event.InfoType === 6) chips.push({ name: i18n('chips.info'), type: 'info' })
     if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n('chips.kwtregistered'), type: 'ok' })
     else if (event.Type === 7) chips.push({ name: i18n('chips.kwt'), type: 'info' })
+    if (event.Type === 103) chips.push({ name: i18n('chips.exam'), type: 'info' })
 
     return chips
 }

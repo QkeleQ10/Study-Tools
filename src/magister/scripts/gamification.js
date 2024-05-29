@@ -510,29 +510,74 @@ async function commenceWrapped() {
 
             if (year.exams?.length > 0) {
                 const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
-                element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je examen in ${year.exams.length} vakken.` })
+                element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je examen in ${year.exams.length} ${year.exams.length > 1 ? 'vakken' : 'vak'}.` })
                 let examLocationHashmap = {}
                 year.exams.map(exam => exam.lokalen?.[0]?.omschrijving).forEach(location => {
                     examLocationHashmap[location] ??= 0
                     examLocationHashmap[location]++
                 })
                 const mostCommonExamLocation = (Object.entries(examLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
-                element('span', null, card, { class: 'st-w-text-small', innerText: (mostCommonExamLocation[1] === year.exams.length ? 'Je maakte al je examens in ' : mostCommonExamLocation[1] + ' van je examens maakte je in ') + (mostCommonExamLocation[0] === 'Sporthal' ? 'de gymzaal' : mostCommonExamLocation[0]) + '.' })
+                if (year.exams.length > 1) element('span', null, card, { class: 'st-w-text-small', innerText: (mostCommonExamLocation[1] === year.exams.length ? 'Je maakte al je examens in ' : mostCommonExamLocation[1] + ' van je examens maakte je in ') + (mostCommonExamLocation[0] === 'Sporthal' ? 'de gymzaal' : mostCommonExamLocation[0]) + '.' })
                 cards.push(card)
             }
 
-            year.grades = await MagisterApi.grades.forYear(year)
-            console.log(year.grades)
+            year.grades = (await MagisterApi.grades.forYear(year))
+                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1)
+                .filter((grade, index, self) =>
+                    index === self.findIndex((g) =>
+                        g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
+                        g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
+                        g.CijferStr === grade.CijferStr
+                    )
+                )
+                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
             if (year.grades?.length > 0) {
-                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 6;', innerText: "Cijfers" })
+                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 5;', innerText: `${year.grades.length} cijfers` })
                 // const tileGradesA = element('div', 'st-wrapped-tiles-grades-a', tileGrades)
                 // element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
                 // element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
                 // const tileGradesB = element('div', 'st-wrapped-tiles-grades-b', tileGrades)
                 // element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
                 // element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
-                const chart = element('div', null, card, { class: 'st-force-light' })
-                chart.createLineChart(year.grades.map(grade => Number(grade.CijferStr?.replace(',', '.'))), year.grades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+                element('div', `st-wrapped-graph-${i}`, card, { class: 'st-force-light' })
+                    .createLineChart(
+                        year.grades
+                            .map(grade => Number(grade.CijferStr?.replace(',', '.'))),
+                        year.grades
+                            .map(grade => `${new Date(grade.DatumIngevoerd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${grade.Vak?.Omschrijving || ''}\n${grade.CijferKolom?.KolomNaam}, ${grade.CijferKolom?.KolomKop}`),
+                        1,
+                        10,
+                        true
+                    )
+                cards.push(card)
+            }
+
+            year.events = (await MagisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks'))
+            console.log(year.events)
+            if (year.events?.length > 0) {
+                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
+                element('span', null, card, { class: 'st-w-metric', innerText: year.events.length })
+                element('span', null, card, { class: 'st-w-text', innerText: 'agenda-items' })
+                element('span', null, card, { class: 'st-w-text-small', innerText: `waarvan ${year.events.filter(item => item.LesuurVan && item.LesuurTotMet && item.Status !== 5 && item.Lokatie?.length > 0 && item.Omschrijving != 'amablok_bb').length} gewone lessen` })
+                // events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id))
+                cards.push(card)
+
+                const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
+                let eventLocationHashmap = {}
+                year.events.filter(event => event.Lokalen?.[0]?.Naam?.length > 0).map(event => event.Lokalen?.[0]?.Naam).forEach(location => {
+                    eventLocationHashmap[location] ??= 0
+                    eventLocationHashmap[location]++
+                })
+                const mostCommonEventLocation = (Object.entries(eventLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                element('span', null, card2, { class: 'st-w-text-small', innerText: `Je had de meeste lessen in ${mostCommonEventLocation[0]} (${mostCommonEventLocation[1]}×)` })
+                let eventTeacherHashmap = {}
+                year.events.filter(event => event.Docenten?.[0]?.Naam?.length > 0).map(event => event.Docenten?.[0]?.Naam).forEach(teacher => {
+                    eventTeacherHashmap[teacher] ??= 0
+                    eventTeacherHashmap[teacher]++
+                })
+                const mostCommonEventTeacher = (Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst les van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
+                cards.push(card2)
             }
 
             cards.forEach(card => {

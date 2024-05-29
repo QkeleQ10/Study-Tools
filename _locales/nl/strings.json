@@ -50,7 +50,8 @@
         "info": "Informatie",
         "important": "Belangrijk",
         "attachments": "Bijlagen",
-        "graded": "Beoordeeld"
+        "graded": "Beoordeeld",
+        "exam": "Examen"
     },
     "dates": {
         "day": "Dag",
