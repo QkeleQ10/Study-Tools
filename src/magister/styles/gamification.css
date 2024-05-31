@@ -65,11 +65,12 @@
 
 #st-wrapped {
     padding: 0;
+    border-radius: 16px;
 }
 
 #st-wrapped-years-wrapper {
-    width: 90vw;
-    height: 90vh;
+    width: calc(100vw - 64px);
+    height: calc(100vh - 64px);
     overflow-y: auto;
     scroll-snap-type: y mandatory;
 
@@ -81,7 +82,7 @@
 
 .st-wrapped-year {
     scroll-snap-align: start;
-    min-height: 90vh;
+    min-height: calc(100vh - 64px);
 
     display: grid;
     grid-template-columns: repeat(3, 1fr);

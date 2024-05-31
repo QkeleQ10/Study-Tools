@@ -489,6 +489,11 @@ async function commenceWrapped() {
 
     yearsWrapper.lastElementChild.scrollIntoView()
 
+    // final year:
+    // reminder to move away from school mail
+    // theme contest?
+    // overall stats
+
     async function constructWrappedForYear(year, i) {
         // exams
         // grade graph
@@ -508,8 +513,21 @@ async function commenceWrapped() {
             const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: formatOrdinals(i + 1, true) + ' klas' })
             let cards = []
 
+            year.grades = (await MagisterApi.grades.forYear(year))
+                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1)
+                .filter((grade, index, self) =>
+                    index === self.findIndex((g) =>
+                        g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
+                        g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
+                        g.CijferStr === grade.CijferStr
+                    )
+                )
+                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+            year.events = (await MagisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks'))
+            year.absences = await MagisterApi.absences.forYear(year)
+
             if (year.exams?.length > 0) {
-                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
+                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
                 element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je examen in ${year.exams.length} ${year.exams.length > 1 ? 'vakken' : 'vak'}.` })
                 let examLocationHashmap = {}
                 year.exams.map(exam => exam.lokalen?.[0]?.omschrijving).forEach(location => {
@@ -521,24 +539,8 @@ async function commenceWrapped() {
                 cards.push(card)
             }
 
-            year.grades = (await MagisterApi.grades.forYear(year))
-                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1)
-                .filter((grade, index, self) =>
-                    index === self.findIndex((g) =>
-                        g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
-                        g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
-                        g.CijferStr === grade.CijferStr
-                    )
-                )
-                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
             if (year.grades?.length > 0) {
-                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 5;', innerText: `${year.grades.length} cijfers` })
-                // const tileGradesA = element('div', 'st-wrapped-tiles-grades-a', tileGrades)
-                // element('span', null, tileGradesA, { class: 'st-metric-enormous', innerText: grades.length })
-                // element('span', null, tileGradesA, { class: 'st-metric-enormous-sub', innerText: "cijfers" })
-                // const tileGradesB = element('div', 'st-wrapped-tiles-grades-b', tileGrades)
-                // element('span', null, tileGradesB, { class: 'st-metric-medium', innerText: gradesMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
-                // element('span', null, tileGradesB, { class: 'st-metric-medium-sub', innerText: "gemiddeld cijfer" })
+                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 4; grid-column: span 2;', innerText: `${year.grades.length} cijfers` })
                 element('div', `st-wrapped-graph-${i}`, card, { class: 'st-force-light' })
                     .createLineChart(
                         year.grades
@@ -550,16 +552,18 @@ async function commenceWrapped() {
                         true
                     )
                 cards.push(card)
+
+                const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;', innerText: `${year.grades.length} cijfers` })
+                cards.push(card2)
             }
 
-            year.events = (await MagisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks'))
-            console.log(year.events)
             if (year.events?.length > 0) {
+                const normalLessons = year.events.filter(event => event.LesuurVan && event.LesuurTotMet && event.Status !== 5 && event.Lokatie?.length > 0 && event.Omschrijving != 'amablok_bb')
+
                 const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
                 element('span', null, card, { class: 'st-w-metric', innerText: year.events.length })
                 element('span', null, card, { class: 'st-w-text', innerText: 'agenda-items' })
-                element('span', null, card, { class: 'st-w-text-small', innerText: `waarvan ${year.events.filter(item => item.LesuurVan && item.LesuurTotMet && item.Status !== 5 && item.Lokatie?.length > 0 && item.Omschrijving != 'amablok_bb').length} gewone lessen` })
-                // events.filter(item => item.Status !== 5 && item.Lokatie?.length > 0 && item.LesuurVan && item.LesuurTotMet && !absences.some(absence => absence.AfspraakId === item.Id))
+                element('span', null, card, { class: 'st-w-text-small', innerText: `waarvan ${normalLessons.length} gewone lessen` })
                 cards.push(card)
 
                 const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
@@ -576,8 +580,34 @@ async function commenceWrapped() {
                     eventTeacherHashmap[teacher]++
                 })
                 const mostCommonEventTeacher = (Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1])?.[0])
-                element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst les van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
+                element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
                 cards.push(card2)
+
+                const card3 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
+                const attendedLessons = normalLessons
+                    .filter(event => !year.absences || !year.absences?.some(absence => absence.AfspraakId === event.Id))
+                const msAttended = attendedLessons
+                    .reduce((accumulator, event) => accumulator + (new Date(event.Einde) - new Date(event.Start)), 0)
+
+                element('span', null, card3, {
+                    class: 'st-w-metric', innerText: `${Math.round(attendedLessons.length / normalLessons.length * 100)}%`
+                })
+                element('span', null, card3, { class: 'st-w-text', innerText: `aanwezigheid` })
+                element('span', null, card3, {
+                    class: 'st-w-text-small', innerText: `Je hebt ${attendedLessons.length} lessen bijgewoond.`
+                })
+                element('span', null, card3, {
+                    class: 'st-w-text-small', innerText: `Dat is ${Math.ceil(msAttended / 3600000)} uur les: ${Math.round(msAttended / 86400000) === msAttended / 86400000 ? 'precies' : Math.round(msAttended / 86400000) > msAttended / 86400000 ? 'bijna' : 'ruim'} ${Math.round(msAttended / 86400000)} dagen.`
+                })
+                cards.push(card3)
+
+
+                if (year.events.filter(event => event.Type === 7).length > 0) {
+                    const card4 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
+                    if (year.events.some(event => event.Type === 7 && (event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))))
+                        element('span', null, card4, { class: 'st-w-text-small', innerText: `Je volgde ${year.events.filter(event => event.Type === 7 && event.Omschrijving.includes('ama_') && event.Lokatie?.length > 0).length} van de ${year.events.filter(event => event.Type === 7 && (event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))).length} Amadeusblokken.` })
+                    cards.push(card4)
+                }
             }
 
             cards.forEach(card => {
