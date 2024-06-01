@@ -485,7 +485,7 @@ async function commenceWrapped() {
         yearsWrapper.append(newElement)
     }
 
-    dialog.showModal()
+    // dialog.showModal()
 
     yearsWrapper.lastElementChild.scrollIntoView()
 
@@ -602,10 +602,22 @@ async function commenceWrapped() {
                 cards.push(card3)
 
 
-                if (year.events.filter(event => event.Type === 7).length > 0) {
+                const kwtLessons = year.events.filter(event => event.Type === 7)
+                const kwtLessonsSignedUp = kwtLessons.filter(event => event.Lokatie?.length > 0 && event.Omschrijving?.length > 0)
+                if (kwtLessons.length > 0) {
                     const card4 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
-                    if (year.events.some(event => event.Type === 7 && (event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))))
-                        element('span', null, card4, { class: 'st-w-text-small', innerText: `Je volgde ${year.events.filter(event => event.Type === 7 && event.Omschrijving.includes('ama_') && event.Lokatie?.length > 0).length} van de ${year.events.filter(event => event.Type === 7 && (event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))).length} Amadeusblokken.` })
+                    element('span', null, card4, { class: 'st-w-text', innerText: `Je volgde ${kwtLessonsSignedUp.length} keuzeblokken.` })
+                    let kwtSubjectHashmap = {}
+                    kwtLessonsSignedUp.map(event => event.Omschrijving).forEach(description => {
+                        kwtSubjectHashmap[description] ??= 0
+                        kwtSubjectHashmap[description]++
+                    })
+                    const mostCommonKwtSubject = (Object.entries(kwtSubjectHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                    element('span', null, card4, { class: 'st-w-text-small', innerText: `Daarvan koos je ${mostCommonKwtSubject[1]}× voor ${mostCommonKwtSubject[0]}.` })
+                    if (kwtLessons.some(event => event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))) {
+                        element('span', null, card4, { class: 'st-w-text-small', innerText: `Je volgde ${kwtLessonsSignedUp.filter(event => event.Omschrijving.includes('ama_')).length} van de ${kwtLessons.filter(event => event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_')).length} Amadeusblokken.` })
+                        card4.style.gridRow = 'span 3'
+                    }
                     cards.push(card4)
                 }
             }
