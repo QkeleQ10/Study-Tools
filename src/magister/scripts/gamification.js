@@ -2,6 +2,13 @@ let now = new Date()
 let user = {}
 let years = []
 
+// const potentialRange = { start: new Date(now.getFullYear() + '-06-12'), end: new Date(now.getFullYear() + '-09-16') } // June 12th - September 15th
+const potentialRange = { start: new Date(now.getFullYear() + '-06-06'), end: new Date(now.getFullYear() + '-09-16') } // June 12th - September 15th
+const forcedRange = { start: new Date(now.getFullYear() + '-07-04'), end: new Date(now.getFullYear() + '-09-16') } // July 4th - September 15th
+// vakantie N: 07-20 to 09-01
+// vakantie M: 07-13 to 08-25
+// vakantie Z: 07-06 to 08-18
+
 checkWrapped()
 
 // async function wrapped() {
@@ -450,11 +457,8 @@ checkWrapped()
 // }
 
 async function checkWrapped() {
-    const checkRange = { start: new Date(now.getFullYear(), 4, 28), end: new Date(now.getFullYear(), 8, 15) } // May 28th - September 15th
-    // N: 06-20 to 08-01
-    // M: 06-13 to 07-25
-    // Z: 06-06 to 07-18
-    if (now >= checkRange.start || now <= checkRange.end) {
+    if (now >= potentialRange.start && now <= potentialRange.end) {
+
         user = await MagisterApi.accountInfo(true)
 
         years = (await MagisterApi.years())
@@ -462,171 +466,204 @@ async function checkWrapped() {
             .sort((a, b) => new Date(a.begin) - new Date(b.begin))
 
         years[years.length - 1] = { ...years.at(-1), exams: [...(await MagisterApi.exams(years.at(-1)))] }
-        console.log(years)
+
+        if (now >= forcedRange.start && now <= forcedRange.end) {
+            commenceWrapped()
+        }
 
         if (years.at(-1)?.exams?.length > 2 && years.at(-1).exams.every(exam => new Date(exam.einde) <= now)) { // If the student has completed all of their finals, commence regardless
             commenceWrapped()
         }
     }
-
 }
 
 async function commenceWrapped() {
+    let lastAccessYear = await getFromStorage('wrapped-accessed', 'local') || 0
 
-    notify('snackbar', "Je komt nu in aanmerking voor Wrapped.", [], 500)
+    const appbarMetrics = await awaitElement('#st-appbar-metrics')
 
-    const dialog = element('dialog', 'st-wrapped', document.body, { class: 'st-modal' })
-    const yearsWrapper = element('div', 'st-wrapped-years-wrapper', dialog)
+    const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Magister Wrapped", innerText: "" })
+    appbarMetrics.firstElementChild.before(wrappedInvoke)
+    const endDateString = new Date(`${now.getFullYear()}-${potentialRange.end.getMonth()+1}-${potentialRange.end.getDate() - 1}`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: `Bekijk nu jouw Magister Wrapped!\nBeschikbaar t/m ${endDateString}.` })
+    if (lastAccessYear !== now.getFullYear()) setTimeout(() => wrappedInvokeTip.classList.remove('hidden'), 100)
+    setTimeout(() => wrappedInvokeTip.classList.add('hidden'), 30000)
 
-    for (let i = 0; i < years.length; i++) {
-        const year = years[i]
+    wrappedInvoke.addEventListener('click', async () => {
+        const loadingDialog = await notify('dialog', "Magister Wrapped wordt klaargezet...\n\nGegevens verzamelen...", [], 0, { allowClose: false })
 
-        const newElement = await constructWrappedForYear(year, i)
-        yearsWrapper.append(newElement)
-    }
+        const wrappedDialog = await constructWrapped()
 
-    // dialog.showModal()
+        loadingDialog.close()
 
-    yearsWrapper.lastElementChild.scrollIntoView()
+        wrappedDialog.showModal()
+        wrappedDialog.lastElementChild.lastElementChild.scrollIntoView()
 
-    // final year:
-    // reminder to move away from school mail
-    // theme contest?
-    // overall stats
+        lastAccessYear = now.getFullYear()
+        saveToStorage('wrapped-accessed', lastAccessYear, 'local')
+    })
 
-    async function constructWrappedForYear(year, i) {
-        // exams
-        // grade graph
-        // grade stats
-        // number of schedule items
-        // most common locations
-        // most common teachers
-        // times cancelled
-        // amadeusblokken
-        // aanwezigheid / lessen bijgewoond
-        // absenties
-        // telaatmeldingen
+}
 
-        return new Promise(async (resolve) => {
-            console.log(year)
-            const yearElement = element('div', null, null, { class: 'st-wrapped-year' })
-            const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: formatOrdinals(i + 1, true) + ' klas' })
-            let cards = []
+async function constructWrapped() {
+    return new Promise(async (resolve) => {
 
-            year.grades = (await MagisterApi.grades.forYear(year))
-                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1)
-                .filter((grade, index, self) =>
-                    index === self.findIndex((g) =>
-                        g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
-                        g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
-                        g.CijferStr === grade.CijferStr
+        if (document.getElementById('dialog')) {
+            resolve(document.getElementById('dialog'))
+            return
+        }
+
+        const dialog = element('dialog', 'st-wrapped', document.body, { class: 'st-modal' })
+        const yearsWrapper = element('div', 'st-wrapped-years-wrapper', dialog)
+
+        for (let i = 0; i < years.length; i++) {
+            const year = years[i]
+
+            const newElement = await constructWrappedForYear(year, i)
+            yearsWrapper.append(newElement)
+        }
+
+        resolve(dialog)
+
+        // final year:
+        // reminder to move away from school mail
+        // theme contest?
+        // overall stats
+
+        async function constructWrappedForYear(year, i) {
+            // exams
+            // grade graph
+            // grade stats
+            // number of schedule items
+            // most common locations
+            // most common teachers
+            // times cancelled
+            // amadeusblokken
+            // aanwezigheid / lessen bijgewoond
+            // absenties
+            // telaatmeldingen
+
+            return new Promise(async (resolveYear) => {
+                console.log(year)
+                const yearElement = element('div', null, null, { class: 'st-wrapped-year' })
+                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: formatOrdinals(i + 1, true) + ' klas' })
+                let cards = []
+
+                year.grades = (await MagisterApi.grades.forYear(year))
+                    .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && Number(grade.CijferStr.replace(',', '.')) <= 10 && Number(grade.CijferStr.replace(',', '.')) >= 1)
+                    .filter((grade, index, self) =>
+                        index === self.findIndex((g) =>
+                            g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
+                            g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
+                            g.CijferStr === grade.CijferStr
+                        )
                     )
-                )
-                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
-            year.events = (await MagisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks'))
-            year.absences = await MagisterApi.absences.forYear(year)
+                    .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+                year.events = (await MagisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks'))
+                year.absences = await MagisterApi.absences.forYear(year)
 
-            if (year.exams?.length > 0) {
-                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
-                element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je examen in ${year.exams.length} ${year.exams.length > 1 ? 'vakken' : 'vak'}.` })
-                let examLocationHashmap = {}
-                year.exams.map(exam => exam.lokalen?.[0]?.omschrijving).forEach(location => {
-                    examLocationHashmap[location] ??= 0
-                    examLocationHashmap[location]++
-                })
-                const mostCommonExamLocation = (Object.entries(examLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
-                if (year.exams.length > 1) element('span', null, card, { class: 'st-w-text-small', innerText: (mostCommonExamLocation[1] === year.exams.length ? 'Je maakte al je examens in ' : mostCommonExamLocation[1] + ' van je examens maakte je in ') + (mostCommonExamLocation[0] === 'Sporthal' ? 'de gymzaal' : mostCommonExamLocation[0]) + '.' })
-                cards.push(card)
-            }
-
-            if (year.grades?.length > 0) {
-                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 4; grid-column: span 2;', innerText: `${year.grades.length} cijfers` })
-                element('div', `st-wrapped-graph-${i}`, card, { class: 'st-force-light' })
-                    .createLineChart(
-                        year.grades
-                            .map(grade => Number(grade.CijferStr?.replace(',', '.'))),
-                        year.grades
-                            .map(grade => `${new Date(grade.DatumIngevoerd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${grade.Vak?.Omschrijving || ''}\n${grade.CijferKolom?.KolomNaam}, ${grade.CijferKolom?.KolomKop}`),
-                        1,
-                        10,
-                        true
-                    )
-                cards.push(card)
-
-                const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;', innerText: `${year.grades.length} cijfers` })
-                cards.push(card2)
-            }
-
-            if (year.events?.length > 0) {
-                const normalLessons = year.events.filter(event => event.LesuurVan && event.LesuurTotMet && event.Status !== 5 && event.Lokatie?.length > 0 && event.Omschrijving != 'amablok_bb')
-
-                const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
-                element('span', null, card, { class: 'st-w-metric', innerText: year.events.length })
-                element('span', null, card, { class: 'st-w-text', innerText: 'agenda-items' })
-                element('span', null, card, { class: 'st-w-text-small', innerText: `waarvan ${normalLessons.length} gewone lessen` })
-                cards.push(card)
-
-                const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
-                let eventLocationHashmap = {}
-                year.events.filter(event => event.Lokalen?.[0]?.Naam?.length > 0).map(event => event.Lokalen?.[0]?.Naam).forEach(location => {
-                    eventLocationHashmap[location] ??= 0
-                    eventLocationHashmap[location]++
-                })
-                const mostCommonEventLocation = (Object.entries(eventLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
-                element('span', null, card2, { class: 'st-w-text-small', innerText: `Je had de meeste lessen in ${mostCommonEventLocation[0]} (${mostCommonEventLocation[1]}×)` })
-                let eventTeacherHashmap = {}
-                year.events.filter(event => event.Docenten?.[0]?.Naam?.length > 0).map(event => event.Docenten?.[0]?.Naam).forEach(teacher => {
-                    eventTeacherHashmap[teacher] ??= 0
-                    eventTeacherHashmap[teacher]++
-                })
-                const mostCommonEventTeacher = (Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1])?.[0])
-                element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
-                cards.push(card2)
-
-                const card3 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
-                const attendedLessons = normalLessons
-                    .filter(event => !year.absences || !year.absences?.some(absence => absence.AfspraakId === event.Id))
-                const msAttended = attendedLessons
-                    .reduce((accumulator, event) => accumulator + (new Date(event.Einde) - new Date(event.Start)), 0)
-
-                element('span', null, card3, {
-                    class: 'st-w-metric', innerText: `${Math.round(attendedLessons.length / normalLessons.length * 100)}%`
-                })
-                element('span', null, card3, { class: 'st-w-text', innerText: `aanwezigheid` })
-                element('span', null, card3, {
-                    class: 'st-w-text-small', innerText: `Je hebt ${attendedLessons.length} lessen bijgewoond.`
-                })
-                element('span', null, card3, {
-                    class: 'st-w-text-small', innerText: `Dat is ${Math.ceil(msAttended / 3600000)} uur les: ${Math.round(msAttended / 86400000) === msAttended / 86400000 ? 'precies' : Math.round(msAttended / 86400000) > msAttended / 86400000 ? 'bijna' : 'ruim'} ${Math.round(msAttended / 86400000)} dagen.`
-                })
-                cards.push(card3)
-
-
-                const kwtLessons = year.events.filter(event => event.Type === 7)
-                const kwtLessonsSignedUp = kwtLessons.filter(event => event.Lokatie?.length > 0 && event.Omschrijving?.length > 0)
-                if (kwtLessons.length > 0) {
-                    const card4 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
-                    element('span', null, card4, { class: 'st-w-text', innerText: `Je volgde ${kwtLessonsSignedUp.length} keuzeblokken.` })
-                    let kwtSubjectHashmap = {}
-                    kwtLessonsSignedUp.map(event => event.Omschrijving).forEach(description => {
-                        kwtSubjectHashmap[description] ??= 0
-                        kwtSubjectHashmap[description]++
+                if (year.exams?.length > 0) {
+                    const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
+                    element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je examen in ${year.exams.length} ${year.exams.length > 1 ? 'vakken' : 'vak'}.` })
+                    let examLocationHashmap = {}
+                    year.exams.map(exam => exam.lokalen?.[0]?.omschrijving).forEach(location => {
+                        examLocationHashmap[location] ??= 0
+                        examLocationHashmap[location]++
                     })
-                    const mostCommonKwtSubject = (Object.entries(kwtSubjectHashmap).sort((a, b) => b[1] - a[1])?.[0])
-                    element('span', null, card4, { class: 'st-w-text-small', innerText: `Daarvan koos je ${mostCommonKwtSubject[1]}× voor ${mostCommonKwtSubject[0]}.` })
-                    if (kwtLessons.some(event => event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))) {
-                        element('span', null, card4, { class: 'st-w-text-small', innerText: `Je volgde ${kwtLessonsSignedUp.filter(event => event.Omschrijving.includes('ama_')).length} van de ${kwtLessons.filter(event => event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_')).length} Amadeusblokken.` })
-                        card4.style.gridRow = 'span 3'
-                    }
-                    cards.push(card4)
+                    const mostCommonExamLocation = (Object.entries(examLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                    if (year.exams.length > 1) element('span', null, card, { class: 'st-w-text-small', innerText: (mostCommonExamLocation[1] === year.exams.length ? 'Je maakte al je examens in ' : mostCommonExamLocation[1] + ' van je examens maakte je in ') + (mostCommonExamLocation[0] === 'Sporthal' ? 'de gymzaal' : mostCommonExamLocation[0]) + '.' })
+                    cards.push(card)
                 }
-            }
 
-            cards.forEach(card => {
-                yearElement.append(card)
+                if (year.grades?.length > 0) {
+                    const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 4; grid-column: span 2;', innerText: `${year.grades.length} cijfers` })
+                    element('div', `st-wrapped-graph-${i}`, card, { class: 'st-force-light' })
+                        .createLineChart(
+                            year.grades
+                                .map(grade => Number(grade.CijferStr?.replace(',', '.'))),
+                            year.grades
+                                .map(grade => `${new Date(grade.DatumIngevoerd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${grade.Vak?.Omschrijving || ''}\n${grade.CijferKolom?.KolomNaam}, ${grade.CijferKolom?.KolomKop}`),
+                            1,
+                            10,
+                            true
+                        )
+                    cards.push(card)
+
+                    const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;', innerText: `${year.grades.length} cijfers` })
+                    cards.push(card2)
+                }
+
+                if (year.events?.length > 0) {
+                    const normalLessons = year.events.filter(event => event.LesuurVan && event.LesuurTotMet && event.Status !== 5 && event.Lokatie?.length > 0 && event.Omschrijving != 'amablok_bb')
+
+                    const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
+                    element('span', null, card, { class: 'st-w-metric', innerText: year.events.length })
+                    element('span', null, card, { class: 'st-w-text', innerText: 'agenda-items' })
+                    element('span', null, card, { class: 'st-w-text-small', innerText: `waarvan ${normalLessons.length} gewone lessen` })
+                    cards.push(card)
+
+                    const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
+                    let eventLocationHashmap = {}
+                    year.events.filter(event => event.Lokalen?.[0]?.Naam?.length > 0).map(event => event.Lokalen?.[0]?.Naam).forEach(location => {
+                        eventLocationHashmap[location] ??= 0
+                        eventLocationHashmap[location]++
+                    })
+                    const mostCommonEventLocation = (Object.entries(eventLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                    element('span', null, card2, { class: 'st-w-text-small', innerText: `Je had de meeste lessen in ${mostCommonEventLocation[0]} (${mostCommonEventLocation[1]}×)` })
+                    let eventTeacherHashmap = {}
+                    year.events.filter(event => event.Docenten?.[0]?.Naam?.length > 0).map(event => event.Docenten?.[0]?.Naam).forEach(teacher => {
+                        eventTeacherHashmap[teacher] ??= 0
+                        eventTeacherHashmap[teacher]++
+                    })
+                    const mostCommonEventTeacher = (Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                    element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
+                    cards.push(card2)
+
+                    const card3 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 3;' })
+                    const attendedLessons = normalLessons
+                        .filter(event => !year.absences || !year.absences?.some(absence => absence.AfspraakId === event.Id))
+                    const msAttended = attendedLessons
+                        .reduce((accumulator, event) => accumulator + (new Date(event.Einde) - new Date(event.Start)), 0)
+
+                    element('span', null, card3, {
+                        class: 'st-w-metric', innerText: `${Math.round(attendedLessons.length / normalLessons.length * 100)}%`
+                    })
+                    element('span', null, card3, { class: 'st-w-text', innerText: `aanwezigheid` })
+                    element('span', null, card3, {
+                        class: 'st-w-text-small', innerText: `Je hebt ${attendedLessons.length} lessen bijgewoond.`
+                    })
+                    element('span', null, card3, {
+                        class: 'st-w-text-small', innerText: `Dat is ${Math.ceil(msAttended / 3600000)} uur les: ${Math.round(msAttended / 86400000) === msAttended / 86400000 ? 'precies' : Math.round(msAttended / 86400000) > msAttended / 86400000 ? 'bijna' : 'ruim'} ${Math.round(msAttended / 86400000)} dagen.`
+                    })
+                    cards.push(card3)
+
+
+                    const kwtLessons = year.events.filter(event => event.Type === 7)
+                    const kwtLessonsSignedUp = kwtLessons.filter(event => event.Lokatie?.length > 0 && event.Omschrijving?.length > 0)
+                    if (kwtLessons.length > 0) {
+                        const card4 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;' })
+                        element('span', null, card4, { class: 'st-w-text', innerText: `Je volgde ${kwtLessonsSignedUp.length} keuzeblokken.` })
+                        let kwtSubjectHashmap = {}
+                        kwtLessonsSignedUp.map(event => event.Omschrijving).forEach(description => {
+                            kwtSubjectHashmap[description] ??= 0
+                            kwtSubjectHashmap[description]++
+                        })
+                        const mostCommonKwtSubject = (Object.entries(kwtSubjectHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                        element('span', null, card4, { class: 'st-w-text-small', innerText: `Daarvan koos je ${mostCommonKwtSubject[1]}× voor ${mostCommonKwtSubject[0]}.` })
+                        if (kwtLessons.some(event => event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_'))) {
+                            element('span', null, card4, { class: 'st-w-text-small', innerText: `Je volgde ${kwtLessonsSignedUp.filter(event => event.Omschrijving.includes('ama_')).length} van de ${kwtLessons.filter(event => event.Omschrijving.includes('amablok') || event.Omschrijving.includes('ama_')).length} Amadeusblokken.` })
+                            card4.style.gridRow = 'span 3'
+                        }
+                        cards.push(card4)
+                    }
+                }
+
+                cards.forEach(card => {
+                    yearElement.append(card)
+                })
+
+                resolveYear(yearElement)
             })
-
-            resolve(yearElement)
-        })
-    }
+        }
+    })
 }

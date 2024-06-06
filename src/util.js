@@ -588,7 +588,7 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
                     : progressiveMeanPrev < progressiveMean
                         ? 'rise'
                         : Math.abs((progressiveMean - progressiveMeanPrev) / (maxValue - minValue)) < 0.2
-                        // : progressiveMeanPrev === progressiveMean
+                            // : progressiveMeanPrev === progressiveMean
                             ? 'equal'
                             : 'none',
             style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}; --mean-height: ${(progressiveMean - minValue) / (maxValue - minValue)}; --previous-mean-height: ${(progressiveMeanPrev - minValue) / (maxValue - minValue)};`
@@ -640,18 +640,27 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                     })
                 }
 
-                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
-                if (options?.index && options?.length) {
-                    dialogDismiss.classList.add('st-step')
-                    dialogDismiss.innerText = `${options.index} / ${options.length}`
-                    if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                if (typeof options.allowClose === 'boolean' && options.allowClose === false) {
+                    dialog.addEventListener('cancel', (event) => {
+                        event.preventDefault()
+                    })
+                    resolve(dialog)
+                } else {
+                    const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
+                    if (options?.index && options?.length) {
+                        dialogDismiss.classList.add('st-step')
+                        dialogDismiss.innerText = `${options.index} / ${options.length}`
+                        if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                    }
+                    dialogDismiss.addEventListener('click', () => {
+                        dialog.close()
+                        dialog.remove()
+                    })
                 }
-                dialogDismiss.addEventListener('click', () => {
-                    dialog.close()
-                    dialog.remove()
-                })
 
-                dialog.addEventListener('close', () => { resolve() }, { once: true })
+                dialog.addEventListener('close', () => {
+                    resolve()
+                }, { once: true })
             })
 
         default:
