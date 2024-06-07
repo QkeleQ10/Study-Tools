@@ -4,7 +4,8 @@ let years = []
 
 // const potentialRange = { start: new Date(now.getFullYear() + '-06-12'), end: new Date(now.getFullYear() + '-09-16') } // June 12th - September 15th
 const potentialRange = { start: new Date(now.getFullYear() + '-06-06'), end: new Date(now.getFullYear() + '-09-16') } // June 12th - September 15th
-const forcedRange = { start: new Date(now.getFullYear() + '-07-04'), end: new Date(now.getFullYear() + '-09-16') } // July 4th - September 15th
+// const forcedRange = { start: new Date(now.getFullYear() + '-07-04'), end: new Date(now.getFullYear() + '-09-16') } // July 4th - September 15th
+const forcedRange = { start: new Date(now.getFullYear() + '-06-06'), end: new Date(now.getFullYear() + '-09-16') } // July 4th - September 15th
 // vakantie N: 07-20 to 09-01
 // vakantie M: 07-13 to 08-25
 // vakantie Z: 07-06 to 08-18
