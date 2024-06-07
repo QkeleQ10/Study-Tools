@@ -114,7 +114,7 @@ function openInNewTab(url) {
             <Icon>chevron_right</Icon>
         </button>
         <Dialog v-model:active="settingsInputDialogActive">
-            <template #icon>restart_alt</template>
+            <template #icon>copy_all</template>
             <template #headline>Voorkeuren kopiëren/plakken</template>
             <template #text>Kopieer de inhoud van het tekstvak om je voorkeuren op te slaan op je klembord. Plak in het
                 tekstvak om voorkeuren te wijzigen. Als je plakt, dan gaan al je huidige voorkeuren verloren.<br><br>

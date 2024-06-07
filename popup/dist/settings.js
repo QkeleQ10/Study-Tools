@@ -193,7 +193,6 @@ export default [
                 subtitle: "De pagina 'Vandaag' is nu 'Start'. Daarin zie je je rooster en gepersonaliseerde widgets. Aanvullende opties op Magister zelf.",
                 default: true,
             },
-            // TODO: possibly move these settings to the actual Start page
             {
                 id: "start-schedule-view",
                 title: "Rooster in Start",

@@ -467,34 +467,39 @@ async function checkWrapped() {
 
         years[years.length - 1] = { ...years.at(-1), exams: [...(await MagisterApi.exams(years.at(-1)))] }
 
-        if (now >= forcedRange.start && now <= forcedRange.end) {
-            commenceWrapped()
-        }
 
         if (years.at(-1)?.exams?.length > 2 && years.at(-1).exams.every(exam => new Date(exam.einde) <= now)) { // If the student has completed all of their finals, commence regardless
-            commenceWrapped()
+            commenceWrapped(true)
+        } else if (now >= forcedRange.start && now <= forcedRange.end) { // Else, continue if it's inside the appropriate time frame
+            commenceWrapped(false)
         }
     }
 }
 
-async function commenceWrapped() {
+async function commenceWrapped(isFinalYearStudent) {
     let lastAccessYear = await getFromStorage('wrapped-accessed', 'local') || 0
 
     const appbarMetrics = await awaitElement('#st-appbar-metrics')
 
     const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Magister Wrapped", innerText: "" })
     appbarMetrics.firstElementChild.before(wrappedInvoke)
-    const endDateString = new Date(`${now.getFullYear()}-${potentialRange.end.getMonth()+1}-${potentialRange.end.getDate() - 1}`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
-    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: `Bekijk nu jouw Magister Wrapped!\nBeschikbaar t/m ${endDateString}.` })
+    const endDateString = new Date(`${now.getFullYear()}-${potentialRange.end.getMonth() + 1}-${potentialRange.end.getDate() - 1}`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: `Magister Wrapped is terug!\nBeschikbaar t/m ${endDateString}.` })
     if (lastAccessYear !== now.getFullYear()) setTimeout(() => wrappedInvokeTip.classList.remove('hidden'), 100)
     setTimeout(() => wrappedInvokeTip.classList.add('hidden'), 30000)
 
     wrappedInvoke.addEventListener('click', async () => {
-        const loadingDialog = await notify('dialog', "Magister Wrapped wordt klaargezet...\n\nGegevens verzamelen...", [], 0, { allowClose: false })
+        if (wrappedInvoke.classList.contains('spinning')) return
 
-        const wrappedDialog = await constructWrapped()
+        wrappedInvoke.innerText = ''
+        wrappedInvoke.classList.add('spinning')
 
-        loadingDialog.close()
+        const wrappedDialog = await constructWrapped(!isFinalYearStudent)
+
+        wrappedInvoke.innerText = ''
+        wrappedInvoke.classList.remove('spinning')
+
+        await notify('dialog', "Je hebt toegang tot een vroege versie van Wrapped. Het is nog erg lelijk en gebrekkig. Gelieve dit nog niet al te veel te delen met anderen!", null, null, { closeIcon: '', closeText: "Begrepen" })
 
         wrappedDialog.showModal()
         wrappedDialog.lastElementChild.lastElementChild.scrollIntoView()
@@ -505,16 +510,20 @@ async function commenceWrapped() {
 
 }
 
-async function constructWrapped() {
+async function constructWrapped(lastYearOnly) {
     return new Promise(async (resolve) => {
 
-        if (document.getElementById('dialog')) {
-            resolve(document.getElementById('dialog'))
+        if (document.getElementById('st-wrapped')) {
+            resolve(document.getElementById('st-wrapped'))
             return
         }
 
         const dialog = element('dialog', 'st-wrapped', document.body, { class: 'st-modal' })
         const yearsWrapper = element('div', 'st-wrapped-years-wrapper', dialog)
+
+        if (lastYearOnly) {
+            years = [years.at(-1)]
+        }
 
         for (let i = 0; i < years.length; i++) {
             const year = years[i]
@@ -546,7 +555,7 @@ async function constructWrapped() {
             return new Promise(async (resolveYear) => {
                 console.log(year)
                 const yearElement = element('div', null, null, { class: 'st-wrapped-year' })
-                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: formatOrdinals(i + 1, true) + ' klas' })
+                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: formatOrdinals(year.studie.code.replace(/\D/gi, ''), true) + ' klas' })
                 let cards = []
 
                 year.grades = (await MagisterApi.grades.forYear(year))
@@ -589,7 +598,12 @@ async function constructWrapped() {
                         )
                     cards.push(card)
 
-                    const card2 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 2;', innerText: `${year.grades.length} cijfers` })
+                    const card2 = element('div', null, null, { class: 'st-wrapped-card grid', style: 'grid-row: span 2; grid-template-rows: auto auto; grid-template-columns: 5fr auto 4fr; padding-inline: 16px;' })
+                    element('div', null, card2, { class: 'st-w-text-small', innerText: 'gemiddeld cijfer', style: 'grid-row: 1; grid-column: 1;' })
+                    element('div', null, card2, { class: 'st-w-metric', innerText: calculateMean(year.grades.map(grade => Number(grade.CijferStr?.replace(',', '.')))).toLocaleString(locale, { minimumFractionDigits: 3, maximumFractionDigits: 3 }), style: 'grid-row: 2; grid-column: 1;' })
+                    element('div', null, card2, { class: 'st-w-line-vertical', style: 'grid-row: 1 / -1; grid-column: 2;' })
+                    element('div', null, card2, { class: 'st-w-text-tiny', innerText: 'voldoendes', style: 'grid-row: 1; grid-column: 3;' })
+                    element('div', null, card2, { class: 'st-w-metric-med', innerText: (year.grades.filter(grade => { return Number(grade.CijferStr?.replace(',', '.')) >= 5.5 }).length / year.grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '%', style: 'grid-row: 2; grid-column: 3;' })
                     cards.push(card2)
                 }
 
@@ -656,6 +670,34 @@ async function constructWrapped() {
                         }
                         cards.push(card4)
                     }
+                }
+
+                if (year.absences) {
+                    const absenceTypes = [...new Set(year.absences.map(item => (item.Omschrijving.toLowerCase() + (item.Geoorloofd ? ' (geoorloofd)' : ' (ongeoorloofd)'))))]
+
+                    const card = element('div', null, null, { class: 'st-wrapped-card grid', style: 'grid-row: span 2;' })
+
+                    absenceTypes.forEach(type => {
+                        element('span', null, card, { class: 'st-metric-small', innerText: year.absences.filter(item => (item.Omschrijving.toLowerCase() + (item.Geoorloofd ? ' (geoorloofd)' : ' (ongeoorloofd)')) === type).length + '×' })
+                        element('span', null, card, { class: 'st-metric-medium-sub', innerText: type })
+                    })
+
+                    cards.push(card)
+
+                    //             const moreAbsences = element('div', 'st-wrapped-more-absences', sectionTiles, { class: 'st-wrapped-details', 'data-show': false })
+                    //             element('span', null, moreAbsences, { class: 'st-metric-large', innerText: absences.length })
+                    //             element('span', null, moreAbsences, { class: 'st-metric-large-sub', innerText: "absenties" })
+                    //             element('span', null, moreAbsences)
+                    //             element('span', null, moreAbsences)
+                    //             const dayMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => new Date(item.Start).toLocaleDateString(locale, { weekday: 'long' }).toLowerCase()).mode()
+                    //             const hourMostOftenTooLate = absences.filter(item => item.Omschrijving.includes('laat')).map(item => `lesuur ${item.Afspraak.LesuurVan}`).mode()
+                    //             if (dayMostOftenTooLate && hourMostOftenTooLate) {
+                    //                 element('div', null, moreAbsences)
+                    //                 element('div', null, moreAbsences)
+                    //                 element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: dayMostOftenTooLate })
+                    //                 element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "vaakst te laat" })
+                    //                 element('span', null, moreAbsences, { class: 'st-metric-tiny', innerText: hourMostOftenTooLate })
+                    //                 element('span', null, moreAbsences, { class: 'st-metric-small-sub', innerText: "vaakst te laat" })
                 }
 
                 cards.forEach(card => {

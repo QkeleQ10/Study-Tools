@@ -36,7 +36,7 @@ async function main() {
     if (syncedStorage['magister-appbar-week']) {
         let appbarWeek = element('a', 'st-appbar-week', appbarMetrics, { class: 'st-metric', 'data-description': i18n('dates.week'), innerText: new Date().getWeek(), href: '#/vandaag' })
         appbarWeek.addEventListener('click', async () => {
-            let weekSel = await awaitElement('#st-start-today-view-popover>button:nth-child(2)')
+            let weekSel = await awaitElement('#st-start-today-view>button')
             if (weekSel) weekSel.click()
         })
     }

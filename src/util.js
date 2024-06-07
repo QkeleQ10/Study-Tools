@@ -606,9 +606,10 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
     switch (type) {
         case 'snackbar':
-            const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 10000) }
+            const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 60000) }
             snackbarQueue.push(snackbar)
             if (!document.querySelector('.st-snackbar')) showSnackbar(snackbar)
+            else document.querySelector('.st-snackbar').classList.add('queued')
             break
 
         case 'dialog':

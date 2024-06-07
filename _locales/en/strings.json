@@ -50,11 +50,12 @@
         "info": "Information",
         "important": "Important",
         "attachments": "Attachments",
-        "graded": "Graded"
+        "graded": "Graded",
+        "exam": "Finals"
     },
     "dates": {
         "day": "Day",
-        "nDays": "{num} days",
+        "nDays": "{days} days",
         "week": "Week",
         "workweek": "Working week",
         "now": "Now",
@@ -110,6 +111,7 @@
     "Nieuwer": "Newer",
     "Ouder": "Older",
     "noEvents": "No events on this day",
+    "noEventsToday": "No events today",
     "error": "Something went wrong",
     "loading": "Loading...",
     "loadingWidgets": "Loading widgets...",

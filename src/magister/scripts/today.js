@@ -598,7 +598,7 @@ async function today() {
                 if (day.events?.length < 1 && !listViewEnabled && agendaView === 'day') {
                     let seed = cyrb128(String(day.date.getTime()))
                     element('i', `st-start-col-${i}-fa`, column, { class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)}` })
-                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: i18n('noEvents') })
+                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: day.today ? i18n('noEventsToday') : i18n('noEvents') })
                 }
 
                 // Ensure a nice scrolling position if the date shown is not today

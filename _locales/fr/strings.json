@@ -50,11 +50,12 @@
         "info": "Informations",
         "important": "Important",
         "attachments": "Pièces jointes",
-        "graded": "Noté"
+        "graded": "Noté",
+        "exam": "Examens finaux"
     },
     "dates": {
         "day": "Jour",
-        "nDays": "{num} jours",
+        "nDays": "{days} jours",
         "week": "Semaine",
         "workweek": "Sem. de travail",
         "now": "maintenant",
@@ -110,6 +111,7 @@
     "Nieuwer": "Plus récent",
     "Ouder": "Plus ancien",
     "noEvents": "Aucun événement ce jour",
+    "noEventsToday": "Aucun événement aujourd'hui",
     "error": "Une erreur s'est produite",
     "loading": "Chargement...",
     "loadingWidgets": "Chargement des widgets...",

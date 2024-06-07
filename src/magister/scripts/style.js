@@ -265,7 +265,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor) {
     if (now.getMonth() === 1 && [14].includes(now.getDate())) {
         handleSpecialTheme('valentine')
     }
-    
+
     createStyle(`.block h3,
 .view {
     position: relative;
@@ -1547,6 +1547,10 @@ table.table-grid-layout>tbody>tr.selected {
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
     } else {
         createStyle('', 'study-tools-pfp')
+    }
+
+    if (syncedStorage['custom-css']) {
+        createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
     }
 }
 

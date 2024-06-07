@@ -92,9 +92,6 @@ function openInNewTab(url) {
     <div id="app-wrapper">
         <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" :data-scrolled="y > 16" />
         <main id="main" ref="main">
-            <Transition name="fade">
-
-            </Transition>
             <div id="options-container">
                 <TransitionGroup name="fade">
                     <template v-for="category in settings">

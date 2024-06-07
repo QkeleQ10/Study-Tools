@@ -423,6 +423,29 @@ dialog.st-modal[open]::backdrop {
     animation: snackbarOut 200ms both;
 }
 
+.st-snackbar.queued:after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    translate: -50%;
+    width: 95%;
+    height: 8px;
+    background-color: var(--st-background-tertiary);
+    opacity: 0.75;
+    border: var(--st-border);
+    border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
+    animation: snackbarQueuedIn 200ms;
+    z-index: -1;
+}
+
+@keyframes snackbarQueuedIn {
+    from {
+        transform-origin: bottom;
+        transform: scaleY(0)
+    }
+}
+
 .st-snackbar>*:first-child {
     margin-left: auto;
 }

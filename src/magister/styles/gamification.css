@@ -17,6 +17,16 @@
     transition: scale 200ms, opacity 200ms;
 }
 
+#st-wrapped-invoke.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        rotate: 359.9deg;
+    }
+}
+
 #st-wrapped-invoke:hover,
 #st-wrapped-invoke:focus-visible {
     scale: 1.1;
@@ -69,11 +79,12 @@
 }
 
 #st-wrapped-years-wrapper {
-    width: calc(100vw - 64px);
-    height: calc(100vh - 64px);
+    width: min(calc(100vw - 64px), 1300px);
+    height: min(calc(100vh - 64px), 850px);
     overflow-y: auto;
     scroll-snap-type: y mandatory;
 
+    container-type: inline-size;
     display: grid;
     grid-auto-rows: auto;
     grid-auto-columns: 100%;
@@ -82,7 +93,9 @@
 
 .st-wrapped-year {
     scroll-snap-align: start;
-    min-height: calc(100vh - 64px);
+    min-height: max-content;
+    height: max-content;
+    min-height: min(calc(100vh - 64px), 850px);
 
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -96,8 +109,14 @@
     color: #ffffff;
 }
 
+@container (max-width: 1000px) {
+    .st-wrapped-year {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 .st-wrapped-year-title {
-    grid-column: span 3;
+    grid-column: 1 / -1;
     font: 500 28px/2rem arboria, sans-serif;
     translate: 0 20px;
 }
@@ -121,8 +140,19 @@
     text-align: left;
 }
 
+.st-wrapped-card.grid {
+    display: grid;
+    gap: 12px;
+}
+
 .st-wrapped-card .st-w-metric {
     font: 500 42px arboria, sans-serif;
+    color: #ffffff;
+    text-align: center;
+}
+
+.st-wrapped-card .st-w-metric-med {
+    font: 500 36px arboria, sans-serif;
     color: #ffffff;
     text-align: center;
 }
@@ -135,8 +165,19 @@
 
 .st-wrapped-card .st-w-text-small {
     font: 500 18px arboria, sans-serif;
-    color: #ffffffcc;
+    color: #ffffffdd;
     text-align: center;
+}
+
+.st-wrapped-card .st-w-text-tiny {
+    font: 500 16px arboria, sans-serif;
+    color: #ffffffdd;
+    text-align: center;
+}
+
+.st-wrapped-card .st-w-line-vertical {
+    height: 100%;
+    border-left: 1px solid #ffffff33;
 }
 
 .st-wrapped-card .st-chart {
