@@ -868,7 +868,7 @@ async function gradeStatistics() {
     })
 
     // Gather all years and populate the year filter
-    years = (await MagisterApi.years()).reverse()
+    years = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
     years.forEach(async (year, i, a) => {
         let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.replace(/\D/gi, ''), title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
         if (!(label.innerText?.length > 0)) label.innerText = i + 1

@@ -415,7 +415,7 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     return dropdown
 }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true, showRemainder = true, itemCap = 100) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-line-chart')
@@ -425,10 +425,11 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     threshold ??= totalFrequency / 40
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
-    const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
+    const maxFrequency = Math.max(...Object.values(frequencyMap), showRemainder ? remainderFrequency : 0)
 
-    const filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
+    let filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
     if (sort) filteredFrequencyMap.sort((a, b) => b[1] - a[1])
+    filteredFrequencyMap = filteredFrequencyMap.slice(0, itemCap)
 
     filteredFrequencyMap.forEach(([key, frequency], i) => {
         const hueRotate = rotateHue ? (20 * i) : 0
@@ -446,7 +447,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             })
     })
 
-    if (remainderFrequency > 0) {
+    if (remainderFrequency > 0 && showRemainder) {
         const hueRotate = rotateHue ? (20 * filteredFrequencyMap.length) : 0
 
         const col = element('div', `${chartArea.id}-remainder`, chartArea, {
