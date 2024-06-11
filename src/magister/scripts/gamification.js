@@ -262,14 +262,14 @@ async function constructWrapped(lastYearOnly) {
                         let el3 = element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
                         cards.push(card2)
 
-                        let el4 = element('div', `st-wrapped-graph-${i}-2`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
+                        let el4 = element('div', `st-wrapped-graph-${i}-4`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
+                            .createBarChart(eventSubjectHashmap, null, 1, true, false, false, 15)
+
+                        let el5 = element('div', `st-wrapped-graph-${i}-2`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
                             .createBarChart(eventLocationHashmap, null, 1, true, false, false, 15)
 
-                        let el5 = element('div', `st-wrapped-graph-${i}-3`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
+                        let el6 = element('div', `st-wrapped-graph-${i}-3`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
                             .createBarChart(eventTeacherHashmap, null, 1, true, false, false, 15)
-
-                        let el6 = element('div', `st-wrapped-graph-${i}-4`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
-                            .createBarChart(eventSubjectHashmap, null, 1, true, false, false, 15)
 
                         card2.addEventListener('click', () => {
                             n = (n + 1) % 4
