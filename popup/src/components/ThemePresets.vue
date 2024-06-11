@@ -1,7 +1,12 @@
 <script setup>
-import { inject } from 'vue'
+import { ref, computed, inject } from 'vue'
+import Icon from './Icon.vue'
+import Dialog from './Dialog.vue'
+import InputText from './InputText.vue'
 
 const syncedStorage = inject('syncedStorage')
+
+const settingsInputDialogActive = ref(false)
 
 function applyPreset(preset) {
     for (const key in preset) {
@@ -11,6 +16,31 @@ function applyPreset(preset) {
         }
     }
 }
+
+const pick = (obj, ...keys) => Object.fromEntries(
+    keys
+        .filter(key => key in obj)
+        .map(key => [key, obj[key]])
+)
+
+const themeString = computed({
+    get() {
+        try {
+            return JSON.stringify(pick(syncedStorage.value, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css')) || {}
+        } catch {
+            return {}
+        }
+    },
+    set(value) {
+        try {
+            syncedStorage.value = { ...syncedStorage.value, ...(JSON.parse(value) || syncedStorage.value || {}) }
+            return syncedStorage.value
+        } catch {
+            syncedStorage.value = syncedStorage.value || {}
+            return syncedStorage.value
+        }
+    }
+})
 
 const presets = [
     {
@@ -67,16 +97,33 @@ const presets = [
 <template>
     <div class="setting-wrapper">
         <div id="theme-presets-container">
-            <div>
+            <div id="theme-presets-heading">
                 <h3 class="setting-title">Themapakketten</h3>
-                <span class="setting-subtitle">Als je een vooraf ingesteld themapakket selecteert, dan worden al je voorkeuren voor het uiterlijk gewist.</span>
+                <span class="setting-subtitle">Als je een vooraf ingesteld themapakket selecteert, dan worden al je
+                    voorkeuren voor het uiterlijk gewist.</span>
             </div>
+            <button id="theme-presets-copy" title="Kopiëren/plakken" @click="settingsInputDialogActive = true">
+                <Icon>copy_all</Icon>
+            </button>
             <div id="theme-presets">
-                <div v-for="preset in presets" :title="preset.name" :style="{ '--thumbnail': preset.thumbnail }"
+                <button v-for="preset in presets" :title="preset.name" :style="{ '--thumbnail': preset.thumbnail }"
                     @click="applyPreset(preset)">
-                </div>
+                </button>
             </div>
         </div>
+        <Dialog v-model:active="settingsInputDialogActive">
+            <template #icon>copy_all</template>
+            <template #headline>Thema kopiëren/plakken</template>
+            <template #text>Kopieer de inhoud van het tekstvak om je thema op te slaan op je klembord. Plak in het
+                tekstvak om het thema te wijzigen. Als je plakt, dan gaan al je huidige themavoorkeuren verloren.<br><br>
+                <InputText id="settings-paste-input" v-model="themeString" @focus="$event.target.select()">
+                    <template #title>Plak hier</template>
+                </InputText>
+            </template>
+            <template #buttons>
+                <button @click="settingsInputDialogActive = false">Sluiten</button>
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -105,6 +152,10 @@ const presets = [
     border-top: 1px solid var(--color-surface-variant);
 }
 
+#theme-presets-heading {
+    padding-right: 44px;
+}
+
 .setting-subtitle {
     text-wrap: balance;
 }
@@ -125,10 +176,31 @@ const presets = [
     cursor: pointer;
     outline: 1px solid var(--color-outline);
     overflow: hidden;
-    color: #fff;
+    color: var(--color-on-surface);
     transition: border-radius 200ms, flex-grow 200ms, background-color 200ms;
     background-image: var(--thumbnail);
     background-position: center;
     background-size: cover;
+}
+
+#theme-presets-copy {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 24px;
+    height: 24px;
+    margin-left: auto;
+    border: none;
+    background-color: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+}
+
+#theme-presets-copy>.icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    font-size: 18px;
 }
 </style>

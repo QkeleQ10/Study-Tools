@@ -20,15 +20,42 @@ gatherEnd.setHours(0, 0, 0, 0)
 
 
 const MagisterApi = {
-    accountInfo: async () => {
+    accountInfo: async (parse = false) => {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.accountInfo ??=
                 fetchWrapper(
                     `https://${magisterApiSchoolName}.magister.net/api/account?noCache=0`, null, 'accountInfo'
                 )
-            resolve(
-                (await magisterApiCache.accountInfo)
-            )
+            if (parse) {
+                const obj = await magisterApiCache.accountInfo
+                resolve({
+                    id: obj.Persoon.Id,
+                    externalId: obj.Persoon.ExterneId,
+                    uuid: obj.Persoon.UuId,
+                    name: {
+                        official: {
+                            firstnames: obj.Persoon.OfficieleVoornamen || obj.Persoon.Roepnaam,
+                            affixes: obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.GeboortenaamTussenvoegsel || obj.Persoon.Tussenvoegsel,
+                            lastname: obj.Persoon.OfficieleAchternaam || obj.Persoon.GeboorteAchternaam || obj.Persoon.Achternaam
+                        },
+                        birth: {
+                            isPreferred: obj.Persoon.GebruikGeboortenaam === true,
+                            affix: obj.Persoon.GeboortenaamTussenvoegsel || obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.Tussenvoegsel,
+                            lastname: obj.Persoon.GeboorteAchternaam || obj.Persoon.OfficieleAchternaam || obj.Persoon.Achternaam
+                        },
+                        initials: obj.Persoon.Voorletters,
+                        firstname: obj.Persoon.Roepnaam || obj.Persoon.OfficieleVoornamen,
+                        affix: obj.Persoon.Tussenvoegsel || obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.GeboortenaamTussenvoegsel,
+                        lastname: obj.Persoon.Achternaam || obj.Persoon.GeboorteAchternaam || obj.Persoon.OfficieleAchternaam
+                    },
+                    dateOfBirth: new Date(obj.Persoon.Geboortedatum),
+                    permissions: obj.Groep[0].Privileges
+                })
+            } else {
+                resolve(
+                    (await magisterApiCache.accountInfo)
+                )
+            }
         })
     },
     years: async () => {
@@ -53,16 +80,30 @@ const MagisterApi = {
             )
         })
     },
-    examInfo: async (year) => {
-        return new Promise(async (resolve, reject) => {
-            magisterApiCache['examInfo' + year?.id] ??=
-                fetchWrapper(
-                    `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examen`, null, 'examInfo'
+
+    exams: {
+        list: async (year) => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache['examsList' + year?.id] ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examens`, null, 'examsList'
+                    )
+                resolve(
+                    (await magisterApiCache['examsList' + year?.id])?.items || null
                 )
-            resolve(
-                (await magisterApiCache['examInfo' + year?.id])
-            )
-        })
+            })
+        },
+        info: async (year) => {
+            return new Promise(async (resolve, reject) => {
+                magisterApiCache['examsInfo' + year?.id] ??=
+                    fetchWrapper(
+                        `https://${magisterApiSchoolName}.magister.net/api/aanmeldingen/${year?.id}/examen`, null, 'examsInfo', true
+                    )
+                resolve(
+                    (await magisterApiCache['examsInfo' + year?.id]) || {}
+                )
+            })
+        }
     },
     events: async (start = gatherStart, end = gatherEnd) => {
         return new Promise(async (resolve, reject) => {
@@ -71,7 +112,7 @@ const MagisterApi = {
                     `https://${magisterApiSchoolName}.magister.net/api/personen/$USERID/afspraken?van=${start.toISOString().substring(0, 10)}&tot=${end.toISOString().substring(0, 10)}`, null, 'events'
                 )
             resolve(
-                (await magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)])?.Items || []
+                (await magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)])?.Items || null
             )
         })
     },
@@ -188,7 +229,7 @@ const MagisterApi = {
  * @param {Object} options
  * @returns {Promise<Object>}
  */
-async function fetchWrapper(url, options, identifier = 'unknown') {
+async function fetchWrapper(url, options, identifier = 'unknown', quiet = false) {
     const calledAt = new Date()
 
     const promiseReq = new Promise(async (resolve, reject) => {
@@ -219,7 +260,7 @@ async function fetchWrapper(url, options, identifier = 'unknown') {
         }
 
         // Reject when ratelimit is hit
-        if (res1.status === 429) {
+        if (res1.status === 429 && !quiet) {
             notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
             return resolve({})
         }
@@ -251,22 +292,24 @@ async function fetchWrapper(url, options, identifier = 'unknown') {
         }
 
         // Reject when ratelimit is hit
-        if (res2.status === 429) {
+        if (res2.status === 429 && !quiet) {
             notify('snackbar', `Verzoeksquotum overschreden\nWacht even, vernieuw de pagina en probeer het opnieuw`)
             return resolve({})
         }
 
         // Handle other errors
-        notify(
-            'snackbar',
-            `Fout ${res2.status}. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
-            [
-                { innerText: "E-mail", href: `mailto:quinten@althues.nl` },
-                { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
-            ],
-            120000
-        )
-        console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+        if (!quiet) {
+            notify(
+                'snackbar',
+                `Fout ${res2.status}. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+                [
+                    { innerText: "E-mail", href: `mailto:quinten@althues.nl` },
+                    { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
+                ],
+                120000
+            )
+            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+        }
         console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
         return resolve({})
     })
@@ -279,16 +322,18 @@ async function fetchWrapper(url, options, identifier = 'unknown') {
         })
     ])
         .catch(err => {
-            notify(
-                'snackbar',
-                `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
-                [
-                    { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
-                    { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
-                ],
-                120000
-            )
-            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+            if (!quiet) {
+                notify(
+                    'snackbar',
+                    `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+                    [
+                        { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
+                        { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
+                    ],
+                    120000
+                )
+                console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+            }
             console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
             return ({})
         })

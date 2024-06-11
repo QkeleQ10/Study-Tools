@@ -36,15 +36,12 @@ async function today() {
 
     let agendaStartDate, agendaEndDate
 
-    const daysToShowSetting = syncedStorage['start-schedule-days'] || 1
-    let daysToShow = daysToShowSetting
-
     const showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
     const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
     let listViewEnabled = listViewEnabledSetting
 
-    let agendaView = 'day' // False for day view, true for week view
+    let agendaView = localStorage['start-schedule-view-stored'] || 'day' // False for day view, true for week view
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
     let agendaDayOffsetChanged = false
 
@@ -153,7 +150,7 @@ async function today() {
                     break;
             }
 
-            if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) {
+            if ((agendaView.slice(-3) !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) {
                 headerText.classList.remove('de-emphasis')
             } else {
                 headerText.classList.add('de-emphasis')
@@ -165,47 +162,78 @@ async function today() {
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
         let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
         todayResetOffset.addEventListener('click', () => {
-            if ((agendaView !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
-            agendaDayOffset = (todayDate.getDay() || 7) - 1
-            agendaDayOffsetChanged = true
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
+            let newOffset = agendaDayOffset
+            if ((agendaView.slice(-3) !== 'day' && agendaDayOffset < 7) || agendaDayOffset === (todayDate.getDay() || 7) - 1) return
+            newOffset = (todayDate.getDay() || 7) - 1
+            moveSchedule(newOffset)
         })
         let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
         todayDecreaseOffset.addEventListener('click', () => {
-            if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 <= 0) || agendaDayOffset <= 0) return
-            if (agendaView !== 'day') agendaDayOffset -= 7
-            else agendaDayOffset--
-            if (agendaDayOffset < 0) agendaDayOffset = 0
-            agendaDayOffsetChanged = true
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
+            let newOffset = agendaDayOffset
+            if (agendaView === 'day') {
+                newOffset -= 1 // For one-day view, decrease offset by 1
+            } else if (agendaView.includes('day')) {
+                newOffset -= Number(agendaView.slice(0, 1)) || 1 // For multi-day view, decrease the offset by the number of days
+            } else if (Math.floor(agendaDayOffset / 7) * 7 > 0) {
+                newOffset -= 7 // For week view, decrease the offset by 7 only if that would be possible
+            }
+            moveSchedule(newOffset)
         })
         let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
         todayIncreaseOffset.addEventListener('click', () => {
-            if ((agendaView !== 'day' && Math.floor(agendaDayOffset / 7) * 7 >= 35) || agendaDayOffset >= 41) return
-            if (agendaView !== 'day') agendaDayOffset += 7
-            else agendaDayOffset++
-            if (agendaDayOffset > 41) agendaDayOffset = 41
-            agendaDayOffsetChanged = true
-            renderSchedule()
-            updateHeaderButtons()
-            updateHeaderText()
+            let newOffset = agendaDayOffset
+            if (agendaView === 'day') {
+                newOffset += 1 // For one-day view, increase offset by 1
+            } else if (agendaView.includes('day')) {
+                newOffset += Number(agendaView.slice(0, 1)) || 1 // For multi-day view, increase the offset by the number of days
+            } else if (Math.floor(agendaDayOffset / 7) * 7 < 35) {
+                newOffset += 7 // For week view, increase the offset by 7 only if that would be possible
+            }
+            moveSchedule(newOffset)
         })
 
-        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' }).createDropdown({ 'day': daysToShowSetting === 1 ? i18n('dates.day') : i18n('dates.nDays', { num: daysToShowSetting }), 'workweek': i18n('dates.workweek'), 'week': i18n('dates.week') }, 'day', selectedCallback, clickCallback)
+        function moveSchedule(newOffset) {
+            const oldOffset = agendaDayOffset
+            if (newOffset > 41) newOffset = 41
+            if (newOffset < 0) newOffset = 0
+            agendaDayOffset = newOffset
+            agendaDayOffsetChanged = true
+
+            if (schedule.dataset.navigate !== 'still') {
+                schedule.dataset.navigate = 'still'
+                renderSchedule()
+            } else if (newOffset > oldOffset) {
+                schedule.dataset.navigate = 'forw'
+                setTimeout(renderSchedule, 70)
+                setTimeout(() => schedule.dataset.navigate = 'still', 200)
+            } else if (newOffset < oldOffset) {
+                schedule.dataset.navigate = 'back'
+                setTimeout(renderSchedule, 70)
+                setTimeout(() => schedule.dataset.navigate = 'still', 200)
+            } else { renderSchedule() }
+        }
+
+        let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' })
+            .createDropdown(
+                {
+                    'day': i18n('dates.day'), // 1 day
+                    ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
+                    'workweek': i18n('dates.workweek'), // workweek
+                    'week': i18n('dates.week') // week
+                },
+                agendaView,
+                selectedCallback,
+                clickCallback
+            )
 
         function clickCallback(currentValue) {
-            // When the current option is selected, cycle to the next one.
-            const choices = Object.keys(todayViewModeDropdown.options)
-            const index = choices.findIndex(e => e === currentValue) ?? -1
-            todayViewModeDropdown.changeValue(choices[(index + 1) % 3])
+            if (currentValue === 'day') todayViewModeDropdown.changeValue('workweek')
+            else todayViewModeDropdown.changeValue('day')
         }
 
         function selectedCallback(newValue) {
             agendaView = newValue
+            saveToStorage('start-schedule-view-stored', newValue, 'local')
             if (newValue === 'day') {
                 widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
                 if (widgets.classList.contains('editing')) widgetsCollapsed = false
@@ -356,9 +384,8 @@ async function today() {
 
         const events = await MagisterApi.events()
 
-        // Display 'no events' if necessary
-        // TODO: use req status
-        if (!(events?.length > 0)) {
+        // Display error if the result does not exist or if it is not an array
+        if (!(events?.constructor === Array)) {
             element('i', `st-start-fa`, schedule, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
             element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n('error') })
             return
@@ -372,6 +399,12 @@ async function today() {
                 events.filter(item => {
                     const startDate = new Date(item.Start)
                     return (startDate - date) < 86400000 && (startDate - date) >= 0 // Add all events that are on this date to this element
+                })?.map(item => {
+                    const endDate = new Date(item.Einde)
+                    if (item.DuurtHeleDag) {
+                        item.Einde = new Date(new Date(endDate).setTime(endDate.getTime() + 86399000)).toISOString()
+                    }
+                    return item
                 }) || []
 
             let eventsOfDayWithCollision = checkCollision(eventsOfDay)
@@ -414,18 +447,23 @@ async function today() {
 
                     let todayIndex = agendaDays.findIndex(item => item.today)
                     let todayEvents = agendaDays[todayIndex].events
-                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || 0
-                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex].events
+                    let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || todayIndex || 0
+                    let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex]?.events
                     let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
 
-                    // Add an extra day to the day view if the last event of the day has passed. (given the user has chosen for this to happen)                    
-                    if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
+                    // Jump to the next relevant day if no (more) events will take place today (given the user hasn't opted out)
+                    if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                         agendaDayOffset = nextRelevantDayIndex
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                         notify('snackbar', `${i18n('toasts.jumpedToNextRelevantDay')} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+
+                        setTimeout(() => document.querySelector('#st-start-today-offset-zero').classList.add('emphasise'), 200)
+                        schedule.dataset.navigate = 'jumpforw'
+                        setTimeout(() => schedule.dataset.navigate = 'still', 600)
                     }
 
-                    agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + daysToShow - 1))
+                    if (agendaView === 'day') agendaEndDate = agendaStartDate
+                    else agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + Number(agendaView.slice(0, 1)) - 1))
 
                     schedule.classList.remove('week-view')
                     break;
@@ -478,7 +516,11 @@ async function today() {
                         'data-start-connecting': day.events.some(el => el.Einde === item.Start),
                         'data-end-connecting': day.events.some(el => el.Start === item.Einde),
                         style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
-                        title: `${item.Omschrijving}\n${item.Lokatie}\n${new Date(item.Start).getFormattedTime()}–${new Date(item.Einde).getFormattedTime()}`
+                        title: [
+                            item.Omschrijving || 'Geen omschrijving',
+                            item.Lokatie || item.Lokalen.map(e => e.Naam).join(', ') || 'Geen locatie',
+                            item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime()
+                        ].join('\n')
                     })
                     let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
                     if (egg && egg.type === 'dialog') {
@@ -541,7 +583,7 @@ async function today() {
                     }
 
                     // Render the time label
-                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: `${new Date(item.Start).getFormattedTime()}–${new Date(item.Einde).getFormattedTime()}` })
+                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
 
                     // Parse and render any chips
                     let chips = getEventChips(item)
@@ -553,14 +595,14 @@ async function today() {
                 })
 
                 // Display 'no events' if necessary
-                if (day.events?.length < 1 && daysToShow < 3 && !listViewEnabled && agendaView === 'day') {
+                if (day.events?.length < 1 && !listViewEnabled && agendaView === 'day') {
                     let seed = cyrb128(String(day.date.getTime()))
                     element('i', `st-start-col-${i}-fa`, column, { class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)}` })
-                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: i18n('noEvents') })
+                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: day.today ? i18n('noEventsToday') : i18n('noEvents') })
                 }
 
                 // Ensure a nice scrolling position if the date shown is not today
-                if (schedule.scrollTop === 0 && (agendaView === 'day' || (listViewEnabledSetting && agendaView !== 'day')) && !agendaDayOffsetChanged) {
+                if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day')) && !agendaDayOffsetChanged) {
                     schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
                     if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                     if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
@@ -572,7 +614,7 @@ async function today() {
                     const currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' }),
                         currentTimeMarkerLabel = element('div', `st-start-now-label`, column, { 'data-temporal-type': 'style-hours', innerText: i18n('dates.nowBrief')?.toUpperCase() })
                     updateTemporalBindings()
-                    if (schedule.scrollTop === 0 && (agendaView === 'day' || (listViewEnabledSetting && agendaView !== 'day'))) {
+                    if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day'))) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
                         if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
                         if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
@@ -580,7 +622,24 @@ async function today() {
                         schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                     }
                 }
+
+                if (agendaView.slice(-3) === 'day') {
+                    widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
+                    if (widgets.classList.contains('editing')) widgetsCollapsed = false
+                    verifyDisplayMode()
+                    if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
+                    listViewEnabled = listViewEnabledSetting
+                } else {
+                    widgetsCollapsed = true
+                    if (widgets.classList.contains('editing')) widgetsCollapsed = false
+                    verifyDisplayMode()
+                    if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
+                    listViewEnabled = false
+                }
             })
+
+            updateHeaderButtons()
+            updateHeaderText()
         }
         renderSchedule()
 
@@ -850,7 +909,7 @@ async function today() {
 
                         if (autoRotate == 'true') {
                             let interval = setInterval(() => {
-                                if (!widgetItemsContainer?.children?.length>1) clearInterval(interval)
+                                if (!widgetItemsContainer?.children?.length > 1) clearInterval(interval)
                                 if (widgetElement.matches(':hover')) return
                                 scrollWidget('forwards')
                             }, 20000)
@@ -1441,6 +1500,7 @@ function getEventChips(event) {
     else if (event.InfoType === 6) chips.push({ name: i18n('chips.info'), type: 'info' })
     if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n('chips.kwtregistered'), type: 'ok' })
     else if (event.Type === 7) chips.push({ name: i18n('chips.kwt'), type: 'info' })
+    if (event.Type === 103) chips.push({ name: i18n('chips.exam'), type: 'info' })
 
     return chips
 }

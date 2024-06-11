@@ -514,6 +514,10 @@ async function gradeBackup(buttonWrapper) {
     bkModalClose.addEventListener('click', () => bkModal.close())
 
     bkInvoke.addEventListener('click', async () => {
+
+        // TEMP LINE
+        await notify('dialog', "Je kunt momenteel geen back-ups maken. Sorry!\n\nMagister heeft intern wijzigingen aangebracht en ik heb nog even geen tijd gehad \nom het systeem hierop aan te passen.")
+
         bkModal.showModal()
 
         if (bkModalExListTitle.disabled) {
@@ -521,7 +525,9 @@ async function gradeBackup(buttonWrapper) {
             return
         }
 
-        bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
+        // TEMP CHANGED
+        bkModalExListTitle.dataset.description = "Momenteel niet mogelijk!"
+        // bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
         bkModalImListTitle.dataset.description = "Upload een eerder geëxporteerde cijferlijst"
 
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
@@ -529,10 +535,11 @@ async function gradeBackup(buttonWrapper) {
 
         yearsArray = await MagisterApi.years()
 
-        yearsArray.forEach((year, i) => {
-            const button = element('button', `st-cb-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
-            button.addEventListener('click', () => exportGradesForYear({ ...year, i, button }))
-        })
+        // TEMP COMMENTED OUT
+        // yearsArray.forEach((year, i) => {
+        //     const button = element('button', `st-cb-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
+        //     button.addEventListener('click', () => exportGradesForYear({ ...year, i, button }))
+        // })
     })
 
     async function exportGradesForYear(year) {
@@ -861,7 +868,7 @@ async function gradeStatistics() {
     })
 
     // Gather all years and populate the year filter
-    years = (await MagisterApi.years()).reverse()
+    years = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
     years.forEach(async (year, i, a) => {
         let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.replace(/\D/gi, ''), title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
         if (!(label.innerText?.length > 0)) label.innerText = i + 1

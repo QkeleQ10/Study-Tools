@@ -43,14 +43,15 @@
     },
     "chips": {
         "cancelled": "Expiratum",
-        "hw": "Opus domum",
+        "hw": "Opus domum ",
         "pw": "Opus temptationi",
         "kwt": "Tempus Deligendi Opus",
         "kwtregistered": "Deditum",
         "info": "Informatie",
         "important": "Belangrijk",
         "attachments": "Bijlagen",
-        "graded": "Beoordeeld"
+        "graded": "Beoordeeld",
+        "exam": "Ultima Examinatio"
     },
     "dates": {
         "day": "Dies",
@@ -110,6 +111,7 @@
     "Nieuwer": "Nieuwer",
     "Ouder": "Ouder",
     "noEvents": "Geen afspraken deze dag",
+    "noEventsToday": "Geen afspraken vandaag",
     "error": "Er is iets misgegaan",
     "loading": "Laden...",
     "loadingWidgets": "Widgets laden...",
@@ -138,7 +140,7 @@
         "subjectPrompt": "Geef de naam van het vak op",
         "hideStudyguide": "Studiewijzer verbergen",
         "hidden": "Verborgen",
-        "periodN": "Pars temperis {periodOrdinal}",
+        "periodN": "Periode {period}",
         "periodMissing": "Geen periode"
     }
 }

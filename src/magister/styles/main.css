@@ -31,6 +31,45 @@ div.loading-overlay {
     background: none;
 }
 
+dialog.st-modal[open] {
+    opacity: 1;
+    transform: scale(1);
+}
+
+dialog.st-modal {
+    opacity: 0;
+    transform: scale(0.5) translateY(50px);
+    transition: opacity 200ms, transform 200ms, overlay 200ms allow-discrete, display 200ms allow-discrete;
+
+    background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    padding: 32px;
+    overflow: hidden;
+}
+
+dialog.st-modal::backdrop {
+    background-color: transparent;
+    transition: background-color 200ms, overlay 200ms allow-discrete, display 200ms allow-discrete;
+}
+
+dialog.st-modal[open]::backdrop {
+    background-color: var(--st-background-overlay);
+}
+
+@starting-style {
+    dialog.st-modal[open] {
+        opacity: 0;
+        transform: scale(0.5) translateY(50px);
+    }
+
+    dialog.st-modal[open]::backdrop {
+        background-color: transparent;
+    }
+}
+
+
 .st-shortcut-icon {
     font: 20px 'Font Awesome 6 Pro';
 }
@@ -382,6 +421,29 @@ div.loading-overlay {
 
 .st-snackbar.hiding {
     animation: snackbarOut 200ms both;
+}
+
+.st-snackbar.queued:after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    translate: -50%;
+    width: 95%;
+    height: 8px;
+    background-color: var(--st-background-tertiary);
+    opacity: 0.75;
+    border: var(--st-border);
+    border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
+    animation: snackbarQueuedIn 200ms;
+    z-index: -1;
+}
+
+@keyframes snackbarQueuedIn {
+    from {
+        transform-origin: bottom;
+        transform: scaleY(0)
+    }
 }
 
 .st-snackbar>*:first-child {
@@ -1163,6 +1225,7 @@ a.st-keyboard-hint.clicked {
 .st-line-chart-col {
     --hue-rotate: 0;
     --color: var(--st-accent-ok);
+    --mean-color: #ffffff44;
     --point-height: 0;
     flex-grow: 1;
     position: relative;
@@ -1197,7 +1260,7 @@ a.st-keyboard-hint.clicked {
     translate: -50%;
     width: 100%;
     height: calc((1 * (var(--point-height) - var(--previous-point-height))) * 100%);
-    min-height: 0.5px;
+    min-height: 2px;
     background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--color), transparent calc(50% + 1px));
 }
 
@@ -1210,7 +1273,7 @@ a.st-keyboard-hint.clicked {
     translate: -50%;
     width: 100%;
     height: calc((1 * (var(--previous-point-height) - var(--point-height))) * 100%);
-    min-height: 0.5px;
+    min-height: 2px;
     background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--color), transparent calc(50% + 1px));
 }
 
@@ -1224,6 +1287,44 @@ a.st-keyboard-hint.clicked {
     width: 100%;
     height: 1px;
     background-color: var(--color);
+}
+
+.st-line-chart-col[data-mean-delta="rise"]:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc((1 - var(--mean-height)) * 100%);
+    right: 0;
+    translate: -50%;
+    width: 100%;
+    height: calc((1 * (var(--mean-height) - var(--previous-mean-height))) * 100%);
+    min-height: 2px;
+    background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--mean-color), transparent calc(50% + 1px));
+}
+
+.st-line-chart-col[data-mean-delta="fall"]:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc((1 - var(--previous-mean-height)) * 100%);
+    right: 0;
+    translate: -50%;
+    width: 100%;
+    height: calc((1 * (var(--previous-mean-height) - var(--mean-height))) * 100%);
+    min-height: 2px;
+    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--mean-color), transparent calc(50% + 1px));
+}
+
+.st-line-chart-col[data-mean-delta="equal"]:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc((1 - var(--mean-height)) * 100%);
+    right: 0;
+    translate: -50%;
+    width: 100%;
+    height: 1px;
+    background-color: var(--mean-color);
 }
 
 #st-decoration-disable {

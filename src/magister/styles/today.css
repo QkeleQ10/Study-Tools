@@ -108,6 +108,33 @@
     font-weight: 600;
 }
 
+#st-start-today-offset-zero.emphasise {
+    animation: 200ms teeter 3 linear, 1000ms pulsebig;
+}
+
+@keyframes teeter {
+    33% {
+        transform: translate(-7%, 0) rotate(-9deg);
+    }
+
+    66% {
+        transform: translate(-5%, 0) rotate(4deg);
+    }
+
+    66% {
+        transform: translate(7%, 0) rotate(9deg);
+    }
+}
+
+@keyframes pulsebig {
+
+    10%,
+    60% {
+        scale: 1.5;
+        translate: 0 -8px;
+    }
+}
+
 #st-start-today-view {
     display: flex;
     flex-wrap: nowrap;
@@ -123,6 +150,47 @@
     height: auto;
     overflow-y: auto;
     transition: background-color 200ms, opacity 200ms;
+}
+
+#st-start-schedule[data-navigate='back'] {
+    animation: 200ms schedule-navigate-back;
+}
+
+#st-start-schedule[data-navigate='forw'] {
+    animation: 200ms schedule-navigate-forw;
+}
+
+#st-start-schedule[data-navigate='jumpforw'] {
+    animation: 600ms schedule-navigate-forw -300ms;
+}
+
+@keyframes schedule-navigate-back {
+    34.9% {
+        translate: 5%;
+        opacity: 0;
+    }
+
+    35% {
+        translate: -5%;
+    }
+}
+
+@keyframes schedule-navigate-forw {
+    34.9% {
+        translate: -5%;
+        opacity: 0;
+    }
+
+    35% {
+        translate: 5%;
+    }
+}
+
+@keyframes schedule-navigate-jump-forw {
+    0% {
+        translate: 15%;
+        opacity: 0;
+    }
 }
 
 #st-start-schedule-head {
@@ -207,7 +275,7 @@
     display: block;
     left: -8px;
     top: 0;
-    width: 0;
+    width: 8px;
     height: 0;
     border-top: 8px solid transparent;
     border-bottom: 8px solid transparent;

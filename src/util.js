@@ -415,7 +415,7 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     return dropdown
 }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true) {
+Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true, showRemainder = true, itemCap = 100) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-line-chart')
@@ -425,10 +425,11 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     threshold ??= totalFrequency / 40
     const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
     const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
-    const maxFrequency = Math.max(...Object.values(frequencyMap), remainderFrequency)
+    const maxFrequency = Math.max(...Object.values(frequencyMap), showRemainder ? remainderFrequency : 0)
 
-    const filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
+    let filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
     if (sort) filteredFrequencyMap.sort((a, b) => b[1] - a[1])
+    filteredFrequencyMap = filteredFrequencyMap.slice(0, itemCap)
 
     filteredFrequencyMap.forEach(([key, frequency], i) => {
         const hueRotate = rotateHue ? (20 * i) : 0
@@ -446,7 +447,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
             })
     })
 
-    if (remainderFrequency > 0) {
+    if (remainderFrequency > 0 && showRemainder) {
         const hueRotate = rotateHue ? (20 * filteredFrequencyMap.length) : 0
 
         const col = element('div', `${chartArea.id}-remainder`, chartArea, {
@@ -555,7 +556,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue) {
+Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue, showProgressiveMean = false) {
     const chartArea = this
     if (!chartArea.classList.contains('st-line-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
@@ -564,14 +565,34 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
     minValue ??= Math.min(...values)
     maxValue ??= Math.max(...values)
 
+    let progressiveMean = values[0]
+
     values.forEach((value, i) => {
         const hueRotate = 10 * i
 
+        const progressiveMeanPrev = progressiveMean
+        progressiveMean = calculateMean(values.slice(0, i + 1))
+
         const col = element('div', `${chartArea.id}-${i}`, chartArea, {
             class: 'st-line-chart-col',
-            title: `${labels?.[i] ?? i}\n${value}`,
-            'data-delta': values[i - 1] > value ? 'fall' : values[i - 1] < value ? 'rise' : values[i - 1] === value ? 'equal' : 'none',
-            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}`
+            title: `${labels?.[i] ?? i}\n${value.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}\n\nVoortschrijdend gemiddelde: ${progressiveMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            'data-delta': values[i - 1] > value
+                ? 'fall'
+                : values[i - 1] < value
+                    ? 'rise' : values[i - 1] === value
+                        ? 'equal'
+                        : 'none',
+            'data-mean-delta': !showProgressiveMean || i === 0
+                ? 'none'
+                : progressiveMeanPrev > progressiveMean
+                    ? 'fall'
+                    : progressiveMeanPrev < progressiveMean
+                        ? 'rise'
+                        : Math.abs((progressiveMean - progressiveMeanPrev) / (maxValue - minValue)) < 0.2
+                            // : progressiveMeanPrev === progressiveMean
+                            ? 'equal'
+                            : 'none',
+            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}; --mean-height: ${(progressiveMean - minValue) / (maxValue - minValue)}; --previous-mean-height: ${(progressiveMeanPrev - minValue) / (maxValue - minValue)};`
         }),
             bar = element('div', `${chartArea.id}-${i}-bar`, col, {
                 class: 'st-line-chart-point'
@@ -586,9 +607,10 @@ Element.prototype.createLineChart = function (values = [], labels = [], minValue
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
     switch (type) {
         case 'snackbar':
-            const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 10000) }
+            const snackbar = { id: new Date().getTime(), body, buttons, duration: Math.min(Math.max(500, duration), 60000) }
             snackbarQueue.push(snackbar)
             if (!document.querySelector('.st-snackbar')) showSnackbar(snackbar)
+            else document.querySelector('.st-snackbar').classList.add('queued')
             break
 
         case 'dialog':
@@ -620,18 +642,27 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                     })
                 }
 
-                const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
-                if (options?.index && options?.length) {
-                    dialogDismiss.classList.add('st-step')
-                    dialogDismiss.innerText = `${options.index} / ${options.length}`
-                    if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                if (typeof options.allowClose === 'boolean' && options.allowClose === false) {
+                    dialog.addEventListener('cancel', (event) => {
+                        event.preventDefault()
+                    })
+                    resolve(dialog)
+                } else {
+                    const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
+                    if (options?.index && options?.length) {
+                        dialogDismiss.classList.add('st-step')
+                        dialogDismiss.innerText = `${options.index} / ${options.length}`
+                        if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                    }
+                    dialogDismiss.addEventListener('click', () => {
+                        dialog.close()
+                        dialog.remove()
+                    })
                 }
-                dialogDismiss.addEventListener('click', () => {
-                    dialog.close()
-                    dialog.remove()
-                })
 
-                dialog.addEventListener('close', () => { resolve() }, { once: true })
+                dialog.addEventListener('close', () => {
+                    resolve()
+                }, { once: true })
             })
 
         default:
