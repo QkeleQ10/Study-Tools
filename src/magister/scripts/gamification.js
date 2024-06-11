@@ -3,13 +3,13 @@ let user = {}
 let years = []
 let wrappedPage = 0
 
-// const potentialRange = { start: new Date(now.getFullYear() + '-06-12'), end: new Date(now.getFullYear() + '-09-16') } // June 12th - September 15th
-const potentialRange = { start: new Date(now.getFullYear() + '-06-06'), end: new Date(now.getFullYear() + '-09-16') } // June 12th - September 15th
-const forcedRange = { start: new Date(now.getFullYear() + '-07-04'), end: new Date(now.getFullYear() + '-09-16') } // July 4th - September 15th
-// const forcedRange = { start: new Date(now.getFullYear() + '-06-06'), end: new Date(now.getFullYear() + '-09-16') } // July 4th - September 15th
+const potentialRange = { start: new Date(now.getFullYear() + '-06-12 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 12th - September 15th
+const forcedRange = { start: new Date(now.getFullYear() + '-07-04 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
 // vakantie N: 07-20 to 09-01
 // vakantie M: 07-13 to 08-25
 // vakantie Z: 07-06 to 08-18
+
+const gradients = ['linear-gradient(to right, #485563, #29323c)', 'linear-gradient(105deg, #485596, #29326A)', 'linear-gradient(105deg, #775596, #55326A)', 'linear-gradient(105deg, rgb(150,85,128), rgb(106,50,95))', 'linear-gradient(105deg, rgb(150,85,99), rgb(106,50,50))', 'linear-gradient(105deg, rgb(150,110,85), rgb(106,75,50))', 'linear-gradient(105deg, rgb(150,138,85), rgb(106,99,50))', 'linear-gradient(105deg, rgb(134,150,85), rgb(91,106,50))', 'linear-gradient(105deg, rgb(106,150,85), rgb(59,106,50))', 'linear-gradient(105deg, rgb(72,130,90), rgb(46,96,62))', 'linear-gradient(105deg, rgb(85,150,129), rgb(50,106,97))', 'linear-gradient(105deg, rgb(85,139,150), rgb(50,92,106))', 'linear-gradient(105deg, rgb(85,117,150), rgb(50,73,106))', 'linear-gradient(105deg, rgb(85,97,150), rgb(50,51,106))']
 
 checkWrapped()
 
@@ -24,7 +24,6 @@ async function checkWrapped() {
 
         const examInfo = await MagisterApi.exams.info(years.at(-1))
         years[years.length - 1].examInfo = examInfo
-
         if (examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) { // If the student has completed all of their finals, commence regardless
             commenceWrapped(true)
         } else if (now >= forcedRange.start && now <= forcedRange.end) { // Else, continue if it's inside the appropriate time frame
@@ -125,9 +124,11 @@ async function constructWrapped(lastYearOnly) {
         // overall stats
 
         async function constructWrappedForYear(year, i) {
-
             return new Promise(async (resolveYear) => {
-                const yearElement = element('div', null, null, { class: 'st-wrapped-year' })
+                let seed = cyrb128(firstName + i)
+                let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
+
+                const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${Object.keys(year).length === 0 ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
                 const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: Object.keys(year).length === 0 ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
                 let cards = []
 
@@ -165,7 +166,7 @@ async function constructWrapped(lastYearOnly) {
 
                 if (year.examInfo && Object.keys(year.examInfo).length > 0) {
                     if (year.exams?.length > 0) {
-                        const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 6;', 'data-icon': '' })
+                        const card = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 5;', 'data-icon': '' })
                         element('span', null, card, { class: 'st-w-text', innerText: `Dit jaar deed je ${year.examInfo.doetVroegtijdig ? 'vroegtijdig ' : ''}examen in ${year.exams.length > 1 ? (year.exams.length + ' vakken') : year.exams[0]?.omschrijving}.` })
                         let examLocationHashmap = {}
                         year.exams.map(exam => exam.lokalen?.[0]?.omschrijving).forEach(location => {

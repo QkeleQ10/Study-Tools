@@ -97,6 +97,8 @@
 }
 
 .st-wrapped-year {
+    --pattern: linear-gradient(to right, transparent, transparent);
+    --gradient: linear-gradient(to right, #485563, #29323c);
     min-height: min(calc(100vh - 64px), 850px);
     max-height: min(calc(100vh - 64px), 850px);
     flex: 100% 0 0;
@@ -111,7 +113,7 @@
 
     overflow-y: auto;
     border-radius: 16px;
-    background-image: linear-gradient(to right, #485563, #29323c);
+    background-image: radial-gradient(at left top, #20283110, #1218201c), var(--pattern), var(--gradient);
     color: #ffffff;
 }
 
@@ -245,7 +247,7 @@
 .st-wrapped-card .st-w-bar-chart {
     height: 100%;
     width: min(max-content, 100%);
-    overflow: hidden;
+    overflow: visible;
     max-width: max-content;
 }
 
