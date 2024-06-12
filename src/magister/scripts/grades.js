@@ -131,7 +131,7 @@ async function gradeCalculator(buttonWrapper) {
 
     buttonWrapper.append(clOpen)
 
-    let years = await MagisterApi.years()
+    let years = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
 
     let apiGrades = {},
         gradeColumns = {},
@@ -514,10 +514,6 @@ async function gradeBackup(buttonWrapper) {
     bkModalClose.addEventListener('click', () => bkModal.close())
 
     bkInvoke.addEventListener('click', async () => {
-
-        // TEMP LINE
-        await notify('dialog', "Je kunt momenteel geen back-ups maken. Sorry!\n\nMagister heeft intern wijzigingen aangebracht en ik heb nog even geen tijd gehad \nom het systeem hierop aan te passen.")
-
         bkModal.showModal()
 
         if (bkModalExListTitle.disabled) {
@@ -525,21 +521,19 @@ async function gradeBackup(buttonWrapper) {
             return
         }
 
-        // TEMP CHANGED
-        bkModalExListTitle.dataset.description = "Momenteel niet mogelijk!"
-        // bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
+        bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
         bkModalImListTitle.dataset.description = "Upload een eerder geëxporteerde cijferlijst"
 
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
         if (yearsArray?.length > 0) return
 
-        yearsArray = await MagisterApi.years()
+        yearsArray = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+        yearsArray.reverse()
 
-        // TEMP COMMENTED OUT
-        // yearsArray.forEach((year, i) => {
-        //     const button = element('button', `st-cb-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
-        //     button.addEventListener('click', () => exportGradesForYear({ ...year, i, button }))
-        // })
+        yearsArray.forEach((year, i) => {
+            const button = element('button', `st-cb-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
+            button.addEventListener('click', () => exportGradesForYear({ ...year, i, button }))
+        })
     })
 
     async function exportGradesForYear(year) {

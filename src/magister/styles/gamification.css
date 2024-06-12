@@ -79,6 +79,7 @@
     border: 1px solid #444;
     outline: none;
     background-color: transparent;
+    user-select: none;
 }
 
 #st-wrapped::backdrop {
@@ -259,20 +260,30 @@
     --st-highlight-primary: #ffffff22;
 }
 
+#st-wrapped .st-button.icon {
+    color: #ffffff;
+}
+
 #st-wrapped-esc {
     position: absolute;
     top: 32px;
     right: 32px;
 }
 
-#st-wrapped-next {
+#st-wrapped-info {
     position: absolute;
     top: 32px;
     right: 68px;
 }
 
-#st-wrapped-prev {
+#st-wrapped-next {
     position: absolute;
     top: 32px;
     right: 104px;
+}
+
+#st-wrapped-prev {
+    position: absolute;
+    top: 32px;
+    right: 140px;
 }
