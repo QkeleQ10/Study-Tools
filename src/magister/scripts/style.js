@@ -1441,25 +1441,6 @@ table.table-grid-layout>tbody>tr.selected {
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
-    if (syncedStorage['special']?.includes('Discord-mode')) {
-        createStyle(`
-:root {
-    --st-background-secondary: #232428;
-}
-
-#st-start-widgets {
-    background-color: var(--st-side-background);
-    border-left: none;
-    box-shadow: none;
-}
-
-.menu-footer, #st-start-widget-controls-wrapper {
-    background-color: #232428;
-    border-top: none;
-}
-`, 'study-tools-discord-mode')
-    } else createStyle('', 'study-tools-discord-mode')
-
     if (syncedStorage['start-enabled']) {
         createStyle(`
 #vandaag-container .main .content-container, #vandaag-container dna-page-header {

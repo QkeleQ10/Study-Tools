@@ -848,14 +848,12 @@ async function today() {
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
                         recentGrades.forEach((item, i) => {
+                            console.log(item)
                             const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, { class: 'st-start-widget-grades-item', 'data-unread': item.unread, 'data-hidden': item.hidden, 'data-assignment': item.assignment })
                             children.push(gradeElement)
                             if (i === 0) widgetElement.dataset.unread = item.unread
 
-                            let formattedResult = item.waarde
-                            if (!isNaN(Number(item.waarde.replace(',', '.')))) formattedResult = Number(item.waarde.replace(',', '.')).toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })
-
-                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: formattedResult, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) < 5.5 })
+                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < 5.5 })
                             let itemSubj = element('span', `st-start-widget-grades-${i}-subj`, gradeElement, { class: 'st-start-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
                             let itemInfo = element('span', `st-start-widget-grades-${i}-info`, gradeElement, { class: 'st-start-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
                             let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', 'data-temporal-type': 'timestamp', 'data-temporal-start': item.date })
@@ -933,6 +931,8 @@ async function today() {
                             widgetItemsContainer.scroll((targetIndex) * 400, 0)
                             widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
                             visibleChildIndex = targetIndex
+
+                            if (!document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`) || !document.querySelector('#st-start-widget-grades-scroll-pagn>div')) return
 
                             document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach(d => d.dataset.current = false)
                             document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).dataset.current = true

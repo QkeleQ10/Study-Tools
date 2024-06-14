@@ -3,18 +3,21 @@ let user = {}
 let years = []
 let wrappedPage = 0
 
-const potentialRange = { start: new Date(now.getFullYear() + '-06-12 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 12th - September 15th
-const forcedRange = { start: new Date(now.getFullYear() + '-07-04 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
+const range1 = { start: new Date(now.getFullYear() + '-06-12 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 12th - September 15th
+const range2 = { start: new Date(now.getFullYear() + '-06-21 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
+const range3 = { start: new Date(now.getFullYear() + '-07-04 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
 // vakantie N: 07-20 to 09-01
 // vakantie M: 07-13 to 08-25
 // vakantie Z: 07-06 to 08-18
 
-const gradients = ['linear-gradient(to right, #485563, #29323c)', 'linear-gradient(105deg, #485596, #29326A)', 'linear-gradient(105deg, #775596, #55326A)', 'linear-gradient(105deg, rgb(150,85,128), rgb(106,50,95))', 'linear-gradient(105deg, rgb(150,85,99), rgb(106,50,50))', 'linear-gradient(105deg, rgb(150,110,85), rgb(106,75,50))', 'linear-gradient(105deg, rgb(150,138,85), rgb(106,99,50))', 'linear-gradient(105deg, rgb(134,150,85), rgb(91,106,50))', 'linear-gradient(105deg, rgb(106,150,85), rgb(59,106,50))', 'linear-gradient(105deg, rgb(72,130,90), rgb(46,96,62))', 'linear-gradient(105deg, rgb(85,150,129), rgb(50,106,97))', 'linear-gradient(105deg, rgb(85,139,150), rgb(50,92,106))', 'linear-gradient(105deg, rgb(85,117,150), rgb(50,73,106))', 'linear-gradient(105deg, rgb(85,97,150), rgb(50,51,106))']
+const gradients = ['linear-gradient(to right, #485563, #29323c)', 'linear-gradient(105deg, #485596, #29326A)', 'linear-gradient(105deg, #775596, #55326A)', 'linear-gradient(105deg, rgb(150,85,128), rgb(106,50,95))', 'linear-gradient(105deg, rgb(150,85,99), rgb(106,50,50))', 'linear-gradient(105deg, rgb(150,110,85), rgb(106,75,50))', 'linear-gradient(105deg, rgb(150,138,85), rgb(106,99,70))', 'linear-gradient(105deg, rgb(134,150,85), rgb(91,106,50))', 'linear-gradient(105deg, rgb(106,150,85), rgb(59,106,50))', 'linear-gradient(105deg, rgb(72,130,90), rgb(46,96,62))', 'linear-gradient(105deg, rgb(85,150,129), rgb(50,106,97))', 'linear-gradient(105deg, rgb(85,139,150), rgb(50,92,106))', 'linear-gradient(105deg, rgb(85,117,150), rgb(50,73,106))', 'linear-gradient(105deg, rgb(85,97,150), rgb(50,51,106))', 'linear-gradient(105deg, rgb(120,160,160), rgb(50,99,96))', 'linear-gradient(105deg, rgb(154,140,80), rgb(110,106,60))']
 
 checkWrapped()
 
+window.checkWrapped = checkWrapped()
+
 async function checkWrapped() {
-    if (now >= potentialRange.start && now <= potentialRange.end) {
+    if ((now >= range1.start && now <= range1.end) || (await getFromStorage('forceWrappedExamEdition', 'session')) === 'true') {
 
         user = await MagisterApi.accountInfo(true)
 
@@ -24,9 +27,17 @@ async function checkWrapped() {
 
         const examInfo = await MagisterApi.exams.info(years.at(-1))
         years[years.length - 1].examInfo = examInfo
-        if (examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) { // If the student has completed all of their finals, commence regardless
+
+        const recentGrades = await MagisterApi.grades.recent()
+
+        if ((examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) || (await getFromStorage('forceWrappedExamEdition', 'session')) === 'true') {
+            // Continue if it's inside 'range 1' and the student has had their final exams
             commenceWrapped(true)
-        } else if (now >= forcedRange.start && now <= forcedRange.end) { // Else, continue if it's inside the appropriate time frame
+        } else if (now >= range2.start && now <= range2.end && recentGrades?.length > 0) {
+            // Else, continue if it's inside 'range 2' and the student has grades
+            commenceWrapped(false)
+        } else if (now >= range3.start && now <= range3.end) {
+            // Else, continue if it's inside 'range 3'
             commenceWrapped(false)
         }
     }
@@ -40,7 +51,7 @@ async function commenceWrapped(isFinalYearStudent) {
 
     const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Magister Wrapped", innerText: "" })
     appbarMetrics.firstElementChild.before(wrappedInvoke)
-    const endDateString = new Date(`${now.getFullYear()}-${potentialRange.end.getMonth() + 1}-${potentialRange.end.getDate() - 1}`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+    const endDateString = new Date(`${now.getFullYear()}-${range1.end.getMonth() + 1}-${range1.end.getDate() - 1}`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
     const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: `Magister Wrapped is terug!\nBeschikbaar t/m ${endDateString}.` })
     if (lastAccessYear !== now.getFullYear()) setTimeout(() => wrappedInvokeTip.classList.remove('hidden'), 100)
     setTimeout(() => wrappedInvokeTip.classList.add('hidden'), 30000)
@@ -52,7 +63,7 @@ async function commenceWrapped(isFinalYearStudent) {
         wrappedInvoke.classList.add('spinning')
 
         let promiseArray = [constructWrapped(!isFinalYearStudent)]
-        if ((now < forcedRange.start) && !used) promiseArray.push(notify('dialog', "Als examenleerling heb je toegang tot een voorproefje van Wrapped. Er kan nog het één en ander veranderen.\n\nVergeet niet het overzicht van álle leerjaren aan het eind te bekijken!", null, null, { closeIcon: '', closeText: "Begrepen" }))
+        if ((now < range2.start) && !used) promiseArray.push(notify('dialog', "Als examenleerling heb je toegang tot een voorproefje van Wrapped. Er kan nog het één en ander veranderen.\n\nVergeet niet het overzicht van álle leerjaren aan het eind te bekijken!", null, null, { closeIcon: '', closeText: "Begrepen" }))
 
         const [wrappedDialog] = await Promise.all(promiseArray)
 
@@ -116,23 +127,36 @@ async function constructWrapped(lastYearOnly) {
             dialog.close()
         })
 
-        resolve(dialog)
+        const infoButton = element('button', 'st-wrapped-info', dialog, { class: 'st-button icon', 'data-icon': '' })
+        infoButton.addEventListener('click', async () => {
+            await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze samenvatting van het afgelopen jaar zie je aan het eind/begin van elk schooljaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)", null, null, { index: 1, length: 3 })
 
-        // final year:
-        // reminder to move away from school mail
-        // theme contest?
-        // overall stats
+            await notify('dialog', "Als je op bepaalde tegels klikt, krijg je meer informatie. \nExamenleerlingen kunnen door de verschillende leerjaren bladeren en zelfs een totaalplaatje zien.", null, null, { index: 2, length: 3 })
+
+            await notify(
+                'dialog',
+                "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van suggesties en probleemrapporten) is daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
+                [
+                    { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
+                ], null, { index: 3, length: 3 })
+        })
+
+        resolve(dialog)
 
         async function constructWrappedForYear(year, i) {
             return new Promise(async (resolveYear) => {
-                let seed = cyrb128(firstName + i)
+                let seed = cyrb128(user.name.firstname + i)
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
-                const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${Object.keys(year).length === 0 ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
-                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: Object.keys(year).length === 0 ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
+                const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
+                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: i === years.length ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
                 let cards = []
 
-                if (Object.keys(year).length === 0) {
+                yearTitle.addEventListener('dblclick', () => {
+                    yearElement.style.setProperty('--gradient', gradients.random())
+                })
+
+                if (i === years.length) {
                     year.grades = years.flatMap(obj => obj.grades)
                         .filter((grade, index, self) =>
                             index === self.findIndex((g) =>
@@ -239,7 +263,7 @@ async function constructWrapped(lastYearOnly) {
                         const card2 = element('div', null, null, { class: 'st-wrapped-card interactable', style: 'grid-row: span 6;', 'data-icon': '', 'data-page': 1, 'data-pages': 4 })
                         let n = 0
                         let eventSubjectHashmap = {}
-                        year.events.filter(event => event.Vakken?.[0]?.Naam?.length > 0).map(event => event.Vakken?.[0]?.Naam).forEach(subject => {
+                        year.events.filter(event => event.Vakken?.[0]?.Naam?.length > 0).map(event => event.Vakken?.[0]?.Naam.replace(/(e taal)$/gi, '')).forEach(subject => {
                             eventSubjectHashmap[subject] ??= 0
                             eventSubjectHashmap[subject]++
                         })
@@ -262,14 +286,14 @@ async function constructWrapped(lastYearOnly) {
                         let el3 = element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
                         cards.push(card2)
 
-                        let el4 = element('div', `st-wrapped-graph-${i}-2`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
+                        let el4 = element('div', `st-wrapped-graph-${i}-4`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
+                            .createBarChart(eventSubjectHashmap, null, 1, true, false, false, 15)
+
+                        let el5 = element('div', `st-wrapped-graph-${i}-2`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
                             .createBarChart(eventLocationHashmap, null, 1, true, false, false, 15)
 
-                        let el5 = element('div', `st-wrapped-graph-${i}-3`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
+                        let el6 = element('div', `st-wrapped-graph-${i}-3`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
                             .createBarChart(eventTeacherHashmap, null, 1, true, false, false, 15)
-
-                        let el6 = element('div', `st-wrapped-graph-${i}-4`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
-                            .createBarChart(eventSubjectHashmap, null, 1, true, false, false, 15)
 
                         card2.addEventListener('click', () => {
                             n = (n + 1) % 4
@@ -361,6 +385,14 @@ async function constructWrapped(lastYearOnly) {
                     element('span', null, card1, { class: 'st-w-text', innerText: `tijdigheid opdrachten` })
                     element('span', null, card1, { class: 'st-w-text-small', innerText: `Van de ${year.assignments.length} leverde je er ${year.assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) < new Date(item.IngeleverdOp)).length} op tijd, ${year.assignments.filter(item => item.IngeleverdOp && new Date(item.InleverenVoor) >= new Date(item.IngeleverdOp)).length} te laat en ${year.assignments.filter(item => !item.IngeleverdOp).length} helemaal niet in.` })
                     cards.push(card1)
+                }
+
+                if (i === years.length) {
+                    const card1 = element('div', null, null, { class: 'st-wrapped-card external-link', style: 'grid-row: span 5;', 'data-icon': '' })
+                    element('span', null, card1, { class: 'st-w-text-small', innerText: `Vergeet niet dat je e-mailadres van school waarschijnlijk binnenkort wordt verwijderd.` })
+                    element('span', null, card1, { class: 'st-w-text-small', innerText: `Maak ook even een back-up van je cijferlijst!` })
+                    cards.push(card1)
+                    card1.addEventListener('click', async (event) => { event.stopPropagation(); dialog.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cb')).click(); })
                 }
 
                 cards.forEach(card => {

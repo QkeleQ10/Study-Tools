@@ -36,10 +36,18 @@ async function studyguideList() {
         let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
         let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
         fakeDefaultItemButton.addEventListener('click', () => {
-            if (egg.type === 'applySettings') {
-                chrome.storage.sync.set(egg.output)
-            } else {
-                notify(egg.type || 'snackbar', egg.output, null, 3600000)
+            switch (egg.type) {
+                case 'setFlag':
+                    saveToStorage(egg.output.key, egg.output.value, 'session')
+                    break;
+
+                case 'applySettings':
+                    chrome.storage.sync.set(egg.output)
+                    break;
+
+                default:
+                    notify(egg.type || 'snackbar', egg.output, null, 3600000)
+                    break;
             }
         })
 
