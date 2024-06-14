@@ -872,6 +872,15 @@ async function gradeStatistics() {
         if (i === a.length - 1) {
             input.checked = true
             let yearGrades = (await MagisterApi.grades.forYear(year))
+                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
+                .filter((grade, index, self) =>
+                    index === self.findIndex((g) =>
+                        g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
+                        g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
+                        g.CijferStr === grade.CijferStr
+                    )
+                )
+                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
             statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
