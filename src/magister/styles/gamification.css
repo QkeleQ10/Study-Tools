@@ -237,10 +237,11 @@
 }
 
 .st-wrapped-card .st-w-grade-chart {
+    --suf-threshold-p: 50%;
     width: 100%;
     background-image:
         linear-gradient(to bottom, transparent calc(100% - 1px), #ffffff20 1px),
-        linear-gradient(to bottom, transparent calc(50% - 0.5px), #ff444460 1px, transparent calc(50% + 0.5px));
+        linear-gradient(to bottom, transparent calc(var(--suf-threshold-p) - 0.75px), #f78888c4 1px, transparent calc(var(--suf-threshold-p) + 0.75px));
     background-size: calc((100% / 9) + (1px / 9)) calc((100% / 9) - (1px / 9)), 100% 100%;
     background-position: 0 1px, 0 0;
 }

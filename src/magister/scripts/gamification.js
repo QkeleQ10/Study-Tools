@@ -4,7 +4,7 @@ let years = []
 let wrappedPage = 0
 
 const range1 = { start: new Date(now.getFullYear() + '-06-12 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 12th - September 15th
-const range2 = { start: new Date(now.getFullYear() + '-06-21 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
+const range2 = { start: new Date(now.getFullYear() + '-06-21 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 21st - September 15th
 const range3 = { start: new Date(now.getFullYear() + '-07-04 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
 // vakantie N: 07-20 to 09-01
 // vakantie M: 07-13 to 08-25
@@ -145,12 +145,19 @@ async function constructWrapped(lastYearOnly) {
 
         async function constructWrappedForYear(year, i) {
             return new Promise(async (resolveYear) => {
-                let seed = cyrb128(user.name.firstname + i)
+                let seed = cyrb128((year.groep?.code + year.lesperiode?.code) || (user.name?.firstname + i))
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
                 const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
                 const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: i === years.length ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
                 let cards = []
+
+                yearTitle.addEventListener('click', () => {
+                    yearTitle.innerText = `Magister Wrapped: ${year.groep?.omschrijving || '?'}`
+                    setTimeout(() => {
+                        yearTitle.innerText = i === years.length ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas`
+                    }, 2000)
+                })
 
                 yearTitle.addEventListener('dblclick', () => {
                     yearElement.style.setProperty('--gradient', gradients.random())
@@ -209,7 +216,7 @@ async function constructWrapped(lastYearOnly) {
 
                 if (year.grades?.length > 0) {
                     const card1 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 7; grid-column: span 2;', innerText: `${year.grades.length} cijfers`, 'data-icon': '' })
-                    element('div', `st-wrapped-graph-${i}`, card1, { class: 'st-w-grade-chart st-force-light' })
+                    element('div', `st-wrapped-graph-${i}`, card1, { class: 'st-w-grade-chart st-force-light', style: `--suf-threshold-p: ${(1 - ((Number(syncedStorage['suf-threshold']) - 1) / 9)) * 100}%` })
                         .createLineChart(
                             year.grades
                                 .map(grade => Number(grade.CijferStr?.replace(',', '.'))),
@@ -225,8 +232,8 @@ async function constructWrapped(lastYearOnly) {
                     element('div', null, card2, { class: 'st-w-text-small', innerText: 'gemiddeld cijfer', style: 'grid-row: 1; grid-column: 1;' })
                     element('div', null, card2, { class: 'st-w-metric', innerText: calculateMean(year.grades.map(grade => Number(grade.CijferStr?.replace(',', '.')))).toLocaleString(locale, { minimumFractionDigits: 3, maximumFractionDigits: 3 }), style: 'grid-row: 2; grid-column: 1;' })
                     element('div', null, card2, { class: 'st-w-line-vertical', style: 'grid-row: 1 / -1; grid-column: 2;' })
-                    element('div', null, card2, { class: 'st-w-text-tiny', innerText: 'voldoendes', style: 'grid-row: 1; grid-column: 3;' })
-                    element('div', null, card2, { class: 'st-w-metric-med', innerText: (year.grades.filter(grade => { return Number(grade.CijferStr?.replace(',', '.')) >= 5.5 }).length / year.grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '%', style: 'grid-row: 2; grid-column: 3;' })
+                    element('div', null, card2, { class: 'st-w-text-tiny', innerText: Number(syncedStorage['suf-threshold']) === 5.5 ? 'voldoendes' : `voldoendes (≥ ${Number(syncedStorage['suf-threshold']).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })})`, style: 'grid-row: 1; grid-column: 3;' })
+                    element('div', null, card2, { class: 'st-w-metric-med', innerText: (year.grades.filter(grade => { return Number(grade.CijferStr?.replace(',', '.')) >= Number(syncedStorage['suf-threshold']) }).length / year.grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '%', style: 'grid-row: 2; grid-column: 3;' })
                     card2.addEventListener('click', async (event) => { event.stopPropagation(); dialog.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
                     cards.push(card2)
                 }

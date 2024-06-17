@@ -308,7 +308,7 @@ async function fetchWrapper(url, options, identifier = 'unknown', quiet = false)
                 ],
                 120000
             )
-            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+            console.log(`Blijf je problemen ervaren? Neem contact op via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf)`)
         }
         console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
         return resolve({})
@@ -332,7 +332,7 @@ async function fetchWrapper(url, options, identifier = 'unknown', quiet = false)
                     ],
                     120000
                 )
-                console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+                console.log(`Blijf je problemen ervaren? Neem contact op via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf)`)
             }
             console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
             return ({})

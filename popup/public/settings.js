@@ -230,6 +230,16 @@ export default [
         id: "grades",
         settings: [
             {
+                id: "suf-threshold",
+                title: "Voldoendegrens",
+                type: "SlideInput",
+                default: 5.5,
+                decimals: 1,
+                min: 1,
+                max: 10,
+                step: 0.1,
+            },
+            {
                 id: "cc",
                 title: "Cijfercalculator",
                 subtitle: "Zie wat je moet halen of wat je komt te staan op basis van je cijferlijst en/of aangepaste cijfers.",

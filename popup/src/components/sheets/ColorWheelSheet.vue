@@ -305,13 +305,19 @@ function isSelected(color) {
     transition: margin 50ms, outline 50ms;
 }
 
-.swatch:first-child {
+.swatch:nth-child(1) {
     border-top-left-radius: 6px;
+}
+
+.swatch:nth-child(8) {
+    border-top-right-radius: 6px;
+}
+
+.swatch:nth-child(9) {
     border-bottom-left-radius: 6px;
 }
 
-.swatch:last-child {
-    border-top-right-radius: 6px;
+.swatch:nth-child(16) {
     border-bottom-right-radius: 6px;
 }
 
