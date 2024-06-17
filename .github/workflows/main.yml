@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Compress Chromium build
         run: |
@@ -26,7 +26,7 @@ jobs:
           mv manifest-chromium.json manifest.json
 
       - name: Upload as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Releases
           path: |
