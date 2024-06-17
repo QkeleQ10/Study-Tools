@@ -8,7 +8,6 @@ window.addEventListener('popstate', () => {
 
 // Page 'Vandaag'
 async function today() {
-    console.log(chrome.runtime.getManifest())
     if (!syncedStorage['start-enabled']) return
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
@@ -928,14 +927,14 @@ async function today() {
                                     targetIndex = children.length - 1
                             }
 
-                            widgetItemsContainer.scroll((targetIndex) * 400, 0)
+                            widgetItemsContainer.scroll((targetIndex) * children[0].clientWidth, 0)
                             widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
                             visibleChildIndex = targetIndex
 
                             if (!document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`) || !document.querySelector('#st-start-widget-grades-scroll-pagn>div')) return
 
                             document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach(d => d.dataset.current = false)
-                            document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).dataset.current = true
+                            document.querySelectorAll(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).forEach(d => d.dataset.current = true)
                         }
 
                         if (recentGrades.length < 2) {

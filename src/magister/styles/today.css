@@ -1121,7 +1121,6 @@ a.st-widget-title {
     grid-auto-columns: 100%;
     margin-top: -64px;
     overflow-x: hidden;
-    scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
 }
 
@@ -1135,7 +1134,6 @@ a.st-widget-title {
     padding-top: 48px;
     padding-bottom: 32px;
     overflow: hidden;
-    scroll-snap-align: start;
 }
 
 .st-widget[data-render-type="Tegel"] .st-start-widget-grades-item {

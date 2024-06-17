@@ -411,3 +411,55 @@ async function constructWrapped(lastYearOnly) {
         }
     })
 }
+
+themeContest()
+async function themeContest() {
+    let unlocked = false
+    document.addEventListener('keydown', (event) => {
+        if (unlocked) return
+        if (event.code === 'Backslash' && event.shiftKey && event.ctrlKey) {
+            event.preventDefault()
+            unlocked = true
+            notify('snackbar', "!!!", [], 1000)
+
+            document.querySelector('a[href="/magister/#/vandaag"]')?.addEventListener('contextmenu', async (event) => {
+                if (!unlocked) return
+
+                event.preventDefault()
+
+                if ((await getFromStorage('themeContestJurorMode', 'session')) === 'true') {
+                    const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px;', resize: 'both' })
+                    document.body.addEventListener('auxclick', (event) => {
+                        if (event.button == 1) {
+                            event.preventDefault()
+                            textarea.style.top = event.clientY + 'px'
+                            textarea.style.left = event.clientX + 'px'
+                        }
+                    })
+                    textarea.addEventListener('paste', (event) => {
+                        try {
+                            let decoded = atob((event.clipboardData || window.clipboardData).getData("text"))?.split('/')
+                            if (decoded[0] !== 'Magister Theme Contest!') {
+                                throw new Error('invalid')
+                            }
+                            textarea.value = decoded.join('\n')
+                        } catch {
+                            textarea.value = 'Ongeldig!'
+                        }
+                    })
+
+                } else {
+                    user = await MagisterApi.accountInfo(true)
+                    navigator.clipboard.writeText(btoa(`Magister Theme Contest!/${user.name.firstname} ${user.name.lastname}/${window.location.hostname.split('.')[0]}/${JSON.stringify(pick(syncedStorage, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css'))}`))
+                    notify('dialog', "Je thema is nu gekopieerd naar je klembord. Stuur hem ergens in het Discord-kanaal!")
+                }
+            })
+        }
+    })
+}
+
+const pick = (obj, ...keys) => Object.fromEntries(
+    keys
+        .filter(key => key in obj)
+        .map(key => [key, obj[key]])
+)

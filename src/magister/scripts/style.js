@@ -1528,6 +1528,8 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
 
     if (syncedStorage['custom-css']) {
         createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
+    } else {
+        createStyle('', 'study-tools-custom-css')
     }
 }
 
