@@ -417,7 +417,7 @@ async function themeContest() {
     let unlocked = false
     document.addEventListener('keydown', (event) => {
         if (unlocked) return
-        if (event.code === 'Backslash' && event.shiftKey && event.ctrlKey) {
+        if (event.code === 'Space' && event.shiftKey && event.ctrlKey) {
             event.preventDefault()
             unlocked = true
             notify('snackbar', "!!!", [], 1000)
