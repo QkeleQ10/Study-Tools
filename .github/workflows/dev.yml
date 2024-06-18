@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Indicate beta version
         run: |
@@ -19,7 +19,7 @@ jobs:
           sed -i '3s/.*/"message": "Study Tools for Magister BETA"/' _locales/en/messages.json
 
       - name: Upload as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Beta release
           path: |

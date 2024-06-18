@@ -848,6 +848,7 @@ async function today() {
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
                         recentGrades.forEach((item, i) => {
+                            console.log(item)
                             const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, { class: 'st-start-widget-grades-item', 'data-unread': item.unread, 'data-hidden': item.hidden, 'data-assignment': item.assignment })
                             children.push(gradeElement)
                             if (i === 0) widgetElement.dataset.unread = item.unread
