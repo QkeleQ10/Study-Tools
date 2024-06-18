@@ -558,7 +558,7 @@ async function today() {
                     }
 
                     // Cancelled label
-                    if (item.Status === 5) {
+                    if (item.Status == 5) {
                         eventElement.classList.add('cancelled')
                         element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
                     }
@@ -1490,7 +1490,7 @@ function checkCollision(eventArr) {
 function getEventChips(event) {
     let chips = []
 
-    if (event.Status === 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
+    if (event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
     if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
     else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
     if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })

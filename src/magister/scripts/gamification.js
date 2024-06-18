@@ -428,12 +428,16 @@ async function themeContest() {
                 event.preventDefault()
 
                 if ((await getFromStorage('themeContestJurorMode', 'session')) === 'true') {
-                    const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px;', resize: 'both' })
-                    document.body.addEventListener('auxclick', (event) => {
-                        if (event.button == 1) {
+                    const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px; transition: all 200ms;', resize: 'both' })
+                    document.body.addEventListener('click', (event) => {
+                        if (event.altKey) {
                             event.preventDefault()
                             textarea.style.top = event.clientY + 'px'
                             textarea.style.left = event.clientX + 'px'
+                        }
+                        if (event.ctrlKey) {
+                            event.preventDefault()
+                            textarea.style.opacity = textarea.style.opacity == '1' ? 0 : 1
                         }
                     })
                     textarea.addEventListener('paste', (event) => {
@@ -442,9 +446,11 @@ async function themeContest() {
                             if (decoded[0] !== 'Magister Theme Contest!') {
                                 throw new Error('invalid')
                             }
-                            textarea.value = decoded.join('\n')
+                            setTimeout(() => textarea.value = decoded.join('\n'), 0)
+                            syncedStorage = { ...syncedStorage, ...(JSON.parse(decoded[3])) }
+                            applyStyles(null, null, null, true)
                         } catch {
-                            textarea.value = 'Ongeldig!'
+                            setTimeout(() => textarea.value = 'Ongeldig!', 0)
                         }
                     })
 

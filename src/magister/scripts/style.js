@@ -156,8 +156,8 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     }
 }
 
-async function applyStyles(varsOnly, overrideTheme, overrideColor) {
-    if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
+    if (!dontUpdate && chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
     let now = new Date()
 
