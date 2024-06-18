@@ -16,6 +16,7 @@ jobs:
       - name: Indicate beta version
         run: |
           sed -i '3s/.*/"message": "Study Tools voor Magister BETA"/' _locales/nl/messages.json
+          sed -i '3s/.*/"message": "Study Tools for Magister BETA"/' _locales/en/messages.json
 
       - name: Upload as artifacts
         uses: actions/upload-artifact@v3

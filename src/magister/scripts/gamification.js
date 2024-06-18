@@ -442,12 +442,12 @@ async function themeContest() {
                     })
                     textarea.addEventListener('paste', (event) => {
                         try {
-                            let decoded = atob((event.clipboardData || window.clipboardData).getData("text"))?.split('/')
-                            if (decoded[0] !== 'Magister Theme Contest!') {
+                            let obj = JSON.parse(atob((event.clipboardData || window.clipboardData).getData("text")) || JSON.stringify((event.clipboardData || window.clipboardData).getData("text")) || (event.clipboardData || window.clipboardData).getData("text"))
+                            if (obj.title !== 'Magister Theme Contest!') {
                                 throw new Error('invalid')
                             }
-                            setTimeout(() => textarea.value = decoded.join('\n'), 0)
-                            syncedStorage = { ...syncedStorage, ...(JSON.parse(decoded[3])) }
+                            setTimeout(() => textarea.value = JSON.stringify(obj, null, 4), 0)
+                            syncedStorage = { ...syncedStorage, ...obj.options }
                             applyStyles(null, null, null, true)
                         } catch {
                             setTimeout(() => textarea.value = 'Ongeldig!', 0)
