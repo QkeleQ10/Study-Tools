@@ -275,7 +275,7 @@ async function gradeCalculator(buttonWrapper) {
             let addedElement = element('span', null, clAddedList, {
                 class: 'st-cc-added-element',
                 innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
-                'data-insufficient': result < 5.5,
+                'data-insufficient': result < Number(syncedStorage['suf-threshold']),
                 'data-type': 'table',
                 'data-id': id
             })
@@ -319,7 +319,7 @@ async function gradeCalculator(buttonWrapper) {
         let addedElement = element('span', null, clAddedList, {
             class: 'st-cc-added-element',
             innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — handmatig ingevoerd\n`,
-            'data-insufficient': result < 5.5,
+            'data-insufficient': result < Number(syncedStorage['suf-threshold']),
             'data-type': 'manual',
             'data-id': id
         })
@@ -368,7 +368,7 @@ async function gradeCalculator(buttonWrapper) {
         } else {
             clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan daalt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
         }
-        clFutureDesc.style.color = hypotheticalMean < 5.5 ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
+        clFutureDesc.style.color = hypotheticalMean < Number(syncedStorage['suf-threshold']) ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
     })
 
     clCanvas.addEventListener('mouseleave', event => {
@@ -390,7 +390,7 @@ async function gradeCalculator(buttonWrapper) {
 
         clAdded.dataset.amount = addedToCalculation.length
 
-        if (calcMean < 5.5) clMean.classList.add('insufficient')
+        if (calcMean < Number(syncedStorage['suf-threshold'])) clMean.classList.add('insufficient')
         else clMean.classList.remove('insufficient')
 
         fallbackHypotheticalWeight = Math.round(calculateMedian(addedToCalculation.map(item => item.weight)) || 1)
@@ -410,9 +410,9 @@ async function gradeCalculator(buttonWrapper) {
 
         const line = element('div', 'st-cc-canvas-line', clCanvas, {
             'data-min-grade': minGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            'data-min-grade-insufficient': minGrade < 5.5,
+            'data-min-grade-insufficient': minGrade < Number(syncedStorage['suf-threshold']),
             'data-max-grade': maxGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            'data-max-grade-insufficient': maxGrade < 5.5,
+            'data-max-grade-insufficient': maxGrade < Number(syncedStorage['suf-threshold']),
             style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
         })
 
@@ -449,17 +449,16 @@ async function gradeCalculator(buttonWrapper) {
             hypotheticalGrades = means[1]
         const minimumMean = Math.min(...hypotheticalMeans)
 
-
         for (let i = 0; i < hypotheticalMeans.length; i++) {
             let meanH = hypotheticalMeans[i],
                 gradeH = hypotheticalGrades[i] || 1.0
-            if (meanH >= 5.495) {
+            if (meanH >= (Number(syncedStorage['suf-threshold']) - 0.005)) {
                 color = 'normal'
-                text = `Haal een ${gradeH.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
+                text = `Haal een ${gradeH.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < Number(syncedStorage['suf-threshold']) ? 'komen te' : 'te blijven'} staan.`
                 if (gradeH <= 1.0) {
                     text = `Met een cijfer dat ${weight}× meetelt\nkun je niet lager komen te staan dan een ${minimumMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
                 } else if (gradeH > 9.9) {
-                    text = `Haal een 10,0 die ${weight}× meetelt\nom een voldoende ${mean < 5.5 ? 'komen te' : 'te blijven'} staan.`
+                    text = `Haal een 10,0 die ${weight}× meetelt\nom een voldoende ${mean < Number(syncedStorage['suf-threshold']) ? 'komen te' : 'te blijven'} staan.`
                 }
                 break
             } else {
@@ -807,9 +806,10 @@ async function gradeStatistics() {
         scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." })
 
     const scSufInsuf = element('div', 'st-cs-suf-insuf', scStats),
-        scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger dan of gelijk aan 5,5." }),
-        scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut', title: "Het percentage cijfers hoger dan of gelijk aan 5,5." }),
-        scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan 5,5." })
+        scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger dan of gelijk aan de voldoendegrens." }),
+        scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut', title: "Het percentage cijfers hoger dan of gelijk aan de voldoendegrens." }),
+        scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan de voldoendegrens." }),
+        scSufInsufDisclaimer = element('div', 'st-cs-suf-insuf-disclaimer', scSufInsuf, { innerText: `Voldoende: ≥ ${Number(syncedStorage['suf-threshold']).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}` })
 
     const scRoundedHeading = element('span', 'st-cs-rounded-heading', scStats, { class: 'st-section-heading', innerText: "Afgerond behaalde cijfers" }),
         scRoundedChart = element('div', 'st-cs-rounded-chart', scStats)
@@ -819,7 +819,7 @@ async function gradeStatistics() {
         scMin = element('div', 'st-cs-min', scHistory, { class: 'st-metric secondary', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
         scMax = element('div', 'st-cs-max', scHistory, { class: 'st-metric secondary', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
         scVariance = element('div', 'st-cs-variance', scHistory, { class: 'st-metric secondary', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
-        scLineChart = element('div', 'st-cs-history-chart', scHistory)
+        scLineChart = element('div', 'st-cs-history-chart', scHistory, { style: `--suf-threshold-p: ${(1 - ((Number(syncedStorage['suf-threshold']) - 1) / 9)) * 100}%` })
 
     const scFilters = element('div', 'st-cs-filters', scContainer),
         scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n('cs.filters') }),
@@ -1048,10 +1048,10 @@ async function gradeStatistics() {
             scMax.innerText = maxResult.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
             scMax.dataset.extra = filteredResults.filter(result => result === maxResult).length + '×'
 
-            let resultsSufficient = filteredResults.filter((e) => { return e >= 5.5 })
+            let resultsSufficient = filteredResults.filter((e) => { return e >= Number(syncedStorage['suf-threshold']) })
             scSufficient.innerText = resultsSufficient.length
 
-            let resultsInsufficient = filteredResults.filter((e) => { return e < 5.5 })
+            let resultsInsufficient = filteredResults.filter((e) => { return e < Number(syncedStorage['suf-threshold']) })
             scInsufficient.innerText = resultsInsufficient.length
             scInsufficient.dataset.has = resultsInsufficient.length > 0
 

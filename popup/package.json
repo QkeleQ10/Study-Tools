@@ -12,13 +12,13 @@
         "vue": "^3.4.27",
         "vue-slider-component": "^4.1.0-beta.7"
     },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^5.0.5",
+        "vite": "^5.3.1"
+    },
     "browserslist": [
         "> 1%",
         "last 2 versions",
         "not dead"
-    ],
-    "devDependencies": {
-        "@vitejs/plugin-vue": "^5.0.4",
-        "vite": "^5.1.1"
-    }
+    ]
 }

@@ -24,15 +24,23 @@ const swatches = [
     { name: "Oranjegeel", color: { h: 40, s: 51, l: 41 } }, // yellow
     { name: "Bloedrood", color: { h: 10, s: 51, l: 41 } }, // red
     { name: "Rozerood", color: { h: 341, s: 61, l: 41 } }, // pink
-    { name: "Lavendelpaars", color: { h: 290, s: 41, l: 41 } }, // purple
-    { name: "Bosbespaars", color: { h: 240, s: 41, l: 41 } }, // indigo
+    { name: "Mauvepaars", color: { h: 290, s: 41, l: 41 } }, // purple
+    { name: "Diepindigo", color: { h: 240, s: 41, l: 41 } }, // indigo
+    { name: "Babyblauw", color: { h: 207, s: 52, l: 66 } },
+    { name: "Mintgroen", color: { h: 161, s: 44, l: 60 } },
+    { name: "Pastelgroen", color: { h: 90, s: 44, l: 60 } },
+    { name: "Zandbeige", color: { h: 40, s: 44, l: 66 } },
+    { name: "Zalmrood", color: { h: 10, s: 44, l: 66 } },
+    { name: "Babyroze", color: { h: 341, s: 44, l: 66 } },
+    { name: "Lavendelpaars", color: { h: 290, s: 44, l: 66 } },
+    { name: "Zachtpaars", color: { h: 240, s: 44, l: 70 } },
 ]
 
 function isSelected(color) {
     return (color.h == value.value.h && color.s == value.value.s && color.l == value.value.l)
 }
 
-const isAnySwatchSelected = computed(() => swatches.some(swatch => isSelected(swatch.color)))
+const isAnyMainSwatchSelected = computed(() => swatches.slice(0,8).some(swatch => isSelected(swatch.color)))
 
 function updateColor(newColor) {
     value.value = newColor
@@ -47,13 +55,13 @@ function updatePickerOpen(newPickerOpenValue) {
     <div class="color-picker">
         <div class="gallery">
             <div class="swatches">
-                <button v-for="swatch in swatches" class="swatch" :class="{ 'selected': isSelected(swatch.color) }"
-                    :key="swatch.name" :title="swatch.name"
+                <button v-for="swatch in swatches.slice(0, 8)" class="swatch"
+                    :class="{ 'selected': isSelected(swatch.color) }" :key="swatch.name" :title="swatch.name"
                     :style="{ 'background-color': `hsl(${swatch.color.h} ${swatch.color.s}% ${swatch.color.l}%` }"
                     @click="value = swatch.color"></button>
             </div>
-            <button class="custom" :class="{ 'selected': !isAnySwatchSelected }"
-                :style="{ '--sel-color': !isAnySwatchSelected ? `hsl(${value.h} ${value.s}% ${value.l}%)` : 'transparent' }"
+            <button class="custom" :class="{ 'selected': !isAnyMainSwatchSelected }"
+                :style="{ '--sel-color': !isAnyMainSwatchSelected ? `hsl(${value.h} ${value.s}% ${value.l}%)` : 'transparent' }"
                 title="Kleur kiezen" @click="pickerOpen = true">
                 <!-- style="background-image: radial-gradient(var(--color-surface-container) 66%, transparent calc(66% + 2px)), conic-gradient(in hsl longer hue, hsl(0 65% 50%) 0 0);" -->
                 <Icon>palette</Icon>

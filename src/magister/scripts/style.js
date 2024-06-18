@@ -156,8 +156,8 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     }
 }
 
-async function applyStyles(varsOnly, overrideTheme, overrideColor) {
-    if (chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
+    if (!dontUpdate && chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
 
     let now = new Date()
 
@@ -1500,16 +1500,12 @@ table.table-grid-layout>tbody>tr.selected {
     } else { createStyle('', 'study-tools-cs') }
 
     if (syncedStorage['insuf-red']) {
+        let insufArray = []
+        for (let i = 1.0; i < Number(syncedStorage['suf-threshold']) - 0.005; i += 0.1) {
+            insufArray.push(parseFloat(i.toFixed(1)))
+        }
         createStyle(`
-.grade.grade.grade.grade[title^="1,"],
-.grade.grade.grade.grade[title^="2,"],
-.grade.grade.grade.grade[title^="3,"],
-.grade.grade.grade.grade[title^="4,"],
-.grade.grade.grade.grade[title^="5,0"],
-.grade.grade.grade.grade[title^="5,1"],
-.grade.grade.grade.grade[title^="5,2"],
-.grade.grade.grade.grade[title^="5,3"],
-.grade.grade.grade.grade[title^="5,4"] {
+${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}"]`).join(',')} {
     color: var(--st-accent-warn) !important;
     font-weight: 700;
 }
@@ -1532,6 +1528,8 @@ table.table-grid-layout>tbody>tr.selected {
 
     if (syncedStorage['custom-css']) {
         createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
+    } else {
+        createStyle('', 'study-tools-custom-css')
     }
 }
 
@@ -1566,6 +1564,10 @@ body, .nieuw-bericht-container, .header, cdk-virtual-scroll-viewport .cdk-virtua
 app-bericht-details, .dna-cell, .dna-header-cell, .dna-footer-cell {
     background-color: var(--st-background-secondary) !important;
     border-color: var(--st-border-color) !important;
+}
+
+app-bericht-details, html:root body dna-search-input {
+    border-radius: var(--st-border-radius) !important;
 }
 
 .dna-header-cell {

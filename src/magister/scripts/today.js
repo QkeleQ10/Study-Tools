@@ -558,7 +558,7 @@ async function today() {
                     }
 
                     // Cancelled label
-                    if (item.Status === 5) {
+                    if (item.Status == 5) {
                         eventElement.classList.add('cancelled')
                         element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
                     }
@@ -822,7 +822,7 @@ async function today() {
                                     omschrijving: item.Vak ? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
                                 },
                                 waarde: item.Beoordeling || '?',
-                                isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= 5.5,
+                                isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= Number(syncedStorage['suf-threshold']),
                                 weegfactor: 0,
                                 kolomId: item.Id,
                                 assignment: true
@@ -853,7 +853,7 @@ async function today() {
                             children.push(gradeElement)
                             if (i === 0) widgetElement.dataset.unread = item.unread
 
-                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < 5.5 })
+                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < Number(syncedStorage['suf-threshold']) })
                             let itemSubj = element('span', `st-start-widget-grades-${i}-subj`, gradeElement, { class: 'st-start-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
                             let itemInfo = element('span', `st-start-widget-grades-${i}-info`, gradeElement, { class: 'st-start-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
                             let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', 'data-temporal-type': 'timestamp', 'data-temporal-start': item.date })
@@ -928,14 +928,14 @@ async function today() {
                                     targetIndex = children.length - 1
                             }
 
-                            widgetItemsContainer.scroll((targetIndex) * 400, 0)
+                            widgetItemsContainer.scroll((targetIndex) * children[0].clientWidth, 0)
                             widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
                             visibleChildIndex = targetIndex
 
                             if (!document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`) || !document.querySelector('#st-start-widget-grades-scroll-pagn>div')) return
 
                             document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach(d => d.dataset.current = false)
-                            document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).dataset.current = true
+                            document.querySelectorAll(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).forEach(d => d.dataset.current = true)
                         }
 
                         if (recentGrades.length < 2) {
@@ -1491,7 +1491,7 @@ function checkCollision(eventArr) {
 function getEventChips(event) {
     let chips = []
 
-    if (event.Status === 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
+    if (event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
     if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
     else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
     if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })

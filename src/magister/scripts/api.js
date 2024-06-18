@@ -301,14 +301,13 @@ async function fetchWrapper(url, options, identifier = 'unknown', quiet = false)
         if (!quiet) {
             notify(
                 'snackbar',
-                `Fout ${res2.status}. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+                `Fout ${res2.status}. Vernieuw de pagina.`,
                 [
-                    { innerText: "E-mail", href: `mailto:quinten@althues.nl` },
-                    { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
+                    { innerText: "Hulp", expandToDialog: "Probeer eerst wat achtergrondprogramma's te sluiten en de pagina te vernieuwen.\n\nBlijf je problemen ervaren? Druk op Ctrl + Shift + J en volg de aanwijzingen in het blauw." }
                 ],
                 120000
             )
-            console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+            console.log("%cBlijf je problemen ervaren? Neem contact op via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) en stuur een screenshot van onderstaande foutmelding mee:", 'background-color: hsl(207 95 55); color: #fff; padding: 10px 20px; font: 600 13px system-ui;')
         }
         console.error(`APIRQ: ${res2.status}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
         return resolve({})
@@ -325,14 +324,13 @@ async function fetchWrapper(url, options, identifier = 'unknown', quiet = false)
             if (!quiet) {
                 notify(
                     'snackbar',
-                    `Er is iets misgegaan. Druk op Ctrl + Shift + J en stuur me een screenshot!`,
+                    `Er is iets misgegaan. Vernieuw de pagina.`,
                     [
-                        { innerText: "e-mail", href: `mailto:quinten@althues.nl` },
-                        { innerText: "Discord", href: `https://discord.gg/2rP7pfeAKf` }
+                        { innerText: "Hulp", expandToDialog: "Probeer eerst wat achtergrondprogramma's te sluiten en de pagina te vernieuwen.\n\nBlijf je problemen ervaren? Druk op Ctrl + Shift + J en volg de aanwijzingen in het blauw." }
                     ],
                     120000
                 )
-                console.log(`Het zou me erg helpen als je een screenshot of kopie van de volgende informatie doorstuurt via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) 💚`)
+                console.log("%cBlijf je problemen ervaren? Neem contact op via e-mail (quinten@althues.nl) of Discord (https://discord.gg/2rP7pfeAKf) en stuur een screenshot van onderstaande foutmelding mee:", 'background-color: hsl(207 95 55); color: #fff; padding: 10px 20px; font: 600 13px system-ui;')
             }
             console.error(`APIRQ: ${err}\n\nurl: ${url}\nuserId: ${magisterApiUserId}\nuserToken.length: ${magisterApiUserToken?.length} (@ ${identifier})`)
             return ({})
