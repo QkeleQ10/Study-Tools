@@ -442,8 +442,8 @@ async function themeContest() {
                     })
                     textarea.addEventListener('paste', (event) => {
                         try {
-                            let obj = JSON.parse(atob((event.clipboardData || window.clipboardData).getData("text")) || JSON.stringify((event.clipboardData || window.clipboardData).getData("text")) || (event.clipboardData || window.clipboardData).getData("text"))
-                            if (obj.title !== 'Magister Theme Contest!') {
+                            let obj = JSON.parse((event.clipboardData || window.clipboardData).getData("text"))
+                            if (obj.title !== 'Magister Theme Contest') {
                                 throw new Error('invalid')
                             }
                             setTimeout(() => textarea.value = JSON.stringify(obj, null, 4), 0)
@@ -456,8 +456,8 @@ async function themeContest() {
 
                 } else {
                     user = await MagisterApi.accountInfo(true)
-                    navigator.clipboard.writeText(btoa(`Magister Theme Contest!/${user.name.firstname} ${user.name.lastname}/${window.location.hostname.split('.')[0]}/${JSON.stringify(pick(syncedStorage, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css'))}`))
-                    notify('dialog', "Je thema is nu gekopieerd naar je klembord. Stuur hem ergens in het Discord-kanaal!")
+                    navigator.clipboard.writeText(btoa(JSON.stringify({ title: 'Magister Theme Contest', name: `${user.name.firstname} ${user.name.lastname}`, school: window.location.hostname.split('.')[0], options: pick(syncedStorage, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css') })))
+                    notify('dialog', "Je inzending is nu gekopieerd naar je klembord. Typ '/winactie' in Discord en volg de aanwijzingen.")
                 }
             })
         }

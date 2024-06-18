@@ -377,6 +377,15 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
             },
+            {
+                id: "custom-css",
+                title: "Aangepaste CSS",
+                type: "TextInput",
+                default: '',
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+            },
             // TODO: setting to disable color adaptation for dark theme
         ]
     },
