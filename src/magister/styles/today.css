@@ -47,22 +47,32 @@
     grid-area: header;
     position: relative;
     width: 100%;
-    display: grid;
-    grid-template:
-        'text buttons' 32px
-        / 1fr auto;
-    align-items: center;
+    height: 84px;
+    box-sizing: border-box;
+    display: flex;
     padding: 32px 32px 20px;
     transition: background-color 200ms, padding-right 200ms, opacity 200ms;
 }
 
+#st-start-header-text-wrapper {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
 #st-start-header-text,
 #st-start-header-greeting {
+    flex: 100% 0 0;
+    width: 100%;
     margin-bottom: 0;
     text-wrap: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     transition: opacity 300ms;
+}
+
+#st-start-header-greeting {
+    translate: -100%;
 }
 
 #st-start-header-text[data-state="visible"],
@@ -79,13 +89,6 @@
     font-style: normal;
     font-weight: 500;
     color: var(--st-foreground-secondary);
-}
-
-#st-start-header-greeting {
-    position: absolute;
-    top: 32px;
-    left: 32px;
-    padding-right: 6px;
 }
 
 #st-start-header-text:after {
@@ -1171,7 +1174,9 @@ a.st-widget-title {
 }
 
 .st-start-widget-grades-item-rslt[data-great=true] {
-    background: linear-gradient(in hsl longer hue, hsl(0, 100%, 60%) 0 0) 0 0/100% 200%;
+    background-image: linear-gradient(rgba(255, 0, 0, 1) 0%, rgba(255, 154, 0, 1) 10%, rgba(208, 222, 33, 1) 20%, rgba(79, 220, 74, 1) 30%, rgba(63, 218, 216, 1) 40%, rgba(47, 201, 226, 1) 50%, rgba(28, 127, 238, 1) 60%, rgba(95, 21, 242, 1) 70%, rgba(186, 12, 248, 1) 80%, rgba(251, 7, 217, 1) 90%, rgba(255, 0, 0, 1) 100%);
+    background-position: 0 0;
+    background-size: 100% 200%;
     background-clip: text;
     color: transparent;
     animation: great-grade 2s linear infinite;
