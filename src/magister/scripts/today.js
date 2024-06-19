@@ -72,8 +72,9 @@ async function today() {
     todayWidgets()
 
     async function todayHeader() {
-        let headerText = element('span', 'st-start-header-text', header, { class: 'st-title' }),
-            headerGreeting = element('span', 'st-start-header-greeting', header, { class: 'st-title' }),
+        const headerTextWrapper = element('div', 'st-start-header-text-wrapper', header)
+        let headerText = element('span', 'st-start-header-text', headerTextWrapper, { class: 'st-title' }),
+            headerGreeting = element('span', 'st-start-header-greeting', headerTextWrapper, { class: 'st-title' }),
             headerButtons = element('div', 'st-start-header-buttons', header),
             formattedWeekday = now.toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long' })
 
@@ -385,7 +386,7 @@ async function today() {
         const events = await MagisterApi.events()
 
         // Display error if the result does not exist or if it is not an array
-        if (!(events?.constructor === Array)) {
+        if (!events || !Array.isArray(events)) {
             element('i', `st-start-fa`, schedule, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
             element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n('error') })
             return
@@ -848,7 +849,6 @@ async function today() {
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
                         recentGrades.forEach((item, i) => {
-                            console.log(item)
                             const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, { class: 'st-start-widget-grades-item', 'data-unread': item.unread, 'data-hidden': item.hidden, 'data-assignment': item.assignment })
                             children.push(gradeElement)
                             if (i === 0) widgetElement.dataset.unread = item.unread
@@ -895,6 +895,7 @@ async function today() {
                         })
 
                         const scrollPagn = element('div', 'st-start-widget-grades-scroll-pagn', widgetElement)
+                        scrollPagn.inenrText = ''
                         children.forEach((child, i) => {
                             const scrollPagnNode = element('div', undefined, scrollPagn, { 'data-current': i === 0 })
                             scrollPagnNode.addEventListener('click', (event) => {

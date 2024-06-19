@@ -98,12 +98,12 @@ async function constructWrapped(lastYearOnly) {
         for (let i = 0; i < years.length; i++) {
             const year = years[i]
 
-            const newElement = await constructWrappedForYear(year, i)
+            const newElement = await constructWrappedForYear(i)
             yearsWrapper.append(newElement)
         }
 
         if (!lastYearOnly) {
-            const newElement = await constructWrappedForYear({}, years.length)
+            const newElement = await constructWrappedForYear(years.length)
             yearsWrapper.append(newElement)
 
             const previousButton = element('button', 'st-wrapped-prev', dialog, { class: 'st-button icon', 'data-icon': '', disabled: true })
@@ -143,8 +143,10 @@ async function constructWrapped(lastYearOnly) {
 
         resolve(dialog)
 
-        async function constructWrappedForYear(year, i) {
+        async function constructWrappedForYear(i) {
             return new Promise(async (resolveYear) => {
+                let year = JSON.parse(JSON.stringify((i === years.length ? {} : years[i]) || {}))
+
                 let seed = cyrb128((year.groep?.code + year.lesperiode?.code) || (user.name?.firstname + i))
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
@@ -167,9 +169,9 @@ async function constructWrapped(lastYearOnly) {
                     year.grades = years.flatMap(obj => obj.grades)
                         .filter((grade, index, self) =>
                             index === self.findIndex((g) =>
-                                g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
-                                g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
-                                g.CijferStr === grade.CijferStr
+                                g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
+                                g?.CijferKolom?.KolomNaam === grade.CijferKolom.KolomNaam &&
+                                g?.CijferStr === grade.CijferStr
                             )
                         )
                     year.events = years.flatMap(obj => obj.events)
@@ -182,9 +184,9 @@ async function constructWrapped(lastYearOnly) {
                         .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
                         .filter((grade, index, self) =>
                             index === self.findIndex((g) =>
-                                g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
-                                g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
-                                g.CijferStr === grade.CijferStr
+                                g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
+                                g?.CijferKolom?.KolomNaam === grade.CijferKolom.KolomNaam &&
+                                g?.CijferStr === grade.CijferStr
                             )
                         )
                         .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
@@ -192,6 +194,8 @@ async function constructWrapped(lastYearOnly) {
                     year.absences = await MagisterApi.absences.forYear(year) || []
                     year.assignments = await MagisterApi.assignments.forYear(year) || []
                 }
+
+                years[i] = year
 
                 const teacherNames = await getFromStorage('start-teacher-names') || await getFromStorage('teacher-names', 'local') || {}
 
@@ -427,8 +431,8 @@ async function themeContest() {
 
                 event.preventDefault()
 
-                if ((await getFromStorage('themeContestJurorMode', 'session')) === 'true') {
-                    const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px; transition: all 200ms;', resize: 'both' })
+                if ((await getFromStorage('themeContestJurorMode', 'session')) === 'true' || syncedStorage['themeContestJurorMode']) {
+                    const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px; transition: all 200ms;', resize: 'both', innerText: 'alt+klik om te verplaatsen, ctrl+klik om te verbergen' })
                     document.body.addEventListener('click', (event) => {
                         if (event.altKey) {
                             event.preventDefault()
