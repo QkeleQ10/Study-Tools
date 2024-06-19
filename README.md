@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/QkeleQ10/Study-Tools/assets/65854503/fcc9719f-dd6d-4fe2-8233-e58bec7e538e" alt="n8n logo" width="200">
+  <img src="https://github.com/QkeleQ10/Study-Tools/assets/65854503/fcc9719f-dd6d-4fe2-8233-e58bec7e538e" alt="Study Tools logo" width="200">
 </p>
 
 # Study Tools voor Magister
@@ -22,6 +22,15 @@ En nog veel meer! Ik voeg regelmatig nieuwe functies toe. Feedback wordt op prij
 
 ![Start](https://github.com/QkeleQ10/Study-Tools/assets/65854503/56dd1a44-e02c-4d31-8c9f-d34afb92da18)
 ![Cijfercalculator](https://github.com/QkeleQ10/Study-Tools/assets/65854503/5ab2b1ec-73f7-4864-b3cc-8f232e9a3090)
+
+
+<img align="left" width="45" height="45" src="https://github.com/QkeleQ10/Study-Tools/assets/65854503/ec4ab9b1-3cf9-45b2-ba08-1a2dfb1e000d" alt="Study Tools beta logo">
+
+## Beta Testen
+1. Kopieer even je huidige instellingen naar je klembord. Dat kan via het tabblad 'Over' in de pop-up!
+2. Deactiveer de stabiele extensie.
+3. [Installeer de bèta-extensie](https://chromewebstore.google.com/u/1/detail/study-tools-voor-magister/dlmdgkhbbclpolcofdlhlpdpiobmklmd).
+4. Plak je instellingen in de bèta-extensie. Dat kan onder hetzelfde menuutje in de pop-up.
 
 ## Licentie
 
