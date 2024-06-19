@@ -385,7 +385,7 @@ async function today() {
         const events = await MagisterApi.events()
 
         // Display error if the result does not exist or if it is not an array
-        if (!(events?.constructor === Array)) {
+        if (!events || !Array.isArray(events)) {
             element('i', `st-start-fa`, schedule, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
             element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n('error') })
             return
