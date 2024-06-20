@@ -3,6 +3,8 @@ chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service
 // Run when the extension and page are loaded
 main()
 async function main() {
+    if((await getFromStorage('sampleApiData', 'session')) === 'true') MagisterApi.useSampleData = true
+
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
     let appbar = await awaitElement('.appbar'),

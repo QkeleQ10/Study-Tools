@@ -112,6 +112,7 @@
     "Ouder": "Ouder",
     "noEvents": "Geen afspraken deze dag",
     "noEventsToday": "Geen afspraken vandaag",
+    "noEventsUntilDate": "Geen afspraken\n(tot in elk geval {date})",
     "error": "Er is iets misgegaan",
     "loading": "Laden...",
     "loadingWidgets": "Widgets laden...",

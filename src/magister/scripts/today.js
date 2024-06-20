@@ -519,7 +519,7 @@ async function today() {
                         style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
                         title: [
                             item.Omschrijving || 'Geen omschrijving',
-                            item.Lokatie || item.Lokalen.map(e => e.Naam).join(', ') || 'Geen locatie',
+                            item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie',
                             item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime()
                         ].join('\n')
                     })
@@ -598,8 +598,17 @@ async function today() {
                 // Display 'no events' if necessary
                 if (day.events?.length < 1 && !listViewEnabled && agendaView === 'day') {
                     let seed = cyrb128(String(day.date.getTime()))
-                    element('i', `st-start-col-${i}-fa`, column, { class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)}` })
-                    element('span', `st-start-col-${i}-disclaimer`, column, { class: 'st-start-disclaimer', innerText: day.today ? i18n('noEventsToday') : i18n('noEvents') })
+                    element('i', `st-start-col-${i}-fa`, column, {
+                        class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)}`
+                    })
+                    element('span', `st-start-col-${i}-disclaimer`, column, {
+                        class: 'st-start-disclaimer',
+                        innerText: events.length === 0
+                            ? i18n('noEventsUntilDate', { date: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'long' }), dateShort: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) })
+                            : day.today
+                                ? i18n('noEventsToday')
+                                : i18n('noEvents')
+                    })
                 }
 
                 // Ensure a nice scrolling position if the date shown is not today
@@ -675,14 +684,12 @@ async function today() {
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        let logs
+                        if (placeholder) MagisterApi.useSampleData = true
 
-                        if (placeholder) {
-                            logs = [null]
-                        } else {
-                            logs = await MagisterApi.logs()
-                                .catch(() => { return reject() })
-                        }
+                        let logs = await MagisterApi.logs()
+                            .catch(() => { return reject() })
+
+                        if (placeholder) MagisterApi.useSampleData = false
 
                         if (logs.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-tile st-widget' })
@@ -702,14 +709,12 @@ async function today() {
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        let activities
+                        if (placeholder) MagisterApi.useSampleData = true
 
-                        if (placeholder) {
-                            activities = [null]
-                        } else {
-                            activities = await MagisterApi.activities()
-                                .catch(() => { return reject() })
-                        }
+                        let activities = await MagisterApi.activities()
+                            .catch(() => { return reject() })
+
+                        if (placeholder) MagisterApi.useSampleData = false
 
                         if (activities.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-activities', null, { class: 'st-tile st-widget' })
@@ -768,50 +773,16 @@ async function today() {
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
                         let autoRotate = await getFromStorage('start-widget-cf-rotate', 'local') || 'true'
 
-                        let grades, assignments, hiddenItems
-                        if (placeholder) {
-                            grades = [
-                                {
-                                    omschrijving: "Voorbeeld",
-                                    ingevoerdOp: new Date(now - 172800000),
-                                    vak: {
-                                        code: "netl",
-                                        omschrijving: "Nederlandse taal"
-                                    },
-                                    waarde: "6,9",
-                                    weegfactor: 0
-                                },
-                                {
-                                    omschrijving: "Baguette",
-                                    ingevoerdOp: new Date(now - 691200000),
-                                    vak: {
-                                        code: "fatl",
-                                        omschrijving: "Franse taal"
-                                    },
-                                    waarde: "U",
-                                    weegfactor: 0
-                                },
-                                {
-                                    omschrijving: "Grade mockery",
-                                    ingevoerdOp: new Date(now - 6891200000),
-                                    vak: {
-                                        code: "entl",
-                                        omschrijving: "Engelse taal"
-                                    },
-                                    waarde: "5,4",
-                                    weegfactor: 0
-                                }
-                            ]
-                            assignments = []
-                            hiddenItems = new Set()
-                        } else {
-                            grades = await MagisterApi.grades.recent()
-                                .catch(() => { return reject() })
-                            assignments = await MagisterApi.assignments.top()
-                                .catch(() => { return reject() })
+                        if (placeholder) MagisterApi.useSampleData = true
 
-                            hiddenItems = new Set((await getFromStorage('hiddenGrades', 'local') || []))
-                        }
+                        let grades = await MagisterApi.grades.recent()
+                            .catch(() => { return reject() })
+                        let assignments = await MagisterApi.assignments.top()
+                            .catch(() => { return reject() })
+
+                        if (placeholder) MagisterApi.useSampleData = false
+
+                        let hiddenItems = new Set((await getFromStorage('hiddenGrades', 'local') || []))
 
                         const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
                             {
@@ -960,31 +931,12 @@ async function today() {
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        let unreadMessages
+                        if (placeholder) MagisterApi.useSampleData = true
 
-                        if (placeholder) {
-                            unreadMessages = [
-                                {
-                                    onderwerp: "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️",
-                                    afzender: {
-                                        naam: "Quinten Althues (V6E)"
-                                    },
-                                    heeftBijlagen: true,
-                                    verzondenOp: new Date(now - 3032000000)
-                                },
-                                {
-                                    onderwerp: "Wie gebruikt Berichten in vredesnaam?",
-                                    afzender: {
-                                        naam: "Quinten Althues (V6E)"
-                                    },
-                                    heeftPrioriteit: true,
-                                    verzondenOp: new Date(now - 1000000)
-                                }
-                            ]
-                        } else {
-                            unreadMessages = await MagisterApi.messages()
-                                .catch(() => { return reject() })
-                        }
+                        let unreadMessages = await MagisterApi.messages()
+                            .catch(() => { return reject() })
+
+                        if (placeholder) MagisterApi.useSampleData = false
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
@@ -1046,53 +998,13 @@ async function today() {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
 
-                        let events
-                        if (placeholder) {
-                            events = [
-                                {
-                                    Start: new Date(new Date().setHours(0, 0, 0, 0) + 122400000),
-                                    Einde: new Date(new Date().setHours(0, 0, 0, 0) + 125100000),
-                                    Inhoud: "<p>Dit is een onvoltooid huiswerkitem.</p>",
-                                    Opmerking: null,
-                                    InfoType: 1,
-                                    Afgerond: false,
-                                    Vakken: [
-                                        {
-                                            Naam: "Niet-bestaand vak"
-                                        }
-                                    ]
-                                },
-                                {
-                                    Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
-                                    Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
-                                    Inhoud: "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>",
-                                    Opmerking: null,
-                                    InfoType: 2,
-                                    Afgerond: false,
-                                    Vakken: [
-                                        {
-                                            Naam: "Lichamelijke opvoeding"
-                                        }
-                                    ]
-                                },
-                                {
-                                    Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000),
-                                    Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
-                                    Inhoud: "<p>Dit item heb je al wel voltooid. Good job.</p>",
-                                    Opmerking: null,
-                                    InfoType: 1,
-                                    Afgerond: true,
-                                    Vakken: [
-                                        {
-                                            Naam: "Jouw favoriete vak"
-                                        }
-                                    ]
-                                }
-                            ]
-                        } else {
-                            events = await MagisterApi.events()
-                                .catch(() => { return reject() })
-                        }
+                        if (placeholder) MagisterApi.useSampleData = true
+
+                        let events = await MagisterApi.events()
+                            .catch(() => { return reject() })
+
+                        if (placeholder) MagisterApi.useSampleData = false
+
                         const homeworkEvents = events.filter(item => {
                             if (filterOption === 'incomplete')
                                 return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
@@ -1145,25 +1057,12 @@ async function today() {
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
-                        let assignments
-                        if (placeholder) {
-                            assignments = [
-                                {
-                                    Titel: "Praktische opdracht",
-                                    Vak: "sk",
-                                    InleverenVoor: new Date(new Date().setHours(0, 0, 0, 0) + 300600000),
-                                    Omschrijving: "Zorg ervoor dat je toestemming hebt van de TOA voordat je begint met je experiment."
-                                },
-                                {
-                                    Titel: "Boekverslag",
-                                    Vak: "netl",
-                                    InleverenVoor: new Date(new Date().setHours(0, 0, 0, 0) + 400500000)
-                                }
-                            ]
-                        } else {
-                            assignments = await MagisterApi.assignments.top()
-                                .catch(() => { return reject() })
-                        }
+                        if (placeholder) MagisterApi.useSampleData = true
+
+                        let assignments = await MagisterApi.assignments.top()
+                            .catch(() => { return reject() })
+
+                        if (placeholder) MagisterApi.useSampleData = false
 
                         const relevantAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
 

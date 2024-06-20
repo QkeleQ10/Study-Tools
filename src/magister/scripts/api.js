@@ -18,44 +18,17 @@ const gatherEnd = new Date()
 gatherEnd.setDate(now.getDate() + 42)
 gatherEnd.setHours(0, 0, 0, 0)
 
-
 const MagisterApi = {
-    accountInfo: async (parse = false) => {
+    useSampleData: false,
+    accountInfo: async () => {
         return new Promise(async (resolve, reject) => {
             magisterApiCache.accountInfo ??=
                 fetchWrapper(
                     `https://${magisterApiSchoolName}.magister.net/api/account?noCache=0`, null, 'accountInfo'
                 )
-            if (parse) {
-                const obj = await magisterApiCache.accountInfo
-                resolve({
-                    id: obj.Persoon.Id,
-                    externalId: obj.Persoon.ExterneId,
-                    uuid: obj.Persoon.UuId,
-                    name: {
-                        official: {
-                            firstnames: obj.Persoon.OfficieleVoornamen || obj.Persoon.Roepnaam,
-                            affixes: obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.GeboortenaamTussenvoegsel || obj.Persoon.Tussenvoegsel,
-                            lastname: obj.Persoon.OfficieleAchternaam || obj.Persoon.GeboorteAchternaam || obj.Persoon.Achternaam
-                        },
-                        birth: {
-                            isPreferred: obj.Persoon.GebruikGeboortenaam === true,
-                            affix: obj.Persoon.GeboortenaamTussenvoegsel || obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.Tussenvoegsel,
-                            lastname: obj.Persoon.GeboorteAchternaam || obj.Persoon.OfficieleAchternaam || obj.Persoon.Achternaam
-                        },
-                        initials: obj.Persoon.Voorletters,
-                        firstname: obj.Persoon.Roepnaam || obj.Persoon.OfficieleVoornamen,
-                        affix: obj.Persoon.Tussenvoegsel || obj.Persoon.OfficieleTussenvoegsels || obj.Persoon.GeboortenaamTussenvoegsel,
-                        lastname: obj.Persoon.Achternaam || obj.Persoon.GeboorteAchternaam || obj.Persoon.OfficieleAchternaam
-                    },
-                    dateOfBirth: new Date(obj.Persoon.Geboortedatum),
-                    permissions: obj.Groep[0].Privileges
-                })
-            } else {
-                resolve(
-                    (await magisterApiCache.accountInfo)
-                )
-            }
+            resolve(
+                (await magisterApiCache.accountInfo)
+            )
         })
     },
     years: async () => {
@@ -80,7 +53,6 @@ const MagisterApi = {
             )
         })
     },
-
     exams: {
         list: async (year) => {
             return new Promise(async (resolve, reject) => {
@@ -106,6 +78,9 @@ const MagisterApi = {
         }
     },
     events: async (start = gatherStart, end = gatherEnd) => {
+        if (MagisterApi.useSampleData) {
+            return [{ "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], "Start": now.toISOString().split('T')[0] + " 09:00", "Einde": now.toISOString().split('T')[0] + " 10:00", "Id": 1, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 2, "LesuurVan": 2, "Lokalen": [{ "Naam": "11s" }], "Omschrijving": "fatl - oba", "Lokatie": "11s", "Status": 5, "Vakken": [{ "Naam": "Franse taal" }] }, { "Docenten": [{ "Naam": "G. Gifje", "Docentcode": "GIF" }], "Start": now.toISOString().split('T')[0] + " 10:00", "Einde": now.toISOString().split('T')[0] + " 11:00", "Id": 2, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 3, "LesuurVan": 3, "Lokalen": [{ "Naam": "11s" }], "Omschrijving": "mem - gif", "Lokatie": "11s", "Vakken": [{ "Naam": "memekunde" }] }, { "Docenten": [{ "Naam": "M. Millenial", "Docentcode": "MMI" }], "Start": now.toISOString().split('T')[0] + " 11:30", "Einde": now.toISOString().split('T')[0] + " 12:30", "Id": 3, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 4, "LesuurVan": 4, "Lokalen": [{ "Naam": "11l" }], "Omschrijving": "stk - mmi", "Lokatie": "11l", "Vakken": [{ "Naam": "straattaalkunde" }] }, { "Docenten": [{ "Id": 0, "Naam": "E. Musk", "Docentcode": "EMU" }], "Start": now.toISOString().split('T')[0] + " 12:30", "Einde": now.toISOString().split('T')[0] + " 13:30", "Id": 4, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 5, "LesuurVan": 5, "Lokalen": [{ "Naam": "binas6" }], "Omschrijving": "na - emu", "Lokatie": "binas6", "Vakken": [{ "Naam": "natuurkunde" }] }, { "Docenten": [{ "Id": 0, "Naam": "B. Baan", "Docentcode": "BBA" }], "Start": now.toISOString().split('T')[0] + " 14:00", "Einde": now.toISOString().split('T')[0] + " 15:00", "Id": 5, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 6, "LesuurVan": 6, "Lokalen": [{ "Naam": "at1_ondersteboven" }], "Omschrijving": "ka - bba", "Lokatie": "at1_ondersteboven", "Type": 7, "Vakken": [{ "Naam": "kinderarbeid" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 122400000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 125100000), Inhoud: "<p>Dit is een onvoltooid huiswerkitem.</p>", Opmerking: null, InfoType: 1, Afgerond: false, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Niet-bestaand vak" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Inhoud: "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>", Opmerking: null, InfoType: 2, Afgerond: false, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Lichamelijke opvoeding" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Inhoud: "<p>Dit item heb je al wel voltooid. Good job.</p>", Opmerking: null, InfoType: 1, Afgerond: true, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Jouw favoriete vak" }] }]
+        }
         return new Promise(async (resolve, reject) => {
             magisterApiCache['events' + start.toISOString().substring(0, 10) + end.toISOString().substring(0, 10)] ??=
                 fetchWrapper(
@@ -118,6 +93,11 @@ const MagisterApi = {
     },
     grades: {
         recent: async () => {
+
+            if (MagisterApi.useSampleData) {
+                return [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0 }, { omschrijving: "Baguette", ingevoerdOp: new Date(now - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0 }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }
+                ]
+            }
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.gradesRecent ??=
                     fetchWrapper(
@@ -153,6 +133,9 @@ const MagisterApi = {
     },
     assignments: {
         top: async () => {
+            if (MagisterApi.useSampleData) {
+                return [{ Titel: "Praktische opdracht", Vak: "sk", InleverenVoor: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Omschrijving: "Zorg ervoor dat je toestemming hebt van de TOA voordat je begint met je experiment." }, { Titel: "Boekverslag", Vak: "netl", InleverenVoor: new Date(new Date().setHours(0, 0, 0, 0) + 400500000) }]
+            }
             return new Promise(async (resolve, reject) => {
                 magisterApiCache.assignments ??=
                     fetchWrapper(
@@ -176,6 +159,10 @@ const MagisterApi = {
         }
     },
     messages: async () => {
+        if (MagisterApi.useSampleData) {
+            return [{ onderwerp: "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️", afzender: { naam: "Quinten Althues (V6E)" }, heeftBijlagen: true, verzondenOp: new Date(now - 3032000000) }, { onderwerp: "Wie gebruikt Berichten in vredesnaam?", afzender: { naam: "Quinten Althues (V6E)" }, heeftPrioriteit: true, verzondenOp: new Date(now - 1000000) }
+            ]
+        }
         return new Promise(async (resolve, reject) => {
             magisterApiCache.messages ??=
                 fetchWrapper(
@@ -187,6 +174,9 @@ const MagisterApi = {
         })
     },
     activities: async () => {
+        if (MagisterApi.useSampleData) {
+            return [null]
+        }
         return new Promise(async (resolve, reject) => {
             magisterApiCache.activities ??=
                 fetchWrapper(
@@ -198,6 +188,9 @@ const MagisterApi = {
         })
     },
     logs: async () => {
+        if (MagisterApi.useSampleData) {
+            return [null]
+        }
         return new Promise(async (resolve, reject) => {
             magisterApiCache.logs ??=
                 fetchWrapper(

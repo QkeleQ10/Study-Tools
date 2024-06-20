@@ -19,7 +19,7 @@ window.checkWrapped = checkWrapped()
 async function checkWrapped() {
     if ((now >= range1.start && now <= range1.end) || (await getFromStorage('forceWrappedExamEdition', 'session')) === 'true') {
 
-        user = await MagisterApi.accountInfo(true)
+        user = await MagisterApi.accountInfo()
 
         years = (await MagisterApi.years())
             .filter(year => Number(year.einde.split('-')[0]) <= now.getFullYear()) // Filter years to not include the upcoming school year
@@ -110,14 +110,14 @@ async function constructWrapped(lastYearOnly) {
             previousButton.addEventListener('click', () => {
                 wrappedPage = Math.max(wrappedPage - 1, 0)
                 document.querySelector(`.st-wrapped-year:nth-child(${wrappedPage + 1})`).scrollIntoView({ inline: 'start', behavior: 'smooth' })
-                nextButton.disabled = wrappedPage === years.length
+                nextButton.disabled = wrappedPage === years.length - 1
                 previousButton.disabled = wrappedPage === 0
             })
             const nextButton = element('button', 'st-wrapped-next', dialog, { class: 'st-button icon', 'data-icon': '' })
             nextButton.addEventListener('click', () => {
                 wrappedPage = Math.min(wrappedPage + 1, years.length)
                 document.querySelector(`.st-wrapped-year:nth-child(${wrappedPage + 1})`).scrollIntoView({ inline: 'start', behavior: 'smooth' })
-                nextButton.disabled = wrappedPage === years.length
+                nextButton.disabled = wrappedPage === years.length - 1
                 previousButton.disabled = wrappedPage === 0
             })
         }
@@ -147,7 +147,7 @@ async function constructWrapped(lastYearOnly) {
             return new Promise(async (resolveYear) => {
                 let year = JSON.parse(JSON.stringify((i === years.length ? {} : years[i]) || {}))
 
-                let seed = cyrb128((year.groep?.code + year.lesperiode?.code) || (user.name?.firstname + i))
+                let seed = cyrb128((year.groep?.code + year.lesperiode?.code) || (user.Persoon.Roepnaam + i))
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
                 const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
@@ -431,7 +431,7 @@ async function themeContest() {
 
                 event.preventDefault()
 
-                if ((await getFromStorage('themeContestJurorMode', 'session')) === 'true' || syncedStorage['themeContestJurorMode']) {
+                if (!((await getFromStorage('themeContestJurorMode', 'session')) === 'true') != !(syncedStorage['themeContestJurorMode'])) {
                     const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px; transition: all 200ms;', resize: 'both', innerText: 'alt+klik om te verplaatsen, ctrl+klik om te verbergen' })
                     document.body.addEventListener('click', (event) => {
                         if (event.altKey) {
@@ -459,9 +459,17 @@ async function themeContest() {
                     })
 
                 } else {
-                    user = await MagisterApi.accountInfo(true)
-                    navigator.clipboard.writeText(btoa(JSON.stringify({ title: 'Magister Theme Contest', name: `${user.name.firstname} ${user.name.lastname}`, school: window.location.hostname.split('.')[0], options: pick(syncedStorage, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css') })))
-                    notify('dialog', "Je inzending is nu gekopieerd naar je klembord. Typ '/winactie' in Discord en volg de aanwijzingen.")
+                    user = await MagisterApi.accountInfo()
+                    const copyText = (btoa(JSON.stringify({ title: 'Magister Theme Contest', name: `${user.Persoon.Roepnaam} ${user.Persoon.Achternaam}`, school: window.location.hostname.split('.')[0], options: pick(syncedStorage, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css') }))).match(new RegExp(`.{1,4000}`, 'g')) || []
+                    if (copyText.length === 1) {
+                        navigator.clipboard.writeText(copyText[0])
+                        notify('dialog', "Je inzending is nu gekopieerd naar je klembord. Typ '/winactie' in Discord en volg de aanwijzingen.")
+                    } else if (copyText.length > 1) {
+                        for (let i = 0; i < copyText.length; i++) {
+                            navigator.clipboard.writeText(copyText[i])
+                            await notify('dialog', `Je inzending is erg lang. Daarom moet hij worden opgesplitst in ${copyText.length} delen. \nDeel ${i + 1} is nu gekopieerd naar je klembord.` + i === 0 ? " Typ '/winactie' in Discord en volg de aanwijzingen.\nKlik pas daarna verder." : '', null, null, { index: i + 1, length: copyText.length })
+                        }
+                    }
                 }
             })
         }

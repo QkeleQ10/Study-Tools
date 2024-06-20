@@ -1005,8 +1005,37 @@ aside .tabs li a {
     transform: scaleX(-1);
 }
 
-.menu-host .logo a .logo-expanded {
-    margin-left: 0;
+.menu-host {
+    display: flex !important;
+    flex-direction: column;
+}
+
+.menu-host .logo {
+    position: static !important;
+    margin-left: 16px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+}
+
+.menu-host .logo a .logo-collapsed {
+    margin-left: -12px;
+}
+
+.menu-host .menu {
+    position: static !important;
+    padding-bottom: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.menu-host .menu .menu-container {
+    height: max-content !important;
+}
+
+.menu-host .menu-footer {
+    position: static !important;
 }
 
 dna-card-title.disabled {
@@ -1528,6 +1557,32 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
 
     if (syncedStorage['custom-css']) {
         createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
+        const cssVarReferenceMatches = extractVariables(syncedStorage['custom-css'])
+
+        function extractVariables(inputString) {
+            const regex = /var\(--st-reference-(\w+)-([^\s)]+)\)/g
+            let matches
+            let result = []
+
+            while ((matches = regex.exec(inputString)) !== null) {
+                const property = matches[1]
+                const selector = matches[2]?.replace(/\\+/gi, '')
+                const variable = `--st-reference-${property}-${selector}`
+                result.push({ variable, property, selector })
+            }
+
+            return result
+        }
+
+        cssVarReferenceMatches.forEach(({ variable, property, selector }) => {
+            let interval = setInterval(update, 50)
+            setTimeout(() => clearInterval(interval), 3000)
+            window.addEventListener('resize', update)
+            document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('click', update)
+            function update() {
+                document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px')
+            }
+        })
     } else {
         createStyle('', 'study-tools-custom-css')
     }
