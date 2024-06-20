@@ -467,7 +467,7 @@ async function themeContest() {
                     } else if (copyText.length > 1) {
                         for (let i = 0; i < copyText.length; i++) {
                             navigator.clipboard.writeText(copyText[i])
-                            await notify('dialog', `Je inzending is erg lang. Daarom moet hij worden opgesplitst in ${copyText.length} delen. \nDeel ${i + 1} is nu gekopieerd naar je klembord.` + i === 0 ? " Typ '/winactie' in Discord en volg de aanwijzingen.\nKlik pas daarna verder." : '', null, null, { index: i + 1, length: copyText.length })
+                            await notify('dialog', `Je inzending is erg lang. Daarom moet hij worden opgesplitst in ${copyText.length} delen. \nDeel ${i + 1} is nu gekopieerd naar je klembord. ${i === 0 ? "Typ '/winactie' in Discord en volg de aanwijzingen.\nKlik pas daarna verder." : ''}`, null, null, { index: i + 1, length: copyText.length })
                         }
                     }
                 }

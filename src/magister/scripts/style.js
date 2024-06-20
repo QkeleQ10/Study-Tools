@@ -1376,6 +1376,10 @@ table.table-grid-layout>tbody>tr.selected {
     grid-area: description;
 }
 
+.appbar .menu-button {
+    flex: 36px 0 0;
+}
+
 .menu-button:has(#help-menu) {
     overflow: hidden;
     height: 0;
