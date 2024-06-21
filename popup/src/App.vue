@@ -97,6 +97,7 @@ function openInNewTab(url) {
                     <template v-for="category in settings">
                         <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
                             <TransitionGroup :name="transitionName">
+                                <ThemePresets v-if="category.id === 'appearance'" key="appearance" />
                                 <About v-if="category.id === 'about'" key="about"
                                     @reset-settings="resetSettingDefaults" />
                                 <template v-for="setting in category.settings">
@@ -116,7 +117,6 @@ function openInNewTab(url) {
                                         </Chip>
                                     </div>
                                 </template>
-                                <ThemePresets v-if="category.id === 'appearance'" key="appearance" />
                             </TransitionGroup>
                         </div>
                     </template>
@@ -233,6 +233,7 @@ main {
     margin: 0;
     color: var(--color-on-surface-variant);
     font: var(--typescale-body-medium);
+    text-wrap: balance;
 }
 
 .scrim {

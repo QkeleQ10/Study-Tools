@@ -1,26 +1,32 @@
 <script setup>
-import { computed, inject } from 'vue'
+import { computed, inject, defineProps } from 'vue'
+
+const props = defineProps(['preset'])
 
 const syncedStorage = inject('syncedStorage')
+
+const preset = props.preset || syncedStorage.value
+
 const style = computed(() => {
-    let accentColor = (syncedStorage.value['ptheme'] || 'auto,207,95,55')?.split(',')
-    let pageColor = syncedStorage.value['pagecolor']?.startsWith('true')
-        ? `hsl(${syncedStorage.value['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+    let accentColor = (preset['ptheme'] || 'auto,207,95,55')?.split(',')
+    let pageColor = preset['pagecolor']?.startsWith('true')
+        ? `hsl(${preset['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
         : null
-    let appbarColor = syncedStorage.value['appbarcolor']?.startsWith('true')
-        ? `hsl(${syncedStorage.value['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
+    let appbarColor = preset['appbarcolor']?.startsWith('true')
+        ? `hsl(${preset['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
         : null
-    let menubarColor = syncedStorage.value['sidecolor']?.startsWith('true')
-        ? `hsl(${syncedStorage.value['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+    let menubarColor = preset['sidecolor']?.startsWith('true')
+        ? `hsl(${preset['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
         : null
-    let wallpaper = syncedStorage.value['wallpaper']?.startsWith('custom')
-        ? `linear-gradient(color-mix(in srgb, var(--page), transparent 20%), color-mix(in srgb, var(--page), transparent 20%)), url(${syncedStorage.value['wallpaper'].replace('custom,', '')})`
+    let wallpaper = preset['wallpaper']?.startsWith('custom')
+        ? `linear-gradient(color-mix(in srgb, var(--page), transparent 20%), color-mix(in srgb, var(--page), transparent 20%)), url(${preset['wallpaper'].replace('custom,', '')})`
         : 'none'
-    let decoration = syncedStorage.value['decoration']?.startsWith('custom')
-        ? `url(${syncedStorage.value['decoration'].replace('custom,', '')})`
+    let decoration = preset['decoration']?.startsWith('custom')
+        ? `url(${preset['decoration'].replace('custom,', '')})`
         : 'none'
     accentColor?.shift()
     return {
+        '--color-scheme': preset['ptheme']?.split(',')?.[0] || 'auto',
         '--page': pageColor || `light-dark(#ffffff, #111111)`,
         '--wallpaper': wallpaper,
         '--appbar': appbarColor || `light-dark(${shiftedHslColor(207, 95, 47, ...accentColor)}, ${shiftedHslColor(207, 73, 22, ...accentColor)})`,
@@ -29,7 +35,7 @@ const style = computed(() => {
         '--sidebar': `light-dark(#ffffffaa, #0c0c0caa)`,
         '--foreground-accent': `light-dark(${shiftedHslColor(207, 78, 43, ...accentColor)}, ${shiftedHslColor(207, 53, 55, ...accentColor)})`,
         '--border': `light-dark(#dfdfdfaa, #2e2e2eaa)`,
-        '--border-radius': (syncedStorage.value['shape'] ?? 8) + 'px',
+        '--border-radius': (preset['shape'] ?? 8) + 'px',
         '--accent-1': `light-dark(${shiftedHslColor(207, 95, 55, ...accentColor)}, ${shiftedHslColor(207, 73, 30, ...accentColor)})`,
         '--accent-2': `light-dark(${shiftedHslColor(207, 95, 47, ...accentColor)}, ${shiftedHslColor(207, 73, 22, ...accentColor)})`,
     }
@@ -136,6 +142,7 @@ const decorations = [
 }
 
 #theme-preview {
+    color-scheme: var(--color-scheme);
     display: grid;
     grid-template-columns: 5% 22% 1fr 30%;
     grid-template-rows: 1fr;
