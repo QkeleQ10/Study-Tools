@@ -1382,7 +1382,7 @@ table.table-grid-layout>tbody>tr.selected {
 
 .menu-button:has(#help-menu) {
     overflow: hidden;
-    height: 0;
+    max-height: 0;
     margin-bottom: 0;
     transition: height 200ms, margin-bottom 200ms;
 }
