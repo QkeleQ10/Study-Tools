@@ -4,15 +4,6 @@
     inherits: true;
 }
 
-:root {
-    --st-linear-gradient-study-tools: linear-gradient(300deg, hsl(209, 40%, 29%), hsl(209, 36%, 30%));
-}
-
-body,
-div.loading-overlay {
-    background: var(--st-background-primary) !important
-}
-
 .st-overlay[open] {
     width: 100%;
     height: 100%;
@@ -1432,6 +1423,12 @@ a.st-keyboard-hint.clicked {
     from {
         opacity: 0;
         scale: .8;
+    }
+}
+
+@keyframes peekInLeft {
+    from {
+        left: -100%;
     }
 }
 

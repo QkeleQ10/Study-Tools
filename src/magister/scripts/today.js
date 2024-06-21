@@ -314,7 +314,9 @@ async function today() {
 
             const events = await MagisterApi.events()
 
-            const eventsTeachers = events.flatMap(item => item.Docenten).filter((value, index, self) =>
+            if(!events) return
+
+            const eventsTeachers = events?.flatMap(item => item.Docenten).filter((value, index, self) =>
                 index === self.findIndex((t) => (
                     t.Docentcode === value.Docentcode
                 ))
@@ -1161,7 +1163,7 @@ async function today() {
                                 .catch(() => { return reject() })
                         }
 
-                        const todaysEvents = events.filter(item => new Date(item.Start).isToday() && item.Omschrijving != 'amablok_bb')
+                        const todaysEvents = events?.filter(item => new Date(item.Start).isToday() && item.Omschrijving != 'amablok_bb') || []
                         if (!todaysEvents?.length > 0) return
                         const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
 

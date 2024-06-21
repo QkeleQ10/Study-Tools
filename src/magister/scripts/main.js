@@ -3,7 +3,7 @@ chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service
 // Run when the extension and page are loaded
 main()
 async function main() {
-    if((await getFromStorage('sampleApiData', 'session')) === 'true') MagisterApi.useSampleData = true
+    if ((await getFromStorage('sampleApiData', 'session')) === 'true') MagisterApi.useSampleData = true
 
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
@@ -75,6 +75,15 @@ async function main() {
     if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg'), 2000)
     if (Math.random() < 0.010) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
     if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
+    if (Math.random() < 0.004) setTimeout(() => {
+        const amogus = element('img', 'st-amogus', document.body, {
+            src: 'https://static.wikia.nocookie.net/fnaf-tower-defense/images/7/77/Among-us-red-png-01.png', style: `position: absolute; bottom: 0; left: 20px; height: 32px; animation: 1000ms peekInLeft;`
+        })
+        amogus.addEventListener('click', () => {
+            var audio = new Audio('https://www.myinstants.com/media/sounds/among-us-roundstart.mp3')
+            audio.play()
+        })
+    }, 2000)
 
     // Birthday party mode!
     const accountInfo = await MagisterApi.accountInfo(),
