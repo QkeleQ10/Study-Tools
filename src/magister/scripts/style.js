@@ -1595,7 +1595,7 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    const frame = await awaitElement('.view iframe', false, 2000, true)
+    const frame = await awaitElement('.view iframe', false, 4000, true)
     if (!frame) return
 
     const iframeStyleInject = document.querySelector('#study-tools-vars').innerHTML +

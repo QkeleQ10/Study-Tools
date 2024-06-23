@@ -314,7 +314,7 @@ async function today() {
 
             const events = await MagisterApi.events()
 
-            if(!events) return
+            if (!events) return
 
             const eventsTeachers = events?.flatMap(item => item.Docenten).filter((value, index, self) =>
                 index === self.findIndex((t) => (
@@ -452,7 +452,7 @@ async function today() {
                     let todayEvents = agendaDays[todayIndex].events
                     let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || todayIndex || 0
                     let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex]?.events
-                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
+                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => !(item.Status == 4 || item.Status == 5)).map(item => new Date(item.Einde))))
 
                     // Jump to the next relevant day if no (more) events will take place today (given the user hasn't opted out)
                     if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
@@ -561,7 +561,7 @@ async function today() {
                     }
 
                     // Cancelled label
-                    if (item.Status == 5) {
+                    if (item.Status == 4 || item.Status == 5) {
                         eventElement.classList.add('cancelled')
                         element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
                     }
@@ -1393,7 +1393,7 @@ function checkCollision(eventArr) {
 function getEventChips(event) {
     let chips = []
 
-    if (event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
+    if (event.Status == 4 || event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
     if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
     else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
     if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })
