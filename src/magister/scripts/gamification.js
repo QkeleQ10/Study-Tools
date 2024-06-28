@@ -49,10 +49,10 @@ async function commenceWrapped(isFinalYearStudent) {
 
     const appbarMetrics = await awaitElement('#st-appbar-metrics')
 
-    const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Magister Wrapped", innerText: "" })
+    const wrappedInvoke = element('button', 'st-wrapped-invoke', appbarMetrics, { title: "Study Tools Wrapped", innerText: "" })
     appbarMetrics.firstElementChild.before(wrappedInvoke)
     const endDateString = new Date(`${now.getFullYear()}-${range1.end.getMonth() + 1}-${range1.end.getDate() - 1}`).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
-    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: `Magister Wrapped is terug!\nBeschikbaar t/m ${endDateString}.` })
+    const wrappedInvokeTip = element('div', 'st-wrapped-invoke-tip', document.body, { class: 'hidden', innerText: `Study Tools Wrapped is terug!\nBeschikbaar t/m ${endDateString}.` })
     if (lastAccessYear !== now.getFullYear()) setTimeout(() => wrappedInvokeTip.classList.remove('hidden'), 100)
     setTimeout(() => wrappedInvokeTip.classList.add('hidden'), 30000)
 
@@ -131,13 +131,13 @@ async function constructWrapped(lastYearOnly) {
 
         const infoButton = element('button', 'st-wrapped-info', dialog, { class: 'st-button icon', 'data-icon': '' })
         infoButton.addEventListener('click', async () => {
-            await notify('dialog', "Welkom bij jouw Magister Wrapped!\n\nDeze samenvatting van het afgelopen jaar zie je aan het eind/begin van elk schooljaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)", null, null, { index: 1, length: 3 })
+            await notify('dialog', "Welkom bij jouw Study Tools Wrapped!\n\nDeze samenvatting van het afgelopen jaar zie je aan het eind/begin van elk schooljaar in jouw Magister terug.\nHij geeft jou een gepersonaliseerde ervaring en zet je in de schijnwerpers door je prestaties van het jaar uit te lichten.\n\nVergelijk je Wrapped vooral met vrienden! Dat maakt mij blij :)", null, null, { index: 1, length: 3 })
 
             await notify('dialog', "Als je op bepaalde tegels klikt, krijg je meer informatie. \nExamenleerlingen kunnen door de verschillende leerjaren bladeren en zelfs een totaalplaatje zien.", null, null, { index: 2, length: 3 })
 
             await notify(
                 'dialog',
-                "Magister Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van suggesties en probleemrapporten) is daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
+                "Study Tools Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van suggesties en probleemrapporten) is daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
                 [
                     { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
                 ], null, { index: 3, length: 3 })
@@ -153,13 +153,13 @@ async function constructWrapped(lastYearOnly) {
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
                 const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
-                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: i === years.length ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
+                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
                 let cards = []
 
                 yearTitle.addEventListener('click', () => {
-                    yearTitle.innerText = `Magister Wrapped: ${year.groep?.omschrijving || '?'}`
+                    yearTitle.innerText = `Study Tools Wrapped: ${year.groep?.omschrijving || '?'}`
                     setTimeout(() => {
-                        yearTitle.innerText = i === years.length ? "Magister Wrapped: alle leerjaren" : `Magister Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas`
+                        yearTitle.innerText = i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas`
                     }, 2000)
                 })
 

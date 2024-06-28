@@ -1024,14 +1024,16 @@ aside .tabs li a {
 .menu-host .menu {
     position: static !important;
     padding-bottom: 0 !important;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    display: grid;
+    grid-template: 
+        "items" calc(100vh - 84px - 64px)
+        "footer" 64px
+        / 1fr;
 }
 
 .menu-host .menu .menu-container {
     height: max-content !important;
+    max-height: 100%;
 }
 
 .menu-host .menu-footer {
@@ -1384,11 +1386,11 @@ table.table-grid-layout>tbody>tr.selected {
     overflow: hidden;
     max-height: 0;
     margin-bottom: 0;
-    transition: height 200ms, margin-bottom 200ms;
+    transition: max-height 200ms, margin-bottom 200ms;
 }
 
 .appbar:has(.user-menu) .menu-button:has(#help-menu) {
-    height: 36px;
+    max-height: 50px;
     margin-bottom: 16px;
 }
 
