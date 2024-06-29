@@ -95,7 +95,7 @@ const MagisterApi = {
         recent: async () => {
 
             if (MagisterApi.useSampleData) {
-                return [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0 }, { omschrijving: "Baguette", ingevoerdOp: new Date(now - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0 }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }
+                return [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0, isVoldoende: true }, { omschrijving: "Baguette", ingevoerdOp: new Date(now - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0, isVoldoende: true }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }
                 ]
             }
             return new Promise(async (resolve, reject) => {

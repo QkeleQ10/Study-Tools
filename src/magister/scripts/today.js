@@ -1370,7 +1370,7 @@ async function today() {
                             widgetTypeButton.classList.add('active')
                             widgetsList.innerText = ''
                             widgets.classList.remove('editing')
-                            editWidgets(true)
+                            editWidgets(widgetElement.id)
                         })
                     })
                     const widgetHideButton = element('button', `st-start-edit-${key}-hide`, editorActionRow, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('remove'), title: i18n('removeWidget') })
@@ -1395,7 +1395,7 @@ async function today() {
                                         saveToStorage(option.key, newValue, 'local')
                                         widgetsList.innerText = ''
                                         widgets.classList.remove('editing')
-                                        editWidgets()
+                                        editWidgets(widgetElement.id)
                                     })
                                     break
 
@@ -1406,6 +1406,10 @@ async function today() {
                         })
                     }
                 })
+
+                if (keepSelection === widgetElement.id) {
+                    widgetElement.classList.add('focused')
+                }
             }
             updateTemporalBindings()
         }

@@ -266,7 +266,36 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
         handleSpecialTheme('valentine')
     }
 
-    createStyle(`.block h3,
+    createStyle(`
+body .container {
+    display: grid;
+    grid-template: 
+        "appbar menu view" auto
+        ". . view" 1fr
+        / auto auto 1fr;
+}
+
+.appbar-host {
+    grid-area: appbar;
+    height: 100vh;
+    max-height: 100vh;
+}
+
+mg-feedback-dialog {
+    position: absolute;
+}
+
+.menu-host {
+    grid-area: menu;
+    height: 100vh;
+    max-height: 100vh;
+}
+
+.view {
+    grid-area: view;
+}
+        
+.block h3,
 .view {
     position: relative;
 }
@@ -1024,11 +1053,11 @@ aside .tabs li a {
 .menu-host .menu {
     position: static !important;
     padding-bottom: 0 !important;
-    display: grid;
-    grid-template: 
-        "items" calc(100vh - 84px - 64px)
-        "footer" 64px
-        / 1fr;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    max-height: calc(100vh - 84px);
 }
 
 .menu-host .menu .menu-container {
@@ -1490,7 +1519,7 @@ table.table-grid-layout>tbody>tr.selected {
     padding-right: 0 !important;
 }
 `, 'study-tools-start-overhaul')
-    }
+    } else { createStyle('', 'study-tools-start-overhaul') }
 
     if (syncedStorage['sw-enabled']) {
         createStyle(`
@@ -1515,7 +1544,7 @@ table.table-grid-layout>tbody>tr.selected {
 .sidecolumn section.main {
     padding-bottom: 0 !important
 }`, 'study-tools-sw-grid')
-    }
+    } else { createStyle('', 'study-tools-sw-grid') }
 
     if (syncedStorage['cs']) {
         createStyle(`
@@ -1549,17 +1578,13 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
     color: var(--st-accent-ok) !important;
     font-weight: 700;
 }`, 'study-tools-insuf-red')
-    } else {
-        createStyle('', 'study-tools-insuf-red')
-    }
+    } else { createStyle('', 'study-tools-insuf-red') }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {
         createStyle(`.menu-button figure img,.photo.photo-high img{content: url("${syncedStorage['magister-picture-source']}")}`, 'study-tools-pfp')
     } else if (syncedStorage['magister-picture'] !== 'show') {
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
-    } else {
-        createStyle('', 'study-tools-pfp')
-    }
+    } else { createStyle('', 'study-tools-pfp') }
 
     if (syncedStorage['custom-css']) {
         createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
@@ -1581,10 +1606,10 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
         }
 
         cssVarReferenceMatches.forEach(({ variable, property, selector }) => {
-            let interval = setInterval(update, 50)
+            let interval = setInterval(update, 25)
             setTimeout(() => clearInterval(interval), 3000)
             window.addEventListener('resize', update)
-            document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('click', update)
+            document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('mouseup', update)
             function update() {
                 document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px')
             }
