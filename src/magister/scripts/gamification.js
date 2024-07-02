@@ -139,7 +139,8 @@ async function constructWrapped(lastYearOnly) {
                 'dialog',
                 "Study Tools Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van suggesties en probleemrapporten) is daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
                 [
-                    { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
+                    { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` },
+                    { innerText: "PayPal", onclick: `window.open('https://paypal.me/QkeleQ10)` }
                 ], null, { index: 3, length: 3 })
         })
 
@@ -417,69 +418,3 @@ async function constructWrapped(lastYearOnly) {
         }
     })
 }
-
-themeContest()
-async function themeContest() {
-    let unlocked = false
-    document.addEventListener('keydown', (event) => {
-        if (unlocked) return
-        if (event.code === 'Space' && event.shiftKey && event.ctrlKey) {
-            event.preventDefault()
-            unlocked = true
-            notify('snackbar', "!!!", [], 1000)
-
-            document.querySelector('a[href="/magister/#/vandaag"]')?.addEventListener('contextmenu', async (event) => {
-                if (!unlocked) return
-
-                event.preventDefault()
-
-                if (!((await getFromStorage('themeContestJurorMode', 'session')) === 'true') != !(syncedStorage['themeContestJurorMode'])) {
-                    const textarea = element('textarea', 'null', document.body, { style: 'position: absolute; z-index: 99999999; top: 50%; left: 50%; translate: -50% -50%; width: 300px; height: 200px; transition: all 200ms;', resize: 'both', innerText: 'alt+klik om te verplaatsen, ctrl+klik om te verbergen' })
-                    document.body.addEventListener('click', (event) => {
-                        if (event.altKey) {
-                            event.preventDefault()
-                            textarea.style.top = event.clientY + 'px'
-                            textarea.style.left = event.clientX + 'px'
-                        }
-                        if (event.ctrlKey) {
-                            event.preventDefault()
-                            textarea.style.opacity = textarea.style.opacity == '1' ? 0 : 1
-                        }
-                    })
-                    textarea.addEventListener('paste', (event) => {
-                        try {
-                            let obj = JSON.parse((event.clipboardData || window.clipboardData).getData("text"))
-                            if (obj.title !== 'Magister Theme Contest') {
-                                throw new Error('invalid')
-                            }
-                            setTimeout(() => textarea.value = JSON.stringify(obj, null, 4), 0)
-                            syncedStorage = { ...syncedStorage, ...obj.options }
-                            applyStyles(null, null, null, true)
-                        } catch {
-                            setTimeout(() => textarea.value = 'Ongeldig!', 0)
-                        }
-                    })
-
-                } else {
-                    user = await MagisterApi.accountInfo()
-                    const copyText = (btoa(JSON.stringify({ title: 'Magister Theme Contest', name: `${user.Persoon.Roepnaam} ${user.Persoon.Achternaam}`, school: window.location.hostname.split('.')[0], options: pick(syncedStorage, 'ptheme', 'pagecolor', 'wallpaper', 'sidecolor', 'decoration', 'decoration-size', 'appbarcolor', 'shape', 'custom-css') }))).match(new RegExp(`.{1,4000}`, 'g')) || []
-                    if (copyText.length === 1) {
-                        navigator.clipboard.writeText(copyText[0])
-                        notify('dialog', "Je inzending is nu gekopieerd naar je klembord. Typ '/winactie' in Discord en volg de aanwijzingen.")
-                    } else if (copyText.length > 1) {
-                        for (let i = 0; i < copyText.length; i++) {
-                            navigator.clipboard.writeText(copyText[i])
-                            await notify('dialog', `Je inzending is erg lang. Daarom moet hij worden opgesplitst in ${copyText.length} delen. \nDeel ${i + 1} is nu gekopieerd naar je klembord. ${i === 0 ? "Typ '/winactie' in Discord en volg de aanwijzingen.\nKlik pas daarna verder." : ''}`, null, null, { index: i + 1, length: copyText.length })
-                        }
-                    }
-                }
-            })
-        }
-    })
-}
-
-const pick = (obj, ...keys) => Object.fromEntries(
-    keys
-        .filter(key => key in obj)
-        .map(key => [key, obj[key]])
-)
