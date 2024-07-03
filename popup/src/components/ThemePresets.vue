@@ -26,6 +26,7 @@ function applyPreset() {
         <div id="theme-presets-container">
             <div id="theme-presets-heading">
                 <h3 class="setting-title">Thema's</h3>
+                <span class="setting-subtitle">Selecteer het tabblad 'Uiterlijk' om je thema aan te passen.</span>
             </div>
             <div id="theme-presets">
                 <button v-for="preset in themePresets" class="theme-preset" :title="preset.name"

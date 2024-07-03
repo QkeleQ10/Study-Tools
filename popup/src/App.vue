@@ -29,7 +29,7 @@ provide('syncedStorage', syncedStorage)
 
 const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 
-let selectedCategory = ref('appearance')
+let selectedCategory = ref('theme')
 let transitionName = ref('')
 
 setTimeout(() => transitionName.value = 'list', 200)
@@ -97,7 +97,7 @@ function openInNewTab(url) {
                     <template v-for="category in settings">
                         <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
                             <TransitionGroup :name="transitionName">
-                                <ThemePresets v-if="category.id === 'appearance'" key="appearance" />
+                                <ThemePresets v-if="category.id === 'theme'" key="theme" />
                                 <About v-if="category.id === 'about'" key="about"
                                     @reset-settings="resetSettingDefaults" />
                                 <template v-for="setting in category.settings">

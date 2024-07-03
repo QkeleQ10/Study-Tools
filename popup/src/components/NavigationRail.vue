@@ -17,8 +17,13 @@ const value = computed({
 
 const tabs = [
     {
+        id: 'theme',
+        name: 'Thema',
+        icon: 'format_paint'
+    },
+    {
         id: 'appearance',
-        name: 'Uiterlijk',
+        name: 'thema2',
         icon: 'format_paint'
     },
     {

@@ -1,5 +1,9 @@
 export default [
     {
+        id: "theme",
+        settings: []
+    },
+    {
         id: "appearance",
         settings: [
             {
