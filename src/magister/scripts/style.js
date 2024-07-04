@@ -267,7 +267,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     }
 
     createStyle(`
-body .container {
+body>.container {
     display: grid;
     grid-template: 
         "appbar menu view" auto
@@ -291,20 +291,21 @@ mg-feedback-dialog {
     max-height: 100vh;
 }
 
-.view {
+body>.container>.view {
     grid-area: view;
-}
-        
-.block h3,
-.view {
     position: relative;
-}
-
-div.view {
     min-width: calc(100vw - 304px);
     width: 100%;
     max-width: calc(100vw - 304px);
     transition: min-width 200ms, max-width 200ms;
+}
+
+.view section.main {
+    overflow: auto;
+}
+        
+.block h3 {
+    position: relative;
 }
 
 div.collapsed-menu ~ div.view {

@@ -122,7 +122,7 @@ const decorations = [
     <div id="theme-preview" :style="style">
         <div id="appbar"></div>
         <div id="menubar"
-            :style="{ ...(decorations.find(e => syncedStorage['decoration']?.startsWith(e.id))?.style || {}) }">
+            :style="{ ...(decorations.find(e => preset['decoration']?.startsWith(e.id))?.style || {}) }">
             <div id="menubar-title"></div>
         </div>
         <div id="page">

@@ -140,7 +140,7 @@ async function constructWrapped(lastYearOnly) {
                 "Study Tools Wrapped is nog gloednieuw. De hele ervaring is veel te snel in elkaar geflanst, met relatief weinig tests en input.\nFeedback (in de vorm van suggesties en probleemrapporten) is daarom meer dan welkom!\n\nNeem contact met me op in de Discord-server. En deel ook vooral screenshots van jouw Wrapped of klets wat met de andere leden!",
                 [
                     { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` },
-                    { innerText: "PayPal", onclick: `window.open('https://paypal.me/QkeleQ10)` }
+                    { innerText: "PayPal", onclick: `window.open('https://paypal.me/QkeleQ10')` }
                 ], null, { index: 3, length: 3 })
         })
 
