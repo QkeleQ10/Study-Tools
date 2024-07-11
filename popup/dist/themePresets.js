@@ -67,6 +67,12 @@ export default [
     {
         name: "Minecraft",
         author: "TheOakTrees & DaintyDust",
+        thumbnailStyle: {
+            menubar: {
+                marginLeft: '-25%',
+                paddingLeft: '35%'
+            }
+        },
         "ptheme": "dark,0,0,48.2",
         "pagecolor": "false,223,6.7,20.6",
         "wallpaper": "custom,https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/panorama.webp",
@@ -78,11 +84,45 @@ export default [
         "custom-css": `.examen-widget,.main-menu .caption,.st-title,.title,h2,h3{font-family:var(--st-font-family-secondary)!important}@font-face{font-family:Minecraftia;src:url("https://unpkg.com/@south-paw/typeface-minecraft@1.0.0/files/minecraft.woff2") format("woff2"),url("https://unpkg.com/@south-paw/typeface-minecraft@1.0.0/files/minecraft.woff") format("woff");font-weight:600}:root{--st-font-family-primary:Minecraftia!important;--st-font-family-secondary:Minecraftia!important;--st-background-secondary:#000000a6}:host{--title-font:Minecraftia!important;--subtitle-font:Minecraftia!important}body{--dna-font-family-base:Minecraftia!important;--dna-font-family-header:Minecraftia!important;height:100vh;flex-direction:column;background-color:#fff;background-image:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/landscape.webp');background-size:cover;background-position:center;position:relative}.examen-widget,.title,h2,h3{font:var(--st-font-family-secondary)!important}.main-menu .caption:not(#st-start-header-text-wrapper *),.main-menu li.submenu.ng-scope>a,.main-menu li>a,.st-title:not(#st-start-header-text-wrapper *){font-size:small}dna-button{color:var(--st-contrast-accent)}.menu-host{margin-left:-90px;padding-left:90px;width:calc(240px + 90px)}.menu-host.collapsed-menu{width:calc(64px + 90px)}.appbar-host{z-index:1;background:0 0}.logo .logo-expanded.ng-scope{content:url(https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/magister.webp)!important;scale:1.2!important;margin:21px!important;padding-bottom:15px!important}.logo-collapsed{content:url(https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/m.webp)!important;padding-bottom:15px!important}#st-cc,#st-start-today-view-popover,#st-start-widgets,.ng-isolate-scope .content-container{background:url(https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/dirt.webp)!important}#aanwezigheid thead,#st-cb,#st-cc-open,#st-start-today-view,#st-start-widget-controls-wrapper,#st-start-widget-grades,.appbar .menu-button,.block h3,.main-menu a,.st-button.icon,.st-button.segment.st-dropdown-segment,dna-button-bar[slot=actions]>*,dna-button-group[slot=actions]>*,input[type=checkbox]+label>span{cursor:pointer;overflow:hidden;white-space:nowrap;user-select:none;border-radius:0;background:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/button.png') center/cover #999;image-rendering:pixelated;border:2px solid #000;box-shadow:inset -2px -4px #0004,inset 2px 2px #fff5!important}.st-button.icon{box-sizing:content-box}#st-start-widget-controls-wrapper,#st-start-widget-grades,.st-button.segment.st-dropdown-segment.active{background:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/buttonoff.png') center/cover #999}.appbar .menu-button>*{border-radius:0!important}#aanwezigheid thead *{background-color:transparent!important;border-color:none!important}#aanwezigheid :not(.fold) thead,#aanwezigheid thead:hover,.block h3:hover,.block:not(.fold) h3,.main-menu a:hover{border:2px solid #fff!important;text-shadow:2px 2px #202013CC!important}.block h3{border:2px solid #000!important;text-shadow:none!important}.main-menu li.active>a,.main-menu li.active>a:active,.main-menu li.active>a:hover,.main-menu li.submenu.ng-scope.active>a,.main-menu li.submenu.ng-scope.active>a:active,.main-menu li.submenu.ng-scope.active>a:hover,.main-menu li.submenu.ng-scope>a:active,.main-menu li>a:active{border:2px solid #fff;text-shadow:2px 2px #202013CC!important;font-size:small}ul.tabs li::after{background-color:transparent}input[type=checkbox]:checked+label>span{cursor:pointer;overflow:hidden;white-space:nowrap;user-select:none;border-radius:0;background:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/minecraft/button.png') center/cover #999;image-rendering:pixelated;border:2px solid #fff!important;box-shadow:inset -2px -4px #0004,inset 2px 2px #fff5!important;text-shadow:2px 2px #202013CC!important}.block .content,.fancy-select .k-multiselect-wrap.k-floatwrap,.fancy-select .k-widget.k-multiselect.k-header.select.all-items-selected,.fancy-select .k-widget.k-multiselect.k-header.select.all-items-selected.k-state-hover,.tabsheet .block,.tabsheet .block .content{background-color:transparent!important;border:none!important}.block .content fieldset{background-color:var(--st-background-secondary)!important}.widget.ng-scope .block h3 b{font-size:large;position:absolute;left:50%;top:50%;translate:-50% -50%}#st-start-widget-controls-wrapper{background-color:var(--st-background-secondary);padding:8px!important}#st-start-widget-controls-wrapper>*{color:#fff}#st-start-widget-digital-clock:hover{background-color:#4d3828!important}`
     },
     {
-        name: '?',
+        name: 'Human',
         author: "DaintyDust",
+        thumbnailStyle: {
+            body: {
+                backgroundImage: 'url(https://i.imgur.com/9oyX79l.jpeg)'
+            },
+            pageTitle: {
+                backgroundColor: '#ffffffbf'
+            },
+            menubar: {
+                marginTop: '4px',
+                height: '75%',
+                borderTopRightRadius: '4px',
+                borderBottomRightRadius: '4px',
+                backgroundColor: '#1a1a1a7a'
+            },
+            appbar: {
+                marginTop: '4px',
+                marginLeft: '4px',
+                height: '75%',
+                borderTopLeftRadius: '4px',
+                borderBottomLeftRadius: '4px',
+                backgroundColor: '#1a1a1a7a'
+            },
+            sidebar: {
+                backgroundColor: 'transparent',
+                borderColor: 'transparent'
+            },
+            widgetGrades: {
+                backgroundImage: 'none'
+            },
+            widget: {
+                backgroundColor: '#1a1a1a7a',
+                borderColor: 'transparent'
+            }
+        },
         "ptheme": "dark,212,91,34",
         "pagecolor": "false,45,98,43",
-        "wallpaper": "custom,https://ios18.net/wp-content/uploads/ios-18-wallpaper.webp",
+        "wallpaper": "custom,https://i.imgur.com/9oyX79l.jpeg",
         "sidecolor": "false,212,98,24",
         "decoration": "none,",
         "decoration-size": 0.8,
@@ -93,6 +133,31 @@ export default [
     {
         name: '?',
         author: 'Astyll',
+        thumbnailStyle: {
+            body: {
+                backgroundImage: 'linear-gradient(#00000050, #00000050), url(https://i.imgur.com/MAfI42c.jpg)'
+            },
+            pageTitle: {
+                backgroundColor: '#ffffff'
+            },
+            menubar: {
+                backgroundColor: '#00000033'
+            },
+            appbar: {
+                backgroundColor: '#0000004d'
+            },
+            sidebar: {
+                backgroundColor: 'transparent',
+                borderColor: 'transparent'
+            },
+            widgetGrades: {
+                backgroundImage: 'none'
+            },
+            widget: {
+                backgroundColor: '#0000001a',
+                borderColor: 'transparent'
+            }
+        },
         "ptheme": "auto,207,95,55",
         "pagecolor": "false,0,0,7",
         "wallpaper": "none,",

@@ -22,11 +22,6 @@ const tabs = [
         icon: 'format_paint'
     },
     {
-        id: 'appearance',
-        name: 'thema2',
-        icon: 'format_paint'
-    },
-    {
         id: 'login',
         name: 'Inloggen',
         icon: 'key'

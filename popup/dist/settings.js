@@ -1,10 +1,6 @@
 export default [
     {
         id: "theme",
-        settings: []
-    },
-    {
-        id: "appearance",
         settings: [
             {
                 id: "ptheme",
@@ -78,6 +74,15 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
                 default: true,
+            },
+            {
+                id: "custom-css",
+                title: "Aangepaste CSS",
+                type: "TextInput",
+                default: '',
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
             },
         ]
     },
@@ -377,15 +382,6 @@ export default [
                 title: "Uitgebreide consoleberichten",
                 subtitle: "Experimenteel. Er worden meer activiteiten geplaatst in de console.",
                 default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "custom-css",
-                title: "Aangepaste CSS",
-                type: "TextInput",
-                default: '',
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],

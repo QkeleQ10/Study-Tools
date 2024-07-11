@@ -2,10 +2,12 @@
 import { ref, inject } from 'vue'
 import MagisterThemePreview from './MagisterThemePreview.vue'
 import Dialog from './Dialog.vue'
+import Icon from './Icon.vue'
 
 import themePresets from '../../public/themePresets.js'
 
 const syncedStorage = inject('syncedStorage')
+const themePickerState = inject('themePickerState')
 
 const promptOpen = ref(false)
 const promptingPreset = ref({})
@@ -23,22 +25,25 @@ function applyPreset() {
 
 <template>
     <div class="setting-wrapper">
-        <div id="theme-presets-container">
-            <div id="theme-presets-heading">
-                <h3 class="setting-title">Thema's</h3>
-                <span class="setting-subtitle">Selecteer het tabblad 'Uiterlijk' om je thema aan te passen.</span>
-            </div>
-            <div id="theme-presets">
-                <button v-for="preset in themePresets" class="theme-preset" :title="preset.name"
-                    @click="promptOpen = true; promptingPreset = preset">
-                    <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
-                    <div class="theme-preset-info">
-                        <span class="theme-preset-name">{{ preset.name }}</span>
-                        <span class="theme-preset-author">{{ preset.author }}</span>
-                    </div>
-                </button>
-            </div>
+
+        <div class="sticky-header" id="theme-presets-heading">
+            <h3 class="setting-title">Thema's</h3>
+            <button class="button tonal" @click="themePickerState = 1">
+                <Icon>tune</Icon><span>Thema aanpassen</span>
+            </button>
         </div>
+
+        <div id="theme-presets">
+            <button v-for="preset in themePresets" class="theme-preset" :title="preset.name"
+                @click="promptOpen = true; promptingPreset = preset">
+                <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
+                <div class="theme-preset-info">
+                    <span class="theme-preset-name">{{ preset.name }}</span>
+                    <span class="theme-preset-author">{{ preset.author }}</span>
+                </div>
+            </button>
+        </div>
+
         <Dialog v-model:active="promptOpen">
             <template #icon>format_paint</template>
             <template #headline>Thema vervangen?</template>
@@ -54,16 +59,23 @@ function applyPreset() {
 </template>
 
 <style scoped>
-#theme-presets-container {
-    display: grid;
-    gap: 16px;
-    padding-top: 16px;
+.setting-wrapper {
+    margin-inline: 8px;
+}
+
+#theme-presets-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: -16px;
 }
 
 #theme-presets {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    justify-items: stretch;
     gap: 8px;
+    margin-bottom: 16px;
 }
 
 .theme-preset {
@@ -73,7 +85,6 @@ function applyPreset() {
     gap: 6px;
     padding: 0;
     margin: 0;
-    width: 196px;
     padding: 8px;
     background-color: var(--color-surface-container);
     border: none;

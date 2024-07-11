@@ -22,10 +22,12 @@ import ThemePresets from './components/ThemePresets.vue'
 import Chip from './components/Chip.vue'
 
 const main = ref(null)
+const themePickerState = ref(0)
 const { y } = useScroll(main)
 const syncedStorage = useSyncedStorage()
 
 provide('syncedStorage', syncedStorage)
+provide('themePickerState', themePickerState)
 
 const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 
@@ -97,10 +99,11 @@ function openInNewTab(url) {
                     <template v-for="category in settings">
                         <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
                             <TransitionGroup :name="transitionName">
-                                <ThemePresets v-if="category.id === 'theme'" key="theme" />
+                                <ThemePresets v-if="category.id === 'theme' && themePickerState === 0" key="theme" />
                                 <About v-if="category.id === 'about'" key="about"
                                     @reset-settings="resetSettingDefaults" />
-                                <template v-for="setting in category.settings">
+                                <template v-for="setting in category.settings"
+                                    v-if="!(category.id === 'theme' && themePickerState === 0)">
                                     <div class="setting-wrapper"
                                         :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
                                         :data-setting-type="setting.type" :data-setting-id="setting.id"
@@ -193,9 +196,6 @@ main {
 }
 
 .setting-wrapper[data-setting-type="ThemePicker"] {
-    position: sticky;
-    top: 16px;
-    z-index: 6;
     border-top: none !important;
     margin-inline: 8px;
 }
@@ -234,6 +234,15 @@ main {
     color: var(--color-on-surface-variant);
     font: var(--typescale-body-medium);
     text-wrap: balance;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    padding-top: 12px;
+    padding-bottom: 8px;
+    background-color: var(--color-surface);
+    z-index: 6;
 }
 
 .scrim {

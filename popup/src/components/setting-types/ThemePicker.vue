@@ -1,12 +1,15 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { ref, computed, defineProps, defineEmits, inject } from 'vue'
 
 import ColorPicker from '../inputs/ColorPicker.vue'
 import SegmentedButton from '../inputs/SegmentedButton.vue'
-import MagisterThemePreview from '../MagisterThemePreview.vue';
+import MagisterThemePreview from '../MagisterThemePreview.vue'
+import Icon from '../Icon.vue'
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
+
+const themePickerState = inject('themePickerState')
 
 const value = computed({
     get() {
@@ -37,30 +40,43 @@ function updateColor(newColor) {
 </script>
 
 <template>
-    <div class="setting theme-picker" id="theme-picker">
+    <div class="setting theme-picker">
 
-        <MagisterThemePreview id="theme-preview" />
+        <div class="sticky-header" id="theme-picker-heading">
+            <h3 class="setting-title">Aangepast thema</h3>
+            <button class="button tonal" @click="themePickerState = 0">
+                <Icon>grid_view</Icon><span>Thema's kiezen</span>
+            </button>
+        </div>
 
-        <!-- <div id="theme-title">
-            <h3 class="setting-title">
-                <slot name="title"></slot>
-            </h3>
-        </div> -->
+        <div id="theme-picker">
 
-        <SegmentedButton id="theme-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
-            :options="[
+            <MagisterThemePreview id="theme-preview" />
+
+            <SegmentedButton id="theme-scheme" :model-value="value.scheme" @update:model-value="updateScheme" :options="[
                 { value: 'auto', icon: 'hdr_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
                 { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
                 { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
             ]" />
 
-        <ColorPicker id="theme-color" :model-value="value.color" @update:model-value="updateColor"
-            :swatches-enabled="true" />
-
+            <ColorPicker id="theme-color" :model-value="value.color" @update:model-value="updateColor"
+                :swatches-enabled="true" />
+        </div>
     </div>
 </template>
 
 <style scoped>
+.setting.theme-picker {
+    padding-top: 0;
+}
+
+#theme-picker-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: -16px;
+}
+
 #theme-picker {
     display: grid;
     grid-template:
@@ -68,7 +84,6 @@ function updateColor(newColor) {
         'preview scheme' auto
         'preview color' auto
         / auto 1fr;
-
     gap: 16px;
 
     padding: 16px;
