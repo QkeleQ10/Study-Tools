@@ -168,12 +168,14 @@ main {
 }
 
 #options-container {
+    position: relative;
     display: flex;
     flex-direction: column;
     padding-top: 16px;
 }
 
 .options-category {
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: auto;
@@ -369,19 +371,19 @@ main {
 
 .list-enter-active,
 .list-leave-active {
-    transition: all 200ms ease;
+    transition: all 150ms ease;
 }
 
 .list-enter-active {
-    transition-delay: 200ms;
-    animation: delayShow 200ms normal forwards step-end;
+    transition-delay: 150ms;
+    animation: delayShow 150ms normal forwards step-end;
 }
 
 .list-enter-from,
 .list-leave-to {
     opacity: 0;
     border-bottom: none;
-    transform: translateX(-30px);
+    transform: translateX(-10px);
 }
 
 @keyframes delayShow {

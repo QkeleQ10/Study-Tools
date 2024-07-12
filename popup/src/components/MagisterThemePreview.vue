@@ -130,7 +130,8 @@ const decorations = [
         </div>
         <div id="sidebar" :style="props.preset?.thumbnailStyle?.sidebar">
             <div class="widget" id="widget-grades"
-                :style="{ ...props.preset?.thumbnailStyle?.widgetGrades, ...props.preset?.thumbnailStyle?.widget }"></div>
+                :style="{ ...props.preset?.thumbnailStyle?.widgetGrades, ...props.preset?.thumbnailStyle?.widget }">
+            </div>
             <div class="widget" :style="props.preset?.thumbnailStyle?.widget"></div>
             <div class="widget" :style="props.preset?.thumbnailStyle?.widget"></div>
         </div>
@@ -203,7 +204,7 @@ const decorations = [
 
 .widget {
     height: 20px;
-    border-radius: calc(var(--border-radius)*0.5);
+    border-radius: calc(var(--border-radius)*0.3);
     border: 1px solid var(--border);
     background-color: var(--sidebar);
 }
