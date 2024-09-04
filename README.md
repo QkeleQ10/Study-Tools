@@ -26,7 +26,7 @@ En nog veel meer! Ik voeg regelmatig nieuwe functies toe. Feedback wordt op prij
 
 <img align="left" width="45" height="45" src="https://github.com/QkeleQ10/Study-Tools/assets/65854503/ec4ab9b1-3cf9-45b2-ba08-1a2dfb1e000d" alt="Study Tools beta logo">
 
-## Beta Testen
+## Bètaversie installeren
 1. Kopieer even je huidige instellingen naar je klembord. Dat kan via het tabblad 'Over' in de pop-up!
 2. Deactiveer de stabiele extensie.
 3. [Installeer de bèta-extensie](https://chromewebstore.google.com/u/1/detail/study-tools-voor-magister/dlmdgkhbbclpolcofdlhlpdpiobmklmd).
