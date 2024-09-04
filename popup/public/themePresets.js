@@ -1,7 +1,7 @@
 export default [
     {
         name: "Standaard",
-        author: "Magister",
+        author: "Magister & Quinten Althues",
         'ptheme': 'auto,207,95,55',
         'pagecolor': 'false,0,0,7',
         'wallpaper': 'none,',

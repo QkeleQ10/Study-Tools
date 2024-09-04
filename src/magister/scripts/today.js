@@ -472,7 +472,7 @@ async function today() {
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                         notify('snackbar', `${i18n('toasts.jumpedToNextRelevantDay')} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
 
-                        setTimeout(() => document.querySelector('#st-start-today-offset-zero').classList.add('emphasise'), 200)
+                        setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
                         schedule.dataset.navigate = 'jumpforw'
                         setTimeout(() => schedule.dataset.navigate = 'still', 600)
                     }
@@ -672,8 +672,8 @@ async function today() {
 
         setTimeout(() => {
             updateHeaderText()
-            document.getElementById('st-start-header-greeting').dataset.state = 'hidden'
-            document.getElementById('st-start-header-text').dataset.state = 'visible'
+            if (document.getElementById('st-start-header-greeting')) document.getElementById('st-start-header-greeting').dataset.state = 'hidden'
+            if (document.getElementById('st-start-header-text')) document.getElementById('st-start-header-text').dataset.state = 'visible'
         }, 2000)
     }
 

@@ -1,13 +1,8 @@
 <script setup>
 import { ref, inject } from 'vue'
-import MagisterThemePreview from './MagisterThemePreview.vue'
-import Dialog from './Dialog.vue'
-import Icon from './Icon.vue'
-
 import themePresets from '../../public/themePresets.js'
 
 const syncedStorage = inject('syncedStorage')
-const themePickerState = inject('themePickerState')
 
 const promptOpen = ref(false)
 const promptingPreset = ref({})
@@ -24,25 +19,15 @@ function applyPreset() {
 </script>
 
 <template>
-    <div class="setting-wrapper">
-
-        <div class="sticky-header" id="theme-presets-heading">
-            <h3 class="setting-title">Thema's</h3>
-            <button class="button tonal" @click="themePickerState = 1">
-                <Icon>tune</Icon><span>Thema aanpassen</span>
-            </button>
-        </div>
-
-        <div id="theme-presets">
-            <button v-for="preset in themePresets" class="theme-preset" :title="preset.name"
-                @click="promptOpen = true; promptingPreset = preset">
-                <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
-                <div class="theme-preset-info">
-                    <span class="theme-preset-name">{{ preset.name }}</span>
-                    <span class="theme-preset-author">{{ preset.author }}</span>
-                </div>
-            </button>
-        </div>
+    <div id="theme-presets">
+        <button v-for="preset in themePresets" class="theme-preset" :title="preset.name"
+            @click="promptOpen = true; promptingPreset = preset">
+            <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
+            <div class="theme-preset-info">
+                <span class="theme-preset-name">{{ preset.name }}</span>
+                <span class="theme-preset-author">{{ preset.author }}</span>
+            </div>
+        </button>
 
         <Dialog v-model:active="promptOpen">
             <template #icon>format_paint</template>
@@ -59,22 +44,12 @@ function applyPreset() {
 </template>
 
 <style scoped>
-.setting-wrapper {
-    margin-inline: 8px;
-}
-
-#theme-presets-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: -16px;
-}
-
 #theme-presets {
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: stretch;
     gap: 8px;
+    margin: 8px;
     margin-bottom: 16px;
 }
 

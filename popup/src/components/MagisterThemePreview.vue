@@ -119,7 +119,8 @@ const decorations = [
 </script>
 
 <template>
-    <div id="theme-preview" :style="{ ...style, ...props.preset?.thumbnailStyle?.body }">
+    <div id="theme-preview" :style="{ ...style, ...props.preset?.thumbnailStyle?.body }"
+        :title="props.preset?.name ? 'Dit is een voorbeeld van je thema. Het kan zijn dat \nhet thema er net anders uitziet dan hier.' : 'Dit is een voorbeeld van je thema. Aangepaste CSS werkt niet in dit \nvoorbeeld, dus het kan zijn dat je thema er anders uitziet dan hier.'">
         <div id="appbar" :style="props.preset?.thumbnailStyle?.appbar"></div>
         <div id="menubar"
             :style="{ ...(decorations.find(e => preset['decoration']?.startsWith(e.id))?.style || {}), ...props.preset?.thumbnailStyle?.menubar }">

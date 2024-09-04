@@ -371,7 +371,7 @@ div.loading-overlay>div:before {
     color: var(--st-foreground-primary) !important;
 }
 
-#cijferoverzichtgrid, .afsprakenlijst-container .main>.content-container, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid {
+#cijferoverzichtgrid, .afsprakenlijst-container .main>.content-container, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid, .tech-info {
     background: transparent !important;
     border-color: var(--st-border-color) !important;
 }
