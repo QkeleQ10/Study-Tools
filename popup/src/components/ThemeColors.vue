@@ -1,9 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
-
-import ColorPicker from '../inputs/ColorPicker.vue'
-import SegmentedButton from '../inputs/SegmentedButton.vue'
-import MagisterThemePreview from '../MagisterThemePreview.vue';
+import { ref, computed, defineProps, defineEmits, inject } from 'vue'
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])
@@ -37,44 +33,33 @@ function updateColor(newColor) {
 </script>
 
 <template>
-    <div class="setting theme-picker" id="theme-picker">
-
+    <div id="theme-colors">
         <MagisterThemePreview id="theme-preview" />
 
-        <!-- <div id="theme-title">
-            <h3 class="setting-title">
-                <slot name="title"></slot>
-            </h3>
-        </div> -->
-
-        <SegmentedButton id="theme-scheme" :model-value="value.scheme" @update:model-value="updateScheme"
-            :options="[
-                { value: 'auto', icon: 'hdr_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
-                { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
-                { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
-            ]" />
+        <SegmentedButton id="theme-scheme" :model-value="value.scheme" @update:model-value="updateScheme" :options="[
+            { value: 'auto', icon: 'hdr_auto', tooltip: prefersDarkColorScheme ? 'Op basis van browserthema (momenteel donker)' : 'Op basis van browserthema (momenteel licht)' },
+            { value: 'light', icon: 'light_mode', tooltip: 'Licht thema' },
+            { value: 'dark', icon: 'dark_mode', tooltip: 'Donker thema' }
+        ]" />
 
         <ColorPicker id="theme-color" :model-value="value.color" @update:model-value="updateColor"
             :swatches-enabled="true" />
-
     </div>
 </template>
 
 <style scoped>
-#theme-picker {
+#theme-colors {
     display: grid;
     grid-template:
-        /* 'preview title' auto */
         'preview scheme' auto
         'preview color' auto
         / auto 1fr;
-
     gap: 16px;
 
-    padding: 16px;
+    margin: 5px;
+    margin-block: 16px;
 
-    background-color: var(--color-surface-container);
-    border-radius: 12px;
+    background-color: var(--color-surface);
 }
 
 #theme-preview {

@@ -1,6 +1,4 @@
 <script setup>
-import Icon from './Icon.vue';
-
 import { computed, defineProps, defineEmits } from 'vue'
 
 const props = defineProps(['modelValue', 'id', 'setting'])

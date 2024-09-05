@@ -67,6 +67,18 @@ async function today() {
         verifyDisplayMode()
     })
 
+    const editor = element('div', 'st-start-editor', document.body, { class: 'st-hidden' })
+    const editorView = element('div', 'st-start-editor-view', editor)
+    const editorWidgetTitle = element('span', 'st-start-editor-title', editorView, { innerText: i18n('editWidgets') })
+    const editorActionRow = element('div', 'st-start-editor-action-row', editorView, { 'data-empty-text': i18n('editWidgetsEmpty') })
+    const editorDisclaimer = element('div', 'st-start-editor-disclaimer', editorView, { class: 'st-disclaimer st-hidden' })
+    const editorOptions = element('div', 'st-start-editor-options', editorView)
+    const editorHidden = element('div', 'st-start-editor-hidden-view', editor)
+    const editorHiddenTitle = element('span', 'st-start-editor-hidden-view-title', editorHidden, { innerText: i18n('addWidgets') })
+    const editorHiddenList = element('div', 'st-start-editor-hidden-view-list', editorHidden, { 'data-empty-text': i18n('addWidgetsEmpty') })
+    const editorProt = element('div', 'st-start-editor-prot', document.body)
+    const editorDone = element('button', 'st-start-editor-done', editorProt, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('editFinish') })
+
     todayHeader()
     todaySchedule()
     todayWidgets()
@@ -314,7 +326,7 @@ async function today() {
 
             const events = await MagisterApi.events()
 
-            if(!events) return
+            if (!events) return
 
             const eventsTeachers = events?.flatMap(item => item.Docenten).filter((value, index, self) =>
                 index === self.findIndex((t) => (
@@ -452,7 +464,7 @@ async function today() {
                     let todayEvents = agendaDays[todayIndex].events
                     let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || todayIndex || 0
                     let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex]?.events
-                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => item.Status !== 5).map(item => new Date(item.Einde))))
+                    let todayEndTime = new Date(Math.max(...todayEvents.filter(item => !(item.Status == 4 || item.Status == 5)).map(item => new Date(item.Einde))))
 
                     // Jump to the next relevant day if no (more) events will take place today (given the user hasn't opted out)
                     if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
@@ -460,7 +472,7 @@ async function today() {
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
                         notify('snackbar', `${i18n('toasts.jumpedToNextRelevantDay')} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
 
-                        setTimeout(() => document.querySelector('#st-start-today-offset-zero').classList.add('emphasise'), 200)
+                        setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
                         schedule.dataset.navigate = 'jumpforw'
                         setTimeout(() => schedule.dataset.navigate = 'still', 600)
                     }
@@ -561,7 +573,7 @@ async function today() {
                     }
 
                     // Cancelled label
-                    if (item.Status == 5) {
+                    if (item.Status == 4 || item.Status == 5) {
                         eventElement.classList.add('cancelled')
                         element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
                     }
@@ -583,6 +595,8 @@ async function today() {
                     // Render the teacher label
                     if (!listViewEnabled && item.Docenten[0]) {
                         let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, row, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
+                        if (eventTeacher.innerText.includes('jeb_')) eventTeacher.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+                        if (eventTeacher.innerText.includes('dinnerbone')) eventTeacher.style.scale = '1 -1'
                     }
 
                     // Render the time label
@@ -660,8 +674,8 @@ async function today() {
 
         setTimeout(() => {
             updateHeaderText()
-            document.getElementById('st-start-header-greeting').dataset.state = 'hidden'
-            document.getElementById('st-start-header-text').dataset.state = 'visible'
+            if (document.getElementById('st-start-header-greeting')) document.getElementById('st-start-header-greeting').dataset.state = 'hidden'
+            if (document.getElementById('st-start-header-text')) document.getElementById('st-start-header-text').dataset.state = 'visible'
         }, 2000)
     }
 
@@ -669,10 +683,8 @@ async function today() {
         widgets.dataset.working = true
         widgetsList.innerText = ''
 
-        if (document.getElementById('st-start-edit-widgets-options')) document.getElementById('st-start-edit-widgets-options').remove()
-        if (document.getElementById('st-start-edit-widgets-hidden')) document.getElementById('st-start-edit-widgets-hidden').remove()
-        if (document.getElementById('st-start-edit-widgets-disclaimer')) document.getElementById('st-start-edit-widgets-disclaimer').remove()
-        if (document.getElementById('st-start-edit-widgets-prot')) document.getElementById('st-start-edit-widgets-prot').remove()
+        editor.classList.add('st-hidden')
+        editorProt.classList.add('st-hidden')
 
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
@@ -683,6 +695,7 @@ async function today() {
         widgetFunctions = {
             logs: {
                 title: i18n('widgets.logs'),
+                disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -708,6 +721,7 @@ async function today() {
 
             activities: {
                 title: i18n('widgets.activities'),
+                disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -930,6 +944,7 @@ async function today() {
 
             messages: {
                 title: i18n('widgets.messages'),
+                disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -978,6 +993,7 @@ async function today() {
 
             homework: {
                 title: i18n('widgets.homework'),
+                disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
                 options: [
                     {
@@ -1056,6 +1072,7 @@ async function today() {
 
             assignments: {
                 title: i18n('widgets.assignments'),
+                disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
@@ -1107,6 +1124,7 @@ async function today() {
 
             digitalClock: {
                 title: i18n('widgets.digitalClock'),
+                disclaimer: i18n('widgetClockDisclaimer'),
                 types: ['Verborgen', 'Tegel', 'Lijst'],
                 options: [
                     {
@@ -1237,15 +1255,21 @@ async function today() {
 
     }
 
-    async function editWidgets() {
+    async function editWidgets(keepSelection) {
         widgetsList.innerText = ''
+        function emptySelection() {
+            editorWidgetTitle.innerText = i18n('editWidgets')
+            editorActionRow.innerText = ''
+            editorDisclaimer.classList.add('st-hidden')
+            editorOptions.innerText = ''
+            editorHiddenList.innerText = ''
+        }
+        if (!keepSelection) emptySelection()
 
-        const editWidgetsOptions = element('div', 'st-start-edit-widgets-options', document.body, { 'data-i18n-widget-options': i18n('widgetOptions') })
-        const editWidgetsHidden = element('div', 'st-start-edit-widgets-hidden', document.body, { innerText: '' })
-        const editWidgetsDisclaimer = element('div', 'st-start-edit-widgets-disclaimer', document.body, { class: 'st-disclaimer', innerText: i18n('widgetDisclaimer') })
-        const editWidgetsProt = element('div', 'st-start-edit-widgets-prot', document.body)
-        const editWidgetsDone = element('button', 'st-start-edit-widgets-done', editWidgetsProt, { class: 'st-button', 'data-icon': '', innerText: i18n('editFinish') })
-        editWidgetsDone.addEventListener('click', () => {
+        editor.classList.remove('st-hidden')
+        editorProt.classList.remove('st-hidden')
+
+        editorDone.addEventListener('click', () => {
             widgetsList.innerText = ''
             widgets.classList.remove('editing')
             todayWidgets()
@@ -1263,8 +1287,15 @@ async function today() {
         for (const key of widgetsOrderSetting) {
             if (!widgetFunctions?.[key]) continue
             if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
-                const widgetPlaceholder = element('button', `st-start-edit-${key}-hidden`, editWidgetsHidden, { class: 'st-button secondary', 'data-icon': '', innerText: `Widget '${widgetFunctions[key].title}' weergeven` })
-                widgetPlaceholder.addEventListener('click', () => {
+                const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })
+
+                let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
+                widgetElement.dataset.renderType = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
+                widgetElement.setAttribute('disabled', true)
+                widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
+                widgetAddButton.append(widgetElement)
+
+                widgetAddButton.addEventListener('click', () => {
                     syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
                     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
                     widgetsList.innerText = ''
@@ -1283,34 +1314,57 @@ async function today() {
                 widgetElement.dataset.value = key
                 widgetsList.append(widgetElement)
 
-                widgetElement.addEventListener('dragstart', event => {
-                    setTimeout(() => {
-                        widgetElement.classList.add('dragging')
-                    }, 0)
-                })
-                widgetElement.addEventListener('dragend', () => {
-                    widgetElement.classList.remove('dragging')
+                if (!widgetElement.dataset.hasListeners) {
+                    widgetElement.addEventListener('dragstart', event => {
+                        event.dataTransfer.effectAllowed = 'all'
+                        event.dataTransfer.setDragImage(element('img', null, null, { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }), 0, 0)
+                        widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
+                        setTimeout(() => {
+                            widgetElement.dataset.dragging = true
+                        }, 0)
+                    })
+                    widgetElement.addEventListener('dragend', () => {
+                        widgetElement.dataset.dragging = false
 
-                    widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
-                    syncedStorage['widgets-order'] = widgetsOrderSetting
-                    saveToStorage('widgets-order', widgetsOrderSetting)
-                })
+                        widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
+                        syncedStorage['widgets-order'] = widgetsOrderSetting
+                        saveToStorage('widgets-order', widgetsOrderSetting)
+                    })
+                    widgetElement.dataset.hasListeners = true
+                }
 
-                widgetElement.addEventListener('mouseenter', () => {
-                    if (widgetsList.querySelector('.dragging')) return
+                // Widget clicked
+                widgetElement.addEventListener('click', () => {
+                    if (widgetElement.classList.contains('focused')) {
+                        widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
+                        emptySelection()
+                        return
+                    }
 
+                    // Focus only the correct widget
                     widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-
-                    editWidgetsOptions.innerText = `${i18n('widgetOptions')}: ${widgetFunctions[key].title}`
                     widgetElement.classList.add('focused')
 
-                    const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editWidgetsOptions, { class: 'st-segmented-control' })
+                    editorWidgetTitle.innerText = `${i18n('widget')}: ${widgetFunctions[key].title}`
+
+                    // Widget disclaimer
+                    if (widgetFunctions[key]?.disclaimer) {
+                        editorDisclaimer.innerText = widgetFunctions[key].disclaimer
+                        editorDisclaimer.classList.remove('st-hidden')
+                    } else {
+                        editorDisclaimer.classList.add('st-hidden')
+                    }
+
+                    editorOptions.innerText = ''
+
+                    // Widget display types
+                    editorActionRow.innerText = ''
+                    const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editorActionRow, { class: 'st-segmented-control' })
                     if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
                         syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
                         saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
                     }
-
-                    ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen'), 'Verborgen']).forEach(type => {
+                    ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen')]).forEach(type => {
                         const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: i18n(type) })
                         if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
                         widgetTypeButton.addEventListener('click', () => {
@@ -1320,13 +1374,22 @@ async function today() {
                             widgetTypeButton.classList.add('active')
                             widgetsList.innerText = ''
                             widgets.classList.remove('editing')
-                            editWidgets()
+                            editWidgets(widgetElement.id)
                         })
                     })
+                    const widgetHideButton = element('button', `st-start-edit-${key}-hide`, editorActionRow, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('remove'), title: i18n('removeWidget') })
+                    widgetHideButton.addEventListener('click', () => {
+                        syncedStorage[`widget-${key}-type`] = 'Verborgen'
+                        saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                        widgetsList.innerText = ''
+                        widgets.classList.remove('editing')
+                        editWidgets()
+                    })
 
+                    // Widget options
                     if (widgetFunctions[key].options) {
                         widgetFunctions[key].options.forEach(async option => {
-                            let optionWrapper = element('div', `st-start-edit-${option.key}`, editWidgetsOptions, { class: 'st-option' })
+                            let optionWrapper = element('div', `st-start-edit-${option.key}`, editorOptions, { class: 'st-option' })
                             let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
                             switch (option.type) {
                                 case 'select':
@@ -1336,7 +1399,7 @@ async function today() {
                                         saveToStorage(option.key, newValue, 'local')
                                         widgetsList.innerText = ''
                                         widgets.classList.remove('editing')
-                                        editWidgets()
+                                        editWidgets(widgetElement.id)
                                     })
                                     break
 
@@ -1347,24 +1410,32 @@ async function today() {
                         })
                     }
                 })
+
+                if (keepSelection === widgetElement.id) {
+                    widgetElement.classList.add('focused')
+                }
             }
             updateTemporalBindings()
         }
 
-        widgetsList.addEventListener('dragover', (event) => {
-            event.preventDefault()
+        if (!widgetsList.dataset.hasListeners) {
+            widgetsList.addEventListener('dragenter', (event) => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'move'
 
-            const draggedItem = widgetsList.querySelector('.dragging')
-            if (!draggedItem) return
+                const draggedItem = widgetsList.querySelector('.st-widget[data-dragging=true]')
+                if (!draggedItem) return
 
-            let nextSibling = [...widgetsList.children].find(sibling => (
-                sibling !== draggedItem &&
-                event.clientY <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
-            ))
+                let nextSibling = [...widgetsList.children].find(sibling => (
+                    sibling !== draggedItem &&
+                    event.clientY <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
+                ))
 
-            widgetsList.insertBefore(draggedItem, nextSibling)
-        })
-        widgetsList.addEventListener('dragenter', e => e.preventDefault())
+                widgetsList.insertBefore(draggedItem, nextSibling)
+            })
+            widgetsList.dataset.hasListeners = true
+        }
+        // widgetsList.addEventListener('dragenter', e => e.preventDefault())
     }
 
     function verifyDisplayMode() {
@@ -1393,7 +1464,7 @@ function checkCollision(eventArr) {
 function getEventChips(event) {
     let chips = []
 
-    if (event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
+    if (event.Status == 4 || event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
     if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
     else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
     if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })

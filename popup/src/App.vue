@@ -1,25 +1,21 @@
 <script setup>
 import { ref, provide } from 'vue'
-import { useScroll } from '@vueuse/core'
+import { useScroll, useStorage } from '@vueuse/core'
 import { useSyncedStorage } from './composables/chrome.js'
 
 import settings from '../public/settings.js'
 
-import NavigationRail from './components/NavigationRail.vue'
 import SwitchInput from './components/SwitchInput.vue'
-import SegmentedButton from './components/SegmentedButton.vue'
-import TextInput from './components/TextInput.vue'
 import SlideInput from './components/SlideInput.vue'
-import ThemePicker from './components/setting-types/ThemePicker.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
+import Text from './components/setting-types/Text.vue'
+import SingleChoice from './components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
 import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
-import About from './components/About.vue'
-import ThemePresets from './components/ThemePresets.vue'
-import Chip from './components/Chip.vue'
+const optionTypes = { SwitchInput, SlideInput, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
 
 const main = ref(null)
 const { y } = useScroll(main)
@@ -27,9 +23,7 @@ const syncedStorage = useSyncedStorage()
 
 provide('syncedStorage', syncedStorage)
 
-const optionTypes = { SwitchInput, SegmentedButton, TextInput, SlideInput, ThemePicker, KeyPicker, ImageInput, ShortcutsEditor, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
-
-let selectedCategory = ref('appearance')
+let selectedCategory = useStorage('selected-tab', 'theme')
 let transitionName = ref('')
 
 setTimeout(() => transitionName.value = 'list', 200)
@@ -92,36 +86,29 @@ function openInNewTab(url) {
     <div id="app-wrapper">
         <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" :data-scrolled="y > 16" />
         <main id="main" ref="main">
-            <div id="options-container">
-                <TransitionGroup name="fade">
-                    <template v-for="category in settings">
-                        <div class="options-category" v-if="category.id === selectedCategory" :key="category.id">
-                            <TransitionGroup :name="transitionName">
-                                <About v-if="category.id === 'about'" key="about"
-                                    @reset-settings="resetSettingDefaults" />
-                                <template v-for="setting in category.settings">
-                                    <div class="setting-wrapper"
-                                        :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
-                                        :data-setting-type="setting.type" :data-setting-id="setting.id"
-                                        v-if="shouldShowSetting(setting)" :key="setting.id" :data-scrolled="y > 16">
-                                        <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
-                                            :id="setting.id" v-model="syncedStorage[setting.id]">
-                                            <template #title>{{ setting.title }}</template>
-                                            <template #subtitle>{{ setting.subtitle }}</template>
-                                        </component>
-                                        <Chip v-for="link in setting.links" :key="link.label"
-                                            @click="openInNewTab(link.href)">
-                                            <template #icon>{{ link.icon }}</template>
-                                            <template #label>{{ link.label }}</template>
-                                        </Chip>
-                                    </div>
-                                </template>
-                                <ThemePresets v-if="category.id === 'appearance'" key="appearance" />
-                            </TransitionGroup>
+            <template v-for="category in settings">
+                <ThemeView v-if="category.id === 'theme' && category.id === selectedCategory" />
+                <div class="options-category auto" v-else-if="category.id === selectedCategory" :key="category.id"
+                    :data-category="category.id">
+                    <About v-if="category.id === 'about'" key="about" @reset-settings="resetSettingDefaults" />
+                    <template v-for="setting in category.settings">
+                        <div class="setting-wrapper"
+                            :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
+                            :data-setting-type="setting.type" :data-setting-id="setting.id"
+                            v-if="shouldShowSetting(setting)" :key="setting.id" :data-scrolled="y > 16">
+                            <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
+                                :id="setting.id" v-model="syncedStorage[setting.id]">
+                                <template #title>{{ setting.title }}</template>
+                                <template #subtitle>{{ setting.subtitle }}</template>
+                            </component>
+                            <Chip v-for="link in setting.links" :key="link.label" @click="openInNewTab(link.href)">
+                                <template #icon>{{ link.icon }}</template>
+                                <template #label>{{ link.label }}</template>
+                            </Chip>
                         </div>
                     </template>
-                </TransitionGroup>
-            </div>
+                </div>
+            </template>
         </main>
     </div>
 </template>
@@ -164,16 +151,12 @@ main {
     overflow-x: hidden;
 }
 
-#options-container {
-    display: flex;
-    flex-direction: column;
-    padding-top: 16px;
-}
-
-.options-category {
+.options-category.auto {
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: auto;
+    padding-top: 16px;
 }
 
 .setting-wrapper {
@@ -190,18 +173,6 @@ main {
 
 .setting-wrapper+.setting-wrapper.visible {
     border-top: 1px solid var(--color-surface-variant);
-}
-
-.setting-wrapper[data-setting-type="ThemePicker"] {
-    position: sticky;
-    top: 16px;
-    z-index: 6;
-    border-top: none !important;
-    margin-inline: 8px;
-}
-
-.setting-wrapper[data-setting-type="ThemePicker"]+.setting-wrapper.visible {
-    border-top: 0px solid transparent;
 }
 
 .setting-wrapper.inline {
@@ -233,6 +204,16 @@ main {
     margin: 0;
     color: var(--color-on-surface-variant);
     font: var(--typescale-body-medium);
+    text-wrap: balance;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    padding-top: 12px;
+    margin-bottom: 8px;
+    background-color: var(--color-surface);
+    z-index: 6;
 }
 
 .scrim {
@@ -359,19 +340,19 @@ main {
 
 .list-enter-active,
 .list-leave-active {
-    transition: all 200ms ease;
+    transition: all 150ms ease;
 }
 
 .list-enter-active {
-    transition-delay: 200ms;
-    animation: delayShow 200ms normal forwards step-end;
+    transition-delay: 150ms;
+    animation: delayShow 150ms normal forwards step-end;
 }
 
 .list-enter-from,
 .list-leave-to {
     opacity: 0;
     border-bottom: none;
-    transform: translateX(-30px);
+    transform: translateX(-10px);
 }
 
 @keyframes delayShow {

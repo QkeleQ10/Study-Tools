@@ -78,6 +78,7 @@ const closeDialog = () => {
 .dialog-description {
 	color: var(--color-on-surface-variant);
 	font: var(--typescale-body-medium);
+	text-wrap: balance;
 }
 
 .dialog-actions {

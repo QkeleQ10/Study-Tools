@@ -240,6 +240,7 @@ async function popstate() {
         }
 
         let frame = await awaitElement('.view iframe', false, 1000, true)
+        if (Math.random() < 0.0005) frame.src = 'https://funhtml5games.com?embed=flappy'
         if (frame) {
             let interval = setIntervalImmediately(async () => {
                 if (!frame?.contentDocument) {

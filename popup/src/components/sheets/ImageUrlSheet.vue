@@ -1,7 +1,5 @@
 <script setup>
 import { ref, computed, defineProps, defineEmits } from 'vue'
-import BottomSheet from '../BottomSheet.vue';
-import TextInput from '../inputs/TextInput.vue';
 
 const props = defineProps(['modelValue', 'pickerOpen'])
 const emit = defineEmits(['update:modelValue', 'update:pickerOpen'])

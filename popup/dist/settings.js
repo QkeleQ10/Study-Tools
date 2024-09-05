@@ -1,11 +1,11 @@
 export default [
     {
-        id: "appearance",
+        id: "theme",
         settings: [
             {
                 id: "ptheme",
                 title: "Algemeen",
-                type: "ThemePicker",
+                type: "ThemeColors",
                 default: 'auto,207,95,55',
             },
             {
@@ -67,13 +67,13 @@ export default [
                 step: 1,
             },
             {
-                id: "darken-content",
-                title: "Inhoud donker maken",
-                subtitle: "Experimenteel. Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
+                id: "custom-css",
+                title: "Aangepaste CSS",
+                type: "Text",
+                default: '',
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
-                default: true,
             },
         ]
     },
@@ -89,7 +89,7 @@ export default [
                 id: "magisterLogin-username",
                 title: "Gebruikersnaam",
                 subtitle: "Je gebruikersnaam wordt vanzelf ingevoerd.",
-                type: "TextInput",
+                type: "Text",
                 default: '',
                 conditions: [
                     { settingId: 'magisterLogin-enabled', operator: 'equal', value: true }
@@ -99,7 +99,7 @@ export default [
                 id: "magisterLogin-email",
                 title: "Microsoft-account",
                 subtitle: "Vul het e-mailadres in van je Microsoft-schoolaccount—als je school gebruikmaakt van Single Sign On via Microsoft. Dit account wordt tijdens het inloggen aangeklikt.",
-                type: "TextInput",
+                type: "Text",
                 fieldType: "email",
                 default: '',
                 conditions: [
@@ -127,7 +127,7 @@ export default [
             {
                 id: 'magister-picture',
                 title: "Profielfoto",
-                type: "SegmentedButton",
+                type: "SingleChoice",
                 default: 'hide',
                 options: [
                     {
@@ -196,7 +196,7 @@ export default [
             {
                 id: "start-schedule-view",
                 title: "Rooster in Start",
-                type: "SegmentedButton",
+                type: "SingleChoice",
                 default: "schedule",
                 conditions: [
                     { settingId: 'start-enabled', operator: 'equal', value: true }
@@ -302,7 +302,7 @@ export default [
             {
                 id: "sw-current-week-behavior",
                 title: "Huidige week in studiewijzer",
-                type: "SegmentedButton",
+                type: "SingleChoice",
                 default: "focus",
                 options: [
                     {
@@ -337,7 +337,7 @@ export default [
                 id: 'language',
                 title: "Taal",
                 subtitle: "Experimenteel",
-                type: "SegmentedButton",
+                type: "SingleChoice",
                 default: 'nl-NL',
                 options: [
                     {
@@ -369,19 +369,19 @@ export default [
                 default: false,
             },
             {
+                id: "darken-content",
+                title: "Inhoud donker maken",
+                subtitle: "Experimenteel. Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+                default: true,
+            },
+            {
                 id: "verbosity",
                 title: "Uitgebreide consoleberichten",
                 subtitle: "Experimenteel. Er worden meer activiteiten geplaatst in de console.",
                 default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "custom-css",
-                title: "Aangepaste CSS",
-                type: "TextInput",
-                default: '',
                 conditions: [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],

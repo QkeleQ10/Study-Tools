@@ -673,7 +673,17 @@
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 999999;
     transition: box-shadow 200ms;
-    animation: floatLeft 200ms;
+
+    transition-property: opacity, translate, display;
+    transition-duration: 200ms;
+    transition-behavior: allow-discrete;
+    opacity: 1;
+    translate: 0;
+
+    @starting-style {
+        opacity: 0;
+        translate: 150px;
+    }
 }
 
 #st-start[data-widgets-collapsed=true] #st-start-widgets {
@@ -694,6 +704,10 @@
     overflow-x: hidden;
     overflow-y: auto;
     border-bottom: var(--st-border);
+}
+
+#st-start-widgets-list:has(.st-widget[data-dragging=true]) {
+    cursor: grabbing;
 }
 
 #st-start-widget-controls-wrapper {
@@ -843,12 +857,23 @@
     background-color: var(--st-background-secondary);
 }
 
-#st-start-widgets[data-working=true] .st-widget {
-    animation: floatLeft 200ms both, expandIn 400ms cubic-bezier(0.5, 1.2, .8, 1) both;
+#st-start-widgets-list .st-widget {
+    transition-property: opacity, translate, display, visibility, max-height;
+    transition-duration: 200ms;
+    transition-behavior: allow-discrete;
+    opacity: 1;
+    translate: 0;
+    visibility: visible;
+
+    @starting-style {
+        opacity: 0;
+        translate: 150px;
+    }
 }
 
 #st-start-widgets.editing .st-widget {
-    cursor: move;
+    cursor: pointer;
+    transition: opacity 200ms;
 }
 
 #st-start-widgets.editing .st-widget * {
@@ -858,12 +883,37 @@
 
 #st-start-widgets.editing:has(.focused) .st-widget {
     opacity: .5;
+    filter: blur(2px);
 }
 
 #st-start-widgets.editing .st-widget.focused {
     opacity: 1 !important;
+    filter: none !important;
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 2;
+    cursor: grab;
+}
+
+#st-start-widgets.editing .st-widget[data-dragging=true] {
+    max-height: 2px;
+    overflow: visible;
+    visibility: hidden;
+    cursor: grabbing;
+
+    transition-property: none !important;
+    transition-duration: 0 !important;
+}
+
+#st-start-widgets.editing .st-widget[data-dragging=true]:after {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: -6px;
+    right: -6px;
+    height: 3px;
+    background-color: var(--st-foreground-accent);
+    border-radius: 1.5px;
+    visibility: visible;
 }
 
 .st-widget[data-render-type="Tegel"] {
@@ -947,7 +997,7 @@ a.st-widget-title {
     content: '12+';
 }
 
-#st-start-edit-widgets-options {
+#st-start-editor {
     position: absolute;
     right: 400px;
     top: 0;
@@ -962,82 +1012,183 @@ a.st-widget-title {
     background-color: var(--st-background-secondary);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     border-left: var(--st-border);
-    font: 500 16px/24px var(--st-font-family-primary);
-    animation: floatLeft 200ms;
+    font: 14px var(--st-font-family-secondary);
+
+    transition-property: opacity, translate, display;
+    transition-duration: 200ms;
+    transition-behavior: allow-discrete;
+    opacity: 1;
+    translate: 0;
+
+    @starting-style {
+        opacity: 0;
+        translate: 150px;
+    }
+
+    &.st-hidden {
+        display: none;
+        opacity: 0;
+        translate: 150px;
+    }
 }
 
-#st-start-edit-widgets-options:empty:before {
-    content: attr(data-i18n-widget-options);
-    font: 500 16px/24px var(--st-font-family-primary);
-}
-
-#st-start-edit-widgets-options:empty:after {
-    content: "Verplaats widgets door te slepen of pas opties aan door eroverheen te bewegen met de muis.";
-    opacity: .75;
-    font: 14px/24px var(--st-font-family-secondary);
-}
-
-#st-start-edit-widgets-options .st-segmented-control {
-    flex-grow: 0;
-    width: max-content;
-}
-
-#st-start-edit-widgets-options .st-option {
+#st-start-editor-view {
+    flex: 67% 1 1;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#st-start-editor-title,
+#st-start-editor-hidden-view-title {
+    font: 500 16px/28px var(--st-font-family-primary);
+}
+
+#st-start-editor-action-row {
+    display: flex;
+    gap: 8px;
+
+    &>button:nth-child(2) {
+        flex: 1;
+        height: 100%;
+        outline: var(--st-border);
+        border-radius: var(--st-border-radius);
+
+        &:before {
+            color: var(--st-accent-warn)
+        }
+    }
+
+    &:empty::after {
+        content: attr(data-empty-text);
+    }
+}
+
+#st-start-editor-disclaimer {
+    transition-property: opacity, scale, max-height, margin-top, translate, display;
+    transition-duration: 350ms;
+    transition-behavior: allow-discrete;
+    opacity: 1;
+    scale: 1;
+    max-height: 150px;
+    margin-top: 0;
+    translate: 0;
+
+    @starting-style {
+        opacity: 0;
+        scale: 0.5;
+        max-height: 0px;
+        margin-top: -42px;
+        translate: 0 50%;
+    }
+
+    &.st-hidden {
+        transition-duration: 200ms;
+
+        display: none;
+        opacity: 0;
+        max-height: 0px;
+        margin-top: -42px;
+        translate: 0 50%;
+    }
+}
+
+#st-start-editor-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#st-start-editor-options .st-option {
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: baseline;
     font: 14px var(--st-font-family-secondary);
 }
 
-#st-start-edit-widgets-hidden {
-    position: absolute;
-    right: 400px;
-    bottom: 0;
-    width: 400px;
-    height: 35vh;
-    padding: 24px;
+#st-start-editor-hidden-view {
+    flex: 33% 1 1;
 
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding-top: 16px;
 
-    font: 500 16px/24px var(--st-font-family-primary);
     border-top: var(--st-border);
-    animation: floatLeft 200ms;
 }
 
-#st-start-edit-widgets-hidden:before {
-    content: "Verborgen widgets";
-    font: 500 16px/24px var(--st-font-family-primary);
+#st-start-editor-hidden-view-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &:empty::after {
+        content: attr(data-empty-text);
+    }
 }
 
-#st-start-edit-widgets-hidden:empty:after {
-    content: "Er zijn geen widgets verborgen. Verberg widgets door 'Verborgen' te kiezen in de opties hierboven.";
-    font: 14px/24px var(--st-font-family-secondary);
-    opacity: .75;
+.st-start-editor-add {
+    position: relative;
+    padding: 16px;
+    padding-left: 120px;
+    height: 70px;
+    width: 100%;
+
+    color: var(--st-foreground-primary);
+    background-color: var(--st-background-tertiary);
+    border-radius: var(--st-border-radius);
+    border: var(--st-border);
+    font: 14px var(--st-font-family-secondary);
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+
+    &:hover {
+        color: var(--st-foreground-accent);
+    }
+
+    &:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        translate: 0 -50%;
+        font: bold 18px 'Font Awesome 6 Pro';
+    }
+
+    &>.st-widget {
+        position: absolute;
+        margin: 0;
+        top: 50%;
+        left: 16px;
+        transform-origin: left;
+        transform: translateY(-50%) scale(0.25);
+
+        width: 352px;
+        border-width: 4px;
+        pointer-events: none;
+    }
 }
 
-#st-start-edit-widgets-disclaimer {
-    position: absolute;
-    right: 400px;
-    width: calc(400px - 32px);
-    margin: 16px;
-    bottom: 35vh;
-    animation: floatLeft 200ms;
-}
-
-#st-start-edit-widgets-prot {
+#st-start-editor-prot {
     position: absolute;
     bottom: 0;
     right: 0;
     width: 399px;
     height: 64px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
     background-color: var(--st-background-tertiary);
     z-index: 1000000;
+
+    &.st-hidden {
+        display: none;
+    }
+}
+
+#st-start-editor-done {
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 0;
 }
 
 #st-start-widgets:not(.editing) #st-start-widget-grades:hover,
@@ -1316,13 +1467,15 @@ a.st-widget-title {
     border-radius: 0;
     border: none;
     cursor: none;
-    background-color: var(--st-background-primary);
+    background-color: #000000;
 }
 
 #st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-time {
     margin-block: auto;
-    font-size: 8vw;
+    font-size: 15vh;
     line-height: normal;
+    color: #ffffff;
+    text-shadow: 0 0 3vh color-mix(in lch, #ffffffaa, var(--st-accent-primary) 70%);
 }
 
 #st-start-widget-digital-clock:fullscreen #st-start-widget-digital-clock-wrapper {

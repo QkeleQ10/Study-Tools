@@ -823,6 +823,7 @@ a.st-metric:focus-visible {
 }
 
 .st-disclaimer {
+    position: relative;
     padding: 12px 16px;
     padding-left: 42px;
     background-color: var(--st-highlight-primary);
