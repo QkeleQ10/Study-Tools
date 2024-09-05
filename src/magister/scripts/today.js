@@ -595,6 +595,8 @@ async function today() {
                     // Render the teacher label
                     if (!listViewEnabled && item.Docenten[0]) {
                         let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, row, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
+                        if (eventTeacher.innerText.includes('jeb_')) eventTeacher.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+                        if (eventTeacher.innerText.includes('dinnerbone')) eventTeacher.style.scale = '1 -1'
                     }
 
                     // Render the time label
@@ -1314,13 +1316,15 @@ async function today() {
 
                 if (!widgetElement.dataset.hasListeners) {
                     widgetElement.addEventListener('dragstart', event => {
+                        event.dataTransfer.effectAllowed = 'all'
+                        event.dataTransfer.setDragImage(element('img', null, null, { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }), 0, 0)
                         widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
                         setTimeout(() => {
-                            widgetElement.classList.add('dragging')
+                            widgetElement.dataset.dragging = true
                         }, 0)
                     })
                     widgetElement.addEventListener('dragend', () => {
-                        widgetElement.classList.remove('dragging')
+                        widgetElement.dataset.dragging = false
 
                         widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
                         syncedStorage['widgets-order'] = widgetsOrderSetting
@@ -1414,20 +1418,24 @@ async function today() {
             updateTemporalBindings()
         }
 
-        widgetsList.addEventListener('dragover', (event) => {
-            event.preventDefault()
+        if (!widgetsList.dataset.hasListeners) {
+            widgetsList.addEventListener('dragenter', (event) => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'move'
 
-            const draggedItem = widgetsList.querySelector('.dragging')
-            if (!draggedItem) return
+                const draggedItem = widgetsList.querySelector('.st-widget[data-dragging=true]')
+                if (!draggedItem) return
 
-            let nextSibling = [...widgetsList.children].find(sibling => (
-                sibling !== draggedItem &&
-                event.clientY <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
-            ))
+                let nextSibling = [...widgetsList.children].find(sibling => (
+                    sibling !== draggedItem &&
+                    event.clientY <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
+                ))
 
-            widgetsList.insertBefore(draggedItem, nextSibling)
-        })
-        widgetsList.addEventListener('dragenter', e => e.preventDefault())
+                widgetsList.insertBefore(draggedItem, nextSibling)
+            })
+            widgetsList.dataset.hasListeners = true
+        }
+        // widgetsList.addEventListener('dragenter', e => e.preventDefault())
     }
 
     function verifyDisplayMode() {

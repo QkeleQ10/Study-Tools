@@ -10,18 +10,35 @@ const promptingPreset = ref({})
 function applyPreset() {
     const preset = promptingPreset.value
     for (const key in preset) {
-        if (Object.hasOwnProperty.call(preset, key) && key != 'name' && key != 'thumbnail') {
+        if (Object.hasOwnProperty.call(preset, key) && key != 'name' && key != 'author' && key != 'thumbnailStyle') {
             const value = preset[key]
             syncedStorage.value[key] = value
         }
     }
 }
+
+function presetMatches(preset) {
+    let matches = true
+    for (const key in preset) {
+        if (Object.hasOwnProperty.call(preset, key) && key != 'name' && key != 'author' && key != 'thumbnailStyle') {
+            const value = preset[key]
+            if (syncedStorage.value[key] !== value) matches = false
+        }
+    }
+    return matches
+}
+
+function promptPreset(preset) {
+    promptingPreset.value = preset
+    if (themePresets.some(p => presetMatches(p))) applyPreset()
+    else promptOpen.value = true
+}
 </script>
 
 <template>
     <div id="theme-presets">
-        <button v-for="preset in themePresets" class="theme-preset" :title="preset.name"
-            @click="promptOpen = true; promptingPreset = preset">
+        <button v-for="preset in themePresets" class="theme-preset" :class="{ matches: presetMatches(preset) }"
+            :title="preset.name" @click="promptPreset(preset)">
             <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
             <div class="theme-preset-info">
                 <span class="theme-preset-name">{{ preset.name }}</span>
@@ -31,12 +48,13 @@ function applyPreset() {
 
         <Dialog v-model:active="promptOpen">
             <template #icon>format_paint</template>
-            <template #headline>Thema vervangen?</template>
+            <template #headline>Aanpassingen wissen?</template>
             <template #text>
-                Als je doorgaat, dan gaan je huidige thema en al je aangepaste themavoorkeuren verloren.
+                Je hebt wijzigingen aangebracht aan je thema. Als je doorgaat, dan gaan je huidige thema en al je
+                aangepaste themavoorkeuren verloren.
             </template>
             <template #buttons>
-                <button @click="applyPreset(); promptOpen = false">Doorgaan</button>
+                <button @click="applyPreset(); promptOpen = false">Wissen</button>
                 <button @click="promptOpen = false">Annuleren</button>
             </template>
         </Dialog>
@@ -67,12 +85,21 @@ function applyPreset() {
     cursor: pointer;
 }
 
+.theme-preset.matches {
+    background-color: var(--color-primary-container);
+    outline: 1px solid var(--color-outline);
+}
+
 .theme-preset-preview {
     grid-area: preview;
     width: 100%;
     height: 90px;
     border-radius: 8px;
     outline: 1px solid var(--color-outline-variant);
+}
+
+.theme-preset.matches .theme-preset-preview {
+    outline: 1px solid var(--color-outline);
 }
 
 .theme-preset-info {

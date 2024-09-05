@@ -83,13 +83,13 @@ const decorations = [
     {
         id: 'waves',
         style: {
-            'background-image': 'repeating-radial-gradient( circle at 0 0, transparent 0, var(--palette-primary) 19px, transparent 20px ), repeating-linear-gradient( #ffffff11, #ffffff33 )'
+            'background-image': 'repeating-radial-gradient( circle at 0 0, transparent 0, var(--accent-1) 19px, transparent 20px ), repeating-linear-gradient( #ffffff11, #ffffff33 )'
         }
     },
     {
         id: 'zig-zag',
         style: {
-            'background-image': 'linear-gradient(135deg, #ffffff11 25%, transparent 25%), linear-gradient(225deg, #ffffff11 25%, transparent 25%), linear-gradient(45deg, #ffffff11 25%, transparent 25%), linear-gradient(315deg, #ffffff11 25%, var(--palette-primary) 25%)',
+            'background-image': 'linear-gradient(135deg, #ffffff11 25%, transparent 25%), linear-gradient(225deg, #ffffff11 25%, transparent 25%), linear-gradient(45deg, #ffffff11 25%, transparent 25%), linear-gradient(315deg, #ffffff11 25%, var(--accent-1) 25%)',
             'background-position': '15px 0, 15px 0, 0 0, 0 0',
             'background-size': '30px 30px',
             'background-repeat': 'repeat'

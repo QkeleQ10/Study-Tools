@@ -13,6 +13,32 @@ export default [
         'custom-css': ''
     },
     {
+        name: "Zeegroen",
+        author: "Quinten Althues",
+        'ptheme': 'auto,161,51,41',
+        'pagecolor': 'false,0,0,7',
+        'wallpaper': 'none,',
+        'sidecolor': 'false,207,95,55',
+        'decoration': 'waves,',
+        'decoration-size': 1,
+        'appbarcolor': 'false,207,95,47',
+        'shape': 8,
+        'custom-css': ''
+    },
+    {
+        name: "Babyroze",
+        author: "Quinten Althues",
+        'ptheme': 'light,341,44,66',
+        'pagecolor': 'false,0,0,7',
+        'wallpaper': 'none,',
+        'sidecolor': 'false,207,95,55',
+        'decoration': 'stripes,',
+        'decoration-size': 1,
+        'appbarcolor': 'false,207,95,47',
+        'shape': 8,
+        'custom-css': ''
+    },
+    {
         name: "Hawaï",
         author: "Quinten Althues",
         'ptheme': 'light,180,50,40',
