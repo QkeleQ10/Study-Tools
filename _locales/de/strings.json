@@ -80,65 +80,65 @@
         ]
     },
     "greetings": {
-        "lateNight": "Goedenavond#;Goedenavond, nachtuil#;Fijne %savond#",
-        "evening": "Goedenavond#;Fijne %savond#",
-        "afternoon": "Goedemiddag#;Fijne %smiddag#",
-        "morning": "Goedemorgen#;Goeiemorgen#;Fijne %sochtend#",
-        "earlyNight": "Goedemorgen#;Goeiemorgen#;Goedemorgen, nachtuil#;Goedemorgen, vroege vogel#;Fijne %sochtend#",
-        "generic": "Welkom#;Hallo!;Welkom terug, %n#;Hey, %n#;Welkom terug#;Goedendag#"
+        "lateNight": "Guten Abend#;Guten Abend, Nachtschwärmer#;Schönen %sAbend#",
+        "evening": "Guten Abend#;Schönen %sAbend#",
+        "afternoon": "Guten Nachmittag#;Schönen %sNachmittag#",
+        "morning": "Guten Morgen#;Schönen %sMorgen#",
+        "earlyNight": "Guten Morgen#;Guten Morgen, Nachtschwärmer#;Guten Morgen, Frühaufsteher#;Schönen %sMorgen#",
+        "generic": "Willkommen#;Hallo!;Willkommen zurück, %n#;Hey, %n#;Willkommen zurück#;Guten Tag#"
     },
     "toasts": {
-        "jumpedToNextRelevantDay": "Gesprongen naar eerstvolgende dag met afspraken"
+        "jumpedToNextRelevantDay": "Zum nächsten Tag mit Terminen gesprungen"
     },
     "close": "Schließen",
-    "remainder": "Overige",
+    "remainder": "Übrige",
     "Inklappen": "Zusammenklappen",
     "Verborgen": "Versteckt",
     "Lijst": "Liste",
-    "Tegel": "Tegel",
-    "scaleUp": "Schaal vergroten",
-    "scaleDown": "Schaal verkleinen",
+    "Tegel": "Kachel",
+    "scaleUp": "Skalierung vergrößern",
+    "scaleDown": "Skalierung verkleinern",
     "editWidgets": "Widgets bearbeiten",
-    "widgetOptions": "Widgetopties",
-    "widgetDisclaimer": "Alleen de widgets met relevante informatie worden weergegeven op je startscherm.",
-    "editTeachers": "Docentennamen aanpassen",
-    "teacherNicknames": "Bijnamen docenten",
-    "editFinish": "Bewerken voltooien",
-    "collapseWidgets": "Widgetpaneel weergeven of verbergen",
-    "Vooruit": "Vooruit",
-    "Achteruit": "Achteruit",
+    "widgetOptions": "Widget-Optionen",
+    "widgetDisclaimer": "Es werden nur Widgets mit relevanten Informationen auf deinem Startbildschirm angezeigt.",
+    "editTeachers": "Lehrernamen bearbeiten",
+    "teacherNicknames": "Lehrer-Spitznamen",
+    "editFinish": "Bearbeitung abschließen",
+    "collapseWidgets": "Widget-Panel ein- oder ausblenden",
+    "Vooruit": "Vorwärts",
+    "Achteruit": "Rückwärts",
     "Vandaag": "Heute",
-    "Nieuwer": "Nieuwer",
-    "Ouder": "Ouder",
-    "noEvents": "Geen afspraken deze dag",
-    "noEventsToday": "Geen afspraken vandaag",
-    "error": "Er is iets misgegaan",
+    "Nieuwer": "Neuer",
+    "Ouder": "Älter",
+    "noEvents": "Keine Termine an diesem Tag",
+    "noEventsToday": "Keine Termine heute",
+    "error": "Etwas ist schiefgelaufen",
     "loading": "Laden...",
     "loadingWidgets": "Widgets laden...",
     "loadingWidget": "Widget '{title}' laden...",
     "hb": {
-        "title": "Aanbevelingen",
-        "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
+        "title": "Empfehlungen",
+        "subtitle": "Eine kuratierte Sammlung von Ressourcen, die dir beim Lernen helfen"
     },
     "cc": {
-        "title": "Cijfercalculator"
+        "title": "Notenrechner"
     },
     "cb": {
-        "title": "Cijferback-up"
+        "title": "Noten-Backup"
     },
     "cs": {
-        "title": "Statistieken",
-        "filters": "Filters",
-        "years": "Leerjaren",
-        "subjects": "Vakken"
+        "title": "Statistiken",
+        "filters": "Filter",
+        "years": "Schuljahre",
+        "subjects": "Fächer"
     },
     "sw": {
-        "searchPlaceholder": "Zoeken",
-        "showHiddenItems": "Verborgen items",
-        "customSubject": "Ander vak...",
-        "autoSubject": "Vak intelligent afleiden",
-        "subjectPrompt": "Geef de naam van het vak op",
-        "hideStudyguide": "Studiewijzer verbergen",
+        "searchPlaceholder": "Suchen",
+        "showHiddenItems": "Versteckte Elemente",
+        "customSubject": "Anderes Fach...",
+        "autoSubject": "Fach automatisch ableiten",
+        "subjectPrompt": "Gib den Namen des Fachs an",
+        "hideStudyguide": "Studienführer ausblenden",
         "hidden": "Versteckt",
         "periodN": "{periodOrdinal} Periode",
         "periodMissing": "Periode nicht definiert"
