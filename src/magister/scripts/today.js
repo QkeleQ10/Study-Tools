@@ -1469,6 +1469,8 @@ function getEventChips(event) {
     else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
     if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })
     else if (event.InfoType === 2) chips.push({ name: i18n('chips.pw'), type: 'important' })
+    if (event.InfoType === 4 && event.Afgerond) chips.push({ name: i18n('chips.so'), type: 'ok' })
+    else if (event.InfoType === 4) chips.push({ name: i18n('chips.so'), type: 'important' })
     if (event.InfoType === 6 && event.Afgerond) chips.push({ name: i18n('chips.info'), type: 'ok' })
     else if (event.InfoType === 6) chips.push({ name: i18n('chips.info'), type: 'info' })
     if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n('chips.kwtregistered'), type: 'ok' })

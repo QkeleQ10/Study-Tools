@@ -69,11 +69,8 @@ export default [
             {
                 id: "custom-css",
                 title: "Aangepaste CSS",
-                type: "Text",
+                type: "LinkToOptionsTab",
                 default: '',
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
             },
         ]
     },

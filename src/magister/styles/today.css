@@ -372,11 +372,10 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    /* background-color: var(--st-background-primary); */
-    /* border-bottom: var(--st-border); */
-    /* the col labels should really be in st-start-header */
+    backdrop-filter: blur(3px);
+    background: linear-gradient(to bottom, var(--st-page-background), transparent);
     font: 12px var(--st-font-family-secondary);
-    z-index: 999;
+    z-index: 2;
 }
 
 .st-start-col-label>span {

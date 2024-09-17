@@ -13,7 +13,8 @@ import SingleChoice from '@/components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from '@/components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from '@/components/setting-types/DecorationPickerSetting.vue'
 import DecorationSizeSetting from '@/components/setting-types/DecorationSizeSetting.vue'
-const optionTypes = { SwitchInput, SlideInput, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
+import LinkToOptionsTab from '@/components/setting-types/LinkToOptionsTab.vue'
+const optionTypes = { SwitchInput, SlideInput, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting, LinkToOptionsTab }
 
 const syncedStorage = inject('syncedStorage')
 
