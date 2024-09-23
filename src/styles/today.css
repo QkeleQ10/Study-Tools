@@ -362,18 +362,19 @@
 
 .st-start-col-label {
     position: sticky;
-    top: 0;
+    top: 2px;
     left: 0;
     right: 0;
-    height: 38px;
-    padding-bottom: 6px;
-    margin-inline: -8px;
+    height: 36px;
+    width: max-content;
+    padding: 6px;
+    margin-inline: auto;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
     backdrop-filter: blur(3px);
-    background: linear-gradient(to bottom, var(--st-page-background), transparent);
+    border-radius: var(--st-border-radius);
     font: 12px var(--st-font-family-secondary);
     z-index: 2;
 }
