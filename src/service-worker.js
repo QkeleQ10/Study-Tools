@@ -59,7 +59,7 @@ async function startListenCredentials() {
             userTokenDate = new Date()
             chrome.storage.session.set({ 'token': userToken })
             chrome.storage.session.set({ 'token-date': userTokenDate.getTime() })
-            if (userTokenWas !== userToken && userTokenDateWas.getTime() == 0) console.info(`User token gathered.`)
+            if (userTokenWas !== userToken && userTokenDateWas.getTime() == 0) console.info(`User token gathered. Length: ${userToken.length}.`)
             else if (userTokenWas !== userToken) console.info(`User token changed since ${userTokenDate - userTokenDateWas} ms ago.`)
         }
 

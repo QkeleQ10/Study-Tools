@@ -66,29 +66,27 @@ function moveItem(from, to) {
                     <span>URL</span>
                     <span>Sneltoets</span>
                 </div>
-                <TransitionGroup name="editor" tag="ul" class="shortcuts-list">
-                    <li v-for="(shortcut, i) in value" :key="shortcut.icon" class="shortcut-wrapper">
-                        <IconInput v-model="value[i].icon"
-                            @input="(v) => editArray(i, { icon: v, href: value[i].href, hotkey: value[i].hotkey })" />
-                        <input class="text-input" type="input" :value="value[i].href"
-                            @input="editArray(i, { icon: value[i].icon, href: $event.target.value.replace('https://', ''), hotkey: value[i].hotkey })"
-                            placeholder=" " autocomplete="off" spellcheck="false">
-                        <KeyInput v-model="value[i].hotkey" :allowClear="true"
-                            @input="(v) => editArray(i, { icon: value[i].icon, href: value[i].href, hotkey: v })" />
-                        <div class="shortcut-actions">
-                            <button class="element-action" @click="removeFromArray(i)">
-                                <Icon>delete</Icon>
-                            </button>
-                            <button class="element-action" @click="moveItem(i, i - 1)">
-                                <Icon>keyboard_arrow_up</Icon>
-                            </button>
-                            <button class="element-action" @click="moveItem(i, i + 1)">
-                                <Icon>keyboard_arrow_down</Icon>
-                            </button>
-                        </div>
-                        <!--clean up delete button and add drag to change order-->
-                    </li>
-                </TransitionGroup>
+                <li v-for="(shortcut, i) in value" :key="shortcut.icon" class="shortcut-wrapper">
+                    <IconInput v-model="value[i].icon"
+                        @input="(v) => editArray(i, { icon: v, href: value[i].href, hotkey: value[i].hotkey })" />
+                    <input class="text-input" type="input" :value="value[i].href"
+                        @input="editArray(i, { icon: value[i].icon, href: $event.target.value.replace('https://', ''), hotkey: value[i].hotkey })"
+                        placeholder=" " autocomplete="off" spellcheck="false">
+                    <KeyInput v-model="value[i].hotkey" :allowClear="true"
+                        @input="(v) => editArray(i, { icon: value[i].icon, href: value[i].href, hotkey: v })" />
+                    <div class="shortcut-actions">
+                        <button class="element-action" @click="removeFromArray(i)">
+                            <Icon>delete</Icon>
+                        </button>
+                        <button class="element-action" @click="moveItem(i, i - 1)">
+                            <Icon>keyboard_arrow_up</Icon>
+                        </button>
+                        <button class="element-action" @click="moveItem(i, i + 1)">
+                            <Icon>keyboard_arrow_down</Icon>
+                        </button>
+                    </div>
+                    <!--clean up delete button and add drag to change order-->
+                </li>
                 <button class="button text" style="margin-top: 16px;"
                     @click="value = [...value, { icon: '', href: '', hotkey: '' }]">Toevoegen</button>
             </template>

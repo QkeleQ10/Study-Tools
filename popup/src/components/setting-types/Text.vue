@@ -84,7 +84,7 @@ const filled = computed(() => {
     border-radius: 4px;
     scale: 0 1;
     pointer-events: none;
-    transition: background-color 200ms, scale 200ms;
+    transition: scale 200ms;
 }
 
 .setting.text.focused .border-cutout,
@@ -110,7 +110,7 @@ const filled = computed(() => {
     caret-color: var(--color-primary);
     color: var(--color-on-surface);
     font: var(--typescale-body-large);
-    transition: background-color 200ms, color 200ms, outline-color 200ms;
+    transition: outline-color 200ms;
 }
 
 .text-input:enabled:hover {

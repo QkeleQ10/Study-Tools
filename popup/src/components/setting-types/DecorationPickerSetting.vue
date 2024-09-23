@@ -160,7 +160,7 @@ function updatePickerOpen(newPickerOpenValue) {
     color: var(--color-on-surface);
     --palette-primary: var(--color-surface);
     background-color: transparent;
-    transition: border-radius 200ms, flex-grow 200ms, background-color 200ms;
+    transition: border-radius 200ms, flex-grow 200ms;
 }
 
 .swatch:hover,

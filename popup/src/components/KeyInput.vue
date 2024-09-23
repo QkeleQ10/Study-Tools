@@ -73,7 +73,7 @@ function formatKey(string) {
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
-    transition: background-color 200ms, color 200ms, outline-color 200ms;
+    transition:  outline-color 200ms;
 }
 
 .key-input>button:hover {

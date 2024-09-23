@@ -52,7 +52,7 @@ const { y } = useScroll(content)
 	background-color: var(--color-surface-container-high);
 	box-shadow: 0 0 16px 0 var(--color-shadow);
 	overflow: hidden;
-	transition: transform 200ms, opacity 200ms, border-radius 200ms, background-color 200ms;
+	transition: transform 200ms, opacity 200ms, border-radius 200ms;
 }
 
 .fullscreen-dialog[active=true] {
@@ -71,7 +71,6 @@ const { y } = useScroll(content)
 	align-items: center;
 	gap: 16px;
 	background-color: var(--color-surface-container-high);
-	transition: background-color 200ms;
 }
 
 .fullscreen-dialog-header[scrolled=true] {

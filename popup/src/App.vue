@@ -6,7 +6,7 @@ import { useSyncedStorage } from './composables/chrome.js'
 import settings from '../public/settings.js'
 
 import SwitchInput from './components/SwitchInput.vue'
-import SlideInput from './components/SlideInput.vue'
+import Slider from './components/setting-types/Slider.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
@@ -14,9 +14,8 @@ import Text from './components/setting-types/Text.vue'
 import SingleChoice from './components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
-import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
 import LinkToOptionsTab from './components/setting-types/LinkToOptionsTab.vue'
-const optionTypes = { SwitchInput, SlideInput, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting, LinkToOptionsTab }
+const optionTypes = { SwitchInput, Slider, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
 
 const main = ref(null)
 
@@ -26,9 +25,6 @@ provide('syncedStorage', syncedStorage)
 const params = useUrlSearchParams('history')
 
 let selectedCategory = useStorage('selected-tab', 'theme')
-let transitionName = ref('')
-
-setTimeout(() => transitionName.value = 'list', 200)
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -66,6 +62,7 @@ function shouldShowSetting(setting) {
     }
     return outcome
 }
+provide('shouldShowSetting', shouldShowSetting)
 
 function resetSettingDefaults() {
     settings.forEach(category => {
@@ -128,13 +125,13 @@ body {
     margin: 0;
     overflow: hidden;
     background-color: var(--color-surface);
-    transition: background-color 200ms;
 }
 
 @media (width >=600px) {
     body {
-        width: 100vw;
+        width: 530px;
         height: 100vh;
+        margin: 0 auto;
     }
 }
 
@@ -157,7 +154,6 @@ body {
         / 80px 450px;
     overflow: hidden;
     font-family: 'Noto Sans', sans-serif;
-    transition: background-color 200ms;
 }
 
 main {
@@ -206,7 +202,6 @@ main {
     padding-block: 12px;
     min-height: 56px;
     box-sizing: border-box;
-    transition: background-color 200ms;
 }
 
 .setting-title {
@@ -336,47 +331,5 @@ main {
     border-radius: 6px;
     font: var(--typescale-body-small);
     text-align: center;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 100ms ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-
-.fade-leave,
-.fade-leave-active {
-    position: absolute;
-}
-
-.list-enter-active,
-.list-leave-active {
-    transition: all 150ms ease;
-}
-
-.list-enter-active {
-    transition-delay: 150ms;
-    animation: delayShow 150ms normal forwards step-end;
-}
-
-.list-enter-from,
-.list-leave-to {
-    opacity: 0;
-    border-bottom: none;
-    transform: translateX(-10px);
-}
-
-@keyframes delayShow {
-    0% {
-        position: absolute;
-    }
-
-    100% {
-        position: static;
-    }
 }
 </style>

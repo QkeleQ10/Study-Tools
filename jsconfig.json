@@ -4,7 +4,7 @@
         "target": "ES6"
     },
     "include": [
-        "src/util.js",
+        "src/scripts/util.js",
         "src/magister/scripts/api.js",
         "src/*"
     ]

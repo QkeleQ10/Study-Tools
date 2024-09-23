@@ -1,10 +1,4 @@
 <script setup>
-import { useExtension } from '@/composables/chrome.js'
-
-const extension = useExtension()
-
-console.log(extension)
-
 function click() {
     chrome.tabs.create({ url: 'popup/dist/index.html?type=options&view=custom-css' })
 }

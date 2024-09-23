@@ -31,7 +31,6 @@ const props = defineProps(['type'])
     border-radius: 8px;
     background-color: transparent;
     cursor: pointer;
-    transition: border-color 200ms, background-color 200ms;
 }
 
 .chip:focus-visible {
@@ -58,7 +57,7 @@ const props = defineProps(['type'])
     pointer-events: none;
     background-color: var(--color-on-surface);
     opacity: 0%;
-    transition: opacity 200ms, background-color 200ms;
+    transition: opacity 200ms;
 }
 
 .chip:hover .chip-state-layer {

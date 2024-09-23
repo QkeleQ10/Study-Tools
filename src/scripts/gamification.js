@@ -17,7 +17,7 @@ checkWrapped()
 window.checkWrapped = checkWrapped()
 
 async function checkWrapped() {
-    if ((now >= range1.start && now <= range1.end) || (await getFromStorage('forceWrappedExamEdition', 'session')) === 'true') {
+    if ((now >= range1.start && now <= range1.end) ) {
 
         user = await MagisterApi.accountInfo()
 
@@ -30,7 +30,7 @@ async function checkWrapped() {
 
         const recentGrades = await MagisterApi.grades.recent()
 
-        if ((examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) || (await getFromStorage('forceWrappedExamEdition', 'session')) === 'true') {
+        if ((examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) ) {
             // Continue if it's inside 'range 1' and the student has had their final exams
             commenceWrapped(true)
         } else if (now >= range2.start && now <= range2.end && recentGrades?.length > 0) {

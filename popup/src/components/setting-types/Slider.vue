@@ -31,7 +31,12 @@ function formatValue(val) {
 </script>
 
 <template>
-    <div class="setting slider">
+    <div class="setting inline-slider" :title="setting.title" v-if="setting.display === 'inline'">
+        <Icon class="setting-icon">{{ setting.icon }}</Icon>
+        <VueSlider :min="setting.min" :max="setting.max" :interval="setting.step" :duration="0.2"
+            :tooltip-formatter="val => formatValue(val)" :tooltip-style="{}" v-model.lazy="value" />
+    </div>
+    <div class="setting slider" v-else>
         <div>
             <h3 class="setting-title">
                 <slot name="title"></slot>
@@ -42,7 +47,6 @@ function formatValue(val) {
         </div>
         <VueSlider :min="setting.min" :max="setting.max" :interval="setting.step" :duration="0.2"
             :tooltip-formatter="val => formatValue(val)" :tooltip-style="{}" v-model.lazy="value" />
-            <!-- Implement debounce to circumvent rate limit -->
     </div>
 </template>
 
@@ -51,6 +55,22 @@ function formatValue(val) {
     display: grid;
     grid-template-rows: 1fr auto;
     gap: 6px;
+}
+
+.setting.inline-slider {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    align-items: center;
+    gap: 6px;
+    column-gap: 12px;
+    padding-top: 0;
+}
+
+.setting.inline-slider>.setting-icon {
+    font-size: 18px;
+    scale: 1.4;
+    color: var(--color-on-surface-variant);
+    justify-self: center;
 }
 
 .vue-slider {
@@ -64,7 +84,9 @@ function formatValue(val) {
     height: 20px !important;
 }
 
-.vue-slider-process, .vue-slider-dot-handle, .vue-slider-dot-tooltip-inner {
+.vue-slider-process,
+.vue-slider-dot-handle,
+.vue-slider-dot-tooltip-inner {
     background-color: var(--color-primary);
 }
 

@@ -138,27 +138,33 @@ function isSelected(color) {
     <BottomSheet v-model:active="pickerOpen" :handle=true>
         <template #content>
             <div class="color-maker">
-                <div class="hue-wheel" ref="hueWheel" @mouseup="hueWheelClick" @mousemove="hueWheelClick"
-                    :style="{ 'background-image': `radial-gradient(var(--color-surface-container) 56%, transparent calc(56% + 1px)), conic-gradient(in hsl longer hue, hsl(0 ${value.s}% ${value.l}%) 0 0)` }">
-                    <div class="hue-wheel-knob knob"
+                <div id="hue-wheel-wrapper">
+                    <div id="hue-wheel" ref="hueWheel" @mouseup="hueWheelClick" @mousemove="hueWheelClick"
+                        :style="{ 'background-image': `radial-gradient(var(--color-surface-container) 56%, transparent calc(56% + 1px)), conic-gradient(in hsl longer hue, hsl(0 ${value.s}% ${value.l}%) 0 0)` }">
+                    </div>
+                    <div id="hue-wheel-knob" class="knob"
                         :style="{ 'transform': `rotate(${value.h - 6}deg)`, 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
                     </div>
-                    <div class="hue-wheel-example"
+                    <div id="hue-wheel-values"
                         :style="{ 'background-color': `hsl(${value.h} ${value.s}% ${value.l}%` }">
-                        {{ Number(value.h).toLocaleString('nl-NL', {
-        style: 'unit', unit: 'degree', unitDisplay: 'short',
-        maximumFractionDigits: 0
-    }) }}
-                        <br>
-                        {{ Number(value.s / 100).toLocaleString('nl-NL', {
-        style: 'percent',
-        maximumFractionDigits: 0
-    }) }}
-                        <br>
-                        {{ Number(value.l / 100).toLocaleString('nl-NL', {
-        style: 'percent',
-        maximumFractionDigits: 0
-    }) }}
+                        <span>
+                            {{ Number(value.h).toLocaleString('nl-NL', {
+                                style: 'unit', unit: 'degree', unitDisplay: 'short',
+                                maximumFractionDigits: 0
+                            }) }}
+                        </span>
+                        <span>
+                            {{ Number(value.s / 100).toLocaleString('nl-NL', {
+                                style: 'percent',
+                                maximumFractionDigits: 0
+                            }) }}
+                        </span>
+                        <span>
+                            {{ Number(value.l / 100).toLocaleString('nl-NL', {
+                                style: 'percent',
+                                maximumFractionDigits: 0
+                            }) }}
+                        </span>
                     </div>
                 </div>
                 <div class="col-right">
@@ -205,14 +211,6 @@ function isSelected(color) {
     gap: 28px;
 }
 
-.hue-wheel {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    cursor: crosshair;
-}
-
 .knob {
     position: absolute;
     width: 20px;
@@ -223,13 +221,26 @@ function isSelected(color) {
     pointer-events: none;
 }
 
-.hue-wheel-knob {
+#hue-wheel-wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+#hue-wheel {
+    position: absolute;
+    inset: 0;
+    clip-path: circle(50% at 50% 50%);
+    cursor: crosshair;
+}
+
+#hue-wheel-knob {
     top: -1px;
     left: 50%;
     transform-origin: 0 100.5px;
 }
 
-.hue-wheel-example {
+#hue-wheel-values {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -237,14 +248,18 @@ function isSelected(color) {
     aspect-ratio: 1;
     box-sizing: border-box;
     translate: -50% -50%;
-    padding-left: 25%;
 
     display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 4px;
     border-radius: 50%;
+}
 
+#hue-wheel-values>* {
     color: #ffffff;
-    font: var(--typescale-body-medium)
+    font: var(--typescale-body-medium);
 }
 
 .col-right {

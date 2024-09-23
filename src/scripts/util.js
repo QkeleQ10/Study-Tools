@@ -151,7 +151,7 @@ function getFromStorage(key, location = 'sync') {
     return new Promise((resolve, reject) => {
         if (location === 'session' && !chrome.storage.session) location = 'local'
         chrome.storage[location].get([key], (result) => {
-            let value = Object.values(result)[0]
+            let value = Object.values(result || {})[0]
             value ? resolve(value) : resolve('')
         })
     })

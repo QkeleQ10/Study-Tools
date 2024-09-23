@@ -46,6 +46,8 @@ watch(() => props.active, async (value) => {
     position: fixed;
     bottom: 0;
     left: 0;
+    right: 0;
+    margin-inline: auto;
     width: 100%;
     max-width: 530px;
     box-sizing: border-box;
@@ -54,7 +56,6 @@ watch(() => props.active, async (value) => {
     border-radius: 28px 28px 0 0;
     z-index: 10001;
     background-color: var(--color-surface-container-low);
-    transition: background-color 200ms;
 }
 
 .bottom-sheet[data-visible=false] {

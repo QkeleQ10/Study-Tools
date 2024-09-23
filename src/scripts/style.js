@@ -51,8 +51,6 @@ function shiftedHslColor(hueOriginal = 207, saturationOriginal = 95, luminanceOr
 }
 
 function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
-    let backgroundImage = syncedStorage['wallpaper'].split(',') || ['false', '']
-
     switch (scheme) {
         case 'dark': {
             return `
@@ -60,7 +58,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
                     ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : '#111111'};
     --st-page-wallpaper: ${syncedStorage['wallpaper']?.startsWith('custom') ? `var(--st-page-wallpaper-overlay), url(${syncedStorage['wallpaper'].replace('custom,', '')})` : 'none'};
-    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent 20%), color-mix(in srgb, var(--st-page-background), transparent 20%));
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
@@ -110,7 +107,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
                     ? `hsl(${syncedStorage['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : '#ffffff'};
     --st-page-wallpaper: ${syncedStorage['wallpaper']?.startsWith('custom') ? `var(--st-page-wallpaper-overlay), url(${syncedStorage['wallpaper'].replace('custom,', '')})` : 'none'};
-    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent 20%), color-mix(in srgb, var(--st-page-background), transparent 20%));
     --st-side-background: ${syncedStorage['sidecolor']?.startsWith('true')
                     ? `hsl(${syncedStorage['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
                     : shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
@@ -175,7 +171,8 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     --st-font-family-primary: 'arboria', sans-serif;
     --st-font-family-secondary: 'open-sans', sans-serif;
     --st-border: 1px solid var(--st-border-color);
-    --st-border-radius: ${syncedStorage.shape}px;`
+    --st-border-radius: ${syncedStorage.shape}px;
+    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%), color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%));`
 
     const rootVarsInvert = `
     #studiewijzer-detail-container .clearfix.user-content {
@@ -1623,7 +1620,7 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    const frame = await awaitElement('.view iframe', false, 4000, true)
+    const frame = await awaitElement?.('.view iframe', false, 4000, true)
     if (!frame) return
 
     const iframeStyleInject = document.querySelector('#study-tools-vars').innerHTML +
