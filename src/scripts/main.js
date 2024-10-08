@@ -276,7 +276,7 @@ async function extensionInstanceCheck() {
 
     switch (chrome.runtime.id) {
         case 'noknhhdcnnlkbkkhepncingmfellfeen': // Edge Add-Ons
-            if (otherExtensionInstances.includes('pjgncknkpkiocjmiomplnpikcimnakdg')) { // Chrome Web Store is installed
+            if (otherExtensionInstances.length>0) { // Chrome Web Store is installed
                 element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(await chrome.storage.sync.get()) })
                 element('meta', `copy-settings-local`, document.head, { innerText: JSON.stringify(await chrome.storage.local.get()) })
                 setTimeout(() => {
@@ -293,7 +293,7 @@ async function extensionInstanceCheck() {
             }
             break
 
-        case 'pjgncknkpkiocjmiomplnpikcimnakdg': // Chrome Web Store
+        default: // Chrome Web Store
             if (otherExtensionInstances.includes('noknhhdcnnlkbkkhepncingmfellfeen')) { // Edge Add-Ons is installed
                 setTimeout(async () => {
                     newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
@@ -309,11 +309,11 @@ async function extensionInstanceCheck() {
             }
             break
 
-        default:
-            if (otherExtensionInstances.length > 0) {
-                notify('snackbar', `Er zijn meerdere versies van Study Tools actief. Dit kan problemen veroorzaken! Deactiveer er ${otherExtensionInstances.length === 1 ? 'één' : otherExtensionInstances.length} via het extensiemenu.`)
-            }
-            break
+        // default:
+        //     if (otherExtensionInstances.length > 0) {
+        //         notify('snackbar', `Er zijn meerdere versies van Study Tools actief. Dit kan problemen veroorzaken! Deactiveer er ${otherExtensionInstances.length === 1 ? 'één' : otherExtensionInstances.length} via het extensiemenu.`)
+        //     }
+        //     break
     }
 }
 
