@@ -218,7 +218,7 @@ async function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
     element('meta', `st-${chrome.runtime.id}`, document.head)
-    extensionInstanceCheck()
+    setTimeout(extensionInstanceCheck, 200)
 
     document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-cc"], *[id^="st-cs"], *[id^="st-cb"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
@@ -270,15 +270,15 @@ async function popstate() {
     }
 }
 
-function extensionInstanceCheck() {
+async function extensionInstanceCheck() {
     const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id})`)].map(e => e.id.split('-')[1])
-    console.log(otherExtensionInstances)
+    console.log(otherExtensionInstances, chrome.runtime.id)
 
     switch (chrome.runtime.id) {
-        case 'ohhafpjdnbhihibepefpcmnnodaodajc': // Edge Add-Ons
-            if (otherExtensionInstances.includes('hacjodpccmeoocakiahjfndppdeallak')) { // Chrome Web Store is installed
-                element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(chrome.storage.sync.get()) })
-                element('meta', `copy-settings-local`, document.head, { innerText: JSON.stringify(chrome.storage.local.get()) })
+        case 'noknhhdcnnlkbkkhepncingmfellfeen': // Edge Add-Ons
+            if (otherExtensionInstances.includes('pjgncknkpkiocjmiomplnpikcimnakdg')) { // Chrome Web Store is installed
+                element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(await chrome.storage.sync.get()) })
+                element('meta', `copy-settings-local`, document.head, { innerText: JSON.stringify(await chrome.storage.local.get()) })
                 setTimeout(() => {
                     if (document.querySelector('meta#copy-settings-success')) {
                         notify('dialog', "De nieuwe extensie is geïnstalleerd en je instellingen zijn overgezet.\n\nKlik alsjeblieft op 'Voltooien' om de oude extensie te verwijderen.", [{
@@ -289,16 +289,12 @@ function extensionInstanceCheck() {
                     }
                 }, 500)
             } else {
-                notify('snackbar', "Deze versie van Study Tools is verouderd.", [{
-                    innerText: "Oplossen", callback: () => {
-                        notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden'. Vernieuw daarna de pagina.", [{ innerText: "Upgraden", href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }])
-                    }
-                }])
+                notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden' en installeer de extensie. Vernieuw daarna de pagina.", [{ innerText: "Upgraden", href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }])
             }
             break
 
-        case 'hacjodpccmeoocakiahjfndppdeallak': // Chrome Web Store
-            if (otherExtensionInstances.includes('ohhafpjdnbhihibepefpcmnnodaodajc')) { // Edge Add-Ons is installed
+        case 'pjgncknkpkiocjmiomplnpikcimnakdg': // Chrome Web Store
+            if (otherExtensionInstances.includes('noknhhdcnnlkbkkhepncingmfellfeen')) { // Edge Add-Ons is installed
                 setTimeout(async () => {
                     newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
                     newLocalStorage = JSON.parse(document.querySelector('meta#copy-settings-local')?.innerText)
