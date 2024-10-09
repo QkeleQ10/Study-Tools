@@ -408,14 +408,6 @@
     display: none;
 }
 
-#st-start-schedule:not(.week-view) .st-start-col:first-child .st-start-col-label {
-    margin-left: -32px;
-}
-
-#st-start-schedule:not(.week-view) .st-start-col:last-child .st-start-col-label {
-    margin-right: -32px;
-}
-
 .st-start-icon {
     display: inline-block;
     position: sticky !important;

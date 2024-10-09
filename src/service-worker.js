@@ -111,6 +111,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }, 5000)
             return true
 
+        case 'uninstallSelf':
+            chrome.management.uninstallSelf({ showConfirmDialog: false }, () => { window.location.reload() })
+            break
+
         default:
             return 0
     }

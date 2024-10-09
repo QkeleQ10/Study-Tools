@@ -624,7 +624,7 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                 const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
                 if (buttons?.length > 0) {
                     buttons.forEach(item => {
-                        const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })
+                        const button = element('button', null, buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` })
                         if (item.innerText) button.innerText = item.innerText
                         if (item.clickSelector) {
                             button.addEventListener('click', event => {

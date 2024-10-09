@@ -272,50 +272,39 @@ async function popstate() {
 
 async function extensionInstanceCheck() {
     const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id})`)].map(e => e.id.split('-')[1])
-    console.log(otherExtensionInstances, chrome.runtime.id)
 
-    switch (chrome.runtime.id) {
-        case 'noknhhdcnnlkbkkhepncingmfellfeen': // Edge Add-Ons
-            if (otherExtensionInstances.length>0) { // Chrome Web Store is installed
-                element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(await chrome.storage.sync.get()) })
-                element('meta', `copy-settings-local`, document.head, { innerText: JSON.stringify(await chrome.storage.local.get()) })
-                setTimeout(() => {
-                    if (document.querySelector('meta#copy-settings-success')) {
-                        notify('dialog', "De nieuwe extensie is geïnstalleerd en je instellingen zijn overgezet.\n\nKlik alsjeblieft op 'Voltooien' om de oude extensie te verwijderen.", [{
-                            innerText: "Voltooien", callback: () => {
-                                chrome.management.uninstallSelf({ showConfirmDialog: false }, () => { window.location.reload() })
-                            }
-                        }], null, { allowClose: false })
+    if (otherExtensionInstances.length > 0) console.log('This instance:', chrome.runtime.id, 'Other instances:', otherExtensionInstances)
+
+    if (chrome.runtime.id === 'ohhafpjdnbhihibepefpcmnnodaodajc' && otherExtensionInstances.includes('hacjodpccmeoocakiahjfndppdeallak')) { // This is Edge Add-Ons version, detected Chrome Web Store version
+        element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(await chrome.storage.sync.get()) })
+        element('meta', `copy-settings-local`, document.head, { innerText: JSON.stringify(await chrome.storage.local.get()) })
+        setTimeout(() => {
+            if (document.querySelector('meta#copy-settings-success')) {
+                notify('dialog', "De nieuwe extensie is geïnstalleerd en je instellingen zijn overgezet.\n\nKlik alsjeblieft op 'Voltooien' om de oude extensie te verwijderen.", [{
+                    innerText: "Voltooien", primary: true, callback: () => {
+                        chrome.runtime.sendMessage({ action: 'uninstallSelf' })
+                        window.location.reload()
                     }
-                }, 500)
-            } else {
-                notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden' en installeer de extensie. Vernieuw daarna de pagina.", [{ innerText: "Upgraden", href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }])
+                }], null, { allowClose: false })
             }
-            break
-
-        default: // Chrome Web Store
-            if (otherExtensionInstances.includes('noknhhdcnnlkbkkhepncingmfellfeen')) { // Edge Add-Ons is installed
-                setTimeout(async () => {
-                    newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
-                    newLocalStorage = JSON.parse(document.querySelector('meta#copy-settings-local')?.innerText)
-                    await chrome.storage.sync.set(newSyncedStorage)
-                    syncedStorage = newSyncedStorage
-                    await chrome.storage.local.set(newLocalStorage)
-                    localStorage = newLocalStorage
-                    element('meta', 'copy-settings-success', document.head)
-                }, 250)
-            } else if (otherExtensionInstances.length > 0) {
-                notify('snackbar', `Er zijn meerdere versies van Study Tools actief. Dit kan problemen veroorzaken! Deactiveer er ${otherExtensionInstances.length === 1 ? 'één' : otherExtensionInstances.length} via het extensiemenu.`)
-            }
-            break
-
-        // default:
-        //     if (otherExtensionInstances.length > 0) {
-        //         notify('snackbar', `Er zijn meerdere versies van Study Tools actief. Dit kan problemen veroorzaken! Deactiveer er ${otherExtensionInstances.length === 1 ? 'één' : otherExtensionInstances.length} via het extensiemenu.`)
-        //     }
-        //     break
+        }, 500)
+    } else if (chrome.runtime.id === 'ohhafpjdnbhihibepefpcmnnodaodajc') {
+        notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden' en installeer de extensie.\n\nVernieuw daarna deze pagina.", [{ innerText: "Upgraden", primary: true, href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }])
+    } else if (chrome.runtime.id === 'hacjodpccmeoocakiahjfndppdeallak' && otherExtensionInstances.includes('ohhafpjdnbhihibepefpcmnnodaodajc')) { // This is Chrome Web Store version, detected Edge Add-Ons version
+        setTimeout(async () => {
+            newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
+            newLocalStorage = JSON.parse(document.querySelector('meta#copy-settings-local')?.innerText)
+            await chrome.storage.sync.set(newSyncedStorage)
+            syncedStorage = newSyncedStorage
+            await chrome.storage.local.set(newLocalStorage)
+            localStorage = newLocalStorage
+            element('meta', 'copy-settings-success', document.head)
+        }, 250)
+    } else if (otherExtensionInstances.length > 0) {
+        notify('dialog', `Er zijn meerdere versies van Study Tools actief. Dit kan problemen veroorzaken!\n\nDeactiveer ${otherExtensionInstances.length === 1 ? 'één' : otherExtensionInstances.length} instantie van Study Tools via het extensiemenu.\n\nVernieuw daarna de pagina.`, [], null, { allowClose: false })
     }
 }
+
 
 function parseSubject(string, enabled, subjects) {
     return new Promise(async (resolve, reject) => {

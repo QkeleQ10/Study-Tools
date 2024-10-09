@@ -417,16 +417,23 @@ div.loading-overlay>div:before {
     background-color: none !important;
 }
 
-.agenda-text-icon, .text-icon, .agenda-text-icon.outline[icon-type=information] {
+.agenda-text-icon.outline[icon-type=information], .agenda-text-icon, .text-icon {
     display: inline-block;
     padding-inline: 12px !important;
     height: auto;
     width: auto;
+    min-width: max-content;
     border: 1px solid var(--st-chip-info-border);
     border-radius: 12px;
     background-color: var(--st-chip-info-background);
-    color: var(--st-foreground-primary);
+    color: var(--st-foreground-primary) !important;
     font: 500 11px/22px var(--st-font-family-secondary);
+}
+
+.agenda-text-icon[icon-type=information], .text-icon[icon-type=information] {
+    border: 1px solid var(--st-chip-info-border) !important;
+    background-color: var(--st-chip-info-border);
+    color: #fff !important;
 }
 
 .agenda-text-icon[icon-type=ok], .text-icon[icon-type=ok] {
@@ -435,16 +442,18 @@ div.loading-overlay>div:before {
     color: var(--st-foreground-primary);
 }
 
-.agenda-text-icon[icon-type=information], .text-icon[icon-type=information] {
-    border: 1px solid var(--st-chip-info-border) !important;
-    background-color: var(--st-chip-info-background);
-    color: var(--st-foreground-primary);
-}
-
 .agenda-text-icon[icon-type=error], .text-icon[icon-type=error] {
     border: 1px solid var(--st-chip-warn-border) !important;
     background-color: var(--st-chip-warn-background);
     color: var(--st-foreground-primary);
+}
+
+.agenda-text-icon:first-letter {
+    text-transform: capitalize;
+}
+
+.sm-grid.k-grid .k-grid-content .icon-column {
+    overflow: visible;
 }
 
 #studiewijzer-detail-container .content>ul.sources,
@@ -551,7 +560,87 @@ form input[type=text], form input[type=password], form input[type=search], form 
 .k-list-container, html body .k-popup.k-list-container .k-item,
 .k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label {
     background-color: var(--st-background-secondary) !important;
-    color: var(--st-foreground-primary)
+    color: var(--st-foreground-primary);
+}
+
+.dialog {
+    width: auto;
+    min-width: 400px;
+    margin: 0;
+    translate: -50% -50%;
+    background-color: var(--st-background-overlay);
+    color: var(--st-foreground-primary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    overflow: visible;
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+
+.dialog-overlay:before {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(3px);
+}
+
+.dialog .content-pane, .dialog .title, .dialog .content, .dialog .footer, .dialog .content * {
+    background-color: transparent !important;
+    color: var(--st-foreground-primary) !important;
+    border: none;
+}
+
+.dialog .title {
+    height: auto;
+    padding: 24px;
+    padding-bottom: 0;
+    font: var(--st-font-primary);
+    line-height: normal;
+    box-shadow: none;
+}
+
+.dialog .content {
+    padding: 24px;
+    min-height: 0;
+}
+
+.dialog .content p {
+    padding-left: 0 !important;
+    font: 14px/18px var(--st-font-family-secondary) !important;
+}
+
+.dialog .footer {
+    height: auto;
+    bottom: -40px;
+    display: flex;
+    justify-content: end;
+    gap: 8px;
+    box-shadow: none;
+}
+
+.dialog .footer .primary-button, .dialog .footer .secondary-button {
+    height: 32px;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 16px;
+    padding-block: 6px;
+    margin: 0;
+    background-color: var(--st-background-overlay);
+    color: var(--st-foreground-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    font: 600 14px/16px var(--st-font-family-secondary);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    text-transform: none !important;
+}
+
+.dialog .footer .primary-button:first-letter, .dialog .footer .secondary-button:first-letter {
+    text-transform: capitalize;
+}
+
+.dialog .footer .primary-button {
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
 }
 
 table:not(.clearfix.user-content table),
@@ -925,6 +1014,41 @@ aside, aside .block,
 .sidecolumn aside .head-bar,
 .k-calendar tbody tr td {
     padding: 0;
+}
+
+.sidecolumn section.main {
+    padding-bottom: 0 !important
+}
+
+@media (width <= 800px) {
+    .sidecolumn section.main {
+        padding-bottom: 330px !important;
+    }
+
+    #studiewijzer-container section.main {
+        padding-bottom: 0 !important;
+    }
+
+    .subtitle aside, .sidecolumn aside {
+        top: auto !important;
+        left: 23px;
+        margin-top: 0;
+    }
+
+    .sidecolumn aside .head-bar {
+        right: 0 !important;
+        left: 0 !important;
+        top: 0 !important;
+    }
+
+    .sidecolumn aside .head-bar .asideTrigger {
+        border: none;
+        background-color: transparent;
+    }
+
+    .sidecolumn aside .tabs li.active:after {
+        top: 0 !important;
+    }
 }
 
 .k-calendar tbody tr td {
@@ -1537,10 +1661,6 @@ table.table-grid-layout>tbody>tr.selected {
 
 #studiewijzer-container {
     padding-right: 8px
-}
-
-.sidecolumn section.main {
-    padding-bottom: 0 !important
 }`, 'study-tools-sw-grid')
     } else { createStyle('', 'study-tools-sw-grid') }
 
@@ -1551,7 +1671,7 @@ table.table-grid-layout>tbody>tr.selected {
 }
 
 #cijfers-container.subtitle aside {
-    top: 125px !important;
+    margin-top: -29px;
 }
 
 #cijfers-container .main div.content-container-cijfers {
@@ -1763,6 +1883,6 @@ async function handleSpecialTheme(type, customCss, customTheme, customColor) {
                 if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
                 document.querySelector('.st-dialog-dismiss').click()
             }, 'data-icon': ''
-        }], null, { closeIcon: '', closeText: "Thema behouden" })
+        }], null, { closeIcon: '', closeText: "Thema behouden", primary: true })
     })
 }
