@@ -765,6 +765,14 @@
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
 }
 
+#st-start-widget-controls.editing>.st-button, #st-start-editor-done {
+    display: none;
+}
+
+#st-start-widget-controls.editing>#st-start-editor-done {
+    display: unset;
+}
+
 #st-start-collapse-widgets:before {
     scale: 1 1;
     transition: scale 200ms;
@@ -1160,27 +1168,6 @@ a.st-widget-title {
         border-width: 4px;
         pointer-events: none;
     }
-}
-
-#st-start-editor-prot {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 399px;
-    height: 64px;
-    background-color: var(--st-background-tertiary);
-    z-index: 1000000;
-
-    &.st-hidden {
-        display: none;
-    }
-}
-
-#st-start-editor-done {
-    inset: 0;
-    height: 100%;
-    width: 100%;
-    border-radius: 0;
 }
 
 #st-start-widgets:not(.editing) #st-start-widget-grades:hover,
