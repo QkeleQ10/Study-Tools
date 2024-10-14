@@ -1,6 +1,11 @@
 <script setup>
 function click() {
-    chrome.tabs.create({ url: 'popup/dist/index.html?type=options&view=custom-css' })
+    chrome.windows.create({
+        url: 'popup/dist/index.html?type=options&view=custom-css',
+        type: 'popup',
+        width: 1000,
+        height: 800
+    })
 }
 </script>
 

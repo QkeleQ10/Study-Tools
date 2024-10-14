@@ -1466,20 +1466,24 @@ function checkCollision(eventArr) {
 }
 
 function getEventChips(event) {
+    const infoTypes = {
+        1: { name: i18n('chips.hw'), type: 'info' },
+        2: { name: i18n('chips.pw'), type: 'important' },
+        4: { name: i18n('chips.so'), type: 'important' },
+        6: { name: i18n('chips.info'), type: 'info' },
+    }
+
     let chips = []
 
     if (event.Status == 4 || event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
-    if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
-    else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
-    if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })
-    else if (event.InfoType === 2) chips.push({ name: i18n('chips.pw'), type: 'important' })
-    if (event.InfoType === 4 && event.Afgerond) chips.push({ name: i18n('chips.so'), type: 'ok' })
-    else if (event.InfoType === 4) chips.push({ name: i18n('chips.so'), type: 'important' })
-    if (event.InfoType === 6 && event.Afgerond) chips.push({ name: i18n('chips.info'), type: 'ok' })
-    else if (event.InfoType === 6) chips.push({ name: i18n('chips.info'), type: 'info' })
     if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n('chips.kwtregistered'), type: 'ok' })
     else if (event.Type === 7) chips.push({ name: i18n('chips.kwt'), type: 'info' })
     if (event.Type === 103) chips.push({ name: i18n('chips.exam'), type: 'info' })
+    if (event.InfoType) {
+        let chip = infoTypes[event.InfoType] || { name: `Infotype ${event.InfoType}`, type: 'info' }
+        if (event.Afgerond) chip.type = 'ok'
+        chips.push(chip)
+    }
 
     return chips
 }
