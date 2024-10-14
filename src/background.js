@@ -82,7 +82,11 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 console.warn(`Request completion notification requested by ${sender.url} has timed out.`)
             }, 5000)
             return true
-
+    
+        case 'uninstallSelf':
+            chrome.management.uninstallSelf({ showConfirmDialog: false }, () => { window.location.reload() })
+            break
+        
         default:
             return 0
     }

@@ -72,9 +72,7 @@ function updateColor(newColor) {
 
 #theme-title {
     grid-area: title;
-
     position: relative;
-    transition: background-color 200ms, color 200ms;
 }
 
 #theme-scheme {

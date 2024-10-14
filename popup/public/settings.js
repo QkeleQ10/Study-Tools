@@ -22,6 +22,21 @@ export default [
                 default: 'none,',
             },
             {
+                id: "wallpaper-opacity",
+                title: "Achtergrondtransparantie",
+                type: "Slider",
+                display: "inline",
+                default: 0.2,
+                format: "percent",
+                decimals: 0,
+                min: 0.05,
+                max: 1,
+                step: 0.05,
+                conditions: [
+                    { settingId: 'wallpaper', operator: 'not starting with', value: 'none' }
+                ],
+            },
+            {
                 id: "sidecolor",
                 title: "Menubalkkleur",
                 subtitle: "Menubalk",
@@ -37,7 +52,8 @@ export default [
             {
                 id: "decoration-size",
                 title: "Menubalkdecoratieformaat",
-                type: "DecorationSizeSetting",
+                type: "Slider",
+                display: "inline",
                 default: 1,
                 format: "percent",
                 decimals: 0,
@@ -58,7 +74,7 @@ export default [
             {
                 id: "shape",
                 title: "Hoekstraal",
-                type: "SlideInput",
+                type: "Slider",
                 default: 8,
                 format: "px",
                 decimals: 0,
@@ -69,11 +85,8 @@ export default [
             {
                 id: "custom-css",
                 title: "Aangepaste CSS",
-                type: "Text",
+                type: "LinkToOptionsTab",
                 default: '',
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
             },
         ]
     },
@@ -232,7 +245,7 @@ export default [
             {
                 id: "suf-threshold",
                 title: "Voldoendegrens",
-                type: "SlideInput",
+                type: "Slider",
                 default: 5.5,
                 decimals: 1,
                 min: 1,
@@ -280,7 +293,7 @@ export default [
             {
                 id: "sw-cols",
                 title: "Aantal kolommen",
-                type: "SlideInput",
+                type: "Slider",
                 default: 3,
                 decimals: 0,
                 min: 1,

@@ -72,3 +72,13 @@ export function useManifest() {
 
     return { manifest }
 }
+
+export function useExtension() {
+    let extension = ref({})
+
+    onMounted(() => {
+        extension.value = browser?.extension
+    })
+
+    return { extension }
+}

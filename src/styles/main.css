@@ -487,6 +487,11 @@ dialog.st-modal[open]::backdrop {
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
 }
 
+.st-dialog>.st-button-wrapper>.st-button.primary {
+    background-color: var(--st-accent-primary) !important;
+    color: var(--st-contrast-accent);
+}
+
 .st-dialog-dismiss.st-step[data-icon]::before {
     content: none;
 }

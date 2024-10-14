@@ -4,7 +4,7 @@ import { useStorage } from '@vueuse/core'
 import settings from '/public/settings.js'
 
 import SwitchInput from '@/components/SwitchInput.vue'
-import SlideInput from '@/components/SlideInput.vue'
+import Slider from '@/components/setting-types/Slider.vue'
 import KeyPicker from '@/components/KeyPicker.vue'
 import ImageInput from '@/components/ImageInput.vue'
 import ShortcutsEditor from '@/components/ShortcutsEditor.vue'
@@ -12,10 +12,11 @@ import Text from '@/components/setting-types/Text.vue'
 import SingleChoice from '@/components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from '@/components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from '@/components/setting-types/DecorationPickerSetting.vue'
-import DecorationSizeSetting from '@/components/setting-types/DecorationSizeSetting.vue'
-const optionTypes = { SwitchInput, SlideInput, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
+import LinkToOptionsTab from '@/components/setting-types/LinkToOptionsTab.vue'
+const optionTypes = { SwitchInput, Slider, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
 
 const syncedStorage = inject('syncedStorage')
+const shouldShowSetting = inject('shouldShowSetting')
 
 const selectedTab = useStorage('selected-tab-theme', 0)
 </script>
@@ -38,7 +39,7 @@ const selectedTab = useStorage('selected-tab-theme', 0)
             <ThemeColors v-model="syncedStorage.ptheme" />
             <div class="additional-options">
                 <template v-for="setting in settings[0].settings.slice(1)">
-                    <div class="setting-wrapper" :data-setting-id="setting.id">
+                    <div class="setting-wrapper" :data-setting-id="setting.id" v-if="shouldShowSetting(setting)">
                         <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting" :id="setting.id"
                             v-model="syncedStorage[setting.id]">
                             <template #title>{{ setting.title }}</template>
@@ -116,7 +117,8 @@ const selectedTab = useStorage('selected-tab-theme', 0)
 
 .setting-wrapper[data-setting-id="decoration"],
 .setting-wrapper[data-setting-id="decoration-size"],
-.setting-wrapper[data-setting-id="wallpaper"] {
+.setting-wrapper[data-setting-id="wallpaper"],
+.setting-wrapper[data-setting-id="wallpaper-opacity"] {
     border-top: none !important;
     margin-top: -10px;
 }

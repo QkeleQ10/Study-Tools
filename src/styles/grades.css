@@ -475,6 +475,7 @@
     inset: 1px;
     margin-top: 40px;
 
+    container-type: size;
     display: none;
 
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
@@ -636,6 +637,28 @@
     opacity: 1;
 }
 
+@container (width >=590px) {
+    #st-cs-stats {
+        margin-right: 290px;
+        --st-background-overlaid: transparent;
+    }
+
+    #st-cs-filters {
+        width: 290px;
+        right: 0;
+        translate: 0 !important;
+        height: 100%;
+        border-top: none;
+        border-left: var(--st-border);
+        box-shadow: none !important;
+    }
+
+    #st-cs-filter-button,
+    #st-cs-filter-button-tooltip {
+        display: none !important;
+    }
+}
+
 #st-cb-i-heading,
 #st-cs-stats-heading,
 #st-cs-filters-heading {
@@ -769,6 +792,7 @@
     background-color: var(--st-background-secondary);
     border-radius: var(--st-border-radius);
     border: var(--st-border);
+    z-index: -1;
 }
 
 #st-cs-sufficient {

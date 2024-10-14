@@ -20,7 +20,9 @@ async function today() {
         header = element('div', 'st-start-header', container),
         schedule = element('div', 'st-start-schedule', container),
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
-        widgetsList = element('div', 'st-start-widgets-list', widgets)
+        widgetsList = element('div', 'st-start-widgets-list', widgets),
+        widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' }),
+        widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
 
     const widgetsOrderDefault = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
     if (!widgetsOrderSetting || widgetsOrderSetting.length < 1 || !widgetsOrderDefault.every(key => widgetsOrderSetting.includes(key))) {
@@ -76,8 +78,6 @@ async function today() {
     const editorHidden = element('div', 'st-start-editor-hidden-view', editor)
     const editorHiddenTitle = element('span', 'st-start-editor-hidden-view-title', editorHidden, { innerText: i18n('addWidgets') })
     const editorHiddenList = element('div', 'st-start-editor-hidden-view-list', editorHidden, { 'data-empty-text': i18n('addWidgetsEmpty') })
-    const editorProt = element('div', 'st-start-editor-prot', document.body)
-    const editorDone = element('button', 'st-start-editor-done', editorProt, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('editFinish') })
 
     todayHeader()
     todaySchedule()
@@ -266,8 +266,6 @@ async function today() {
         }
 
         // Controls (bottom right of page)
-        let widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' })
-        let widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
         setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
 
         // Zoom buttons
@@ -292,9 +290,17 @@ async function today() {
             }
         }
 
-        let invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editWidgets') })
+        const invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editWidgets') })
         invokeEditWidgets.addEventListener('click', () => {
             editWidgets()
+        })
+
+        const stopEditWidgets = element('button', 'st-start-editor-done', widgetControls, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('editFinish') })
+        stopEditWidgets.addEventListener('click', () => {
+            widgetsList.innerText = ''
+            widgets.classList.remove('editing')
+            widgetControls.classList.remove('editing')
+            todayWidgets()
         })
 
         if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('start-widgets-edit-known', 'local') ?? false)) {
@@ -684,7 +690,6 @@ async function today() {
         widgetsList.innerText = ''
 
         editor.classList.add('st-hidden')
-        editorProt.classList.add('st-hidden')
 
         let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
         let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
@@ -1267,21 +1272,16 @@ async function today() {
         if (!keepSelection) emptySelection()
 
         editor.classList.remove('st-hidden')
-        editorProt.classList.remove('st-hidden')
-
-        editorDone.addEventListener('click', () => {
-            widgetsList.innerText = ''
-            widgets.classList.remove('editing')
-            todayWidgets()
-        })
 
         if (widgets.classList.contains('editing')) {
             todayWidgets()
             widgets.classList.remove('editing')
+            widgetControls.classList.remove('editing')
             return
         }
 
         widgets.classList.add('editing')
+        widgetControls.classList.add('editing')
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
         for (const key of widgetsOrderSetting) {
@@ -1300,6 +1300,7 @@ async function today() {
                     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
                     widgetsList.innerText = ''
                     widgets.classList.remove('editing')
+                    widgetControls.classList.remove('editing')
                     editWidgets()
                 })
                 continue
@@ -1374,6 +1375,7 @@ async function today() {
                             widgetTypeButton.classList.add('active')
                             widgetsList.innerText = ''
                             widgets.classList.remove('editing')
+                            widgetControls.classList.remove('editing')
                             editWidgets(widgetElement.id)
                         })
                     })
@@ -1383,6 +1385,7 @@ async function today() {
                         saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
                         widgetsList.innerText = ''
                         widgets.classList.remove('editing')
+                        widgetControls.classList.remove('editing')
                         editWidgets()
                     })
 
@@ -1399,6 +1402,7 @@ async function today() {
                                         saveToStorage(option.key, newValue, 'local')
                                         widgetsList.innerText = ''
                                         widgets.classList.remove('editing')
+                                        widgetControls.classList.remove('editing')
                                         editWidgets(widgetElement.id)
                                     })
                                     break
@@ -1462,18 +1466,24 @@ function checkCollision(eventArr) {
 }
 
 function getEventChips(event) {
+    const infoTypes = {
+        1: { name: i18n('chips.hw'), type: 'info' },
+        2: { name: i18n('chips.pw'), type: 'important' },
+        4: { name: i18n('chips.so'), type: 'important' },
+        6: { name: i18n('chips.info'), type: 'info' },
+    }
+
     let chips = []
 
     if (event.Status == 4 || event.Status == 5) chips.push({ name: i18n('chips.cancelled'), type: 'warn' })
-    if (event.InfoType === 1 && event.Afgerond) chips.push({ name: i18n('chips.hw'), type: 'ok' })
-    else if (event.InfoType === 1) chips.push({ name: i18n('chips.hw'), type: 'info' })
-    if (event.InfoType === 2 && event.Afgerond) chips.push({ name: i18n('chips.pw'), type: 'ok' })
-    else if (event.InfoType === 2) chips.push({ name: i18n('chips.pw'), type: 'important' })
-    if (event.InfoType === 6 && event.Afgerond) chips.push({ name: i18n('chips.info'), type: 'ok' })
-    else if (event.InfoType === 6) chips.push({ name: i18n('chips.info'), type: 'info' })
     if (event.Type === 7 && event.Lokatie?.length > 0) chips.push({ name: i18n('chips.kwtregistered'), type: 'ok' })
     else if (event.Type === 7) chips.push({ name: i18n('chips.kwt'), type: 'info' })
     if (event.Type === 103) chips.push({ name: i18n('chips.exam'), type: 'info' })
+    if (event.InfoType) {
+        let chip = infoTypes[event.InfoType] || { name: `Infotype ${event.InfoType}`, type: 'info' }
+        if (event.Afgerond) chip.type = 'ok'
+        chips.push(chip)
+    }
 
     return chips
 }

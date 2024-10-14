@@ -74,7 +74,6 @@ function navClick(id) {
     gap: 8px;
     z-index: 9999;
     background-color: var(--color-surface-container);
-    transition: background-color 200ms;
 }
 
 .navigation-item {
@@ -103,7 +102,7 @@ function navClick(id) {
     width: 32px;
     height: 32px;
     border-radius: 16px;
-    transition: background-color 200ms, width 200ms;
+    transition: width 200ms;
 }
 
 .navigation-item-icon-wrapper[active=true] {

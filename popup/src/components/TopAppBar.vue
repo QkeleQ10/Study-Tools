@@ -45,7 +45,6 @@ function resetSettings() {
     display: flex;
     align-items: center;
     z-index: 9999;
-    transition: background-color 200ms;
 }
 
 #app-heading {

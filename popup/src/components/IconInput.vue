@@ -86,7 +86,7 @@ function setIcon(icon) {
     font: 20px "Font Awesome 6 Free";
     overflow: hidden;
     cursor: pointer;
-    transition: background-color 200ms, color 200ms, outline-color 200ms;
+    transition: outline-color 200ms;
 }
 
 .icon-input>button:hover {

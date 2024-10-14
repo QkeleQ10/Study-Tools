@@ -3,7 +3,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.12.1",
+    "version": "3.12.4",
     "default_locale": "nl",
     "icons": {
         "16": "icons/icon@16px.png",
@@ -33,8 +33,8 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "src/magister/scripts/api.js",
-                "src/util.js"
+                "src/scripts/api.js",
+                "src/scripts/util.js"
             ],
             "run_at": "document_start"
         },
@@ -43,14 +43,14 @@
                 "*://*.magister.net/*"
             ],
             "js": [
-                "src/magister/scripts/style.js"
+                "src/scripts/style.js"
             ],
             "css": [
-                "src/magister/styles/main.css",
-                "src/magister/styles/gamification.css",
-                "src/magister/styles/today.css",
-                "src/magister/styles/grades.css",
-                "src/magister/styles/studyguide.css"
+                "src/styles/main.css",
+                "src/styles/gamification.css",
+                "src/styles/today.css",
+                "src/styles/grades.css",
+                "src/styles/studyguide.css"
             ],
             "run_at": "document_start"
         },
@@ -59,12 +59,12 @@
                 "*://*.magister.net/magister/*"
             ],
             "js": [
-                "src/magister/scripts/main.js",
-                "src/magister/scripts/gamification.js",
-                "src/magister/scripts/today.js",
-                "src/magister/scripts/grades.js",
-                "src/magister/scripts/studyguide.js",
-                "src/magister/scripts/books.js"
+                "src/scripts/main.js",
+                "src/scripts/gamification.js",
+                "src/scripts/today.js",
+                "src/scripts/grades.js",
+                "src/scripts/studyguide.js",
+                "src/scripts/books.js"
             ],
             "run_at": "document_end"
         },
@@ -73,7 +73,7 @@
                 "*://accounts.magister.net/account/login*"
             ],
             "js": [
-                "src/magister/scripts/login.js"
+                "src/scripts/login.js"
             ],
             "run_at": "document_end"
         },
@@ -82,7 +82,7 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "src/other/microsoft-login.js"
+                "src/scripts/microsoft-login.js"
             ],
             "run_at": "document_end"
         }
@@ -112,11 +112,11 @@
             "300": "icons/icon@300px.png",
             "512": "icons/icon@512px.png"
         },
-        "default_popup": "popup/dist/index.html",
+        "default_popup": "popup/dist/index.html?type=popup",
         "default_title": "__MSG_appName__\nKlik om te configureren"
     },
     "options_ui": {
-        "page": "popup/dist/index.html",
+        "page": "popup/dist/index.html?type=options",
         "open_in_tab": true
     },
     "permissions": [

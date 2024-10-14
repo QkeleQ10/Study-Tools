@@ -3,7 +3,7 @@ chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service
 // Run when the extension and page are loaded
 main()
 async function main() {
-    if ((await getFromStorage('sampleApiData', 'session')) === 'true') MagisterApi.useSampleData = true
+    // if ((await getFromStorage('sampleApiData', 'session')) === 'true') MagisterApi.useSampleData = true
 
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
@@ -217,6 +217,9 @@ window.addEventListener('popstate', popstate)
 async function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
+    element('meta', `st-${chrome.runtime.id}`, document.head)
+    setTimeout(extensionInstanceCheck, 200)
+
     document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-cc"], *[id^="st-cs"], *[id^="st-cb"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
     })
@@ -266,6 +269,42 @@ async function popstate() {
         })
     }
 }
+
+async function extensionInstanceCheck() {
+    const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id})`)].map(e => e.id.split('-')[1])
+
+    if (otherExtensionInstances.length > 0) console.log('This instance:', chrome.runtime.id, 'Other instances:', otherExtensionInstances)
+
+    if (chrome.runtime.id === 'ohhafpjdnbhihibepefpcmnnodaodajc' && otherExtensionInstances.includes('hacjodpccmeoocakiahjfndppdeallak')) { // This is Edge Add-Ons version, detected Chrome Web Store version
+        element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(await chrome.storage.sync.get()) })
+        element('meta', `copy-settings-local`, document.head, { innerText: JSON.stringify(await chrome.storage.local.get()) })
+        setTimeout(() => {
+            if (document.querySelector('meta#copy-settings-success')) {
+                notify('dialog', "De nieuwe extensie is geïnstalleerd en je instellingen zijn overgezet.\n\nKlik alsjeblieft op 'Voltooien' om de oude extensie te verwijderen.", [{
+                    innerText: "Voltooien", primary: true, callback: () => {
+                        chrome.runtime.sendMessage({ action: 'uninstallSelf' })
+                        window.location.reload()
+                    }
+                }], null, { allowClose: false })
+            }
+        }, 500)
+    } else if (chrome.runtime.id === 'ohhafpjdnbhihibepefpcmnnodaodajc') {
+        notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden' en installeer de extensie.\n\nVernieuw daarna deze pagina.", [{ innerText: "Upgraden", primary: true, href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }])
+    } else if (chrome.runtime.id === 'hacjodpccmeoocakiahjfndppdeallak' && otherExtensionInstances.includes('ohhafpjdnbhihibepefpcmnnodaodajc')) { // This is Chrome Web Store version, detected Edge Add-Ons version
+        setTimeout(async () => {
+            newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
+            newLocalStorage = JSON.parse(document.querySelector('meta#copy-settings-local')?.innerText)
+            await chrome.storage.sync.set(newSyncedStorage)
+            syncedStorage = newSyncedStorage
+            await chrome.storage.local.set(newLocalStorage)
+            localStorage = newLocalStorage
+            element('meta', 'copy-settings-success', document.head)
+        }, 250)
+    } else if (otherExtensionInstances.length > 0) {
+        notify('dialog', `Er zijn meerdere versies van Study Tools actief. Dit kan problemen veroorzaken!\n\nDeactiveer ${otherExtensionInstances.length === 1 ? 'één' : otherExtensionInstances.length} instantie van Study Tools via het extensiemenu.\n\nVernieuw daarna de pagina.`, [], null, { allowClose: false })
+    }
+}
+
 
 function parseSubject(string, enabled, subjects) {
     return new Promise(async (resolve, reject) => {

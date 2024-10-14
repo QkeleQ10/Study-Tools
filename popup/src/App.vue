@@ -1,12 +1,12 @@
 <script setup>
 import { ref, provide } from 'vue'
-import { useScroll, useStorage } from '@vueuse/core'
+import { useStorage, useUrlSearchParams } from '@vueuse/core'
 import { useSyncedStorage } from './composables/chrome.js'
 
 import settings from '../public/settings.js'
 
 import SwitchInput from './components/SwitchInput.vue'
-import SlideInput from './components/SlideInput.vue'
+import Slider from './components/setting-types/Slider.vue'
 import KeyPicker from './components/KeyPicker.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
@@ -14,19 +14,17 @@ import Text from './components/setting-types/Text.vue'
 import SingleChoice from './components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
-import DecorationSizeSetting from './components/setting-types/DecorationSizeSetting.vue'
-const optionTypes = { SwitchInput, SlideInput, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, DecorationSizeSetting }
+import LinkToOptionsTab from './components/setting-types/LinkToOptionsTab.vue'
+const optionTypes = { SwitchInput, Slider, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
 
 const main = ref(null)
-const { y } = useScroll(main)
-const syncedStorage = useSyncedStorage()
 
+const syncedStorage = useSyncedStorage()
 provide('syncedStorage', syncedStorage)
 
-let selectedCategory = useStorage('selected-tab', 'theme')
-let transitionName = ref('')
+const params = useUrlSearchParams('history')
 
-setTimeout(() => transitionName.value = 'list', 200)
+let selectedCategory = useStorage('selected-tab', 'theme')
 
 function shouldShowSetting(setting) {
     let outcome = true
@@ -64,6 +62,7 @@ function shouldShowSetting(setting) {
     }
     return outcome
 }
+provide('shouldShowSetting', shouldShowSetting)
 
 function resetSettingDefaults() {
     settings.forEach(category => {
@@ -83,8 +82,12 @@ function openInNewTab(url) {
 </script>
 
 <template>
-    <div id="app-wrapper">
-        <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" :data-scrolled="y > 16" />
+    <div v-if="params.view === 'custom-css'" id="custom-css-container">
+        <textarea v-model="syncedStorage['custom-css']"
+            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: none; outline: none; resize: none;"></textarea>
+    </div>
+    <div id="app-wrapper" v-else>
+        <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" />
         <main id="main" ref="main">
             <template v-for="category in settings">
                 <ThemeView v-if="category.id === 'theme' && category.id === selectedCategory" />
@@ -95,7 +98,7 @@ function openInNewTab(url) {
                         <div class="setting-wrapper"
                             :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
                             :data-setting-type="setting.type" :data-setting-id="setting.id"
-                            v-if="shouldShowSetting(setting)" :key="setting.id" :data-scrolled="y > 16">
+                            v-if="shouldShowSetting(setting)" :key="setting.id">
                             <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
                                 :id="setting.id" v-model="syncedStorage[setting.id]">
                                 <template #title>{{ setting.title }}</template>
@@ -117,14 +120,20 @@ function openInNewTab(url) {
 @import url(assets/variables.css);
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
-
 body {
     width: 530px;
     height: 600px;
     margin: 0;
     overflow: hidden;
     background-color: var(--color-surface);
-    transition: background-color 200ms;
+}
+
+@media (width >=600px) {
+    body {
+        width: 530px;
+        height: 100vh;
+        margin: 0 auto;
+    }
 }
 
 #app {
@@ -132,17 +141,23 @@ body {
     height: 100%;
 }
 
+#custom-css-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
 #app-wrapper {
     width: 100%;
     height: 100%;
     display: grid;
     grid-template:
-        /* 'rail header' 64px */
         'rail content' auto
         / 80px 450px;
     overflow: hidden;
     font-family: 'Noto Sans', sans-serif;
-    transition: background-color 200ms;
 }
 
 main {
@@ -191,7 +206,6 @@ main {
     padding-block: 12px;
     min-height: 56px;
     box-sizing: border-box;
-    transition: background-color 200ms;
 }
 
 .setting-title {
@@ -321,47 +335,5 @@ main {
     border-radius: 6px;
     font: var(--typescale-body-small);
     text-align: center;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 100ms ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-
-.fade-leave,
-.fade-leave-active {
-    position: absolute;
-}
-
-.list-enter-active,
-.list-leave-active {
-    transition: all 150ms ease;
-}
-
-.list-enter-active {
-    transition-delay: 150ms;
-    animation: delayShow 150ms normal forwards step-end;
-}
-
-.list-enter-from,
-.list-leave-to {
-    opacity: 0;
-    border-bottom: none;
-    transform: translateX(-10px);
-}
-
-@keyframes delayShow {
-    0% {
-        position: absolute;
-    }
-
-    100% {
-        position: static;
-    }
 }
 </style>

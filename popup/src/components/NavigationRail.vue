@@ -86,7 +86,6 @@ function navClick(id) {
     gap: 12px;
     border-right: 1px solid transparent;
     background-color: var(--color-surface);
-    transition: background-color 200ms, border 200ms;
 }
 
 .navigation-item {

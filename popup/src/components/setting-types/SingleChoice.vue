@@ -36,7 +36,8 @@ const value = computed({
                     </Transition>
                 </div>
                 <span class="button-segment-text"
-                    :style="{ 'margin-left': (option.value === value || option.icon) ? '0' : '-8px' }">{{ option.title }}</span>
+                    :style="{ 'margin-left': (option.value === value || option.icon) ? '0' : '-8px' }">{{ option.title
+                    }}</span>
                 <div class="button-segment-state-layer"></div>
             </button>
         </div>
@@ -74,7 +75,7 @@ const value = computed({
     outline: none;
     cursor: pointer;
     overflow: hidden;
-    transition: background-color 200ms, grid-template-columns 200ms;
+    transition: grid-template-columns 200ms;
 }
 
 .button-segment:first-of-type {
