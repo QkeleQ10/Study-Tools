@@ -190,6 +190,47 @@ Element.prototype.setAttributes = function (attributes) {
     }
 }
 
+function formatTimestamp(start, end, networkTime, includeTime) {
+    networkTime ??= new Date(new Date().getTime() + (timeOffset || 0))
+    start ??= end ?? networkTime
+    end ??= start ?? networkTime
+    let timestamp = start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
+    if (start <= networkTime && end >= networkTime) {
+        // Start date is in the past and End date is in the future
+        i18n('dates.now')
+    } else if (start >= networkTime) {
+        // Start date is in the future
+        if (start - networkTime < minToMs(15)) timestamp =
+            i18n('dates.soon')
+        else if (start.isToday()) timestamp =
+            i18n(includeTime ? 'dates.todayAtTime' : 'dates.today', { time: start.getFormattedTime() })
+        else if (start.isTomorrow()) timestamp =
+            i18n(includeTime ? 'dates.tomorrowAtTime' : 'dates.tomorrow', { time: start.getFormattedTime() })
+        else if (start - networkTime < daysToMs(5)) timestamp =
+            i18n(includeTime ? 'dates.weekdayAtTime' : 'dates.nextWeekday', { weekday: start.getFormattedDay(), time: start.getFormattedTime() })
+        else if (start - networkTime < daysToMs(90)) timestamp =
+            i18n('dates.weekdayInWeek', { weekday: start.getFormattedDay(), week: start.getWeek() })
+        else timestamp =
+            start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    } else if (end <= networkTime) {
+        // End date is in the past
+        if (networkTime - end < minToMs(5)) timestamp =
+            i18n('dates.justNow')
+        else if (networkTime - end < minToMs(15)) timestamp =
+            i18n('dates.fewMinsAgo')
+        else if (end.isToday()) timestamp =
+            i18n(includeTime ? 'dates.todayAtTime' : 'dates.today', { time: end.getFormattedTime() })
+        else if (end.isYesterday()) timestamp =
+            i18n(includeTime ? 'dates.yesterdayAtTime' : 'dates.yesterday', { time: end.getFormattedTime() })
+        else if (networkTime - end < daysToMs(5)) timestamp =
+            i18n('dates.lastWeekday', { weekday: end.getFormattedDay() })
+        else if (networkTime.getFullYear() !== end.getFullYear()) timestamp =
+            end.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    }
+
+    return timestamp
+}
+
 // Elements with a temporal binding are updated every second, or whenever the function is invoked manually.
 function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
@@ -202,39 +243,7 @@ function updateTemporalBindings() {
 
         switch (type) {
             case 'timestamp':
-                let timestamp = start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
-                if (start <= networkTime && end >= networkTime) {
-                    // Start date is in the past and End date is in the future
-                    i18n('dates.now')
-                } else if (start >= networkTime) {
-                    // Start date is in the future
-                    if (start - networkTime < minToMs(15)) timestamp =
-                        i18n('dates.soon')
-                    else if (start.isToday()) timestamp =
-                        i18n('dates.todayAtTime', { time: start.getFormattedTime() })
-                    else if (start.isTomorrow()) timestamp =
-                        i18n('dates.tomorrowAtTime', { time: start.getFormattedTime() })
-                    else if (start - networkTime < daysToMs(5)) timestamp =
-                        i18n('dates.weekdayAtTime', { weekday: start.getFormattedDay(), time: start.getFormattedTime() })
-                    else if (start - networkTime < daysToMs(90)) timestamp =
-                        i18n('dates.weekdayInWeek', { weekday: start.getFormattedDay(), week: start.getWeek() })
-                    else timestamp =
-                        start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                } else if (end <= networkTime) {
-                    // End date is in the past
-                    if (networkTime - end < minToMs(5)) timestamp =
-                        i18n('dates.justNow')
-                    else if (networkTime - end < minToMs(15)) timestamp =
-                        i18n('dates.fewMinsAgo')
-                    else if (end.isToday()) timestamp =
-                        i18n('dates.todayAtTime', { time: end.getFormattedTime() })
-                    else if (end.isYesterday()) timestamp =
-                        i18n('dates.yesterdayAtTime', { time: end.getFormattedTime() })
-                    else if (networkTime - end < daysToMs(5)) timestamp =
-                        i18n('dates.lastWeekday', { weekday: end.getFormattedDay() })
-                    else if (networkTime.getFullYear() !== end.getFullYear()) timestamp =
-                        end.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                }
+                timestamp = formatTimestamp(start, end, networkTime, true)
                 if (element.dataset.time != timestamp) element.dataset.time = timestamp
                 break
 

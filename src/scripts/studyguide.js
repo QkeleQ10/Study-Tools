@@ -22,7 +22,7 @@ async function studyguideList() {
 
     renderStudyguideList(hiddenItemsContainer)
 
-    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n('sw.searchPlaceholder') })
+    let searchBar = element('input', 'st-sw-search', document.body, { class: 'st-input', placeholder: i18n('sw.searchPlaceholder') })
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
             document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
@@ -266,13 +266,13 @@ async function studyguideIndividual() {
             asideResizer.style.right = (asideDisplayWidth + 8) + 'px'
         }
 
-        asideResizer.addEventListener("mousedown", function (e) {
+        asideResizer.addEventListener('mousedown', function (e) {
             m_pos = e.x
-            document.addEventListener("mousemove", asideResize, false)
+            document.addEventListener('mousemove', asideResize, false)
         }, false)
-        document.addEventListener("mouseup", function () {
+        document.addEventListener('mouseup', function () {
             asidePreferenceWidth = asideDisplayWidth
-            document.removeEventListener("mousemove", asideResize, false)
+            document.removeEventListener('mousemove', asideResize, false)
         }, false)
     }
 }

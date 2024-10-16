@@ -476,11 +476,11 @@ async function today() {
                     if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                         agendaDayOffset = nextRelevantDayIndex
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                        notify('snackbar', `${i18n('toasts.jumpedToNextRelevantDay')} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                        notify('snackbar', i18n('toasts.jumpedToDate', { date: formatTimestamp(agendaStartDate) }), [], 1500)
 
                         setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
                         schedule.dataset.navigate = 'jumpforw'
-                        setTimeout(() => schedule.dataset.navigate = 'still', 600)
+                        setTimeout(() => schedule.dataset.navigate = 'still', 300)
                     }
 
                     if (agendaView === 'day') agendaEndDate = agendaStartDate
@@ -1469,7 +1469,7 @@ function getEventChips(event) {
     const infoTypes = {
         1: { name: i18n('chips.hw'), type: 'info' },
         2: { name: i18n('chips.pw'), type: 'important' },
-        3: { name: i18n('chips.tentamen'), type: 'important' },
+        3: { name: i18n('chips.prelim'), type: 'important' },
         4: { name: i18n('chips.so'), type: 'important' },
         6: { name: i18n('chips.info'), type: 'info' },
     }

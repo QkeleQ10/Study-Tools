@@ -168,7 +168,7 @@
 }
 
 #st-start-schedule[data-navigate='jumpforw'] {
-    animation: 600ms schedule-navigate-forw -300ms;
+    animation: 300ms schedule-navigate-jump-forw;
 }
 
 @keyframes schedule-navigate-back {
