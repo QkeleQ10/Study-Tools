@@ -1469,6 +1469,7 @@ function getEventChips(event) {
     const infoTypes = {
         1: { name: i18n('chips.hw'), type: 'info' },
         2: { name: i18n('chips.pw'), type: 'important' },
+        3: { name: i18n('chips.tentamen'), type: 'important' },
         4: { name: i18n('chips.so'), type: 'important' },
         6: { name: i18n('chips.info'), type: 'info' },
     }
