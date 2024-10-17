@@ -1,6 +1,6 @@
 <script setup>
 import { ref, inject } from 'vue'
-import themePresets from '../../public/themePresets.js'
+import { presets, propertyKeys } from '../../public/themePresets.js'
 
 const syncedStorage = inject('syncedStorage')
 
@@ -9,35 +9,28 @@ const promptingPreset = ref({})
 
 function applyPreset() {
     const preset = promptingPreset.value
-    for (const key in preset) {
-        if (Object.hasOwnProperty.call(preset, key) && key != 'name' && key != 'author' && key != 'thumbnailStyle') {
-            const value = preset[key]
-            syncedStorage.value[key] = value
-        }
-    }
+    const fallbackPreset = presets[0]
+
+    propertyKeys.forEach(key => syncedStorage.value[key] = (preset?.[key] ?? fallbackPreset[key]))
 }
 
 function presetMatches(preset) {
-    let matches = true
-    for (const key in preset) {
-        if (Object.hasOwnProperty.call(preset, key) && key != 'name' && key != 'author' && key != 'thumbnailStyle') {
-            const value = preset[key]
-            if (syncedStorage.value[key] !== value) matches = false
-        }
-    }
-    return matches
+    const fallbackPreset = presets[0]
+
+    // Return true if every property matches the preset (or, if it doesn't exist, the fallback preset)
+    return propertyKeys.every(key => syncedStorage.value[key] === (preset?.[key] ?? fallbackPreset[key]))
 }
 
 function promptPreset(preset) {
     promptingPreset.value = preset
-    if (themePresets.some(p => presetMatches(p))) applyPreset()
+    if (presets.some(p => presetMatches(p))) applyPreset()
     else promptOpen.value = true
 }
 </script>
 
 <template>
     <div id="theme-presets">
-        <button v-for="preset in themePresets" class="theme-preset" :class="{ matches: presetMatches(preset) }"
+        <button v-for="preset in presets" class="theme-preset" :class="{ matches: presetMatches(preset) }"
             :title="preset.name" @click="promptPreset(preset)">
             <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
             <div class="theme-preset-info">

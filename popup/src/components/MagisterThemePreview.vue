@@ -1,32 +1,39 @@
 <script setup>
 import { computed, inject, defineProps } from 'vue'
+import { presets, propertyKeys } from '../../public/themePresets.js'
 
 const props = defineProps(['preset'])
 
 const syncedStorage = inject('syncedStorage')
 
-const preset = props.preset || syncedStorage.value
+const currentTheme = computed(() => {
+    let currentTheme = {}
+    if (props.preset) propertyKeys.forEach(key => currentTheme[key] = (props.preset?.[key] || presets[0][key]))
+    else propertyKeys.forEach(key => currentTheme[key] = syncedStorage.value[key])
+    console.log(props.preset,  currentTheme)
+    return currentTheme
+})
 
 const style = computed(() => {
-    let accentColor = (preset['ptheme'] || 'auto,207,95,55')?.split(',')
-    let pageColor = preset['pagecolor']?.startsWith('true')
-        ? `hsl(${preset['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+    let accentColor = (currentTheme.value['ptheme'] || 'auto,207,95,55')?.split(',')
+    let pageColor = currentTheme.value['pagecolor']?.startsWith('true')
+        ? `hsl(${currentTheme.value['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
         : null
-    let appbarColor = preset['appbarcolor']?.startsWith('true')
-        ? `hsl(${preset['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
+    let appbarColor = currentTheme.value['appbarcolor']?.startsWith('true')
+        ? `hsl(${currentTheme.value['appbarcolor'].replace('true,', '').replace(/,/gi, ' ')})`
         : null
-    let menubarColor = preset['sidecolor']?.startsWith('true')
-        ? `hsl(${preset['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
+    let menubarColor = currentTheme.value['sidecolor']?.startsWith('true')
+        ? `hsl(${currentTheme.value['sidecolor'].replace('true,', '').replace(/,/gi, ' ')})`
         : null
-    let wallpaper = preset['wallpaper']?.startsWith('custom')
-        ? `linear-gradient(color-mix(in srgb, var(--page), transparent ${Number(preset['wallpaper-opacity'] ?? 0.2) * 100}%), color-mix(in srgb, var(--page), transparent ${Number(preset['wallpaper-opacity'] ?? 0.2) * 100}%)), url(${preset['wallpaper'].replace('custom,', '')})`
+    let wallpaper = currentTheme.value['wallpaper']?.startsWith('custom')
+        ? `linear-gradient(color-mix(in srgb, var(--page), transparent ${Number(currentTheme.value['wallpaper-opacity'] ?? 0.2) * 100}%), color-mix(in srgb, var(--page), transparent ${Number(currentTheme.value['wallpaper-opacity'] ?? 0.2) * 100}%)), url(${currentTheme.value['wallpaper'].replace('custom,', '')})`
         : 'none'
-    let decoration = preset['decoration']?.startsWith('custom')
-        ? `url(${preset['decoration'].replace('custom,', '')})`
+    let decoration = currentTheme.value['decoration']?.startsWith('custom')
+        ? `url(${currentTheme.value['decoration'].replace('custom,', '')})`
         : 'none'
     accentColor?.shift()
     return {
-        '--color-scheme': (preset['ptheme']?.split(',')?.[0] || 'auto').replace('auto', 'light dark'),
+        '--color-scheme': (currentTheme.value['ptheme']?.split(',')?.[0] || 'auto').replace('auto', 'light dark'),
         '--page': pageColor || `light-dark(#ffffff, #111111)`,
         '--wallpaper': wallpaper,
         '--appbar': appbarColor || `light-dark(${shiftedHslColor(207, 95, 47, ...accentColor)}, ${shiftedHslColor(207, 73, 22, ...accentColor)})`,
@@ -35,7 +42,7 @@ const style = computed(() => {
         '--sidebar': `light-dark(#ffffffaa, #0c0c0caa)`,
         '--foreground-accent': `light-dark(${shiftedHslColor(207, 78, 43, ...accentColor)}, ${shiftedHslColor(207, 53, 55, ...accentColor)})`,
         '--border': `light-dark(#dfdfdfaa, #2e2e2eaa)`,
-        '--border-radius': (preset['shape'] ?? 8) + 'px',
+        '--border-radius': (currentTheme.value['shape'] ?? 8) + 'px',
         '--accent-1': `light-dark(${shiftedHslColor(207, 95, 55, ...accentColor)}, ${shiftedHslColor(207, 73, 30, ...accentColor)})`,
         '--accent-2': `light-dark(${shiftedHslColor(207, 95, 47, ...accentColor)}, ${shiftedHslColor(207, 73, 22, ...accentColor)})`,
     }
@@ -116,31 +123,41 @@ const decorations = [
         }
     }
 ]
+
+function presetMatches(preset) {
+    const fallbackPreset = presets[0]
+
+    // Return true if every property matches the preset (or, if it doesn't exist, the fallback preset)
+    return propertyKeys.every(key => currentTheme.value[key] === (preset?.[key] ?? fallbackPreset[key]))
+}
 </script>
 
 <template>
-    <div id="theme-preview" :style="{ ...style, ...props.preset?.thumbnailStyle?.body }"
-        :title="props.preset?.name ? 'Dit is een voorbeeld van je thema. Het kan zijn dat \nhet thema er net anders uitziet dan hier.' : 'Dit is een voorbeeld van je thema. Aangepaste CSS werkt niet in dit \nvoorbeeld, dus het kan zijn dat je thema er anders uitziet dan hier.'">
-        <div id="appbar" :style="props.preset?.thumbnailStyle?.appbar"></div>
+    <div id="theme-preview" v-if="props.preset?.thumbnail || presets.find(presetMatches)?.thumbnail" class="image">
+        <img :src="props.preset?.thumbnail || presets.find(presetMatches)?.thumbnail"
+            :title="'Dit is een voorbeeld van je thema. Het kan zijn dat \nhet thema er net anders uitziet dan hier.'" />
+    </div>
+    <div id="theme-preview" v-else class="composition" :style="{ ...style }"
+        :title="props.preset?.name ? 'Dit is een voorbeeld van je thema. Het kan zijn dat \nhet thema er net anders uitziet dan hier.' : currentTheme['custom-css'] ? 'Dit is een voorbeeld van je thema. Aangepaste CSS werkt niet in dit \nvoorbeeld, dus het kan zijn dat je thema er anders uitziet dan hier.' : 'Dit is een voorbeeld van je thema.'">
+        <div id="appbar"></div>
         <div id="menubar"
-            :style="{ ...(decorations.find(e => preset['decoration']?.startsWith(e.id))?.style || {}), ...props.preset?.thumbnailStyle?.menubar }">
-            <div id="menubar-title" :style="props.preset?.thumbnailStyle?.menubarTitle"></div>
+            :style="{ ...(decorations.find(e => currentTheme['decoration']?.startsWith(e.id))?.style || {}) }">
+            <div id="menubar-title"></div>
         </div>
-        <div id="page" :style="props.preset?.thumbnailStyle?.page">
-            <div id="page-title" :style="props.preset?.thumbnailStyle?.pageTitle"></div>
+        <div id="page">
+            <div id="page-title"></div>
         </div>
-        <div id="sidebar" :style="props.preset?.thumbnailStyle?.sidebar">
-            <div class="widget" id="widget-grades"
-                :style="{ ...props.preset?.thumbnailStyle?.widgetGrades, ...props.preset?.thumbnailStyle?.widget }">
+        <div id="sidebar">
+            <div class="widget" id="widget-grades">
             </div>
-            <div class="widget" :style="props.preset?.thumbnailStyle?.widget"></div>
-            <div class="widget" :style="props.preset?.thumbnailStyle?.widget"></div>
+            <div class="widget"></div>
+            <div class="widget"></div>
         </div>
     </div>
 </template>
 
 <style scoped>
-#theme-preview {
+#theme-preview.composition {
     color-scheme: var(--color-scheme);
     display: grid;
     grid-template-columns: 5% 22% 1fr 30%;
@@ -151,6 +168,15 @@ const decorations = [
     background-position: center;
     background-size: cover;
     background-color: var(--page);
+}
+
+#theme-preview.image {
+    overflow: hidden;
+}
+
+#theme-preview.image>img {
+    width: 100%;
+    height: 100%;
 }
 
 #theme-preview * {

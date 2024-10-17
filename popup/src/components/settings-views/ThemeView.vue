@@ -1,7 +1,8 @@
 <script setup>
-import { ref, inject } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useStorage } from '@vueuse/core'
 import settings from '/public/settings.js'
+import { presets, propertyKeys } from '/public/themePresets.js'
 
 import SwitchInput from '@/components/SwitchInput.vue'
 import Slider from '@/components/setting-types/Slider.vue'
@@ -19,6 +20,18 @@ const syncedStorage = inject('syncedStorage')
 const shouldShowSetting = inject('shouldShowSetting')
 
 const selectedTab = useStorage('selected-tab-theme', 0)
+
+const dataStr = computed(() => {
+    const fallbackPreset = presets[0]
+
+    let obj = {}
+
+    propertyKeys.forEach(key => {
+        if (syncedStorage.value?.[key] !== fallbackPreset[key]) obj[key] = syncedStorage.value[key]
+    })
+
+    return "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj))
+})
 </script>
 
 <template>
@@ -51,6 +64,10 @@ const selectedTab = useStorage('selected-tab-theme', 0)
                         </Chip>
                     </div>
                 </template>
+                <a id="theme-downloader" :href="dataStr" download="Mijn thema.sttheme">
+                    <h3 class="setting-title">Thema opslaan</h3>
+                    <Icon>chevron_right</Icon>
+                </a>
             </div>
         </div>
     </div>
@@ -121,5 +138,21 @@ const selectedTab = useStorage('selected-tab-theme', 0)
 .setting-wrapper[data-setting-id="wallpaper-opacity"] {
     border-top: none !important;
     margin-top: -10px;
+}
+
+#theme-downloader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    box-sizing: border-box;
+    padding-block: 12px;
+    margin-inline: 16px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-surface-variant);
+    color: var(--color-on-surface);
+    cursor: pointer;
+    text-decoration: none;
 }
 </style>

@@ -357,6 +357,7 @@ input[type=switch]+label span,
 
 div.loading-overlay {
     background: radial-gradient(at -150% -50%, var(--st-highlight-primary), transparent), radial-gradient(at top right, var(--st-background-primary), var(--st-background-tertiary)) !important;
+    z-index: 200;
 }
 
 div.loading-overlay * {
@@ -1007,7 +1008,7 @@ aside, aside .block,
     translate: -90px -30px;
     background: #0000ff;
     padding: 16px;
-    z-index: 99999998;
+    z-index: 1000;
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
@@ -1600,7 +1601,7 @@ table.table-grid-layout>tbody>tr.selected {
     background-color: var(--st-background-transparent);
     opacity: 1;
     backdrop-filter: blur(3px);
-    z-index: 999999999999;
+    z-index: 10001;
 }
 
 .animation-container-loading.ng-cloak {
@@ -1706,7 +1707,6 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
 
     if (syncedStorage['custom-css']) {
         createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
-        const cssVarReferenceMatches = extractVariables(syncedStorage['custom-css'])
 
         function extractVariables(inputString) {
             const regex = /var\(--st-reference-(\w+)-([^\s)]+)\)/g
@@ -1723,15 +1723,22 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
             return result
         }
 
-        cssVarReferenceMatches.forEach(({ variable, property, selector }) => {
-            let interval = setInterval(update, 25)
-            setTimeout(() => clearInterval(interval), 3000)
-            window.addEventListener('resize', update)
+        let updateSteps = []
+        extractVariables(syncedStorage['custom-css']).forEach(({ variable, property, selector }) => {
             document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('mouseup', update)
-            function update() {
-                document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px')
-            }
+            updateSteps.push(() => document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px'))
         })
+        if (getComputedStyle(document.body).getPropertyValue('--st-menu-collapse') === 'disallow') {
+            updateSteps.push(() => document.querySelector('.collapsed-menu')?.classList.remove('collapsed-menu'))
+            new MutationObserver(update).observe(await awaitElement('.menu-host'), { attributes: true })
+        }
+
+        let interval = setIntervalImmediately(update, 25)
+        setTimeout(() => clearInterval(interval), 3000)
+        window.addEventListener('resize', update)
+        function update() {
+            updateSteps.forEach(x => x())
+        }
     } else {
         createStyle('', 'study-tools-custom-css')
     }

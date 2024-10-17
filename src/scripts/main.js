@@ -64,8 +64,8 @@ async function main() {
     // Handle forced logout
     let userMenuLink = await awaitElement('#user-menu')
     userMenuLink.addEventListener('click', async () => {
-        let logoutLink = await awaitElement('.user-menu ul li:nth-child(3) a')
-        logoutLink.addEventListener('click', async () => {
+        let logoutLink = await awaitElement('#log-off')
+        logoutLink?.addEventListener('click', async () => {
             await saveToStorage('force-logout', new Date().getTime(), 'local')
         })
     })

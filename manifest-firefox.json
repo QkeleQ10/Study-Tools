@@ -90,11 +90,11 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "_locales/nl/strings.json",
-                "_locales/en/strings.json",
-                "_locales/fr/strings.json",
-                "_locales/de/strings.json",
-                "_locales/la/strings.json"
+                "src/strings/nl.json",
+                "src/strings/en.json",
+                "src/strings/fr.json",
+                "src/strings/de.json",
+                "src/strings/la.json"
             ],
             "matches": [
                 "*://*.magister.net/*"

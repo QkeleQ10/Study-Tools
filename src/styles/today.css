@@ -272,7 +272,7 @@
     border-top-right-radius: calc(var(--st-border-radius) * 0.5);
     border-bottom-right-radius: calc(var(--st-border-radius) * 0.5);
     color: var(--st-contrast-accent);
-    z-index: 2;
+    z-index: 1;
     pointer-events: none;
 }
 
@@ -376,7 +376,7 @@
     backdrop-filter: blur(3px);
     border-radius: var(--st-border-radius);
     font: 12px var(--st-font-family-secondary);
-    z-index: 2;
+    z-index: 1;
 }
 
 .st-start-col-label>span {
@@ -462,7 +462,6 @@
     overflow: hidden;
     cursor: pointer;
     container-type: size;
-    z-index: 1;
     transition: top 200ms, left 200ms, height 200ms, width 200ms;
 }
 
@@ -663,7 +662,6 @@
     background-color: var(--st-background-secondary);
     border-left: var(--st-border);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    z-index: 999999;
     transition: box-shadow 200ms;
 
     transition-property: opacity, translate, display;
@@ -705,12 +703,11 @@
 #st-start-widget-controls-wrapper {
     display: flex;
     justify-content: center;
-    position: fixed;
+    position: absolute;
     right: 0;
     bottom: 0;
     min-width: 400px;
     padding: 8px;
-    z-index: 1000000;
     color: var(--st-foreground-insignificant);
     transition: scale 200ms, opacity 200ms, min-width 200ms;
 }
@@ -798,7 +795,7 @@
     font: 12px var(--st-font-family-secondary);
     text-align: center;
     text-wrap: balance;
-    z-index: 2000000;
+    z-index: 100;
     transform-origin: bottom right;
     transform: none;
     opacity: 1;
@@ -890,7 +887,6 @@
     opacity: 1 !important;
     filter: none !important;
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    z-index: 2;
     cursor: grab;
 }
 
@@ -1001,8 +997,8 @@ a.st-widget-title {
     position: absolute;
     right: 400px;
     top: 0;
+    bottom: 0;
     width: 400px;
-    height: 100%;
     padding: 24px;
 
     display: flex;
@@ -1187,7 +1183,7 @@ a.st-widget-title {
 #st-start-widget-grades-title {
     background-color: transparent;
     border-bottom-color: transparent;
-    z-index: 2;
+    z-index: 1;
     position: relative;
     transition: color 200ms;
 }
@@ -1502,7 +1498,6 @@ a.st-widget-title {
 
 .st-list-timestamp {
     text-align: end;
-    z-index: 2;
     font-weight: 600;
     color: var(--st-foreground-insignificant);
 }

@@ -69,7 +69,7 @@ async function today() {
         verifyDisplayMode()
     })
 
-    const editor = element('div', 'st-start-editor', document.body, { class: 'st-hidden' })
+    const editor = element('div', 'st-start-editor', container, { class: 'st-hidden' })
     const editorView = element('div', 'st-start-editor-view', editor)
     const editorWidgetTitle = element('span', 'st-start-editor-title', editorView, { innerText: i18n('editWidgets') })
     const editorActionRow = element('div', 'st-start-editor-action-row', editorView, { 'data-empty-text': i18n('editWidgetsEmpty') })
@@ -217,11 +217,11 @@ async function today() {
                 renderSchedule()
             } else if (newOffset > oldOffset) {
                 schedule.dataset.navigate = 'forw'
-                setTimeout(renderSchedule, 70)
+                setTimeout(renderSchedule, 50)
                 setTimeout(() => schedule.dataset.navigate = 'still', 200)
             } else if (newOffset < oldOffset) {
                 schedule.dataset.navigate = 'back'
-                setTimeout(renderSchedule, 70)
+                setTimeout(renderSchedule, 50)
                 setTimeout(() => schedule.dataset.navigate = 'still', 200)
             } else { renderSchedule() }
         }
