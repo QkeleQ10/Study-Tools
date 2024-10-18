@@ -72,7 +72,7 @@ dialog.st-modal[open]::backdrop {
 .st-title {
     display: block;
     color: var(--st-foreground-accent);
-    font: 700 28px / 2rem arboria, sans-serif;
+    font: var(--st-font-hero);
     margin-bottom: 6px;
 }
 

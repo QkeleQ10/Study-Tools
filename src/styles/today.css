@@ -1276,6 +1276,7 @@ a.st-widget-title {
 
 .st-start-widget-grades-item[data-unread=true] {
     background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-primary-dark));
+    background-image: linear-gradient(35deg, hsl(from var(--st-accent-primary) h calc(s - 5) calc(l + 5)), hsl(from var(--st-accent-primary) h calc(s + 25) calc(l - 17)));
 }
 
 .st-start-widget-grades-item[data-unread=true] *,

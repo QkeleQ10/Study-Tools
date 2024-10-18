@@ -1,4 +1,5 @@
-let currentTheme
+let currentTheme,
+    updateSteps = []
 
 // Apply the styles instantly,
 // and whenever the settings change
@@ -167,8 +168,9 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     if (verbose) console.info(`STYLE START with theme ${currentTheme.join(', ')}`)
 
     const rootVarsGeneral = `
-    --st-font-primary: 600 16px/44px 'arboria', sans-serif;
     --st-font-family-primary: 'arboria', sans-serif;
+    --st-font-primary: 600 16px/44px var(--st-font-family-primary);
+    --st-font-hero: 700 28px/2rem var(--st-font-family-primary);
     --st-font-family-secondary: 'open-sans', sans-serif;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${syncedStorage.shape}px;
@@ -369,7 +371,7 @@ div.loading-overlay>div:before {
     color: var(--st-foreground-primary) !important;
 }
 
-#cijferoverzichtgrid, .afsprakenlijst-container .main>.content-container, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid, .tech-info {
+#cijferoverzichtgrid, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid, .tech-info {
     background: transparent !important;
     border-color: var(--st-border-color) !important;
 }
@@ -858,8 +860,9 @@ span.nrblock,
     left: 2px
 }
 
-.menu-footer {
+.menu-footer, .afsprakenlijst-container .main>.content-container {
     background-color: transparent;
+    border-color: var(--st-border-color);
     border-top: none;
 }
 
@@ -1202,6 +1205,7 @@ dna-card {
 
 .container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
+    --title-font: var(--st-font-hero);
     --color: var(--st-foreground-accent);
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);
@@ -1723,14 +1727,14 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
             return result
         }
 
-        let updateSteps = []
+        updateSteps = []
         extractVariables(syncedStorage['custom-css']).forEach(({ variable, property, selector }) => {
             document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('mouseup', update)
             updateSteps.push(() => document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px'))
         })
         if (getComputedStyle(document.body).getPropertyValue('--st-menu-collapse') === 'disallow') {
             updateSteps.push(() => document.querySelector('.collapsed-menu')?.classList.remove('collapsed-menu'))
-            new MutationObserver(update).observe(await awaitElement('.menu-host'), { attributes: true })
+            if (await awaitElement('.menu-host')) new MutationObserver(update).observe(document.querySelector('.menu-host'), { attributes: true })
         }
 
         let interval = setIntervalImmediately(update, 25)
@@ -1759,6 +1763,7 @@ ${currentTheme[0] === 'dark' ? '.no-selection-container object, .no-messages-con
     --primary: var(--st-accent-primary) !important;
     --background: var(--st-background-secondary) !important;
     --title-color: var(--st-foreground-accent) !important;
+    --title-font: var(--st-font-hero) !important;
     --separator-color: var(--st-foreground-accent) !important;
     --dna-background: var(--st-background-primary) !important;
     --dna-text-color-dark: var(--st-foreground-primary) !important;
@@ -1788,6 +1793,7 @@ app-bericht-details, html:root body dna-search-input {
 
 dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
+    --title-font: var(--st-font-hero);
     --color: var(--st-foreground-accent);
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);
