@@ -68,8 +68,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-background-primary: #121212;
     --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
-    --st-background-overlay: #121212f7;
-    --st-background-transparent: #121212bb;
     --st-background-overlaid: #00000030;
     --st-highlight-primary: ${shiftedHslColor(207, 33, 20, color.h, color.s, color.l, undefined, undefined, 10)};
     --st-highlight-subtle: #181f24;
@@ -83,7 +81,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-border-color: #2e2e2eaa;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-accent-primary-dark: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
-    --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #4ea3e9;
@@ -117,8 +114,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-background-primary: #ffffff;
     --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
-    --st-background-overlay: #fffffff7;
-    --st-background-transparent: #ffffffbb;
     --st-background-overlaid: #12121210;
     --st-highlight-primary: ${shiftedHslColor(207, 85, 82, color.h, color.s, color.l, undefined, undefined, 96)};
     --st-highlight-subtle: #f2f9ff;
@@ -132,7 +127,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-border-color: #dfdfdfaa;
     --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
     --st-accent-primary-dark: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
-    --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #4ea3e9;
@@ -174,6 +168,8 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     --st-font-family-secondary: 'open-sans', sans-serif;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${syncedStorage.shape}px;
+    --st-background-overlay: hsl(from var(--st-background-primary) h s l / 0.97);
+    --st-background-transparent: hsl(from var(--st-background-primary) h s l / 0.73);
     --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%), color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%));`
 
     const rootVarsInvert = `

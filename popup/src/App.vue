@@ -83,8 +83,7 @@ function openInNewTab(url) {
 
 <template>
     <div v-if="params.view === 'custom-css'" id="custom-css-container">
-        <textarea v-model="syncedStorage['custom-css']"
-            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: none; outline: none; resize: none;"></textarea>
+        <CustomCssEditor/>
     </div>
     <div id="app-wrapper" v-else>
         <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" />

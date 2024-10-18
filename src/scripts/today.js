@@ -1471,6 +1471,7 @@ function getEventChips(event) {
         2: { name: i18n('chips.pw'), type: 'important' },
         3: { name: i18n('chips.prelim'), type: 'important' },
         4: { name: i18n('chips.so'), type: 'important' },
+        5: { name: i18n('chips.mo'), type: 'important' },
         6: { name: i18n('chips.info'), type: 'info' },
     }
 

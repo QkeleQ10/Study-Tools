@@ -165,7 +165,7 @@ async function gradeCalculator(buttonWrapper) {
     clClose.addEventListener('click', () => {
         gradesContainer.removeAttribute('style')
         clOverlay.removeAttribute('open')
-        createStyle('', 'st-cculation-added')
+        createStyle('', 'st-calculation-added')
     })
 
     clBugReport.addEventListener('click', () => {
@@ -209,7 +209,7 @@ async function gradeCalculator(buttonWrapper) {
                 } else {
                     elem.classList.add('st-cannot-add')
                     setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
-                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-cculation-added')
+                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
                 }
             }
         } else {
@@ -235,6 +235,7 @@ async function gradeCalculator(buttonWrapper) {
                 innerText: gradeElement.title,
                 style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
             })
+            setTimeout(() => { if (ghostElement) ghostElement.remove() }, 5000)
 
             let result = Number(gradeElement.title.replace(',', '.')),
                 weight,
@@ -284,12 +285,12 @@ async function gradeCalculator(buttonWrapper) {
                 event.target.classList.add('remove')
                 setTimeout(() => {
                     event.target.remove()
-                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-cculation-added')
+                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
                 }, 100)
                 updateCalculations()
             })
             addedElement.scrollIntoView({ behavior: 'smooth' })
-            createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-cculation-added')
+            createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
 
             let ghostTargetPosition = addedElement.getBoundingClientRect()
             ghostElement.style.top = `${ghostTargetPosition.top}px`
