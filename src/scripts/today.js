@@ -558,7 +558,7 @@ async function today() {
                     let teacherNames = item.Docenten?.map((e, i, a) => {
                         return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
                     }) || []
-                    let locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
+                    let locationNames =  [item.Lokatie] || item.Lokalen?.map(e => e.Naam)
                     if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
                     if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
 

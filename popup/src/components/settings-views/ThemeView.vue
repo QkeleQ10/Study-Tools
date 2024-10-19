@@ -65,7 +65,7 @@ const dataStr = computed(() => {
                     </div>
                 </template>
                 <a id="theme-downloader" :href="dataStr" download="Mijn thema.sttheme">
-                    <h3 class="setting-title">Thema opslaan</h3>
+                    <h3 class="setting-title">Bewaren in Mijn thema's</h3>
                     <Icon>chevron_right</Icon>
                 </a>
             </div>
