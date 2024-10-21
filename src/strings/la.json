@@ -17,6 +17,7 @@
         "Agenda": "Index temporum",
         "To Do": "Ad Facendum",
         "Lijst": "Index",
+        "Inzicht": "Inzicht",
         "Afwezigheid": "Absentia",
         "Cijfers": "Numeri",
         "Laatste cijfers": "Numeri priores",
@@ -155,7 +156,7 @@
         "subjectPrompt": "Intra buxum nomen",
         "hideStudyguide": "Studiewijzer verbergen",
         "hidden": "Occultus",
-        "periodN": "Tempus {period}",
+        "periodN": "Tempus {periodOrdinal}",
         "periodMissing": "Nulla tempus"
     }
 }
