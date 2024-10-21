@@ -3,7 +3,7 @@
         "logs": "Libres factorum",
         "activities": "Actiones",
         "messages": "Missa",
-        "homework": "Opus domum ",
+        "homework": "Opus domum",
         "assignments": "Iussus",
         "grades": "Numeri",
         "digitalClock": "Horologium disciplinum innovatio",
@@ -43,46 +43,47 @@
     },
     "chips": {
         "cancelled": "Expiratum",
-        "hw": "Opus domum ",
+        "hw": "Opus domum",
         "pw": "Opus temptationi",
-        "prelim": "Tentamen",
+        "prelim": "Exam",
         "so": "SO",
+        "mo": "MO",
         "kwt": "Tempus Deligendi Opus",
         "kwtregistered": "Deditum",
-        "info": "Informatie",
-        "important": "Belangrijk",
-        "attachments": "Bijlagen",
-        "graded": "Beoordeeld",
+        "info": "Informationes",
+        "important": "Maximus",
+        "attachments": "Attachiamenta",
+        "graded": "Certum",
         "exam": "Ultima Examinatio"
     },
     "dates": {
         "day": "Dies",
-        "nDays": "{num} dagen",
-        "week": "Week",
-        "workweek": "Werkweek",
+        "nDays": "{num} Ad auroram",
+        "week": "Hebdomada",
+        "workweek": "Opus septimana",
         "now": "nunc",
         "nowBrief": "nunc",
-        "justNow": "zojuist",
-        "soon": "zometeen",
-        "fewMinsAgo": "een paar minuten geleden",
-        "todayAtTime": "vandaag om {time}",
-        "today": "vandaag",
-        "yesterdayAtTime": "gisteren om {time}",
-        "yesterday": "gisteren",
-        "lastWeekday": "afgelopen {weekday}",
-        "tomorrowAtTime": "morgen om {time}",
-        "tomorrow": "morgen",
-        "weekdayAtTime": "{weekday} om {time}",
-        "nextWeekday": "komende {weekday}",
-        "weekdayInWeek": "week {week}, {weekday}",
+        "justNow": "modo",
+        "soon": "in momento",
+        "fewMinsAgo": "a pauci minutes ago",
+        "todayAtTime": "hodie at {time}",
+        "today": "hodie",
+        "yesterdayAtTime": "heri ad {time}",
+        "yesterday": "heri",
+        "lastWeekday": "ultima {weekday}",
+        "tomorrowAtTime": "cras ad {time}",
+        "tomorrow": "cras",
+        "weekdayAtTime": "{weekday} ad {time}",
+        "nextWeekday": "altera {weekday}",
+        "weekdayInWeek": "septimana {week}, {weekday}",
         "weekdays": [
-            "zondag",
-            "maandag",
-            "dinsdag",
-            "woensdag",
-            "donderdag",
-            "vrijdag",
-            "zaterdag"
+            "solis",
+            "lunae",
+            "martis",
+            "mercurii",
+            "iovis",
+            "veneris",
+            "saturni"
         ]
     },
     "greetings": {
@@ -94,12 +95,12 @@
         "generic": "Welkom#;Hallo!;Welkom terug, %n#;Hey, %n#;Welkom terug#;Goedendag#"
     },
     "toasts": {
-        "jumpedToDate": "Gesprongen naar {date}"
+        "jumpedToDate": "Desiluit to {date}"
     },
     "close": "Sluiten",
     "remainder": "Overige",
-    "Inklappen": "Inklappen",
-    "Verborgen": "Verborgen",
+    "Inklappen": "Collapse",
+    "Verborgen": "Occultus",
     "Lijst": "Index",
     "Tegel": "Tegel",
     "scaleUp": "Schaal vergroten",
@@ -127,15 +128,15 @@
     "noEventsToday": "Geen afspraken vandaag",
     "noEventsUntilDate": "Geen afspraken\n(tot in elk geval {date})",
     "error": "Er is iets misgegaan",
-    "loading": "Laden...",
-    "loadingWidgets": "Widgets laden...",
-    "loadingWidget": "Widget '{title}' laden...",
+    "loading": "Loading...",
+    "loadingWidgets": "Onus contenta...",
+    "loadingWidget": "Onus '{title}' content...",
     "hb": {
-        "title": "Aanbevelingen",
+        "title": "Commendationes",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
     },
     "cc": {
-        "title": "Cijfercalculator"
+        "title": "Numerus calculator"
     },
     "cb": {
         "title": "Cijferback-up"
@@ -147,14 +148,14 @@
         "subjects": "Vakken"
     },
     "sw": {
-        "searchPlaceholder": "Zoeken",
+        "searchPlaceholder": "Ad quaerere",
         "showHiddenItems": "Verborgen items",
         "customSubject": "Ander vak...",
         "autoSubject": "Vak intelligent afleiden",
-        "subjectPrompt": "Geef de naam van het vak op",
+        "subjectPrompt": "Intra buxum nomen",
         "hideStudyguide": "Studiewijzer verbergen",
-        "hidden": "Verborgen",
-        "periodN": "Periode {period}",
-        "periodMissing": "Geen periode"
+        "hidden": "Occultus",
+        "periodN": "Tempus {period}",
+        "periodMissing": "Nulla tempus"
     }
 }

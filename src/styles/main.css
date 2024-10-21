@@ -599,7 +599,7 @@ dialog.st-modal[open]::backdrop {
     text-align: center;
     pointer-events: none;
     z-index: 1000;
-    animation: ghostUp 1000ms both;
+    animation: opacityOut 200ms 200ms both;
 }
 
 .st-aside-sheet {
@@ -624,22 +624,6 @@ dialog.st-modal[open]::backdrop {
 
 .st-aside-sheet[data-visible=true] {
     display: flex;
-}
-
-@keyframes ghostUp {
-    0% {
-        opacity: 0;
-        translate: 0 -32px;
-    }
-
-    50% {
-        opacity: .5;
-    }
-
-    100% {
-        opacity: 0;
-        translate: 0 -96px;
-    }
 }
 
 .st-progress-bar {
@@ -1384,6 +1368,12 @@ a.st-keyboard-hint.clicked {
 
 @keyframes opacityIn {
     0% {
+        opacity: 0;
+    }
+}
+
+@keyframes opacityOut {
+    100% {
         opacity: 0;
     }
 }

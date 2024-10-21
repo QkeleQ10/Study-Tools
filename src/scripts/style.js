@@ -274,6 +274,7 @@ body>.container {
     grid-area: appbar;
     height: 100vh;
     max-height: 100vh;
+    z-index: 1;
 }
 
 mg-feedback-dialog {

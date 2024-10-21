@@ -256,7 +256,7 @@
     height: 1px;
     padding-bottom: 64px;
     border-top: 1px solid var(--st-foreground-accent);
-    z-index: 0;
+    z-index: -1;
     pointer-events: none;
 }
 

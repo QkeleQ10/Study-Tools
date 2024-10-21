@@ -45,8 +45,9 @@
         "cancelled": "Abgesagt",
         "hw": "Hausaufgaben",
         "pw": "Prüfung",
-        "prelim": "Tentamen",
+        "prelim": "Prüfung",
         "so": "SO",
+        "mo": "MO",
         "kwt": "Wahl",
         "kwtregistered": "Angemeldet",
         "info": "Information",
@@ -66,14 +67,14 @@
         "soon": "in einem Moment",
         "fewMinsAgo": "vor ein paar Minuten",
         "todayAtTime": "Heute um {time}",
-        "today": "vandaag",
+        "today": "heute",
         "yesterdayAtTime": "Gestern um {time}",
-        "yesterday": "gisteren",
+        "yesterday": "gestern",
         "lastWeekday": "Letzten {weekday}",
         "tomorrowAtTime": "Morgen um {time}",
         "tomorrow": "morgen",
         "weekdayAtTime": "{weekday} um {time}",
-        "nextWeekday": "komende {weekday}",
+        "nextWeekday": "nächsten {weekday}",
         "weekdayInWeek": "{weekday} der Woche {week}",
         "weekdays": [
             "Sonntag",
@@ -94,7 +95,7 @@
         "generic": "Willkommen#; Hallo!; Willkommen zurück, %n#; Hey, %n#; Willkommen zurück#; Guten Tag"
     },
     "toasts": {
-        "jumpedToDate": "Gesprongen naar {date}"
+        "jumpedToDate": "Gesprungen auf {date}"
     },
     "close": "Schließen",
     "remainder": "Weitere",

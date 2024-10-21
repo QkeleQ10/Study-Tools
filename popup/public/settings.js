@@ -370,6 +370,10 @@ export default [
                         title: "Deutsch"
                     },
                     {
+                        value: "sv-SE",
+                        title: "Svenska"
+                    },
+                    {
                         value: "la-LA",
                         title: "Latina lingua"
                     },

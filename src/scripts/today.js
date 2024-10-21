@@ -285,8 +285,8 @@ async function today() {
             document.querySelector('#st-start-ticks-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
             document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
             if (source) {
-                let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${Math.round(zoomSetting * 100)}%`, style: `top: ${source.getBoundingClientRect().top}px; left: ${source.getBoundingClientRect().left}px;` })
-                setTimeout(() => ghost.remove(), 1000)
+                let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${Math.round(zoomSetting * 100)}%`, style: `top: ${source.getBoundingClientRect().top - 24}px; left: ${source.getBoundingClientRect().left}px;` })
+                setTimeout(() => ghost.remove(), 400)
             }
         }
 
@@ -547,7 +547,7 @@ async function today() {
                     if (egg && egg.type === 'dialog') {
                         eventElement.addEventListener('click', () => notify('dialog', egg.output))
                     } else {
-                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
+                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/${item.Type === 1 || item.Type === 16 ? 'afspraak' : 'huiswerk'}/${item.Id}?returnUrl=%252Fvandaag`)
                     }
 
                     // Parse and array-ify the subjects, the teachers and the locations
@@ -558,7 +558,7 @@ async function today() {
                     let teacherNames = item.Docenten?.map((e, i, a) => {
                         return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
                     }) || []
-                    let locationNames =  [item.Lokatie] || item.Lokalen?.map(e => e.Naam)
+                    let locationNames = [item.Lokatie] || item.Lokalen?.map(e => e.Naam)
                     if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
                     if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
 
@@ -568,12 +568,10 @@ async function today() {
                     if (item.Type === 1) {
                         eventSchoolHours.classList.add('icon')
                         eventSchoolHours.innerText = '' // Icon: user-lock
-                    }
-                    if (item.Type === 16) {
+                    } else if (item.Type === 16) {
                         eventSchoolHours.classList.add('icon')
                         eventSchoolHours.innerText = '' // Icon: user-edit
-                    }
-                    if (!eventSchoolHours.innerText) {
+                    } else if (!eventSchoolHours.innerText) {
                         eventSchoolHours.classList.add('icon')
                         eventSchoolHours.innerText = '' // Icon: calendar-day
                     }
@@ -702,6 +700,7 @@ async function today() {
                 title: i18n('widgets.logs'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Logboeken'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -728,6 +727,7 @@ async function today() {
                 title: i18n('widgets.activities'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Activiteiten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -753,6 +753,7 @@ async function today() {
             grades: {
                 title: i18n('widgets.grades'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Cijfers'],
                 options: [
                     {
                         title: "Automatisch rouleren",
@@ -798,8 +799,10 @@ async function today() {
 
                         let grades = await MagisterApi.grades.recent()
                             .catch(() => { return reject() })
-                        let assignments = await MagisterApi.assignments.top()
-                            .catch(() => { return reject() })
+                        let assignments = magisterApiPermissions.includes('EloOpdracht')
+                            ? await MagisterApi.assignments.top()
+                                .catch(() => { return reject() })
+                            : []
 
                         if (placeholder) MagisterApi.useSampleData = false
 
@@ -951,6 +954,7 @@ async function today() {
                 title: i18n('widgets.messages'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Berichten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -1000,6 +1004,7 @@ async function today() {
                 title: i18n('widgets.homework'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Afspraken'],
                 options: [
                     {
                         title: "Afgeronde items tonen",
@@ -1079,6 +1084,7 @@ async function today() {
                 title: i18n('widgets.assignments'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['EloOpdracht'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -1131,6 +1137,7 @@ async function today() {
                 title: i18n('widgets.digitalClock'),
                 disclaimer: i18n('widgetClockDisclaimer'),
                 types: ['Verborgen', 'Tegel', 'Lijst'],
+                requiredPermissions: [],
                 options: [
                     {
                         title: "Seconden tonen",
@@ -1153,7 +1160,6 @@ async function today() {
                         const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
 
                         const widgetElement = element(placeholder ? 'div' : 'button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" })
-                        const timeDisclaimer = element('p', 'st-start-widget-digital-clock-disclaimer', widgetElement, { 'data-temporal-type': 'current-time-disclaimer' })
                         const timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
                             'data-temporal-type': secondsOption === 'show'
                                 ? 'current-time-long'
@@ -1235,9 +1241,12 @@ async function today() {
             }
         }
 
+        // Ensure the user permission flags are up-to-date
+        await MagisterApi.accountInfo()
+
         // Draw the selected widgets in the specified order
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key]) continue
+            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApiPermissions?.includes(p))) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
                 syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
@@ -1285,7 +1294,8 @@ async function today() {
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key]) continue
+            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApiPermissions?.includes(p))) continue
+
             if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
                 const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })
 
