@@ -58,10 +58,10 @@
         "exam": "Slutprov"
     },
     "dates": {
-        "day": "1 dag",
+        "day": "Dag",
         "nDays": "{num} dagar",
-        "week": "1 vecka",
-        "workweek": "1 arbetsvecka",
+        "week": "Vecka",
+        "workweek": "Arbetsvecka",
         "now": "nu",
         "nowBrief": "nu",
         "justNow": "nyss",
