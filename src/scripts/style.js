@@ -407,7 +407,9 @@ div.loading-overlay>div:before {
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
 .k-calendar .k-header .k-state-hover,
-.column-container li.selected, .column-container li.checked {
+.column-container li.selected, .column-container li.checked,
+.k-treeview .k-in.k-state-selected>a, .k-treeview .k-in.k-state-selected.k-state-focused>a, .k-treeview .k-in.k-state-selected .k-state-focused>a,
+.k-treeview .k-in.k-state-hover>a, .k-treeview .k-in.k-state-focused>a, .k-treeview .k-in.k-state-selected:hover>a {
     background: var(--st-highlight-primary) !important;
     background-color: var(--st-highlight-primary) !important
 }
@@ -558,7 +560,8 @@ form input[type=text], form input[type=password], form input[type=search], form 
 .k-editor .k-content,
 .k-editable-area,
 .k-list-container, html body .k-popup.k-list-container .k-item,
-.k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label {
+.k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label,
+.k-treeview .k-treeview-lines, .k-grid-header .k-link:link, .k-grid-header .k-link:visited, .k-grid-header .k-nav-current.k-state-hover .k-link, .k-grouping-header .k-link {
     background-color: var(--st-background-secondary) !important;
     color: var(--st-foreground-primary);
 }
@@ -645,7 +648,13 @@ form input[type=text], form input[type=password], form input[type=search], form 
 
 table:not(.clearfix.user-content table),
 table.table-grid-layout td,
-.ngGrid {
+.ngGrid,
+#profiel-container .content,
+div.profile-content,
+span.datetime-label, 
+.block h3+div h3,
+.main div.multi-columns .col, .main div.multi-columns .col-noprint,
+.sm-grid.k-grid .k-grid-header th.k-header {
     background: transparent !important;
     color: var(--st-foreground-primary);
     border-color: var(--st-border-color) !important
@@ -686,7 +695,9 @@ html body .k-popup.k-list-container .k-item,
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
 .attachment-bar, .attachments,
-.block h3 {
+.block h3,
+.k-treeview .k-treeview-lines,
+.k-treeview-lines li {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -1126,14 +1137,17 @@ aside .tabs:has(li.st-tab.active) li.active:after {
     translate: -50% 1px;
 }
 
-aside .tabs li a {
-    line-height: normal;
+aside .tabs li a, aside .tabs li.double-line-title>a {
     height: 40px;
+    margin-top: 0;
+    padding-block: 0;
+    padding-inline: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    text-wrap: nowrap;
+    line-height: normal;
+    text-wrap: balance;
+    overflow-wrap: break-word;
     text-overflow: ellipsis;
 }
 
@@ -1200,7 +1214,7 @@ dna-card {
     --box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
 }
 
-.container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
+.container > dna-breadcrumbs, .container dna-breadcrumbs, .container > dna-page-header, .container dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
     --title-font: var(--st-font-hero);
     --color: var(--st-foreground-accent);
@@ -1312,37 +1326,34 @@ footer.endlink {
     border-top: none !important;
 }
 
-.icon-down-arrow:before, .icon-up-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
-    content: '' !important;
+.icon-up-arrow:before, .icon-down-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
+    content: '' !important;
     font: 400 24px/44px "Font Awesome 6 Pro" !important;
-    transition: rotate 200ms, translate 200ms;
+    transition: transform 200ms, rotate 200ms, translate 200ms;
 }
 
-.icon-up-arrow:before {
+#profiel-container .icon-up-arrow:before, #profiel-container .icon-down-arrow:before {
     rotate: 180deg;
 }
 
-.block.fold .icon-up-arrow:before {
-    rotate: 0deg;
+.icon-down-arrow:before {
+    transform: rotateX(180deg);
 }
 
 .icon-up-arrow.prev:before, .k-calendar .k-header .k-i-arrow-w:after {
-    rotate: 90deg;
-}
-
-.icon-up-arrow.next:before, .k-calendar .k-header .k-i-arrow-e:after {
     rotate: -90deg;
 }
 
-.studiewijzer-onderdeel:has(h3 b:active, .icon-down-arrow:active) .icon-down-arrow:before,
-h3:active> .icon-down-arrow:before,
-.block.fold .icon-up-arrow:active:before {
-    translate: 0 6px;
+.icon-up-arrow.next:before, .k-calendar .k-header .k-i-arrow-e:after {
+    rotate: 90deg;
 }
 
-.studiewijzer-onderdeel:has(h3 b:active, .icon-up-arrow:active) .icon-up-arrow:before,
-h3:active> .icon-up-arrow:before {
+h3:active > .icon-up-arrow:before, #profiel-container h3:active > .icon-down-arrow:before {
     translate: 0 -6px;
+}
+
+h3:active > .icon-down-arrow:before, #profiel-container h3:active > .icon-up-arrow:before {
+    translate: 0 6px;
 }
 
 .icon-up-arrow.prev:active:before, .k-calendar .k-header .k-i-arrow-w:active:after {

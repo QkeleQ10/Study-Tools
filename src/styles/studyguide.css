@@ -21,7 +21,7 @@
     position: absolute;
     top: 70px;
     right: 25px;
-    z-index: 2;
+    z-index: 1000;
 }
 
 .st-sw-item.hidden,

@@ -528,90 +528,83 @@ async function today() {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, column, {
-                        class: 'st-start-event',
-                        'data-2nd': item.Omschrijving,
+                    const eventWrapperEl = element('div', `st-event-${item.Id}-wrapper`, column, {
+                        class: 'st-event-wrapper',
                         'data-temporal-type': 'ongoing-check',
                         'data-temporal-start': item.Start,
                         'data-temporal-end': item.Einde,
-                        'data-start-connecting': day.events.some(el => el.Einde === item.Start),
-                        'data-end-connecting': day.events.some(el => el.Start === item.Einde),
-                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
+                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length}; --st-brm-top-left: ${day.events.some(el => el.Einde === item.Start) ? 0 : 0.75}; --st-brm-top-right: ${day.events.some(el => el.Einde === item.Start) ? 0 : 0.75}; --st-brm-bottom-left: ${day.events.some(el => el.Start === item.Einde) ? 0 : 0.75}; --st-brm-bottom-right: ${day.events.some(el => el.Start === item.Einde) ? 0 : 0.75}`
+                    })
+                    const eventEl = element('div', `st-event-${item.Id}`, eventWrapperEl, {
+                        class: 'st-event',
                         title: [
                             item.Omschrijving || 'Geen omschrijving',
                             item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie',
                             item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime()
                         ].join('\n')
                     })
-                    let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
-                    if (egg && egg.type === 'dialog') {
-                        eventElement.addEventListener('click', () => notify('dialog', egg.output))
-                    } else {
-                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/${item.Type === 1 || item.Type === 16 ? 'afspraak' : 'huiswerk'}/${item.Id}?returnUrl=%252Fvandaag`)
-                    }
 
-                    // Parse and array-ify the subjects, the teachers and the locations
-                    let subjectNames = item.Vakken?.map((e, i, a) => {
+                    // Event click handler
+                    eventWrapperEl.addEventListener('click', () => window.location.hash = `#/agenda/${(item.Type === 1 || item.Type === 16) ? 'afspraak' : 'huiswerk'}/${item.Id}?returnUrl=%252Fvandaag`)
+
+                    // Parse the subject, teacher and location fields
+                    let eventSubjects = (item.Vakken?.map((e, i, a) => {
                         if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
                         return e.Naam
-                    }) || [item.Omschrijving]
-                    let teacherNames = item.Docenten?.map((e, i, a) => {
+                    }) || []).join(', ')
+                    if (!eventSubjects?.length > 0) eventSubjects = item.Omschrijving
+                    let eventTeachers = (item.Docenten?.map((e, i, a) => {
                         return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
-                    }) || []
-                    let locationNames = [item.Lokatie] || item.Lokalen?.map(e => e.Naam)
-                    if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
-                    if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
+                    }) || []).join(', ')
+                    let eventLocation = item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ')
 
-                    // Render the school hour label
-                    let schoolHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
-                    let eventSchoolHours = element('div', `st-start-event-${item.Id}-school-hours`, eventElement, { class: 'st-start-event-school-hours', innerText: schoolHours })
+                    // Draw the school hour label
+                    let eventHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
+                    const eventNumberEl = element('div', `st-event-${item.Id}-school-hours`, eventEl, { class: 'st-event-number', innerText: eventHours })
                     if (item.Type === 1) {
-                        eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = '' // Icon: user-lock
+                        eventNumberEl.classList.add('icon')
+                        eventNumberEl.innerText = '' // Icon: user-lock
                     } else if (item.Type === 16) {
-                        eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = '' // Icon: user-edit
-                    } else if (!eventSchoolHours.innerText) {
-                        eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = '' // Icon: calendar-day
+                        eventNumberEl.classList.add('icon')
+                        eventNumberEl.innerText = '' // Icon: user-edit
+                    } else if (!eventNumberEl.innerText) {
+                        eventNumberEl.classList.add('icon')
+                        eventNumberEl.innerText = '' // Icon: calendar-day
                     }
 
                     // Cancelled label
                     if (item.Status == 4 || item.Status == 5) {
-                        eventElement.classList.add('cancelled')
-                        element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
+                        eventWrapperEl.dataset.cancelled = true
                     }
 
-                    // Render the subject and location label
+                    // Draw the event details
+                    const eventDetailsEl = element('div', `st-event-${item.Id}-details`, eventEl, {
+                        class: 'st-event-details'
+                    })
+                    const eventTitleWrapperEl = element('span', `st-event-${item.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
                     if (listViewEnabled) {
-                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject st-bold', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
+                        element('b', null, eventTitleWrapperEl, { innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
-                        let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject' })
-                        let eventSubject = element('b', null, eventSubjectWrapper, { class: 'st-bold', innerText: subjectNames.join(', ') })
-                        if (locationNames?.join(', ')?.length > 0) {
-                            let eventLocation = document.createTextNode('  (' + locationNames.join(', ') + ')')
-                            eventSubjectWrapper.appendChild(eventLocation)
-                        }
+                        element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
+                        if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
                     }
-
-                    let row = element('div', `st-start-event-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
 
                     // Render the teacher label
-                    if (!listViewEnabled && item.Docenten[0]) {
-                        let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, row, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
-                        if (eventTeacher.innerText.includes('jeb_')) eventTeacher.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
-                        if (eventTeacher.innerText.includes('dinnerbone')) eventTeacher.style.scale = '1 -1'
+                    if (!listViewEnabled && eventTeachers?.length > 0) {
+                        const eventTeacherEl = element('span', `st-event-${item.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
+                        if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+                        if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
                     }
 
                     // Render the time label
-                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
+                    element('span', `st-event-${item.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
 
                     // Parse and render any chips
                     let chips = getEventChips(item)
 
-                    let eventChipsWrapper = element('div', `st-start-event-${item.Id}-chips`, eventElement, { class: 'st-chips-wrapper' })
+                    const eventChipsWrapperEl = element('div', `st-event-${item.Id}-chips`, eventEl, { class: 'st-event-chips st-chips-wrapper' })
                     chips.forEach(chip => {
-                        let chipElement = element('span', `st-start-event-${item.Id}-chip-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        let chipElement = element('span', `st-event-${item.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                     })
                 })
 
@@ -634,8 +627,8 @@ async function today() {
                 // Ensure a nice scrolling position if the date shown is not today
                 if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day')) && !agendaDayOffsetChanged) {
                     schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                    if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
-                    if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                    if (column.querySelector('.st-event:last-of-type')) column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
+                    if (column.querySelector('.st-event')) column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
                     schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                 }
 
@@ -646,8 +639,8 @@ async function today() {
                     updateTemporalBindings()
                     if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day'))) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                        if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
-                        if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                        if (column.querySelector('.st-event:last-of-type')) column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
+                        if (column.querySelector('.st-event')) column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
                         currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
                         schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                     }

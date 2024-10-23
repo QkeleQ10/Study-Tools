@@ -339,15 +339,6 @@ dialog.st-modal[open]::backdrop {
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);
-    /* background-color: var(--background-color); */
-    /* box-shadow: 0 0 12px 12px var(--background-color); */
-}
-
-.st-start-event .st-chips-wrapper {
-    flex-direction: column;
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
 }
 
 .st-chips-wrapper:empty {
