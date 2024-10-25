@@ -257,7 +257,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
         handleSpecialTheme('valentine')
     }
     // Halloween mode
-    if (now.getMonth() === 9 && now.getDate() === 25) {
+    if (now.getMonth() === 9 && now.getDate() === 31) {
         if (await getFromStorage('no-special-decorations', 'session') !== 'halloween') {
             const audio = new Audio(`https://www.myinstants.com/media/sounds/${['thunder-sound-effect', 'thunder-crack'].random()}.mp3`)
             setTimeout(() => audio.play(), 9800)
