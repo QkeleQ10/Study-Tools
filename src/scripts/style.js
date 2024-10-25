@@ -1,4 +1,5 @@
-let currentTheme
+let currentTheme,
+    updateSteps = []
 
 // Apply the styles instantly,
 // and whenever the settings change
@@ -67,8 +68,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-background-primary: #121212;
     --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#0c0c0caa' : '#151515'};
     --st-background-tertiary: #0c0c0c;
-    --st-background-overlay: #121212f7;
-    --st-background-transparent: #121212bb;
     --st-background-overlaid: #00000030;
     --st-highlight-primary: ${shiftedHslColor(207, 33, 20, color.h, color.s, color.l, undefined, undefined, 10)};
     --st-highlight-subtle: #181f24;
@@ -82,7 +81,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-border-color: #2e2e2eaa;
     --st-accent-primary: ${shiftedHslColor(207, 73, 30, color.h, color.s, color.l)};
     --st-accent-primary-dark: ${shiftedHslColor(207, 73, 22, color.h, color.s, color.l)};
-    --st-accent-tertiary: ${shiftedHslColor(207, 73, 26, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #4ea3e9;
@@ -116,8 +114,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-background-primary: #ffffff;
     --st-background-secondary: ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') ? '#ffffffaa' : '#ffffff'};
     --st-background-tertiary: #fafafa;
-    --st-background-overlay: #fffffff7;
-    --st-background-transparent: #ffffffbb;
     --st-background-overlaid: #12121210;
     --st-highlight-primary: ${shiftedHslColor(207, 85, 82, color.h, color.s, color.l, undefined, undefined, 96)};
     --st-highlight-subtle: #f2f9ff;
@@ -131,7 +127,6 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-border-color: #dfdfdfaa;
     --st-accent-primary: ${shiftedHslColor(207, 95, 55, color.h, color.s, color.l)};
     --st-accent-primary-dark: ${shiftedHslColor(207, 95, 47, color.h, color.s, color.l)};
-    --st-accent-tertiary: ${shiftedHslColor(207, 95, 51, color.h, color.s, color.l)};
     --st-accent-ok: #339e7c;
     --st-accent-warn: #e94f4f;
     --st-accent-info: #4ea3e9;
@@ -167,11 +162,14 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     if (verbose) console.info(`STYLE START with theme ${currentTheme.join(', ')}`)
 
     const rootVarsGeneral = `
-    --st-font-primary: 600 16px/44px 'arboria', sans-serif;
     --st-font-family-primary: 'arboria', sans-serif;
+    --st-font-primary: 600 16px/44px var(--st-font-family-primary);
+    --st-font-hero: 700 28px/2rem var(--st-font-family-primary);
     --st-font-family-secondary: 'open-sans', sans-serif;
     --st-border: 1px solid var(--st-border-color);
     --st-border-radius: ${syncedStorage.shape}px;
+    --st-background-overlay: hsl(from var(--st-background-primary) h s l / 0.97);
+    --st-background-transparent: hsl(from var(--st-background-primary) h s l / 0.73);
     --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%), color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%));`
 
     const rootVarsInvert = `
@@ -254,13 +252,23 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     }
     decorations()
 
+    // Valentine's day mode
+    if (now.getMonth() === 1 && now.getDate() === 14) {
+        handleSpecialTheme('valentine')
+    }
+    // Halloween mode
+    if (now.getMonth() === 9 && now.getDate() === 25) {
+        if (await getFromStorage('no-special-decorations', 'session') !== 'halloween') {
+            const audio = new Audio(`https://www.myinstants.com/media/sounds/${['thunder-sound-effect', 'thunder-crack'].random()}.mp3`)
+            setTimeout(() => audio.play(), 9800)
+            setTimeout(() => {
+                handleSpecialTheme('halloween', `:root{--st-page-wallpaper:var(--st-page-wallpaper-overlay),url(https://www.creativefabrica.com/wp-content/uploads/2023/09/01/gothic-halloween-wallpaper-Graphics-78301451-1.jpg)!important}html{animation:1s flash}.menu-host{background-image:none}@keyframes flash{0%,15%{filter:blur(10px)}10%{filter:brightness(5) blur(10px)}20%{filter:brightness(10) blur(10px)}100%{filter:none}}`, 'dark', { h: 22, s: 85, l: 60 })
+            }, 10000)
+        }
+    }
     // Christmas mode
     if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {
         handleSpecialTheme('christmas')
-    }
-    // Valentine's day mode
-    if (now.getMonth() === 1 && [14].includes(now.getDate())) {
-        handleSpecialTheme('valentine')
     }
 
     createStyle(`
@@ -276,6 +284,7 @@ body>.container {
     grid-area: appbar;
     height: 100vh;
     max-height: 100vh;
+    z-index: 1;
 }
 
 mg-feedback-dialog {
@@ -357,6 +366,7 @@ input[type=switch]+label span,
 
 div.loading-overlay {
     background: radial-gradient(at -150% -50%, var(--st-highlight-primary), transparent), radial-gradient(at top right, var(--st-background-primary), var(--st-background-tertiary)) !important;
+    z-index: 200;
 }
 
 div.loading-overlay * {
@@ -368,7 +378,7 @@ div.loading-overlay>div:before {
     color: var(--st-foreground-primary) !important;
 }
 
-#cijferoverzichtgrid, .afsprakenlijst-container .main>.content-container, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid, .tech-info {
+#cijferoverzichtgrid, .sm-grid.k-grid .k-grid-content tbody, .sm-grid.k-grid, .tech-info {
     background: transparent !important;
     border-color: var(--st-border-color) !important;
 }
@@ -407,7 +417,9 @@ div.loading-overlay>div:before {
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
 .k-calendar .k-header .k-state-hover,
-.column-container li.selected, .column-container li.checked {
+.column-container li.selected, .column-container li.checked,
+.k-treeview .k-in.k-state-selected>a, .k-treeview .k-in.k-state-selected.k-state-focused>a, .k-treeview .k-in.k-state-selected .k-state-focused>a,
+.k-treeview .k-in.k-state-hover>a, .k-treeview .k-in.k-state-focused>a, .k-treeview .k-in.k-state-selected:hover>a {
     background: var(--st-highlight-primary) !important;
     background-color: var(--st-highlight-primary) !important
 }
@@ -558,7 +570,8 @@ form input[type=text], form input[type=password], form input[type=search], form 
 .k-editor .k-content,
 .k-editable-area,
 .k-list-container, html body .k-popup.k-list-container .k-item,
-.k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label {
+.k-calendar thead th, .k-calendar .k-header *, .column-container h3, #bronnen-container .bronnen-quota-label,
+.k-treeview .k-treeview-lines, .k-grid-header .k-link:link, .k-grid-header .k-link:visited, .k-grid-header .k-nav-current.k-state-hover .k-link, .k-grouping-header .k-link {
     background-color: var(--st-background-secondary) !important;
     color: var(--st-foreground-primary);
 }
@@ -645,7 +658,13 @@ form input[type=text], form input[type=password], form input[type=search], form 
 
 table:not(.clearfix.user-content table),
 table.table-grid-layout td,
-.ngGrid {
+.ngGrid,
+#profiel-container .content,
+div.profile-content,
+span.datetime-label, 
+.block h3+div h3,
+.main div.multi-columns .col, .main div.multi-columns .col-noprint,
+.sm-grid.k-grid .k-grid-header th.k-header {
     background: transparent !important;
     color: var(--st-foreground-primary);
     border-color: var(--st-border-color) !important
@@ -686,7 +705,9 @@ html body .k-popup.k-list-container .k-item,
 .k-calendar td.range-select,
 .k-calendar .k-content tbody td.k-other-month.k-state-hover, .k-calendar .k-content tbody td.k-state-focused, .k-calendar .k-content tbody td.k-state-hover, .k-calendar .k-content tbody td.k-state-selected,
 .attachment-bar, .attachments,
-.block h3 {
+.block h3,
+.k-treeview .k-treeview-lines,
+.k-treeview-lines li {
     border-color: var(--st-border-color) !important;
     outline-color: var(--st-border-color) !important
 }
@@ -857,8 +878,9 @@ span.nrblock,
     left: 2px
 }
 
-.menu-footer {
+.menu-footer, .afsprakenlijst-container .main>.content-container {
     background-color: transparent;
+    border-color: var(--st-border-color);
     border-top: none;
 }
 
@@ -1007,7 +1029,7 @@ aside, aside .block,
     translate: -90px -30px;
     background: #0000ff;
     padding: 16px;
-    z-index: 99999998;
+    z-index: 1000;
     animation: moveX 4s linear 0s infinite alternate, moveY 6.8s linear 0s infinite alternate, rainbow 5s linear 0s infinite;
 }
 
@@ -1125,14 +1147,17 @@ aside .tabs:has(li.st-tab.active) li.active:after {
     translate: -50% 1px;
 }
 
-aside .tabs li a {
-    line-height: normal;
+aside .tabs li a, aside .tabs li.double-line-title>a {
     height: 40px;
+    margin-top: 0;
+    padding-block: 0;
+    padding-inline: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    text-wrap: nowrap;
+    line-height: normal;
+    text-wrap: balance;
+    overflow-wrap: break-word;
     text-overflow: ellipsis;
 }
 
@@ -1199,8 +1224,9 @@ dna-card {
     --box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
 }
 
-.container > dna-breadcrumbs, .container > dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
+.container > dna-breadcrumbs, .container dna-breadcrumbs, .container > dna-page-header, .container dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
+    --title-font: var(--st-font-hero);
     --color: var(--st-foreground-accent);
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);
@@ -1310,37 +1336,34 @@ footer.endlink {
     border-top: none !important;
 }
 
-.icon-down-arrow:before, .icon-up-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
-    content: '' !important;
+.icon-up-arrow:before, .icon-down-arrow:before, .k-calendar .k-header .k-i-arrow-w:after, .k-calendar .k-header .k-i-arrow-e:after {
+    content: '' !important;
     font: 400 24px/44px "Font Awesome 6 Pro" !important;
-    transition: rotate 200ms, translate 200ms;
+    transition: transform 200ms, rotate 200ms, translate 200ms;
 }
 
-.icon-up-arrow:before {
+#profiel-container .icon-up-arrow:before, #profiel-container .icon-down-arrow:before {
     rotate: 180deg;
 }
 
-.block.fold .icon-up-arrow:before {
-    rotate: 0deg;
+.icon-down-arrow:before {
+    transform: rotateX(180deg);
 }
 
 .icon-up-arrow.prev:before, .k-calendar .k-header .k-i-arrow-w:after {
-    rotate: 90deg;
-}
-
-.icon-up-arrow.next:before, .k-calendar .k-header .k-i-arrow-e:after {
     rotate: -90deg;
 }
 
-.studiewijzer-onderdeel:has(h3 b:active, .icon-down-arrow:active) .icon-down-arrow:before,
-h3:active> .icon-down-arrow:before,
-.block.fold .icon-up-arrow:active:before {
-    translate: 0 6px;
+.icon-up-arrow.next:before, .k-calendar .k-header .k-i-arrow-e:after {
+    rotate: 90deg;
 }
 
-.studiewijzer-onderdeel:has(h3 b:active, .icon-up-arrow:active) .icon-up-arrow:before,
-h3:active> .icon-up-arrow:before {
+h3:active > .icon-up-arrow:before, #profiel-container h3:active > .icon-down-arrow:before {
     translate: 0 -6px;
+}
+
+h3:active > .icon-down-arrow:before, #profiel-container h3:active > .icon-up-arrow:before {
+    translate: 0 6px;
 }
 
 .icon-up-arrow.prev:active:before, .k-calendar .k-header .k-i-arrow-w:active:after {
@@ -1600,7 +1623,7 @@ table.table-grid-layout>tbody>tr.selected {
     background-color: var(--st-background-transparent);
     opacity: 1;
     backdrop-filter: blur(3px);
-    z-index: 999999999999;
+    z-index: 10001;
 }
 
 .animation-container-loading.ng-cloak {
@@ -1706,7 +1729,6 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
 
     if (syncedStorage['custom-css']) {
         createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
-        const cssVarReferenceMatches = extractVariables(syncedStorage['custom-css'])
 
         function extractVariables(inputString) {
             const regex = /var\(--st-reference-(\w+)-([^\s)]+)\)/g
@@ -1723,15 +1745,22 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
             return result
         }
 
-        cssVarReferenceMatches.forEach(({ variable, property, selector }) => {
-            let interval = setInterval(update, 25)
-            setTimeout(() => clearInterval(interval), 3000)
-            window.addEventListener('resize', update)
+        updateSteps = []
+        extractVariables(syncedStorage['custom-css']).forEach(({ variable, property, selector }) => {
             document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('mouseup', update)
-            function update() {
-                document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px')
-            }
+            updateSteps.push(() => document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px'))
         })
+        if (getComputedStyle(document.body).getPropertyValue('--st-menu-collapse') === 'disallow') {
+            updateSteps.push(() => document.querySelector('.collapsed-menu')?.classList.remove('collapsed-menu'))
+            if (await awaitElement('.menu-host')) new MutationObserver(update).observe(document.querySelector('.menu-host'), { attributes: true })
+        }
+
+        let interval = setIntervalImmediately(update, 25)
+        setTimeout(() => clearInterval(interval), 3000)
+        window.addEventListener('resize', update)
+        function update() {
+            updateSteps.forEach(x => x())
+        }
     } else {
         createStyle('', 'study-tools-custom-css')
     }
@@ -1752,6 +1781,7 @@ ${currentTheme[0] === 'dark' ? '.no-selection-container object, .no-messages-con
     --primary: var(--st-accent-primary) !important;
     --background: var(--st-background-secondary) !important;
     --title-color: var(--st-foreground-accent) !important;
+    --title-font: var(--st-font-hero) !important;
     --separator-color: var(--st-foreground-accent) !important;
     --dna-background: var(--st-background-primary) !important;
     --dna-text-color-dark: var(--st-foreground-primary) !important;
@@ -1781,6 +1811,7 @@ app-bericht-details, html:root body dna-search-input {
 
 dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
+    --title-font: var(--st-font-hero);
     --color: var(--st-foreground-accent);
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);

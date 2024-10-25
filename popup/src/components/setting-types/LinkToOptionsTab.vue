@@ -32,6 +32,7 @@ button {
     background-color: transparent;
     border: none;
     border-bottom: 1px solid var(--color-surface-variant);
+    color: var(--color-on-surface);
     cursor: pointer;
 }
 </style>

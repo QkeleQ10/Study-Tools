@@ -8,7 +8,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 9999998;
+    z-index: 1001;
     display: grid;
     grid-template:
         'title buttons aside' auto
@@ -431,7 +431,7 @@
 
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
-    z-index: 999999;
+    z-index: 1001;
 }
 
 #st-cb-i[data-visible=true] {
@@ -480,7 +480,7 @@
 
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
-    z-index: 999999;
+    z-index: 1001;
 }
 
 #st-cs[data-visible=true] {
@@ -902,7 +902,7 @@
 }
 
 aside.st-appear-top {
-    z-index: 999999;
+    z-index: 1001;
     background: var(--st-background-secondary);
 }
 
@@ -916,7 +916,7 @@ aside.st-appear-top {
     overflow: hidden;
     pointer-events: none;
     scale: 1.2;
-    z-index: 10000000;
+    z-index: 1000;
     animation: ghost-create 100ms both;
     transition: top 300ms ease-in, right 300ms ease-in;
 }

@@ -8,9 +8,7 @@ let syncedStorage = {},
     verbose = false,
     apiUserId,
     apiUserToken,
-    apiCache = {},
-    timeOffset,
-    timeZoneDifference;
+    apiCache = {};
 
 let eggs = [],
     announcements = [],
@@ -22,10 +20,11 @@ let eggs = [],
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
-            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'la-LA'].includes(locale)) locale = 'nl-NL'
-            const req = await fetch(chrome.runtime.getURL(`_locales/${locale.split('-')[0]}/strings.json`))
+            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'sv-SE', 'la-LA'].includes(locale)) locale = 'nl-NL'
+            chrome.storage.sync.onChanged.addListener((changes) => { if (changes.language) window.location.reload() })
+            const req = await fetch(chrome.runtime.getURL(`src/strings/${locale.split('-')[0]}.json`))
             i18nData = await req.json()
-            const reqNl = await fetch(chrome.runtime.getURL(`_locales/nl/strings.json`))
+            const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`))
             i18nDataNl = await reqNl.json()
         }
 
@@ -190,104 +189,94 @@ Element.prototype.setAttributes = function (attributes) {
     }
 }
 
+function formatTimestamp(start, end, now, includeTime) {
+    now ??= new Date()
+    start ??= end ?? now
+    end ??= start ?? now
+    let timestamp = start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
+    if (start <= now && end >= now) {
+        // Start date is in the past and End date is in the future
+        i18n('dates.now')
+    } else if (start >= now) {
+        // Start date is in the future
+        if (start - now < minToMs(15)) timestamp =
+            i18n('dates.soon')
+        else if (start.isToday()) timestamp =
+            i18n(includeTime ? 'dates.todayAtTime' : 'dates.today', { time: start.getFormattedTime() })
+        else if (start.isTomorrow()) timestamp =
+            i18n(includeTime ? 'dates.tomorrowAtTime' : 'dates.tomorrow', { time: start.getFormattedTime() })
+        else if (start - now < daysToMs(5)) timestamp =
+            i18n(includeTime ? 'dates.weekdayAtTime' : 'dates.nextWeekday', { weekday: start.getFormattedDay(), time: start.getFormattedTime() })
+        else if (start - now < daysToMs(90)) timestamp =
+            i18n('dates.weekdayInWeek', { weekday: start.getFormattedDay(), week: start.getWeek() })
+        else timestamp =
+            start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    } else if (end <= now) {
+        // End date is in the past
+        if (now - end < minToMs(5)) timestamp =
+            i18n('dates.justNow')
+        else if (now - end < minToMs(15)) timestamp =
+            i18n('dates.fewMinsAgo')
+        else if (end.isToday()) timestamp =
+            i18n(includeTime ? 'dates.todayAtTime' : 'dates.today', { time: end.getFormattedTime() })
+        else if (end.isYesterday()) timestamp =
+            i18n(includeTime ? 'dates.yesterdayAtTime' : 'dates.yesterday', { time: end.getFormattedTime() })
+        else if (now - end < daysToMs(5)) timestamp =
+            i18n('dates.lastWeekday', { weekday: end.getFormattedDay() })
+        else if (now.getFullYear() !== end.getFullYear()) timestamp =
+            end.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    }
+
+    return timestamp
+}
+
 // Elements with a temporal binding are updated every second, or whenever the function is invoked manually.
 function updateTemporalBindings() {
     let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
     elementsWithTemporalBinding.forEach(element => {
 
-        let networkTime = new Date(new Date().getTime() + (timeOffset || 0)),
+        let now = new Date(),
             type = element.dataset.temporalType,
-            start = new Date(element.dataset.temporalStart || networkTime),
-            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || networkTime)
+            start = new Date(element.dataset.temporalStart || now),
+            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || now)
 
         switch (type) {
             case 'timestamp':
-                let timestamp = start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long' })
-                if (start <= networkTime && end >= networkTime) {
-                    // Start date is in the past and End date is in the future
-                    i18n('dates.now')
-                } else if (start >= networkTime) {
-                    // Start date is in the future
-                    if (start - networkTime < minToMs(15)) timestamp =
-                        i18n('dates.soon')
-                    else if (start.isToday()) timestamp =
-                        i18n('dates.todayAtTime', { time: start.getFormattedTime() })
-                    else if (start.isTomorrow()) timestamp =
-                        i18n('dates.tomorrowAtTime', { time: start.getFormattedTime() })
-                    else if (start - networkTime < daysToMs(5)) timestamp =
-                        i18n('dates.weekdayAtTime', { weekday: start.getFormattedDay(), time: start.getFormattedTime() })
-                    else if (start - networkTime < daysToMs(90)) timestamp =
-                        i18n('dates.weekdayInWeek', { weekday: start.getFormattedDay(), week: start.getWeek() })
-                    else timestamp =
-                        start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                } else if (end <= networkTime) {
-                    // End date is in the past
-                    if (networkTime - end < minToMs(5)) timestamp =
-                        i18n('dates.justNow')
-                    else if (networkTime - end < minToMs(15)) timestamp =
-                        i18n('dates.fewMinsAgo')
-                    else if (end.isToday()) timestamp =
-                        i18n('dates.todayAtTime', { time: end.getFormattedTime() })
-                    else if (end.isYesterday()) timestamp =
-                        i18n('dates.yesterdayAtTime', { time: end.getFormattedTime() })
-                    else if (networkTime - end < daysToMs(5)) timestamp =
-                        i18n('dates.lastWeekday', { weekday: end.getFormattedDay() })
-                    else if (networkTime.getFullYear() !== end.getFullYear()) timestamp =
-                        end.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
-                }
+                timestamp = formatTimestamp(start, end, now, true)
                 if (element.dataset.time != timestamp) element.dataset.time = timestamp
                 break
 
             case 'style-hours':
-                element.style.setProperty('--relative-start', networkTime.getHoursWithDecimals())
+                element.style.setProperty('--relative-start', now.getHoursWithDecimals())
                 break
 
             case 'ongoing-check':
-                element.dataset.ongoing = (start <= networkTime && end >= networkTime)
+                element.dataset.ongoing = (start <= now && end >= now)
                 break
 
             case 'style-progress':
-                let progress = (networkTime - start) / (end - start)
+                let progress = (now - start) / (end - start)
                 element.style.setProperty('--progress', Math.min(Math.max(0, progress), 1))
                 element.dataset.done = progress >= 1
                 break
 
             case 'current-time-long': {
-                const timef = networkTime.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
+                const timef = now.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
                 element.dataset.time = timef
                 break
             }
 
             case 'current-time-short': {
-                const timef = networkTime.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
+                const timef = now.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
                 element.dataset.time = timef
                 break
             }
-
-            case 'current-time-disclaimer':
-                if (timeZoneDifference === 0) return element.style.display = 'none'
-                else element.style.removeProperty('style')
-                element.innerText = timeZoneDifference > 0
-                    ? `Tijd in Nederland (${timeZoneDifference} uur later)`
-                    : `Tijd in Nederland (${-timeZoneDifference} uur eerder)`
-                break
 
             default:
                 break
         }
     })
 }
-
-timeOffset = 0
-timeZoneDifference = 0
-fetch('https://worldtimeapi.org/api/timezone/Europe/Amsterdam')
-    .then(response => response.json())
-    .then(data => {
-        timeOffset = (new Date(data?.datetime) - new Date()) || 0 // timeOffset is the difference between the system time and the network time.
-        let amsterdamTimeZoneOffset = (parseInt(data?.datetime.slice(-5, -3), 10) * 60 +
-            parseInt(data?.datetime.slice(-2), 10)) * -1
-        timeZoneDifference = ((new Date().getTimezoneOffset() - amsterdamTimeZoneOffset) / 60)
-    })
 setIntervalImmediately(updateTemporalBindings, 1000)
 
 let minToMs = (minutes = 1) => minutes * 60000
@@ -784,6 +773,10 @@ function formatOrdinals(number, feminine) {
         ]),
         'de-DE': new Map([
             ['other', '.']
+        ]),
+        'sv-SE': new Map([
+            ['one', ':a'],
+            ['other', ':e']
         ])
     }
 

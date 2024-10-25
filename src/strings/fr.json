@@ -17,6 +17,7 @@
         "Agenda": "Programme",
         "To Do": "Tâches",
         "Lijst": "Liste",
+        "Inzicht": "Aperçu",
         "Afwezigheid": "Absences",
         "Cijfers": "Notes",
         "Laatste cijfers": "Dernières notes",
@@ -45,7 +46,9 @@
         "cancelled": "Annulé",
         "hw": "Devoirs",
         "pw": "Test",
+        "prelim": "Examen",
         "so": "Test formatif",
+        "mo": "Examen oral",
         "kwt": "Choix",
         "kwtregistered": "Inscrit",
         "info": "Informations",
@@ -65,10 +68,14 @@
         "soon": "bientôt",
         "fewMinsAgo": "il y a quelques minutes",
         "todayAtTime": "aujourd'hui à {time}",
+        "today": "aujourd'hui",
         "yesterdayAtTime": "hier à {time}",
+        "yesterday": "hier",
         "lastWeekday": "{weekday} dernier",
         "tomorrowAtTime": "demain à {time}",
+        "tomorrow": "demain",
         "weekdayAtTime": "{weekday} prochain à {time}",
+        "nextWeekday": "{weekday} prochain",
         "weekdayInWeek": "semaine {week}, {weekday}",
         "weekdays": [
             "dimanche",
@@ -89,7 +96,7 @@
         "generic": "Bienvenue#;Bonjour#;Bon retour, %n#;Content de te revoir#;Salut#"
     },
     "toasts": {
-        "jumpedToNextRelevantDay": "Affichage du lendemain avec des événements"
+        "jumpedToDate": "Affichage du programme pour {date}"
     },
     "close": "Fermer",
     "remainder": "Autres",

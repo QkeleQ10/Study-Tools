@@ -72,7 +72,7 @@ dialog.st-modal[open]::backdrop {
 .st-title {
     display: block;
     color: var(--st-foreground-accent);
-    font: 700 28px / 2rem arboria, sans-serif;
+    font: var(--st-font-hero);
     margin-bottom: 6px;
 }
 
@@ -245,7 +245,7 @@ dialog.st-modal[open]::backdrop {
     outline: var(--st-border);
     border-radius: var(--st-border-radius);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    z-index: 1000000;
+    z-index: 1001;
     overflow-y: auto;
 
     display: none;
@@ -339,15 +339,6 @@ dialog.st-modal[open]::backdrop {
     gap: 8px;
     margin-top: auto;
     max-height: calc(100% - 24px);
-    /* background-color: var(--background-color); */
-    /* box-shadow: 0 0 12px 12px var(--background-color); */
-}
-
-.st-start-event .st-chips-wrapper {
-    flex-direction: column;
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
 }
 
 .st-chips-wrapper:empty {
@@ -406,7 +397,7 @@ dialog.st-modal[open]::backdrop {
     border-radius: var(--st-border-radius);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     overflow: visible;
-    z-index: 9999999999999999999999;
+    z-index: 9000;
     animation: snackbarIn 300ms;
 }
 
@@ -598,8 +589,8 @@ dialog.st-modal[open]::backdrop {
     font: 16px var(--st-font-family-secondary);
     text-align: center;
     pointer-events: none;
-    z-index: 10000000;
-    animation: ghostUp 1000ms both;
+    z-index: 1000;
+    animation: opacityOut 200ms 200ms both;
 }
 
 .st-aside-sheet {
@@ -619,27 +610,11 @@ dialog.st-modal[open]::backdrop {
     border-radius: 0 0 var(--st-border-radius) var(--st-border-radius);
     overflow: hidden;
     overflow-y: auto;
-    z-index: 999999;
+    z-index: 1001;
 }
 
 .st-aside-sheet[data-visible=true] {
     display: flex;
-}
-
-@keyframes ghostUp {
-    0% {
-        opacity: 0;
-        translate: 0 -32px;
-    }
-
-    50% {
-        opacity: .5;
-    }
-
-    100% {
-        opacity: 0;
-        translate: 0 -96px;
-    }
 }
 
 .st-progress-bar {
@@ -983,7 +958,7 @@ a.st-keyboard-hint.clicked {
     height: 100vh;
     opacity: .1;
     background-color: var(--st-background-overlay);
-    z-index: 99999999;
+    z-index: 9000;
 }
 
 .border-top-radius-none,
@@ -1333,6 +1308,7 @@ a.st-keyboard-hint.clicked {
     font-size: 12px;
     font-weight: normal;
     opacity: .3;
+    z-index: 1;
 }
 
 @keyframes displayIn {
@@ -1384,6 +1360,12 @@ a.st-keyboard-hint.clicked {
 
 @keyframes opacityIn {
     0% {
+        opacity: 0;
+    }
+}
+
+@keyframes opacityOut {
+    100% {
         opacity: 0;
     }
 }

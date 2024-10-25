@@ -165,7 +165,7 @@ async function gradeCalculator(buttonWrapper) {
     clClose.addEventListener('click', () => {
         gradesContainer.removeAttribute('style')
         clOverlay.removeAttribute('open')
-        createStyle('', 'st-cculation-added')
+        createStyle('', 'st-calculation-added')
     })
 
     clBugReport.addEventListener('click', () => {
@@ -209,7 +209,7 @@ async function gradeCalculator(buttonWrapper) {
                 } else {
                     elem.classList.add('st-cannot-add')
                     setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
-                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-cculation-added')
+                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
                 }
             }
         } else {
@@ -235,6 +235,7 @@ async function gradeCalculator(buttonWrapper) {
                 innerText: gradeElement.title,
                 style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
             })
+            setTimeout(() => { if (ghostElement) ghostElement.remove() }, 5000)
 
             let result = Number(gradeElement.title.replace(',', '.')),
                 weight,
@@ -284,12 +285,12 @@ async function gradeCalculator(buttonWrapper) {
                 event.target.classList.add('remove')
                 setTimeout(() => {
                     event.target.remove()
-                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-cculation-added')
+                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
                 }, 100)
                 updateCalculations()
             })
             addedElement.scrollIntoView({ behavior: 'smooth' })
-            createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-cculation-added')
+            createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
 
             let ghostTargetPosition = addedElement.getBoundingClientRect()
             ghostElement.style.top = `${ghostTargetPosition.top}px`
@@ -1062,7 +1063,7 @@ async function gradeStatistics() {
             url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-primary').replace('#', '%23')}' stroke-width='6.9'/%3e%3c/svg%3e")`
             scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 
-            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title}`), 1, 10)
+            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title || 'cijfer'}\n`), 1, 10)
             // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
 
             resolve()

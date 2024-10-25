@@ -69,7 +69,7 @@ async function today() {
         verifyDisplayMode()
     })
 
-    const editor = element('div', 'st-start-editor', document.body, { class: 'st-hidden' })
+    const editor = element('div', 'st-start-editor', container, { class: 'st-hidden' })
     const editorView = element('div', 'st-start-editor-view', editor)
     const editorWidgetTitle = element('span', 'st-start-editor-title', editorView, { innerText: i18n('editWidgets') })
     const editorActionRow = element('div', 'st-start-editor-action-row', editorView, { 'data-empty-text': i18n('editWidgetsEmpty') })
@@ -217,11 +217,11 @@ async function today() {
                 renderSchedule()
             } else if (newOffset > oldOffset) {
                 schedule.dataset.navigate = 'forw'
-                setTimeout(renderSchedule, 70)
+                setTimeout(renderSchedule, 50)
                 setTimeout(() => schedule.dataset.navigate = 'still', 200)
             } else if (newOffset < oldOffset) {
                 schedule.dataset.navigate = 'back'
-                setTimeout(renderSchedule, 70)
+                setTimeout(renderSchedule, 50)
                 setTimeout(() => schedule.dataset.navigate = 'still', 200)
             } else { renderSchedule() }
         }
@@ -285,8 +285,8 @@ async function today() {
             document.querySelector('#st-start-ticks-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
             document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
             if (source) {
-                let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${Math.round(zoomSetting * 100)}%`, style: `top: ${source.getBoundingClientRect().top}px; left: ${source.getBoundingClientRect().left}px;` })
-                setTimeout(() => ghost.remove(), 1000)
+                let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${Math.round(zoomSetting * 100)}%`, style: `top: ${source.getBoundingClientRect().top - 24}px; left: ${source.getBoundingClientRect().left}px;` })
+                setTimeout(() => ghost.remove(), 400)
             }
         }
 
@@ -476,11 +476,11 @@ async function today() {
                     if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (todayDate.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
                         agendaDayOffset = nextRelevantDayIndex
                         agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                        notify('snackbar', `${i18n('toasts.jumpedToNextRelevantDay')} (${agendaStartDate.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long', month: 'long', day: 'numeric' })})`)
+                        notify('snackbar', i18n('toasts.jumpedToDate', { date: formatTimestamp(agendaStartDate) }), [], 1500)
 
                         setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
                         schedule.dataset.navigate = 'jumpforw'
-                        setTimeout(() => schedule.dataset.navigate = 'still', 600)
+                        setTimeout(() => schedule.dataset.navigate = 'still', 300)
                     }
 
                     if (agendaView === 'day') agendaEndDate = agendaStartDate
@@ -528,92 +528,83 @@ async function today() {
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
                     // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    let eventElement = element('button', `st-start-event-${item.Id}`, column, {
-                        class: 'st-start-event',
-                        'data-2nd': item.Omschrijving,
+                    const eventWrapperEl = element('div', `st-event-${item.Id}-wrapper`, column, {
+                        class: 'st-event-wrapper',
                         'data-temporal-type': 'ongoing-check',
                         'data-temporal-start': item.Start,
                         'data-temporal-end': item.Einde,
-                        'data-start-connecting': day.events.some(el => el.Einde === item.Start),
-                        'data-end-connecting': day.events.some(el => el.Start === item.Einde),
-                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length};`,
+                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length}; --st-brm-top-left: ${day.events.some(el => el.Einde === item.Start) ? 0 : 0.75}; --st-brm-top-right: ${day.events.some(el => el.Einde === item.Start) ? 0 : 0.75}; --st-brm-bottom-left: ${day.events.some(el => el.Start === item.Einde) ? 0 : 0.75}; --st-brm-bottom-right: ${day.events.some(el => el.Start === item.Einde) ? 0 : 0.75}`
+                    })
+                    const eventEl = element('div', `st-event-${item.Id}`, eventWrapperEl, {
+                        class: 'st-event',
                         title: [
                             item.Omschrijving || 'Geen omschrijving',
                             item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie',
                             item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime()
                         ].join('\n')
                     })
-                    let egg = eggs.find(egg => egg.location === 'personalEventTitle' && egg.matchRule === 'startsWith' && item.Omschrijving.startsWith(egg.input))
-                    if (egg && egg.type === 'dialog') {
-                        eventElement.addEventListener('click', () => notify('dialog', egg.output))
-                    } else {
-                        eventElement.addEventListener('click', () => window.location.hash = `#/agenda/huiswerk/${item.Id}`)
-                    }
 
-                    // Parse and array-ify the subjects, the teachers and the locations
-                    let subjectNames = item.Vakken?.map((e, i, a) => {
+                    // Event click handler
+                    eventWrapperEl.addEventListener('click', () => window.location.hash = `#/agenda/${(item.Type === 1 || item.Type === 16) ? 'afspraak' : 'huiswerk'}/${item.Id}?returnUrl=%252Fvandaag`)
+
+                    // Parse the subject, teacher and location fields
+                    let eventSubjects = (item.Vakken?.map((e, i, a) => {
                         if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
                         return e.Naam
-                    }) || [item.Omschrijving]
-                    let teacherNames = item.Docenten?.map((e, i, a) => {
+                    }) || []).join(', ')
+                    if (!eventSubjects?.length > 0) eventSubjects = item.Omschrijving
+                    let eventTeachers = (item.Docenten?.map((e, i, a) => {
                         return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
-                    }) || []
-                    let locationNames = item.Lokalen?.map(e => e.Naam) || [item.Lokatie]
-                    if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
-                    if (locationNames.length < 1 && item.Lokatie) locationNames.push(item.Lokatie)
+                    }) || []).join(', ')
+                    let eventLocation = item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ')
 
-                    // Render the school hour label
-                    let schoolHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
-                    let eventSchoolHours = element('div', `st-start-event-${item.Id}-school-hours`, eventElement, { class: 'st-start-event-school-hours', innerText: schoolHours })
+                    // Draw the school hour label
+                    let eventHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
+                    const eventNumberEl = element('div', `st-event-${item.Id}-school-hours`, eventEl, { class: 'st-event-number', innerText: eventHours })
                     if (item.Type === 1) {
-                        eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = '' // Icon: user-lock
-                    }
-                    if (item.Type === 16) {
-                        eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = '' // Icon: user-edit
-                    }
-                    if (!eventSchoolHours.innerText) {
-                        eventSchoolHours.classList.add('icon')
-                        eventSchoolHours.innerText = '' // Icon: calendar-day
+                        eventNumberEl.classList.add('icon')
+                        eventNumberEl.innerText = '' // Icon: user-lock
+                    } else if (item.Type === 16) {
+                        eventNumberEl.classList.add('icon')
+                        eventNumberEl.innerText = '' // Icon: user-edit
+                    } else if (!eventNumberEl.innerText) {
+                        eventNumberEl.classList.add('icon')
+                        eventNumberEl.innerText = '' // Icon: calendar-day
                     }
 
                     // Cancelled label
                     if (item.Status == 4 || item.Status == 5) {
-                        eventElement.classList.add('cancelled')
-                        element('div', `st-start-event-${item.Id}-cancelled`, eventElement, { class: 'st-start-event-cancelled', title: "Dit blok vervalt mogelijk.\nControleer alsjeblieft even je Magister-app of de pagina 'Agenda'!" })
+                        eventWrapperEl.dataset.cancelled = true
                     }
 
-                    // Render the subject and location label
+                    // Draw the event details
+                    const eventDetailsEl = element('div', `st-event-${item.Id}-details`, eventEl, {
+                        class: 'st-event-details'
+                    })
+                    const eventTitleWrapperEl = element('span', `st-event-${item.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
                     if (listViewEnabled) {
-                        let eventSubject = element('span', `st-start-event-${item.Id}-subject`, eventElement, { class: 'st-start-event-subject st-bold', innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
+                        element('b', null, eventTitleWrapperEl, { innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
                     } else {
-                        let eventSubjectWrapper = element('span', `st-start-event-${item.Id}-subject-wrapper`, eventElement, { class: 'st-start-event-subject' })
-                        let eventSubject = element('b', null, eventSubjectWrapper, { class: 'st-bold', innerText: subjectNames.join(', ') })
-                        if (locationNames?.join(', ')?.length > 0) {
-                            let eventLocation = document.createTextNode('  (' + locationNames.join(', ') + ')')
-                            eventSubjectWrapper.appendChild(eventLocation)
-                        }
+                        element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
+                        if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
                     }
-
-                    let row = element('div', `st-start-event-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
 
                     // Render the teacher label
-                    if (!listViewEnabled && item.Docenten[0]) {
-                        let eventTeacher = element('span', `st-start-event-${item.Id}-teacher`, row, { class: 'st-start-event-teacher', innerText: teacherNames.join(', ') })
-                        if (eventTeacher.innerText.includes('jeb_')) eventTeacher.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
-                        if (eventTeacher.innerText.includes('dinnerbone')) eventTeacher.style.scale = '1 -1'
+                    if (!listViewEnabled && eventTeachers?.length > 0) {
+                        const eventTeacherEl = element('span', `st-event-${item.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
+                        if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+                        if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
                     }
 
                     // Render the time label
-                    let eventTime = element('span', `st-start-event-${item.Id}-time`, row, { class: 'st-start-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
+                    element('span', `st-event-${item.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
 
                     // Parse and render any chips
                     let chips = getEventChips(item)
 
-                    let eventChipsWrapper = element('div', `st-start-event-${item.Id}-chips`, eventElement, { class: 'st-chips-wrapper' })
+                    const eventChipsWrapperEl = element('div', `st-event-${item.Id}-chips`, eventEl, { class: 'st-event-chips st-chips-wrapper' })
                     chips.forEach(chip => {
-                        let chipElement = element('span', `st-start-event-${item.Id}-chip-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                        let chipElement = element('span', `st-event-${item.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                     })
                 })
 
@@ -636,8 +627,8 @@ async function today() {
                 // Ensure a nice scrolling position if the date shown is not today
                 if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day')) && !agendaDayOffsetChanged) {
                     schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                    if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
-                    if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                    if (column.querySelector('.st-event:last-of-type')) column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
+                    if (column.querySelector('.st-event')) column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
                     schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                 }
 
@@ -648,8 +639,8 @@ async function today() {
                     updateTemporalBindings()
                     if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day'))) {
                         schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                        if (column.querySelector('.st-start-event:last-of-type')) column.querySelector('.st-start-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
-                        if (column.querySelector('.st-start-event')) column.querySelector('.st-start-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+                        if (column.querySelector('.st-event:last-of-type')) column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
+                        if (column.querySelector('.st-event')) column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
                         currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
                         schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                     }
@@ -702,6 +693,7 @@ async function today() {
                 title: i18n('widgets.logs'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Logboeken'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -728,6 +720,7 @@ async function today() {
                 title: i18n('widgets.activities'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Activiteiten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -753,6 +746,7 @@ async function today() {
             grades: {
                 title: i18n('widgets.grades'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Cijfers'],
                 options: [
                     {
                         title: "Automatisch rouleren",
@@ -798,8 +792,10 @@ async function today() {
 
                         let grades = await MagisterApi.grades.recent()
                             .catch(() => { return reject() })
-                        let assignments = await MagisterApi.assignments.top()
-                            .catch(() => { return reject() })
+                        let assignments = magisterApiPermissions.includes('EloOpdracht')
+                            ? await MagisterApi.assignments.top()
+                                .catch(() => { return reject() })
+                            : []
 
                         if (placeholder) MagisterApi.useSampleData = false
 
@@ -951,6 +947,7 @@ async function today() {
                 title: i18n('widgets.messages'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Berichten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -1000,6 +997,7 @@ async function today() {
                 title: i18n('widgets.homework'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['Afspraken'],
                 options: [
                     {
                         title: "Afgeronde items tonen",
@@ -1079,6 +1077,7 @@ async function today() {
                 title: i18n('widgets.assignments'),
                 disclaimer: i18n('widgetDisclaimer'),
                 types: ['Tegel', 'Lijst'],
+                requiredPermissions: ['EloOpdracht'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
                         if (placeholder) MagisterApi.useSampleData = true
@@ -1131,6 +1130,7 @@ async function today() {
                 title: i18n('widgets.digitalClock'),
                 disclaimer: i18n('widgetClockDisclaimer'),
                 types: ['Verborgen', 'Tegel', 'Lijst'],
+                requiredPermissions: [],
                 options: [
                     {
                         title: "Seconden tonen",
@@ -1153,7 +1153,6 @@ async function today() {
                         const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
 
                         const widgetElement = element(placeholder ? 'div' : 'button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" })
-                        const timeDisclaimer = element('p', 'st-start-widget-digital-clock-disclaimer', widgetElement, { 'data-temporal-type': 'current-time-disclaimer' })
                         const timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
                             'data-temporal-type': secondsOption === 'show'
                                 ? 'current-time-long'
@@ -1235,9 +1234,12 @@ async function today() {
             }
         }
 
+        // Ensure the user permission flags are up-to-date
+        await MagisterApi.accountInfo()
+
         // Draw the selected widgets in the specified order
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key]) continue
+            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApiPermissions?.includes(p))) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
                 syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
@@ -1285,7 +1287,8 @@ async function today() {
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key]) continue
+            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApiPermissions?.includes(p))) continue
+
             if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
                 const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })
 
@@ -1469,7 +1472,9 @@ function getEventChips(event) {
     const infoTypes = {
         1: { name: i18n('chips.hw'), type: 'info' },
         2: { name: i18n('chips.pw'), type: 'important' },
+        3: { name: i18n('chips.prelim'), type: 'important' },
         4: { name: i18n('chips.so'), type: 'important' },
+        5: { name: i18n('chips.mo'), type: 'important' },
         6: { name: i18n('chips.info'), type: 'info' },
     }
 

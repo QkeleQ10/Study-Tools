@@ -53,6 +53,7 @@ const value = computed({
 
 .button-wrapper {
     display: flex;
+    flex-wrap: wrap;
     width: 100%;
     box-sizing: border-box;
 }

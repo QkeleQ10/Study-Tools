@@ -2,7 +2,8 @@ let magisterApiCache = {},
     magisterApiUserId,
     magisterApiUserToken,
     magisterApiUserTokenDate,
-    magisterApiSchoolName = window.location.hostname.split('.')[0]
+    magisterApiSchoolName = window.location.hostname.split('.')[0],
+    magisterApiPermissions = []
 
 now = new Date()
 
@@ -29,6 +30,7 @@ const MagisterApi = {
             resolve(
                 (await magisterApiCache.accountInfo)
             )
+            magisterApiPermissions = (await magisterApiCache.accountInfo)?.Groep?.[0]?.Privileges?.filter(p => p.AccessType.includes('Read')).map(p => p.Naam)
         })
     },
     years: async () => {

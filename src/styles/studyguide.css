@@ -21,7 +21,7 @@
     position: absolute;
     top: 70px;
     right: 25px;
-    z-index: 99999;
+    z-index: 1000;
 }
 
 .st-sw-item.hidden,
@@ -43,7 +43,7 @@
     position: absolute;
     top: 73px;
     right: 154px;
-    z-index: 99999;
+    z-index: 2;
 }
 
 #st-sw-hidden-items {

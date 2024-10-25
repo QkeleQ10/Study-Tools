@@ -64,8 +64,8 @@ async function main() {
     // Handle forced logout
     let userMenuLink = await awaitElement('#user-menu')
     userMenuLink.addEventListener('click', async () => {
-        let logoutLink = await awaitElement('.user-menu ul li:nth-child(3) a')
-        logoutLink.addEventListener('click', async () => {
+        let logoutLink = await awaitElement('#log-off')
+        logoutLink?.addEventListener('click', async () => {
             await saveToStorage('force-logout', new Date().getTime(), 'local')
         })
     })
@@ -77,7 +77,7 @@ async function main() {
     if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
     if (Math.random() < 0.004) setTimeout(() => {
         const amogus = element('img', 'st-amogus', document.body, {
-            src: 'https://static.wikia.nocookie.net/fnaf-tower-defense/images/7/77/Among-us-red-png-01.png', style: `position: absolute; bottom: 0; left: 20px; height: 32px; animation: 1000ms peekInLeft;`
+            src: 'https://static.wikia.nocookie.net/fnaf-tower-defense/images/7/77/Among-us-red-png-01.png', style: `position: absolute; bottom: 0; left: 20px; height: 32px; animation: 1000ms peekInLeft; z-index: 9000;`
         })
         amogus.addEventListener('click', () => {
             var audio = new Audio('https://www.myinstants.com/media/sounds/among-us-roundstart.mp3')
@@ -166,8 +166,10 @@ async function main() {
             })
         }
 
-        document.querySelector('#menu-berichten-new').dataset.hotkey = 'b'
-        shortcutHotkey = element('div', `st-messages-hotkey-label`, document.querySelector('#menu-berichten-new'), { class: 'st-hotkey-label', innerText: 'B' })
+        if (document.querySelector('#menu-berichten-new')) {
+            document.querySelector('#menu-berichten-new').dataset.hotkey = 'b'
+            shortcutHotkey = element('div', `st-messages-hotkey-label`, document.querySelector('#menu-berichten-new'), { class: 'st-hotkey-label', innerText: 'B' })
+        }
 
         addEventListener('keydown', e => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return

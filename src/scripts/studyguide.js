@@ -22,7 +22,7 @@ async function studyguideList() {
 
     renderStudyguideList(hiddenItemsContainer)
 
-    let searchBar = element('input', 'st-sw-search', document.body, { class: "st-input", placeholder: i18n('sw.searchPlaceholder') })
+    let searchBar = element('input', 'st-sw-search', document.body, { class: 'st-input', placeholder: i18n('sw.searchPlaceholder') })
     searchBar.addEventListener('keyup', e => {
         if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
             document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
@@ -266,13 +266,13 @@ async function studyguideIndividual() {
             asideResizer.style.right = (asideDisplayWidth + 8) + 'px'
         }
 
-        asideResizer.addEventListener("mousedown", function (e) {
+        asideResizer.addEventListener('mousedown', function (e) {
             m_pos = e.x
-            document.addEventListener("mousemove", asideResize, false)
+            document.addEventListener('mousemove', asideResize, false)
         }, false)
-        document.addEventListener("mouseup", function () {
+        document.addEventListener('mouseup', function () {
             asidePreferenceWidth = asideDisplayWidth
-            document.removeEventListener("mousemove", asideResize, false)
+            document.removeEventListener('mousemove', asideResize, false)
         }, false)
     }
 }
@@ -479,7 +479,7 @@ function autoStudyguideSubject(title) {
     const subjectMap = [
         { name: "Aardrijkskunde", aliases: ["aardrijkskunde", "ak"] },
         { name: "Bedrijfseconomie", aliases: ["bedrijfseconomie", "beco", "bec"] },
-        { name: "Beeldende vorming", aliases: ["beeldend", "beeldende", "kubv", "be", "bv", "bha", "kbv", "ha", "tw"] },
+        { name: "Beeldende vorming", aliases: ["beeldend", "beeldende", "kubv", "be", "bv", "bha", "kbv", "tw"] },
         { name: "Biologie", aliases: ["biologie", "bio", "bi", "biol"] },
         { name: "Cult. en kunstz. vorming", aliases: ["ckv"] },
         { name: "Drama", aliases: ["drama", "kudr", "dr", "kdr", "da", "kda"] },
@@ -507,6 +507,7 @@ function autoStudyguideSubject(title) {
         { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
         { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
         { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen", "re"] },
+        { name: "Handarbeid", aliases: ["ha"] }, // Positioned very low to avoid 'ha' being recognised as 'Handarbeid'
         { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] }, // Positioned very low to avoid 'de' being recognised as 'Duits'
         { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'Engels'
         { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },

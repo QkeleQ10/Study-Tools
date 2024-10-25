@@ -17,6 +17,7 @@
         "Agenda": "Agenda",
         "To Do": "To Do",
         "Lijst": "Lijst",
+        "Inzicht": "Inzicht",
         "Afwezigheid": "Afwezigheid",
         "Cijfers": "Cijfers",
         "Laatste cijfers": "Laatste cijfers",
@@ -45,7 +46,9 @@
         "cancelled": "Vervallen",
         "hw": "Huiswerk",
         "pw": "Proefwerk",
+        "prelim": "Tentamen",
         "so": "SO",
+        "mo": "MO",
         "kwt": "KWT",
         "kwtregistered": "Ingeschreven",
         "info": "Informatie",
@@ -65,10 +68,14 @@
         "soon": "zometeen",
         "fewMinsAgo": "een paar minuten geleden",
         "todayAtTime": "vandaag om {time}",
+        "today": "vandaag",
         "yesterdayAtTime": "gisteren om {time}",
+        "yesterday": "gisteren",
         "lastWeekday": "afgelopen {weekday}",
         "tomorrowAtTime": "morgen om {time}",
+        "tomorrow": "morgen",
         "weekdayAtTime": "{weekday} om {time}",
+        "nextWeekday": "komende {weekday}",
         "weekdayInWeek": "week {week}, {weekday}",
         "weekdays": [
             "zondag",
@@ -89,7 +96,7 @@
         "generic": "Welkom#;Hallo!;Welkom terug, %n#;Hey, %n#;Welkom terug#;Goedendag#"
     },
     "toasts": {
-        "jumpedToNextRelevantDay": "Gesprongen naar eerstvolgende dag met afspraken"
+        "jumpedToDate": "Gesprongen naar {date}"
     },
     "close": "Sluiten",
     "remainder": "Overige",
