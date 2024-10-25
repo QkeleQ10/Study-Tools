@@ -64,10 +64,10 @@ const dataStr = computed(() => {
                         </Chip>
                     </div>
                 </template>
-                <a id="theme-downloader" :href="dataStr" download="Mijn thema.sttheme">
+                <!--<a id="theme-downloader" :href="dataStr" download="Mijn thema.sttheme">
                     <h3 class="setting-title">Bewaren in Mijn thema's</h3>
                     <Icon>chevron_right</Icon>
-                </a>
+                </a>-->
             </div>
         </div>
     </div>

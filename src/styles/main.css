@@ -1308,6 +1308,7 @@ a.st-keyboard-hint.clicked {
     font-size: 12px;
     font-weight: normal;
     opacity: .3;
+    z-index: 1;
 }
 
 @keyframes displayIn {

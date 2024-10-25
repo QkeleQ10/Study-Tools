@@ -252,13 +252,23 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     }
     decorations()
 
+    // Valentine's day mode
+    if (now.getMonth() === 1 && now.getDate() === 14) {
+        handleSpecialTheme('valentine')
+    }
+    // Halloween mode
+    if (now.getMonth() === 9 && now.getDate() === 25) {
+        if (await getFromStorage('no-special-decorations', 'session') !== 'halloween') {
+            const audio = new Audio(`https://www.myinstants.com/media/sounds/${['thunder-sound-effect', 'thunder-crack'].random()}.mp3`)
+            setTimeout(() => audio.play(), 9800)
+            setTimeout(() => {
+                handleSpecialTheme('halloween', `:root{--st-page-wallpaper:var(--st-page-wallpaper-overlay),url(https://www.creativefabrica.com/wp-content/uploads/2023/09/01/gothic-halloween-wallpaper-Graphics-78301451-1.jpg)!important}html{animation:1s flash}.menu-host{background-image:none}@keyframes flash{0%,15%{filter:blur(10px)}10%{filter:brightness(5) blur(10px)}20%{filter:brightness(10) blur(10px)}100%{filter:none}}`, 'dark', { h: 22, s: 85, l: 60 })
+            }, 10000)
+        }
+    }
     // Christmas mode
     if (now.getMonth() === 11 && [24, 25, 26, 27].includes(now.getDate())) {
         handleSpecialTheme('christmas')
-    }
-    // Valentine's day mode
-    if (now.getMonth() === 1 && [14].includes(now.getDate())) {
-        handleSpecialTheme('valentine')
     }
 
     createStyle(`
