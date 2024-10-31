@@ -220,7 +220,7 @@ async function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
     element('meta', `st-${chrome.runtime.id}`, document.head)
-    setTimeout(extensionInstanceCheck, 200)
+    setTimeout(upgradeAssistant, 200)
 
     document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-cc"], *[id^="st-cs"], *[id^="st-cb"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
         e.remove()
@@ -272,7 +272,8 @@ async function popstate() {
     }
 }
 
-async function extensionInstanceCheck() {
+// The upgrade assistant ensures no two versions are installed at the same time, on top of offering an upgrade from the Edge Add-Ons version to the Chrome Web Store version
+async function upgradeAssistant() {
     const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id})`)].map(e => e.id.split('-')[1])
 
     if (otherExtensionInstances.length > 0) console.log('This instance:', chrome.runtime.id, 'Other instances:', otherExtensionInstances)
@@ -291,7 +292,7 @@ async function extensionInstanceCheck() {
             }
         }, 500)
     } else if (chrome.runtime.id === 'ohhafpjdnbhihibepefpcmnnodaodajc') {
-        notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden' en installeer de extensie.\n\nVernieuw daarna deze pagina.", [{ innerText: "Upgraden", primary: true, href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }])
+        notify('dialog', "Deze versie van Study Tools is verouderd. Binnenkort werkt deze niet meer.\n\nKlik op 'Upgraden' en installeer de extensie.\n\nVernieuw daarna deze pagina.", [{ innerText: "Upgraden", primary: true, href: 'https://chromewebstore.google.com/detail/study-tools-voor-magister/hacjodpccmeoocakiahjfndppdeallak?hl=nl-NL' }, { innerText: "Ondersteuning", href: 'mailto:quinten@althues.nl' }])
     } else if (chrome.runtime.id === 'hacjodpccmeoocakiahjfndppdeallak' && otherExtensionInstances.includes('ohhafpjdnbhihibepefpcmnnodaodajc')) { // This is Chrome Web Store version, detected Edge Add-Ons version
         setTimeout(async () => {
             newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
