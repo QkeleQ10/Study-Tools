@@ -360,6 +360,78 @@ input[type=switch]+label span,
     background: var(--st-background-primary) !important
 }
 
+ul.widget-checkboxes li {
+    height: 32px;
+    min-height: unset;
+    padding: 0 4px;
+    line-height: normal;
+    border: none;
+}
+
+input[type=checkbox]+label span {
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    background-color: var(--st-background-tertiary);
+    border: var(--st-border);
+    border-radius: calc(var(--st-border-radius) * 0.75);
+}
+
+input[type=checkbox]:checked+label span {
+    background-color: var(--st-highlight-primary);
+}
+
+input[type=checkbox]:checked+label span:after {
+    width: 22px;
+    height: 22px;
+    color: var(--st-foreground-primary);
+    font: 600 16px/23px "Font Awesome 6 Pro";
+    content: '';
+}
+
+.tabsheet#idMultimedia .content>div[ng-show] img {
+    max-width: 100%;
+    height: auto;
+}
+
+.tabsheet#idMultimedia .content>div[ng-show] img[src="assets/images/PlayerPlaceHolder.png"] {
+    visibility: hidden;
+}
+
+.tabsheet#idMultimedia .content>div[ng-show]:has(> img[src="assets/images/PlayerPlaceHolder.png"]) {
+    background: radial-gradient(at -150% -50%, var(--st-highlight-primary), transparent), radial-gradient(at top right, var(--st-background-primary), var(--st-background-tertiary));
+}
+
+.tabsheet#idMultimedia .content>div[ng-show]:has(> img[src="assets/images/PlayerPlaceHolder.png"]):after {
+    content: '';
+    font: 600 48px "Font Awesome 6 Pro";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate:  -50% -50%;
+    visibility: visible;
+    opacity: .25;
+}
+
+.k-multiselect .k-select:has(.k-icon.k-i-close) {
+    content-visibility: hidden;
+    width: 8px;
+}
+
+div.fancy-select .k-multiselect .k-multiselect-wrap li.k-button {
+    border-radius: calc(var(--st-border-radius) * .75);
+    margin-top: 4px;
+    margin-left: 4px;
+}
+
+div.fancy-select .k-multiselect .k-multiselect-wrap li.k-button:hover, div.fancy-select .k-multiselect .k-multiselect-wrap li.k-button.k-state-hover {
+    background-color: var(--st-highlight-warn);
+}
+
+.k-multiselect .k-button span:first-child:first-letter {
+    text-transform: capitalize;
+}
+
 .new-appointment-block > fieldset > ul > li:nth-child(4) > div > span.check > label {
     text-wrap: nowrap;
 }

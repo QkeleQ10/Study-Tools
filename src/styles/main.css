@@ -543,12 +543,12 @@ dialog.st-modal[open]::backdrop {
     left: -32px;
     top: -3px;
     padding-top: 4px;
-    font: 16px 'Font Awesome 6 Pro';
+    font: 600 16px 'Font Awesome 6 Pro';
     text-align: center;
     background-color: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
-    border-radius: var(--st-border-radius);
+    border-radius: calc(var(--st-border-radius) * 0.75);
 }
 
 .st-checkbox-label:has(.st-checkbox-input:checked):before {
