@@ -389,6 +389,10 @@ input[type=checkbox]:checked+label span:after {
     content: '';
 }
 
+#afsprakenLijst colgroup>col:nth-child(2) {
+    width: 72px !important;
+}
+
 .tabsheet#idMultimedia .content>div[ng-show] img {
     max-width: 100%;
     height: auto;
