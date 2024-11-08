@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
+import { useFileDialog } from '@vueuse/core'
 import { presets, propertyKeys } from '../../public/themePresets.js'
 
 const syncedStorage = inject('syncedStorage')
@@ -13,6 +14,36 @@ const promptingIndex = ref(0)
 localStorage.value.storedThemes = Object.values(localStorage.value?.storedThemes || [])
 const allPresets = computed(() => [...localStorage.value?.storedThemes, ...presets])
 
+const { open: openFileDialog, onChange } = useFileDialog({
+    multiple: false, accept: '.sttheme', reset: true,
+})
+onChange(async (files) => { if (files?.[0]) presetUploaded(files[0]) })
+
+document.addEventListener('dragover', (e) => e.preventDefault())
+document.addEventListener('drop', (e) => {
+    e.preventDefault()
+    presetUploaded(e.dataTransfer.files[0])
+})
+
+async function presetUploaded(file) {
+    if (localStorage.value.storedThemes.length >= 9) return
+
+    const json = JSON.parse(await file.text())
+    const fallbackPreset = presets[0]
+
+    let obj = {};
+    ([...propertyKeys, 'name', 'author', 'date']).forEach(key => {
+        if (json?.[key] !== fallbackPreset[key]) obj[key] = json[key]
+    })
+
+    if (allPresets.value.some(p => presetsMatch(p, obj))) return
+
+    localStorage.value.storedThemes.unshift({
+        date: new Date().toISOString(),
+        ...obj
+    })
+}
+
 function applyPreset() {
     const preset = promptingPreset.value
     const fallbackPreset = presets[0]
@@ -20,25 +51,24 @@ function applyPreset() {
     propertyKeys.forEach(key => syncedStorage.value[key] = (preset?.[key] ?? fallbackPreset[key]))
 }
 
-function presetMatches(preset) {
+function presetsMatch(preset1, preset2 = syncedStorage.value) {
     const fallbackPreset = presets[0]
 
     // Return true if every property matches the preset (or, if it doesn't exist, the fallback preset)
-    return propertyKeys.every(key => syncedStorage.value[key] === (preset?.[key] ?? fallbackPreset[key]))
+    return propertyKeys.every(key => (preset2?.[key] ?? fallbackPreset[key]) === (preset1?.[key] ?? fallbackPreset[key]))
 }
 
 function promptPreset(preset) {
     promptingPreset.value = preset
-    if (allPresets.value.some(p => presetMatches(p))) applyPreset()
+    if (allPresets.value.some(p => presetsMatch(p))) applyPreset()
     else promptOpen.value = true
 }
 
 function generatePresetUrl(preset) {
     const fallbackPreset = presets[0]
 
-    let obj = {}
-
-    propertyKeys.forEach(key => {
+    let obj = {};
+    ([...propertyKeys, 'name', 'author', 'date']).forEach(key => {
         if (preset?.[key] !== fallbackPreset[key]) obj[key] = preset[key]
     })
 
@@ -50,7 +80,7 @@ function generatePresetUrl(preset) {
     <div id="theme-presets">
         <div id="personal-presets" class="theme-presets-grid" v-if="localStorage.storedThemes?.length > 0">
             <button v-for="(preset, i) in localStorage.storedThemes" class="theme-preset"
-                :class="{ matches: presetMatches(preset) }"
+                :class="{ matches: presetsMatch(preset) }"
                 :title="'Persoonlijk thema\n' + (preset.name || new Date(preset.date)?.toLocaleString('nl-NL')) + '\nKlik om toe te passen'"
                 @click="promptPreset(preset)">
                 <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
@@ -61,18 +91,27 @@ function generatePresetUrl(preset) {
                     </button>
                     <a class="theme-preset-download" @click.stop title="Persoonlijk thema exporteren naar bestand"
                         :href="generatePresetUrl(preset)" :download="preset.date + '.sttheme'">
-                        <Icon>download</Icon>
+                        <Icon>file_export</Icon>
                     </a>
                 </div>
             </button>
+            <div class="personal-presets-actions" v-if="localStorage.storedThemes?.length < 9">
+                <!-- <button class="theme-preset-upload" title="Persoonlijke thema's toevoegen vanuit winkel">
+                    <Icon>storefront</Icon>
+                </button> -->
+                <button class="theme-preset-upload" title="Persoonlijk thema importeren vanuit bestand"
+                    @click="openFileDialog">
+                    <Icon>add</Icon>
+                </button>
+            </div>
         </div>
         <div id="public-presets" class="theme-presets-grid">
-            <button v-for="preset in presets" class="theme-preset" :class="{ matches: presetMatches(preset) }"
+            <button v-for="(preset, i) in presets" class="theme-preset" :class="{ matches: presetsMatch(preset) }"
                 :title="preset.name" @click="promptPreset(preset)">
                 <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
                 <div class="theme-preset-info">
                     <span class="theme-preset-name">{{ preset.name }}</span>
-                    <span class="theme-preset-author">{{ preset.author }}</span>
+                    <span v-if="i >= 6" class="theme-preset-author">{{ preset.author }}</span>
                 </div>
             </button>
         </div>
@@ -117,7 +156,8 @@ function generatePresetUrl(preset) {
 
 #personal-presets {
     grid-template-columns: 1fr 1fr 1fr;
-    background-color: var(--color-surface-variant);
+    background-color: var(--color-surface);
+    outline: 1px solid var(--color-outline-variant);
     border-radius: 12px;
     padding: 8px;
 }
@@ -136,14 +176,13 @@ function generatePresetUrl(preset) {
     cursor: pointer;
 }
 
-.theme-preset.matches {
+#public-presets .theme-preset.matches {
     background-color: var(--color-primary-container);
     outline: 1px solid var(--color-outline);
 }
 
 #personal-presets .theme-preset {
     padding: 0;
-    outline: none;
     overflow: hidden;
     padding: 1px;
     border-radius: 8px;
@@ -211,7 +250,8 @@ function generatePresetUrl(preset) {
     pointer-events: all;
 }
 
-.theme-actions>* {
+.theme-actions>*,
+.personal-presets-actions>* {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -220,17 +260,51 @@ function generatePresetUrl(preset) {
     border-radius: 50%;
     border: none;
     background-color: transparent;
-    color: var(--color-on-surface);
+    color: var(--color-on-surface-variant);
     cursor: pointer;
     text-decoration: none;
     transition: background-color 100ms;
 }
 
-.theme-actions>*:hover {
+.theme-actions>* {
+    width: 34px;
+    height: 34px;
+    color: var(--color-on-surface);
+}
+
+.theme-actions>*:hover,
+.personal-presets-actions>*:hover {
     background-color: #12212114;
 }
 
 .theme-actions>*>.icon {
     font-size: 22px;
+}
+
+.personal-presets-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-container);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.personal-presets-actions.highlight {
+    background-color: var(--color-surface-variant);
+}
+
+.personal-presets-actions:nth-child(3n-2) {
+    grid-column: span 3;
+}
+
+/* .personal-presets-actions:nth-child(3n-1) {
+    grid-column: span 2;
+} */
+
+.personal-presets-actions>* {
+    flex-grow: 2;
+    height: 100%;
+    border-radius: 8px;
 }
 </style>

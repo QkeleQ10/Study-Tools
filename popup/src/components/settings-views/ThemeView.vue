@@ -35,6 +35,8 @@ function presetMatches(preset) {
 }
 
 function storeCurrentTheme() {
+    if (localStorage.value.storedThemes.length >= 9) return
+
     const fallbackPreset = presets[0]
 
     let obj = {}
@@ -47,7 +49,6 @@ function storeCurrentTheme() {
         ...obj
     })
 
-    if (localStorage.value.storedThemes.length > 8) localStorage.value.storedThemes.length = 8
     selectedTab.value = 0
 }
 </script>
@@ -90,7 +91,7 @@ function storeCurrentTheme() {
                         <Icon>library_add_check</Icon>
                         <span>Opgeslagen in thema's</span>
                     </button>
-                    <button v-else-if="localStorage.storedThemes?.length >= 8" class="button tonal"
+                    <button v-else-if="localStorage.storedThemes?.length >= 9" class="button tonal"
                         @click="promptOpen = true">
                         <Icon>library_add</Icon>
                         <span>Opslaan in thema's</span>
@@ -104,14 +105,12 @@ function storeCurrentTheme() {
         </div>
 
         <Dialog v-model:active="promptOpen">
-            <template #headline>Let op!</template>
+            <template #headline>Opslaan mislukt</template>
             <template #text>
-                Je kunt maximaal 8 persoonlijke thema's opslaan. Als je doorgaat, dan verlies je je oudste
-                persoonlijke thema.
+                Je kunt maximaal {{ localStorage.storedThemes?.length }} persoonlijke thema's hebben. Verwijder eerst een thema om een nieuwe op te slaan.
             </template>
             <template #buttons>
-                <button @click="storeCurrentTheme(); promptOpen = false">Doorgaan</button>
-                <button @click="promptOpen = false">Annuleren</button>
+                <button @click="promptOpen = false">Sluiten</button>
             </template>
         </Dialog>
     </div>
@@ -166,12 +165,12 @@ function storeCurrentTheme() {
 
 #theme-edit>.additional-options {
     overflow-y: auto;
+    margin-inline: 4px;
     border-radius: 12px;
 }
 
 #theme-edit>.additional-options>.surface-container {
     background-color: var(--color-surface-container);
-    margin-inline: 4px;
     border-radius: 12px;
 }
 
