@@ -54,7 +54,8 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
                 <span v-for="(v, i) in cssVars"><code @click="selectEntireContents"
                         @mouseenter="selectEntireContents">{{ v }}</code><span v-if="i !== cssVars.length - 1">,
                     </span></span><br>
-                Er zijn er uiteraard meer, maar pas niet meer aan dan nodig is. Het configuratiepaneel kan ook helpen.
+                Er zijn er uiteraard meer, maar pas niet meer aan dan nodig is. Je kunt meer aanpassen via het configuratiepaneel dan je denkt.<br>
+                Als je je kleurenschema dynamisch wilt maken, stel je je thema in op 'automatisch' en gebruik je de CSS-functie <code>light-dark()</code>.
                 <br><br>
                 Een bijzondere <code>:root</code>-regel die je kunt gebruiken is
                 <code @click="selectEntireContents"

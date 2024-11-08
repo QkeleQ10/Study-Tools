@@ -10,7 +10,6 @@ export function useSyncedStorage() {
     let syncedStorage = ref({})
 
     onMounted(() => {
-        console.log('mounted!')
         if (browser?.storage?.sync) {
             browser.storage.sync.get()
                 .then(value => {
@@ -60,6 +59,36 @@ export function useSyncedStorage() {
     })
 
     return syncedStorage
+}
+
+export function useLocalStorage() {
+    let localStorage = ref({})
+
+    onMounted(() => {
+        if (browser?.storage?.local) {
+            browser.storage.local.get()
+                .then(value => {
+                    localStorage.value = value
+
+                    localStorage.value.storedThemes = Object.values(localStorage.value.storedThemes || [])
+                })
+        }
+    })
+
+    const debouncedFn = useDebounceFn(() => {
+        if (browser?.storage?.local) {
+            let toStore = { ...localStorage.value }
+            if (isProxy(toStore)) toStore = toRaw(toStore)
+            browser.storage.local.set(toStore)
+        }
+    }, 250, { maxWait: 2000 })
+
+    watchEffect(() => {
+        let toStore = { ...localStorage.value }
+        debouncedFn()
+    })
+
+    return localStorage
 }
 
 export function useManifest() {

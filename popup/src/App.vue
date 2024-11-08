@@ -1,7 +1,7 @@
 <script setup>
 import { ref, provide } from 'vue'
 import { useStorage, useUrlSearchParams } from '@vueuse/core'
-import { useSyncedStorage } from './composables/chrome.js'
+import { useSyncedStorage, useLocalStorage } from './composables/chrome.js'
 
 import settings from '../public/settings.js'
 
@@ -21,6 +21,8 @@ const main = ref(null)
 
 const syncedStorage = useSyncedStorage()
 provide('syncedStorage', syncedStorage)
+const localStorage = useLocalStorage()
+provide('localStorage', localStorage)
 
 const params = useUrlSearchParams('history')
 
@@ -83,7 +85,7 @@ function openInNewTab(url) {
 
 <template>
     <div v-if="params.view === 'custom-css'" id="custom-css-container">
-        <CustomCssEditor/>
+        <CustomCssEditor />
     </div>
     <div id="app-wrapper" v-else>
         <NavigationRail v-model="selectedCategory" @scroll-to-top="scrollToTop" />
@@ -207,6 +209,7 @@ main {
     box-sizing: border-box;
 }
 
+h3,
 .setting-title {
     margin: 0;
     color: var(--color-on-surface);
@@ -271,6 +274,12 @@ main {
     font-variation-settings: 'FILL' 1;
 }
 
+.action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .button {
     display: flex;
     align-items: center;
@@ -287,7 +296,7 @@ main {
 
 .button.tonal {
     background-color: var(--color-secondary-container);
-    color: var(--color-on-secondary-container)
+    color: var(--color-on-secondary-container);
 }
 
 .button.text {
@@ -301,6 +310,17 @@ main {
     padding: 0;
     height: auto;
     font-size: inherit;
+}
+
+.button:disabled {
+    background-color: hsl(from var(--color-on-surface) h s l / 0.12);
+    color: var(--color-on-surface);
+    cursor: unset;
+    pointer-events: none;
+}
+
+.button:disabled>* {
+    opacity: 0.38;
 }
 
 .button .icon {

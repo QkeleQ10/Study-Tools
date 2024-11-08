@@ -13,7 +13,7 @@ function click() {
     <button @click="click">
         <div>
             <h3 class="setting-title">
-                <slot name="title"></slot>
+                <slot name="title"></slot>...
             </h3>
         </div>
         <Icon>chevron_right</Icon>

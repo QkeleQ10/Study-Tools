@@ -10,7 +10,6 @@ const currentTheme = computed(() => {
     let currentTheme = {}
     if (props.preset) propertyKeys.forEach(key => currentTheme[key] = (props.preset?.[key] || presets[0][key]))
     else propertyKeys.forEach(key => currentTheme[key] = syncedStorage.value[key])
-    console.log(props.preset,  currentTheme)
     return currentTheme
 })
 
@@ -205,35 +204,35 @@ function presetMatches(preset) {
 }
 
 #menubar-title {
-    width: 25px;
-    height: 5px;
+    width: 85%;
+    height: 7%;
     border-radius: 100vmax;
     background-color: #ffffff88;
 }
 
 #page-title {
     width: 50%;
-    height: 5px;
+    height: 7%;
     border-radius: 100vmax;
     background-color: var(--foreground-accent);
 }
 
 #sidebar {
-    padding-top: 5px;
+    padding-top: 10%;
     align-items: stretch;
     border-left: 1px solid var(--border);
     background-color: var(--sidebar);
 }
 
 .widget {
-    height: 20px;
+    height: 22%;
     border-radius: calc(var(--border-radius)*0.3);
     border: 1px solid var(--border);
     background-color: var(--sidebar);
 }
 
 #widget-grades {
-    height: 25px;
+    height: 33%;
     background: linear-gradient(35deg, var(--accent-1), var(--accent-2));
 }
 </style>
