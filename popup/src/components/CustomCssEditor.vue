@@ -43,10 +43,6 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
             spellcheck="false" @keydown="editing = true"></textarea>
         <Dialog v-model:active="infoDialogActive">
             <template #text>
-                <strong>Let op:</strong> Sluit dit venster voordat je wijzigingen maakt in het
-                configuratiepaneel! Als je wijzigingen maakt in zowel dit venster als in het configuratiepaneel, dan kun
-                je je voortgang verliezen.
-                <br><br>
                 De maximale lengte van je CSS-code is 8181 bytes. Als je code langer is, wordt deze niet
                 opgeslagen. Optimaliseer je code en gebruik eventueel een CSS-minifier.
                 <br><br>

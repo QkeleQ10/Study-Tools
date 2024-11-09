@@ -23,6 +23,13 @@ export function useSyncedStorage() {
                             }
                         })
                     })
+
+                    browser.storage.sync.onChanged.addListener(changes => {
+                        for (let key in changes) {
+                            if (syncedStorage.value[key] !== changes[key].newValue)
+                                syncedStorage.value[key] = changes[key].newValue
+                        }
+                    })
                 })
 
             // Store the current version number
@@ -69,9 +76,14 @@ export function useLocalStorage() {
             browser.storage.local.get()
                 .then(value => {
                     localStorage.value = value
-
-                    localStorage.value.storedThemes = Object.values(localStorage.value.storedThemes || [])
                 })
+
+            browser.storage.local.onChanged.addListener(changes => {
+                for (let key in changes) {
+                    if (localStorage.value[key] !== changes[key].newValue)
+                        localStorage.value[key] = changes[key].newValue
+                }
+            })
         }
     })
 

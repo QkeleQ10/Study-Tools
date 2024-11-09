@@ -11,8 +11,16 @@ const deletionPrompt = ref(false)
 const promptingPreset = ref({})
 const promptingIndex = ref(0)
 
-localStorage.value.storedThemes = Object.values(localStorage.value?.storedThemes || [])
-const allPresets = computed(() => [...localStorage.value?.storedThemes, ...presets])
+const storedThemes = computed({
+    get() {
+        return Object.values(localStorage.value?.storedThemes || [])
+    },
+    set(value) {
+        localStorage.value.storedThemes = value
+    }
+})
+
+const allPresets = computed(() => [...storedThemes.value, ...presets])
 
 const { open: openFileDialog, onChange } = useFileDialog({
     multiple: false, accept: '.sttheme', reset: true,
@@ -26,7 +34,7 @@ document.addEventListener('drop', (e) => {
 })
 
 async function presetUploaded(file) {
-    if (localStorage.value.storedThemes.length >= 9) return
+    if (storedThemes.value.length >= 9) return
 
     const json = JSON.parse(await file.text())
     const fallbackPreset = presets[0]
@@ -38,10 +46,13 @@ async function presetUploaded(file) {
 
     if (allPresets.value.some(p => presetsMatch(p, obj))) return
 
-    localStorage.value.storedThemes.unshift({
-        date: new Date().toISOString(),
-        ...obj
-    })
+    storedThemes.value = [
+        ...storedThemes.value,
+        {
+            date: new Date().toISOString(),
+            ...obj
+        }
+    ]
 }
 
 function applyPreset() {
@@ -78,32 +89,34 @@ function generatePresetUrl(preset) {
 
 <template>
     <div id="theme-presets">
-        <div id="personal-presets" class="theme-presets-grid" v-if="localStorage.storedThemes?.length > 0">
-            <button v-for="(preset, i) in localStorage.storedThemes" class="theme-preset"
-                :class="{ matches: presetsMatch(preset) }"
-                :title="'Persoonlijk thema\n' + (preset.name || new Date(preset.date)?.toLocaleString('nl-NL')) + '\nKlik om toe te passen'"
-                @click="promptPreset(preset)">
-                <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
-                <div class="theme-actions">
-                    <button class="theme-preset-remove" @click.stop="promptingIndex = i; deletionPrompt = true"
-                        title="Persoonlijk thema verwijderen">
-                        <Icon>delete</Icon>
-                    </button>
-                    <a class="theme-preset-download" @click.stop title="Persoonlijk thema exporteren naar bestand"
-                        :href="generatePresetUrl(preset)" :download="preset.date + '.sttheme'">
-                        <Icon>file_export</Icon>
-                    </a>
-                </div>
-            </button>
-            <div class="personal-presets-actions" v-if="localStorage.storedThemes?.length < 9">
-                <!-- <button class="theme-preset-upload" title="Persoonlijke thema's toevoegen vanuit winkel">
+        <div id="personal-presets" class="theme-presets-grid" v-if="storedThemes.length > 0">
+            <TransitionGroup name="presets">
+                <button v-for="(preset, i) in storedThemes" :key="preset.name || preset.date" class="theme-preset"
+                    :class="{ matches: presetsMatch(preset) }"
+                    :title="'Persoonlijk thema\n' + (preset.name || new Date(preset.date)?.toLocaleString('nl-NL')) + '\nKlik om toe te passen'"
+                    @click="promptPreset(preset)">
+                    <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
+                    <div class="theme-actions">
+                        <button class="theme-preset-remove" @click.stop="promptingIndex = i; deletionPrompt = true"
+                            title="Persoonlijk thema verwijderen">
+                            <Icon>delete</Icon>
+                        </button>
+                        <a class="theme-preset-download" @click.stop title="Persoonlijk thema exporteren naar bestand"
+                            :href="generatePresetUrl(preset)" :download="preset.date + '.sttheme'">
+                            <Icon>file_export</Icon>
+                        </a>
+                    </div>
+                </button>
+                <div key="add-new" class="personal-presets-actions" v-if="storedThemes.length < 9">
+                    <!-- <button class="theme-preset-upload" title="Persoonlijke thema's toevoegen vanuit winkel">
                     <Icon>storefront</Icon>
                 </button> -->
-                <button class="theme-preset-upload" title="Persoonlijk thema importeren vanuit bestand"
-                    @click="openFileDialog">
-                    <Icon>add</Icon>
-                </button>
-            </div>
+                    <button class="theme-preset-upload" title="Persoonlijk thema importeren vanuit bestand"
+                        @click="openFileDialog">
+                        <Icon>add</Icon>
+                    </button>
+                </div>
+            </TransitionGroup>
         </div>
         <div id="public-presets" class="theme-presets-grid">
             <button v-for="(preset, i) in presets" class="theme-preset" :class="{ matches: presetsMatch(preset) }"
@@ -118,13 +131,14 @@ function generatePresetUrl(preset) {
 
         <Dialog v-model:active="promptOpen">
             <template #icon>format_paint</template>
-            <template #headline>Aanpassingen wissen?</template>
+            <template #headline>Let op!</template>
             <template #text>
-                Je hebt wijzigingen aangebracht aan je thema. Als je doorgaat, dan gaan je huidige thema en al je
+                Je hebt wijzigingen aangebracht aan je thema. Als je dit thema nu toepast, dan gaan je huidige thema en
+                al je
                 aangepaste themavoorkeuren verloren.
             </template>
             <template #buttons>
-                <button @click="applyPreset(); promptOpen = false">Wissen</button>
+                <button @click="applyPreset(); promptOpen = false">Toepassen</button>
                 <button @click="promptOpen = false">Annuleren</button>
             </template>
         </Dialog>
@@ -137,7 +151,7 @@ function generatePresetUrl(preset) {
             </template>
             <template #buttons>
                 <button
-                    @click="localStorage.storedThemes.splice(promptingIndex, 1); deletionPrompt = false">Verwijderen</button>
+                    @click="storedThemes = storedThemes.filter((v, i) => i !== promptingIndex); deletionPrompt = false">Verwijderen</button>
                 <button @click="deletionPrompt = false">Annuleren</button>
             </template>
         </Dialog>
@@ -146,6 +160,7 @@ function generatePresetUrl(preset) {
 
 <style scoped>
 .theme-presets-grid {
+    position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: stretch;
@@ -306,5 +321,30 @@ function generatePresetUrl(preset) {
     flex-grow: 2;
     height: 100%;
     border-radius: 8px;
+}
+
+.presets-move,
+.presets-enter-active,
+.presets-leave-active {
+    transition: all 300ms ease;
+}
+
+.presets-enter-active {
+    transition-delay: 100ms;
+    transition-duration: 500ms;
+}
+
+.presets-enter-from {
+    opacity: 0;
+    scale: 1.5;
+}
+
+.presets-leave-to {
+    opacity: 0;
+    scale: 0.75;
+}
+
+.presets-leave-active {
+    position: absolute;
 }
 </style>

@@ -799,7 +799,7 @@ async function today() {
 
                         if (placeholder) MagisterApi.useSampleData = false
 
-                        let hiddenItems = new Set((await getFromStorage('hiddenGrades', 'local') || []))
+                        let hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])))
 
                         const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
                             {

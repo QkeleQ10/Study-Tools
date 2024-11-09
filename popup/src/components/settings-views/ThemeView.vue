@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, nextTick } from 'vue'
 import { useStorage } from '@vueuse/core'
 import settings from '/public/settings.js'
 import { presets, propertyKeys } from '/public/themePresets.js'
@@ -24,8 +24,16 @@ const selectedTab = useStorage('selected-tab-theme', 0)
 
 const promptOpen = ref(false)
 
-localStorage.value.storedThemes = Object.values(localStorage.value?.storedThemes || [])
-const allPresets = computed(() => [...localStorage.value?.storedThemes, ...presets])
+const storedThemes = computed({
+    get() {
+        return Object.values(localStorage.value?.storedThemes || [])
+    },
+    set(value) {
+        localStorage.value.storedThemes = value
+    }
+})
+
+const allPresets = computed(() => [...storedThemes.value, ...presets])
 
 function presetMatches(preset) {
     const fallbackPreset = presets[0]
@@ -34,8 +42,8 @@ function presetMatches(preset) {
     return propertyKeys.every(key => syncedStorage.value[key] === (preset?.[key] ?? fallbackPreset[key]))
 }
 
-function storeCurrentTheme() {
-    if (localStorage.value.storedThemes.length >= 9) return
+async function storeCurrentTheme() {
+    if (storedThemes.value.length >= 9) return
 
     const fallbackPreset = presets[0]
 
@@ -44,12 +52,18 @@ function storeCurrentTheme() {
         if (syncedStorage.value?.[key] !== fallbackPreset[key]) obj[key] = syncedStorage.value[key]
     })
 
-    localStorage.value.storedThemes.unshift({
-        date: new Date().toISOString(),
-        ...obj
-    })
-
     selectedTab.value = 0
+
+    await nextTick()
+
+    storedThemes.value = [
+        ...storedThemes.value,
+        {
+            date: new Date().toISOString(),
+            ...obj
+        }
+    ]
+
 }
 </script>
 
@@ -91,8 +105,7 @@ function storeCurrentTheme() {
                         <Icon>library_add_check</Icon>
                         <span>Opgeslagen in thema's</span>
                     </button>
-                    <button v-else-if="localStorage.storedThemes?.length >= 9" class="button tonal"
-                        @click="promptOpen = true">
+                    <button v-else-if="storedThemes.length >= 9" class="button tonal" @click="promptOpen = true">
                         <Icon>library_add</Icon>
                         <span>Opslaan in thema's</span>
                     </button>
@@ -107,7 +120,8 @@ function storeCurrentTheme() {
         <Dialog v-model:active="promptOpen">
             <template #headline>Opslaan mislukt</template>
             <template #text>
-                Je kunt maximaal {{ localStorage.storedThemes?.length }} persoonlijke thema's hebben. Verwijder eerst een thema om een nieuwe op te slaan.
+                Je kunt maximaal {{ storedThemes.length }} persoonlijke thema's hebben. Verwijder eerst
+                een thema om een nieuwe op te slaan.
             </template>
             <template #buttons>
                 <button @click="promptOpen = false">Sluiten</button>
