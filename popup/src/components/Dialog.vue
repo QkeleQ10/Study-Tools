@@ -38,7 +38,7 @@ const closeDialog = () => {
 	flex-direction: column;
 	gap: 16px;
 	translate: -50% -50%;
-	transform: scaleY(.7) translateY(-30%);
+	transform: scaleY(.8) translateY(-20%);
 	opacity: 0;
 	min-width: 280px;
 	max-width: min(calc(100vw - 112px), 560px);
@@ -49,13 +49,15 @@ const closeDialog = () => {
 	border-radius: 28px;
 	z-index: 10001;
 	background-color: var(--color-surface-container-high);
-	transition: transform 200ms, opacity 200ms;
+	transition: transform 100ms, opacity 100ms;
 }
 
 .dialog[active=true] {
 	pointer-events: all;
 	transform: none;
 	opacity: 1;
+	transition-duration: 400ms;
+	transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);;
 }
 
 .dialog-icon {

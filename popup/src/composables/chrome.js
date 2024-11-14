@@ -87,17 +87,10 @@ export function useLocalStorage() {
         }
     })
 
-    const debouncedFn = useDebounceFn(() => {
-        if (browser?.storage?.local) {
-            let toStore = { ...localStorage.value }
-            if (isProxy(toStore)) toStore = toRaw(toStore)
-            browser.storage.local.set(toStore)
-        }
-    }, 250, { maxWait: 2000 })
-
     watchEffect(() => {
         let toStore = { ...localStorage.value }
-        debouncedFn()
+        if (isProxy(toStore)) toStore = toRaw(toStore)
+        browser.storage.local.set(toStore)
     })
 
     return localStorage
