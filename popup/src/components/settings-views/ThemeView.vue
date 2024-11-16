@@ -6,7 +6,6 @@ import { presets, propertyKeys } from '/public/themePresets.js'
 
 import SwitchInput from '@/components/SwitchInput.vue'
 import Slider from '@/components/setting-types/Slider.vue'
-import KeyPicker from '@/components/KeyPicker.vue'
 import ImageInput from '@/components/ImageInput.vue'
 import ShortcutsEditor from '@/components/ShortcutsEditor.vue'
 import Text from '@/components/setting-types/Text.vue'
@@ -14,7 +13,7 @@ import SingleChoice from '@/components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from '@/components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from '@/components/setting-types/DecorationPickerSetting.vue'
 import LinkToOptionsTab from '@/components/setting-types/LinkToOptionsTab.vue'
-const optionTypes = { SwitchInput, Slider, KeyPicker, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
+const optionTypes = { SwitchInput, Slider, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
 
 const syncedStorage = inject('syncedStorage')
 const localStorage = inject('localStorage')

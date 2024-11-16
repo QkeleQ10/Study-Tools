@@ -90,7 +90,7 @@ export function useLocalStorage() {
     watchEffect(() => {
         let toStore = { ...localStorage.value }
         if (isProxy(toStore)) toStore = toRaw(toStore)
-        browser.storage.local.set(toStore)
+        if (browser?.storage) browser.storage.local.set(toStore)
     })
 
     return localStorage

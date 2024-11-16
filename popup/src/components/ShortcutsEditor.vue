@@ -3,7 +3,6 @@ import { ref, computed, defineProps, defineEmits } from 'vue'
 
 import Icon from './Icon.vue'
 import DialogFullscreen from './DialogFullscreen.vue'
-import KeyInput from './KeyInput.vue';
 import IconInput from './IconInput.vue';
 
 const props = defineProps(['modelValue'])
@@ -64,16 +63,13 @@ function moveItem(from, to) {
                 <div class="shortcut-example">
                     <span>Icoon</span>
                     <span>URL</span>
-                    <span>Sneltoets</span>
                 </div>
                 <li v-for="(shortcut, i) in value" :key="shortcut.icon" class="shortcut-wrapper">
                     <IconInput v-model="value[i].icon"
-                        @input="(v) => editArray(i, { icon: v, href: value[i].href, hotkey: value[i].hotkey })" />
+                        @input="(v) => editArray(i, { icon: v, href: value[i].href})" />
                     <input class="text-input" type="input" :value="value[i].href"
-                        @input="editArray(i, { icon: value[i].icon, href: $event.target.value.replace('https://', ''), hotkey: value[i].hotkey })"
+                        @input="editArray(i, { icon: value[i].icon, href: $event.target.value.replace('https://', '') })"
                         placeholder=" " autocomplete="off" spellcheck="false">
-                    <KeyInput v-model="value[i].hotkey" :allowClear="true"
-                        @input="(v) => editArray(i, { icon: value[i].icon, href: value[i].href, hotkey: v })" />
                     <div class="shortcut-actions">
                         <button class="element-action" @click="removeFromArray(i)">
                             <Icon>delete</Icon>
@@ -88,7 +84,7 @@ function moveItem(from, to) {
                     <!--clean up delete button and add drag to change order-->
                 </li>
                 <button class="button text" style="margin-top: 16px;"
-                    @click="value = [...value, { icon: '', href: '', hotkey: '' }]">Toevoegen</button>
+                    @click="value = [...value, { icon: '', href: '' }]">Toevoegen</button>
             </template>
         </DialogFullscreen>
     </div>
@@ -127,7 +123,7 @@ function moveItem(from, to) {
 .shortcut-wrapper,
 .shortcut-example {
     display: grid;
-    grid-template-columns: 56px 1fr 56px 52px;
+    grid-template-columns: 56px 1fr 52px;
     gap: 8px;
 }
 

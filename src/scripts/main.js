@@ -8,11 +8,11 @@ async function main() {
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
     let appbar = await awaitElement('.appbar'),
-        logos = await awaitElement('img.logo-expanded, img.logo-collapsed', true),
-        key = syncedStorage['magister-overlay-hotkey'] || 'S'
+        logos = await awaitElement('img.logo-expanded, img.logo-collapsed', true)
 
     let shortcuts = Object.values(syncedStorage.shortcuts),
-        spacer = await awaitElement('.appbar>.spacer')
+        spacer = await awaitElement('.appbar>.spacer'),
+        mappedHotkeys = {}
 
     // Change Vandaag to Start in appbar
     if (syncedStorage['start-enabled']) {
@@ -21,11 +21,6 @@ async function main() {
         if (Math.random() < 0.009) createStyle(`.fa-home:before { content: '' !important; }`)
         if (Math.random() < 0.004) vandaagText.innerText = "Eind"
     }
-
-    const allMenuItemSpans = await awaitElement('.main-menu a span, .main-menu .popup-menu a', true)
-    allMenuItemSpans.forEach(span => {
-        span.innerText = i18n(`views.${span.innerText}`, {}, false, true) || span.innerText
-    })
 
     document.querySelector('.menu-footer > a > span').innerText = i18n('Inklappen')
 
@@ -54,11 +49,6 @@ async function main() {
             shortcutSpan = element('span', null, shortcutA, { innerText: url.replace('https://', '').split('/')?.[0] || "Ongeldige URL" })
 
         if (spacer) spacer.after(shortcutDiv)
-
-        if (syncedStorage['hotkeys-enabled'] && shortcut.hotkey?.length > 0) {
-            shortcutA.dataset.hotkey = shortcut.hotkey.toLowerCase()
-            shortcutHotkey = element('div', `st-shortcut-${i}-hotkey-label`, shortcutA, { class: 'st-hotkey-label', innerText: formatKey(shortcut.hotkey), style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
-        }
     })
 
     // Handle forced logout
@@ -115,99 +105,72 @@ async function main() {
             notify('snackbar', `Van harte gefeliciteerd met je verjaardag, ${firstName}!`, null, 15000)
     }
 
-    // Hotkeys
-    if (syncedStorage['hotkeys-enabled']) {
-        const hotkeyList = [
-            { key: '`', code: 'Backquote' },
-            { key: '1', code: 'Digit1' },
-            { key: '2', code: 'Digit2' },
-            { key: '3', code: 'Digit3' },
-            { key: '4', code: 'Digit4' },
-            { key: '5', code: 'Digit5' },
-            { key: '6', code: 'Digit6' },
-            { key: '7', code: 'Digit7' },
-            { key: '8', code: 'Digit8' },
-            { key: '9', code: 'Digit9' },
-            { key: '0', code: 'Digit0' },
-            { key: '-', code: 'Minus' },
-            { key: '=', code: 'Equal' },
-            { key: '[', code: 'BracketLeft' },
-            { key: ']', code: 'BracketRight' },
-        ],
-            hotkeysOnToday = syncedStorage['hotkeys-quick']
+    await replaceMenuItemNames()
+    if (syncedStorage['hotkeys-enabled']) handleHotkeys()
 
-        setTimeout(() => {
-            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) {
-                createHotkeyLabels()
-                document.documentElement.dataset.hotkeysVisible = true
+    async function replaceMenuItemNames() {
+        return new Promise(async resolve => {
+            const hotkeyMap = {
+                "start": "s",
+                "agenda": "a",
+                "lijst": "j",
+                "vandaag": "v",
+                "inzicht": "h",
+                "afwezigheid": "z",
+                "cijfers": "c",
+                "examen": "x",
+                "logboeken": "g",
+                "toetsen": "t",
+                "opp": "p",
+                "bronnen": "r",
+                "studiewijzers": "w",
+                "opdrachten": "o",
+                "profiel": "f",
+                "portfoliodocumenten": "d",
+                "beoordeelde producten": "e",
+                "activiteiten": "i",
+                "leermiddelen": "l",
+                "bestellen": "n",
+                "berichten": "b"
             }
-        }, 600)
-        setTimeout(() => {
-            if (hotkeysOnToday && document.location.hash.includes('#/vandaag')) {
-                createHotkeyLabels()
-                document.documentElement.dataset.hotkeysVisible = true
-            }
-        }, 1200)
-
-        function createHotkeyLabels() {
-            if (syncedStorage['sidebar-expand-all']) document.querySelectorAll('ul.main-menu>li.children').forEach(menuItem => menuItem.classList.add('expanded'))
-
-            document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a').forEach((menuItem, i, a) => {
-                if (i >= hotkeyList.length) return
-                let title = menuItem.querySelector('span.caption')?.innerText || menuItem.firstChild.nodeValue
-
-                let hotkeyLabel = element('div', `st-hotkey-label-${title}`, menuItem, { class: 'st-hotkey-label', innerText: hotkeyList[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms` })
-
-                if (hotkeyLabel.closest('li.children')) {
-                    let parent = hotkeyLabel.closest('li.children')
-                    let childIndex = Array.prototype.indexOf.call(parent.querySelector('ul').children, hotkeyLabel.parentElement.parentElement)
-                    let hotkeyLabelParent = element('div', `st-hotkey-label-parent-${title}`, parent.firstElementChild, { class: 'st-hotkey-label st-hotkey-label-collapsed-only', innerText: hotkeyList[i].key, style: `--transition-delay: ${i * 10}ms; --reverse-transition-delay: ${(a.length - i) * 5}ms; --child-index: ${childIndex}` })
-                }
-            })
-        }
-
-        if (document.querySelector('#menu-berichten-new')) {
-            document.querySelector('#menu-berichten-new').dataset.hotkey = 'b'
-            shortcutHotkey = element('div', `st-messages-hotkey-label`, document.querySelector('#menu-berichten-new'), { class: 'st-hotkey-label', innerText: 'B' })
-        }
-
-        addEventListener('keydown', e => {
-            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
-            if (e.key.toLowerCase() === key.toLowerCase()) {
-                e.preventDefault()
-                createHotkeyLabels()
-                document.documentElement.dataset.hotkeysVisible = true
-            }
-            if (document.documentElement.dataset.hotkeysVisible === 'true') {
-                let matchingShortcut = document.querySelector(`.menu-button>a[data-hotkey="${e.key.toLowerCase()}"]`)
-                if (matchingShortcut) {
-                    matchingShortcut.click()
-                    if (!hotkeysOnToday || !document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = false
-                    return
-                }
-
-                let matchingKey = hotkeyList.find(key => key.code === e.code)
-                if (!matchingKey) return
-
-                let targetElement = document.querySelectorAll('ul.main-menu>li:not(.ng-hide, .children) a, ul.main-menu>li.children:not(.ng-hide) ul>li a')?.[hotkeyList.indexOf(matchingKey)]
-                if (targetElement) {
-                    e.preventDefault()
-                    targetElement.click()
+            const menuItems = await awaitElement('.main-menu a span, .main-menu .popup-menu a, #menu-berichten-new>span', true)
+            for (const menuItem of menuItems) {
+                const newItemName = i18n(`views.${menuItem.innerText}`, {}, false, true) || menuItem.innerText
+                const hotkey = hotkeyMap[menuItem.innerText.toLowerCase()]
+                if (!hotkey || mappedHotkeys[hotkey]) {
+                    menuItem.innerHTML = newItemName
+                } else if (newItemName.toLowerCase().includes(hotkey)) {
+                    if (newItemName.replace(hotkey.toUpperCase(), `<u>${hotkey.toUpperCase()}</u>`) !== newItemName)
+                        menuItem.innerHTML = newItemName.replace(hotkey.toUpperCase(), `<u>${hotkey.toUpperCase()}</u>`)
+                    else
+                        menuItem.innerHTML = newItemName.replace(hotkey, `<u>${hotkey}</u>`)
+                    mappedHotkeys[hotkey] = menuItem
+                } else {
+                    menuItem.innerHTML = `${newItemName}<u class="extra">${hotkey.toUpperCase()}</u>`
+                    mappedHotkeys[hotkey] = menuItem
                 }
             }
+            resolve()
         })
+    }
 
-        addEventListener('keyup', e => {
-            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.getAttribute('contenteditable') === 'true') return
-            if (e.key.toLowerCase() === key.toLowerCase()) {
-                if (!hotkeysOnToday || !document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = false
+    function handleHotkeys() {
+        const mainMenu = document.querySelector('.main-menu')
+        document.addEventListener('keydown', (event) => {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return
+            if (event.shiftKey || event.ctrlKey || event.metaKey) return
+            mainMenu.dataset.hotkeysVisible = event.altKey
+            if (event.altKey) {
+                document.addEventListener('mousedown', () => {
+                    mainMenu.dataset.hotkeysVisible = false
+                }, { once: true })
             }
-        })
-
-        window.addEventListener('popstate', async () => {
-            if (syncedStorage['hotkeys-quick']) {
-                if (document.location.hash.includes('#/vandaag')) document.documentElement.dataset.hotkeysVisible = true
-                else document.documentElement.dataset.hotkeysVisible = false
+            if (mainMenu.dataset.hotkeysVisible) {
+                event.preventDefault()
+                if (mappedHotkeys[event.key.toLowerCase()]) {
+                    mappedHotkeys[event.key.toLowerCase()].click()
+                    mainMenu.dataset.hotkeysVisible = false
+                }
             }
         })
     }

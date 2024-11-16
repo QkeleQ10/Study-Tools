@@ -173,28 +173,18 @@ export default [
             {
                 id: 'hotkeys-enabled',
                 title: "Sneltoetsen",
-                subtitle: "Houd de activatietoets ingedrukt en druk op een getal op je toetsenbord voor snelle navigatie.",
+                subtitle: "Houd Alt ingedrukt en druk op een letter op je toetsenbord voor snelle navigatie.",
                 default: true,
             },
-            {
-                id: 'magister-overlay-hotkey',
-                title: "Activatietoets sneltoetsen",
-                subtitle: "Deze toets activeert de sneltoetsen.",
-                type: "KeyPicker",
-                default: "S",
-                conditions: [
-                    { settingId: 'hotkeys-enabled', operator: 'equal', value: true },
-                ],
-            },
-            {
-                id: 'hotkeys-quick',
-                title: "Snellere sneltoetsen",
-                subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder de activatietoets ingedrukt te hoeven houden.",
-                default: false,
-                conditions: [
-                    { settingId: 'hotkeys-enabled', operator: 'equal', value: true },
-                ],
-            },
+            // {
+            //     id: 'hotkeys-quick',
+            //     title: "Snellere sneltoetsen",
+            //     subtitle: "Op de startpagina zijn sneltoetsen bruikbaar zonder Alt ingedrukt te hoeven houden.",
+            //     default: false,
+            //     conditions: [
+            //         { settingId: 'hotkeys-enabled', operator: 'equal', value: true },
+            //     ],
+            // },
         ]
     },
     {
