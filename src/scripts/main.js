@@ -164,6 +164,9 @@ async function main() {
                 document.addEventListener('mousedown', () => {
                     mainMenu.dataset.hotkeysVisible = false
                 }, { once: true })
+                window.addEventListener('blur', () => {
+                    mainMenu.dataset.hotkeysVisible = false
+                }, { once: true })
             }
             if (mainMenu.dataset.hotkeysVisible) {
                 event.preventDefault()
