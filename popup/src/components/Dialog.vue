@@ -67,10 +67,18 @@ const closeDialog = () => {
 	text-align: center;
 }
 
+.dialog-icon:empty {
+	display: none;
+}
+
 .dialog-title {
 	margin: 0;
 	color: var(--color-on-surface);
 	font: var(--typescale-headline-small);
+}
+
+.dialog-title:empty {
+	display: none;
 }
 
 .dialog-title.center {
@@ -81,6 +89,10 @@ const closeDialog = () => {
 	color: var(--color-on-surface-variant);
 	font: var(--typescale-body-medium);
 	text-wrap: balance;
+}
+
+.dialog-description:empty {
+	display: none;
 }
 
 .dialog-actions {

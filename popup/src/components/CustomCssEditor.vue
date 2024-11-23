@@ -11,18 +11,20 @@ const editing = ref(false)
 
 const customCssValue = computed({
     get() {
-        return (syncedStorage.value['custom-css'] ?? '') + (syncedStorage.value['custom-css2'] ?? '')
+        let value = (syncedStorage.value['custom-css'] ?? '') + (syncedStorage.value['custom-css2'] ?? '')
+        let formattedValue = value
+        return formattedValue
     },
-    set(newValue) {
-        console.log(syncedStorage.value['custom-css'].length, syncedStorage.value['custom-css2'].length)
-        syncedStorage.value['custom-css'] = newValue?.substring(0, 8181) ?? ''
-        syncedStorage.value['custom-css2'] = newValue?.substring(8181, 16361) ?? ''
-        console.log(syncedStorage.value['custom-css'].length, syncedStorage.value['custom-css2'].length)
-        if (byteSize(newValue) > 16361) warnDialogActive.value = true
+    set(value) {
+        let minifiedValue = value
+        syncedStorage.value['custom-css'] = minifiedValue?.slice(0, value.length / 2) ?? ''
+        syncedStorage.value['custom-css2'] = minifiedValue?.slice(value.length / 2, value.length) ?? ''
+        console.log(byteSize())
+        if (byteSize() > 16384) warnDialogActive.value = true
     }
 })
 
-const byteSize = str => new Blob([str]).size
+const byteSize = () => (JSON.stringify(syncedStorage.value['custom-css']).length + 'custom-css'.length + JSON.stringify(syncedStorage.value['custom-css2']).length + 'custom-css2'.length)
 
 const cssVars = ['--st-font-family-primary', '--st-font-family-secondary', '--st-font-hero', '--st-font-primary', '--st-font-secondary', '--st-background-primary', '--st-background-secondary', '--st-background-tertiary', '--st-foreground-primary', '--st-foreground-secondary', , '--st-foreground-accent', '--st-highlight-primary', '--st-accent-primary', '--st-accent-primary-dark', '--st-border', '--st-contrast-accent']
 
@@ -54,13 +56,14 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
         <div class="header">
             <div>
                 <h3 class="setting-title">CSS-editor</h3>
-                <span v-if="!editing || !syncedStorage['custom-css']" class="setting-subtitle">Lees eerst de
-                    informatie!</span>
-                <span v-else class="setting-subtitle">{{ byteSize([customCssValue || ''])
-                    }}
-                    /
-                    16361
-                    bytes gebruikt</span>
+                <span v-if="!editing || (!syncedStorage['custom-css'] && !syncedStorage['custom-css2'])"
+                    class="setting-subtitle">
+                    Lees eerst de informatie!
+                </span>
+                <span v-else class="setting-subtitle">
+                    {{ byteSize() }} / 16384 bytes
+                    <span v-if="byteSize() > 16384"> (niet opgeslagen!)</span>
+                </span>
             </div>
             <button class="button tonal" @click="infoDialogActive = true">
                 <Icon>help</Icon>
@@ -71,7 +74,7 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
             spellcheck="false" @keydown="editing = true" @keydown.tab="tabPressed"></textarea>
         <Dialog v-model:active="infoDialogActive">
             <template #text>
-                De maximale lengte van je CSS-code is 16361 bytes. Als je code langer is, wordt deze niet
+                De maximale lengte van je CSS-code is 16384 bytes. Als je code langer is, wordt deze niet
                 opgeslagen. Optimaliseer je code en gebruik eventueel een CSS-minifier.
                 <br><br>
                 Enkele CSS-<code>:root</code>-variabelen die je kunt overschrijven zijn:<br>
@@ -96,8 +99,8 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
             <template #icon>warning</template>
             <template #headline>Niet opgeslagen</template>
             <template #text>
-                De maximale lengte van je CSS-code is 16361 bytes. Je code is langer dan dit en wordt daarom niet
-                volledig opgeslagen.
+                De maximale lengte van je CSS-code is 16384 bytes. Je code is langer dan dit en je wijzigingen zijn dus
+                niet opgeslagen! Optimaliseer je code en gebruik eventueel een CSS-minifier.
             </template>
             <template #buttons>
                 <button @click="warnDialogActive = false">Sluiten</button>

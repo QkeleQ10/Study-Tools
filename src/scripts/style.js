@@ -1837,7 +1837,7 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
     } else { createStyle('', 'study-tools-pfp') }
 
-    if (syncedStorage['custom-css']) {
+    if (syncedStorage['custom-css'] || syncedStorage['custom-css2']) {
         createStyle(((syncedStorage['custom-css'] ?? '') + (syncedStorage['custom-css2'] ?? '')), 'study-tools-custom-css')
 
         function extractVariables(inputString) {
