@@ -461,6 +461,7 @@
     border-bottom-right-radius: calc(var(--st-border-radius) * var(--st-brm-bottom-right));
     container-type: size;
     container-name: event-wrapper;
+    overflow: hidden;
 }
 
 .st-event-wrapper[data-ongoing=true] {
@@ -468,11 +469,12 @@
 }
 
 .st-event-wrapper[data-cancelled=true]:before {
+    content: '';
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
-    width: 5px;
+    width: 4px;
     background-color: var(--st-accent-warn);
     opacity: 1 !important;
     transform: none !important;
@@ -637,7 +639,7 @@
 
 @container event-wrapper (height < 75px) {
     .st-event-details {
-        grid-template-columns: auto auto;
+        grid-template-columns: auto 1fr;
     }
 }
 

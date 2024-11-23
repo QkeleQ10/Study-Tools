@@ -62,7 +62,7 @@ async function main() {
 
     // Easter egg
     if (Math.random() < 0.006) /* 0,6% */ setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
-    if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => document.querySelector('.logo-expanded').setAttribute('src', 'https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg'), 2000)
+    if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => createStyle(`:root{--mg-logo-expanded:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg')}`), 2000)
     if (Math.random() < 0.010) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
     if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
     if (Math.random() < 0.004) setTimeout(() => {
@@ -144,9 +144,11 @@ async function main() {
                         menuItem.innerHTML = newItemName.replace(hotkey.toUpperCase(), `<u>${hotkey.toUpperCase()}</u>`)
                     else
                         menuItem.innerHTML = newItemName.replace(hotkey, `<u>${hotkey}</u>`)
+                    menuItem.title = i18n('hotkeyTooltip', { key: hotkey.toUpperCase() })
                     mappedHotkeys[hotkey] = menuItem
                 } else {
                     menuItem.innerHTML = `${newItemName}<u class="extra">${hotkey.toUpperCase()}</u>`
+                    menuItem.title = i18n('hotkeyTooltip', { key: hotkey.toUpperCase() })
                     mappedHotkeys[hotkey] = menuItem
                 }
             }
@@ -155,24 +157,24 @@ async function main() {
     }
 
     function handleHotkeys() {
-        const mainMenu = document.querySelector('.main-menu')
+        const container = document.querySelector('.container')
         document.addEventListener('keydown', (event) => {
             if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return
             if (event.shiftKey || event.ctrlKey || event.metaKey) return
-            mainMenu.dataset.hotkeysVisible = event.altKey
             if (event.altKey) {
+                container.dataset.hotkeysVisible = true
                 document.addEventListener('mousedown', () => {
-                    mainMenu.dataset.hotkeysVisible = false
+                    container.dataset.hotkeysVisible = false
                 }, { once: true })
                 window.addEventListener('blur', () => {
-                    mainMenu.dataset.hotkeysVisible = false
+                    container.dataset.hotkeysVisible = false
                 }, { once: true })
             }
-            if (mainMenu.dataset.hotkeysVisible) {
+            if (container.dataset.hotkeysVisible === 'true') {
                 event.preventDefault()
                 if (mappedHotkeys[event.key.toLowerCase()]) {
                     mappedHotkeys[event.key.toLowerCase()].click()
-                    mainMenu.dataset.hotkeysVisible = false
+                    container.dataset.hotkeysVisible = false
                 }
             }
         })
@@ -242,7 +244,7 @@ async function popstate() {
 async function upgradeAssistant() {
     const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id})`)].map(e => e.id.split('-')[1])
 
-    if (otherExtensionInstances.length > 0) console.log('This instance:', chrome.runtime.id, 'Other instances:', otherExtensionInstances)
+    if (otherExtensionInstances.length > 0) console.info('This instance:', chrome.runtime.id, 'Other instances:', otherExtensionInstances)
 
     if (chrome.runtime.id === 'ohhafpjdnbhihibepefpcmnnodaodajc' && otherExtensionInstances.includes('hacjodpccmeoocakiahjfndppdeallak')) { // This is Edge Add-Ons version, detected Chrome Web Store version
         element('meta', `copy-settings-sync`, document.head, { innerText: JSON.stringify(await chrome.storage.sync.get()) })

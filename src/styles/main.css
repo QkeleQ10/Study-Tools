@@ -1259,37 +1259,64 @@ a.st-keyboard-hint.clicked {
 }
 
 .main-menu a span>u,
-.main-menu .popup-menu a>u {
+.main-menu .popup-menu a>u,
+.appbar a span>u {
     text-decoration: none;
 }
 
 .main-menu a span>u.extra,
-.main-menu .popup-menu a>u.extra {
+.main-menu .popup-menu a>u.extra,
+.appbar a span>u.extra {
     display: none;
 }
 
-.main-menu[data-hotkeys-visible=true] a span>u,
-.main-menu[data-hotkeys-visible=true] .popup-menu a>u {
+.container[data-hotkeys-visible=true] .main-menu a span>u,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u,
+.container[data-hotkeys-visible=true] .appbar a span>u {
     text-decoration: underline;
     text-decoration-skip-ink: none;
 }
 
-.main-menu[data-hotkeys-visible=true] a span>u.extra,
-.main-menu[data-hotkeys-visible=true] .popup-menu a>u.extra {
+.container[data-hotkeys-visible=true] .main-menu a span>u.extra,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u.extra {
     display: inline-block;
     position: absolute;
     right: 6px;
-    scale: 0.75;
+    opacity: 0.5;
+    font-size: 11px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.container[data-hotkeys-visible=true] .appbar a span>u.extra {
+    margin-left: 3px;
+    display: inline-block;
     opacity: 0.5;
     text-decoration: none;
 }
 
-.main-menu[data-hotkeys-visible=true]:hover li ul {
+.container[data-hotkeys-visible=true] .main-menu a span>u.extra:before,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u.extra:before,
+.container[data-hotkeys-visible=true] .appbar a span>u.extra:before {
+    content: ' (';
+}
+
+.container[data-hotkeys-visible=true] .main-menu a span>u.extra:after,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u.extra:after,
+.container[data-hotkeys-visible=true] .appbar a span>u.extra:after {
+    content: ')';
+}
+
+.container[data-hotkeys-visible=true] .menu-host:hover li ul {
     display: block;
     margin-left: 42px;
 }
 
-.main-menu[data-hotkeys-visible=true]:hover li:not(.expanded) ul>li {
+.container[data-hotkeys-visible=true] .menu-host:hover li>a:after {
+    transform: scaleY(-1);
+}
+
+.container[data-hotkeys-visible=true] .menu-host:hover li:not(.expanded) ul>li {
     margin-top: -22px;
 }
 

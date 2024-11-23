@@ -134,6 +134,7 @@
     "loading": "Laden...",
     "loadingWidgets": "Widgets laden...",
     "loadingWidget": "Widget '{title}' laden...",
+    "hotkeyTooltip": "Sneltoets: Alt+{key}",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
