@@ -3,6 +3,11 @@ import { ref, computed, inject } from 'vue'
 
 const syncedStorage = inject('syncedStorage')
 
+const bytesLimit = (8192 * 2)
+const bytesUnusable = 12 - (13 * 1)
+const bytesUsable = bytesLimit - bytesUnusable
+const bytesUsed = () => (JSON.stringify(syncedStorage.value['custom-css']).length + 'custom-css'.length + JSON.stringify(syncedStorage.value['custom-css2']).length + 'custom-css2'.length)
+
 const textarea = ref(null)
 
 const infoDialogActive = ref(false)
@@ -19,12 +24,10 @@ const customCssValue = computed({
         let minifiedValue = value
         syncedStorage.value['custom-css'] = minifiedValue?.slice(0, value.length / 2) ?? ''
         syncedStorage.value['custom-css2'] = minifiedValue?.slice(value.length / 2, value.length) ?? ''
-        console.log(byteSize())
-        if (byteSize() > 16384) warnDialogActive.value = true
+        console.log(bytesUsed())
+        if (bytesUsed() > bytesLimit) warnDialogActive.value = true
     }
 })
-
-const byteSize = () => (JSON.stringify(syncedStorage.value['custom-css']).length + 'custom-css'.length + JSON.stringify(syncedStorage.value['custom-css2']).length + 'custom-css2'.length)
 
 const cssVars = ['--st-font-family-primary', '--st-font-family-secondary', '--st-font-hero', '--st-font-primary', '--st-font-secondary', '--st-background-primary', '--st-background-secondary', '--st-background-tertiary', '--st-foreground-primary', '--st-foreground-secondary', , '--st-foreground-accent', '--st-highlight-primary', '--st-accent-primary', '--st-accent-primary-dark', '--st-border', '--st-contrast-accent']
 
@@ -61,8 +64,8 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
                     Lees eerst de informatie!
                 </span>
                 <span v-else class="setting-subtitle">
-                    {{ byteSize() }} / 16384 bytes
-                    <span v-if="byteSize() > 16384"> (niet opgeslagen!)</span>
+                    {{ bytesUsed() - bytesUnusable }} / {{ bytesUsable }} bytes
+                    <span v-if="bytesUsed() > bytesLimit"> (niet opgeslagen!)</span>
                 </span>
             </div>
             <button class="button tonal" @click="infoDialogActive = true">
@@ -74,7 +77,7 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
             spellcheck="false" @keydown="editing = true" @keydown.tab="tabPressed"></textarea>
         <Dialog v-model:active="infoDialogActive">
             <template #text>
-                De maximale lengte van je CSS-code is 16384 bytes. Als je code langer is, wordt deze niet
+                De maximale lengte van je CSS-code is {{ bytesUsable }} bytes. Als je code langer is, wordt deze niet
                 opgeslagen. Optimaliseer je code en gebruik eventueel een CSS-minifier.
                 <br><br>
                 Enkele CSS-<code>:root</code>-variabelen die je kunt overschrijven zijn:<br>
@@ -99,7 +102,9 @@ setTimeout(() => { if (syncedStorage.value['custom-css']) editing.value = true }
             <template #icon>warning</template>
             <template #headline>Niet opgeslagen</template>
             <template #text>
-                De maximale lengte van je CSS-code is 16384 bytes. Je code is langer dan dit en je wijzigingen zijn dus
+                De maximale lengte van je CSS-code is {{ bytesUsable }} bytes. Je code is langer dan dit en je
+                wijzigingen
+                zijn dus
                 niet opgeslagen! Optimaliseer je code en gebruik eventueel een CSS-minifier.
             </template>
             <template #buttons>
