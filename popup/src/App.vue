@@ -98,7 +98,7 @@ function openInNewTab(url) {
                         <div class="setting-wrapper"
                             :class="{ visible: shouldShowSetting(setting), inline: setting.inline }"
                             :data-setting-type="setting.type" :data-setting-id="setting.id"
-                            v-if="shouldShowSetting(setting)" :key="setting.id">
+                            v-if="!setting.hide && shouldShowSetting(setting)" :key="setting.id">
                             <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
                                 :id="setting.id" v-model="syncedStorage[setting.id]">
                                 <template #title>{{ setting.title }}</template>

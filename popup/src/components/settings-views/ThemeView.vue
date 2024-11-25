@@ -86,7 +86,8 @@ async function storeCurrentTheme() {
             <div class="additional-options">
                 <div class="surface-container">
                     <template v-for="setting in settings[0].settings.slice(1)">
-                        <div class="setting-wrapper" :data-setting-id="setting.id" v-if="shouldShowSetting(setting)">
+                        <div class="setting-wrapper" :data-setting-id="setting.id"
+                            v-if="!setting.hide && shouldShowSetting(setting)">
                             <component :is="optionTypes[setting.type || 'SwitchInput']" :setting="setting"
                                 :id="setting.id" v-model="syncedStorage[setting.id]">
                                 <template #title>{{ setting.title }}</template>

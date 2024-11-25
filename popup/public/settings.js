@@ -88,6 +88,11 @@ export default [
                 type: "LinkToOptionsTab",
                 default: '',
             },
+            {
+                id: "custom-css2",
+                hide: true,
+                default: '',
+            },
         ]
     },
     {
