@@ -822,10 +822,9 @@
 #st-start-widgets-collapsed-tooltip,
 #st-start-widgets-edit-tooltip {
     position: absolute;
-    bottom: 84px;
-    right: 10px;
-    translate: 0 50%;
-    max-width: 300px;
+    width: fit-content;
+    min-width: 100px;
+    max-width: 270px;
 
     padding: 7px 13px;
     background-color: var(--st-accent-primary);
@@ -841,11 +840,6 @@
     opacity: 1;
     pointer-events: none;
     transition: transform 200ms, opacity 200ms;
-}
-
-#st-start-widgets-edit-tooltip {
-    right: 175px;
-    max-width: 210px;
 }
 
 #st-start-widgets-collapsed-tooltip:after,

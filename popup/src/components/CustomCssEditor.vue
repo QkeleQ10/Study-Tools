@@ -22,14 +22,39 @@ const customCssValue = computed({
     },
     set(value) {
         let minifiedValue = value
-        syncedStorage.value['custom-css'] = minifiedValue?.slice(0, value.length / 2) ?? ''
-        syncedStorage.value['custom-css2'] = minifiedValue?.slice(value.length / 2, value.length) ?? ''
-        console.log(bytesUsed())
+        const parts = splitStringByJsonByteLength(minifiedValue, [8192 - 10, 8192 - 11])
+        syncedStorage.value['custom-css'] = parts[0]
+        syncedStorage.value['custom-css2'] = parts[1]
+
+        console.log(JSON.parse(JSON.stringify(value)))
         if (bytesUsed() > bytesLimit) warnDialogActive.value = true
     }
 })
 
-const cssVars = ['--st-font-family-primary', '--st-font-family-secondary', '--st-font-hero', '--st-font-primary', '--st-font-secondary', '--st-background-primary', '--st-background-secondary', '--st-background-tertiary', '--st-foreground-primary', '--st-foreground-secondary', , '--st-foreground-accent', '--st-highlight-primary', '--st-accent-primary', '--st-accent-primary-dark', '--st-border', '--st-contrast-accent']
+function splitStringByJsonByteLength(input, partsLengths) {
+    const encodeForJson = (str) => JSON.stringify(str).length
+    const parts = Array(partsLengths.length).fill('') // Initialize all parts with empty strings
+
+    let remaining = input
+
+    for (let i = 0; i < partsLengths.length; i++) {
+        let part = remaining
+
+        // Find the split point for the current part
+        while (encodeForJson(part) > partsLengths[i]) {
+            part = part.slice(0, -1) // Trim the last character until it fits
+        }
+
+        parts[i] = part // Assign the valid part
+        remaining = remaining.slice(part.length) // Update the remaining string
+
+        if (!remaining) break // Stop if there's nothing left to split
+    }
+
+    return parts
+}
+
+const cssVars = ['--st-font-family-primary', '--st-font-family-secondary', '--st-font-hero', '--st-font-primary', '--st-font-secondary', '--st-background-primary', '--st-background-secondary', '--st-background-tertiary', '--st-foreground-primary', '--st-foreground-secondary', , '--st-foreground-accent', '--st-highlight-primary', '--st-accent-primary', '--st-accent-primary-dark', '--st-border', '--st-contrast-accent', '--mg-logo-expanded', '--mg-logo-collapsed']
 
 function selectEntireContents(event) {
     event.target.focus()

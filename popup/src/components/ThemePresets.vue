@@ -95,7 +95,7 @@ function generatePresetUrl(preset) {
                     :class="{ matches: presetsMatch(preset) }"
                     :title="'Persoonlijk thema\n' + (preset.name || new Date(preset.date)?.toLocaleString('nl-NL')) + '\nKlik om toe te passen'"
                     @click="promptPreset(preset)">
-                    <MagisterThemePreview class="theme-preset-preview" :preset="preset" />
+                    <MagisterThemePreview class="theme-preset-preview" :preset="preset" :scale="1.1" />
                     <div class="theme-actions">
                         <button class="theme-preset-remove" @click.stop="promptingIndex = i; deletionPrompt = true"
                             title="Persoonlijk thema verwijderen">
@@ -162,7 +162,7 @@ function generatePresetUrl(preset) {
 .theme-presets-grid {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 50% 50%;
     justify-items: stretch;
     gap: 8px;
     margin: 8px;
@@ -170,7 +170,7 @@ function generatePresetUrl(preset) {
 }
 
 #personal-presets {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, calc(100% / 3));
     background-color: var(--color-surface);
     outline: 1px solid var(--color-outline-variant);
     border-radius: 12px;
@@ -214,6 +214,7 @@ function generatePresetUrl(preset) {
     height: 90px;
     border-radius: 8px;
     outline: 1px solid var(--color-outline-variant);
+    overflow: hidden;
 }
 
 .theme-preset.matches .theme-preset-preview {

@@ -1,5 +1,4 @@
 <script setup>
-import ThemePreviewImage from '@/assets/ThemePreviewImage.vue'
 import { computed, inject, defineProps } from 'vue'
 import { presets, propertyKeys } from '../../public/themePresets.js'
 
@@ -15,7 +14,7 @@ const currentTheme = computed(() => {
 })
 
 const style = computed(() => ({
-    colorScheme: (currentTheme.value['ptheme']?.split(',')?.[0] || 'auto').replace('auto', 'light dark'),
+    colorScheme: (currentTheme.value['ptheme']?.split(',')?.[0] || 'auto'),
     accentColor: (currentTheme.value['ptheme'] || 'auto,207,95,55')?.split(',').slice(1),
     pageColor: currentTheme.value['pagecolor']?.startsWith('true')
         ? `hsl(${currentTheme.value['pagecolor'].replace('true,', '').replace(/,/gi, ' ')})`
@@ -30,10 +29,13 @@ const style = computed(() => ({
     wallpaperUrl: currentTheme.value['wallpaper']?.startsWith('custom')
         ? currentTheme.value['wallpaper'].replace('custom,', '')
         : null,
-    decoration: currentTheme.value['decoration']?.split(',')[0],
+    decoration: currentTheme.value['decoration']?.split(',')[0] !== 'none'
+        ? currentTheme.value['decoration']?.split(',')[0]
+        : null,
     decorationUrl: currentTheme.value['decoration']?.startsWith('custom')
         ? currentTheme.value['decoration'].replace('custom,', '')
         : null,
+    shape: currentTheme.value['shape'] ?? 8,
 }))
 
 function presetMatches(preset) {

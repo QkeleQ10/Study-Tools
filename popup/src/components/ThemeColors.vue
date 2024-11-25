@@ -65,9 +65,10 @@ function updateColor(newColor) {
 #theme-preview {
     grid-area: preview;
     width: 200px;
-    aspect-ratio: 16 / 9;
+    height: 110px;
     border-radius: 8px;
     outline: 1px solid var(--color-outline-variant);
+    overflow: hidden;
 }
 
 #theme-title {

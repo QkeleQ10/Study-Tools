@@ -307,16 +307,18 @@ async function today() {
         })
 
         if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('start-widgets-edit-known', 'local') ?? false)) {
-            const tooltip = element('div', 'st-start-widgets-edit-tooltip', document.body, { class: 'st-hidden', innerText: "Onder deze knop kun je het widgetpaneel compleet aanpassen." })
-            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
-            invokeEditWidgets.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-edit-known', true, 'local')
-            })
             setTimeout(() => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-edit-known', true, 'local')
-            }, 20000)
+                const rect = invokeEditWidgets.getBoundingClientRect()
+                const tooltip = element('div', 'st-start-widgets-edit-tooltip', document.body, { class: 'st-hidden', innerText: "Onder deze knop kun je het widgetpaneel compleet aanpassen.", style: `bottom: ${window.innerHeight - rect.top}px; right: ${window.innerWidth - rect.right}px; translate: 8px -16px;` })
+                setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
+                invokeEditWidgets.addEventListener('click', () => {
+                    tooltip.classList.add('st-hidden')
+                    saveToStorage('start-widgets-edit-known', true, 'local')
+                })
+                setTimeout(() => {
+                    tooltip.classList.add('st-hidden')
+                }, 20000)
+            }, 2000)
         }
 
         let editTeachers
@@ -380,17 +382,19 @@ async function today() {
             verifyDisplayMode()
         })
 
-        if (widgetsCollapsed &&( !(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false) || Math.random() < 0.01)) {
-            const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen." })
-            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
-            todayCollapseWidgets.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-collapsed-known', true, 'local')
-            })
+        if (widgetsCollapsed && (!(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false) || Math.random() < 0.01)) {
             setTimeout(() => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-collapsed-known', true, 'local')
-            }, 20000)
+                const rect = todayCollapseWidgets.getBoundingClientRect()
+                const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen.", style: `bottom: ${window.innerHeight - rect.top}px; right: ${window.innerWidth - rect.right}px; translate: 8px -16px;` })
+                setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
+                todayCollapseWidgets.addEventListener('click', () => {
+                    tooltip.classList.add('st-hidden')
+                    saveToStorage('start-widgets-collapsed-known', true, 'local')
+                })
+                setTimeout(() => {
+                    tooltip.classList.add('st-hidden')
+                }, 20000)
+            }, 2000)
         }
 
         // Allow for keyboard navigation
