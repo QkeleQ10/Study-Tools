@@ -108,7 +108,7 @@ function generatePresetUrl(preset) {
                     </div>
                 </button>
                 <div key="add-new" class="personal-presets-actions" v-if="storedThemes.length < 9">
-                    <!-- <button class="theme-preset-upload" title="Persoonlijke thema's toevoegen vanuit winkel">
+                    <!-- <button class="theme-preset-upload" title="Thema's toevoegen vanuit themawinkel">
                     <Icon>storefront</Icon>
                 </button> -->
                     <button class="theme-preset-upload" title="Persoonlijk thema importeren vanuit bestand"

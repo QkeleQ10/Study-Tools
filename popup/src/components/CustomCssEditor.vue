@@ -26,22 +26,21 @@ const customCssValue = computed({
         syncedStorage.value['custom-css'] = parts[0]
         syncedStorage.value['custom-css2'] = parts[1]
 
-        console.log(JSON.parse(JSON.stringify(value)))
         if (bytesUsed() > bytesLimit) warnDialogActive.value = true
     }
 })
 
-function splitStringByJsonByteLength(input, partsLengths) {
+function splitStringByJsonByteLength(input, partsMaxLengths) {
     const encodeForJson = (str) => JSON.stringify(str).length
-    const parts = Array(partsLengths.length).fill('') // Initialize all parts with empty strings
+    const parts = Array(partsMaxLengths.length).fill('') // Initialize all parts with empty strings
 
     let remaining = input
 
-    for (let i = 0; i < partsLengths.length; i++) {
+    for (let i = 0; i < partsMaxLengths.length; i++) {
         let part = remaining
 
         // Find the split point for the current part
-        while (encodeForJson(part) > partsLengths[i]) {
+        while (encodeForJson(part) > partsMaxLengths[i]) {
             part = part.slice(0, -1) // Trim the last character until it fits
         }
 

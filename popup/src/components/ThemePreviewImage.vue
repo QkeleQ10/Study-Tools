@@ -207,12 +207,9 @@ async function getDecoration(decorationName) {
 
 function lightDark(lightColor, darkColor) {
     switch (style.colorScheme) {
-        case 'dark':
-            return darkColor
-        case 'light':
-            return lightColor
-        default:
-            return preferredColor.value === 'dark' ? darkColor : lightColor
+        case 'dark': return darkColor
+        case 'light': return lightColor
+        default: return preferredColor.value === 'dark' ? darkColor : lightColor
     }
 }
 
@@ -222,11 +219,9 @@ function shiftedHslColor(wishH, wishS, wishL, defaultS, defaultL) {
 
 function normaliseColorComponent(x, a, b) {
     if (x <= b) {
-        // First linear function: from 0 < x < b, correlate to 0 < y < a
-        return (x / b) * a;
+        return (x / b) * a // First linear function: from 0 < x < b, correlate to 0 < y < a
     } else {
-        // Second linear function: from b < x < 100, correlate to a < y < 100
-        return a + ((x - b) / (100 - b)) * (100 - a);
+        return a + ((x - b) / (100 - b)) * (100 - a) // Second linear function: from b < x < 100, correlate to a < y < 100
     }
 }
 </script>

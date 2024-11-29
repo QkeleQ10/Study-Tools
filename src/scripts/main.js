@@ -65,7 +65,7 @@ async function main() {
     if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => createStyle(`:root{--mg-logo-expanded:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg')}`), 2000)
     if (Math.random() < 0.010) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
     if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
-    if (Math.random() < 0.004) setTimeout(() => {
+    if (Math.random() < 0.004) /* 0,4% */ setTimeout(() => {
         const amogus = element('img', 'st-amogus', document.body, {
             src: 'https://static.wikia.nocookie.net/fnaf-tower-defense/images/7/77/Among-us-red-png-01.png', style: `position: absolute; bottom: 0; left: 20px; height: 32px; animation: 1000ms peekInLeft; z-index: 9000;`
         })
@@ -74,6 +74,18 @@ async function main() {
             audio.play()
         })
     }, 2000)
+    if (
+        ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000 < 7) /* Between November 28th and December 5th */
+        && ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000 > 0)
+        && Math.random() < (-0.15 * ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000) + 1) /* Probability correlating to time until December 5th */
+    ) {
+        const mijter = element('img', 'st-mijter', document.body, {
+            src: 'https://i.imgur.com/2NSn0gh.png', style: `position: absolute; top: 20px; left: 82px; height: 24px; z-index: 100;`
+        })
+        mijter.addEventListener('click', () => {
+            mijter.remove()
+        })
+    }
 
     // Birthday party mode!
     const accountInfo = await MagisterApi.accountInfo(),
@@ -180,6 +192,55 @@ async function main() {
         })
     }
 }
+
+window.addEventListener('DOMContentLoaded', async () => {
+    handleAnnouncements()
+})
+
+async function handleAnnouncements() {
+    let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
+    if (!response.ok) return
+    announcements = Object.values(await response.json())
+
+    announcements
+        .filter(announcement => announcement.type === 'snackbar' || announcement.type === 'dialog')
+        .forEach(async announcement => {
+            if (await isAnnouncementValid(announcement)) {
+                notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
+                if (announcement.showOnceId) setTimeout(() => {
+                    saveToStorage(`announcement-${announcement.showOnceId}`, true, 'local')
+                }, 5000)
+            }
+        })
+}
+
+function isAnnouncementValid(announcement) {
+    return new Promise(async (resolve, reject) => {
+        let now = new Date()
+        if (!!announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
+        if (!!announcement.onlyForStudents && !announcement.onlyForStudents.includes((await awaitElement('.menu-button figure img')).getAttribute('alt'))) resolve(false)
+        if (!!announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local')) && !announcement.onlyForSchools.includes('studentname')) resolve(false)
+        if (!!announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
+        if (!!announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
+        if (!!announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
+        if (!!announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
+        if (!!announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
+        if (!!announcement.showOnceId && (await getFromStorage(`announcement-${announcement.showOnceId}`, 'local') || false)) resolve(false)
+
+        resolve(true)
+    })
+}
+
+// TODO: ugly code
+// Output eggs
+fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/eggs.json`)
+    .then(response => {
+        if (!response.ok) return
+        response.json()
+            .then(data => {
+                eggs = data
+            })
+    })
 
 // Run at start and when the URL changes
 popstate()

@@ -62,7 +62,6 @@ async function storeCurrentTheme() {
             ...obj
         }
     ]
-
 }
 </script>
 
