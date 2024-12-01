@@ -34,55 +34,6 @@ let eggs = [],
     verbose = syncedStorage['verbosity']
 })()
 
-window.addEventListener('DOMContentLoaded', async () => {
-    handleAnnouncements()
-})
-
-async function handleAnnouncements() {
-    let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
-    if (!response.ok) return
-    announcements = Object.values(await response.json())
-
-    announcements
-        .filter(announcement => announcement.type === 'snackbar' || announcement.type === 'dialog')
-        .forEach(async announcement => {
-            if (await isAnnouncementValid(announcement)) {
-                notify(announcement.type || 'snackbar', announcement.body, announcement.buttons, announcement.duration || 10000)
-                if (announcement.showOnceId) setTimeout(() => {
-                    saveToStorage(`announcement-${announcement.showOnceId}`, true, 'local')
-                }, 5000)
-            }
-        })
-}
-
-function isAnnouncementValid(announcement) {
-    return new Promise(async (resolve, reject) => {
-        let now = new Date()
-        if (!!announcement.requiredSettings && !announcement.requiredSettings.every(setting => syncedStorage[setting])) resolve(false)
-        if (!!announcement.onlyForStudents && !announcement.onlyForStudents.includes((await awaitElement('.menu-button figure img')).getAttribute('alt'))) resolve(false)
-        if (!!announcement.onlyForSchools && !announcement.onlyForSchools.includes(await getFromStorage('schoolName', 'local')) && !announcement.onlyForSchools.includes('studentname')) resolve(false)
-        if (!!announcement.dateStart && (new Date(announcement.dateStart) > now)) resolve(false)
-        if (!!announcement.dateEnd && (new Date(announcement.dateEnd) < now)) resolve(false)
-        if (!!announcement.onlyOnWeekdays && !announcement.onlyOnWeekdays.includes(now.getDay())) resolve(false)
-        if (!!announcement.onlyBeforeTime && (new Date(`${now.toDateString()} ${announcement.onlyBeforeTime}`) < now)) resolve(false)
-        if (!!announcement.onlyAfterTime && (new Date(`${now.toDateString()} ${announcement.onlyAfterTime}`) > now)) resolve(false)
-        if (!!announcement.showOnceId && (await getFromStorage(`announcement-${announcement.showOnceId}`, 'local') || false)) resolve(false)
-
-        resolve(true)
-    })
-}
-
-// TODO: ugly code
-// Output eggs
-fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/eggs.json`)
-    .then(response => {
-        if (!response.ok) return
-        response.json()
-            .then(data => {
-                eggs = data
-            })
-    })
-
 /**
  * 
  * @param {TimerHandler} func 
@@ -184,6 +135,7 @@ Element.prototype.setAttributes = function (attributes) {
     for (var key in attributes) {
         if (key === 'innerText') elem.innerText = attributes[key]
         else if (key === 'innerHTML') elem.innerHTML = attributes[key]
+        else if (key === 'outerHTML') elem.outerHTML = attributes[key]
         else if (key === 'viewBox') elem.setAttributeNS(null, 'viewBox', attributes[key])
         else elem.setAttribute(key, attributes[key])
     }

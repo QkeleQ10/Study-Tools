@@ -170,7 +170,9 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     --st-border-radius: ${syncedStorage.shape}px;
     --st-background-overlay: hsl(from var(--st-background-primary) h s l / 0.97);
     --st-background-transparent: hsl(from var(--st-background-primary) h s l / 0.73);
-    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%), color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%));`
+    --st-page-wallpaper-overlay: linear-gradient(color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%), color-mix(in srgb, var(--st-page-background), transparent ${Number(syncedStorage['wallpaper-opacity']) * 100}%));
+    --mg-logo-expanded: url('assets/images/logo-magister-white.svg');
+    --mg-logo-collapsed: url('assets/images/logo-m-white.svg');`
 
     const rootVarsInvert = `
     #studiewijzer-detail-container .clearfix.user-content {
@@ -280,6 +282,14 @@ body>.container {
         / auto auto 1fr;
 }
 
+.logo .logo-expanded.ng-scope {
+    content: var(--mg-logo-expanded);
+}
+
+.logo-collapsed {
+    content: var(--mg-logo-collapsed);
+}
+
 .appbar-host {
     grid-area: appbar;
     height: 100vh;
@@ -358,6 +368,82 @@ input[type=switch]+label span,
 .agenda-lesdashboard .lesvak-prev-next .content-auto .list li:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto .list a:hover,
 .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.prev:hover, .agenda-lesdashboard .lesvak-prev-next .content-auto span.icon-up-arrow.next:hover {
     background: var(--st-background-primary) !important
+}
+
+ul.widget-checkboxes li {
+    height: 32px;
+    min-height: unset;
+    padding: 0 4px;
+    line-height: normal;
+    border: none;
+}
+
+input[type=checkbox]+label span {
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    background-color: var(--st-background-tertiary);
+    border: var(--st-border);
+    border-radius: calc(var(--st-border-radius) * 0.75);
+}
+
+input[type=checkbox]:checked+label span {
+    background-color: var(--st-highlight-primary);
+}
+
+input[type=checkbox]:checked+label span:after {
+    width: 22px;
+    height: 22px;
+    color: var(--st-foreground-primary);
+    font: 600 16px/23px "Font Awesome 6 Pro";
+    content: '';
+}
+
+#afsprakenLijst colgroup>col:nth-child(2) {
+    width: 72px !important;
+}
+
+.tabsheet#idMultimedia .content>div[ng-show] img {
+    max-width: 100%;
+    height: auto;
+}
+
+.tabsheet#idMultimedia .content>div[ng-show] img[src="assets/images/PlayerPlaceHolder.png"] {
+    visibility: hidden;
+}
+
+.tabsheet#idMultimedia .content>div[ng-show]:has(> img[src="assets/images/PlayerPlaceHolder.png"]) {
+    background: radial-gradient(at -150% -50%, var(--st-highlight-primary), transparent), radial-gradient(at top right, var(--st-background-primary), var(--st-background-tertiary));
+}
+
+.tabsheet#idMultimedia .content>div[ng-show]:has(> img[src="assets/images/PlayerPlaceHolder.png"]):after {
+    content: '';
+    font: 600 48px "Font Awesome 6 Pro";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate:  -50% -50%;
+    visibility: visible;
+    opacity: .25;
+}
+
+.k-multiselect .k-select:has(.k-icon.k-i-close) {
+    content-visibility: hidden;
+    width: 8px;
+}
+
+div.fancy-select .k-multiselect .k-multiselect-wrap li.k-button {
+    border-radius: calc(var(--st-border-radius) * .75);
+    margin-top: 4px;
+    margin-left: 4px;
+}
+
+div.fancy-select .k-multiselect .k-multiselect-wrap li.k-button:hover, div.fancy-select .k-multiselect .k-multiselect-wrap li.k-button.k-state-hover {
+    background-color: var(--st-highlight-warn);
+}
+
+.k-multiselect .k-button span:first-child:first-letter {
+    text-transform: capitalize;
 }
 
 .new-appointment-block > fieldset > ul > li:nth-child(4) > div > span.check > label {
@@ -656,6 +742,13 @@ form input[type=text], form input[type=password], form input[type=search], form 
     color: var(--st-contrast-accent);
 }
 
+.dialog-large {
+    top: 50% !important;
+    left: 50% !important;
+    width: 80% !important;
+    height: 80% !important;
+}
+
 table:not(.clearfix.user-content table),
 table.table-grid-layout td,
 .ngGrid,
@@ -948,7 +1041,7 @@ aside, aside .block,
 }
 
 .main-menu li.expanded>a::after {
-    transform: rotate(180deg);
+    transform: scaleY(-1);
 }
 
 .main-menu li.expanded:active>a::after {
@@ -1205,6 +1298,7 @@ aside .tabs li a, aside .tabs li.double-line-title>a {
     justify-content: space-between;
     height: 100%;
     max-height: calc(100vh - 84px);
+    font-family: var(--st-font-family-secondary);
 }
 
 .menu-host .menu .menu-container {
@@ -1226,13 +1320,17 @@ dna-card {
 
 .container > dna-breadcrumbs, .container dna-breadcrumbs, .container > dna-page-header, .container dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
     --title-color: var(--st-foreground-accent);
-    --title-font: var(--st-font-hero);
+    --title-font: var(--st-font-hero) !important;
+    --subtitle-font: var(--st-font-family-secondary) !important;
     --color: var(--st-foreground-accent);
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);
+    --dna-font-family-base: var(--st-font-family-secondary) !important;
+    --dna-font-family-header: var(--st-font-family-secondary) !important
     --separator-color: var(--st-foreground-accent);
     --background-secondary: var(--st-foreground-accent);
     --radius: calc(var(--st-border-radius) * 0.75);
+    font-family: var(--st-font-family-secondary) !important;
 }
 
 dna-button {
@@ -1261,6 +1359,14 @@ dna-button:hover {
 
 dna-card-title.ng-binding, dna-card-title, .content.content-auto.background-white, .opdrachten-details-row, .gegevens-container, .empty-message, .label, .capitalize.ng-binding, .examen-cijfer.ng-binding {
     color: var(--st-foreground-primary);
+}
+
+dna-card-title {
+    font: 500 16px/24px var(--st-font-family-primary);
+}
+
+dna-page-header span[slot=subtitle] {
+    font: 14px var(--st-font-family-secondary);
 }
 
 .overdue,.overdue *{color:grey!important}
@@ -1439,6 +1545,10 @@ table.table-grid-layout>tbody>tr.selected {
 
 #examen-resultaten-widget dna-card {
     --color: var(--st-foreground-primary);
+}
+
+.examen-widget {
+    font: 12px var(--st-font-family-secondary);
 }
 
 .kwt-widget table {
@@ -1727,8 +1837,8 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
     } else { createStyle('', 'study-tools-pfp') }
 
-    if (syncedStorage['custom-css']) {
-        createStyle(syncedStorage['custom-css'], 'study-tools-custom-css')
+    if (syncedStorage['custom-css'] || syncedStorage['custom-css2']) {
+        createStyle(((syncedStorage['custom-css'] ?? '') + (syncedStorage['custom-css2'] ?? '')), 'study-tools-custom-css')
 
         function extractVariables(inputString) {
             const regex = /var\(--st-reference-(\w+)-([^\s)]+)\)/g
@@ -1746,7 +1856,7 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
         }
 
         updateSteps = []
-        extractVariables(syncedStorage['custom-css']).forEach(({ variable, property, selector }) => {
+        extractVariables(((syncedStorage['custom-css'] ?? '') + (syncedStorage['custom-css2'] ?? ''))).forEach(({ variable, property, selector }) => {
             document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('mouseup', update)
             updateSteps.push(() => document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px'))
         })
@@ -1810,14 +1920,20 @@ app-bericht-details, html:root body dna-search-input {
 }
 
 dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
+    --primary: var(--st-foreground-accent) !important;
     --title-color: var(--st-foreground-accent);
     --title-font: var(--st-font-hero);
     --color: var(--st-foreground-accent);
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);
-    --separator-color: var(--st-foreground-accent);
+    --separator-color: var(--st-foreground-accent) !important;
     --background-secondary: var(--st-foreground-accent);
     --radius: var(--st-border-radius);
+}
+
+.separator, dna-breadcrumbs .separator, dna-breadcrumbs .separator svg, .separator svg.svg-inline--fa.fa-w-10, .svg-inline--fa.fa-w-10 {
+    color: var(--st-foreground-accent) !important;
+    fill: var(--st-foreground-accent) !important;
 }
 
 dna-button[fill=solid] {

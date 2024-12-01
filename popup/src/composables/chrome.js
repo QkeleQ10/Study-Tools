@@ -10,7 +10,6 @@ export function useSyncedStorage() {
     let syncedStorage = ref({})
 
     onMounted(() => {
-        console.log('mounted!')
         if (browser?.storage?.sync) {
             browser.storage.sync.get()
                 .then(value => {
@@ -23,6 +22,13 @@ export function useSyncedStorage() {
                                 syncedStorage.value[setting.id] = setting.default
                             }
                         })
+                    })
+
+                    browser.storage.sync.onChanged.addListener(changes => {
+                        for (let key in changes) {
+                            if (syncedStorage.value[key] !== changes[key].newValue)
+                                syncedStorage.value[key] = changes[key].newValue
+                        }
                     })
                 })
 
@@ -60,6 +66,34 @@ export function useSyncedStorage() {
     })
 
     return syncedStorage
+}
+
+export function useLocalStorage() {
+    let localStorage = ref({})
+
+    onMounted(() => {
+        if (browser?.storage?.local) {
+            browser.storage.local.get()
+                .then(value => {
+                    localStorage.value = value
+                })
+
+            browser.storage.local.onChanged.addListener(changes => {
+                for (let key in changes) {
+                    if (localStorage.value[key] !== changes[key].newValue)
+                        localStorage.value[key] = changes[key].newValue
+                }
+            })
+        }
+    })
+
+    watchEffect(() => {
+        let toStore = { ...localStorage.value }
+        if (isProxy(toStore)) toStore = toRaw(toStore)
+        if (browser?.storage) browser.storage.local.set(toStore)
+    })
+
+    return localStorage
 }
 
 export function useManifest() {

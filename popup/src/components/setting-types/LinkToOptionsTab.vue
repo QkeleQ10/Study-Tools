@@ -1,7 +1,9 @@
 <script setup>
 function click() {
     chrome.windows.create({
-        url: 'popup/dist/index.html?type=options&view=custom-css',
+        url: navigator.userAgent.includes('Firefox')
+            ? 'index.html?type=options&view=custom-css'
+            : 'popup/dist/index.html?type=options&view=custom-css',
         type: 'popup',
         width: 1000,
         height: 800
@@ -13,7 +15,7 @@ function click() {
     <button @click="click">
         <div>
             <h3 class="setting-title">
-                <slot name="title"></slot>
+                <slot name="title"></slot>...
             </h3>
         </div>
         <Icon>chevron_right</Icon>

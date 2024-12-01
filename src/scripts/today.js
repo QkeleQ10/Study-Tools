@@ -43,7 +43,9 @@ async function today() {
     const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
     let listViewEnabled = listViewEnabledSetting
 
-    let agendaView = localStorage['start-schedule-view-stored'] || 'day' // False for day view, true for week view
+    let agendaView = listViewEnabled
+        ? 'day' // If list view is enabled, force day view
+        : localStorage['start-schedule-view-stored'] || 'day' // Recall the last used view mode
     let agendaDayOffset = 0 // Six weeks are capable of being shown in the agenda.
     let agendaDayOffsetChanged = false
 
@@ -62,6 +64,7 @@ async function today() {
 
     // Automagically collapse the widgets panel when it's necessary
     widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
+    container.scrollLeft = 0
     verifyDisplayMode()
     window.addEventListener('resize', () => {
         widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
@@ -109,7 +112,7 @@ async function today() {
                 [6, ...i18n('greetings.morning').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
                 [0, ...i18n('greetings.earlyNight').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
             ],
-                greetingsGeneric = [...i18n('greetings.generic').split(';'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!']
+                greetingsGeneric = [...i18n('greetings.generic').split(';'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!', 'Hé buurman!']
 
             let possibleGreetings = []
             for (let i = 0; i < greetingsByHour.length; i++) {
@@ -121,7 +124,7 @@ async function today() {
                 }
             }
             possibleGreetings.push(...greetingsGeneric)
-            const punctuation = Math.random() < 0.7 ? '.' : '!',
+            const punctuation = Math.random() < 0.8 ? '.' : '!',
                 greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation).replace('%s', formattedWeekday).replace('%n', firstName)
             if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
             headerGreeting.innerText = greeting.slice(0, -1)
@@ -304,16 +307,18 @@ async function today() {
         })
 
         if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('start-widgets-edit-known', 'local') ?? false)) {
-            const tooltip = element('div', 'st-start-widgets-edit-tooltip', document.body, { class: 'st-hidden', innerText: "Onder deze knop kun je het widgetpaneel compleet aanpassen." })
-            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
-            invokeEditWidgets.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-edit-known', true, 'local')
-            })
             setTimeout(() => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-edit-known', true, 'local')
-            }, 20000)
+                const rect = invokeEditWidgets.getBoundingClientRect()
+                const tooltip = element('div', 'st-start-widgets-edit-tooltip', document.body, { class: 'st-hidden', innerText: "Onder deze knop kun je het widgetpaneel compleet aanpassen.", style: `bottom: ${window.innerHeight - rect.top}px; right: ${window.innerWidth - rect.right}px; translate: 8px -16px;` })
+                setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
+                invokeEditWidgets.addEventListener('click', () => {
+                    tooltip.classList.add('st-hidden')
+                    saveToStorage('start-widgets-edit-known', true, 'local')
+                })
+                setTimeout(() => {
+                    tooltip.classList.add('st-hidden')
+                }, 20000)
+            }, 2000)
         }
 
         let editTeachers
@@ -377,17 +382,19 @@ async function today() {
             verifyDisplayMode()
         })
 
-        if (widgetsCollapsed && !(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false)) {
-            const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen." })
-            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
-            todayCollapseWidgets.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-collapsed-known', true, 'local')
-            })
+        if (widgetsCollapsed && (!(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false) || Math.random() < 0.01)) {
             setTimeout(() => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-collapsed-known', true, 'local')
-            }, 20000)
+                const rect = todayCollapseWidgets.getBoundingClientRect()
+                const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen.", style: `bottom: ${window.innerHeight - rect.top}px; right: ${window.innerWidth - rect.right}px; translate: 8px -16px;` })
+                setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
+                todayCollapseWidgets.addEventListener('click', () => {
+                    tooltip.classList.add('st-hidden')
+                    saveToStorage('start-widgets-collapsed-known', true, 'local')
+                })
+                setTimeout(() => {
+                    tooltip.classList.add('st-hidden')
+                }, 20000)
+            }, 2000)
         }
 
         // Allow for keyboard navigation
@@ -624,12 +631,16 @@ async function today() {
                     })
                 }
 
+                schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
+
                 // Ensure a nice scrolling position if the date shown is not today
-                if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day')) && !agendaDayOffsetChanged) {
-                    schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                    if (column.querySelector('.st-event:last-of-type')) column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
-                    if (column.querySelector('.st-event')) column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
-                    schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
+                // Only in day view and if the user hasn't navigated to a different day
+                if (agendaView.slice(-3) === 'day' && !agendaDayOffsetChanged) {
+                    if (column.querySelector('.st-event')) {
+                        // If there are events today, try to make the last one visible but ensure the first event is visible.
+                        column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' })
+                        column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' })
+                    }
                 }
 
                 if (!listViewEnabled && day.today) {
@@ -637,14 +648,21 @@ async function today() {
                     const currentTimeMarker = element('div', `st-start-now`, column, { 'data-temporal-type': 'style-hours' }),
                         currentTimeMarkerLabel = element('div', `st-start-now-label`, column, { 'data-temporal-type': 'style-hours', innerText: i18n('dates.nowBrief')?.toUpperCase() })
                     updateTemporalBindings()
-                    if (schedule.scrollTop === 0 && (agendaView.slice(-3) === 'day' || (listViewEnabledSetting && agendaView.slice(-3) !== 'day'))) {
-                        schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
-                        if (column.querySelector('.st-event:last-of-type')) column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the last event is visible.
-                        if (column.querySelector('.st-event')) column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' }) // If there are events today, ensure the first event is visible.
+
+                    // Ensure a nice scrolling position if today is visible on-screen
+                    // Only in day view and if the user hasn't navigated to a different day
+                    if (agendaView.slice(-3) === 'day' && !agendaDayOffsetChanged) {
+                        if (column.querySelector('.st-event')) {
+                            // If there are events today, try to make the last one visible but ensure the first event is visible.
+                            column.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' })
+                            column.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' })
+                        }
                         currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
-                        schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice.
                     }
                 }
+
+                schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice
+                container.scrollLeft = 0 // Ensure the page is not scrolled in the x-axis
 
                 if (agendaView.slice(-3) === 'day') {
                     widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
@@ -799,7 +817,7 @@ async function today() {
 
                         if (placeholder) MagisterApi.useSampleData = false
 
-                        let hiddenItems = new Set((await getFromStorage('hiddenGrades', 'local') || []))
+                        let hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])))
 
                         const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
                             {
@@ -1447,6 +1465,7 @@ async function today() {
 
     function verifyDisplayMode() {
         container.setAttribute('data-widgets-collapsed', widgetsCollapsed)
+        container.scrollLeft = 0
     }
 }
 

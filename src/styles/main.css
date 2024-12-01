@@ -543,12 +543,12 @@ dialog.st-modal[open]::backdrop {
     left: -32px;
     top: -3px;
     padding-top: 4px;
-    font: 16px 'Font Awesome 6 Pro';
+    font: 600 16px 'Font Awesome 6 Pro';
     text-align: center;
     background-color: var(--st-background-tertiary);
     color: var(--st-foreground-primary);
     border: var(--st-border);
-    border-radius: var(--st-border-radius);
+    border-radius: calc(var(--st-border-radius) * 0.75);
 }
 
 .st-checkbox-label:has(.st-checkbox-input:checked):before {
@@ -845,59 +845,6 @@ a.st-metric:focus-visible {
 
 .main-menu li a {
     overflow: visible !important;
-}
-
-.st-hotkey-label {
-    --transition-delay: 0ms;
-    --reverse-transition-delay: 0ms;
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: calc(var(--st-border-radius) * 0.5);
-    background: var(--st-accent-primary-dark);
-    color: var(--st-contrast-accent);
-    font: 600 14px var(--st-font-family-secondary);
-    border: 1px solid var(--st-foreground-accent);
-    scale: 0;
-    opacity: 0;
-    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms;
-}
-
-li.children .submenu .st-hotkey-label {
-    left: -14px;
-}
-
-[data-hotkeys-visible="true"] .st-hotkey-label {
-    scale: 1;
-    opacity: .8;
-    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms;
-}
-
-.st-hotkey-label-collapsed-only {
-    --child-index: 0;
-    left: calc(var(--child-index) * 12px - 2px);
-    scale: 0 !important;
-    opacity: 0 !important;
-    transition: scale 100ms var(--reverse-transition-delay), opacity 200ms, left 200ms !important;
-}
-
-[data-hotkeys-visible="true"] .menu-host.collapsed-menu li.children .st-hotkey-label-collapsed-only {
-    left: calc(var(--child-index) * 12px - 2px);
-    scale: 1 !important;
-    opacity: .8 !important;
-    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
-}
-
-[data-hotkeys-visible="true"] li.children:not(.expanded) .st-hotkey-label-collapsed-only {
-    left: calc(var(--child-index) * 24px - 2px);
-    scale: 1 !important;
-    opacity: .8 !important;
-    transition: scale 300ms cubic-bezier(.29, 1.5, .64, 1) var(--transition-delay), opacity 200ms, left 200ms !important;
 }
 
 .st-keyboard-hint,
@@ -1309,6 +1256,68 @@ a.st-keyboard-hint.clicked {
     font-weight: normal;
     opacity: .3;
     z-index: 1;
+}
+
+.main-menu a span>u,
+.main-menu .popup-menu a>u,
+.appbar a span>u {
+    text-decoration: none;
+}
+
+.main-menu a span>u.extra,
+.main-menu .popup-menu a>u.extra,
+.appbar a span>u.extra {
+    display: none;
+}
+
+.container[data-hotkeys-visible=true] .main-menu a span>u,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u,
+.container[data-hotkeys-visible=true] .appbar a span>u {
+    text-decoration: underline;
+    text-decoration-skip-ink: none;
+}
+
+.container[data-hotkeys-visible=true] .main-menu a span>u.extra,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u.extra {
+    display: inline-block;
+    position: absolute;
+    right: 6px;
+    opacity: 0.5;
+    font-size: 11px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.container[data-hotkeys-visible=true] .appbar a span>u.extra {
+    margin-left: 3px;
+    display: inline-block;
+    opacity: 0.5;
+    text-decoration: none;
+}
+
+.container[data-hotkeys-visible=true] .main-menu a span>u.extra:before,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u.extra:before,
+.container[data-hotkeys-visible=true] .appbar a span>u.extra:before {
+    content: ' (';
+}
+
+.container[data-hotkeys-visible=true] .main-menu a span>u.extra:after,
+.container[data-hotkeys-visible=true] .main-menu .popup-menu a>u.extra:after,
+.container[data-hotkeys-visible=true] .appbar a span>u.extra:after {
+    content: ')';
+}
+
+.container[data-hotkeys-visible=true] .menu-host:hover li ul {
+    display: block;
+    margin-left: 42px;
+}
+
+.container[data-hotkeys-visible=true] .menu-host:hover li>a:after {
+    transform: scaleY(-1);
+}
+
+.container[data-hotkeys-visible=true] .menu-host:hover li:not(.expanded) ul>li {
+    margin-top: -22px;
 }
 
 @keyframes displayIn {

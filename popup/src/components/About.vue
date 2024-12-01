@@ -55,7 +55,7 @@ function openInNewTab(url) {
             Bedankt voor het gebruiken van Study Tools!<br>
             
         </p>
-        <div id="about-buttons">
+        <div class="action-row" id="about-buttons">
             <button class="button" @click="openInNewTab('https://qkeleq10.github.io/studytools')">
                 <Icon>captive_portal</Icon><span>Website</span>
             </button>
@@ -152,9 +152,6 @@ function openInNewTab(url) {
 }
 
 #about-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
     padding-bottom: 8px;
 }
 

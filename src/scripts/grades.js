@@ -994,11 +994,16 @@ async function gradeStatistics() {
                 filteredGrades = filterGrades()
                 scStatsHeading.dataset.amount = filteredGrades.length
 
-                let yearsText = [...includedYears]
-                    .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
-                    .map(id => years.find(y => y.id === id).studie.code).join(', ')
+                let yearsText = new Intl.ListFormat(locale, {
+                    style: 'short',
+                    type: 'conjunction',
+                }).format(
+                    [...includedYears]
+                        .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
+                        .map(id => years.find(y => y.id === id).studie.code)
+                )
                 if (includedYears.size === 1 && includedYears.has(years.at(-1).id)) yearsText = `Dit leerjaar (${years.at(-1)?.studie?.code})`
-                if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
+                else if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
 
                 let subjectsText = includedSubjects.join(', ')
                 if (includedSubjects.length > 3) subjectsText = `${includedSubjects.length} van de ${subjects.size} vakken`

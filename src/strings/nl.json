@@ -15,9 +15,11 @@
         "Start": "Start",
         "Vandaag": "Vandaag",
         "Agenda": "Agenda",
-        "To Do": "To Do",
+        "To Do": "To-do",
         "Lijst": "Lijst",
+        "Mijn takenlijst": "Mijn takenlijst",
         "Inzicht": "Inzicht",
+        "Mijn To Do's voor vandaag": "Mijn to-do's voor vandaag",
         "Afwezigheid": "Afwezigheid",
         "Cijfers": "Cijfers",
         "Laatste cijfers": "Laatste cijfers",
@@ -132,6 +134,7 @@
     "loading": "Laden...",
     "loadingWidgets": "Widgets laden...",
     "loadingWidget": "Widget '{title}' laden...",
+    "hotkeyTooltip": "Sneltoets: Alt+{key}",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
