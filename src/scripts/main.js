@@ -77,7 +77,7 @@ async function main() {
     if (
         ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000 < 7) /* Between November 28th and December 5th */
         && ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000 > 0)
-        && Math.random() < (-0.15 * ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000) + 1) /* Probability correlating to time until December 5th */
+        && Math.random() < (-0.25 * ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000) + 1) /* Probability correlating to time until December 5th */
     ) {
         const mijter = element('img', 'st-mijter', document.body, {
             src: 'https://i.imgur.com/2NSn0gh.png', style: `position: absolute; top: 20px; left: 82px; height: 24px; z-index: 100;`

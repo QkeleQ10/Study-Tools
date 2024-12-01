@@ -78,16 +78,6 @@
                 "src/scripts/microsoft-login.js"
             ],
             "run_at": "document_end"
-        },
-        {
-            "matches": [
-                "*://localhost/*"
-            ],
-            "js": [
-                "src/scripts/util.js",
-                "src/scripts/theme-store.js"
-            ],
-            "run_at": "document_end"
         }
     ],
     "web_accessible_resources": [
@@ -101,8 +91,7 @@
                 "src/strings/la.json"
             ],
             "matches": [
-                "*://*.magister.net/*",
-                "*://localhost/*"
+                "*://*.magister.net/*"
             ]
         }
     ],
