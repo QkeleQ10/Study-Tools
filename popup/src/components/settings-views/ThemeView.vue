@@ -99,7 +99,7 @@ async function storeCurrentTheme() {
                         </div>
                     </template>
                 </div>
-                <!--<div class="action-row" id="theme-edit-buttons">
+                <div class="action-row" id="theme-edit-buttons">
                     <button v-if="allPresets.some(p => presetMatches(p))" disabled class="button tonal">
                         <Icon>library_add_check</Icon>
                         <span>Opgeslagen in thema's</span>
@@ -112,7 +112,7 @@ async function storeCurrentTheme() {
                         <Icon>library_add</Icon>
                         <span>Opslaan in thema's</span>
                     </button>
-                </div>-->
+                </div>
             </div>
         </div>
 
