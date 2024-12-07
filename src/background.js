@@ -82,11 +82,30 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 console.warn(`Request completion notification requested by ${sender.url} has timed out.`)
             }, 5000)
             return true
-    
+
         case 'uninstallSelf':
             chrome.management.uninstallSelf({ showConfirmDialog: false }, () => { window.location.reload() })
             break
-        
+
+        default:
+            return 0
+    }
+})
+
+browser.runtime.onMessageExternal.addListener(async (request, sender, sendResponse) => {
+    switch (request.action) {
+        case 'addPersonalTheme':
+            const obj = request.obj
+            const storedThemes = Object.values((await chrome.storage.local.get('storedThemes')).storedThemes)
+            if (!storedThemes || storedThemes.length >= 9) return
+
+            storedThemes.push(obj)
+
+            //TODO: only if not exist
+
+            await chrome.storage.local.set({ 'storedThemes': storedThemes })
+            break
+
         default:
             return 0
     }
