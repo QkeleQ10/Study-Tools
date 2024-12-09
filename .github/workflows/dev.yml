@@ -1,4 +1,4 @@
-name: Create beta release
+name: Beta Release Creation
 
 on:
   push:
@@ -10,18 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Indicate beta version
+      - name: Update to Beta Version
         run: |
           sed -i '3s/.*/"message": "Study Tools voor Magister BETA"/' _locales/nl/messages.json
           sed -i '3s/.*/"message": "Study Tools for Magister BETA"/' _locales/en/messages.json
 
-      - name: Upload as artifacts
+      - name: Upload Artifacts for Beta Release
         uses: actions/upload-artifact@v4
         with:
-          name: Beta release
+          name: Beta-Release-Files
           path: |
             _locales
             icons
