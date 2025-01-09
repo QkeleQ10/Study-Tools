@@ -303,7 +303,7 @@ dialog.st-modal[open]::backdrop {
 .st-button:focus-visible,
 .st-dropdown:focus-visible,
 .st-dropdown>button:focus-visible {
-    outline: 2px solid var(--st-foreground-primary);
+    outline: 2px solid var(--st-foreground-accent);
 }
 
 .st-button:hover {
@@ -735,7 +735,7 @@ a.st-metric:focus-visible {
 }
 
 a.st-metric:focus-visible {
-    outline: 2px solid var(--st-foreground-primary);
+    outline: 2px solid var(--st-foreground-accent);
 }
 
 .st-list {

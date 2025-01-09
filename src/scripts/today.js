@@ -219,11 +219,11 @@ async function today() {
                 schedule.dataset.navigate = 'still'
                 renderSchedule()
             } else if (newOffset > oldOffset) {
-                schedule.dataset.navigate = 'forw'
+                schedule.dataset.navigate = 'forwards'
                 setTimeout(renderSchedule, 50)
                 setTimeout(() => schedule.dataset.navigate = 'still', 200)
             } else if (newOffset < oldOffset) {
-                schedule.dataset.navigate = 'back'
+                schedule.dataset.navigate = 'backwards'
                 setTimeout(renderSchedule, 50)
                 setTimeout(() => schedule.dataset.navigate = 'still', 200)
             } else { renderSchedule() }
@@ -335,7 +335,7 @@ async function today() {
                 renderSchedule()
             })
 
-            const events = await MagisterApi.events()
+            const events = await magisterApi.events()
 
             if (!events) return
 
@@ -410,7 +410,7 @@ async function today() {
         now = new Date()
         agendaDayOffset = Math.floor((todayDate - gatherStart) / 86400000)
 
-        const events = await MagisterApi.events()
+        const events = await magisterApi.events()
 
         // Display error if the result does not exist or if it is not an array
         if (!events || !Array.isArray(events)) {
@@ -486,7 +486,7 @@ async function today() {
                         notify('snackbar', i18n('toasts.jumpedToDate', { date: formatTimestamp(agendaStartDate) }), [], 1500)
 
                         setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
-                        schedule.dataset.navigate = 'jumpforw'
+                        schedule.dataset.navigate = 'jumpforwards'
                         setTimeout(() => schedule.dataset.navigate = 'still', 300)
                     }
 
@@ -714,12 +714,12 @@ async function today() {
                 requiredPermissions: ['Logboeken'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        if (placeholder) MagisterApi.useSampleData = true
+                        if (placeholder) magisterApi.useSampleData = true
 
-                        let logs = await MagisterApi.logs()
+                        let logs = await magisterApi.logs()
                             .catch(() => { return reject() })
 
-                        if (placeholder) MagisterApi.useSampleData = false
+                        if (placeholder) magisterApi.useSampleData = false
 
                         if (logs.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-tile st-widget' })
@@ -741,12 +741,12 @@ async function today() {
                 requiredPermissions: ['Activiteiten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        if (placeholder) MagisterApi.useSampleData = true
+                        if (placeholder) magisterApi.useSampleData = true
 
-                        let activities = await MagisterApi.activities()
+                        let activities = await magisterApi.activities()
                             .catch(() => { return reject() })
 
-                        if (placeholder) MagisterApi.useSampleData = false
+                        if (placeholder) magisterApi.useSampleData = false
 
                         if (activities.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-activities', null, { class: 'st-tile st-widget' })
@@ -806,16 +806,16 @@ async function today() {
                         let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
                         let autoRotate = await getFromStorage('start-widget-cf-rotate', 'local') || 'true'
 
-                        if (placeholder) MagisterApi.useSampleData = true
+                        if (placeholder) magisterApi.useSampleData = true
 
-                        let grades = await MagisterApi.grades.recent()
+                        let grades = await magisterApi.gradesRecent()
                             .catch(() => { return reject() })
-                        let assignments = magisterApiPermissions.includes('EloOpdracht')
-                            ? await MagisterApi.assignments.top()
+                        let assignments = magisterApi.permissions.includes('EloOpdracht')
+                            ? await magisterApi.assignmentsTop()
                                 .catch(() => { return reject() })
                             : []
 
-                        if (placeholder) MagisterApi.useSampleData = false
+                        if (placeholder) magisterApi.useSampleData = false
 
                         let hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])))
 
@@ -935,14 +935,17 @@ async function today() {
                                     targetIndex = children.length - 1
                             }
 
-                            widgetItemsContainer.scroll((targetIndex) * children[0].clientWidth, 0)
-                            widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
-                            visibleChildIndex = targetIndex
+                            widgetItemsContainer.dataset.navigate = 'still'
+                            setTimeout(() => {
+                                widgetItemsContainer.dataset.navigate = targetIndex > visibleChildIndex ? 'forwards' : targetIndex < visibleChildIndex ? 'backwards' : 'still'
+                                visibleChildIndex = targetIndex
+                                setTimeout(() => {
+                                    children.forEach((child, index) => child.style.display = index === targetIndex ? 'flex' : 'none');
+                                    document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach((d, index) => d.dataset.current = index === targetIndex);
+                                    widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
+                                }, 60);
 
-                            if (!document.querySelector(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`) || !document.querySelector('#st-start-widget-grades-scroll-pagn>div')) return
-
-                            document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach(d => d.dataset.current = false)
-                            document.querySelectorAll(`#st-start-widget-grades-scroll-pagn>div:nth-child(${targetIndex + 1})`).forEach(d => d.dataset.current = true)
+                            }, 10);
                         }
 
                         if (recentGrades.length < 2) {
@@ -968,12 +971,12 @@ async function today() {
                 requiredPermissions: ['Berichten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        if (placeholder) MagisterApi.useSampleData = true
+                        if (placeholder) magisterApi.useSampleData = true
 
-                        let unreadMessages = await MagisterApi.messages()
+                        let unreadMessages = await magisterApi.messages()
                             .catch(() => { return reject() })
 
-                        if (placeholder) MagisterApi.useSampleData = false
+                        if (placeholder) magisterApi.useSampleData = false
 
                         if (unreadMessages.length < 1) return resolve()
                         let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
@@ -1037,12 +1040,12 @@ async function today() {
                     return new Promise(async resolve => {
                         const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
 
-                        if (placeholder) MagisterApi.useSampleData = true
+                        if (placeholder) magisterApi.useSampleData = true
 
-                        let events = await MagisterApi.events()
+                        let events = await magisterApi.events()
                             .catch(() => { return reject() })
 
-                        if (placeholder) MagisterApi.useSampleData = false
+                        if (placeholder) magisterApi.useSampleData = false
 
                         const homeworkEvents = events.filter(item => {
                             if (filterOption === 'incomplete')
@@ -1098,12 +1101,12 @@ async function today() {
                 requiredPermissions: ['EloOpdracht'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
-                        if (placeholder) MagisterApi.useSampleData = true
+                        if (placeholder) magisterApi.useSampleData = true
 
-                        let assignments = await MagisterApi.assignments.top()
+                        let assignments = await magisterApi.assignmentsTop()
                             .catch(() => { return reject() })
 
-                        if (placeholder) MagisterApi.useSampleData = false
+                        if (placeholder) magisterApi.useSampleData = false
 
                         const relevantAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
 
@@ -1199,7 +1202,7 @@ async function today() {
                         if (placeholder) {
                             events = []
                         } else {
-                            events = await MagisterApi.events()
+                            events = await magisterApi.events()
                                 .catch(() => { return reject() })
                         }
 
@@ -1253,11 +1256,11 @@ async function today() {
         }
 
         // Ensure the user permission flags are up-to-date
-        await MagisterApi.accountInfo()
+        await magisterApi.accountInfo()
 
         // Draw the selected widgets in the specified order
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApiPermissions?.includes(p))) continue
+            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue
 
             if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
                 syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
@@ -1305,7 +1308,7 @@ async function today() {
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApiPermissions?.includes(p))) continue
+            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue
 
             if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
                 const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })

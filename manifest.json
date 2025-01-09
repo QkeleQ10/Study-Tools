@@ -26,8 +26,8 @@
                 "*://login.microsoftonline.com/*/oauth2/authorize*"
             ],
             "js": [
-                "src/scripts/api.js",
-                "src/scripts/util.js"
+                "src/scripts/util.js",
+                "src/scripts/api.js"
             ],
             "run_at": "document_start"
         },

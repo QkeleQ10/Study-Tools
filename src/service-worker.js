@@ -120,7 +120,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 })
 
-browser.runtime.onMessageExternal.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessageExternal.addListener(async (request, sender, sendResponse) => {
     switch (request.action) {
         case 'addPersonalTheme':
             const obj = request.obj
