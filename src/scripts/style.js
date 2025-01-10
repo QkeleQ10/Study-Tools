@@ -1686,39 +1686,82 @@ table.table-grid-layout>tbody>tr.selected {
     outline: 2px solid var(--st-foreground-primary);
 }
 
-.challenge-container {
-    color: var(--st-foreground-primary);
-}
+.app-container {
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
 
-.challenge-container footer {
-    background-color: var(--st-background-secondary);
-    color: var(--st-foreground-primary);
-    overflow: hidden;
-    container-type: size;
+    &>.challenge-container {
+        flex: 50% 1 1;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
 
-    * {
-        flex-shrink: 0;
-    }
+        color: var(--st-foreground-primary);
 
-    .bottom-conditions {
-        margin-right: 0;
-    }
-
-    .bottom-company-logo {
-        margin-left: auto;
-
-        @container (width < 660px) {
-            width: 14px;
-            overflow: hidden;
+        &>header {
+            flex: 64px 0 0;
+            height: auto;
         }
+        
+        &>.podium_container {
+            min-height: 0;
+            flex: 100% 1 1;
+            width: auto;
+        }
+        
+        &>footer {
+            flex: 60px 0 0;
+            height: auto;
+            width: auto;
 
-        @container (width < 545px) {
+            background-color: var(--st-background-secondary);
+            color: var(--st-foreground-primary);
+            overflow: hidden;
+            container-type: size;
+
+            &>* {
+                flex-shrink: 0;
+            }
+
+            &>.bottom-conditions {
+                margin-right: 0;
+            }
+
+            &>.bottom-company-logo {
+                margin-left: auto;
+
+                @container (width < 660px) {
+                    width: 14px;
+                    overflow: hidden;
+                }
+
+                @container (width < 545px) {
+                    display: none;
+                }
+            }
+
+            &>.bottom-green dna-icon, .bottom-green-mobile dna-icon {
+                color: var(--st-foreground-accent);
+            }
+        }
+    }
+    
+    &>.challenge-container+div {
+        flex: 50% 1 1;
+        position: relative;
+        display: block;
+    
+        &>.splash-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+            
+        @media (width <= 1150px) {
             display: none;
         }
-    }
-
-    .bottom-green dna-icon, .bottom-green-mobile dna-icon {
-        color: var(--st-foreground-accent);
     }
 }
 

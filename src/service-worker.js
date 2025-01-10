@@ -142,18 +142,3 @@ chrome.runtime.onMessageExternal.addListener(async (request, sender, sendRespons
             return 0
     }
 })
-
-async function sleepUntil(f, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timeWas = new Date()
-        const wait = setInterval(function () {
-            if (f()) {
-                clearInterval(wait)
-                resolve()
-            } else if (new Date() - timeWas > timeoutMs) {
-                clearInterval(wait)
-                reject()
-            }
-        }, 20)
-    })
-}

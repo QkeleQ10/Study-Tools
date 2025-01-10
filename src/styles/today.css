@@ -150,6 +150,7 @@
     flex-direction: column;
     height: auto;
     overflow-y: auto;
+    --st-anim-mod-scale: 0.97;
     transition: background-color 200ms, opacity 200ms;
 }
 
@@ -171,6 +172,7 @@
     30% {
         translate: 5%;
         opacity: 0;
+        scale: var(--st-anim-mod-scale, .9);
     }
 
     30.1% {
@@ -182,6 +184,7 @@
     30% {
         translate: -5%;
         opacity: 0;
+        scale: var(--st-anim-mod-scale, .9);
     }
 
     30.1% {
@@ -193,6 +196,7 @@
     0% {
         translate: 15%;
         opacity: 0;
+        scale: var(--st-anim-mod-scale, .9);
     }
 }
 
@@ -701,22 +705,20 @@
     background-color: var(--st-background-secondary);
     border-left: var(--st-border);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    transition: box-shadow 200ms;
 
-    transition-property: opacity, translate, display;
-    transition-duration: 200ms;
-    transition-behavior: allow-discrete;
+    transition: opacity 200ms, translate 200ms, display 200ms allow-discrete;
     opacity: 1;
     translate: 0;
 
     @starting-style {
         opacity: 0;
-        translate: 150px;
+        translate: 50%;
     }
 }
 
 #st-start[data-widgets-collapsed=true] #st-start-widgets {
-    box-shadow: none;
+    display: none;
+    opacity: 0;
 }
 
 #st-start:has(#st-start-widgets.editing) #st-start-header,

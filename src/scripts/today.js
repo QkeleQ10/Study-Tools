@@ -215,18 +215,15 @@ async function today() {
             agendaDayOffset = newOffset
             agendaDayOffsetChanged = true
 
-            if (schedule.dataset.navigate !== 'still') {
+            if (newOffset > oldOffset) {
                 schedule.dataset.navigate = 'still'
-                renderSchedule()
-            } else if (newOffset > oldOffset) {
-                schedule.dataset.navigate = 'forwards'
-                setTimeout(renderSchedule, 50)
-                setTimeout(() => schedule.dataset.navigate = 'still', 200)
+                setTimeout(() => schedule.dataset.navigate = 'forwards', 10)
+                setTimeout(renderSchedule, 40)
             } else if (newOffset < oldOffset) {
-                schedule.dataset.navigate = 'backwards'
-                setTimeout(renderSchedule, 50)
-                setTimeout(() => schedule.dataset.navigate = 'still', 200)
-            } else { renderSchedule() }
+                schedule.dataset.navigate = 'still'
+                setTimeout(() => schedule.dataset.navigate = 'backwards', 10)
+                setTimeout(renderSchedule, 40)
+            }
         }
 
         let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' })
@@ -487,7 +484,6 @@ async function today() {
 
                         setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
                         schedule.dataset.navigate = 'jumpforwards'
-                        setTimeout(() => schedule.dataset.navigate = 'still', 300)
                     }
 
                     if (agendaView === 'day') agendaEndDate = agendaStartDate
@@ -855,7 +851,13 @@ async function today() {
                         if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
 
                         recentGrades.forEach((item, i) => {
-                            const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, { class: 'st-start-widget-grades-item', 'data-unread': item.unread, 'data-hidden': item.hidden, 'data-assignment': item.assignment })
+                            const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, {
+                                class: 'st-start-widget-grades-item',
+                                'data-unread': item.unread,
+                                'data-hidden': item.hidden,
+                                'data-assignment': item.assignment,
+                                style: i == 0 ? '' : 'display: none;'
+                            })
                             children.push(gradeElement)
                             if (i === 0) widgetElement.dataset.unread = item.unread
 
@@ -944,7 +946,6 @@ async function today() {
                                     document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach((d, index) => d.dataset.current = index === targetIndex);
                                     widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
                                 }, 60);
-
                             }, 10);
                         }
 
