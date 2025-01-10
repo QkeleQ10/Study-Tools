@@ -1690,6 +1690,38 @@ table.table-grid-layout>tbody>tr.selected {
     color: var(--st-foreground-primary);
 }
 
+.challenge-container footer {
+    background-color: var(--st-background-secondary);
+    color: var(--st-foreground-primary);
+    overflow: hidden;
+    container-type: size;
+
+    * {
+        flex-shrink: 0;
+    }
+
+    .bottom-conditions {
+        margin-right: 0;
+    }
+
+    .bottom-company-logo {
+        margin-left: auto;
+
+        @container (width < 660px) {
+            width: 14px;
+            overflow: hidden;
+        }
+
+        @container (width < 545px) {
+            display: none;
+        }
+    }
+
+    .bottom-green dna-icon, .bottom-green-mobile dna-icon {
+        color: var(--st-foreground-accent);
+    }
+}
+
 .podium .completed-challenge {
     background-color: var(--st-background-tertiary);
 }
@@ -1709,6 +1741,14 @@ table.table-grid-layout>tbody>tr.selected {
 
 .podium h1 {
     color: var(--st-foreground-accent);
+    font-family: var(--st-font-family-primary);
+    margin-bottom: 6px;
+}
+
+.podium h2 {
+    font-family: var(--st-font-family-primary);
+    font-weight: 500;
+    margin-top: 6px;
 }
 
 .podium button {

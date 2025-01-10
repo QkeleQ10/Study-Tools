@@ -577,9 +577,10 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                                 window.open(item.href, '_blank').focus()
                                 event.stopPropagation()
                             })
-                        } else if (item.callback) {
+                        } else if (item.callback || item.onclick) {
                             button.addEventListener('click', event => {
-                                item.callback(event)
+                                if (item.callback) item.callback(event)
+                                if (item.onclick) item.onclick(event)
                                 event.stopPropagation()
                             })
                         } else button.addEventListener('click', event => event.stopPropagation())

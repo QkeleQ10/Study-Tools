@@ -26,6 +26,10 @@ provide('localStorage', localStorage)
 const params = useUrlSearchParams('history')
 
 let selectedCategory = useStorage('selected-tab', 'theme')
+if (params.tab) {
+    selectedCategory.value = params.tab
+    params.tab = null
+}
 
 function shouldShowSetting(setting) {
     let outcome = true

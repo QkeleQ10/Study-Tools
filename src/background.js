@@ -87,6 +87,10 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
             chrome.management.uninstallSelf({ showConfirmDialog: false }, () => { window.location.reload() })
             break
 
+        case 'openOptions':
+            chrome.tabs.create({ url: `index.html?${request.data}` });
+            break;
+
         default:
             return 0
     }
