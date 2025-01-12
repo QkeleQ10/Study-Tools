@@ -154,6 +154,7 @@ class MagisterApiRequest {
             } catch (error) {
                 console.error(error);
                 try {
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     await magisterApi.updateApiCredentials();
                     let res2 = await this.#executeRequest(url, options);
                     resolve(this.#formatOutput(res2));

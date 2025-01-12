@@ -89,7 +89,8 @@
     color: var(--st-foreground-secondary);
 }
 
-#st-start-header-text:after {
+#st-start-header-text:after,
+#st-start-header-greeting:after {
     content: attr(data-last-letter);
 }
 

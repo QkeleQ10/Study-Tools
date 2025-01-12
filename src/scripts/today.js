@@ -52,7 +52,6 @@ async function today() {
     now = new Date()
 
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
-    firstName = (await awaitElement('#user-menu > figure > img')).alt.split(' ')[0]
 
     const gatherStart = new Date()
     gatherStart.setDate(now.getDate() - (now.getDay() + 6) % 7)
@@ -102,7 +101,7 @@ async function today() {
                 headerText.dataset.state = 'visible'
             }, 2000)
         })
-        function greetUser() {
+        async function greetUser() {
             headerGreeting.dataset.state = 'visible'
             headerText.dataset.state = 'hidden'
             const greetingsByHour = [
@@ -112,7 +111,7 @@ async function today() {
                 [6, ...i18n('greetings.morning').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
                 [0, ...i18n('greetings.earlyNight').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
             ],
-                greetingsGeneric = [...i18n('greetings.generic').split(';'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!', 'Hé buurman!']
+                greetingsGeneric = [...i18n('greetings.generic').split(';'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!', 'Hé buur!']
 
             let possibleGreetings = []
             for (let i = 0; i < greetingsByHour.length; i++) {
@@ -124,8 +123,9 @@ async function today() {
                 }
             }
             possibleGreetings.push(...greetingsGeneric)
-            const punctuation = Math.random() < 0.8 ? '.' : '!',
-                greeting = possibleGreetings[Math.floor(Math.random() * possibleGreetings.length)].replace('#', punctuation).replace('%s', formattedWeekday).replace('%n', firstName)
+            const greeting = possibleGreetings.random()
+                .replace('#', Math.random() < 0.8 ? '.' : '!').replace('%s', formattedWeekday)
+                .replace('%n', (await magisterApi.accountInfo())?.Persoon?.Roepnaam || '')
             if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
             headerGreeting.innerText = greeting.slice(0, -1)
             headerGreeting.dataset.lastLetter = greeting.slice(-1)
@@ -701,6 +701,8 @@ async function today() {
         let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: i18n('loadingWidgets') })
 
         now = new Date()
+
+        await magisterApi.updateApiPermissions()
 
         widgetFunctions = {
             logs: {
