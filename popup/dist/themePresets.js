@@ -60,7 +60,7 @@ export const
         },
         {
             name: "Minecraft",
-            author: "TheOakTrees & DaintyDust",
+            author: "TheOakTrees & Nick Verbruggen",
             thumbnail: "https://i.imgur.com/V5loO5Z.png",
             "ptheme": "dark,0,0,48.2",
             "pagecolor": "false,223,6.7,20.6",
@@ -74,7 +74,7 @@ export const
         },
         {
             name: 'Human',
-            author: "DaintyDust",
+            author: "Nick Verbruggen",
             thumbnail: "https://i.imgur.com/EFedQLr.png",
             "ptheme": "dark,212,91,34",
             "pagecolor": "false,45,98,43",
