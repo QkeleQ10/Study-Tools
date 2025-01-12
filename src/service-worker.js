@@ -115,22 +115,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             chrome.management.uninstallSelf({ showConfirmDialog: false }, () => { window.location.reload() })
             break
 
+        case 'openOptions':
+            chrome.tabs.create({ url: `popup/dist/index.html?${request.data}` });
+            break;
+
         default:
             return 0
     }
 })
 
-async function sleepUntil(f, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timeWas = new Date()
-        const wait = setInterval(function () {
-            if (f()) {
-                clearInterval(wait)
-                resolve()
-            } else if (new Date() - timeWas > timeoutMs) {
-                clearInterval(wait)
-                reject()
-            }
-        }, 20)
-    })
-}
+chrome.runtime.onMessageExternal.addListener(async (request, sender, sendResponse) => {
+    switch (request.action) {
+        case 'addPersonalTheme':
+            const obj = request.obj
+            const storedThemes = Object.values((await chrome.storage.local.get('storedThemes')).storedThemes)
+            if (!storedThemes || storedThemes.length >= 9) return
+
+            storedThemes.push(obj)
+
+            //TODO: only if not exist
+
+            await chrome.storage.local.set({ 'storedThemes': storedThemes })
+            break
+
+        default:
+            return 0
+    }
+})

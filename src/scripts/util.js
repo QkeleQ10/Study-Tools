@@ -21,7 +21,6 @@ let eggs = [],
         if (chrome?.runtime) {
             locale = syncedStorage['language']
             if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'sv-SE', 'la-LA'].includes(locale)) locale = 'nl-NL'
-            chrome.storage.sync.onChanged.addListener((changes) => { if (changes.language) window.location.reload() })
             const req = await fetch(chrome.runtime.getURL(`src/strings/${locale.split('-')[0]}.json`))
             i18nData = await req.json()
             const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`))
@@ -234,11 +233,11 @@ setIntervalImmediately(updateTemporalBindings, 1000)
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
 
-let midnight = (offset = 0) => {
-    const date = new Date()
-    date.setDate(date.getDate() + offset)
-    date.setHours(23, 59, 59, 999)
-    return date
+function midnight(targetDate) {
+    const date = new Date();
+    date.setDate(targetDate || date.getDate());
+    date.setHours(0, 0, 0, 0);
+    return date;
 }
 
 Date.prototype.getWeek = function () {
@@ -259,9 +258,9 @@ Date.prototype.getFormattedDay = function () {
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
-Date.prototype.isTomorrow = function (offset = 0) { return this > midnight(0 + offset) && this < midnight(1 + offset) }
-Date.prototype.isToday = function (offset = 0) { return this > midnight(-1 + offset) && this < midnight(0 + offset) }
-Date.prototype.isYesterday = function (offset = 0) { return this > midnight(-2 + offset) && this < midnight(-1 + offset) }
+Date.prototype.isTomorrow = function (offset = 0) { return this >= midnight(new Date().getDate() + 1 + offset) && this < midnight(new Date().getDate() + 2 + offset) }
+Date.prototype.isToday = function (offset = 0) { return this >= midnight(new Date().getDate() + offset) && this < midnight(new Date().getDate() + 1 + offset) }
+Date.prototype.isYesterday = function (offset = 0) { return this >= midnight(new Date().getDate() - 1 + offset) && this < midnight(new Date().getDate() + offset) }
 
 Array.prototype.random = function (seed) {
     let randomValue = Math.random()
@@ -577,9 +576,10 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                                 window.open(item.href, '_blank').focus()
                                 event.stopPropagation()
                             })
-                        } else if (item.callback) {
+                        } else if (item.callback || item.onclick) {
                             button.addEventListener('click', event => {
-                                item.callback(event)
+                                if (item.callback) item.callback(event)
+                                if (item.onclick) item.onclick(event)
                                 event.stopPropagation()
                             })
                         } else button.addEventListener('click', event => event.stopPropagation())

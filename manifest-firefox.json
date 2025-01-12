@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.13.2.0",
+    "version": "3.13.3",
     "default_locale": "nl",
     "icons": {
         "16": "icons/icon@16px.png",
@@ -84,6 +84,15 @@
                 "src/scripts/microsoft-login.js"
             ],
             "run_at": "document_end"
+        },
+        {
+            "matches": [
+                "*://study-tools.nl/*"
+            ],
+            "js": [
+                "src/scripts/util.js",
+                "src/scripts/theme-store.js"
+            ]
         }
     ],
     "web_accessible_resources": [
@@ -97,7 +106,8 @@
                 "src/strings/la.json"
             ],
             "matches": [
-                "*://*.magister.net/*"
+                "*://*.magister.net/*",
+                "*://study-tools.nl/*"
             ]
         }
     ],

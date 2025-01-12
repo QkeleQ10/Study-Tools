@@ -131,7 +131,7 @@ async function gradeCalculator(buttonWrapper) {
 
     buttonWrapper.append(clOpen)
 
-    let years = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+    let years = (await magisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
 
     let apiGrades = {},
         gradeColumns = {},
@@ -153,7 +153,7 @@ async function gradeCalculator(buttonWrapper) {
         if (!document.querySelector('#st-cb-aside')) {
             let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
             let schoolYear = years.find(y => y.id == schoolYearId)
-            apiGrades[schoolYearId] ??= await MagisterApi.grades.forYear(schoolYear)
+            apiGrades[schoolYearId] ??= await magisterApi.gradesForYear(schoolYear)
         }
         if (!accessedBefore) {
             await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
@@ -249,7 +249,7 @@ async function gradeCalculator(buttonWrapper) {
             } else {
                 let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
                 let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === id || `${item.Vak.Afkorting}_${item.CijferKolom.KolomKop}_${item.CijferKolom.KolomNummer}` === id).CijferKolom.Id
-                gradeColumns[gradeColumnId] ??= await MagisterApi.grades.columnInfo({ id: schoolYearId }, gradeColumnId)
+                gradeColumns[gradeColumnId] ??= await magisterApi.gradesColumnInfo({ id: schoolYearId }, gradeColumnId)
                 weight = gradeColumns[gradeColumnId].Weging
                 gradeElement.parentElement.dataset.weight = weight
                 column = gradeColumns[gradeColumnId].KolomNaam
@@ -527,7 +527,7 @@ async function gradeBackup(buttonWrapper) {
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
         if (yearsArray?.length > 0) return
 
-        yearsArray = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+        yearsArray = (await magisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
         yearsArray.reverse()
 
         yearsArray.forEach((year, i) => {
@@ -547,7 +547,7 @@ async function gradeBackup(buttonWrapper) {
 
         bkModalExListTitle.dataset.description = "Wachten op cijfers..."
 
-        const gradesArray = await MagisterApi.grades.forYear(year)
+        const gradesArray = await magisterApi.gradesForYear(year)
         if (!gradesArray?.length > 0) {
             bkModalExListTitle.dataset.description = "Geen cijfers gevonden!"
             busy = false
@@ -597,7 +597,7 @@ async function gradeBackup(buttonWrapper) {
                     }
 
                     setTimeout(async () => {
-                        const gradeExtra = await MagisterApi.grades.columnInfo(year, gradeBasis?.CijferKolom?.Id)
+                        const gradeExtra = await magisterApi.gradesColumnInfo(year, gradeBasis?.CijferKolom?.Id)
 
                         let weight = Number(gradeExtra.Weging),
                             column = gradeExtra.KolomNaam,
@@ -863,7 +863,7 @@ async function gradeStatistics() {
     })
 
     // Gather all years and populate the year filter
-    years = (await MagisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+    years = (await magisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
     years.forEach(async (year, i, a) => {
         let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.replace(/\D/gi, ''), title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
         if (!(label.innerText?.length > 0)) label.innerText = i + 1
@@ -872,7 +872,7 @@ async function gradeStatistics() {
 
         if (i === a.length - 1) {
             input.checked = true
-            let yearGrades = (await MagisterApi.grades.forYear(year))
+            let yearGrades = (await magisterApi.gradesForYear(year))
                 .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
                 .filter((grade, index, self) =>
                     index === self.findIndex((g) =>
@@ -904,7 +904,7 @@ async function gradeStatistics() {
 
         input.addEventListener('input', async () => {
             if (!gatheredYears.has(year.id)) {
-                let yearGrades = (await MagisterApi.grades.forYear(year))
+                let yearGrades = (await magisterApi.gradesForYear(year))
                 statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
                 gatheredYears.add(year.id)
@@ -1076,7 +1076,7 @@ async function gradeStatistics() {
             // Add weighted stats afterwards in case there's only one subject and year selected
             if (!fromBackup && includedYears.size === 1 && includedSubjects.length === 1) {
                 for (const e of filteredGrades) {
-                    e.weight ??= (await MagisterApi.grades.columnInfo({ id: [...includedYears][0] }, e.CijferKolom.Id)).Weging
+                    e.weight ??= (await magisterApi.gradesColumnInfo({ id: [...includedYears][0] }, e.CijferKolom.Id)).Weging
                     statsGrades[statsGrades.findIndex(f => f.CijferKolom.Id === e.CijferKolom.Id)].weight ??= e.weight
                 }
 

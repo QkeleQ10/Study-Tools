@@ -48,7 +48,7 @@ function openInNewTab(url) {
     <div id="about">
         <h4 id="about-hero">Study Tools voor Magister (<button class="button text inline"
                 @click="openInNewTab('https://github.com/QkeleQ10/Study-Tools/blob/dev/updates.json')">
-                <span>versie {{ manifest.version || "onbekend" }}</span>
+                <span>versie {{ manifest.version?.replace(/^([0-9]+(\.[0-9]+){2})(\.[1-9]+)$/gi, '$1-beta$3') || "onbekend" }}</span>
             </button>)</h4>
         <p id="about-description">
             Ontwikkeld door Quinten Althues<br>

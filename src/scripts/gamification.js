@@ -19,16 +19,16 @@ window.checkWrapped = checkWrapped()
 async function checkWrapped() {
     if ((now >= range1.start && now <= range1.end) ) {
 
-        user = await MagisterApi.accountInfo()
+        user = await magisterApi.accountInfo()
 
-        years = (await MagisterApi.years())
+        years = (await magisterApi.years())
             .filter(year => Number(year.einde.split('-')[0]) <= now.getFullYear()) // Filter years to not include the upcoming school year
             .sort((a, b) => new Date(a.begin) - new Date(b.begin))
 
-        const examInfo = await MagisterApi.exams.info(years.at(-1))
+        const examInfo = await magisterApi.exams.info(years.at(-1))
         years[years.length - 1].examInfo = examInfo
 
-        const recentGrades = await MagisterApi.grades.recent()
+        const recentGrades = await magisterApi.gradesRecent()
 
         if ((examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) ) {
             // Continue if it's inside 'range 1' and the student has had their final exams
@@ -181,9 +181,9 @@ async function constructWrapped(lastYearOnly) {
                     year.absences = years.flatMap(obj => obj.absences)
                     year.assignments = years.flatMap(obj => obj.assignments)
                 } else {
-                    if ((years.length - i) <= 2) year.examInfo ??= await MagisterApi.exams.info(year) || null
-                    if ((years.length - i) <= 2) year.exams = await MagisterApi.exams.list(year) || []
-                    year.grades = (await MagisterApi.grades.forYear(year) || [])
+                    if ((years.length - i) <= 2) year.examInfo ??= await magisterApi.exams.info(year) || null
+                    if ((years.length - i) <= 2) year.exams = await magisterApi.exams.list(year) || []
+                    year.grades = (await magisterApi.gradesForYear(year) || [])
                         .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
                         .filter((grade, index, self) =>
                             index === self.findIndex((g) =>
@@ -193,9 +193,9 @@ async function constructWrapped(lastYearOnly) {
                             )
                         )
                         .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
-                    year.events = (await MagisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks')) || []
-                    year.absences = await MagisterApi.absences.forYear(year) || []
-                    year.assignments = await MagisterApi.assignments.forYear(year) || []
+                    year.events = (await magisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks')) || []
+                    year.absences = await magisterApi.absencesForYear(year) || []
+                    year.assignments = await magisterApi.assignmentsForYear(year) || []
                 }
 
                 years[i] = year

@@ -3,8 +3,6 @@ chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service
 // Run when the extension and page are loaded
 main()
 async function main() {
-    // if ((await getFromStorage('sampleApiData', 'session')) === 'true') MagisterApi.useSampleData = true
-
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
     let appbar = await awaitElement('.appbar'),
@@ -88,7 +86,7 @@ async function main() {
     }
 
     // Birthday party mode!
-    const accountInfo = await MagisterApi.accountInfo(),
+    const accountInfo = await magisterApi.accountInfo(),
         dateOfBirth = new Date(new Date(accountInfo?.Persoon?.Geboortedatum)?.setHours(0, 0, 0, 0)),
         birthday = new Date(new Date(dateOfBirth).setYear(now.getFullYear())),
         firstName = accountInfo?.Persoon?.Roepnaam || accountInfo?.Persoon?.OfficieleVoornamen,
