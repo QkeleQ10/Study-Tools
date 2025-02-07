@@ -45,28 +45,29 @@ function setIntervalImmediately(func, interval) {
 
 /**
  * Creates an element if it doesn't exist already and applies the specified properties to it.
- * @param {string} [tagName] The element's tag name
- * @param {string} [id] The element's ID
- * @param {HTMLElement} [parent] The element's parent
- * @param {Object} [attributes] The attributes to assign to the element
- * @param {string} [attributes.innerText] The element's inner text
- * @returns {HTMLElement} The created element.
+ * @param {string} tagName - The element's tag name
+ * @param {HTMLElement} [parent] - The element's parent
+ * @param {Object} [attributes] - The attributes to assign to the element
+ * @param {string} [attributes.id] - The element's ID
+ * @param {string} [attributes.innerText] - The element's inner text
+ * @param {Object|string} [attributes.style] - The element's style
+ * @returns {HTMLElement} - The created or updated element.
  */
-function element(tagName, id, parent, attributes) {
-    let elem = id ? document.getElementById(id) : undefined
-    if (!elem) {
-        elem = document.createElement(tagName)
-        if (id) elem.id = id
-        if (parent) parent.append(elem)
-        if (attributes) elem.setAttributes(attributes)
-    } else {
-        if (attributes) elem.setAttributes(attributes)
+function createElement(tagName, parent, attributes = {}) {
+    let element = attributes.id ? document.getElementById(attributes.id) : null;
+    if (!element) { // Create element if it doesn't exist
+        element = document.createElement(tagName);
     }
-    return elem
+    element.setAttributes(attributes);
+    if (parent) parent.append(element);
+    return element;
+}
+function element(tagName, id, parent, attributes) {
+    return createElement(tagName, parent, { id, ...attributes })
 }
 
 /**
- * 
+ * Wait for an element to be available in the DOM.
  * @param {string} querySelector 
  * @param {boolean} [all=false] 
  * @param {number} [duration=10000] 
@@ -131,12 +132,38 @@ function saveToStorage(key, value, location) {
 
 Element.prototype.setAttributes = function (attributes) {
     const elem = this
-    for (var key in attributes) {
-        if (key === 'innerText') elem.innerText = attributes[key]
-        else if (key === 'innerHTML') elem.innerHTML = attributes[key]
-        else if (key === 'outerHTML') elem.outerHTML = attributes[key]
-        else if (key === 'viewBox') elem.setAttributeNS(null, 'viewBox', attributes[key])
-        else elem.setAttribute(key, attributes[key])
+    for (const [key, value] of Object.entries(attributes)) {
+        switch (key) {
+            case 'innerText':
+            case 'textContent':
+            case 'innerHTML':
+            case 'outerHTML':
+                elem[key] = value;
+                break;
+            case 'viewBox':
+                elem.setAttributeNS(null, 'viewBox', value);
+                break;
+            case 'style':
+            case 'dataset':
+                if (typeof value === 'object') {
+                    for (let subKey in value) {
+                        elem[key][subKey] = value[subKey];
+                    }
+                } else {
+                    elem.setAttribute(key, value);
+                }
+                break;
+            case 'classList':
+                if (Array.isArray(value)) {
+                    elem.classList.add(...value);
+                } else {
+                    elem.classList.add(...value.split(' '));
+                }
+                break;
+            default:
+                elem.setAttribute(key, value);
+                break;
+        }
     }
 }
 
@@ -198,7 +225,7 @@ function updateTemporalBindings() {
                 break
 
             case 'style-hours':
-                element.style.setProperty('--relative-start', now.getHoursWithDecimals())
+                element.style.setProperty('--start-time', now.getHoursWithDecimals())
                 break
 
             case 'ongoing-check':

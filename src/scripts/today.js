@@ -1,4 +1,8 @@
-let events = []
+let events = [],
+    teacherNamesSetting = syncedStorage['start-teacher-names'] || {},
+    listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list',
+    listViewEnabled = listViewEnabledSetting,
+    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
 // Run at start and when the URL changes
 if (document.location.href.includes('/vandaag') && !document.location.href.includes('to-do')) today()
@@ -12,17 +16,21 @@ async function today() {
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
-        zoomSetting = await getFromStorage('start-zoom', 'local') || 1,
-        teacherNamesSetting = syncedStorage['start-teacher-names'] || await getFromStorage('teacher-names', 'local') || {},
+        hourHeightSetting = await getFromStorage('start-hour-height', 'local') || 115,
         widgetsOrderSetting = Object.values(syncedStorage['widgets-order'] || []) || [],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         header = element('div', 'st-start-header', container),
-        schedule = element('div', 'st-start-schedule', container),
+        schedule = element('div', 'st-start-schedule', container, { style: `--hour-height: ${hourHeightSetting}px` }),
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets),
         widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' }),
         widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
+
+    teacherNamesSetting = syncedStorage['start-teacher-names'] || {}
+    listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
+    listViewEnabled = listViewEnabledSetting
+    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
     const widgetsOrderDefault = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
     if (!widgetsOrderSetting || widgetsOrderSetting.length < 1 || !widgetsOrderDefault.every(key => widgetsOrderSetting.includes(key))) {
@@ -37,11 +45,6 @@ async function today() {
     let renderSchedule, updateHeaderButtons, updateHeaderText
 
     let agendaStartDate, agendaEndDate
-
-    const showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
-
-    const listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
-    let listViewEnabled = listViewEnabledSetting
 
     let agendaView = listViewEnabled
         ? 'day' // If list view is enabled, force day view
@@ -272,20 +275,19 @@ async function today() {
         let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('scaleDown') })
         let zoomIn = element('button', 'st-start-edit-zoom-in', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('scaleUp') })
         zoomOut.addEventListener('click', () => {
-            zoomSetting -= .1
+            hourHeightSetting -= 5
             effectuateZoom(zoomOut)
         })
         zoomIn.addEventListener('click', () => {
-            zoomSetting += .1
+            hourHeightSetting += 5
             effectuateZoom(zoomIn)
         })
         function effectuateZoom(source) {
-            zoomSetting = Math.min(Math.max(0.4, zoomSetting), 4)
-            saveToStorage('start-zoom', zoomSetting, 'local')
-            document.querySelector('#st-start-ticks-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
-            document.querySelector('#st-start-schedule-wrapper').setAttribute('style', `--hour-zoom: ${zoomSetting}`)
+            hourHeightSetting = Math.min(Math.max(45, hourHeightSetting), 450)
+            saveToStorage('start-hour-height', hourHeightSetting, 'local')
+            schedule.setAttribute('style', `--hour-height: ${hourHeightSetting}px`)
             if (source) {
-                let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${Math.round(zoomSetting * 100)}%`, style: `top: ${source.getBoundingClientRect().top - 24}px; left: ${source.getBoundingClientRect().left}px;` })
+                let ghost = element('span', null, document.body, { class: 'st-number-ghost', innerText: `${hourHeightSetting}px`, style: `top: ${source.getBoundingClientRect().top - 24}px; left: ${source.getBoundingClientRect().left}px;` })
                 setTimeout(() => ghost.remove(), 400)
             }
         }
@@ -429,6 +431,9 @@ async function today() {
                     if (item.DuurtHeleDag) {
                         item.Einde = new Date(new Date(endDate).setTime(endDate.getTime() + 86399000)).toISOString()
                     }
+                    item.startH = new Date(item.Start).getHoursWithDecimals()
+                    item.endH = new Date(item.Einde).getHoursWithDecimals()
+                    item.durationH = item.endH - item.startH
                     return item
                 }) || []
 
@@ -497,13 +502,13 @@ async function today() {
 
             clearInterval(interval)
 
-            let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}` })
-            let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { style: `--hour-zoom: ${zoomSetting || 1}`, innerText: '' })
+            let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule)
+            let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { innerText: '' })
 
             // Create tick marks for schedule view
             if (!listViewEnabled) {
                 for (let i = 0; i <= 24; i += 0.5) {
-                    let hourTick = element('div', `st-start-tick-${i}h`, ticksWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--relative-start: ${i}` })
+                    let hourTick = element('div', `st-start-tick-${i}h`, ticksWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--start-time: ${i}` })
                 }
             }
 
@@ -525,90 +530,92 @@ async function today() {
                 if (day.date.getDate() === 1 && day.date.getMonth() === 0) element('span', `st-start-col-${i}-head-span-3`, columnLabel, { innerText: day.date.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', year: 'numeric' }) })
 
                 // Loop through all events of the day
-                day.events.forEach((item, i) => {
+                // day.events.forEach((item, i) => {
 
-                    // Render the event element
-                    // TODO: BUG: overlap is quite broken!
-                    // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
-                    const eventWrapperEl = element('div', `st-event-${item.Id}-wrapper`, column, {
-                        class: 'st-event-wrapper',
-                        'data-temporal-type': 'ongoing-check',
-                        'data-temporal-start': item.Start,
-                        'data-temporal-end': item.Einde,
-                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length}; --st-brm-top-left: ${day.events.some(el => el.Einde === item.Start) ? 0 : 1}; --st-brm-top-right: ${day.events.some(el => el.Einde === item.Start) ? 0 : 1}; --st-brm-bottom-left: ${day.events.some(el => el.Start === item.Einde) ? 0 : 1}; --st-brm-bottom-right: ${day.events.some(el => el.Start === item.Einde) ? 0 : 1}`
-                    })
-                    const eventEl = element('div', `st-event-${item.Id}`, eventWrapperEl, {
-                        class: 'st-event',
-                        title: [
-                            item.Omschrijving || 'Geen omschrijving',
-                            item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie',
-                            item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime()
-                        ].join('\n')
-                    })
+                // Render the event element
+                // TODO: BUG: overlap is quite broken!
+                // TODO: BUG: all-day events show up as normal ones, but with a duration of 0.
+                // const eventWrapperEl = element('div', `st-event-${item.Id}-wrapper`, column, {
+                //     class: 'st-event-wrapper',
+                //     'data-temporal-type': 'ongoing-check',
+                //     'data-temporal-start': item.Start,
+                //     'data-temporal-end': item.Einde,
+                //     style: `--start-time: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length}; --st-brm-top-left: ${day.events.some(el => el.Einde === item.Start) ? 0 : 1}; --st-brm-top-right: ${day.events.some(el => el.Einde === item.Start) ? 0 : 1}; --st-brm-bottom-left: ${day.events.some(el => el.Start === item.Einde) ? 0 : 1}; --st-brm-bottom-right: ${day.events.some(el => el.Start === item.Einde) ? 0 : 1}`
+                // })
+                // const eventEl = element('div', `st-event-${item.Id}`, eventWrapperEl, {
+                //     class: 'st-event',
+                //     title: [
+                //         item.Omschrijving || 'Geen omschrijving',
+                //         item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie',
+                //         item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime()
+                //     ].join('\n')
+                // })
 
-                    // Event click handler
-                    eventWrapperEl.addEventListener('click', () => window.location.hash = `#/agenda/${(item.Type === 1 || item.Type === 16) ? 'afspraak' : 'huiswerk'}/${item.Id}?returnUrl=%252Fvandaag`)
+                // // Event click handler
+                // eventWrapperEl.addEventListener('click', () => window.location.hash = `#/agenda/${(item.Type === 1 || item.Type === 16) ? 'afspraak' : 'huiswerk'}/${item.Id}?returnUrl=%252Fvandaag`)
 
-                    // Parse the subject, teacher and location fields
-                    let eventSubjects = (item.Vakken?.map((e, i, a) => {
-                        if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
-                        return e.Naam
-                    }) || []).join(', ')
-                    if (!eventSubjects?.length > 0) eventSubjects = item.Omschrijving
-                    let eventTeachers = (item.Docenten?.map((e, i, a) => {
-                        return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
-                    }) || []).join(', ')
-                    let eventLocation = item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ')
+                // // Parse the subject, teacher and location fields
+                // let eventSubjects = (item.Vakken?.map((e, i, a) => {
+                //     if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
+                //     return e.Naam
+                // }) || []).join(', ')
+                // if (!eventSubjects?.length > 0) eventSubjects = item.Omschrijving
+                // let eventTeachers = (item.Docenten?.map((e, i, a) => {
+                //     return (teacherNamesSetting[e.Docentcode] || e.Naam) + ` (${e.Docentcode})`
+                // }) || []).join(', ')
+                // let eventLocation = item.Lokatie || item.Lokalen?.map(e => e.Naam).join(', ')
 
-                    // Draw the school hour label
-                    let eventHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
-                    const eventNumberEl = element('div', `st-event-${item.Id}-school-hours`, eventEl, { class: 'st-event-number', innerText: eventHours })
-                    if (item.Type === 1) {
-                        eventNumberEl.classList.add('icon')
-                        eventNumberEl.innerText = '' // Icon: user-lock
-                    } else if (item.Type === 16) {
-                        eventNumberEl.classList.add('icon')
-                        eventNumberEl.innerText = '' // Icon: user-edit
-                    } else if (!eventNumberEl.innerText) {
-                        eventNumberEl.classList.add('icon')
-                        eventNumberEl.innerText = '' // Icon: calendar-day
-                    }
+                // // Draw the school hour label
+                // let eventHours = (item.LesuurVan === item.LesuurTotMet) ? item.LesuurVan : `${item.LesuurVan}-${item.LesuurTotMet}`
+                // const eventNumberEl = element('div', `st-event-${item.Id}-school-hours`, eventEl, { class: 'st-event-number', innerText: eventHours })
+                // if (item.Type === 1) {
+                //     eventNumberEl.classList.add('icon')
+                //     eventNumberEl.innerText = '' // Icon: user-lock
+                // } else if (item.Type === 16) {
+                //     eventNumberEl.classList.add('icon')
+                //     eventNumberEl.innerText = '' // Icon: user-edit
+                // } else if (!eventNumberEl.innerText) {
+                //     eventNumberEl.classList.add('icon')
+                //     eventNumberEl.innerText = '' // Icon: calendar-day
+                // }
 
-                    // Cancelled label
-                    if (item.Status == 4 || item.Status == 5) {
-                        eventWrapperEl.dataset.cancelled = true
-                    }
+                // // Cancelled label
+                // if (item.Status == 4 || item.Status == 5) {
+                //     eventWrapperEl.dataset.cancelled = true
+                // }
 
-                    // Draw the event details
-                    const eventDetailsEl = element('div', `st-event-${item.Id}-details`, eventEl, {
-                        class: 'st-event-details'
-                    })
-                    const eventTitleWrapperEl = element('span', `st-event-${item.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
-                    if (listViewEnabled) {
-                        element('b', null, eventTitleWrapperEl, { innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
-                    } else {
-                        element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
-                        if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
-                    }
+                // // Draw the event details
+                // const eventDetailsEl = element('div', `st-event-${item.Id}-details`, eventEl, {
+                //     class: 'st-event-details'
+                // })
+                // const eventTitleWrapperEl = element('span', `st-event-${item.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
+                // if (listViewEnabled) {
+                //     element('b', null, eventTitleWrapperEl, { innerText: item.Lokatie ? `${item.Omschrijving} (${item.Lokatie})` : item.Omschrijving })
+                // } else {
+                //     element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
+                //     if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
+                // }
 
-                    // Render the teacher label
-                    if (!listViewEnabled && eventTeachers?.length > 0) {
-                        const eventTeacherEl = element('span', `st-event-${item.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
-                        if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
-                        if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
-                    }
+                // // Render the teacher label
+                // if (!listViewEnabled && eventTeachers?.length > 0) {
+                //     const eventTeacherEl = element('span', `st-event-${item.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
+                //     if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+                //     if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
+                // }
 
-                    // Render the time label
-                    element('span', `st-event-${item.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
+                // // Render the time label
+                // element('span', `st-event-${item.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: item.DuurtHeleDag ? 'Hele dag' : new Date(item.Start).getFormattedTime() + '–' + new Date(item.Einde).getFormattedTime() })
 
-                    // Parse and render any chips
-                    let chips = getEventChips(item)
+                // // Parse and render any chips
+                // let chips = getEventChips(item)
 
-                    const eventChipsWrapperEl = element('div', `st-event-${item.Id}-chips`, eventEl, { class: 'st-event-chips st-chips-wrapper' })
-                    chips.forEach(chip => {
-                        let chipElement = element('span', `st-event-${item.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-                    })
-                })
+                // const eventChipsWrapperEl = element('div', `st-event-${item.Id}-chips`, eventEl, { class: 'st-event-chips st-chips-wrapper' })
+                // chips.forEach(chip => {
+                //     let chipElement = element('span', `st-event-${item.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                // })
+
+                // })
+                renderEvents(day.events, column)
 
                 // Display 'no events' if necessary
                 if (day.events?.length < 1 && !listViewEnabled && agendaView === 'day') {
@@ -626,7 +633,7 @@ async function today() {
                     })
                 }
 
-                schedule.scrollTop = zoomSetting * 115 * 8 // Default scroll to 08:00
+                schedule.scrollTop = hourHeightSetting * 115 * 8 // Default scroll to 08:00
 
                 // Ensure a nice scrolling position if the date shown is not today
                 // Only in day view and if the user hasn't navigated to a different day
@@ -1475,7 +1482,7 @@ async function today() {
 }
 
 function collidesWith(a, b) {
-    return new Date(a.Einde) > new Date(b.Start) && new Date(a.Start) < new Date(b.Einde)
+    return new Date(a.Einde) > new Date(b.Start) && new Date(a.Start) < new Date(b.Einde);
 }
 
 function checkCollision(eventArr) {
@@ -1490,6 +1497,135 @@ function checkCollision(eventArr) {
         }
     }
     return eventArrOut
+}
+
+function renderEvents(events, parent) {
+    parent.innerHTML = ""; // Clear previous events
+
+    positionEvents(events).forEach(event => {
+        const eventWrapperElement = createElement("div", parent, {
+            class: "st-event-wrapper", textContent: event.title, style: {
+                top: `calc(${event.startH} * var(--hour-height))`,
+                height: `calc(${event.durationH} * var(--hour-height))`,
+                left: `calc(${event.left} * 100%)`,
+                width: `calc(${event.width} * 100%)`,
+                borderTopLeftRadius: events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
+                borderTopRightRadius: events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
+                borderBottomLeftRadius: events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
+                borderBottomRightRadius: events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
+            }
+        });
+
+        const eventElement = createElement('div', eventWrapperElement, {
+            class: 'st-event',
+            title: `${event.Omschrijving || 'Geen omschrijving'}
+${event.Lokatie || event.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie'}
+${event.DuurtHeleDag ? 'Hele dag' : `${new Date(event.Start).getFormattedTime()}–${new Date(event.Einde).getFormattedTime()}`}`
+        });
+
+        // Event click handler
+        eventWrapperElement.addEventListener('click', () => window.location.hash = `#/agenda/${(event.Type === 1 || event.Type === 16) ? 'afspraak' : 'huiswerk'}/${event.Id}?returnUrl=%252Fvandaag`)
+
+        // Parse the subject, teacher and location fields
+        let eventSubjects = (event.Vakken?.map((vak, i) => {
+            if (i === 0) return vak.Naam.charAt(0).toUpperCase() + vak.Naam.slice(1)
+            return vak.Naam
+        }) || []).join(', ');
+        if (!eventSubjects?.length > 0) eventSubjects = event.Omschrijving;
+
+        let eventTeachers = (event.Docenten?.map((docent) => {
+            return (teacherNamesSetting?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
+        }) || []).join(', ');
+
+        let eventLocation = event.Lokatie || event.Lokalen?.map(e => e.Naam).join(', ');
+
+        // Draw the school hour label
+        let eventHours = (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}-${event.LesuurTotMet}`
+        const eventNumberEl = element('div', `st-event-${event.Id}-school-hours`, eventElement, { class: 'st-event-number', innerText: eventHours })
+        if (event.Type === 1) {
+            eventNumberEl.classList.add('icon')
+            eventNumberEl.innerText = '' // Icon: user-lock
+        } else if (event.Type === 16) {
+            eventNumberEl.classList.add('icon')
+            eventNumberEl.innerText = '' // Icon: user-edit
+        } else if (!eventNumberEl.innerText) {
+            eventNumberEl.classList.add('icon')
+            eventNumberEl.innerText = '' // Icon: calendar-day
+        }
+
+        // Cancelled label
+        if (event.Status == 4 || event.Status == 5) {
+            eventWrapperElement.dataset.cancelled = true
+        }
+
+        // Draw the event details
+        const eventDetailsEl = element('div', `st-event-${event.Id}-details`, eventElement, {
+            class: 'st-event-details'
+        })
+        const eventTitleWrapperEl = element('span', `st-event-${event.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
+        if (listViewEnabled) {
+            element('b', null, eventTitleWrapperEl, { innerText: event.Lokatie ? `${event.Omschrijving} (${event.Lokatie})` : event.Omschrijving })
+        } else {
+            element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
+            if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
+        }
+
+        // Render the teacher label
+        if (!listViewEnabled && eventTeachers?.length > 0) {
+            const eventTeacherEl = element('span', `st-event-${event.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
+            if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+            if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
+        }
+
+        // Render the time label
+        element('span', `st-event-${event.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: event.DuurtHeleDag ? 'Hele dag' : new Date(event.Start).getFormattedTime() + '–' + new Date(event.Einde).getFormattedTime() })
+
+        // Parse and render any chips
+        let chips = getEventChips(event)
+
+        const eventChipsWrapperEl = element('div', `st-event-${event.Id}-chips`, eventElement, { class: 'st-event-chips st-chips-wrapper' })
+        chips.forEach(chip => {
+            element('span', `st-event-${event.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+        })
+    });
+}
+
+function positionEvents(events) {
+    // Step 1: Sort events by start time
+    events.sort((a, b) => a.startH - b.startH);
+
+    let activeColumns = []; // Tracks currently overlapping events
+
+    events.forEach(event => {
+        // Remove finished events from activeColumns
+        activeColumns = activeColumns.filter(e => e.endH > event.startH);
+
+        // Assign the first available column index
+        let columnIndex = 0;
+        while (activeColumns.some(e => e.column === columnIndex)) {
+            columnIndex++;
+        }
+
+        event.column = columnIndex;
+        activeColumns.push(event);
+
+        // Find max simultaneous overlaps for this event
+        event.maxOverlap = activeColumns.length;
+    });
+
+    // Step 2: Compute width dynamically based on maxOverlap
+    events.forEach(event => {
+        // Get max overlap for events in the same timeslot
+        let overlappingEvents = events.filter(e =>
+            (e.startH < event.endH && e.endH > event.startH)
+        );
+        let maxColumns = Math.max(...overlappingEvents.map(e => e.column + 1));
+
+        event.width = 1 / maxColumns; // Take up only necessary space
+        event.left = (event.column / maxColumns); // Adjust left position
+    });
+
+    return events;
 }
 
 function getEventChips(event) {
