@@ -338,7 +338,6 @@ dialog.st-modal[open]::backdrop {
     justify-content: flex-end;
     gap: 8px;
     margin-top: auto;
-    max-height: calc(100% - 24px);
 }
 
 .st-chips-wrapper:empty {

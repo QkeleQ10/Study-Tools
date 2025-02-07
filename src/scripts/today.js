@@ -526,7 +526,6 @@ async function today() {
 
                 // Loop through all events of the day
                 day.events.forEach((item, i) => {
-                    let ongoing = (new Date(item.Start) < now && new Date(item.Einde) > now)
 
                     // Render the event element
                     // TODO: BUG: overlap is quite broken!
@@ -536,7 +535,7 @@ async function today() {
                         'data-temporal-type': 'ongoing-check',
                         'data-temporal-start': item.Start,
                         'data-temporal-end': item.Einde,
-                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length}; --st-brm-top-left: ${day.events.some(el => el.Einde === item.Start) ? 0 : 0.75}; --st-brm-top-right: ${day.events.some(el => el.Einde === item.Start) ? 0 : 0.75}; --st-brm-bottom-left: ${day.events.some(el => el.Start === item.Einde) ? 0 : 0.75}; --st-brm-bottom-right: ${day.events.some(el => el.Start === item.Einde) ? 0 : 0.75}`
+                        style: `--relative-start: ${new Date(item.Start).getHoursWithDecimals()}; --duration: ${new Date(item.Einde).getHoursWithDecimals() - new Date(item.Start).getHoursWithDecimals()}; --cols: ${item.cols.length}; --cols-before: ${item.colsBefore.length}; --st-brm-top-left: ${day.events.some(el => el.Einde === item.Start) ? 0 : 1}; --st-brm-top-right: ${day.events.some(el => el.Einde === item.Start) ? 0 : 1}; --st-brm-bottom-left: ${day.events.some(el => el.Start === item.Einde) ? 0 : 1}; --st-brm-bottom-right: ${day.events.some(el => el.Start === item.Einde) ? 0 : 1}`
                     })
                     const eventEl = element('div', `st-event-${item.Id}`, eventWrapperEl, {
                         class: 'st-event',
@@ -720,8 +719,8 @@ async function today() {
                         if (placeholder) magisterApi.useSampleData = false
 
                         if (logs.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-logs-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.logs'), 'data-amount': logs.length, href: '#/lvs-logboeken' })
+                        let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-widget', href: '#/lvs-logboeken' })
+                        let widgetTitle = element('h3', 'st-start-widget-logs-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.logs'), 'data-amount': logs.length })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
@@ -747,8 +746,8 @@ async function today() {
                         if (placeholder) magisterApi.useSampleData = false
 
                         if (activities.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-start-widget-activities', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-activities-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.activities'), 'data-amount': activities.length, href: '#/elo/activiteiten' })
+                        let widgetElement = element('a', 'st-start-widget-activities', null, { class: 'st-widget', href: '#/elo/activiteiten' })
+                        let widgetTitle = element('h3', 'st-start-widget-activities-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.activities'), 'data-amount': activities.length })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
@@ -844,8 +843,8 @@ async function today() {
 
                         if (recentGrades.length < 1) return resolve() // Stop if no grades.
 
-                        let widgetElement = element(placeholder ? 'div' : 'a', 'st-start-widget-grades', null, { class: 'st-tile st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
-                        let widgetTitle = element('div', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
+                        let widgetElement = element('a', 'st-start-widget-grades', null, { class: 'st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
+                        let widgetTitle = element('h3', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
                         let widgetItemsContainer = element('div', 'st-start-widget-grades-items', widgetElement)
 
                         let children = []
@@ -982,25 +981,25 @@ async function today() {
                         if (placeholder) magisterApi.useSampleData = false
 
                         if (unreadMessages.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-start-widget-messages', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.messages'), 'data-amount': unreadMessages.length, href: '#/berichten' })
+                        let widgetElement = element('a', 'st-start-widget-messages', null, { class: 'st-widget', href: '#/berichten' })
+                        let widgetTitle = element('h3', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.messages'), 'data-amount': unreadMessages.length })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
                         }
 
                         unreadMessages.forEach(item => {
-                            let messageElement = element('a', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-list-item', href: `#/berichten` })
+                            let messageElement = element('a', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-widget-subitem', href: `#/berichten` })
 
-                            let row1 = element('span', `st-start-widget-messages-${item.id}-row1`, messageElement, { class: 'st-list-row' })
-                            let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-list-title', innerText: item.afzender.naam })
+                            let row1 = element('span', `st-start-widget-messages-${item.id}-row1`, messageElement, { class: 'st-widget-subitem-row' })
+                            let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-widget-subitem-title', innerText: item.afzender.naam })
                             let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, row1, {
-                                class: 'st-list-timestamp',
+                                class: 'st-widget-subitem-timestamp',
                                 'data-temporal-type': 'timestamp', 'data-temporal-start': item.verzondenOp
                             })
 
-                            let row2 = element('span', `st-start-widget-messages-${item.id}-row2`, messageElement, { class: 'st-list-row' })
-                            let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, row2, { class: 'st-list-content', innerText: item.onderwerp })
+                            let row2 = element('span', `st-start-widget-messages-${item.id}-row2`, messageElement, { class: 'st-widget-subitem-row' })
+                            let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, row2, { class: 'st-widget-subitem-content', innerText: item.onderwerp })
 
                             let chips = []
                             if (item.heeftPrioriteit) chips.push({ name: i18n('chips.important'), type: 'warn' })
@@ -1058,8 +1057,8 @@ async function today() {
                         })
 
                         if (homeworkEvents.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-start-widget-homework', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('div', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.homework'), 'data-amount': homeworkEvents.length })
+                        let widgetElement = element('a', 'st-start-widget-homework', null, { class: 'st-widget' })
+                        let widgetTitle = element('h3', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.homework'), 'data-amount': homeworkEvents.length })
 
                         if (type === 'Lijst') return resolve(widgetElement)
 
@@ -1070,17 +1069,17 @@ async function today() {
                             }) || [item.Omschrijving]
                             if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
 
-                            let eventElement = element('a', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-list-item', href: `#/agenda/huiswerk/${item.Id}` })
+                            let eventElement = element('a', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-widget-subitem', href: `#/agenda/huiswerk/${item.Id}` })
 
-                            let row1 = element('span', `st-start-widget-homework-${item.Id}-row1`, eventElement, { class: 'st-list-row' })
-                            let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-list-title', innerText: subjectNames.join(', ') })
+                            let row1 = element('span', `st-start-widget-homework-${item.Id}-row1`, eventElement, { class: 'st-widget-subitem-row' })
+                            let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-widget-subitem-title', innerText: subjectNames.join(', ') })
                             let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, row1, {
-                                class: 'st-list-timestamp',
+                                class: 'st-widget-subitem-timestamp',
                                 'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.Einde
                             })
 
-                            let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-list-row' })
-                            let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, row2, { class: 'st-list-content' })
+                            let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-widget-subitem-row' })
+                            let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, row2, { class: 'st-widget-subitem-content' })
                             eventContent.innerHTML = item.Inhoud.replace(/(<br ?\/?>)/gi, '') // eventContent.setHTML(item.Inhoud)
                             if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
 
@@ -1114,25 +1113,25 @@ async function today() {
                         const relevantAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
 
                         if (relevantAssignments.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-start-widget-assignments', null, { class: 'st-tile st-widget' })
-                        let widgetTitle = element('a', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.assignments'), 'data-amount': relevantAssignments.length, href: '#/elo/opdrachten' })
+                        let widgetElement = element('a', 'st-start-widget-assignments', null, { class: 'st-widget', href: '#/elo/opdrachten' })
+                        let widgetTitle = element('h3', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.assignments'), 'data-amount': relevantAssignments.length })
 
                         if (type === 'Lijst') {
                             return resolve(widgetElement)
                         }
 
                         relevantAssignments.forEach(item => {
-                            let assignmentElement = element('a', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-list-item', href: `#/elo/opdrachten/${item.Id}` })
+                            let assignmentElement = element('a', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-widget-subitem', href: `#/elo/opdrachten/${item.Id}` })
 
-                            let row1 = element('span', `st-start-widget-assignments-${item.Id}-row1`, assignmentElement, { class: 'st-list-row' })
-                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-list-title', innerText: item.Vak ? `${item.Titel} (${item.Vak})` : item.Titel })
+                            let row1 = element('span', `st-start-widget-assignments-${item.Id}-row1`, assignmentElement, { class: 'st-widget-subitem-row' })
+                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-widget-subitem-title', innerText: item.Vak ? `${item.Titel} (${item.Vak})` : item.Titel })
                             let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
-                                class: 'st-list-timestamp',
+                                class: 'st-widget-subitem-timestamp',
                                 'data-temporal-type': 'timestamp', 'data-temporal-start': item.InleverenVoor
                             })
 
-                            let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-list-row' })
-                            let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-list-content' })
+                            let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-widget-subitem-row' })
+                            let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-widget-subitem-content' })
                             assignmentContent.innerHTML = item.Omschrijving?.replace(/(<br ?\/?>)/gi, '') || '' //assignmentContent.setHTML(item.Omschrijving)
                             if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
 
@@ -1176,7 +1175,7 @@ async function today() {
                     return new Promise(async resolve => {
                         const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
 
-                        const widgetElement = element(placeholder ? 'div' : 'button', 'st-start-widget-digital-clock', null, { class: 'st-tile st-widget', title: "Klok in volledig scherm" })
+                        const widgetElement = element(placeholder ? 'div' : 'button', 'st-start-widget-digital-clock', null, { class: 'st-widget', title: "Klok in volledig scherm" })
                         const timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
                             'data-temporal-type': secondsOption === 'show'
                                 ? 'current-time-long'
