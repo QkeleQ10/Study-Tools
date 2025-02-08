@@ -40,8 +40,8 @@
             ],
             "css": [
                 "src/styles/main.css",
-                "src/styles/gamification.css",
                 "src/styles/today.css",
+                "src/styles/gamification.css",
                 "src/styles/grades.css",
                 "src/styles/studyguide.css"
             ],
@@ -53,8 +53,10 @@
             ],
             "js": [
                 "src/scripts/main.js",
+                "src/scripts/today/schedule.js",
+                "src/scripts/today/widgets.js",
+                "src/scripts/today/today.js",
                 "src/scripts/gamification.js",
-                "src/scripts/today.js",
                 "src/scripts/grades.js",
                 "src/scripts/studyguide.js",
                 "src/scripts/books.js"

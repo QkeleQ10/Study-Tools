@@ -14,6 +14,11 @@ let eggs = [],
     announcements = [],
     snackbarQueue = [];
 
+const dates = {
+    get now() { return new Date() },
+    get today() { return midnight() },
+};
+
 (async () => {
     if (chrome?.storage) {
         syncedStorage = await getFromStorageMultiple(null, 'sync', true)
@@ -64,6 +69,14 @@ function createElement(tagName, parent, attributes = {}) {
 }
 function element(tagName, id, parent, attributes) {
     return createElement(tagName, parent, { id, ...attributes })
+}
+
+Element.prototype.createChildElement = function (tagName, attributes) {
+    return createElement(tagName, this, attributes)
+}
+
+Element.prototype.createSiblingElement = function (tagName, attributes) {
+    return createElement(tagName, this.parentElement, attributes)
 }
 
 /**
