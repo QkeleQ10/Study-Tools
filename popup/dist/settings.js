@@ -228,8 +228,16 @@ export default [
                 subtitle: "Springen naar de eerstvolgende dag met lessen wanneer er vandaag geen lessen (meer) zijn. Alleen in de weergavemodus 'Dag'.",
                 default: true,
                 conditions: [
-                    { settingId: 'start-enabled', operator: 'equal', value: true },
-                    { settingId: 'start-schedule-view', operator: 'equal', value: 'schedule' }
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "start-schedule-persist",
+                title: "Laatst bekeken roosterweergave onthouden",
+                subtitle: "De laatst gebruikte roosterweergave en -bereik worden onthouden tot je Magister opnieuw opent.",
+                default: true,
+                conditions: [
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
                 ],
             },
         ]

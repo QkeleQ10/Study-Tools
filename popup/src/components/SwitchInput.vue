@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { ref, computed } from 'vue'
 import { useElementSize, useFocus } from '@vueuse/core'
 
 import Icon from './Icon.vue'

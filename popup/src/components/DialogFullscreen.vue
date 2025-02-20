@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { useScroll } from '@vueuse/core'
 
 import Icon from './Icon.vue'

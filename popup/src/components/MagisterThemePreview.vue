@@ -1,5 +1,5 @@
 <script setup>
-import { computed, inject, defineProps } from 'vue'
+import { computed, inject } from 'vue'
 import { presets, propertyKeys } from '../../public/themePresets.js'
 
 const props = defineProps(['preset'])

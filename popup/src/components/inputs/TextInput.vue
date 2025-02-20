@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineModel } from 'vue'
+import { ref, computed } from 'vue'
 import { useFocus } from '@vueuse/core'
 
 const model = defineModel()

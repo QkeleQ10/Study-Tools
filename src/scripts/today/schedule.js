@@ -1,347 +1,335 @@
-async function todaySchedule() {
-    let interval
+class Schedule {
+    element;
+    days = [];
+    #scheduleWrapper;
 
-    agendaDayOffset = Math.floor((dates.today - gatherStart) / 86400000)
-
-    const events = await magisterApi.events()
-
-    // Display error if the result does not exist or if it is not an array
-    if (!events || !Array.isArray(events)) {
-        element('i', `st-start-fa`, schedule, { class: 'st-start-icon fa-duotone fa-calendar-circle-exclamation' })
-        element('span', `st-start-disclaimer`, schedule, { class: 'st-start-disclaimer', innerText: i18n('error') })
-        return
+    #hourHeight = 115;
+    get hourHeight() { return this.#hourHeight; }
+    set hourHeight(newHeight) {
+        this.#hourHeight = Math.min(Math.max(45, newHeight), 450);
+        this.element.style.setProperty('--hour-height', `${newHeight}px`);
+        saveToStorage('start-hour-height', newHeight, 'local');
     }
 
-    // Create an array with 42 days (6 weeks) containing events of those days
-    let agendaDays = []
-    for (let i = 0; i < 42; i++) {
-        const date = new Date(new Date(gatherStart.getTime()).setDate(gatherStart.getDate() + i))
-        const eventsOfDay =
-            events.filter(item => {
-                const startDate = new Date(item.Start)
-                return (startDate - date) < 86400000 && (startDate - date) >= 0 // Add all events that are on this date to this element
-            })?.map(item => {
-                const endDate = new Date(item.Einde)
-                if (item.DuurtHeleDag) {
-                    item.Einde = new Date(new Date(endDate).setTime(endDate.getTime() + 86399000)).toISOString()
-                }
-                item.startH = new Date(item.Start).getHoursWithDecimals()
-                item.endH = new Date(item.Einde).getHoursWithDecimals()
-                item.durationH = item.endH - item.startH
-                return item
-            }) || []
+    set scheduleView(newView) {
+        switch (newView) {
+            case 'workweek': this.scheduleSize = 5; this.snapToMonday = true; break;
+            case 'week': this.scheduleSize = 7; this.snapToMonday = true; break;
+            case 'day': this.scheduleSize = 1; this.snapToMonday = false; break;
+            default: this.scheduleSize = parseInt(newView.replace('day', '')); this.snapToMonday = false; break;
+        };
+        persistedScheduleView = newView;
+    }
+    get scheduleView() {
+        if (this.#snapToMonday && this.#scheduleSize === 5) return 'workweek';
+        if (this.#snapToMonday) return 'week';
+        if (this.#scheduleSize === 1) return 'day';
+        return `${this.#scheduleSize}day`;
+    }
 
-        let eventsOfDayWithCollision = checkCollision(eventsOfDay)
+    #scheduleSize = 1;
+    get scheduleSize() { return this.#scheduleSize; }
+    set scheduleSize(newSize) {
+        this.#scheduleSize = Math.min(Math.max(1, newSize), 7);
+        this.scheduleDate = this.scheduleDate;
+    }
 
-        agendaDays.push({
-            date: new Date(date),
-            today: (date - dates.today) === 0, // Days have the highest relevancy when they match the current date.
-            tomorrow: (date - dates.today) === 86400000, // Days have increased relevancy when they match tomorrow's date.
-            irrelevant: eventsOfDayWithCollision.length < 1 || date < dates.today, // Days are irrelevant when they are empty or in the past.
-            events: eventsOfDayWithCollision
+    #snapToMonday = false;
+    get snapToMonday() { return this.#snapToMonday; }
+    set snapToMonday(newSetting) {
+        this.#snapToMonday = newSetting;
+        this.scheduleDate = this.scheduleDate;
+    }
+
+    #scheduleDate = dates.today;
+    get scheduleDate() { return this.#scheduleDate; }
+    set scheduleDate(newDate) {
+        this.#scheduleDate = midnight(newDate);
+        this.scheduleRange = { start: midnight(this.#scheduleDate), end: midnight(this.#scheduleDate, this.#scheduleSize - 1) };
+    }
+
+    #scheduleRange = { start: this.#scheduleDate, end: this.#scheduleDate };
+    get scheduleRange() { return this.#scheduleRange; }
+    set scheduleRange(newRange) {
+        if (this.#snapToMonday) {
+            while (newRange.start.getDay() !== 1) {
+                newRange.start.setDate(newRange.start.getDate() - 1);
+                newRange.end.setDate(newRange.end.getDate() - 1);
+            }
+        }
+        (async () => {
+            // If any of the days in agendaRange don't have a corresponding entry in this.days, extend the schedule range to include it.
+            if (!this.days.some(day => day.date.getTime() === newRange.start.getTime())) {
+                await this.#fetchAndAppendEvents(
+                    midnight(newRange.start, -13),
+                    midnight(newRange.end, 1)
+                );
+            }
+            if (!this.days.some(day => day.date.getTime() === newRange.end.getTime())) {
+                await this.#fetchAndAppendEvents(
+                    midnight(newRange.start, 0),
+                    midnight(newRange.end, 14)
+                );
+            }
+
+            let oldRange = this.#scheduleRange;
+            this.#scheduleRange = newRange;
+
+            this.element.dispatchEvent(new CustomEvent('rangechange'));
+
+            this.#updateDayColumns(newRange.start - oldRange.start);
+        })();
+    }
+
+    constructor(parentElement, hourHeight) {
+        this.element = createElement('div', parentElement, { id: 'st-start-schedule', style: `--hour-height: ${hourHeight}px` });
+        this.#initialise();
+    }
+
+    async #initialise() {
+        let ticksWrapper = element('div', 'st-start-ticks-wrapper', this.element);
+        for (let i = 0; i <= 24; i += 0.5) {
+            createElement('div', ticksWrapper, { classList: [`st-start-tick`, Number.isInteger(i) ? 'whole' : 'half'], style: `--start-time: ${i}` });
+        }
+
+        this.#scheduleWrapper = element('div', 'st-start-schedule-wrapper', this.element, { innerText: '' });
+        this.#scheduleWrapper.parentElement.scrollTop = 8.5 * this.hourHeight; // Scroll to 8:30
+
+        await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
+
+        this.element.dispatchEvent(new CustomEvent('contentloaded'));
+
+        this.#updateDayColumns();
+    }
+
+    #fetchAndAppendEvents(gatherStart, gatherEnd) {
+        // TODO: loading bar
+        console.log(`Fetching events between ${gatherStart} and ${gatherEnd}...`);
+
+        return new Promise(async (resolve, _) => {
+            let events = await magisterApi.events(gatherStart, gatherEnd);
+            for (let i = 0; i <= Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)); i++) {
+                const date = midnight(gatherStart, i);
+                if (this.days.some(day => day.date.getTime() === date.getTime())) continue;
+
+                const eventsOfDay = events.filter(event => {
+                    const startDate = new Date(event.Start);
+                    return (startDate - date) < 86400000 && (startDate - date) >= 0;
+                });
+
+                if (i === Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
+                this.days.push(new ScheduleDay(date, eventsOfDay, this.#scheduleWrapper));
+            }
+            resolve();
         })
     }
 
-    // Start rendering
-    renderSchedule = async () => {
+    async #updateDayColumns(difference = 0) {
+        this.#scheduleWrapper.dataset.navigate = 'still';
 
-        switch (agendaView) {
-            case 'week':
-                // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
-                agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 6))
-                schedule.classList.add('week-view')
-                schedule.classList.remove('list-view')
-                break;
+        for (const day of this.days) {
+            // If the column should be shown, populate it with events
+            if (!day.rendered && this.isInRange(day.date)) await day.drawEvents();
 
-            case 'workweek':
-                // When in week view, the first day shown should be the Monday of the selected week. The last day shown should be 6 days later.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + Math.min(Math.max(0, Math.floor(agendaDayOffset / 7) * 7), 41)))
-                agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + 4))
-                schedule.classList.add('week-view')
-                schedule.classList.remove('list-view')
-                break;
-
-            default:
-                // When in day view, the first day shown should be today. The amount of days set to be shown dictates the last day shown.
-                agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                if (listViewEnabled) {
-                    schedule.classList.add('list-view')
-                }
-
-                let todayIndex = agendaDays.findIndex(item => item.today)
-                let todayEvents = agendaDays[todayIndex].events
-                let nextRelevantDayIndex = agendaDays.findIndex((item, i) => item.events.length > 0 && i > todayIndex) || todayIndex || 0
-                let nextRelevantDayEvents = agendaDays[nextRelevantDayIndex]?.events
-                let todayEndTime = new Date(Math.max(...todayEvents.filter(item => !(item.Status == 4 || item.Status == 5)).map(item => new Date(item.Einde))))
-
-                // Jump to the next relevant day if no (more) events will take place today (given the user hasn't opted out)
-                if (nextRelevantDayIndex > todayIndex && !agendaDayOffsetChanged && (new Date() >= todayEndTime || todayEvents.length < 1) && showNextDaySetting && agendaView === 'day' && agendaDayOffset === (dates.today.getDay() || 7) - 1 && nextRelevantDayEvents.length > 0) {
-                    agendaDayOffset = nextRelevantDayIndex
-                    agendaStartDate = new Date(new Date(gatherStart).setDate(gatherStart.getDate() + agendaDayOffset))
-                    notify('snackbar', i18n('toasts.jumpedToDate', { date: formatTimestamp(agendaStartDate) }), [], 1500)
-
-                    setTimeout(() => { if (document.querySelector('#st-start-today-offset-zero')) document.querySelector('#st-start-today-offset-zero').classList.add('emphasise') }, 200)
-                    schedule.dataset.navigate = 'jumpforwards'
-                }
-
-                if (agendaView === 'day') agendaEndDate = agendaStartDate
-                else agendaEndDate = new Date(new Date(agendaStartDate).setDate(agendaStartDate.getDate() + Number(agendaView.slice(0, 1)) - 1))
-
-                schedule.classList.remove('week-view')
-                break;
+            setTimeout(() => {
+                day.element.dataset.state = this.isInRange(day.date) ? 'visible' : 'hidden';
+            }, 60);
         }
 
-        clearInterval(interval)
+        // Update the scheduleWrapper's navigate attribute to trigger the CSS animation
+        setTimeout(() => {
+            this.#scheduleWrapper.dataset.navigate = difference > 0 ? 'forwards' : difference < 0 ? 'backwards' : 'still';
+        }, 5);
+    }
 
-        let ticksWrapper = element('div', 'st-start-ticks-wrapper', schedule)
-        let scheduleWrapper = element('div', 'st-start-schedule-wrapper', schedule, { innerText: '' })
+    isInRange(date) {
+        return date >= this.#scheduleRange.start && date <= this.#scheduleRange.end;
+    }
+}
 
-        // Create tick marks for schedule view
-        if (!listViewEnabled) {
-            for (let i = 0; i <= 24; i += 0.5) {
-                let hourTick = element('div', `st-start-tick-${i}h`, ticksWrapper, { class: `st-start-tick ${Number.isInteger(i) ? 'whole' : 'half'}`, style: `--start-time: ${i}` })
+class ScheduleDay {
+    element;
+    rendered = false;
+
+    constructor(date, eventsArray, parentElement) {
+        this.date = date;
+        this.events = this.#calculateEventOverlap(eventsArray);
+
+        this.element = createElement('div', parentElement, {
+            class: 'st-start-schedule-day',
+            dataset: {
+                today: this.isToday,
+                tomorrow: this.isTomorrow,
+                irrelevant: this.events.length < 1 || this.isPast,
             }
-        }
+        })
+    }
 
-        agendaDays.forEach((day, i, a) => {
-            // If the date falls outside the agenda range, don't proceed.
-            if (day.date < agendaStartDate || day.date > agendaEndDate) return
+    get isToday() {
+        return this.date.getTime() === dates.today.getTime();
+    }
 
-            // Create a column for the day
-            const dayColumnEl = element('div', `st-start-schedule-day-${i}`, scheduleWrapper, {
-                class: 'st-start-schedule-day',
-                'data-today': day.today,
-                'data-tomorrow': day.tomorrow,
-                'data-irrelevant': day.irrelevant
-            })
+    get isTomorrow() {
+        return this.date.getTime() === dates.tomorrow.getTime();
+    }
 
-            // TODO: the label for the column
+    get isPast() {
+        return this.date.getTime() < dates.today.getTime();
+    }
 
-            renderEvents(day.events, dayColumnEl)
+    get hasFutureEvents() {
+        return this.events.some(event => new Date(event.Einde).getTime() > dates.now.getTime());
+    }
 
-            // Display 'no events' if necessary
-            if (day.events?.length < 1 && !listViewEnabled) {
-                let seed = cyrb128(String(day.date.getTime()))
-                createElement('i', dayColumnEl, {
-                    classList: ['st-start-icon', 'fa-duotone', ['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)]
-                })
-                createElement('span', dayColumnEl, {
-                    class: 'st-start-disclaimer',
-                    innerText: events.length === 0
-                        ? i18n('noEventsUntilDate', { date: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'long' }), dateShort: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) })
-                        : day.today
-                            ? i18n('noEventsToday')
-                            : i18n('noEvents')
-                })
-            }
-
-            schedule.scrollTop = hourHeightSetting * 115 * 8 // Default scroll to 08:00
-
-            // Ensure a nice scrolling position if the date shown is not today
-            // Only in day view and if the user hasn't navigated to a different day
-            if (agendaView.slice(-3) === 'day' && !agendaDayOffsetChanged) {
-                if (dayColumnEl.querySelector('.st-event')) {
-                    // If there are events today, try to make the last one visible but ensure the first event is visible.
-                    dayColumnEl.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' })
-                    dayColumnEl.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' })
-                }
-            }
-
-            if (!listViewEnabled && day.today) {
-                // Add a marker of the current time (if applicable) and scroll to it if the scroll position is 0.
-                const currentTimeMarker = element('div', `st-start-now`, dayColumnEl, { 'data-temporal-type': 'style-hours' }),
-                    currentTimeMarkerLabel = element('div', `st-start-now-label`, dayColumnEl, { 'data-temporal-type': 'style-hours', innerText: i18n('dates.nowBrief')?.toUpperCase() })
-                updateTemporalBindings()
-
-                // Ensure a nice scrolling position if today is visible on-screen
-                // Only in day view and if the user hasn't navigated to a different day
-                if (agendaView.slice(-3) === 'day' && !agendaDayOffsetChanged) {
-                    if (dayColumnEl.querySelector('.st-event')) {
-                        // If there are events today, try to make the last one visible but ensure the first event is visible.
-                        dayColumnEl.querySelector('.st-event:last-of-type').scrollIntoView({ block: 'nearest', behavior: 'instant' })
-                        dayColumnEl.querySelector('.st-event').scrollIntoView({ block: 'nearest', behavior: 'instant' })
+    async drawEvents() {
+        return new Promise((resolve, _) => {
+            this.events.forEach(event => {
+                const eventWrapperElement = createElement('div', this.element, {
+                    class: "st-event-wrapper", textContent: event.title, style: {
+                        top: `calc(${event.startH} * var(--hour-height))`,
+                        height: `calc(${event.durationH} * var(--hour-height))`,
+                        left: `calc(${event.left} * 100%)`,
+                        width: `calc(${event.width} * 100%)`,
+                        borderTopLeftRadius: this.events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
+                        borderTopRightRadius: this.events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
+                        borderBottomLeftRadius: this.events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
+                        borderBottomRightRadius: this.events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
                     }
-                    currentTimeMarker.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) // Ensure the current time is visible (with a bottom margin set in CSS)
+                });
+
+                const eventElement = createElement('div', eventWrapperElement, {
+                    class: 'st-event',
+                    title: [
+                        event.Omschrijving || 'Geen omschrijving',
+                        event.Lokatie || event.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie',
+                        event.DuurtHeleDag ? 'Hele dag' : `${new Date(event.Start).getFormattedTime()}–${new Date(event.Einde).getFormattedTime()}`
+                    ].join('\n'),
+                    dataset: {
+                        temporalType: 'ongoing-check',
+                        temporalStart: event.Start,
+                        temporalEnd: event.Einde
+                    }
+                });
+
+                // Event click handler
+                eventWrapperElement.addEventListener('click', () => window.location.hash = `#/agenda/${(event.Type === 1 || event.Type === 16) ? 'afspraak' : 'huiswerk'}/${event.Id}?returnUrl=%252Fvandaag`)
+
+                // Parse the subject, teacher and location fields
+                let eventSubjects = (event.Vakken?.map((vak, i) => {
+                    if (i === 0) return vak.Naam.charAt(0).toUpperCase() + vak.Naam.slice(1)
+                    return vak.Naam
+                }) || []).join(', ');
+                if (!eventSubjects?.length > 0) eventSubjects = event.Omschrijving;
+
+                let eventTeachers = (event.Docenten?.map((docent) => {
+                    return (teacherNamesSetting?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
+                }) || []).join(', ');
+
+                let eventLocation = event.Lokatie || event.Lokalen?.map(e => e.Naam).join(', ');
+
+                // Draw the school hour label
+                let eventHours = (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}-${event.LesuurTotMet}`
+                const eventNumberEl = element('div', `st-event-${event.Id}-school-hours`, eventElement, { class: 'st-event-number', innerText: eventHours })
+                if (event.Type === 1) {
+                    eventNumberEl.classList.add('icon')
+                    eventNumberEl.innerText = '' // Icon: user-lock
+                } else if (event.Type === 16) {
+                    eventNumberEl.classList.add('icon')
+                    eventNumberEl.innerText = '' // Icon: user-edit
+                } else if (!eventNumberEl.innerText) {
+                    eventNumberEl.classList.add('icon')
+                    eventNumberEl.innerText = '' // Icon: calendar-day
                 }
-            }
 
-            schedule.scrollTop -= 3 // Scroll back a few pixels to ensure the border looks nice
-            container.scrollLeft = 0 // Ensure the page is not scrolled in the x-axis
+                // Cancelled label
+                if (event.Status == 4 || event.Status == 5) {
+                    eventElement.dataset.cancelled = true
+                }
 
-            if (agendaView.slice(-3) === 'day') {
-                widgetsCollapsed = window.innerWidth < 1100 || widgetsCollapsedSetting
-                if (widgets.classList.contains('editing')) widgetsCollapsed = false
-                verifyDisplayMode()
-                if (document.querySelector('.menu-host')?.classList.contains('collapsed-menu') && window.innerWidth > 1200) document.querySelector('.menu-footer>a')?.click()
-                listViewEnabled = listViewEnabledSetting
-            } else {
-                widgetsCollapsed = true
-                if (widgets.classList.contains('editing')) widgetsCollapsed = false
-                verifyDisplayMode()
-                if (!document.querySelector('.menu-host')?.classList.contains('collapsed-menu')) document.querySelector('.menu-footer>a')?.click()
-                listViewEnabled = false
+                // Draw the event details
+                const eventDetailsEl = element('div', `st-event-${event.Id}-details`, eventElement, {
+                    class: 'st-event-details'
+                })
+                const eventTitleWrapperEl = element('span', `st-event-${event.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
+                if (listViewEnabled) {
+                    element('b', null, eventTitleWrapperEl, { innerText: event.Lokatie ? `${event.Omschrijving} (${event.Lokatie})` : event.Omschrijving })
+                } else {
+                    element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
+                    if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
+                }
+
+                // Render the teacher label
+                if (!listViewEnabled && eventTeachers?.length > 0) {
+                    const eventTeacherEl = element('span', `st-event-${event.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
+                    if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
+                    if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
+                }
+
+                // Render the time label
+                element('span', `st-event-${event.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: event.DuurtHeleDag ? 'Hele dag' : new Date(event.Start).getFormattedTime() + '–' + new Date(event.Einde).getFormattedTime() })
+
+                // Parse and render any chips
+                let chips = getEventChips(event)
+
+                const eventChipsWrapperEl = element('div', `st-event-${event.Id}-chips`, eventElement, { class: 'st-event-chips st-chips-wrapper' })
+                chips.forEach(chip => {
+                    element('span', `st-event-${event.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                })
+            });
+
+            this.rendered = true;
+
+            resolve();
+        })
+    }
+
+    #calculateEventOverlap(array) {
+        // Step 1: Add event details
+        let newArray = array.map(item => {
+            const endDate = new Date(item.Einde)
+            if (item.DuurtHeleDag) {
+                item.Einde = new Date(new Date(endDate).setTime(endDate.getTime() + 86399000)).toISOString()
             }
+            item.startH = new Date(item.Start).getHoursWithDecimals()
+            item.endH = new Date(item.Einde).getHoursWithDecimals()
+            item.durationH = item.endH - item.startH
+            return item
         })
 
-        updateHeaderButtons()
-        updateHeaderText()
-    }
-    renderSchedule()
+        // Step 2: Sort events by start time
+        newArray.sort((a, b) => a.startH - b.startH);
 
-    updateTemporalBindings()
-    updateHeaderButtons()
+        let activeColumns = []; // Tracks currently overlapping events
 
-    setTimeout(() => {
-        updateHeaderText()
-        if (document.getElementById('st-start-header-greeting')) document.getElementById('st-start-header-greeting').dataset.state = 'hidden'
-        if (document.getElementById('st-start-header-text')) document.getElementById('st-start-header-text').dataset.state = 'visible'
-    }, 2000)
-}
+        array.forEach(event => {
+            // Remove finished events from activeColumns
+            activeColumns = activeColumns.filter(e => e.endH > event.startH);
 
-function collidesWith(a, b) {
-    return new Date(a.Einde) > new Date(b.Start) && new Date(a.Start) < new Date(b.Einde);
-}
-
-function checkCollision(eventArr) {
-    let eventArrOut = []
-    for (var i = 0; i < eventArr.length; i++) {
-        eventArrOut[i] = { ...eventArr[i], cols: [], colsBefore: [] }
-        for (var j = 0; j < eventArr.length; j++) {
-            if (collidesWith(eventArr[i], eventArr[j])) {
-                eventArrOut[i].cols.push(j)
-                if (i > j) eventArrOut[i].colsBefore.push(j)
+            // Assign the first available column index
+            let columnIndex = 0;
+            while (activeColumns.some(e => e.column === columnIndex)) {
+                columnIndex++;
             }
-        }
-    }
-    return eventArrOut
-}
 
-function renderEvents(events, parent) {
-    parent.innerHTML = ""; // Clear previous events
+            event.column = columnIndex;
+            activeColumns.push(event);
 
-    positionEvents(events).forEach(event => {
-        const eventWrapperElement = createElement("div", parent, {
-            class: "st-event-wrapper", textContent: event.title, style: {
-                top: `calc(${event.startH} * var(--hour-height))`,
-                height: `calc(${event.durationH} * var(--hour-height))`,
-                left: `calc(${event.left} * 100%)`,
-                width: `calc(${event.width} * 100%)`,
-                borderTopLeftRadius: events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
-                borderTopRightRadius: events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
-                borderBottomLeftRadius: events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
-                borderBottomRightRadius: events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
-            }
+            // Find max simultaneous overlaps for this event
+            event.maxOverlap = activeColumns.length;
         });
 
-        const eventElement = createElement('div', eventWrapperElement, {
-            class: 'st-event',
-            title: `${event.Omschrijving || 'Geen omschrijving'}
-${event.Lokatie || event.Lokalen?.map(e => e.Naam).join(', ') || 'Geen locatie'}
-${event.DuurtHeleDag ? 'Hele dag' : `${new Date(event.Start).getFormattedTime()}–${new Date(event.Einde).getFormattedTime()}`}`
+        // Step 3: Compute width dynamically based on maxOverlap
+        array.forEach(event => {
+            // Get max overlap for events in the same timeslot
+            let overlappingEvents = array.filter(e =>
+                (e.startH < event.endH && e.endH > event.startH)
+            );
+            let maxColumns = Math.max(...overlappingEvents.map(e => e.column + 1));
+
+            event.width = 1 / maxColumns; // Take up only necessary space
+            event.left = (event.column / maxColumns); // Adjust left position
         });
 
-        // Event click handler
-        eventWrapperElement.addEventListener('click', () => window.location.hash = `#/agenda/${(event.Type === 1 || event.Type === 16) ? 'afspraak' : 'huiswerk'}/${event.Id}?returnUrl=%252Fvandaag`)
-
-        // Parse the subject, teacher and location fields
-        let eventSubjects = (event.Vakken?.map((vak, i) => {
-            if (i === 0) return vak.Naam.charAt(0).toUpperCase() + vak.Naam.slice(1)
-            return vak.Naam
-        }) || []).join(', ');
-        if (!eventSubjects?.length > 0) eventSubjects = event.Omschrijving;
-
-        let eventTeachers = (event.Docenten?.map((docent) => {
-            return (teacherNamesSetting?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
-        }) || []).join(', ');
-
-        let eventLocation = event.Lokatie || event.Lokalen?.map(e => e.Naam).join(', ');
-
-        // Draw the school hour label
-        let eventHours = (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}-${event.LesuurTotMet}`
-        const eventNumberEl = element('div', `st-event-${event.Id}-school-hours`, eventElement, { class: 'st-event-number', innerText: eventHours })
-        if (event.Type === 1) {
-            eventNumberEl.classList.add('icon')
-            eventNumberEl.innerText = '' // Icon: user-lock
-        } else if (event.Type === 16) {
-            eventNumberEl.classList.add('icon')
-            eventNumberEl.innerText = '' // Icon: user-edit
-        } else if (!eventNumberEl.innerText) {
-            eventNumberEl.classList.add('icon')
-            eventNumberEl.innerText = '' // Icon: calendar-day
-        }
-
-        // Cancelled label
-        if (event.Status == 4 || event.Status == 5) {
-            eventWrapperElement.dataset.cancelled = true
-        }
-
-        // Draw the event details
-        const eventDetailsEl = element('div', `st-event-${event.Id}-details`, eventElement, {
-            class: 'st-event-details'
-        })
-        const eventTitleWrapperEl = element('span', `st-event-${event.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
-        if (listViewEnabled) {
-            element('b', null, eventTitleWrapperEl, { innerText: event.Lokatie ? `${event.Omschrijving} (${event.Lokatie})` : event.Omschrijving })
-        } else {
-            element('b', null, eventTitleWrapperEl, { innerText: eventSubjects })
-            if (eventLocation.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocation})` })
-        }
-
-        // Render the teacher label
-        if (!listViewEnabled && eventTeachers?.length > 0) {
-            const eventTeacherEl = element('span', `st-event-${event.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers })
-            if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
-            if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
-        }
-
-        // Render the time label
-        element('span', `st-event-${event.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: event.DuurtHeleDag ? 'Hele dag' : new Date(event.Start).getFormattedTime() + '–' + new Date(event.Einde).getFormattedTime() })
-
-        // Parse and render any chips
-        let chips = getEventChips(event)
-
-        const eventChipsWrapperEl = element('div', `st-event-${event.Id}-chips`, eventElement, { class: 'st-event-chips st-chips-wrapper' })
-        chips.forEach(chip => {
-            element('span', `st-event-${event.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-        })
-    });
-}
-
-function positionEvents(events) {
-    // Step 1: Sort events by start time
-    events.sort((a, b) => a.startH - b.startH);
-
-    let activeColumns = []; // Tracks currently overlapping events
-
-    events.forEach(event => {
-        // Remove finished events from activeColumns
-        activeColumns = activeColumns.filter(e => e.endH > event.startH);
-
-        // Assign the first available column index
-        let columnIndex = 0;
-        while (activeColumns.some(e => e.column === columnIndex)) {
-            columnIndex++;
-        }
-
-        event.column = columnIndex;
-        activeColumns.push(event);
-
-        // Find max simultaneous overlaps for this event
-        event.maxOverlap = activeColumns.length;
-    });
-
-    // Step 2: Compute width dynamically based on maxOverlap
-    events.forEach(event => {
-        // Get max overlap for events in the same timeslot
-        let overlappingEvents = events.filter(e =>
-            (e.startH < event.endH && e.endH > event.startH)
-        );
-        let maxColumns = Math.max(...overlappingEvents.map(e => e.column + 1));
-
-        event.width = 1 / maxColumns; // Take up only necessary space
-        event.left = (event.column / maxColumns); // Adjust left position
-    });
-
-    return events;
+        return array;
+    }
 }

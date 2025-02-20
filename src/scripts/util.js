@@ -17,6 +17,10 @@ let eggs = [],
 const dates = {
     get now() { return new Date() },
     get today() { return midnight() },
+    get tomorrow() { return midnight(null, 1) },
+    get gatherStart() { return midnight(null, -7) },
+    get gatherEarlyStart() { return midnight(null, -42) },
+    get gatherEnd() { return midnight(null, 42) },
 };
 
 (async () => {
@@ -273,9 +277,15 @@ setIntervalImmediately(updateTemporalBindings, 1000)
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
 
-function midnight(targetDate) {
-    const date = new Date();
-    date.setDate(targetDate || date.getDate());
+function midnight(targetDate, offset = 0) {
+    let date;
+    if (targetDate instanceof Date) {
+        date = new Date(targetDate);
+        date.setDate(targetDate.getDate() + offset);
+    } else {
+        date = new Date();
+        date.setDate(date.getDate() + offset);
+    }
     date.setHours(0, 0, 0, 0);
     return date;
 }
@@ -298,9 +308,15 @@ Date.prototype.getFormattedDay = function () {
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
-Date.prototype.isTomorrow = function (offset = 0) { return this >= midnight(new Date().getDate() + 1 + offset) && this < midnight(new Date().getDate() + 2 + offset) }
-Date.prototype.isToday = function (offset = 0) { return this >= midnight(new Date().getDate() + offset) && this < midnight(new Date().getDate() + 1 + offset) }
-Date.prototype.isYesterday = function (offset = 0) { return this >= midnight(new Date().getDate() - 1 + offset) && this < midnight(new Date().getDate() + offset) }
+Date.prototype.addDays = function (days) {
+    let date = new Date(this)
+    date.setDate(date.getDate() + days)
+    return date
+}
+
+Date.prototype.isTomorrow = function (offset = 0) { return this >= midnight(null, 1 + offset) && this < midnight(null, 2 + offset) }
+Date.prototype.isToday = function (offset = 0) { return this >= midnight(null, offset) && this < midnight(null, 1 + offset) }
+Date.prototype.isYesterday = function (offset = 0) { return this >= midnight(null, -1 + offset) && this < midnight(null, 1 + offset) }
 
 Array.prototype.random = function (seed) {
     let randomValue = Math.random()

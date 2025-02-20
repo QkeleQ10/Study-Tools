@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits, inject } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps(['modelValue', 'id'])
 const emit = defineEmits(['update:modelValue'])

@@ -98,7 +98,7 @@
         "generic": "Welkom#;Hallo!;Welkom terug, %n#;Hey, %n#;Welkom terug#;Goedendag#"
     },
     "toasts": {
-        "jumpedToDate": "Gesprongen naar {date}"
+        "jumpedToDate": "Geen afspraken meer vandaag; gesprongen naar {date}"
     },
     "close": "Sluiten",
     "remainder": "Overige",

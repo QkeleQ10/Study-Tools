@@ -13,9 +13,9 @@ class MagisterApi {
         this.updateApiCredentials();
 
         this.permissions = await this.updateApiPermissions();
-        this.gatherStart = midnight(new Date().getDate() - (new Date().getDay() + 6) % 7);
-        this.gatherEarlyStart = midnight(new Date().getDate() - 42);
-        this.gatherEnd = midnight(new Date().getDate() + 42);
+        this.gatherStart = dates.gatherStart;
+        this.gatherEarlyStart = dates.gatherEarlyStart;
+        this.gatherEnd = dates.gatherEnd;
         this.useSampleData = false;
 
     }

@@ -1,7 +1,6 @@
 <script setup>
+import { computed } from 'vue';
 import Icon from '../Icon.vue';
-
-import { computed, defineProps, defineEmits } from 'vue'
 
 const props = defineProps(['modelValue', 'options', 'density'])
 const emit = defineEmits(['update:modelValue'])

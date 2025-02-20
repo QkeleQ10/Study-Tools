@@ -1,5 +1,4 @@
 <script setup>
-import { defineProps } from 'vue'
 import Icon from './Icon.vue';
 
 const props = defineProps(['type'])
