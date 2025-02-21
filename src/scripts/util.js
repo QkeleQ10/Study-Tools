@@ -338,6 +338,10 @@ Array.prototype.mode = function () {
     ).at(-1)
 }
 
+String.prototype.toSentenceCase = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1)
+}
+
 Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeholder' }, selectedOption = 'placeholder', onChange, onClick) {
     const dropdown = this
     dropdown.classList.add('st-dropdown')
@@ -614,7 +618,8 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
 
         case 'dialog':
             return new Promise(resolve => {
-                const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
+                const dialog = element('dialog', null, document.body, { class: 'st-dialog' })
+                const dialogBody = element('div', null, dialog, { class: 'st-dialog-body', innerText: body })
                 dialog.showModal()
 
                 const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
@@ -648,7 +653,7 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                     })
                     resolve(dialog)
                 } else {
-                    const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
+                    const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') })
                     if (options?.index && options?.length) {
                         dialogDismiss.classList.add('st-step')
                         dialogDismiss.innerText = `${options.index} / ${options.length}`
@@ -670,13 +675,82 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
     }
 }
 
+class Dialog {
+    element;
+    body;
+    #buttonsWrapper;
+
+    constructor(options = {}) {
+        this.element = createElement('dialog', document.body, { class: 'st-dialog' })
+        this.body = createElement('div', this.element, { class: 'st-dialog-body', innerText: options.innerText || '' })
+
+        this.#buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' })
+        if (options?.buttons?.length > 0) {
+            options.buttons.forEach(item => {
+                const button = createElement('button', this.#buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` })
+                if (item.innerText) button.innerText = item.innerText
+                if (item.clickSelector) {
+                    button.addEventListener('click', event => {
+                        document.querySelector(item.clickSelector)?.click()
+                        event.stopPropagation()
+                    })
+                } else if (item.href) {
+                    button.addEventListener('click', event => {
+                        window.open(item.href, '_blank').focus()
+                        event.stopPropagation()
+                    })
+                } else if (item.callback || item.onclick) {
+                    button.addEventListener('click', event => {
+                        if (item.callback) item.callback(event)
+                        if (item.onclick) item.onclick(event)
+                        event.stopPropagation()
+                    })
+                } else button.addEventListener('click', event => event.stopPropagation())
+            })
+        }
+
+        if (typeof options.allowClose === 'boolean' && options.allowClose === false) {
+            this.element.addEventListener('cancel', (event) => {
+                event.preventDefault()
+            })
+        } else {
+            const dialogDismiss = createElement('button', this.#buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') })
+            if (options?.index && options?.length) {
+                dialogDismiss.classList.add('st-step')
+                dialogDismiss.innerText = `${options.index} / ${options.length}`
+                if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+            }
+            dialogDismiss.addEventListener('click', () => this.close())
+        }
+    }
+
+    show() {
+        this.element.showModal()
+    }
+
+    close() {
+        this.element.close()
+        this.element.remove()
+    }
+
+    on(event, callback) {
+        return new Promise(resolve => {
+            this.element.addEventListener(event, (e) => {
+                resolve(e)
+                callback(e)
+            })
+        })
+
+    }
+}
+
 function showSnackbar(object) {
     const { id, body, buttons, duration } = object
     snackbarQueue.splice(snackbarQueue.findIndex(item => item.id === id), 1)
 
     const snackbar = element('div', `st-snackbar-${id}`, document.body, { class: 'st-snackbar', innerText: body })
 
-    if (buttons?.length > 0) {
+    if (buttons?.[0] && buttons?.forEach) {
         const buttonsWrapper = element('div', null, snackbar, { class: 'st-button-wrapper' })
         buttons.forEach(item => {
             const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })

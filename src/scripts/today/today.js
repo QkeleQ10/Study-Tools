@@ -4,8 +4,9 @@ let events = [],
     listViewEnabled = listViewEnabledSetting,
     showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true,
     schedulePersistenceEnabled = syncedStorage['start-schedule-persist'] ?? true
-
+// TODO: persist forever setting
 let persistedScheduleView = 'day';
+let persistedScheduleDate = dates.today;
 
 // Run at start and when the URL changes 
 today()
@@ -68,6 +69,7 @@ async function today() {
     const schedule = new Schedule(container, hourHeightSetting);
     schedule.element.addEventListener('rangechange', () => {
         updateHeader();
+        persistedScheduleDate = schedule.scheduleDate;
     });
     schedule.element.addEventListener('contentloaded', () => {
         if (showNextDaySetting) {
@@ -132,7 +134,7 @@ async function today() {
         // Update the header text accordingly
 
         const dateOptions = { timeZone: 'Europe/Amsterdam' };
-        if (schedule.scheduleRange.start.getFullYear() !== dates.today.getFullYear() || schedule.scheduleRange.end.getFullYear() !== dates.today.getFullYear()) dateOptions.year = 'numeric';
+        if (isYearNotCurrent(schedule.scheduleRange.start.getFullYear()) || isYearNotCurrent(schedule.scheduleRange.end.getFullYear())) dateOptions.year = 'numeric';
 
         if (schedule.snapToMonday) {
             if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
@@ -495,7 +497,7 @@ async function today() {
                             let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < Number(syncedStorage['suf-threshold']) })
                             let itemSubj = element('span', `st-start-widget-grades-${i}-subj`, gradeElement, { class: 'st-start-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
                             let itemInfo = element('span', `st-start-widget-grades-${i}-info`, gradeElement, { class: 'st-start-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
-                            let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', 'data-temporal-type': 'timestamp', 'data-temporal-start': item.date })
+                            let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', innerText: makeTimestamp(item.date) })
                             let itemHide = element('button', `st-start-widget-grades-${i}-hide`, gradeElement, { class: 'st-start-widget-grades-item-hide st-button icon tertiary', 'data-icon': item.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
                             itemHide.addEventListener('click', (event) => {
                                 event.preventDefault()
@@ -625,7 +627,7 @@ async function today() {
                             let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-widget-subitem-title', innerText: item.afzender.naam })
                             let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, row1, {
                                 class: 'st-widget-subitem-timestamp',
-                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.verzondenOp
+                                innerText: makeTimestamp(item.verzondenOp)
                             })
 
                             let row2 = element('span', `st-start-widget-messages-${item.id}-row2`, messageElement, { class: 'st-widget-subitem-row' })
@@ -699,13 +701,17 @@ async function today() {
                             }) || [item.Omschrijving]
                             if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
 
-                            let eventElement = element('a', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-widget-subitem', href: `#/agenda/huiswerk/${item.Id}` })
+                            let eventElement = element('button', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-widget-subitem' })
+                            eventElement.addEventListener('click', () => {
+                                new ScheduleEventDialog(item).show();
+                                if (schedule.scheduleDate) schedule.scheduleDate = new Date(item.Start);
+                            });
 
                             let row1 = element('span', `st-start-widget-homework-${item.Id}-row1`, eventElement, { class: 'st-widget-subitem-row' })
                             let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-widget-subitem-title', innerText: subjectNames.join(', ') })
                             let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, row1, {
                                 class: 'st-widget-subitem-timestamp',
-                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.Start, 'data-temporal-end': item.Einde
+                                innerText: makeTimestamp(item.Start)
                             })
 
                             let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-widget-subitem-row' })
@@ -757,7 +763,7 @@ async function today() {
                             let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-widget-subitem-title', innerText: item.Vak ? `${item.Titel} (${item.Vak})` : item.Titel })
                             let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
                                 class: 'st-widget-subitem-timestamp',
-                                'data-temporal-type': 'timestamp', 'data-temporal-start': item.InleverenVoor
+                                innerText: makeTimestamp(item.InleverenVoor)
                             })
 
                             let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-widget-subitem-row' })
@@ -1104,8 +1110,6 @@ async function today() {
     }
 }
 
-
-
 function getEventChips(event) {
     const infoTypes = {
         1: { name: i18n('chips.hw'), type: 'info' },
@@ -1127,6 +1131,51 @@ function getEventChips(event) {
         if (event.Afgerond) chip.type = 'ok'
         chips.push(chip)
     }
+    if (event.HeeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
 
     return chips
+}
+
+function isYearNotCurrent(fullYear) {
+    if (fullYear instanceof Date) fullYear = fullYear.getFullYear();
+    return fullYear !== dates.today.getFullYear();
+}
+
+function eventSubjects(event) {
+    let subjectsF = (event.Vakken?.map((vak, i) => {
+        if (i === 0) return vak.Naam.charAt(0).toUpperCase() + vak.Naam.slice(1)
+        return vak.Naam
+    }) || []).join(', ');
+    if (!subjectsF?.length > 0) return null;
+    return subjectsF;
+}
+
+function eventTeachers(event) {
+    let teachersArray = event.Docenten ? event.Docenten : event;
+    return (teachersArray?.map((docent) => {
+        return (teacherNamesSetting?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
+    }) || []).join(', ');
+}
+
+function eventLocations(event) {
+    let locationsArray = event.Lokalen ? event.Lokalen : event;
+    return event.Lokatie || locationsArray.map(e => e.Naam).join(', ');
+}
+
+function makeTimestamp(d) {
+    d = d instanceof Date ? d : new Date(d);
+
+    const dateFormat = { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' };
+    if (isYearNotCurrent(d) || isYearNotCurrent(d)) dateFormat.year = 'numeric';
+
+    if (d.isToday())
+        return i18n('dates.todayAtTime', { time: d.toLocaleString(locale, { ...dateFormat }) })
+    else if (d.isTomorrow())
+        return i18n('dates.tomorrowAtTime', { time: d.toLocaleString(locale, { ...dateFormat }) })
+    else if (d.isYesterday())
+        return i18n('dates.yesterdayAtTime', { time: d.toLocaleString(locale, { ...dateFormat }) })
+    else if (d.getTime() - dates.today.getTime() < daysToMs(5))
+        return i18n('dates.weekdayAtTime', { weekday: i18n('dates.weekdays')[d.getDay()], time: d.toLocaleString(locale, { ...dateFormat }) })
+    else
+        return d.toLocaleString(locale, { weekday: 'short', day: 'numeric', month: 'short', ...dateFormat })
 }

@@ -17,7 +17,9 @@
         "Agenda": "Index temporum",
         "To Do": "Ad Facendum",
         "Lijst": "Index",
+        "Mijn takenlijst": "Mijn takenlijst",
         "Inzicht": "Inzicht",
+        "Mijn To Do's voor vandaag": "Mijn to-do's voor vandaag",
         "Afwezigheid": "Absentia",
         "Cijfers": "Numeri",
         "Laatste cijfers": "Numeri priores",
@@ -87,6 +89,9 @@
             "saturni"
         ]
     },
+    "units": {
+        "kibibyte": "KiB"
+    },
     "greetings": {
         "lateNight": "Goedenavond#;Goedenavond, nachtuil#;Fijne %savond#",
         "evening": "Goedenavond#;Fijne %savond#",
@@ -132,6 +137,28 @@
     "loading": "Loading...",
     "loadingWidgets": "Onus contenta...",
     "loadingWidget": "Onus '{title}' content...",
+    "hotkeyTooltip": "Sneltoets: Alt+{key}",
+    "unknown": "Onbekend",
+    "typeFile": "{type}-bestand",
+    "attachments": "Attachiamenta",
+    "attachment": "Bijlage",
+    "viewInAgenda": "In agenda openen",
+    "title": "Titel",
+    "subject": "Vak",
+    "schoolHour": "Lesuur",
+    "start": "Begin",
+    "end": "Einde",
+    "location": "Locatie",
+    "note": "Opmerking",
+    "teacher": "Docent",
+    "extra": "Extra",
+    "added": "Toegevoegd",
+    "uploaded": "Geüpload",
+    "lastModified": "Laatst gewijzigd",
+    "fileSize": "Bestandsgrootte",
+    "fileType": "Bestandsindeling",
+    "repetition": "Herhaling",
+    "untilDate": "Tot {date}",
     "hb": {
         "title": "Commendationes",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"

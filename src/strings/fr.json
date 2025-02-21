@@ -17,7 +17,9 @@
         "Agenda": "Programme",
         "To Do": "Tâches",
         "Lijst": "Liste",
+        "Mijn takenlijst": "Ma liste de tâches",
         "Inzicht": "Aperçu",
+        "Mijn To Do's voor vandaag": "Mes tâches pour aujourd'hui",
         "Afwezigheid": "Absences",
         "Cijfers": "Notes",
         "Laatste cijfers": "Dernières notes",
@@ -87,6 +89,9 @@
             "samedi"
         ]
     },
+    "units": {
+        "kibibyte": "KiB"
+    },
     "greetings": {
         "lateNight": "Bonsoir#;Bonne soirée#;Bonsoir, oiseau de nuit#;Bon %s soir #",
         "evening": "Bonsoir#;Bonne soirée#;Bon %s soir#",
@@ -132,6 +137,28 @@
     "loading": "Chargement...",
     "loadingWidgets": "Chargement des widgets...",
     "loadingWidget": "Chargement de widget «{title}»...",
+    "hotkeyTooltip": "Sneltoets: Alt+{key}",
+    "unknown": "Onbekend",
+    "typeFile": "{type}-bestand",
+    "attachments": "Pièces jointes",
+    "attachment": "Bijlage",
+    "viewInAgenda": "In agenda openen",
+    "title": "Titel",
+    "subject": "Vak",
+    "schoolHour": "Lesuur",
+    "start": "Begin",
+    "end": "Einde",
+    "location": "Locatie",
+    "note": "Opmerking",
+    "teacher": "Docent",
+    "extra": "Extra",
+    "added": "Toegevoegd",
+    "uploaded": "Geüpload",
+    "lastModified": "Laatst gewijzigd",
+    "fileSize": "Bestandsgrootte",
+    "fileType": "Bestandsindeling",
+    "repetition": "Herhaling",
+    "untilDate": "Tot {date}",
     "hb": {
         "title": "Recommandations",
         "subtitle": "Une collection de ressources constituée pour t'aider à maîtriser le matériel"

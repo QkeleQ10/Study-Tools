@@ -17,7 +17,9 @@
         "Agenda": "Kalender",
         "To Do": "Att göra",
         "Lijst": "Lista",
+        "Mijn takenlijst": "Mijn takenlijst",
         "Inzicht": "Översikt",
+        "Mijn To Do's voor vandaag": "Mijn to-do's voor vandaag",
         "Afwezigheid": "Frånvaro",
         "Cijfers": "Betyg",
         "Laatste cijfers": "Senaste betygen",
@@ -87,6 +89,9 @@
             "lördag"
         ]
     },
+    "units": {
+        "kibibyte": "KiB"
+    },
     "greetings": {
         "lateNight": "God kväll#;God kväll, nattuggla#;Trevlig %sskväll#",
         "evening": "God kväll#;Trevlig %sskväll#",
@@ -132,6 +137,28 @@
     "loading": "Läser in...",
     "loadingWidgets": "Läser in widgetar...",
     "loadingWidget": "Läser in widgeten \"{title}\"...",
+    "hotkeyTooltip": "Sneltoets: Alt+{key}",
+    "unknown": "Onbekend",
+    "typeFile": "{type}-bestand",
+    "attachments": "Bilagor",
+    "attachment": "Bijlage",
+    "viewInAgenda": "In agenda openen",
+    "title": "Titel",
+    "subject": "Vak",
+    "schoolHour": "Lesuur",
+    "start": "Begin",
+    "end": "Einde",
+    "location": "Locatie",
+    "note": "Opmerking",
+    "teacher": "Docent",
+    "extra": "Extra",
+    "added": "Toegevoegd",
+    "uploaded": "Geüpload",
+    "lastModified": "Laatst gewijzigd",
+    "fileSize": "Bestandsgrootte",
+    "fileType": "Bestandsindeling",
+    "repetition": "Herhaling",
+    "untilDate": "Tot {date}",
     "hb": {
         "title": "Rekommenderade",
         "subtitle": "En samling resurser som hjälper dig att bemästra provinnehållet"

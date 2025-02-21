@@ -15,9 +15,11 @@
         "Start": "Start",
         "Vandaag": "Today",
         "Agenda": "Calendar",
-        "To Do": "To Do",
+        "To Do": "To do",
         "Lijst": "List",
+        "Mijn takenlijst": "My to-do list",
         "Inzicht": "Overview",
+        "Mijn To Do's voor vandaag": "My tasks for today",
         "Afwezigheid": "Absences",
         "Cijfers": "Grades",
         "Laatste cijfers": "Recent grades",
@@ -87,6 +89,9 @@
             "Saturday"
         ]
     },
+    "units": {
+        "kibibyte": "KiB"
+    },
     "greetings": {
         "lateNight": "Good evening#;Good evening, night owl#;Happy %s night#",
         "evening": "Good evening#;Happy %s evening#",
@@ -132,6 +137,28 @@
     "loading": "Loading...",
     "loadingWidgets": "Loading widgets...",
     "loadingWidget": "Loading widget \"{title}\"...",
+    "hotkeyTooltip": "Hotkey: Alt+{key}",
+    "unknown": "Unknown",
+    "typeFile": "{type} file",
+    "attachments": "Attachments",
+    "attachment": "Attachment",
+    "viewInAgenda": "Open in calendar",
+    "title": "Title",
+    "subject": "Subject",
+    "schoolHour": "Period",
+    "start": "Start",
+    "end": "End",
+    "location": "Location",
+    "note": "Note",
+    "teacher": "Teacher",
+    "extra": "Extras",
+    "added": "Added",
+    "uploaded": "Uploaded",
+    "lastModified": "Last modified",
+    "fileSize": "File size",
+    "fileType": "File format",
+    "repetition": "Recurrence",
+    "untilDate": "Until {date}",
     "hb": {
         "title": "Recommended",
         "subtitle": "A curated collection of helpful resources to help you master the subject matter"

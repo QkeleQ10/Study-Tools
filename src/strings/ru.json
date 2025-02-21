@@ -139,8 +139,6 @@
     "loadingWidget": "Widget '{title}' laden...",
     "hotkeyTooltip": "Sneltoets: Alt+{key}",
     "unknown": "Onbekend",
-    "lessonDetails": "Lesdetails",
-    "eventDetails": "Afspraakdetails",
     "typeFile": "{type}-bestand",
     "attachments": "Bijlagen",
     "attachment": "Bijlage",
@@ -161,9 +159,6 @@
     "fileType": "Bestandsindeling",
     "repetition": "Herhaling",
     "untilDate": "Tot {date}",
-    "completed": "Afgerond",
-    "register": "Inschrijven",
-    "registered": "Ingeschreven",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
