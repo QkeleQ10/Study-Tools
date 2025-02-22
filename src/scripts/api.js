@@ -4,6 +4,8 @@ class MagisterApi {
     }
 
     async #initialize() {
+        if (!window.location.pathname.includes('magister')) return;
+
         this.cache = {};
         this.schoolName = window.location.hostname.split('.')[0];
         this.userId = await this.getFromStorage('user-id', 'sync');
@@ -21,6 +23,8 @@ class MagisterApi {
     }
 
     async updateApiCredentials() {
+        if (!window.location.pathname.includes('magister')) return;
+
         const calledAt = new Date();
         const storageLocation = chrome.storage.session?.get ? 'session' : 'local';
 
@@ -140,7 +144,10 @@ class MagisterApiRequest {
     }
 
     get(options = {}) {
+
         return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
             if (magisterApi.useSampleData && this.sample) {
                 resolve(this.sample);
             } else if (!this.identifier || !this.path) {
@@ -158,8 +165,9 @@ class MagisterApiRequest {
     }
 
     async put(body = {}, options = {}) {
-        console.log(body)
         return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
             let res = await fetch(
                 `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
                 {
@@ -180,6 +188,8 @@ class MagisterApiRequest {
 
     #fetchWrapper(url, options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
             if (!magisterApi.userId || !magisterApi.userToken) {
                 await magisterApi.updateApiCredentials()
                     .catch(err => console.error(err));
@@ -208,6 +218,8 @@ class MagisterApiRequest {
     #executeRequest(url, options = {}) {
         const calledAt = new Date();
         return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
             if (!magisterApi.userId || !magisterApi.userToken) {
                 await magisterApi.updateApiCredentials()
                     .catch(err => console.error(err));

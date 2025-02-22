@@ -82,7 +82,6 @@ async function today() {
         }
     });
 
-
     todayWidgets();
 
     const headerTextWrapper = element('div', 'st-start-header-text-wrapper', header)
@@ -92,7 +91,19 @@ async function today() {
         formattedWeekday = dates.now.toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long' })
 
     // Greeting system
-    headerText.addEventListener('click', greetUser)
+    headerTextWrapper.addEventListener('click', () => {
+        const dialog = new Dialog({ closeText: i18n('done'), closeIcon: '' });
+        dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('selectDate') });
+        const input = dialog.body.createChildElement('input', {
+            class: 'st-input',
+            type: 'date',
+            value: `${schedule.scheduleDate.getFullYear()}-${String(schedule.scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(schedule.scheduleDate.getDate()).padStart(2, '0')}`,
+        });
+        dialog.on('close', () => schedule.scheduleDate = new Date(input.value));
+        dialog.show();
+        input.focus();
+        input.showPicker();
+    });
 
     async function greetUser() {
         headerGreeting.dataset.state = 'visible'
@@ -318,6 +329,7 @@ async function today() {
 
     // Allow for keyboard navigation
     document.addEventListener('keydown', event => {
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
         if (event.key === 'ArrowLeft' && !todayDecreaseOffset.disabled) todayDecreaseOffset.click()
         else if (event.key === 'ArrowRight' && !todayIncreaseOffset.disabled) todayIncreaseOffset.click()
     })
@@ -366,7 +378,6 @@ async function today() {
             activities: {
                 title: i18n('widgets.activities'),
                 disclaimer: i18n('widgetDisclaimer'),
-                types: ['Tegel', 'Lijst'],
                 requiredPermissions: ['Activiteiten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
@@ -392,7 +403,6 @@ async function today() {
 
             grades: {
                 title: i18n('widgets.grades'),
-                types: ['Tegel', 'Lijst'],
                 requiredPermissions: ['Cijfers'],
                 options: [
                     {
@@ -601,49 +611,12 @@ async function today() {
             messages: {
                 title: i18n('widgets.messages'),
                 disclaimer: i18n('widgetDisclaimer'),
-                types: ['Tegel', 'Lijst'],
                 requiredPermissions: ['Berichten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        if (placeholder) magisterApi.useSampleData = true
+                        const widget = new MessagesWidget(null) // pass default option
 
-                        let unreadMessages = await magisterApi.messages()
-                            .catch(() => { return reject() })
-
-                        if (placeholder) magisterApi.useSampleData = false
-
-                        if (unreadMessages.length < 1) return resolve()
-                        let widgetElement = element('a', 'st-start-widget-messages', null, { class: 'st-widget', href: '#/berichten' })
-                        let widgetTitle = element('h3', 'st-start-widget-messages-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.messages'), 'data-amount': unreadMessages.length })
-
-                        if (type === 'Lijst') {
-                            return resolve(widgetElement)
-                        }
-
-                        unreadMessages.forEach(item => {
-                            let messageElement = element('a', `st-start-widget-messages-${item.id}`, widgetElement, { class: 'st-widget-subitem', href: `#/berichten` })
-
-                            let row1 = element('span', `st-start-widget-messages-${item.id}-row1`, messageElement, { class: 'st-widget-subitem-row' })
-                            let messageSender = element('span', `st-start-widget-messages-${item.id}-title`, row1, { class: 'st-widget-subitem-title', innerText: item.afzender.naam })
-                            let messageDate = element('span', `st-start-widget-messages-${item.id}-date`, row1, {
-                                class: 'st-widget-subitem-timestamp',
-                                innerText: makeTimestamp(item.verzondenOp)
-                            })
-
-                            let row2 = element('span', `st-start-widget-messages-${item.id}-row2`, messageElement, { class: 'st-widget-subitem-row' })
-                            let messageSubject = element('div', `st-start-widget-messages-${item.id}-content`, row2, { class: 'st-widget-subitem-content', innerText: item.onderwerp })
-
-                            let chips = []
-                            if (item.heeftPrioriteit) chips.push({ name: i18n('chips.important'), type: 'warn' })
-                            if (item.heeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
-
-                            let messageChipsWrapper = element('div', `st-start-widget-messages-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
-                            chips.forEach(chip => {
-                                let chipElement = element('span', `st-start-widget-messages-${item.id}-chip-${chip.name}`, messageChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-                            })
-                        })
-
-                        resolve(widgetElement)
+                        resolve(widget.element)
                     })
                 }
             },
@@ -651,7 +624,6 @@ async function today() {
             homework: {
                 title: i18n('widgets.homework'),
                 disclaimer: i18n('widgetDisclaimer'),
-                types: ['Tegel', 'Lijst'],
                 requiredPermissions: ['Afspraken'],
                 options: [
                     {
@@ -672,62 +644,11 @@ async function today() {
                 ],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        const filterOption = await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete'
+                        const options = { filter: await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete' }
 
-                        if (placeholder) magisterApi.useSampleData = true
+                        const widget = new HomeworkWidget(null, options) // pass default option
 
-                        let events = await magisterApi.events()
-                            .catch(() => { return reject() })
-
-                        if (placeholder) magisterApi.useSampleData = false
-
-                        const homeworkEvents = events.filter(item => {
-                            if (filterOption === 'incomplete')
-                                return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
-                            else
-                                return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
-                        })
-
-                        if (homeworkEvents.length < 1) return resolve()
-                        let widgetElement = element('a', 'st-start-widget-homework', null, { class: 'st-widget' })
-                        let widgetTitle = element('h3', 'st-start-widget-homework-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.homework'), 'data-amount': homeworkEvents.length })
-
-                        if (type === 'Lijst') return resolve(widgetElement)
-
-                        homeworkEvents.forEach(item => {
-                            let subjectNames = item.Vakken?.map((e, i, a) => {
-                                if (i === 0) return e.Naam.charAt(0).toUpperCase() + e.Naam.slice(1)
-                                return e.Naam
-                            }) || [item.Omschrijving]
-                            if (subjectNames.length < 1 && item.Omschrijving) subjectNames.push(item.Omschrijving)
-
-                            let eventElement = element('button', `st-start-widget-homework-${item.Id}`, widgetElement, { class: 'st-widget-subitem' })
-                            eventElement.addEventListener('click', () => {
-                                new ScheduleEventDialog(item).show();
-                                if (schedule.scheduleDate) schedule.scheduleDate = new Date(item.Start);
-                            });
-
-                            let row1 = element('span', `st-start-widget-homework-${item.Id}-row1`, eventElement, { class: 'st-widget-subitem-row' })
-                            let eventSubject = element('span', `st-start-widget-homework-${item.Id}-title`, row1, { class: 'st-widget-subitem-title', innerText: subjectNames.join(', ') })
-                            let eventDate = element('span', `st-start-widget-homework-${item.Id}-date`, row1, {
-                                class: 'st-widget-subitem-timestamp',
-                                innerText: makeTimestamp(item.Start)
-                            })
-
-                            let row2 = element('span', `st-start-widget-homework-${item.Id}-row2`, eventElement, { class: 'st-widget-subitem-row' })
-                            let eventContent = element('div', `st-start-widget-homework-${item.Id}-content`, row2, { class: 'st-widget-subitem-content' })
-                            eventContent.innerHTML = item.Inhoud.replace(/(<br ?\/?>)/gi, '') // eventContent.setHTML(item.Inhoud)
-                            if (eventContent.scrollHeight > eventContent.clientHeight) eventContent.classList.add('overflow')
-
-                            let chips = getEventChips(item)
-
-                            let eventChipsWrapper = element('div', `st-start-widget-homework-${item.Id}-chips`, row2, { class: 'st-chips-wrapper' })
-                            chips.forEach(chip => {
-                                let chipElement = element('span', `st-start-widget-homework-${item.Id}-chip-${chip.name}`, eventChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-                            })
-                        })
-
-                        resolve(widgetElement)
+                        resolve(widget.element)
                     })
                 }
             },
@@ -735,7 +656,6 @@ async function today() {
             assignments: {
                 title: i18n('widgets.assignments'),
                 disclaimer: i18n('widgetDisclaimer'),
-                types: ['Tegel', 'Lijst'],
                 requiredPermissions: ['EloOpdracht'],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
@@ -788,7 +708,6 @@ async function today() {
             digitalClock: {
                 title: i18n('widgets.digitalClock'),
                 disclaimer: i18n('widgetClockDisclaimer'),
-                types: ['Verborgen', 'Tegel', 'Lijst'],
                 requiredPermissions: [],
                 options: [
                     {
@@ -900,16 +819,15 @@ async function today() {
         for (const key of widgetsOrderSetting) {
             if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue
 
-            if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
-                syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
-                saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`], 'local')
-            }
-            if (syncedStorage[`widget-${key}-type`] === 'Verborgen') continue
+            // if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
+            //     syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
+            //     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`], 'local')
+            // }
+            // if (syncedStorage[`widget-${key}-type`] === 'Verborgen') continue
 
             widgetsProgressText.innerText = i18n('loadingWidget', { title: widgetFunctions[key].title })
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`])
             if (widgetElement) {
-                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
                 widgetsList.append(widgetElement)
             }
             updateTemporalBindings()
@@ -948,29 +866,27 @@ async function today() {
         for (const key of widgetsOrderSetting) {
             if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue
 
-            if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
-                const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })
+            // if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
+            //     const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })
 
-                let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
-                widgetElement.dataset.renderType = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
-                widgetElement.setAttribute('disabled', true)
-                widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
-                widgetAddButton.append(widgetElement)
+            //     let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
+            //     widgetElement.setAttribute('disabled', true)
+            //     widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
+            //     widgetAddButton.append(widgetElement)
 
-                widgetAddButton.addEventListener('click', () => {
-                    syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
-                    saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                    widgetsList.innerText = ''
-                    widgets.classList.remove('editing')
-                    widgetControls.classList.remove('editing')
-                    editWidgets()
-                })
-                continue
-            }
+            //     widgetAddButton.addEventListener('click', () => {
+            //         syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
+            //         saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+            //         widgetsList.innerText = ''
+            //         widgets.classList.remove('editing')
+            //         widgetControls.classList.remove('editing')
+            //         editWidgets()
+            //     })
+            //     continue
+            // }
 
             let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
             if (widgetElement) {
-                widgetElement.dataset.renderType = syncedStorage[`widget-${key}-type`] || widgetFunctions[key].types[0]
                 widgetElement.setAttribute('disabled', true)
                 widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
                 widgetElement.setAttribute('draggable', true)
@@ -1022,34 +938,34 @@ async function today() {
 
                     // Widget display types
                     editorActionRow.innerText = ''
-                    const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editorActionRow, { class: 'st-segmented-control' })
-                    if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
-                        syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
-                        saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                    }
-                    ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen')]).forEach(type => {
-                        const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: i18n(type) })
-                        if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
-                        widgetTypeButton.addEventListener('click', () => {
-                            syncedStorage[`widget-${key}-type`] = type
-                            saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                            widgetTypeSelector.querySelectorAll('.st-button.segment').forEach(b => b.classList.remove('active'))
-                            widgetTypeButton.classList.add('active')
-                            widgetsList.innerText = ''
-                            widgets.classList.remove('editing')
-                            widgetControls.classList.remove('editing')
-                            editWidgets(widgetElement.id)
-                        })
-                    })
-                    const widgetHideButton = element('button', `st-start-edit-${key}-hide`, editorActionRow, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('remove'), title: i18n('removeWidget') })
-                    widgetHideButton.addEventListener('click', () => {
-                        syncedStorage[`widget-${key}-type`] = 'Verborgen'
-                        saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                        widgetsList.innerText = ''
-                        widgets.classList.remove('editing')
-                        widgetControls.classList.remove('editing')
-                        editWidgets()
-                    })
+                    // const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editorActionRow, { class: 'st-segmented-control' })
+                    // if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
+                    //     syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
+                    //     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                    // }
+                    // ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen')]).forEach(type => {
+                    //     const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: i18n(type) })
+                    //     if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
+                    //     widgetTypeButton.addEventListener('click', () => {
+                    //         syncedStorage[`widget-${key}-type`] = type
+                    //         saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                    //         widgetTypeSelector.querySelectorAll('.st-button.segment').forEach(b => b.classList.remove('active'))
+                    //         widgetTypeButton.classList.add('active')
+                    //         widgetsList.innerText = ''
+                    //         widgets.classList.remove('editing')
+                    //         widgetControls.classList.remove('editing')
+                    //         editWidgets(widgetElement.id)
+                    //     })
+                    // })
+                    // const widgetHideButton = element('button', `st-start-edit-${key}-hide`, editorActionRow, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('remove'), title: i18n('removeWidget') })
+                    // widgetHideButton.addEventListener('click', () => {
+                    //     syncedStorage[`widget-${key}-type`] = 'Verborgen'
+                    //     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
+                    //     widgetsList.innerText = ''
+                    //     widgets.classList.remove('editing')
+                    //     widgetControls.classList.remove('editing')
+                    //     editWidgets()
+                    // })
 
                     // Widget options
                     if (widgetFunctions[key].options) {

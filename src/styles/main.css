@@ -537,6 +537,21 @@ dialog.st-modal[open]::backdrop {
     border: 1px solid var(--st-accent-primary);
 }
 
+.st-input[type=date] {
+    &::-webkit-datetime-edit-fields-wrapper {
+        cursor: text;
+    }
+
+    &::-webkit-inner-spin-button {
+        color: var(--st-foreground-accent);
+    }
+
+    &::-webkit-calendar-picker-indicator {
+        color: var(--st-foreground-accent);
+        cursor: pointer;
+    }
+}
+
 .st-checkbox-label {
     position: relative;
     margin-left: 32px;

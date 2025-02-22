@@ -505,8 +505,15 @@ class ScheduleEventDialog extends Dialog {
             this.event.Bijlagen.forEach(bijlage => {
                 let fileType = fileTypes.find(type => type.extensions.some(ext => bijlage.Naam.toLowerCase().endsWith(ext)));
 
-                createElement('button', attachmentsColumn, { class: 'st-button secondary st-event-dialog-event-attachment', innerText: bijlage.Naam, dataset: { icon: fileType?.icon || '' } })
-                    .addEventListener('click', async () => window.open((await magisterApi.eventAttachment(bijlage.Id)).location, '_blank'));
+                const fileButton = attachmentsColumn.createChildElement('button', { class: 'st-button secondary st-event-dialog-event-attachment', innerText: bijlage.Naam, dataset: { icon: fileType?.icon || '' } });
+                fileButton.addEventListener('click', async () => window.open((await magisterApi.eventAttachment(bijlage.Id)).location, '_blank'));
+                fileButton.addEventListener('auxclick', async (e) => {
+                    e.preventDefault();
+                    const locationUrl = (await magisterApi.eventAttachment(bijlage.Id)).location;
+                    const file = await fetch(locationUrl);
+                    const blob = new Blob([await file.blob()], { type: bijlage.ContentType });
+                    window.open(URL.createObjectURL(blob), '_blank');
+                });
 
                 let table2 = createElement('table', attachmentsColumn, { class: 'st' });
                 this.#addRowToTable(table2, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : i18n('unknown'));
