@@ -1,7 +1,11 @@
+let persistedScheduleView, persistedScheduleDate;
+
 class Schedule {
     element;
     days = [];
-    #scheduleWrapper;
+    #body;
+    #header;
+    #headerControls = {};
     #progressBar;
 
     #hourHeight = 115;
@@ -32,6 +36,7 @@ class Schedule {
     get scheduleSize() { return this.#scheduleSize; }
     set scheduleSize(newSize) {
         this.#scheduleSize = Math.min(Math.max(1, newSize), 7);
+        this.element.style.setProperty('--size', this.#scheduleSize);
         this.scheduleDate = this.scheduleDate;
     }
 
@@ -47,6 +52,7 @@ class Schedule {
     set scheduleDate(newDate) {
         this.#scheduleDate = midnight(newDate);
         this.scheduleRange = { start: midnight(this.#scheduleDate), end: midnight(this.#scheduleDate, this.#scheduleSize - 1) };
+        persistedScheduleDate = this.#scheduleDate;
     }
 
     #scheduleRange = { start: this.#scheduleDate, end: this.#scheduleDate };
@@ -73,50 +79,67 @@ class Schedule {
                 );
             }
 
-            let oldRange = this.#scheduleRange;
             this.#scheduleRange = newRange;
 
-            this.element.dispatchEvent(new CustomEvent('rangechange'));
-
-            this.#updateDayColumns(newRange.start - oldRange.start);
+            await this.#updateDayColumns();
+            this.#updateHeaderStrip();
         })();
     }
 
     constructor(parentElement, hourHeight) {
-        this.element = createElement('div', parentElement, { id: 'st-start-schedule', style: `--hour-height: ${hourHeight}px` });
+        this.element = createElement('div', parentElement, {
+            id: 'st-sch',
+            class: listViewEnabled ? 'list-view' : '',
+            style: {
+                '--hour-height': `${hourHeight}px`,
+                '--size': this.#scheduleSize
+            },
+        });
         this.#initialise();
     }
 
     async #initialise() {
-        this.#progressBar = createElement('div', this.element, { id: 'st-start-schedule-progress', class: 'st-progress-bar' })
-        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
+        this.#progressBar = createElement('div', this.element, { id: 'st-sch-progress', class: 'st-progress-bar' });
+        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' });
 
-        let ticksWrapper = element('div', 'st-start-ticks-wrapper', this.element);
-        for (let i = 0; i <= 24; i += 0.5) {
-            createElement('div', ticksWrapper, { classList: [`st-start-tick`, Number.isInteger(i) ? 'whole' : 'half'], style: `--start-time: ${i}` });
-        }
+        this.#header = element('div', 'st-start-header', this.element);
+        this.#header.addEventListener('eventchanged', this.#eventChanged);
 
-        this.#scheduleWrapper = element('div', 'st-start-schedule-wrapper', this.element);
-        this.#scheduleWrapper.parentElement.scrollTop = 8.0 * this.hourHeight; // Scroll to 8:00
+        this.#createHeaderStrip();
+
+        this.#body = element('div', 'st-sch-body', this.element);
+        this.#body.addEventListener('eventchanged', this.#eventChanged);
+        this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
         await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
 
-        this.element.dispatchEvent(new CustomEvent('contentloaded'));
+        if (persistedScheduleDate) this.scheduleDate = persistedScheduleDate;
+        if (persistedScheduleView) this.scheduleView = persistedScheduleView;
 
-        this.#scheduleWrapper.addEventListener('eventchanged', async () => {
-            // Clear all cached elements with keys containing 'event'
-            Object.keys(magisterApi.cache).forEach(key => {
-                if (key.includes('event')) delete magisterApi.cache[key];
-            });
+        if (!persistedScheduleDate && !persistedScheduleView && showNextDaySetting) {
+            let nextDayWithEvents = Object.values(this.days).find(day => day.hasFutureEvents);
+            if (nextDayWithEvents) {
+                this.scheduleDate = nextDayWithEvents.date;
+                notify('snackbar', i18n('toasts.jumpedToDate', { date: this.scheduleDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) }));
+            }
+        }
 
-            // Clear the state and completely redraw the schedule
-            this.days = [];
-            this.#scheduleWrapper.innerHTML = '';
-            await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
-            this.#updateDayColumns();
+        await this.#updateDayColumns();
+        this.#updateHeaderStrip();
+    }
+
+    async #eventChanged() {
+        // Clear all cached elements with keys containing 'event'
+        Object.keys(magisterApi.cache).forEach(key => {
+            if (key.includes('event')) delete magisterApi.cache[key];
         });
 
-        this.#updateDayColumns();
+        // Clear the state and completely redraw the schedule
+        this.days = [];
+        this.#body.innerHTML = '';
+        this.#header.innerHTML = '';
+        await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
+        await this.#updateDayColumns();
     }
 
     #fetchAndAppendEvents(gatherStart, gatherEnd) {
@@ -135,8 +158,8 @@ class Schedule {
                 });
 
                 if (i === Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
-                if (this.#scheduleWrapper.querySelector(`.st-start-schedule-day[data-date="${date.toISOString()}"]`)) continue;
-                this.days.push(new ScheduleDay(date, eventsOfDay, this.#scheduleWrapper));
+                if (this.#header.querySelector(`.st-sch-day-body[data-date="${date.toISOString()}"]`)) continue;
+                this.days.push(new ScheduleDay(date, eventsOfDay, this.#body, this.#header));
             }
             resolve();
 
@@ -144,61 +167,196 @@ class Schedule {
         })
     }
 
-    async #updateDayColumns(difference = 0) {
-        this.#scheduleWrapper.dataset.navigate = 'still';
+    #updateDayColumns() {
+        return new Promise(async (resolve, _) => {
+            let difference = this.#scheduleDate.getTime() - new Date(this.element.dataset.date).getTime();
 
-        for (const day of this.days) {
-            // If the column should be shown, populate it with events
-            if (!day.rendered && this.isInRange(day.date)) await day.drawEvents();
+            this.#body.dataset.navigate = 'still';
 
+            for (const day of this.days) {
+                // If the column should be shown, populate it with events
+                if (!day.rendered && this.positionInRange(day.date) > -1) await day.drawEvents();
+
+                setTimeout(() => {
+                    day.body.dataset.visible = this.positionInRange(day.date) > -1;
+                    day.body.style.setProperty('--index', this.positionInRange(day.date));
+                    day.head.dataset.visible = this.positionInRange(day.date) > -1;
+                    day.head.style.setProperty('--index', this.positionInRange(day.date));
+
+                    // if (this.isInRange(day.date)) {
+                    //     day.body.dataset.leftmost = day.date.getTime() === this.#scheduleRange.start.getTime();
+                    //     day.body.dataset.rightmost = day.date.getTime() === this.#scheduleRange.end.getTime();
+                    // }
+                }, difference !== 0 ? 60 : 0);
+            }
+
+            // Update the scheduleWrapper's navigate attribute to trigger the CSS animation
             setTimeout(() => {
-                day.element.dataset.visible = this.isInRange(day.date);
+                this.#body.dataset.navigate = difference > 0 ? 'forwards' : difference < 0 ? 'backwards' : 'still';
+                this.element.dataset.size = this.#scheduleSize;
+                this.element.dataset.date = this.#scheduleDate.toISOString();
 
-                if (this.isInRange(day.date)) {
-                    day.element.dataset.leftmost = day.date.getTime() === this.#scheduleRange.start.getTime();
-                    day.element.dataset.rightmost = day.date.getTime() === this.#scheduleRange.end.getTime();
-                }
-            }, difference !== 0 ? 60 : 0);
-        }
-
-        // Update the scheduleWrapper's navigate attribute to trigger the CSS animation
-        setTimeout(() => {
-            this.#scheduleWrapper.dataset.navigate = difference > 0 ? 'forwards' : difference < 0 ? 'backwards' : 'still';
-        }, 5);
+                resolve();
+            }, difference !== 0 ? 5 : 0);
+        });
     }
 
-    isInRange(date) {
-        return date >= this.#scheduleRange.start && date <= this.#scheduleRange.end;
+    positionInRange(date) {
+        if (date >= this.#scheduleRange.start && date <= this.#scheduleRange.end) {
+            return Math.round((date - this.#scheduleRange.start) / 86400000);
+        } else return -1;
+    }
+
+    #createHeaderStrip() {
+        let headerStrip = this.#header.createChildElement('div', { id: 'st-start-header-strip' });
+
+        let headerTextWrapper = headerStrip.createChildElement('button', {
+            id: 'st-start-header-text-wrapper',
+            class: (persistedScheduleDate || persistedScheduleView) ? '' : 'greet',
+            title: i18n('selectDate'),
+        });
+        headerTextWrapper.addEventListener('click', () => {
+            const dialog = new Dialog({ closeText: i18n('done'), closeIcon: '' });
+            dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('selectDate') });
+            const input = dialog.body.createChildElement('input', {
+                class: 'st-input',
+                type: 'date',
+                value: `${this.scheduleDate.getFullYear()}-${String(this.scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(this.scheduleDate.getDate()).padStart(2, '0')}`,
+            });
+            dialog.on('close', () => this.scheduleDate = new Date(input.value));
+            dialog.show();
+            input.focus();
+            input.showPicker();
+        });
+
+        this.#headerControls.title = headerTextWrapper.createChildElement('span', {
+            id: 'st-start-header-title',
+            class: 'st-title',
+            innerText: i18n('loading').replace('.', ''),
+        });
+        this.#headerControls.shortTitle = headerTextWrapper.createChildElement('span', {
+            id: 'st-start-header-short-title',
+            class: 'st-title',
+            innerText: i18n('loading').replace('.', ''),
+        });
+        createGreetingMessage(headerTextWrapper.createChildElement('span', {
+            id: 'st-start-header-greeting',
+            class: 'st-title',
+            innerText: i18n('loading').replace('.', ''),
+        }));
+        setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
+
+        let headerControls = headerStrip.createChildElement('div', { id: 'st-start-header-buttons' });
+
+        // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
+        this.#headerControls.moveReset = element('button', 'st-start-today-offset-zero', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
+        this.#headerControls.moveReset.addEventListener('click', () => {
+            this.scheduleDate = dates.today;
+        })
+        this.#headerControls.moveBackward = element('button', 'st-start-today-offset-minus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
+        this.#headerControls.moveBackward.addEventListener('click', () => {
+            this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? -7 : (-1 * this.scheduleSize));
+        })
+        this.#headerControls.moveForward = element('button', 'st-start-today-offset-plus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
+        this.#headerControls.moveForward.addEventListener('click', () => {
+            this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? 7 : this.scheduleSize);
+        })
+
+        this.#headerControls.viewMode = element('button', 'st-start-today-view', headerControls, { class: 'st-segmented-control' })
+            .createDropdown(
+                {
+                    'day': i18n('dates.day'), // 1 day
+                    ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
+                    'workweek': i18n('dates.workweek'), // workweek
+                    'week': i18n('dates.week') // week
+                },
+                this.scheduleView,
+                (newValue) => this.scheduleView = newValue,
+                (currentValue) => currentValue === 'day' ? 'workweek' : 'day'
+            );
+    }
+
+    #updateHeaderStrip() {
+        this.#headerControls.moveReset.disabled = schedule.positionInRange(dates.today) > -1;
+
+        const dateOptions = { timeZone: 'Europe/Amsterdam' };
+        if (isYearNotCurrent(schedule.scheduleRange.start.getFullYear()) || isYearNotCurrent(schedule.scheduleRange.end.getFullYear())) dateOptions.year = 'numeric';
+
+        if (schedule.snapToMonday) {
+            if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
+                this.#headerControls.title.innerText =
+                    `${i18n('dates.week')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'long' })})`;
+                this.#headerControls.shortTitle.innerText =
+                    `${i18n('dates.weekShort')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
+
+            } else {
+                this.#headerControls.title.innerText =
+                    `${i18n('dates.week')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
+                this.#headerControls.shortTitle.innerText =
+                    `${i18n('dates.weekShort')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
+            }
+        } else if (schedule.scheduleSize > 1) {
+            if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
+                this.#headerControls.title.innerText = this.#headerControls.shortTitle.innerText =
+                    `${schedule.scheduleRange.start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', day: 'numeric', month: 'long' })}`;
+            } else {
+                this.#headerControls.title.innerText = this.#headerControls.shortTitle.innerText =
+                    `${schedule.scheduleRange.start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', day: 'numeric', month: 'short' })}`;
+            }
+        } else {
+            this.#headerControls.title.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'long', month: 'long', day: 'numeric' });
+            this.#headerControls.shortTitle.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        this.#headerControls.title.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
+        this.#headerControls.shortTitle.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
     }
 }
 
 class ScheduleDay {
     date;
     events;
-    element;
+    body;
+    head;
     rendered = false;
 
-    constructor(date, eventsArray, parentElement) {
+    constructor(date, eventsArray, body, header) {
         this.date = date;
         this.events = this.#calculateEventOverlap(eventsArray);
 
-        this.element = createElement('div', null, {
-            class: 'st-start-schedule-day',
+        // Create the day head
+        this.head = createElement('div', null, {
+            class: 'st-sch-day-head',
             dataset: {
                 visible: false,
                 date: date.toISOString()
             }
         })
+        this.head.addEventListener('eventchanged', () => body.dispatchEvent(new CustomEvent('eventchanged')));
 
-        const siblings = Array.from(parentElement.children);
-        const index = siblings.findIndex(sibling => new Date(sibling.dataset.date) > date);
+        const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' };
+        if (isYearNotCurrent(this.date)) dateFormat.year = 'numeric';
+        this.head.createChildElement('span', { class: 'st-sch-day-date', innerText: date.toLocaleDateString(locale, dateFormat) });
+
+        // Create the day body
+        this.body = createElement('div', null, {
+            class: 'st-sch-day-body',
+            dataset: {
+                visible: false,
+                date: date.toISOString()
+            }
+        })
+        this.body.addEventListener('eventchanged', () => body.dispatchEvent(new CustomEvent('eventchanged')));
+
+        // Append the elements in their appropriate DOM positions based on the date
+        const index = Array.from(header.children).findIndex(sibling => new Date(sibling.dataset.date) > date);
         if (index === -1) {
-            parentElement.appendChild(this.element);
+            body.appendChild(this.body);
+            header.appendChild(this.head);
         } else {
-            parentElement.insertBefore(this.element, siblings[index]);
+            body.insertBefore(this.body, Array.from(body.children)[index]);
+            header.insertBefore(this.head, Array.from(header.children)[index]);
         }
-
-        this.element.addEventListener('eventchanged', () => parentElement.dispatchEvent(new CustomEvent('eventchanged')));
     }
 
     get isToday() {
@@ -220,16 +378,16 @@ class ScheduleDay {
     async drawEvents() {
         return new Promise((resolve, _) => {
             this.events.forEach(event => {
-                const eventWrapperElement = createElement('div', this.element, {
-                    class: event.DuurtHeleDag ? "st-event-wrapper all-day" : "st-event-wrapper", textContent: event.title, style: {
-                        top: `calc(${event.startH} * var(--hour-height))`,
-                        height: `calc(${event.durationH} * var(--hour-height))`,
-                        left: `calc(${event.left} * 100%)`,
-                        width: `calc(${event.width} * 100%)`,
-                        borderTopLeftRadius: this.events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
-                        borderTopRightRadius: this.events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
-                        borderBottomLeftRadius: this.events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
-                        borderBottomRightRadius: this.events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
+                const eventWrapperElement = createElement('div', event.DuurtHeleDag ? this.head : this.body, {
+                    class: 'st-event-wrapper', textContent: event.title, style: {
+                        '--top': `calc(${event.startH} * var(--hour-height))`,
+                        '--height': `calc(${event.durationH} * var(--hour-height))`,
+                        '--left': `calc(${event.left} * 100%)`,
+                        '--width': `calc(${event.width} * 100%)`,
+                        '--border-top-left-radius': this.events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
+                        '--border-top-right-radius': this.events.some(el => el.Einde === event.Start) ? 0 : 'var(--st-border-radius)',
+                        '--border-bottom-left-radius': this.events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
+                        '--border-bottom-right-radius': this.events.some(el => el.Start === event.Einde) ? 0 : 'var(--st-border-radius)',
                     }
                 });
 
@@ -243,11 +401,11 @@ class ScheduleDay {
                 });
 
                 // Event click handler
-                eventWrapperElement.addEventListener('click', () => new ScheduleEventDialog(event, this.element).show());
+                eventWrapperElement.addEventListener('click', () => new ScheduleEventDialog(event, this.body).show());
 
                 // Draw the school hour label
                 let eventHours = (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}-${event.LesuurTotMet}`
-                const eventNumberEl = element('div', `st-event-${event.Id}-school-hours`, eventElement, { class: 'st-event-number', innerText: eventHours })
+                const eventNumberEl = eventElement.createChildElement('div', { class: 'st-event-number', innerText: eventHours })
                 if (event.Type === 1) {
                     eventNumberEl.classList.add('icon')
                     eventNumberEl.innerText = '' // Icon: user-lock
@@ -265,23 +423,21 @@ class ScheduleDay {
                 }
 
                 // Draw the event details
-                const eventDetailsEl = element('div', `st-event-${event.Id}-details`, eventElement, {
-                    class: 'st-event-details'
-                })
-                const eventTitleWrapperEl = element('span', `st-event-${event.Id}-title`, eventDetailsEl, { class: 'st-event-title' })
-                if (listViewEnabled) {
-                    element('b', null, eventTitleWrapperEl, { innerText: event.Lokatie ? `${event.Omschrijving} (${event.Lokatie})` : event.Omschrijving })
+                const eventDetailsEl = eventElement.createChildElement('div', { class: 'st-event-details' })
+                const eventTitleWrapperEl = eventDetailsEl.createChildElement('span', { class: 'st-event-title' })
+                if (false) {
+                    eventTitleWrapperEl.createChildElement('b', { innerText: event.Lokatie ? `${event.Omschrijving} (${event.Lokatie})` : event.Omschrijving })
                 } else {
-                    element('b', null, eventTitleWrapperEl, { innerText: eventSubjects(event) || event.Omschrijving })
-                    if (eventLocations(event)?.length > 0) element('span', null, eventTitleWrapperEl, { innerText: ` (${eventLocations(event)})` })
+                    eventTitleWrapperEl.createChildElement('b', { innerText: eventSubjects(event) || event.Omschrijving })
+                    if (eventLocations(event)?.length > 0) eventTitleWrapperEl.createChildElement('span', { innerText: ` (${eventLocations(event)})` })
                 }
 
                 // Render the time label
-                element('span', `st-event-${event.Id}-time`, eventDetailsEl, { class: 'st-event-time', innerText: event.DuurtHeleDag ? 'Hele dag' : new Date(event.Start).getFormattedTime() + '–' + new Date(event.Einde).getFormattedTime() })
+                eventDetailsEl.createChildElement('span', { class: 'st-event-time', innerText: event.DuurtHeleDag ? i18n('allDay') : new Date(event.Start).getFormattedTime() + '–' + new Date(event.Einde).getFormattedTime() })
 
                 // Render the teacher label
-                if (!listViewEnabled && eventTeachers(event)?.length > 0) {
-                    const eventTeacherEl = element('span', `st-event-${event.Id}-teacher`, eventDetailsEl, { class: 'st-event-teacher', innerText: eventTeachers(event) })
+                if (!false && eventTeachers(event)?.length > 0) {
+                    const eventTeacherEl = eventDetailsEl.createChildElement('span', { class: 'st-event-teacher', innerText: eventTeachers(event) })
                     if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
                     if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
                 }
@@ -289,9 +445,9 @@ class ScheduleDay {
                 // Parse and render any chips
                 let chips = getEventChips(event)
 
-                const eventChipsWrapperEl = element('div', `st-event-${event.Id}-chips`, eventElement, { class: 'st-event-chips st-chips-wrapper' })
+                const eventChipsWrapperEl = eventElement.createChildElement('div', { class: 'st-event-chips st-chips-wrapper' })
                 chips.forEach(chip => {
-                    element('span', `st-event-${event.Id}-chip-${chip.name}`, eventChipsWrapperEl, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
+                    eventChipsWrapperEl.createChildElement('span', { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                 })
             });
 
@@ -304,10 +460,6 @@ class ScheduleDay {
     #calculateEventOverlap(array) {
         // Step 1: Add event details
         array = array.map(item => {
-            // const endDate = new Date(item.Einde)
-            // if (item.DuurtHeleDag) {
-            //     item.Einde = new Date(new Date(endDate).setTime(endDate.getTime() + 86399000)).toISOString();
-            // }
             item.startH = new Date(item.Start).getHoursWithDecimals();
             item.endH = new Date(item.Einde).getHoursWithDecimals();
             item.durationH = item.endH - item.startH;
@@ -372,6 +524,8 @@ class ScheduleEventDialog extends Dialog {
         this.event = event;
         this.#invokerElement = invokerElement;
 
+        if (schedule?.scheduleDate) schedule.scheduleDate = new Date(this.event.Start);
+
         this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
         createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
 
@@ -380,15 +534,19 @@ class ScheduleEventDialog extends Dialog {
 
         let table1 = createElement('table', column1, { class: 'st' });
 
-        this.#addRowToTable(table1, i18n('title'), event.Omschrijving || i18n('unknown'));
-        this.#addRowToTable(table1, i18n('subject'), eventSubjects(event) || i18n('unknown'));
-        this.#addRowToTable(table1, i18n('schoolHour'), event.LesuurVan ? (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}–${event.LesuurTotMet}` : i18n('unknown'));
+        this.#addRowToTable(table1, i18n('title'), event.Omschrijving || '-');
+        this.#addRowToTable(table1, i18n('subject'), eventSubjects(event) || '-');
+        this.#addRowToTable(table1, i18n('schoolHour'), event.LesuurVan
+            ? (event.LesuurVan === event.LesuurTotMet)
+                ? i18n('schoolHourNum', { num: event.LesuurVan, numOrdinal: formatOrdinals(event.LesuurVan) })
+                : i18n('closedInterval', { start: i18n('schoolHourNum', { num: event.LesuurVan, numOrdinal: formatOrdinals(event.LesuurVan) }), end: i18n('schoolHourNum', { num: event.LesuurTotMet, numOrdinal: formatOrdinals(event.LesuurTotMet) }) })
+            : '-');
         const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
         if (isYearNotCurrent(new Date(event.Start)) || isYearNotCurrent(new Date(event.Einde))) dateFormat.year = 'numeric';
         this.#addRowToTable(table1, i18n('start'), new Date(event.Start).toLocaleString(locale, dateFormat));
         this.#addRowToTable(table1, i18n('end'), new Date(event.Einde).toLocaleString(locale, dateFormat));
-        this.#addRowToTable(table1, i18n('location'), eventLocations(event) || i18n('unknown'));
-        this.#addRowToTable(table1, i18n('teacher'), eventTeachers(event) || i18n('unknown'));
+        this.#addRowToTable(table1, i18n('location'), eventLocations(event) || '-');
+        this.#addRowToTable(table1, i18n('teacher'), eventTeachers(event) || '-');
         if (event.Opmerking) this.#addRowToTable(table1, i18n('note'), event.Opmerking);
         if (event.Herhaling) this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
 
@@ -477,8 +635,8 @@ class ScheduleEventDialog extends Dialog {
 
             const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' };
             if (isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp))) dateFormat.year = 'numeric';
-            this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, dateFormat) : i18n('unknown'));
-            this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, dateFormat) : i18n('unknown'));
+            this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, dateFormat) : '-');
+            this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, dateFormat) : '-');
         }
 
         console.log(this.event);
@@ -515,11 +673,11 @@ class ScheduleEventDialog extends Dialog {
                 });
 
                 let table2 = createElement('table', attachmentsColumn, { class: 'st' });
-                this.#addRowToTable(table2, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : i18n('unknown'));
+                this.#addRowToTable(table2, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : '-');
                 this.#addRowToTable(table2, i18n('fileType'), i18n('typeFile', { type: fileType?.name || /(?:\.([^.]+))?$/.exec(bijlage.Naam.toUpperCase())[1] }));
                 const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' };
                 if (isYearNotCurrent(new Date(bijlage.Datum))) dateFormat.year = 'numeric';
-                this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, dateFormat) : i18n('unknown'));
+                this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, dateFormat) : '-');
             });
         }
     }

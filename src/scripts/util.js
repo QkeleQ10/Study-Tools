@@ -161,6 +161,12 @@ Element.prototype.setAttributes = function (attributes) {
                 elem.setAttributeNS(null, 'viewBox', value);
                 break;
             case 'style':
+                if (typeof value === 'object') {
+                    for (let subKey in value) {
+                        elem.style.setProperty(subKey, value[subKey]);
+                    }
+                    break;
+                } // else, fall through
             case 'dataset':
                 if (typeof value === 'object') {
                     for (let subKey in value) {
@@ -348,11 +354,11 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
     dropdown.innerText = ''
     dropdown.dataset.clickFunction = !!onClick
 
-    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption].replace(i18n('sw.hideStudyguide'), i18n('sw.hidden')) })
+    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption]?.replace(i18n('sw.hideStudyguide'), i18n('sw.hidden')) })
     if (onClick) {
         selectedOptionElement.addEventListener('click', event => {
             if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
-            onClick(selectedOption)
+            dropdown.changeValue(onClick(selectedOption))
         })
     }
 

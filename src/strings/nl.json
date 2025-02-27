@@ -64,6 +64,8 @@
         "nDays": "{num} dagen",
         "week": "Week",
         "workweek": "Werkweek",
+        "weekShort": "Wk",
+        "workweekShort": "Wk",
         "now": "nu",
         "nowBrief": "nu",
         "justNow": "zojuist",
@@ -142,6 +144,7 @@
     "loadingWidget": "Widget '{title}' laden...",
     "hotkeyTooltip": "Sneltoets: Alt+{key}",
     "unknown": "Onbekend",
+    "closedInterval": "{start} t/m {end}",
     "lessonDetails": "Lesdetails",
     "eventDetails": "Afspraakdetails",
     "typeFile": "{type}-bestand",
@@ -151,6 +154,7 @@
     "title": "Titel",
     "subject": "Vak",
     "schoolHour": "Lesuur",
+    "schoolHourNum": "{numOrdinal} uur",
     "start": "Begin",
     "end": "Einde",
     "location": "Locatie",
@@ -167,6 +171,7 @@
     "completed": "Afgerond",
     "register": "Inschrijven",
     "registered": "Ingeschreven",
+    "allDay": "Hele dag",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"

@@ -313,7 +313,6 @@ body>.container>.view {
     min-width: calc(100vw - 304px);
     width: 100%;
     max-width: calc(100vw - 304px);
-    transition: min-width 200ms, max-width 200ms;
 }
 
 .view section.main {
@@ -1334,27 +1333,33 @@ dna-card {
 }
 
 dna-button {
-    border-width: 1px;
-}
+    --_color: var(--st-foreground-accent);
+    --color: var(--_color);
+    --_background: var(--st-background-secondary);
+    --background: var(--_background);
+    --_border-width: 1px;
+    --border-width: var(--_border-width);
+    --_border-color: var(--st-accent-primary);
+    --border-color: var(--_border-color);
 
-dna-button[variant=primary] {
-    --color: var(--st-contrast-accent);
-    --background: var(--st-accent-primary);
+    &[variant=primary] {
+        --_color: var(--st-contrast-accent);
+        --_background: var(--st-accent-primary);
+    }
+
+    &[fill=clear] {
+        --_background: transparent;
+        --_border-color: transparent;
+    }
+
+    &:hover {
+        filter: brightness(var(--st-hover-brightness));
+    }
 }
 
 dna-breadcrumbs > dna-breadcrumb > a,
 .podium header h1 {
     --color: var(--st-foreground-accent) !important;
-}
-
-dna-button:not([variant=primary], [fill=clear]) {
-    --color: var(--st-foreground-accent);
-    --background: var(--st-background-secondary);
-    border-color: var(--st-accent-primary);
-}
-
-dna-button:hover {
-    filter: brightness(var(--st-hover-brightness));
 }
 
 dna-card-title.ng-binding, dna-card-title, .content.content-auto.background-white, .opdrachten-details-row, .gegevens-container, .empty-message, .label, .capitalize.ng-binding, .examen-cijfer.ng-binding {

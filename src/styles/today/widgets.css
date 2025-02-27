@@ -11,6 +11,7 @@
     background-color: var(--st-background-secondary);
     border-left: var(--st-border);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    z-index: 1;
 
     transition: opacity 200ms, translate 200ms, display 200ms allow-discrete;
     opacity: 1;
@@ -28,7 +29,7 @@
 }
 
 #st-start:has(#st-start-widgets.editing) #st-start-header,
-#st-start:has(#st-start-widgets.editing) #st-start-schedule {
+#st-start:has(#st-start-widgets.editing) #st-sch {
     opacity: 0.1;
     pointer-events: none;
 }
@@ -116,12 +117,12 @@
     display: unset;
 }
 
-#st-start-schedule-collapse-widgets:before {
+#st-sch-collapse-widgets:before {
     scale: 1 1;
     transition: scale 200ms;
 }
 
-#st-start[data-widgets-collapsed=true] #st-start-schedule-collapse-widgets:before {
+#st-start[data-widgets-collapsed=true] #st-sch-collapse-widgets:before {
     scale: -1 1;
 }
 
@@ -165,11 +166,6 @@
 #st-start-widgets-edit-tooltip.st-hidden {
     transform: scale(0);
     opacity: 0;
-}
-
-#st-start-schedule-progress {
-    position: sticky;
-    z-index: 1;
 }
 
 #st-start-widget-progress-text {
@@ -706,9 +702,11 @@
 
 #st-start-widgets:not(.editing) #st-start-widget-grades:hover .st-button.icon,
 #st-start-widget-grades:focus-visible .st-button.icon,
+#st-start-widget-grades:has(:focus-within) .st-button.icon,
 .st-button.icon:focus-visible,
 #st-start-widgets:not(.editing) #st-start-widget-grades:hover #st-start-widget-grades-scroll-pagn,
-#st-start-widget-grades:focus-visible #st-start-widget-grades-scroll-pagn {
+#st-start-widget-grades:focus-visible #st-start-widget-grades-scroll-pagn,
+#st-start-widget-grades:has(:focus-visible) #st-start-widget-grades-scroll-pagn {
     opacity: 1;
     transform: none;
 }

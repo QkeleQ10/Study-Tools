@@ -77,7 +77,7 @@ dialog.st-modal[open]::backdrop {
 }
 
 .st-title:after {
-    content: ".";
+    content: attr(data-last-letter, ".");
     display: inline-block;
     width: 3px;
     color: #ff8205;
@@ -460,18 +460,18 @@ dialog.st-modal[open]::backdrop {
     transition-duration: 100ms;
     transition-behavior: allow-discrete;
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.9);
 
 
     &[open] {
         opacity: 1;
         transform: none;
 
-        transition-duration: 200ms;
+        transition-duration: 150ms;
 
         @starting-style {
             opacity: 0;
-            transform: scale(0.8);
+            transform: scale(0.85);
         }
     }
 }
@@ -906,12 +906,12 @@ a.st-metric:focus-visible {
     translate: -50%;
 }
 
-#st-start-schedule>ul>li:hover {
+#st-sch>ul>li:hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
 }
 
-#st-start-schedule>ul>li[data-current] {
+#st-sch>ul>li[data-current] {
     background: var(--st-highlight-primary)
 }
 

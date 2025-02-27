@@ -92,7 +92,6 @@ class HomeworkWidget extends ListWidget {
             itemElement.addEventListener('click', () => {
                 if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
                 new ScheduleEventDialog(event).show();
-                if (schedule.scheduleDate) schedule.scheduleDate = new Date(event.Start);
             });
 
             itemElement.createChildElement('span', {
@@ -266,5 +265,47 @@ class AssignmentsWidget extends ListWidget {
 
     toString() {
         return 'assignments';
+    }
+}
+
+class LogsWidget extends Widget {
+    async initialise() {
+        let logs = await magisterApi.logs();
+
+        this.header.dataset.amount = logs.length;
+        if (logs.length < 1) this.element.style.display = 'none';
+
+        this.element.tabIndex = 0;
+        this.element.addEventListener('click', () => {
+            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            window.location.href = '#/lvs-logboeken';
+        });
+
+        this.progressBar.dataset.visible = false;
+    }
+
+    toString() {
+        return 'logs';
+    }
+}
+
+class ActivitiesWidget extends Widget {
+    async initialise() {
+        let logs = await magisterApi.activities();
+
+        this.header.dataset.amount = logs.length;
+        if (logs.length < 1) this.element.style.display = 'none';
+
+        this.element.tabIndex = 0;
+        this.element.addEventListener('click', () => {
+            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            window.location.href = '#/elo/activiteiten';
+        });
+
+        this.progressBar.dataset.visible = false;
+    }
+
+    toString() {
+        return 'activities';
     }
 }

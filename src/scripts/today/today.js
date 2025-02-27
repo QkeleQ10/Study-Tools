@@ -1,12 +1,9 @@
-let events = [],
+let schedule,
+    events = [],
     teacherNamesSetting = syncedStorage['start-teacher-names'] || {},
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list',
     listViewEnabled = listViewEnabledSetting,
-    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true,
-    schedulePersistenceEnabled = syncedStorage['start-schedule-persist'] ?? true
-// TODO: persist forever setting
-let persistedScheduleView = 'day';
-let persistedScheduleDate = dates.today;
+    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
 // Run at start and when the URL changes 
 today()
@@ -22,7 +19,7 @@ async function today() {
         widgetsOrderSetting = Object.values(syncedStorage['widgets-order'] || []) || [],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
-        header = element('div', 'st-start-header', container),
+        // header = element('div', 'st-start-header', container),
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets),
         widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' }),
@@ -43,7 +40,6 @@ async function today() {
 
     let todayCollapseWidgets
     let widgetFunctions
-    let updateHeader
 
     // Automagically collapse the widgets panel when it's necessary
     widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
@@ -66,150 +62,9 @@ async function today() {
     const editorHiddenList = element('div', 'st-start-editor-hidden-view-list', editorHidden, { 'data-empty-text': i18n('addWidgetsEmpty') })
 
 
-    const schedule = new Schedule(container, hourHeightSetting);
-    schedule.element.addEventListener('rangechange', () => {
-        updateHeader();
-        persistedScheduleDate = schedule.scheduleDate;
-    });
-    schedule.element.addEventListener('contentloaded', () => {
-        if (showNextDaySetting) {
-            let nextDayWithEvents = Object.values(schedule.days).find(day => day.hasFutureEvents);
-            if (nextDayWithEvents) {
-                schedule.scheduleDate = nextDayWithEvents.date;
-                notify('snackbar', i18n('toasts.jumpedToDate', { date: schedule.scheduleDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) }));
-            }
-            greetUser()
-        }
-    });
+    schedule = new Schedule(container, hourHeightSetting);
 
     todayWidgets();
-
-    const headerTextWrapper = element('div', 'st-start-header-text-wrapper', header)
-    let headerText = element('span', 'st-start-header-text', headerTextWrapper, { class: 'st-title', 'data-state': 'hidden' }),
-        headerGreeting = element('span', 'st-start-header-greeting', headerTextWrapper, { class: 'st-title', 'data-state': 'visible' }),
-        headerButtons = element('div', 'st-start-header-buttons', header),
-        formattedWeekday = dates.now.toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'long' })
-
-    // Greeting system
-    headerTextWrapper.addEventListener('click', () => {
-        const dialog = new Dialog({ closeText: i18n('done'), closeIcon: '' });
-        dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('selectDate') });
-        const input = dialog.body.createChildElement('input', {
-            class: 'st-input',
-            type: 'date',
-            value: `${schedule.scheduleDate.getFullYear()}-${String(schedule.scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(schedule.scheduleDate.getDate()).padStart(2, '0')}`,
-        });
-        dialog.on('close', () => schedule.scheduleDate = new Date(input.value));
-        dialog.show();
-        input.focus();
-        input.showPicker();
-    });
-
-    async function greetUser() {
-        headerGreeting.dataset.state = 'visible'
-        headerText.dataset.state = 'hidden'
-        const greetingsByHour = [
-            [22, ...i18n('greetings.lateNight').split(';'), 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
-            [18, ...i18n('greetings.evening').split(';'), 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
-            [12, ...i18n('greetings.afternoon').split(';'), 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
-            [6, ...i18n('greetings.morning').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
-            [0, ...i18n('greetings.earlyNight').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
-        ],
-            greetingsGeneric = [...i18n('greetings.generic').split(';'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!', 'Hé buur!']
-
-        let possibleGreetings = []
-        for (let i = 0; i < greetingsByHour.length; i++) {
-            const e = greetingsByHour[i]
-            if (dates.now.getHours() >= e[0]) {
-                e.shift()
-                possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
-                break
-            }
-        }
-        possibleGreetings.push(...greetingsGeneric)
-        const greeting = possibleGreetings.random()
-            .replace('#', Math.random() < 0.8 ? '.' : '!').replace('%s', formattedWeekday)
-            .replace('%n', (await magisterApi.accountInfo())?.Persoon?.Roepnaam || '')
-        if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
-        headerGreeting.innerText = greeting.slice(0, -1)
-        headerGreeting.dataset.lastLetter = greeting.slice(-1)
-
-        setTimeout(() => {
-            updateHeader();
-        }, 2000)
-    }
-
-    updateHeader = () => {
-        document.querySelector('#st-start-today-offset-zero').disabled = schedule.isInRange(dates.today)
-
-        // Update the header text accordingly
-
-        const dateOptions = { timeZone: 'Europe/Amsterdam' };
-        if (isYearNotCurrent(schedule.scheduleRange.start.getFullYear()) || isYearNotCurrent(schedule.scheduleRange.end.getFullYear())) dateOptions.year = 'numeric';
-
-        if (schedule.snapToMonday) {
-            if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
-                headerText.innerText = `${i18n(schedule.scheduleSize === 7 ? 'dates.week' : 'dates.workweek')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'long' })})`;
-            } else {
-                headerText.innerText = `${i18n(schedule.scheduleSize === 7 ? 'dates.week' : 'dates.workweek')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
-            }
-        } else if (schedule.scheduleSize > 1) {
-            if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
-                headerText.innerText = `${schedule.scheduleRange.start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', day: 'numeric', month: 'long' })}`;
-            } else {
-                headerText.innerText = `${schedule.scheduleRange.start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', day: 'numeric', month: 'short' })}`;
-            }
-        } else {
-            headerText.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'long', month: 'long', day: 'numeric' });
-        }
-
-        if (schedule.scheduleDate.getTime() === dates.today.getTime()) {
-            headerText.classList.remove('de-emphasis')
-        } else {
-            headerText.classList.add('de-emphasis')
-        }
-
-        headerText.dataset.lastLetter = '.'
-        headerGreeting.dataset.state = 'hidden'
-        headerText.dataset.state = 'visible'
-    }
-
-    // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
-    let todayResetOffset = element('button', 'st-start-today-offset-zero', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
-    todayResetOffset.addEventListener('click', () => {
-        schedule.scheduleDate = dates.today;
-    })
-    let todayDecreaseOffset = element('button', 'st-start-today-offset-minus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
-    todayDecreaseOffset.addEventListener('click', () => {
-        schedule.scheduleDate = schedule.scheduleDate.addDays(schedule.snapToMonday ? -7 : (-1 * schedule.scheduleSize));
-    })
-    let todayIncreaseOffset = element('button', 'st-start-today-offset-plus', headerButtons, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
-    todayIncreaseOffset.addEventListener('click', () => {
-        schedule.scheduleDate = schedule.scheduleDate.addDays(schedule.snapToMonday ? 7 : schedule.scheduleSize);
-    })
-
-    let todayViewModeDropdown = element('button', 'st-start-today-view', headerButtons, { class: 'st-segmented-control' })
-        .createDropdown(
-            {
-                'day': i18n('dates.day'), // 1 day
-                ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
-                'workweek': i18n('dates.workweek'), // workweek
-                'week': i18n('dates.week') // week
-            },
-            persistedScheduleView,
-            selectedCallback,
-            clickCallback
-        )
-
-    function clickCallback(currentValue) {
-        if (currentValue === 'day') todayViewModeDropdown.changeValue('workweek')
-        else todayViewModeDropdown.changeValue('day')
-    }
-
-    function selectedCallback(newValue) {
-        schedule.scheduleView = newValue;
-        persistedScheduleView = newValue;
-    }
 
     // Controls (bottom right of page)
     setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
@@ -303,7 +158,7 @@ async function today() {
     })
 
     // Side panel collapse/expand button
-    todayCollapseWidgets = element('button', 'st-start-schedule-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
+    todayCollapseWidgets = element('button', 'st-sch-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
     todayCollapseWidgets.addEventListener('click', () => {
         widgetsCollapsed = !widgetsCollapsed
         if (widgets.classList.contains('editing')) widgetsCollapsed = false
@@ -355,22 +210,9 @@ async function today() {
                 requiredPermissions: ['Logboeken'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        if (placeholder) magisterApi.useSampleData = true
+                        const widget = new LogsWidget() // pass default option
 
-                        let logs = await magisterApi.logs()
-                            .catch(() => { return reject() })
-
-                        if (placeholder) magisterApi.useSampleData = false
-
-                        if (logs.length < 1) return resolve()
-                        let widgetElement = element('div', 'st-start-widget-logs', null, { class: 'st-widget', href: '#/lvs-logboeken' })
-                        let widgetTitle = element('h3', 'st-start-widget-logs-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.logs'), 'data-amount': logs.length })
-
-                        if (type === 'Lijst') {
-                            return resolve(widgetElement)
-                        }
-
-                        resolve(widgetElement)
+                        resolve(widget.element)
                     })
                 }
             },
@@ -381,22 +223,9 @@ async function today() {
                 requiredPermissions: ['Activiteiten'],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        if (placeholder) magisterApi.useSampleData = true
+                        const widget = new ActivitiesWidget() // pass default option
 
-                        let activities = await magisterApi.activities()
-                            .catch(() => { return reject() })
-
-                        if (placeholder) magisterApi.useSampleData = false
-
-                        if (activities.length < 1) return resolve()
-                        let widgetElement = element('a', 'st-start-widget-activities', null, { class: 'st-widget', href: '#/elo/activiteiten' })
-                        let widgetTitle = element('h3', 'st-start-widget-activities-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.activities'), 'data-amount': activities.length })
-
-                        if (type === 'Lijst') {
-                            return resolve(widgetElement)
-                        }
-
-                        resolve(widgetElement)
+                        resolve(widget.element)
                     })
                 }
             },
@@ -1078,4 +907,33 @@ function makeTimestamp(d) {
         return i18n('dates.weekdayAtTime', { weekday: i18n('dates.weekdays')[d.getDay()], time: d.toLocaleString(locale, { ...dateFormat }) })
     else
         return d.toLocaleString(locale, { weekday: 'short', day: 'numeric', month: 'short', ...dateFormat })
+}
+
+async function createGreetingMessage(element) {
+    const greetingsByHour = [
+        [22, ...i18n('greetings.lateNight').split(';'), 'Bonsoir#', 'Buenas noches#', 'Guten Abend#'], // 22:00 - 23:59
+        [18, ...i18n('greetings.evening').split(';'), 'Bonsoir#', 'Buenas tardes#', 'Guten Abend#'], // 18:00 - 21:59
+        [12, ...i18n('greetings.afternoon').split(';'), 'Bonjour#', 'Buenas tardes!', 'Guten Mittag#'], // 12:00 - 17:59
+        [6, ...i18n('greetings.morning').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'], // 6:00 - 11:59
+        [0, ...i18n('greetings.earlyNight').split(';'), 'Bonjour#', 'Buenos días#', 'Guten Morgen#'] // 0:00 - 5:59
+    ],
+        greetingsGeneric = [...i18n('greetings.generic').split(';'), 'Yooo!', 'Hello, handsome.', 'Guten Tag#', 'Greetings#', 'Hey#', 'Hoi#', '¡Hola!', 'Ahoy!', 'Bonjour#', 'Buongiorno#', 'Namasté#', 'Howdy!', 'G\'day!', 'Oi mate!', 'Aloha!', 'Ciao!', 'Olá!', 'Salut#', 'Saluton!', 'Hei!', 'Hej!', 'Salve!', 'Bom dia#', 'Zdravo!', 'Shalom!', 'Γεια!', 'Привіт!', 'Здравейте!', '你好！', '今日は!', '안녕하세요!', 'Hé buur!']
+
+    let possibleGreetings = []
+    for (let i = 0; i < greetingsByHour.length; i++) {
+        const e = greetingsByHour[i]
+        if (dates.now.getHours() >= e[0]) {
+            e.shift()
+            possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
+            break
+        }
+    }
+    possibleGreetings.push(...greetingsGeneric)
+    const greeting = possibleGreetings.random()
+        .replace('#', Math.random() < 0.8 ? '.' : '!').replace('%s', i18n('dates.weekdays')[dates.now.getDay()])
+        .replace('%n', (await magisterApi.accountInfo())?.Persoon?.Roepnaam || '')
+    if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
+
+    element.innerText = greeting.slice(0, -1);
+    element.dataset.lastLetter = greeting.slice(-1);
 }
