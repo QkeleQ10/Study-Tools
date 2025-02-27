@@ -481,8 +481,7 @@ class ScheduleEventDialog extends Dialog {
             this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, dateFormat) : i18n('unknown'));
         }
 
-        console.log(this.event)
-        // TODO: COMPLETION
+        console.log(this.event);
 
         if (this.event.Bijlagen?.length > 0) {
             const fileTypes = [

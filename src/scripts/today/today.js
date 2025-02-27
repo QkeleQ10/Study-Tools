@@ -657,50 +657,34 @@ async function today() {
                 title: i18n('widgets.assignments'),
                 disclaimer: i18n('widgetDisclaimer'),
                 requiredPermissions: ['EloOpdracht'],
+                options: [
+                    {
+                        title: "Niet-ingeleverde opdrachten na deadline",
+                        key: 'start-widget-hw-filter',
+                        type: 'select',
+                        choices: [
+                            {
+                                title: "Nog een week tonen",
+                                value: 'week'
+                            },
+                            {
+                                title: "Niet tonen",
+                                value: 'none'
+                            },
+                            {
+                                title: "Tonen",
+                                value: 'all'
+                            }
+                        ]
+                    }
+                ],
                 render: async (type, placeholder) => {
                     return new Promise(async (resolve) => {
-                        if (placeholder) magisterApi.useSampleData = true
+                        const options = { filter: await getFromStorage('start-widget-as-filter', 'local') || 'week' }
 
-                        let assignments = await magisterApi.assignmentsTop()
-                            .catch(() => { return reject() })
+                        const widget = new AssignmentsWidget(null, options) // pass default option
 
-                        if (placeholder) magisterApi.useSampleData = false
-
-                        const relevantAssignments = assignments.filter(item => !item.Afgesloten && !item.IngeleverdOp)
-
-                        if (relevantAssignments.length < 1) return resolve()
-                        let widgetElement = element('a', 'st-start-widget-assignments', null, { class: 'st-widget', href: '#/elo/opdrachten' })
-                        let widgetTitle = element('h3', 'st-start-widget-assignments-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.assignments'), 'data-amount': relevantAssignments.length })
-
-                        if (type === 'Lijst') {
-                            return resolve(widgetElement)
-                        }
-
-                        relevantAssignments.forEach(item => {
-                            let assignmentElement = element('a', `st-start-widget-assignments-${item.Id}`, widgetElement, { class: 'st-widget-subitem', href: `#/elo/opdrachten/${item.Id}` })
-
-                            let row1 = element('span', `st-start-widget-assignments-${item.Id}-row1`, assignmentElement, { class: 'st-widget-subitem-row' })
-                            let assignmentTitle = element('span', `st-start-widget-assignments-${item.Id}-title`, row1, { class: 'st-widget-subitem-title', innerText: item.Vak ? `${item.Titel} (${item.Vak})` : item.Titel })
-                            let assignmentDate = element('span', `st-start-widget-assignments-${item.Id}-date`, row1, {
-                                class: 'st-widget-subitem-timestamp',
-                                innerText: makeTimestamp(item.InleverenVoor)
-                            })
-
-                            let row2 = element('span', `st-start-widget-assignments-${item.Id}-row2`, assignmentElement, { class: 'st-widget-subitem-row' })
-                            let assignmentContent = element('div', `st-start-widget-assignments-${item.Id}-content`, row2, { class: 'st-widget-subitem-content' })
-                            assignmentContent.innerHTML = item.Omschrijving?.replace(/(<br ?\/?>)/gi, '') || '' //assignmentContent.setHTML(item.Omschrijving)
-                            if (assignmentContent.scrollHeight > assignmentContent.clientHeight) assignmentContent.classList.add('overflow')
-
-                            let chips = []
-                            if (item.BeoordeeldOp) chips.push({ name: i18n('chips.graded'), type: 'ok' })
-
-                            let assignmentChipsWrapper = element('div', `st-start-widget-assignments-${item.id}-chips`, row2, { class: 'st-chips-wrapper' })
-                            chips.forEach(chip => {
-                                let chipElement = element('span', `st-start-widget-assignments-${item.id}-chip-${chip.name}`, assignmentChipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
-                            })
-                        })
-
-                        resolve(widgetElement)
+                        resolve(widget.element)
                     })
                 }
             },
@@ -1090,7 +1074,7 @@ function makeTimestamp(d) {
         return i18n('dates.tomorrowAtTime', { time: d.toLocaleString(locale, { ...dateFormat }) })
     else if (d.isYesterday())
         return i18n('dates.yesterdayAtTime', { time: d.toLocaleString(locale, { ...dateFormat }) })
-    else if (d.getTime() - dates.today.getTime() < daysToMs(5))
+    else if (d.getTime() - dates.today.getTime() < daysToMs(5) && d.getTime() - dates.today.getTime() > 0)
         return i18n('dates.weekdayAtTime', { weekday: i18n('dates.weekdays')[d.getDay()], time: d.toLocaleString(locale, { ...dateFormat }) })
     else
         return d.toLocaleString(locale, { weekday: 'short', day: 'numeric', month: 'short', ...dateFormat })

@@ -75,11 +75,11 @@ class ListWidget extends Widget {
 
 class HomeworkWidget extends ListWidget {
     async initialise() {
-        this.listItems = (await magisterApi.events()).filter(item => {
+        this.listItems = (await magisterApi.events()).filter(event => {
             if (this.options.filter === 'incomplete')
-                return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date() && !item.Afgerond)
+                return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date() && !event.Afgerond)
             else
-                return (item.Inhoud?.length > 0 && new Date(item.Einde) > new Date())
+                return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date())
         });
         super.initialise();
     }
@@ -88,6 +88,7 @@ class HomeworkWidget extends ListWidget {
         return new Promise(resolve => {
             let itemElement = super.drawListItem();
 
+            itemElement.tabIndex = 0;
             itemElement.addEventListener('click', () => {
                 if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
                 new ScheduleEventDialog(event).show();
@@ -190,5 +191,80 @@ class MessagesWidget extends ListWidget {
 
     toString() {
         return 'messages';
+    }
+}
+
+class AssignmentsWidget extends ListWidget {
+    async initialise() {
+        this.listItems = (await magisterApi.assignmentsTop()).filter(assignment => {
+            switch (this.options.showPastDue) {
+                case 'all':
+                    return (!assignment.Afgesloten && !assignment.IngeleverdOp);
+                case 'none':
+                    return (!assignment.Afgesloten && !assignment.IngeleverdOp && new Date(assignment.InleverenVoor) >= dates.now);
+                case 'week':
+                default:
+                    return (!assignment.Afgesloten && !assignment.IngeleverdOp && new Date(assignment.InleverenVoor).getTime() - dates.now.getTime() > -604800000);
+            }
+        });
+        super.initialise();
+
+        this.element.tabIndex = 0;
+        this.element.addEventListener('click', () => {
+            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            window.location.href = '#/elo/opdrachten';
+        });
+    }
+
+    async drawListItem(assignment) {
+        return new Promise(resolve => {
+            let itemElement = super.drawListItem();
+
+            itemElement.tabIndex = 0;
+            itemElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+                window.location.href = `#/elo/opdrachten/${assignment.Id}`;
+            });
+
+            itemElement.createChildElement('span', {
+                class: 'st-widget-subitem-row'
+            })
+                .createChildElement('b', {
+                    class: 'st-widget-subitem-title',
+                    innerText: assignment.Vak ? `${assignment.Titel} (${assignment.Vak})` : assignment.Titel,
+                })
+                .createSiblingElement('span', {
+                    class: new Date(assignment.InleverenVoor) < dates.now ? 'st-widget-subitem-timestamp warn' : 'st-widget-subitem-timestamp',
+                    innerText: makeTimestamp(assignment.InleverenVoor),
+                });
+
+            itemElement.createChildElement('span', {
+                class: 'st-widget-subitem-row',
+            })
+                .createChildElement('div', {
+                    class: 'st-widget-subitem-content',
+                    innerHTML: assignment.Omschrijving?.replace(/(<br ?\/?>)/gi, '') || '',
+                });
+
+            let chips = [];
+            console.log(assignment)
+            if (assignment.BeoordeeldOp) chips.push({ name: i18n('chips.graded'), type: 'ok' });
+            const chipsWrapper = itemElement.createChildElement('div', {
+                class: 'st-chips-wrapper',
+            });
+            chips.forEach(chip => {
+                createElement('span', chipsWrapper, {
+                    class: `st-chip ${chip.type || 'info'}`,
+                    innerText: chip.name,
+                });
+            });
+
+            resolve(itemElement);
+        });
+    }
+
+    toString() {
+        return 'assignments';
     }
 }

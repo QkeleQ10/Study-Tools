@@ -214,16 +214,18 @@
 
 #st-start-widgets:not(.editing) {
     .st-widget {
-        &[tabindex="0"] {
+
+        &[tabindex="0"],
+        .st-widget-subitem[tabindex="0"] {
             cursor: pointer;
 
-            &:hover {
+            &:hover:not(:has(.st-widget-subitem[tabindex="0"]:hover)) {
                 background-color: var(--st-highlight-primary);
             }
 
             &:focus-visible {
                 outline: 2px solid var(--st-foreground-accent);
-                /* outline-offset: -4px; */
+                outline-offset: -2px;
             }
         }
     }
@@ -842,10 +844,10 @@
     text-align: end;
     font-weight: 600;
     color: var(--st-foreground-insignificant);
-}
 
-.st-widget-subitem-timestamp:after {
-    content: attr(data-time);
+    &.warn {
+        color: var(--st-accent-warn);
+    }
 }
 
 .st-widget-subitem-content {

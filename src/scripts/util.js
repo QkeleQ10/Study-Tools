@@ -681,66 +681,65 @@ class Dialog {
     #buttonsWrapper;
 
     constructor(options = {}) {
-        this.element = createElement('dialog', document.body, { class: 'st-dialog' })
-        this.body = createElement('div', this.element, { class: 'st-dialog-body', innerText: options.innerText || '' })
+        this.element = createElement('dialog', document.body, { class: 'st-dialog' });
+        this.body = createElement('div', this.element, { class: 'st-dialog-body', innerText: options.innerText || '' });
 
-        this.#buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' })
+        this.#buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' });
         if (options?.buttons?.length > 0) {
             options.buttons.forEach(item => {
-                const button = createElement('button', this.#buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` })
-                if (item.innerText) button.innerText = item.innerText
+                const button = createElement('button', this.#buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` });
+                if (item.innerText) button.innerText = item.innerText;
                 if (item.clickSelector) {
                     button.addEventListener('click', event => {
-                        document.querySelector(item.clickSelector)?.click()
-                        event.stopPropagation()
-                    })
+                        document.querySelector(item.clickSelector)?.click();
+                        event.stopPropagation();
+                    });
                 } else if (item.href) {
                     button.addEventListener('click', event => {
-                        window.open(item.href, '_blank').focus()
-                        event.stopPropagation()
-                    })
+                        window.open(item.href, '_blank').focus();
+                        event.stopPropagation();
+                    });
                 } else if (item.callback || item.onclick) {
                     button.addEventListener('click', event => {
-                        if (item.callback) item.callback(event)
-                        if (item.onclick) item.onclick(event)
-                        event.stopPropagation()
-                    })
-                } else button.addEventListener('click', event => event.stopPropagation())
-            })
+                        if (item.callback) item.callback(event);
+                        if (item.onclick) item.onclick(event);
+                        event.stopPropagation();
+                    });
+                } else button.addEventListener('click', event => event.stopPropagation());
+            });
         }
 
         if (typeof options.allowClose === 'boolean' && options.allowClose === false) {
             this.element.addEventListener('cancel', (event) => {
-                event.preventDefault()
-            })
+                event.preventDefault();
+            });
         } else {
-            const dialogDismiss = createElement('button', this.#buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') })
+            const dialogDismiss = createElement('button', this.#buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') });
             if (options?.index && options?.length) {
-                dialogDismiss.classList.add('st-step')
-                dialogDismiss.innerText = `${options.index} / ${options.length}`
-                if (options.index !== options.length) dialogDismiss.dataset.icon = ''
+                dialogDismiss.classList.add('st-step');
+                dialogDismiss.innerText = `${options.index} / ${options.length}`;
+                if (options.index !== options.length) dialogDismiss.dataset.icon = '';
             }
-            dialogDismiss.addEventListener('click', () => this.close())
+            dialogDismiss.addEventListener('click', () => this.close());
         }
     }
 
     show() {
-        this.element.showModal()
+        this.element.showModal();
     }
 
-    close() {
-        this.element.close()
-        this.element.remove()
+    close(maintain = false) {
+        this.element.close();
+        if (!maintain) setTimeout(() => this.element.remove(), 200);
     }
 
     on(event, callback) {
         return new Promise(resolve => {
             this.element.addEventListener(event, (e) => {
-                resolve(e)
-                callback(e)
-            })
-        })
-
+                resolve(e);
+                callback(e);
+            });
+        });
     }
 }
 

@@ -456,18 +456,22 @@ dialog.st-modal[open]::backdrop {
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     overflow: visible;
 
-    transition: opacity 200ms, transform 200ms, overlay 200ms allow-discrete, display 200ms allow-discrete;
+    transition-property: opacity, transform, overlay, display;
+    transition-duration: 100ms;
+    transition-behavior: allow-discrete;
     opacity: 0;
-    transform: translateY(50px);
+    transform: scale(0.85);
 
 
     &[open] {
         opacity: 1;
         transform: none;
 
+        transition-duration: 200ms;
+
         @starting-style {
             opacity: 0;
-            transform: translateY(-50px);
+            transform: scale(0.8);
         }
     }
 }
