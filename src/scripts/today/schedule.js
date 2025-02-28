@@ -171,8 +171,6 @@ class Schedule {
         return new Promise(async (resolve, _) => {
             let difference = this.#scheduleDate.getTime() - new Date(this.element.dataset.date).getTime();
 
-            this.#body.dataset.navigate = 'still';
-
             for (const day of this.days) {
                 // If the column should be shown, populate it with events
                 if (!day.rendered && this.positionInRange(day.date) > -1) await day.drawEvents();
@@ -191,6 +189,7 @@ class Schedule {
             }
 
             // Update the scheduleWrapper's navigate attribute to trigger the CSS animation
+            this.#body.dataset.navigate = 'still';
             setTimeout(() => {
                 this.#body.dataset.navigate = difference > 0 ? 'forwards' : difference < 0 ? 'backwards' : 'still';
                 this.element.dataset.size = this.#scheduleSize;

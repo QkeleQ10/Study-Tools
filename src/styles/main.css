@@ -1397,6 +1397,38 @@ a.st-keyboard-hint.clicked {
     margin-top: -22px;
 }
 
+*[data-navigate='backwards'],*[data-navigate='backwards2'] {
+    animation: 200ms navigation-move-backwards;
+}
+
+*[data-navigate='forwards'] {
+    animation: 200ms navigation-move-forwards;
+}
+
+@keyframes navigation-move-backwards {
+    30% {
+        translate: 5%;
+        opacity: 0;
+        scale: var(--st-anim-mod-scale, .9);
+    }
+
+    30.1% {
+        translate: -5%;
+    }
+}
+
+@keyframes navigation-move-forwards {
+    30% {
+        translate: -5%;
+        opacity: 0;
+        scale: var(--st-anim-mod-scale, .9);
+    }
+
+    30.1% {
+        translate: 5%;
+    }
+}
+
 @keyframes displayIn {
     0% {
         display: none;

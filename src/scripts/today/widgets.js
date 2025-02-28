@@ -12,18 +12,18 @@ class Widget {
         }
 
         this.element = createElement('div', parentElement, {
-            id: `st-start-widget-${this.toString()}`,
+            id: `st-widget-${this.toString()}`,
             class: 'st-widget',
         });
 
         this.header = createElement('h3', this.element, {
-            id: `st-start-widget-${this.toString()}-title`,
+            id: `st-widget-${this.toString()}-title`,
             class: 'st-widget-title',
             innerText: i18n(`widgets.${this.toString()}`),
             'data-amount': 0,
         });
 
-        this.progressBar = createElement('div', this.element, {
+        this.progressBar = this.element.createChildElement('div', {
             class: 'st-progress-bar',
         });
         createElement('div', this.progressBar, {
@@ -42,16 +42,12 @@ class ListWidget extends Widget {
     #listElement;
     listItems = [];
 
-    constructor(parentElement, options) {
-        super(parentElement, options);
-
+    async initialise() {
         this.#listElement = this.element.createChildElement('ul', {
-            id: `st-start-widget-${this.toString()}-list`,
+            id: `st-widget-${this.toString()}-list`,
             class: 'st-widget-list',
         });
-    }
 
-    async initialise() {
         this.#drawList();
     }
 
@@ -70,6 +66,91 @@ class ListWidget extends Widget {
         return createElement('li', this.#listElement, {
             class: 'st-widget-subitem'
         })
+    }
+}
+
+class SlideshowWidget extends Widget {
+    #slideshowElement;
+    listItems = [];
+    #paginationElement;
+    #currentSlide = 0;
+
+    get currentSlide() { return this.#currentSlide; }
+    set currentSlide(value) {
+        let newValue = (this.listItems.length + value) % this.listItems.length;
+        let difference = newValue - this.#currentSlide;
+        this.#currentSlide = newValue;
+        setTimeout(() => {
+            this.#slideshowElement.querySelectorAll('div').forEach((node, i) => node.dataset.visible = i === newValue);
+            this.element.dataset.unread = this.listItems[newValue].unread;
+            this.#paginationElement.querySelectorAll('div').forEach((node, i) => node.dataset.current = i === newValue);
+        }, 60);
+
+        this.#slideshowElement.dataset.navigate = 'still';
+        setTimeout(() => {
+            this.#slideshowElement.dataset.navigate = difference > 0 ? 'forwards' : difference < 0 ? 'backwards' : 'still';
+        }, 5);
+    }
+
+    async initialise() {
+        this.#slideshowElement = this.element.createChildElement('div', {
+            id: `st-widget-${this.toString()}-slideshow`,
+            class: 'st-widget-slideshow',
+        });
+
+        this.element.createChildElement('button', {
+            class: 'st-button icon tertiary st-widget-slideshow-previous',
+            dataset: { icon: '' },
+            title: i18n('Nieuwer')
+        })
+            .addEventListener('click', (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                this.currentSlide--;
+            });
+
+        this.element.createChildElement('button', {
+            class: 'st-button icon tertiary st-widget-slideshow-next',
+            dataset: { icon: '' },
+            title: i18n('Ouder')
+        })
+            .addEventListener('click', (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                this.currentSlide++;
+            });
+
+        this.#paginationElement = this.element.createChildElement('div', { innerText: '', class: 'st-widget-slideshow-pagination' });
+
+        this.#drawSlideshow();
+    }
+
+    async #drawSlideshow() {
+        for (const [index, item] of this.listItems.entries()) {
+            await this.drawSlideItem(item, index);
+        }
+
+        this.header.dataset.amount = this.listItems.length;
+        if (this.listItems.length < 1) this.element.style.display = 'none';
+        this.element.dataset.unread = this.listItems[0].unread;
+
+        this.progressBar.dataset.visible = false;
+    }
+
+    drawSlideItem(item, index) {
+        this.#paginationElement.createChildElement('div', {
+            dataset: { current: index === this.#currentSlide }
+        })
+            .addEventListener('click', (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                this.currentSlide = index;
+            });
+
+        return this.#slideshowElement.createChildElement('div', {
+            class: 'st-slideshow-item',
+            dataset: { visible: index === this.#currentSlide }
+        });
     }
 }
 
@@ -307,5 +388,216 @@ class ActivitiesWidget extends Widget {
 
     toString() {
         return 'activities';
+    }
+}
+
+class GradesWidget extends SlideshowWidget {
+    #hiddenItems;
+
+    async initialise() {
+        this.#hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])));
+
+        this.listItems = [
+            ...(await magisterApi.gradesRecent()),
+            ...(magisterApi.permissions.includes('EloOpdracht') ? (await magisterApi.assignmentsTop()).filter(item => item.Beoordeling?.length > 0) : [])
+        ]
+            .map(item => {
+                const date = new Date(item.ingevoerdOp || item.BeoordeeldOp);
+                const unread = date > dates.now - (1000 * 60 * 60 * 24 * 7);
+                const hidden = this.#hiddenItems.has(item.kolomId || item.Id);
+                const result = item.waarde || item.Beoordeling || '?';
+                const value = isNaN(Number(result.replace(',', '.'))) ? null : Number(result.replace(',', '.'));
+                const isSufficient = (value && value >= Number(syncedStorage['suf-threshold']) && value <= 10) || item.isVoldoende;
+                return {
+                    ...item, date, unread, hidden, result, value, isSufficient,
+                    omschrijving: item.omschrijving || item.Titel,
+                    vak: item.vak || {
+                        code: item.Vak ? `${item.Vak} (opdr.)` : "opdr.",
+                        omschrijving: item.Vak ? `${item.Vak} (beoordeelde opdracht)` : "Beoordeelde opdracht"
+                    },
+                    weegfactor: item.weegfactor || 0,
+                    kolomId: item.kolomId || item.Id,
+                    isAssignment: !!item.Id
+                };
+            })
+            .sort((a, b) => b.date - a.date);
+
+        super.initialise();
+
+        this.header.innerText = this.listItems.some(grade => grade.unread) ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
+
+        this.element.tabIndex = 0;
+        this.element.addEventListener('click', () => {
+            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            window.location.href = '#/cijfers';
+        });
+
+        if (this.options.autoRotate == 'true') {
+            let interval = setInterval(() => {
+                if (!this.element || this.listItems?.length <= 1) clearInterval(interval)
+                if (this.element.matches(':hover')) return
+                this.currentSlide++;
+            }, 20000)
+        }
+    }
+
+    async drawSlideItem(grade, index) {
+        return new Promise(resolve => {
+            let itemElement = super.drawSlideItem(grade, index);
+
+            itemElement.setAttributes({
+                class: 'st-widget-grades-item',
+                dataset: {
+                    unread: grade.unread,
+                    hidden: grade.hidden,
+                    isAssignment: grade.isAssignment,
+                }
+            });
+
+            let resultElement = itemElement.createChildElement('span', {
+                class: 'st-widget-grades-item-rslt',
+                innerText: grade.waarde,
+                dataset: {
+                    great: this.options.autoRotate == 'true' && grade.value > 8.9 && grade.value <= 10,
+                    insuf: syncedStorage['insuf-red'] && grade.value >= 1 && grade.value < Number(syncedStorage['suf-threshold']),
+                    hidden: grade.hidden || this.options.viewResult == 'never' || (this.options.viewResult == 'sufficient' && !grade.isSufficient),
+                }
+            });
+
+            itemElement.createChildElement('span', {
+                class: 'st-widget-grades-item-subj',
+                innerText: grade.vak.omschrijving.charAt(0).toUpperCase() + grade.vak.omschrijving.slice(1)
+            });
+            itemElement.createChildElement('span', {
+                class: 'st-widget-grades-item-info',
+                innerText: grade.isAssignment ? grade.omschrijving : `${grade.omschrijving} (${grade.weegfactor || 0}×)`
+            });
+            itemElement.createChildElement('span', {
+                class: 'st-widget-grades-item-date',
+                innerText: makeTimestamp(grade.date)
+            });
+            let itemHide = itemElement.createChildElement('button', {
+                class: 'st-widget-grades-item-hide st-button icon tertiary',
+                dataset: { icon: grade.hidden ? '' : '' },
+                title: "Dit specifieke cijfer verbergen/weergeven"
+            });
+            itemHide.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                if (resultElement.dataset.hidden == 'true') {
+                    itemHide.dataset.icon = '';
+                    resultElement.dataset.hidden = false;
+                    this.#hiddenItems.delete(grade.kolomId);
+                    saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
+                } else {
+                    itemHide.dataset.icon = '';
+                    resultElement.dataset.hidden = true;
+                    this.#hiddenItems.add(grade.kolomId);
+                    saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
+                }
+                return false;
+            });
+
+            resolve(itemElement);
+        });
+    }
+
+    toString() {
+        return 'grades';
+    }
+}
+
+class DigitalClockWidget extends Widget {
+    timeElement;
+
+    async initialise() {
+        this.header.remove();
+
+        this.timeElement = this.element.createChildElement('p', {
+            id: 'st-widget-digital-clock-time',
+        });
+        for (let i = 0; i < 8; i++) {
+            this.timeElement.createChildElement('span');
+        }
+
+        this.updateClock();
+        setInterval(() => this.updateClock(), 1000);
+
+        this.element.tabIndex = 0;
+        this.element.addEventListener('click', () => {
+            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (!document.fullscreenElement) this.element.requestFullscreen();
+            else document.exitFullscreen();
+        });
+
+        const rawLessonPeriods = [
+            ...new Set(
+                (await magisterApi.events())
+                    .filter(event => new Date(event.Start).isToday() && event.Lokatie?.length > 0 && event.LesuurVan && event.LesuurTotMet)
+                    .map(event => JSON.stringify({ start: event.Start, end: event.Einde }))
+            )
+        ]
+            .map(event => JSON.parse(event))
+            .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+        const lessonPeriods = [];
+
+        for (let i = 0; i < rawLessonPeriods.length; i++) {
+            const current = rawLessonPeriods[i];
+            lessonPeriods.push(current);
+
+            if (i < rawLessonPeriods.length - 1) {
+                const next = rawLessonPeriods[i + 1];
+                const currentEnd = new Date(current.end);
+                const nextStart = new Date(next.start);
+
+                // Insert break if there's a gap
+                if (currentEnd < nextStart) {
+                    lessonPeriods.push({
+                        start: current.end,
+                        end: next.start,
+                        break: true
+                    });
+                }
+            }
+        }
+
+        this.#displayEvents(lessonPeriods);
+
+        this.progressBar.dataset.visible = false;
+    }
+
+    async #displayEvents(lessonPeriods) {
+        if (!lessonPeriods?.length > 0) return;
+        const lessonPeriodsContainer = this.element.createChildElement('div', {
+            class: 'st-widget-digital-clock-lesson-periods',
+        });
+
+        for (const period of lessonPeriods) {
+            lessonPeriodsContainer.createChildElement('div', {
+                style: {
+                    flexGrow: (new Date(period.end) - new Date(period.start)),
+                    opacity: period.break ? 0.5 : 1
+                }
+            })
+        }
+    }
+
+    updateClock() {
+        let timeString = document.fullscreenElement || this.options.showSeconds
+            ? dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            : dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
+
+        for (let i = 0; i < this.element.children[1].children.length; i++) {
+            const child = this.element.children[1].children[i];
+            child.innerText = timeString[i];
+        }
+
+        // logic to update the progress bars
+    }
+
+    toString() {
+        return 'digital-clock';
     }
 }

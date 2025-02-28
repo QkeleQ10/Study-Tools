@@ -22,8 +22,8 @@ async function today() {
         // header = element('div', 'st-start-header', container),
         widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
         widgetsList = element('div', 'st-start-widgets-list', widgets),
-        widgetControlsWrapper = element('div', 'st-start-widget-controls-wrapper', container, { class: 'st-visible' }),
-        widgetControls = element('div', 'st-start-widget-controls', widgetControlsWrapper)
+        widgetControlsWrapper = element('div', 'st-widget-controls-wrapper', container, { class: 'st-visible' }),
+        widgetControls = element('div', 'st-widget-controls', widgetControlsWrapper)
 
     teacherNamesSetting = syncedStorage['start-teacher-names'] || {}
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
@@ -196,9 +196,9 @@ async function today() {
 
         editor.classList.add('st-hidden')
 
-        let widgetsProgress = element('div', 'st-start-widget-progress', widgets, { class: 'st-progress-bar' })
-        let widgetsProgressValue = element('div', 'st-start-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
-        let widgetsProgressText = element('span', 'st-start-widget-progress-text', widgets, { class: 'st-subtitle', innerText: i18n('loadingWidgets') })
+        let widgetsProgress = element('div', 'st-widget-progress', widgets, { class: 'st-progress-bar' })
+        let widgetsProgressValue = element('div', 'st-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
+        let widgetsProgressText = element('span', 'st-widget-progress-text', widgets, { class: 'st-subtitle', innerText: i18n('loadingWidgets') })
 
         await magisterApi.updateApiPermissions()
 
@@ -271,168 +271,177 @@ async function today() {
                 ],
                 render: async (type, placeholder) => {
                     return new Promise(async resolve => {
-                        let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
-                        let autoRotate = await getFromStorage('start-widget-cf-rotate', 'local') || 'true'
-
-                        if (placeholder) magisterApi.useSampleData = true
-
-                        let grades = await magisterApi.gradesRecent()
-                            .catch(() => { return reject() })
-                        let assignments = magisterApi.permissions.includes('EloOpdracht')
-                            ? await magisterApi.assignmentsTop()
-                                .catch(() => { return reject() })
-                            : []
-
-                        if (placeholder) magisterApi.useSampleData = false
-
-                        let hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])))
-
-                        const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
-                            {
-                                ...item,
-                                omschrijving: item.Titel,
-                                ingevoerdOp: item.BeoordeeldOp,
-                                vak: {
-                                    code: item.Vak ? item.Vak + " (opdr.)" : "opdr.",
-                                    omschrijving: item.Vak ? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
-                                },
-                                waarde: item.Beoordeling || '?',
-                                isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= Number(syncedStorage['suf-threshold']),
-                                weegfactor: 0,
-                                kolomId: item.Id,
-                                assignment: true
-                            }
-                        ))
-                        const recentGrades = [...grades, ...relevantAssignments].map(item => (
-                            {
-                                ...item,
-                                date: new Date(item.ingevoerdOp),
-                                unread: new Date(item.ingevoerdOp) > dates.now - (1000 * 60 * 60 * 24 * 7),
-                                hidden: (hiddenItems.has(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
-                            }
-                        )).sort((a, b) => b.date - a.date)
-
-                        if (recentGrades.length < 1) return resolve() // Stop if no grades.
-
-                        let widgetElement = element('a', 'st-start-widget-grades', null, { class: 'st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
-                        let widgetTitle = element('h3', 'st-start-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
-                        let widgetItemsContainer = element('div', 'st-start-widget-grades-items', widgetElement)
-
-                        let children = []
-
-                        if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
-
-                        recentGrades.forEach((item, i) => {
-                            const gradeElement = element('div', `st-start-widget-grades-${i}`, widgetItemsContainer, {
-                                class: 'st-start-widget-grades-item',
-                                'data-unread': item.unread,
-                                'data-hidden': item.hidden,
-                                'data-assignment': item.assignment,
-                                style: i == 0 ? '' : 'display: none;'
-                            })
-                            children.push(gradeElement)
-                            if (i === 0) widgetElement.dataset.unread = item.unread
-
-                            let itemRslt = element('span', `st-start-widget-grades-${i}-rslt`, gradeElement, { class: 'st-start-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < Number(syncedStorage['suf-threshold']) })
-                            let itemSubj = element('span', `st-start-widget-grades-${i}-subj`, gradeElement, { class: 'st-start-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
-                            let itemInfo = element('span', `st-start-widget-grades-${i}-info`, gradeElement, { class: 'st-start-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
-                            let itemDate = element('span', `st-start-widget-grades-${i}-date`, gradeElement, { class: 'st-start-widget-grades-item-date', innerText: makeTimestamp(item.date) })
-                            let itemHide = element('button', `st-start-widget-grades-${i}-hide`, gradeElement, { class: 'st-start-widget-grades-item-hide st-button icon tertiary', 'data-icon': item.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
-                            itemHide.addEventListener('click', (event) => {
-                                event.preventDefault()
-                                event.stopPropagation()
-                                event.stopImmediatePropagation()
-                                if (gradeElement.dataset.hidden == 'true') {
-                                    itemHide.dataset.icon = ''
-                                    gradeElement.dataset.hidden = false
-                                    hiddenItems.delete(item.kolomId)
-                                    saveToStorage('hiddenGrades', [...hiddenItems], 'local')
-                                } else {
-                                    itemHide.dataset.icon = ''
-                                    gradeElement.dataset.hidden = true
-                                    hiddenItems.add(item.kolomId)
-                                    saveToStorage('hiddenGrades', [...hiddenItems], 'local')
-                                }
-                                return false
-                            })
-                        })
-
-                        visibleChildIndex = 0
-
-                        const scrollBack = element('button', 'st-start-widget-grades-scroll-back', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Nieuwer') })
-                        scrollBack.addEventListener('click', (event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            event.stopImmediatePropagation()
-                            scrollWidget('backwards')
-                        })
-                        const scrollForw = element('button', 'st-start-widget-grades-scroll-forw', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Ouder') })
-                        scrollForw.addEventListener('click', (event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            event.stopImmediatePropagation()
-                            scrollWidget('forwards')
-                        })
-
-                        const scrollPagn = element('div', 'st-start-widget-grades-scroll-pagn', widgetElement)
-                        scrollPagn.inenrText = ''
-                        children.forEach((child, i) => {
-                            const scrollPagnNode = element('div', undefined, scrollPagn, { 'data-current': i === 0 })
-                            scrollPagnNode.addEventListener('click', (event) => {
-                                event.preventDefault()
-                                event.stopPropagation()
-                                event.stopImmediatePropagation()
-                                scrollWidget('index', i)
-                            })
-                        })
-
-                        if (autoRotate == 'true') {
-                            let interval = setInterval(() => {
-                                if (!widgetItemsContainer?.children?.length > 1) clearInterval(interval)
-                                if (widgetElement.matches(':hover')) return
-                                scrollWidget('forwards')
-                            }, 20000)
+                        const options = {
+                            autoRotate: await getFromStorage('start-widget-cf-rotate', 'local') || 'true',
+                            viewResult: await getFromStorage('start-widget-cf-result', 'local') || 'always'
                         }
 
-                        function scrollWidget(direction = 'forwards', targetIndex = 0) {
-                            widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
-                            if (direction === 'forwards') {
-                                if (children[visibleChildIndex + 1])
-                                    targetIndex = visibleChildIndex + 1
-                                else
-                                    targetIndex = 0
-                            }
-                            if (direction === 'backwards') {
-                                if (children[visibleChildIndex - 1])
-                                    targetIndex = visibleChildIndex - 1
-                                else
-                                    targetIndex = children.length - 1
-                            }
+                        const widget = new GradesWidget(null, options) // pass default option
 
-                            widgetItemsContainer.dataset.navigate = 'still'
-                            setTimeout(() => {
-                                widgetItemsContainer.dataset.navigate = targetIndex > visibleChildIndex ? 'forwards' : targetIndex < visibleChildIndex ? 'backwards' : 'still'
-                                visibleChildIndex = targetIndex
-                                setTimeout(() => {
-                                    children.forEach((child, index) => child.style.display = index === targetIndex ? 'flex' : 'none');
-                                    document.querySelectorAll('#st-start-widget-grades-scroll-pagn>div').forEach((d, index) => d.dataset.current = index === targetIndex);
-                                    widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
-                                }, 60);
-                            }, 10);
-                        }
+                        resolve(widget.element)
 
-                        if (recentGrades.length < 2) {
-                            scrollBack.remove()
-                            scrollForw.remove()
-                            scrollPagn.remove()
-                        }
+                        // let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
+                        // let autoRotate = await getFromStorage('start-widget-cf-rotate', 'local') || 'true'
 
-                        if (type === 'Lijst') {
-                            widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
-                            return resolve(widgetElement)
-                        }
+                        // if (placeholder) magisterApi.useSampleData = true
 
-                        resolve(widgetElement)
+                        // let grades = await magisterApi.gradesRecent()
+                        //     .catch(() => { return reject() })
+                        // let assignments = magisterApi.permissions.includes('EloOpdracht')
+                        //     ? await magisterApi.assignmentsTop()
+                        //         .catch(() => { return reject() })
+                        //     : []
+
+                        // if (placeholder) magisterApi.useSampleData = false
+
+                        // let hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])))
+
+                        // const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
+                        //     {
+                        //         ...item,
+                        //         omschrijving: item.Titel,
+                        //         ingevoerdOp: item.BeoordeeldOp,
+                        //         vak: {
+                        //             code: item.Vak ? item.Vak + " (opdr.)" : "opdr.",
+                        //             omschrijving: item.Vak ? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
+                        //         },
+                        //         waarde: item.Beoordeling || '?',
+                        //         isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= Number(syncedStorage['suf-threshold']),
+                        //         weegfactor: 0,
+                        //         kolomId: item.Id,
+                        //         assignment: true
+                        //     }
+                        // ))
+                        // const recentGrades = [...grades, ...relevantAssignments].map(item => (
+                        //     {
+                        //         ...item,
+                        //         date: new Date(item.ingevoerdOp),
+                        //         unread: new Date(item.ingevoerdOp) > dates.now - (1000 * 60 * 60 * 24 * 7),
+                        //         hidden: (hiddenItems.has(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
+                        //     }
+                        // )).sort((a, b) => b.date - a.date)
+
+                        // if (recentGrades.length < 1) return resolve() // Stop if no grades.
+
+                        // let widgetElement = element('a', 'st-widget-grades', null, { class: 'st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
+                        // let widgetTitle = element('h3', 'st-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
+                        // let widgetItemsContainer = element('div', 'st-widget-grades-items', widgetElement)
+
+                        // let children = []
+
+                        // if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
+
+                        // recentGrades.forEach((item, i) => {
+                        //     const gradeElement = element('div', `st-widget-grades-${i}`, widgetItemsContainer, {
+                        //         class: 'st-widget-grades-item',
+                        //         'data-unread': item.unread,
+                        //         'data-hidden': item.hidden,
+                        //         'data-assignment': item.assignment,
+                        //         style: i == 0 ? '' : 'display: none;'
+                        //     })
+                        //     children.push(gradeElement)
+                        //     if (i === 0) widgetElement.dataset.unread = item.unread
+
+                        //     let itemRslt = element('span', `st-widget-grades-${i}-rslt`, gradeElement, { class: 'st-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < Number(syncedStorage['suf-threshold']) })
+                        //     let itemSubj = element('span', `st-widget-grades-${i}-subj`, gradeElement, { class: 'st-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
+                        //     let itemInfo = element('span', `st-widget-grades-${i}-info`, gradeElement, { class: 'st-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
+                        //     let itemDate = element('span', `st-widget-grades-${i}-date`, gradeElement, { class: 'st-widget-grades-item-date', innerText: makeTimestamp(item.date) })
+                        //     let itemHide = element('button', `st-widget-grades-${i}-hide`, gradeElement, { class: 'st-widget-grades-item-hide st-button icon tertiary', 'data-icon': item.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
+                        //     itemHide.addEventListener('click', (event) => {
+                        //         event.preventDefault()
+                        //         event.stopPropagation()
+                        //         event.stopImmediatePropagation()
+                        //         if (gradeElement.dataset.hidden == 'true') {
+                        //             itemHide.dataset.icon = ''
+                        //             gradeElement.dataset.hidden = false
+                        //             hiddenItems.delete(item.kolomId)
+                        //             saveToStorage('hiddenGrades', [...hiddenItems], 'local')
+                        //         } else {
+                        //             itemHide.dataset.icon = ''
+                        //             gradeElement.dataset.hidden = true
+                        //             hiddenItems.add(item.kolomId)
+                        //             saveToStorage('hiddenGrades', [...hiddenItems], 'local')
+                        //         }
+                        //         return false
+                        //     })
+                        // })
+
+                        // visibleChildIndex = 0
+
+                        // const scrollBack = element('button', 'st-widget-grades-scroll-back', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Nieuwer') })
+                        // scrollBack.addEventListener('click', (event) => {
+                        //     event.preventDefault()
+                        //     event.stopPropagation()
+                        //     event.stopImmediatePropagation()
+                        //     scrollWidget('backwards')
+                        // })
+                        // const scrollForw = element('button', 'st-widget-grades-scroll-forw', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Ouder') })
+                        // scrollForw.addEventListener('click', (event) => {
+                        //     event.preventDefault()
+                        //     event.stopPropagation()
+                        //     event.stopImmediatePropagation()
+                        //     scrollWidget('forwards')
+                        // })
+
+                        // const scrollPagn = element('div', 'st-widget-grades-scroll-pagn', widgetElement)
+                        // scrollPagn.inenrText = ''
+                        // children.forEach((child, i) => {
+                        //     const scrollPagnNode = element('div', undefined, scrollPagn, { 'data-current': i === 0 })
+                        //     scrollPagnNode.addEventListener('click', (event) => {
+                        //         event.preventDefault()
+                        //         event.stopPropagation()
+                        //         event.stopImmediatePropagation()
+                        //         scrollWidget('index', i)
+                        //     })
+                        // })
+
+                        // if (autoRotate == 'true') {
+                        //     let interval = setInterval(() => {
+                        //         if (!widgetItemsContainer?.children?.length > 1) clearInterval(interval)
+                        //         if (widgetElement.matches(':hover')) return
+                        //         scrollWidget('forwards')
+                        //     }, 20000)
+                        // }
+
+                        // function scrollWidget(direction = 'forwards', targetIndex = 0) {
+                        //     widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
+                        //     if (direction === 'forwards') {
+                        //         if (children[visibleChildIndex + 1])
+                        //             targetIndex = visibleChildIndex + 1
+                        //         else
+                        //             targetIndex = 0
+                        //     }
+                        //     if (direction === 'backwards') {
+                        //         if (children[visibleChildIndex - 1])
+                        //             targetIndex = visibleChildIndex - 1
+                        //         else
+                        //             targetIndex = children.length - 1
+                        //     }
+
+                        //     widgetItemsContainer.dataset.navigate = 'still'
+                        //     setTimeout(() => {
+                        //         widgetItemsContainer.dataset.navigate = targetIndex > visibleChildIndex ? 'forwards' : targetIndex < visibleChildIndex ? 'backwards' : 'still'
+                        //         visibleChildIndex = targetIndex
+                        //         setTimeout(() => {
+                        //             children.forEach((child, index) => child.style.display = index === targetIndex ? 'flex' : 'none');
+                        //             document.querySelectorAll('#st-widget-grades-scroll-pagn>div').forEach((d, index) => d.dataset.current = index === targetIndex);
+                        //             widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
+                        //         }, 60);
+                        //     }, 10);
+                        // }
+
+                        // if (recentGrades.length < 2) {
+                        //     scrollBack.remove()
+                        //     scrollForw.remove()
+                        //     scrollPagn.remove()
+                        // }
+
+                        // if (type === 'Lijst') {
+                        //     widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
+                        //     return resolve(widgetElement)
+                        // }
+
+                        // resolve(widgetElement)
                     })
                 }
             },
@@ -541,85 +550,13 @@ async function today() {
                 ],
                 render: (type, placeholder) => {
                     return new Promise(async resolve => {
-                        const secondsOption = await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
-
-                        const widgetElement = element(placeholder ? 'div' : 'button', 'st-start-widget-digital-clock', null, { class: 'st-widget', title: "Klok in volledig scherm" })
-                        const timeText = element('p', 'st-start-widget-digital-clock-time', widgetElement, {
-                            'data-temporal-type': secondsOption === 'show'
-                                ? 'current-time-long'
-                                : 'current-time-short'
-                        })
-
-                        if (!placeholder) widgetElement.addEventListener('click', () => {
-                            if (!document.fullscreenElement) {
-                                widgetElement.requestFullscreen()
-                                widgetElement.removeAttribute('title')
-                                timeText.dataset.temporalType = 'current-time-long'
-                                updateTemporalBindings()
-                            } else {
-                                if (document.exitFullscreen) document.exitFullscreen()
-                                widgetElement.title = "Klok in volledig scherm"
-                                timeText.dataset.temporalType = secondsOption === 'show' ? 'current-time-long' : 'current-time-short'
-                                updateTemporalBindings()
-                            }
-                        })
-
-                        resolve(widgetElement)
-
-                        // Aditionally, show the progress of the day. Widget will be rendered even before this is available!
-
-                        let events
-                        if (placeholder) {
-                            events = []
-                        } else {
-                            events = await magisterApi.events()
-                                .catch(() => { return reject() })
+                        const options = {
+                            showSeconds: await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
                         }
 
-                        const todaysEvents = events?.filter(item => new Date(item.Start).isToday() && item.Omschrijving != 'amablok_bb') || []
-                        if (!todaysEvents?.length > 0) return
-                        const progressWrapper = element('div', 'st-start-widget-digital-clock-wrapper', widgetElement)
+                        const widget = new DigitalClockWidget(null, options) // pass default option
 
-                        let schoolHours = {}
-                        todaysEvents.forEach(item => {
-                            if (item.LesuurVan) {
-                                schoolHours[item.LesuurVan] ??= { hour: item.LesuurVan }
-                                schoolHours[item.LesuurVan].start = item.Start
-                            }
-                            if (item.LesuurTotMet) {
-                                schoolHours[item.LesuurTotMet] ??= { hour: item.LesuurTotMet }
-                                schoolHours[item.LesuurVan].end = item.Einde
-                            }
-                        })
-
-                        function findGaps(schoolHours) {
-                            const hours = Object.keys(schoolHours);
-
-                            for (let i = 0; i < hours.length - 1; i++) {
-                                const currentHour = hours[i];
-                                const nextHour = hours[i + 1];
-
-                                const currentEnd = new Date(schoolHours[currentHour].end);
-                                const nextStart = new Date(schoolHours[nextHour].start);
-
-                                if (currentEnd < nextStart) {
-                                    const gapStart = currentEnd.toISOString();
-                                    const gapEnd = nextStart.toISOString();
-
-                                    schoolHours[`gap${i}`] = {
-                                        start: gapStart,
-                                        end: gapEnd,
-                                        gap: true
-                                    };
-                                }
-                            }
-
-                            return schoolHours
-                        }
-
-                        Object.values(findGaps(schoolHours)).sort((a, b) => new Date(a.start) - new Date(b.start)).forEach((item, i) => {
-                            element('div', `st-start-widget-digital-clock-${i}`, progressWrapper, { 'data-temporal-type': 'style-progress', 'data-temporal-start': item.start, 'data-temporal-end': item.end, title: `${item.gap ? "Tijd tussen lesuren" : item.hour + "e lesuur"}\n${new Date(item.start).getFormattedTime()}–${new Date(item.end).getFormattedTime()}`, style: `flex-grow: ${(new Date(item.end) - new Date(item.start))}; opacity: ${item.gap ? 0.5 : 1}` })
-                        })
+                        resolve(widget.element)
                     })
                 }
             }

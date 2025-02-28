@@ -163,7 +163,8 @@ Element.prototype.setAttributes = function (attributes) {
             case 'style':
                 if (typeof value === 'object') {
                     for (let subKey in value) {
-                        elem.style.setProperty(subKey, value[subKey]);
+                        if (/^[a-z]+([A-Z][a-z]*)*$/.test(subKey)) elem.style[subKey] = value[subKey];
+                        else elem.style.setProperty(subKey, value[subKey]);
                     }
                     break;
                 } // else, fall through
@@ -320,9 +321,9 @@ Date.prototype.addDays = function (days) {
     return date
 }
 
-Date.prototype.isTomorrow = function (offset = 0) { return this >= midnight(null, 1 + offset) && this < midnight(null, 2 + offset) }
 Date.prototype.isToday = function (offset = 0) { return this >= midnight(null, offset) && this < midnight(null, 1 + offset) }
-Date.prototype.isYesterday = function (offset = 0) { return this >= midnight(null, -1 + offset) && this < midnight(null, 1 + offset) }
+Date.prototype.isTomorrow = function () { return this.isToday(1) }
+Date.prototype.isYesterday = function () { return this.isToday(-1) }
 
 Array.prototype.random = function (seed) {
     let randomValue = Math.random()
