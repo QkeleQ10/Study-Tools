@@ -4,38 +4,46 @@ class Widget {
     options = {};
     progressBar;
 
-    constructor(parentElement, options) {
-        this.options = options || {};
+    constructor(options = {}) {
+        this.options = options;
 
-        if (this.constructor == Widget || !this.toString()) {
+        if (this.constructor == Widget) {
             throw new Error("Abstract classes can't be instantiated.");
         }
+    }
 
+    drawWidget(parentElement) {
         this.element = createElement('div', parentElement, {
-            id: `st-widget-${this.toString()}`,
+            id: `st-widget-${this.constructor.id}`,
             class: 'st-widget',
         });
 
         this.header = createElement('h3', this.element, {
-            id: `st-widget-${this.toString()}-title`,
+            id: `st-widget-${this.constructor.id}-title`,
             class: 'st-widget-title',
-            innerText: i18n(`widgets.${this.toString()}`),
+            innerText: i18n(`widgets.${this.constructor.id}`),
             'data-amount': 0,
         });
 
         this.progressBar = this.element.createChildElement('div', {
-            class: 'st-progress-bar',
+            class: 'st-progress-bar'
         });
         createElement('div', this.progressBar, {
             class: 'st-progress-bar-value indeterminate',
         });
 
         this.initialise();
+
+        return this.element;
     }
 
     async initialise() { }
 
-    toString() { }
+    static id = '';
+    static disclaimer = 'widgetDisclaimer';
+    static requiredPermissions = [];
+    static displayByDefault = true;
+    static possibleOptions = {};
 }
 
 class ListWidget extends Widget {
@@ -44,7 +52,7 @@ class ListWidget extends Widget {
 
     async initialise() {
         this.#listElement = this.element.createChildElement('ul', {
-            id: `st-widget-${this.toString()}-list`,
+            id: `st-widget-${this.constructor.id}-list`,
             class: 'st-widget-list',
         });
 
@@ -94,7 +102,7 @@ class SlideshowWidget extends Widget {
 
     async initialise() {
         this.#slideshowElement = this.element.createChildElement('div', {
-            id: `st-widget-${this.toString()}-slideshow`,
+            id: `st-widget-${this.constructor.id}-slideshow`,
             class: 'st-widget-slideshow',
         });
 
@@ -157,7 +165,7 @@ class SlideshowWidget extends Widget {
 class HomeworkWidget extends ListWidget {
     async initialise() {
         this.listItems = (await magisterApi.events()).filter(event => {
-            if (this.options.filter === 'incomplete')
+            if (this.options.filter == 'incomplete')
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date() && !event.Afgerond)
             else
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date())
@@ -171,7 +179,7 @@ class HomeworkWidget extends ListWidget {
 
             itemElement.tabIndex = 0;
             itemElement.addEventListener('click', () => {
-                if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+                if (this.element.getAttribute('disabled') == 'true') return;
                 new ScheduleEventDialog(event).show();
             });
 
@@ -210,9 +218,26 @@ class HomeworkWidget extends ListWidget {
         });
     }
 
-    toString() {
-        return 'homework';
-    }
+    static id = 'homework';
+    static requiredPermissions = ['Afspraken'];
+    static possibleOptions = {
+        filter: {
+            title: "Afgeronde items tonen",
+            type: 'select',
+            choices: [
+                {
+                    title: "Alles",
+                    value: 'all'
+                },
+                {
+                    title: "Alleen onvoltooid",
+                    value: 'incomplete',
+                    default: true
+                },
+            ]
+        }
+    };
+
 }
 
 class MessagesWidget extends ListWidget {
@@ -222,7 +247,7 @@ class MessagesWidget extends ListWidget {
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
-            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (this.element.getAttribute('disabled') == 'true') return;
             window.location.href = '#/berichten';
         });
     }
@@ -269,15 +294,14 @@ class MessagesWidget extends ListWidget {
         });
     }
 
-    toString() {
-        return 'messages';
-    }
+    static id = 'messages';
+    static requiredPermissions = ['Berichten'];
 }
 
 class AssignmentsWidget extends ListWidget {
     async initialise() {
         this.listItems = (await magisterApi.assignmentsTop()).filter(assignment => {
-            switch (this.options.showPastDue) {
+            switch (this.options.pastDue) {
                 case 'all':
                     return (!assignment.Afgesloten && !assignment.IngeleverdOp);
                 case 'none':
@@ -291,7 +315,7 @@ class AssignmentsWidget extends ListWidget {
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
-            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (this.element.getAttribute('disabled') == 'true') return;
             window.location.href = '#/elo/opdrachten';
         });
     }
@@ -303,7 +327,7 @@ class AssignmentsWidget extends ListWidget {
             itemElement.tabIndex = 0;
             itemElement.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+                if (this.element.getAttribute('disabled') == 'true') return;
                 window.location.href = `#/elo/opdrachten/${assignment.Id}`;
             });
 
@@ -328,7 +352,6 @@ class AssignmentsWidget extends ListWidget {
                 });
 
             let chips = [];
-            console.log(assignment)
             if (assignment.BeoordeeldOp) chips.push({ name: i18n('chips.graded'), type: 'ok' });
             const chipsWrapper = itemElement.createChildElement('div', {
                 class: 'st-chips-wrapper',
@@ -344,9 +367,28 @@ class AssignmentsWidget extends ListWidget {
         });
     }
 
-    toString() {
-        return 'assignments';
-    }
+    static id = 'assignments';
+    static requiredPermissions = ['EloOpdracht'];
+    static possibleOptions = {
+        pastDue: {
+            title: "Niet-ingeleverde opdrachten na deadline",
+            type: 'select',
+            choices: [
+                {
+                    title: "Nog een week tonen",
+                    value: 'week'
+                },
+                {
+                    title: "Niet tonen",
+                    value: 'none'
+                },
+                {
+                    title: "Tonen",
+                    value: 'all'
+                }
+            ]
+        }
+    };
 }
 
 class LogsWidget extends Widget {
@@ -358,16 +400,15 @@ class LogsWidget extends Widget {
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
-            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (this.element.getAttribute('disabled') == 'true') return;
             window.location.href = '#/lvs-logboeken';
         });
 
         this.progressBar.dataset.visible = false;
     }
 
-    toString() {
-        return 'logs';
-    }
+    static id = 'logs';
+    static requiredPermissions = ['Logboeken'];
 }
 
 class ActivitiesWidget extends Widget {
@@ -379,16 +420,15 @@ class ActivitiesWidget extends Widget {
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
-            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (this.element.getAttribute('disabled') == 'true') return;
             window.location.href = '#/elo/activiteiten';
         });
 
         this.progressBar.dataset.visible = false;
     }
 
-    toString() {
-        return 'activities';
-    }
+    static id = 'activities';
+    static requiredPermissions = ['Activiteiten'];
 }
 
 class GradesWidget extends SlideshowWidget {
@@ -428,11 +468,11 @@ class GradesWidget extends SlideshowWidget {
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
-            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (this.element.getAttribute('disabled') == 'true') return;
             window.location.href = '#/cijfers';
         });
 
-        if (this.options.autoRotate == 'true') {
+        if (this.options.rotate == 'true') {
             let interval = setInterval(() => {
                 if (!this.element || this.listItems?.length <= 1) clearInterval(interval)
                 if (this.element.matches(':hover')) return
@@ -458,9 +498,9 @@ class GradesWidget extends SlideshowWidget {
                 class: 'st-widget-grades-item-rslt',
                 innerText: grade.waarde,
                 dataset: {
-                    great: this.options.autoRotate == 'true' && grade.value > 8.9 && grade.value <= 10,
+                    great: this.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
                     insuf: syncedStorage['insuf-red'] && grade.value >= 1 && grade.value < Number(syncedStorage['suf-threshold']),
-                    hidden: grade.hidden || this.options.viewResult == 'never' || (this.options.viewResult == 'sufficient' && !grade.isSufficient),
+                    hidden: grade.hidden || this.options.filter == 'never' || (this.options.filter == 'sufficient' && !grade.isSufficient),
                 }
             });
 
@@ -503,8 +543,42 @@ class GradesWidget extends SlideshowWidget {
         });
     }
 
-    toString() {
-        return 'grades';
+    static id = 'grades';
+    static disclaimer = null;
+    static requiredPermissions = ['Cijfers'];
+    static possibleOptions = {
+        rotate: {
+            title: "Automatisch rouleren",
+            type: 'select',
+            choices: [
+                {
+                    title: "Elke 20 seconden",
+                    value: 'true'
+                },
+                {
+                    title: "Uit",
+                    value: 'false'
+                }
+            ]
+        },
+        filter: {
+            title: "Beoordeling weergeven",
+            type: 'select',
+            choices: [
+                {
+                    title: "Altijd",
+                    value: 'always'
+                },
+                {
+                    title: "Alleen voldoendes",
+                    value: 'sufficient'
+                },
+                {
+                    title: "Nooit",
+                    value: 'never'
+                }
+            ]
+        }
     }
 }
 
@@ -515,7 +589,7 @@ class DigitalClockWidget extends Widget {
         this.header.remove();
 
         this.timeElement = this.element.createChildElement('p', {
-            id: 'st-widget-digital-clock-time',
+            id: 'st-widget-digitalclock-time',
         });
         for (let i = 0; i < 8; i++) {
             this.timeElement.createChildElement('span');
@@ -526,7 +600,7 @@ class DigitalClockWidget extends Widget {
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
-            if (this.element.closest('#st-start-widgets')?.classList.contains('editing')) return;
+            if (this.element.getAttribute('disabled') == 'true') return;
             if (!document.fullscreenElement) this.element.requestFullscreen();
             else document.exitFullscreen();
         });
@@ -571,7 +645,7 @@ class DigitalClockWidget extends Widget {
     async #displayEvents(lessonPeriods) {
         if (!lessonPeriods?.length > 0) return;
         const lessonPeriodsContainer = this.element.createChildElement('div', {
-            class: 'st-widget-digital-clock-lesson-periods',
+            class: 'st-widget-digitalclock-lesson-periods',
         });
 
         for (const period of lessonPeriods) {
@@ -585,19 +659,35 @@ class DigitalClockWidget extends Widget {
     }
 
     updateClock() {
-        let timeString = document.fullscreenElement || this.options.showSeconds
+        let timeString = document.fullscreenElement || this.options.showSeconds == 'show'
             ? dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', second: '2-digit' })
             : dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
 
         for (let i = 0; i < this.element.children[1].children.length; i++) {
             const child = this.element.children[1].children[i];
-            child.innerText = timeString[i];
+            child.innerText = timeString[i] || '';
         }
 
         // logic to update the progress bars
     }
 
-    toString() {
-        return 'digital-clock';
+    static id = 'digitalclock';
+    static disclaimer = 'widgetClockDisclaimer';
+    static displayByDefault = false;
+    static possibleOptions = {
+        showSeconds: {
+            title: "Seconden tonen",
+            type: 'select',
+            choices: [
+                {
+                    title: "Weergeven",
+                    value: 'show'
+                },
+                {
+                    title: "Verbergen",
+                    value: 'hide'
+                }
+            ]
+        }
     }
 }

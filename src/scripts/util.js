@@ -83,6 +83,8 @@ Element.prototype.createSiblingElement = function (tagName, attributes) {
     return createElement(tagName, this.parentElement, attributes)
 }
 
+parseBoolean = (value) => value === 'true' ? true : value === 'false' ? false : null
+
 /**
  * Wait for an element to be available in the DOM.
  * @param {string} querySelector 

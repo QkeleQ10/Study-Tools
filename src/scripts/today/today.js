@@ -20,7 +20,7 @@ async function today() {
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         // header = element('div', 'st-start-header', container),
-        widgets = element('div', 'st-start-widgets', container, { 'data-working': true }),
+        widgets = element('div', 'st-start-widgets', container),
         widgetsList = element('div', 'st-start-widgets-list', widgets),
         widgetControlsWrapper = element('div', 'st-widget-controls-wrapper', container, { class: 'st-visible' }),
         widgetControls = element('div', 'st-widget-controls', widgetControlsWrapper)
@@ -30,8 +30,8 @@ async function today() {
     listViewEnabled = listViewEnabledSetting
     showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
-    const widgetsOrderDefault = ['digitalClock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
-    if (!widgetsOrderSetting || widgetsOrderSetting.length < 1 || !widgetsOrderDefault.every(key => widgetsOrderSetting.includes(key))) {
+    const widgetsOrderDefault = ['digitalclock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
+    if (!widgetsOrderSetting || widgetsOrderSetting.length < 1 || widgetsOrderDefault.some(key => !widgetsOrderSetting.includes(key))) {
         console.info(`Changing widgets-order`, widgetsOrderSetting, widgetsOrderDefault)
         widgetsOrderSetting = widgetsOrderDefault
         syncedStorage['widgets-order'] = widgetsOrderSetting
@@ -39,7 +39,15 @@ async function today() {
     }
 
     let todayCollapseWidgets
-    let widgetFunctions
+    const widgetClasses = {
+        logs: LogsWidget,
+        activities: ActivitiesWidget,
+        grades: GradesWidget,
+        messages: MessagesWidget,
+        homework: HomeworkWidget,
+        assignments: AssignmentsWidget,
+        digitalclock: DigitalClockWidget
+    }
 
     // Automagically collapse the widgets panel when it's necessary
     widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
@@ -81,14 +89,12 @@ async function today() {
 
     const invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editWidgets') })
     invokeEditWidgets.addEventListener('click', () => {
-        editWidgets()
+        invokeWidgetEditor()
     })
 
     const stopEditWidgets = element('button', 'st-start-editor-done', widgetControls, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('editFinish') })
     stopEditWidgets.addEventListener('click', () => {
-        widgetsList.innerText = ''
-        widgets.classList.remove('editing')
-        widgetControls.classList.remove('editing')
+        closeWidgetEditor()
         todayWidgets()
     })
 
@@ -189,408 +195,51 @@ async function today() {
         else if (event.key === 'ArrowRight' && !todayIncreaseOffset.disabled) todayIncreaseOffset.click()
     })
 
-
     async function todayWidgets() {
-        widgets.dataset.working = true
         widgetsList.innerText = ''
 
-        editor.classList.add('st-hidden')
-
-        let widgetsProgress = element('div', 'st-widget-progress', widgets, { class: 'st-progress-bar' })
-        let widgetsProgressValue = element('div', 'st-widget-progress-value', widgetsProgress, { class: 'st-progress-bar-value indeterminate' })
-        let widgetsProgressText = element('span', 'st-widget-progress-text', widgets, { class: 'st-subtitle', innerText: i18n('loadingWidgets') })
 
         await magisterApi.updateApiPermissions()
-
-        widgetFunctions = {
-            logs: {
-                title: i18n('widgets.logs'),
-                disclaimer: i18n('widgetDisclaimer'),
-                types: ['Tegel', 'Lijst'],
-                requiredPermissions: ['Logboeken'],
-                render: async (type, placeholder) => {
-                    return new Promise(async resolve => {
-                        const widget = new LogsWidget() // pass default option
-
-                        resolve(widget.element)
-                    })
-                }
-            },
-
-            activities: {
-                title: i18n('widgets.activities'),
-                disclaimer: i18n('widgetDisclaimer'),
-                requiredPermissions: ['Activiteiten'],
-                render: async (type, placeholder) => {
-                    return new Promise(async resolve => {
-                        const widget = new ActivitiesWidget() // pass default option
-
-                        resolve(widget.element)
-                    })
-                }
-            },
-
-            grades: {
-                title: i18n('widgets.grades'),
-                requiredPermissions: ['Cijfers'],
-                options: [
-                    {
-                        title: "Automatisch rouleren",
-                        key: 'start-widget-cf-rotate',
-                        type: 'select',
-                        choices: [
-                            {
-                                title: "Elke 20 seconden",
-                                value: 'true'
-                            },
-                            {
-                                title: "Uit",
-                                value: 'false'
-                            }
-                        ]
-                    },
-                    {
-                        title: "Beoordeling weergeven",
-                        key: 'start-widget-cf-result',
-                        type: 'select',
-                        choices: [
-                            {
-                                title: "Altijd",
-                                value: 'always'
-                            },
-                            {
-                                title: "Alleen voldoendes",
-                                value: 'sufficient'
-                            },
-                            {
-                                title: "Nooit",
-                                value: 'never'
-                            }
-                        ]
-                    }
-                ],
-                render: async (type, placeholder) => {
-                    return new Promise(async resolve => {
-                        const options = {
-                            autoRotate: await getFromStorage('start-widget-cf-rotate', 'local') || 'true',
-                            viewResult: await getFromStorage('start-widget-cf-result', 'local') || 'always'
-                        }
-
-                        const widget = new GradesWidget(null, options) // pass default option
-
-                        resolve(widget.element)
-
-                        // let viewResult = await getFromStorage('start-widget-cf-result', 'local') || 'always'
-                        // let autoRotate = await getFromStorage('start-widget-cf-rotate', 'local') || 'true'
-
-                        // if (placeholder) magisterApi.useSampleData = true
-
-                        // let grades = await magisterApi.gradesRecent()
-                        //     .catch(() => { return reject() })
-                        // let assignments = magisterApi.permissions.includes('EloOpdracht')
-                        //     ? await magisterApi.assignmentsTop()
-                        //         .catch(() => { return reject() })
-                        //     : []
-
-                        // if (placeholder) magisterApi.useSampleData = false
-
-                        // let hiddenItems = new Set(Object.values((await getFromStorage('hiddenGrades', 'local') || [])))
-
-                        // const relevantAssignments = assignments.filter(item => item.Beoordeling?.length > 0).map(item => (
-                        //     {
-                        //         ...item,
-                        //         omschrijving: item.Titel,
-                        //         ingevoerdOp: item.BeoordeeldOp,
-                        //         vak: {
-                        //             code: item.Vak ? item.Vak + " (opdr.)" : "opdr.",
-                        //             omschrijving: item.Vak ? item.Vak + " (beoordeelde opdracht)" : "Beoordeelde opdracht"
-                        //         },
-                        //         waarde: item.Beoordeling || '?',
-                        //         isVoldoende: !isNaN(Number(item.Beoordeling.replace(',', '.'))) || Number(item.Beoordeling.replace(',', '.')) >= Number(syncedStorage['suf-threshold']),
-                        //         weegfactor: 0,
-                        //         kolomId: item.Id,
-                        //         assignment: true
-                        //     }
-                        // ))
-                        // const recentGrades = [...grades, ...relevantAssignments].map(item => (
-                        //     {
-                        //         ...item,
-                        //         date: new Date(item.ingevoerdOp),
-                        //         unread: new Date(item.ingevoerdOp) > dates.now - (1000 * 60 * 60 * 24 * 7),
-                        //         hidden: (hiddenItems.has(item.kolomId)) || (viewResult === 'sufficient' && !item.isVoldoende) || (viewResult === 'never') // Hide if hidden manually, or if insufficient and user has set widget to sufficient only, or if user has set widget to hide result.
-                        //     }
-                        // )).sort((a, b) => b.date - a.date)
-
-                        // if (recentGrades.length < 1) return resolve() // Stop if no grades.
-
-                        // let widgetElement = element('a', 'st-widget-grades', null, { class: 'st-widget', title: "Laatste cijfers bekijken", href: '#/cijfers' })
-                        // let widgetTitle = element('h3', 'st-widget-grades-title', widgetElement, { class: 'st-widget-title', innerText: i18n('widgets.latestGrade') })
-                        // let widgetItemsContainer = element('div', 'st-widget-grades-items', widgetElement)
-
-                        // let children = []
-
-                        // if (type === 'Lijst') widgetTitle.dataset.amount = recentGrades.filter(item => item.unread).length
-
-                        // recentGrades.forEach((item, i) => {
-                        //     const gradeElement = element('div', `st-widget-grades-${i}`, widgetItemsContainer, {
-                        //         class: 'st-widget-grades-item',
-                        //         'data-unread': item.unread,
-                        //         'data-hidden': item.hidden,
-                        //         'data-assignment': item.assignment,
-                        //         style: i == 0 ? '' : 'display: none;'
-                        //     })
-                        //     children.push(gradeElement)
-                        //     if (i === 0) widgetElement.dataset.unread = item.unread
-
-                        //     let itemRslt = element('span', `st-widget-grades-${i}-rslt`, gradeElement, { class: 'st-widget-grades-item-rslt', innerText: item.waarde, 'data-great': autoRotate == 'true' && Number(item.waarde.replace(',', '.')) > 8.9 && Number(item.waarde.replace(',', '.')) <= 10, 'data-insuf': syncedStorage['insuf-red'] === true && Number(item.waarde.replace(',', '.')) >= 1 && Number(item.waarde.replace(',', '.')) < Number(syncedStorage['suf-threshold']) })
-                        //     let itemSubj = element('span', `st-widget-grades-${i}-subj`, gradeElement, { class: 'st-widget-grades-item-subj', innerText: item.vak.omschrijving.charAt(0).toUpperCase() + item.vak.omschrijving.slice(1) })
-                        //     let itemInfo = element('span', `st-widget-grades-${i}-info`, gradeElement, { class: 'st-widget-grades-item-info', innerText: item.assignment ? item.omschrijving : `${item.omschrijving} (${item.weegfactor || 0}×)` })
-                        //     let itemDate = element('span', `st-widget-grades-${i}-date`, gradeElement, { class: 'st-widget-grades-item-date', innerText: makeTimestamp(item.date) })
-                        //     let itemHide = element('button', `st-widget-grades-${i}-hide`, gradeElement, { class: 'st-widget-grades-item-hide st-button icon tertiary', 'data-icon': item.hidden ? '' : '', title: "Dit specifieke cijfer verbergen/weergeven" })
-                        //     itemHide.addEventListener('click', (event) => {
-                        //         event.preventDefault()
-                        //         event.stopPropagation()
-                        //         event.stopImmediatePropagation()
-                        //         if (gradeElement.dataset.hidden == 'true') {
-                        //             itemHide.dataset.icon = ''
-                        //             gradeElement.dataset.hidden = false
-                        //             hiddenItems.delete(item.kolomId)
-                        //             saveToStorage('hiddenGrades', [...hiddenItems], 'local')
-                        //         } else {
-                        //             itemHide.dataset.icon = ''
-                        //             gradeElement.dataset.hidden = true
-                        //             hiddenItems.add(item.kolomId)
-                        //             saveToStorage('hiddenGrades', [...hiddenItems], 'local')
-                        //         }
-                        //         return false
-                        //     })
-                        // })
-
-                        // visibleChildIndex = 0
-
-                        // const scrollBack = element('button', 'st-widget-grades-scroll-back', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Nieuwer') })
-                        // scrollBack.addEventListener('click', (event) => {
-                        //     event.preventDefault()
-                        //     event.stopPropagation()
-                        //     event.stopImmediatePropagation()
-                        //     scrollWidget('backwards')
-                        // })
-                        // const scrollForw = element('button', 'st-widget-grades-scroll-forw', widgetElement, { class: 'st-button icon tertiary', 'data-icon': '', title: i18n('Ouder') })
-                        // scrollForw.addEventListener('click', (event) => {
-                        //     event.preventDefault()
-                        //     event.stopPropagation()
-                        //     event.stopImmediatePropagation()
-                        //     scrollWidget('forwards')
-                        // })
-
-                        // const scrollPagn = element('div', 'st-widget-grades-scroll-pagn', widgetElement)
-                        // scrollPagn.inenrText = ''
-                        // children.forEach((child, i) => {
-                        //     const scrollPagnNode = element('div', undefined, scrollPagn, { 'data-current': i === 0 })
-                        //     scrollPagnNode.addEventListener('click', (event) => {
-                        //         event.preventDefault()
-                        //         event.stopPropagation()
-                        //         event.stopImmediatePropagation()
-                        //         scrollWidget('index', i)
-                        //     })
-                        // })
-
-                        // if (autoRotate == 'true') {
-                        //     let interval = setInterval(() => {
-                        //         if (!widgetItemsContainer?.children?.length > 1) clearInterval(interval)
-                        //         if (widgetElement.matches(':hover')) return
-                        //         scrollWidget('forwards')
-                        //     }, 20000)
-                        // }
-
-                        // function scrollWidget(direction = 'forwards', targetIndex = 0) {
-                        //     widgetElement.dataset.unread = children[visibleChildIndex]?.dataset.unread || false
-                        //     if (direction === 'forwards') {
-                        //         if (children[visibleChildIndex + 1])
-                        //             targetIndex = visibleChildIndex + 1
-                        //         else
-                        //             targetIndex = 0
-                        //     }
-                        //     if (direction === 'backwards') {
-                        //         if (children[visibleChildIndex - 1])
-                        //             targetIndex = visibleChildIndex - 1
-                        //         else
-                        //             targetIndex = children.length - 1
-                        //     }
-
-                        //     widgetItemsContainer.dataset.navigate = 'still'
-                        //     setTimeout(() => {
-                        //         widgetItemsContainer.dataset.navigate = targetIndex > visibleChildIndex ? 'forwards' : targetIndex < visibleChildIndex ? 'backwards' : 'still'
-                        //         visibleChildIndex = targetIndex
-                        //         setTimeout(() => {
-                        //             children.forEach((child, index) => child.style.display = index === targetIndex ? 'flex' : 'none');
-                        //             document.querySelectorAll('#st-widget-grades-scroll-pagn>div').forEach((d, index) => d.dataset.current = index === targetIndex);
-                        //             widgetElement.dataset.unread = children[targetIndex]?.dataset.unread || false
-                        //         }, 60);
-                        //     }, 10);
-                        // }
-
-                        // if (recentGrades.length < 2) {
-                        //     scrollBack.remove()
-                        //     scrollForw.remove()
-                        //     scrollPagn.remove()
-                        // }
-
-                        // if (type === 'Lijst') {
-                        //     widgetTitle.innerText = recentGrades.filter(item => item.unread).length > 0 ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
-                        //     return resolve(widgetElement)
-                        // }
-
-                        // resolve(widgetElement)
-                    })
-                }
-            },
-
-            messages: {
-                title: i18n('widgets.messages'),
-                disclaimer: i18n('widgetDisclaimer'),
-                requiredPermissions: ['Berichten'],
-                render: async (type, placeholder) => {
-                    return new Promise(async resolve => {
-                        const widget = new MessagesWidget(null) // pass default option
-
-                        resolve(widget.element)
-                    })
-                }
-            },
-
-            homework: {
-                title: i18n('widgets.homework'),
-                disclaimer: i18n('widgetDisclaimer'),
-                requiredPermissions: ['Afspraken'],
-                options: [
-                    {
-                        title: "Afgeronde items tonen",
-                        key: 'start-widget-hw-filter',
-                        type: 'select',
-                        choices: [
-                            {
-                                title: "Alleen onvoltooid",
-                                value: 'incomplete'
-                            },
-                            {
-                                title: "Alles",
-                                value: 'all'
-                            }
-                        ]
-                    }
-                ],
-                render: async (type, placeholder) => {
-                    return new Promise(async resolve => {
-                        const options = { filter: await getFromStorage('start-widget-hw-filter', 'local') || 'incomplete' }
-
-                        const widget = new HomeworkWidget(null, options) // pass default option
-
-                        resolve(widget.element)
-                    })
-                }
-            },
-
-            assignments: {
-                title: i18n('widgets.assignments'),
-                disclaimer: i18n('widgetDisclaimer'),
-                requiredPermissions: ['EloOpdracht'],
-                options: [
-                    {
-                        title: "Niet-ingeleverde opdrachten na deadline",
-                        key: 'start-widget-hw-filter',
-                        type: 'select',
-                        choices: [
-                            {
-                                title: "Nog een week tonen",
-                                value: 'week'
-                            },
-                            {
-                                title: "Niet tonen",
-                                value: 'none'
-                            },
-                            {
-                                title: "Tonen",
-                                value: 'all'
-                            }
-                        ]
-                    }
-                ],
-                render: async (type, placeholder) => {
-                    return new Promise(async (resolve) => {
-                        const options = { filter: await getFromStorage('start-widget-as-filter', 'local') || 'week' }
-
-                        const widget = new AssignmentsWidget(null, options) // pass default option
-
-                        resolve(widget.element)
-                    })
-                }
-            },
-
-            digitalClock: {
-                title: i18n('widgets.digitalClock'),
-                disclaimer: i18n('widgetClockDisclaimer'),
-                requiredPermissions: [],
-                options: [
-                    {
-                        title: "Seconden tonen",
-                        key: 'start-widget-digitalClock-seconds',
-                        type: 'select',
-                        choices: [
-                            {
-                                title: "Weergeven",
-                                value: 'show'
-                            },
-                            {
-                                title: "Verbergen",
-                                value: 'hide'
-                            }
-                        ]
-                    }
-                ],
-                render: (type, placeholder) => {
-                    return new Promise(async resolve => {
-                        const options = {
-                            showSeconds: await getFromStorage('start-widget-digitalClock-seconds', 'local') || 'show'
-                        }
-
-                        const widget = new DigitalClockWidget(null, options) // pass default option
-
-                        resolve(widget.element)
-                    })
-                }
-            }
-        }
 
         // Ensure the user permission flags are up-to-date
         await magisterApi.accountInfo()
 
         // Draw the selected widgets in the specified order
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue
+            const widgetClass = widgetClasses[key];
 
-            // if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
-            //     syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
-            //     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`], 'local')
-            // }
-            // if (syncedStorage[`widget-${key}-type`] === 'Verborgen') continue
-
-            widgetsProgressText.innerText = i18n('loadingWidget', { title: widgetFunctions[key].title })
-            let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`])
-            if (widgetElement) {
-                widgetsList.append(widgetElement)
+            const displaySetting = parseBoolean(await getFromStorage(`widget-${key}-display`)) ?? widgetClass.displayByDefault;
+            const options = {};
+            for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
+                options[optKey] =
+                    await getFromStorage(`widget-${key}-${optKey}`)
+                    || opt.choices.find(option => option.default)?.value
+                    || opt.choices[0].value;
             }
-            updateTemporalBindings()
+
+            if (
+                !displaySetting
+                || !widgetClass.requiredPermissions?.every(p => magisterApi.permissions?.includes(p))
+            ) continue;
+
+            const widgetInstance = new widgetClass(options);
+            const widgetElement = widgetInstance.drawWidget(widgetsList);
         }
-
-        widgets.dataset.working = false
-        widgetsProgress.remove()
-        widgetsProgressText.remove()
-
     }
 
-    async function editWidgets(keepSelection) {
-        widgetsList.innerText = ''
+    async function closeWidgetEditor() {
+        magisterApi.useSampleData = false; // TODO: THIS WON'T ALWAYS RUN!
+
+        editor.classList.add('st-hidden')
+        widgets.classList.remove('editing')
+        widgetControls.classList.remove('editing')
+        todayWidgets()
+    }
+
+    async function invokeWidgetEditor(keepSelection) {
+        magisterApi.useSampleData = true;
+
+        widgetsList.innerText = '';
         function emptySelection() {
             editorWidgetTitle.innerText = i18n('editWidgets')
             editorActionRow.innerText = ''
@@ -601,153 +250,135 @@ async function today() {
         if (!keepSelection) emptySelection()
 
         editor.classList.remove('st-hidden')
-
-        if (widgets.classList.contains('editing')) {
-            todayWidgets()
-            widgets.classList.remove('editing')
-            widgetControls.classList.remove('editing')
-            return
-        }
-
         widgets.classList.add('editing')
         widgetControls.classList.add('editing')
         if (widgetsCollapsed) todayCollapseWidgets.click()
 
         for (const key of widgetsOrderSetting) {
-            if (!widgetFunctions?.[key] || !widgetFunctions[key].requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue
+            const widgetClass = widgetClasses[key];
 
-            // if (syncedStorage[`widget-${key}-type`] === 'Verborgen' || (!syncedStorage[`widget-${key}-type`] && widgetFunctions[key].types[0] === 'Verborgen')) {
-            //     const widgetAddButton = element('button', `st-start-edit-${key}-add`, editorHiddenList, { class: 'st-start-editor-add', innerText: widgetFunctions[key].title, title: i18n('add') })
+            const displaySetting = parseBoolean(await getFromStorage(`widget-${key}-display`)) ?? widgetClass.displayByDefault;
+            const options = {};
+            for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
+                options[optKey] =
+                    await getFromStorage(`widget-${key}-${optKey}`)
+                    || opt.choices.find(option => option.default)?.value
+                    || opt.choices[0].value;
+            }
 
-            //     let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
-            //     widgetElement.setAttribute('disabled', true)
-            //     widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
-            //     widgetAddButton.append(widgetElement)
+            if (!displaySetting) {
+                const widgetAddButton = editorHiddenList.createChildElement('button', {
+                    class: 'st-start-editor-add',
+                    innerText: i18n(`widgets.${widgetClass.id}`),
+                    title: i18n('add')
+                })
+                widgetAddButton.addEventListener('click', async () => {
+                    await saveToStorage(`widget-${key}-display`, 'true')
+                    invokeWidgetEditor()
+                })
 
-            //     widgetAddButton.addEventListener('click', () => {
-            //         syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types.filter(e => e !== 'Verborgen')[0]
-            //         saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-            //         widgetsList.innerText = ''
-            //         widgets.classList.remove('editing')
-            //         widgetControls.classList.remove('editing')
-            //         editWidgets()
-            //     })
-            //     continue
-            // }
-
-            let widgetElement = await widgetFunctions[key].render(syncedStorage[`widget-${key}-type`], true)
-            if (widgetElement) {
+                const widgetInstance = new widgetClass(options);
+                const widgetElement = widgetInstance.drawWidget(widgetAddButton);
                 widgetElement.setAttribute('disabled', true)
-                widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
-                widgetElement.setAttribute('draggable', true)
-                widgetElement.dataset.value = key
-                widgetsList.append(widgetElement)
 
-                if (!widgetElement.dataset.hasListeners) {
-                    widgetElement.addEventListener('dragstart', event => {
-                        event.dataTransfer.effectAllowed = 'all'
-                        event.dataTransfer.setDragImage(element('img', null, null, { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }), 0, 0)
-                        widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-                        setTimeout(() => {
-                            widgetElement.dataset.dragging = true
-                        }, 0)
-                    })
-                    widgetElement.addEventListener('dragend', () => {
-                        widgetElement.dataset.dragging = false
+                continue
+            }
 
-                        widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
-                        syncedStorage['widgets-order'] = widgetsOrderSetting
-                        saveToStorage('widgets-order', widgetsOrderSetting)
-                    })
-                    widgetElement.dataset.hasListeners = true
+            if (!widgetClass.requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue;
+
+
+            const widgetInstance = new widgetClass(options);
+            const widgetElement = widgetInstance.drawWidget(widgetsList);
+
+            if (!widgetElement) continue
+
+            widgetElement.setAttribute('disabled', true)
+            widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
+            widgetElement.setAttribute('draggable', true)
+            widgetElement.dataset.value = key
+            widgetsList.append(widgetElement)
+
+            if (!widgetElement.dataset.hasListeners) {
+                widgetElement.addEventListener('dragstart', event => {
+                    event.dataTransfer.effectAllowed = 'all'
+                    event.dataTransfer.setDragImage(element('img', null, null, { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }), 0, 0)
+                    widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
+                    setTimeout(() => {
+                        widgetElement.dataset.dragging = true
+                    }, 0)
+                })
+                widgetElement.addEventListener('dragend', () => {
+                    widgetElement.dataset.dragging = false
+
+                    widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
+                    syncedStorage['widgets-order'] = widgetsOrderSetting
+                    saveToStorage('widgets-order', widgetsOrderSetting)
+                })
+                widgetElement.dataset.hasListeners = true
+            }
+
+            // Widget clicked
+            widgetElement.addEventListener('click', async () => {
+                if (widgetElement.classList.contains('focused')) {
+                    widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
+                    emptySelection()
+                    return
                 }
 
-                // Widget clicked
-                widgetElement.addEventListener('click', () => {
-                    if (widgetElement.classList.contains('focused')) {
-                        widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-                        emptySelection()
-                        return
-                    }
+                // Focus only the correct widget
+                widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
+                widgetElement.classList.add('focused')
 
-                    // Focus only the correct widget
-                    widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-                    widgetElement.classList.add('focused')
+                editorWidgetTitle.innerText = `${i18n('widget')}: ${i18n(`widgets.${widgetClass.id}`)}`
 
-                    editorWidgetTitle.innerText = `${i18n('widget')}: ${widgetFunctions[key].title}`
+                // Widget disclaimer
+                editorDisclaimer.innerText = i18n(widgetClass.disclaimer || editorDisclaimer.innerText)
+                editorDisclaimer.classList.toggle('st-hidden', !widgetClass.disclaimer)
 
-                    // Widget disclaimer
-                    if (widgetFunctions[key]?.disclaimer) {
-                        editorDisclaimer.innerText = widgetFunctions[key].disclaimer
-                        editorDisclaimer.classList.remove('st-hidden')
-                    } else {
-                        editorDisclaimer.classList.add('st-hidden')
-                    }
+                editorOptions.innerText = ''
 
-                    editorOptions.innerText = ''
+                // Widget display types
+                editorActionRow.innerText = ''
+                const widgetHideButton = editorActionRow.createChildElement('button', {
+                    class: 'st-button tertiary st-start-editor-remove',
+                    dataset: { icon: '' },
+                    innerText: i18n('remove'),
+                    title: i18n('removeWidget')
+                })
+                widgetHideButton.addEventListener('click', () => {
+                    saveToStorage(`widget-${key}-display`, 'false')
+                    invokeWidgetEditor()
+                })
 
-                    // Widget display types
-                    editorActionRow.innerText = ''
-                    // const widgetTypeSelector = element('div', `st-start-edit-${key}-type`, editorActionRow, { class: 'st-segmented-control' })
-                    // if (!syncedStorage[`widget-${key}-type`] || ![...widgetFunctions[key].types, 'Verborgen'].includes(syncedStorage[`widget-${key}-type`])) {
-                    //     syncedStorage[`widget-${key}-type`] = widgetFunctions[key].types[0]
-                    //     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                    // }
-                    // ([...widgetFunctions[key].types.filter(e => e !== 'Verborgen')]).forEach(type => {
-                    //     const widgetTypeButton = element('button', `st-start-edit-${key}-type-${type}`, widgetTypeSelector, { class: 'st-button segment', innerText: i18n(type) })
-                    //     if (syncedStorage[`widget-${key}-type`] === type) widgetTypeButton.classList.add('active')
-                    //     widgetTypeButton.addEventListener('click', () => {
-                    //         syncedStorage[`widget-${key}-type`] = type
-                    //         saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                    //         widgetTypeSelector.querySelectorAll('.st-button.segment').forEach(b => b.classList.remove('active'))
-                    //         widgetTypeButton.classList.add('active')
-                    //         widgetsList.innerText = ''
-                    //         widgets.classList.remove('editing')
-                    //         widgetControls.classList.remove('editing')
-                    //         editWidgets(widgetElement.id)
-                    //     })
-                    // })
-                    // const widgetHideButton = element('button', `st-start-edit-${key}-hide`, editorActionRow, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('remove'), title: i18n('removeWidget') })
-                    // widgetHideButton.addEventListener('click', () => {
-                    //     syncedStorage[`widget-${key}-type`] = 'Verborgen'
-                    //     saveToStorage(`widget-${key}-type`, syncedStorage[`widget-${key}-type`])
-                    //     widgetsList.innerText = ''
-                    //     widgets.classList.remove('editing')
-                    //     widgetControls.classList.remove('editing')
-                    //     editWidgets()
-                    // })
-
-                    // Widget options
-                    if (widgetFunctions[key].options) {
-                        widgetFunctions[key].options.forEach(async option => {
-                            let optionWrapper = element('div', `st-start-edit-${option.key}`, editorOptions, { class: 'st-option' })
-                            let optionTitle = element('label', `st-start-edit-${option.key}-title`, optionWrapper, { for: `st-start-edit-${option.key}-input`, innerText: option.title })
-                            switch (option.type) {
-                                case 'select':
-                                    let choices = option.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
-                                    let selectedChoice = await getFromStorage(option.key, 'local') || Object.keys(choices)[0]
-                                    element('div', `st-start-edit-${option.key}-input`, optionWrapper, { name: option.title }).createDropdown(choices, selectedChoice, (newValue) => {
-                                        saveToStorage(option.key, newValue, 'local')
+                // Widget options
+                if (widgetClass.possibleOptions) {
+                    for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
+                        let optionWrapper = element('div', `st-start-edit-${opt.key}`, editorOptions, { class: 'st-option' })
+                        let optionTitle = element('label', `st-start-edit-${opt.key}-title`, optionWrapper, { for: `st-start-edit-${opt.key}-input`, innerText: opt.title })
+                        switch (opt.type) {
+                            case 'select':
+                            default:
+                                let choices = opt.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
+                                let selectedChoice = await getFromStorage(`widget-${key}-${optKey}`) || opt.choices.find(item => item.default)?.value || opt.choices[0].value
+                                element('div', `st-start-edit-${opt.key}-input`, optionWrapper, { name: opt.title })
+                                    .createDropdown(choices, selectedChoice, async (newValue) => {
+                                        await saveToStorage(`widget-${key}-${optKey}`, newValue)
                                         widgetsList.innerText = ''
                                         widgets.classList.remove('editing')
                                         widgetControls.classList.remove('editing')
-                                        editWidgets(widgetElement.id)
+                                        invokeWidgetEditor(widgetElement.id)
                                     })
-                                    break
+                                break
 
-                                default:
-                                    // Implement other option types as necessary
-                                    break
-                            }
-                        })
+                            // Implement other option types as necessary
+                        }
                     }
-                })
-
-                if (keepSelection === widgetElement.id) {
-                    widgetElement.classList.add('focused')
                 }
+            })
+
+            if (keepSelection === widgetElement.id) {
+                widgetElement.classList.add('focused')
             }
-            updateTemporalBindings()
         }
 
         if (!widgetsList.dataset.hasListeners) {

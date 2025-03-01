@@ -221,6 +221,11 @@
 
             &:focus-visible {
                 outline: 2px solid var(--st-foreground-accent);
+            }
+        }
+
+        .st-widget-subitem[tabindex="0"] {
+            &:focus-visible {
                 outline-offset: -2px;
             }
         }
@@ -249,8 +254,7 @@
 
     .st-widget {
         cursor: pointer;
-        color: var(--st-foreground-primary);
-        transition: opacity 200ms;
+        transition: opacity 200ms, filter 200ms;
 
         * {
             pointer-events: none;
@@ -307,10 +311,6 @@
     gap: 8px;
     color: currentColor;
     font: 500 16px/24px var(--st-font-family-primary);
-
-    &[href]:hover {
-        background-color: var(--st-highlight-primary);
-    }
 }
 
 .st-widget-title[data-amount]:after {
@@ -332,7 +332,7 @@
     top: 0;
     bottom: 0;
     width: 400px;
-    padding: 24px;
+    padding: 16px 24px;
 
     display: flex;
     flex-direction: column;
@@ -362,26 +362,24 @@
 }
 
 #st-start-editor-view {
-    flex: 67% 1 1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    flex: 50% 1 1;
 }
 
 #st-start-editor-title,
 #st-start-editor-hidden-view-title {
+    display: inline-block;
     font: 500 16px/28px var(--st-font-family-primary);
+    margin-block: 8px;
 }
 
 #st-start-editor-action-row {
+    float: right;
     display: flex;
     gap: 8px;
+    margin-block: 8px;
 
-    &>button:nth-child(2) {
-        flex: 1;
-        height: 100%;
+    .st-start-editor-remove {
         outline: var(--st-border);
-        border-radius: var(--st-border-radius);
 
         &:before {
             color: var(--st-accent-warn)
@@ -394,21 +392,19 @@
 }
 
 #st-start-editor-disclaimer {
-    transition-property: opacity, scale, max-height, margin-top, translate, display;
+    transition-property: opacity, transform, max-height, margin, display;
     transition-duration: 350ms;
     transition-behavior: allow-discrete;
     opacity: 1;
-    scale: 1;
+    transform: none;
     max-height: 150px;
-    margin-top: 0;
-    translate: 0;
+    margin-block: 8px;
 
     @starting-style {
         opacity: 0;
-        scale: 0.5;
+        transform: scale(0.5);
         max-height: 0px;
-        margin-top: -42px;
-        translate: 0 50%;
+        margin-block: -8px;
     }
 
     &.st-hidden {
@@ -416,19 +412,18 @@
 
         display: none;
         opacity: 0;
+        transform: scaleY(0.5);
         max-height: 0px;
-        margin-top: -42px;
-        translate: 0 50%;
+        margin-block: -8px;
     }
 }
 
 #st-start-editor-options {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    margin-block: 8px;
 }
 
 #st-start-editor-options .st-option {
+    margin-block: 8px;
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: baseline;
@@ -436,7 +431,7 @@
 }
 
 #st-start-editor-hidden-view {
-    flex: 33% 1 1;
+    flex: 50% 1 1;
 
     display: flex;
     flex-direction: column;
@@ -631,9 +626,9 @@
         transition: color 400ms, opacity 100ms, transform 100ms, display 100ms allow-discrete;
     }
 
-    &:hover,
-    &:focus-visible,
-    &:has(:focus-visible) {
+    &:not([disabled=true]):hover,
+    &:not([disabled=true]):focus-visible,
+    &:not([disabled=true]):has(:focus-visible) {
 
         .st-widget-slideshow-previous,
         .st-widget-slideshow-next,
@@ -729,8 +724,8 @@
     font: 600 12px/22px var(--st-font-family-secondary);
 }
 
-#st-widget-digital-clock {
-    #st-widget-digital-clock-time {
+#st-widget-digitalclock {
+    #st-widget-digitalclock-time {
         font: 500 28px/42px var(--st-font-family-primary);
         text-align: center;
         margin-top: 4px;
@@ -740,14 +735,19 @@
             display: inline-block;
             width: 1ch;
             font: inherit;
+            color: currentColor;
 
             &:nth-child(3n) {
                 width: auto;
             }
+
+            &:empty {
+                display: none;
+            }
         }
     }
 
-    .st-widget-digital-clock-lesson-periods {
+    .st-widget-digitalclock-lesson-periods {
         height: 5px;
         margin-top: 16px;
         margin-bottom: -10px;
@@ -787,13 +787,13 @@
         cursor: none !important;
         background-color: #000000 !important;
 
-        #st-widget-digital-clock-time {
+        #st-widget-digitalclock-time {
             margin-block: auto;
             font-size: 15vh;
             color: #ffffff;
         }
 
-        .st-widget-digital-clock-lesson-periods {
+        .st-widget-digitalclock-lesson-periods {
             height: 32px;
         }
     }
