@@ -305,9 +305,7 @@ async function today() {
                 })
 
                 // Widget options
-                console.log(widgetClass.possibleOptions)
                 for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                    console.log(optKey, opt)
                     let optionWrapper = element('div', `st-start-edit-${key}-${optKey}`, editorOptions, { class: 'st-option' })
                     let optionTitle = element('label', `st-start-edit-${key}-${optKey}-title`, optionWrapper, { for: `st-start-edit-${key}-${optKey}-input`, innerText: opt.title })
                     switch (opt.type) {
@@ -494,7 +492,7 @@ class TeacherNamesDialog extends Dialog {
         schedule?.redraw();
         // todayWidgets();
 
-        notify('snackbar', i18n('teacherNicknamesSaved'));
+        notify('snackbar', i18n('saved'));
 
         this.close();
     }

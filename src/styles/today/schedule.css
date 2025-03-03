@@ -217,7 +217,6 @@
     &:hover {
         min-height: 85px;
         min-width: 256px;
-        border-radius: var(--st-border-radius);
         z-index: 1;
         transition: min-height 500ms 500ms, min-width 500ms 500ms, border-radius 500ms 500ms;
     }
@@ -254,7 +253,7 @@
 
     .st-event-number {
         align-self: stretch;
-        padding: 12px;
+        padding-top: 10px;
 
         display: flex;
         justify-content: center;

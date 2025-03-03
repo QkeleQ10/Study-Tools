@@ -760,7 +760,7 @@
             position: relative;
             flex-grow: 1;
             height: 100%;
-            background-color: var(--st-highlight-primary);
+            background-color: var(--st-accent-primary);
 
             &::before {
                 position: absolute;

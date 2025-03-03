@@ -87,6 +87,7 @@ class Schedule {
     }
 
     constructor(parentElement, hourHeight) {
+        this.#hourHeight = hourHeight;
         this.element = createElement('div', parentElement, {
             id: 'st-sch',
             class: listViewEnabled ? 'list-view' : '',
@@ -103,12 +104,10 @@ class Schedule {
         createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' });
 
         this.#header = element('div', 'st-start-header', this.element);
-        this.#header.addEventListener('eventchanged', this.#eventChanged);
 
         this.#createHeaderStrip();
 
         this.#body = element('div', 'st-sch-body', this.element);
-        this.#body.addEventListener('eventchanged', this.#eventChanged);
         this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
         await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
@@ -129,7 +128,8 @@ class Schedule {
     }
 
     /** Clear all cached elements with keys containing 'event' */
-    async #eventChanged() {
+    async refresh() {
+        console.log(event);
         Object.keys(magisterApi.cache).forEach(key => {
             if (key.includes('event')) delete magisterApi.cache[key];
         });
@@ -335,7 +335,6 @@ class ScheduleDay {
                 date: date.toISOString()
             }
         })
-        this.head.addEventListener('eventchanged', () => body.dispatchEvent(new CustomEvent('eventchanged')));
 
         const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' };
         if (isYearNotCurrent(this.date)) dateFormat.year = 'numeric';
@@ -349,7 +348,6 @@ class ScheduleDay {
                 date: date.toISOString()
             }
         })
-        this.body.addEventListener('eventchanged', () => body.dispatchEvent(new CustomEvent('eventchanged')));
 
         // Append the elements in their appropriate DOM positions based on the date
         const index = Array.from(header.children).findIndex(sibling => new Date(sibling.dataset.date) > date);
@@ -531,9 +529,8 @@ class ScheduleDay {
 class ScheduleEventDialog extends Dialog {
     event;
     #progressBar;
-    #invokerElement;
 
-    constructor(event, invokerElement) {
+    constructor(event) {
         super({
             buttons: [{
                 innerText: i18n('viewInAgenda'),
@@ -546,7 +543,6 @@ class ScheduleEventDialog extends Dialog {
         this.body.classList.add('st-event-dialog');
 
         this.event = event;
-        this.#invokerElement = invokerElement;
 
         if (schedule?.scheduleDate) schedule.scheduleDate = new Date(this.event.Start);
 
@@ -596,8 +592,6 @@ class ScheduleEventDialog extends Dialog {
 
             const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
 
-            console.log(kwtChoices)
-
             if (kwtChoices?.[0]?.Keuzes?.[0]) {
                 kwtChoices[0].Keuzes.forEach(choice => {
                     const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers)
@@ -644,10 +638,10 @@ class ScheduleEventDialog extends Dialog {
             input.addEventListener('input', async () => {
                 this.#progressBar.dataset.visible = true;
                 await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
-                this.#invokerElement.dispatchEvent(new CustomEvent('eventchanged'));
+                schedule.refresh();
                 this.event.Afgerond = input.checked;
                 this.body.querySelectorAll('.st-chip').forEach(chip => {
-                    if (chip.innerText === i18n('chips.hw')) {
+                    if (chip.innerText === infoTypes[this.event.InfoType].name) {
                         chip.classList.toggle('ok', input.checked);
                         chip.classList.toggle('info', !input.checked);
                     }

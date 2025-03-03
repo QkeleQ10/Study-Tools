@@ -447,7 +447,7 @@ class GradesWidget extends SlideshowWidget {
                 const hidden = this.#hiddenItems.has(item.kolomId || item.Id);
                 const result = item.waarde || item.Beoordeling || '?';
                 const value = isNaN(Number(result.replace(',', '.'))) ? null : Number(result.replace(',', '.'));
-                const isSufficient = (value && value >= Number(syncedStorage['suf-threshold']) && value <= 10) || item.isVoldoende;
+                const isSufficient = item.isVoldoende ?? (value && value >= Number(syncedStorage['suf-threshold']) && value <= 10);
                 return {
                     ...item, date, unread, hidden, result, value, isSufficient,
                     omschrijving: item.omschrijving || item.Titel,
@@ -499,7 +499,7 @@ class GradesWidget extends SlideshowWidget {
                 innerText: grade.waarde,
                 dataset: {
                     great: this.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
-                    insuf: syncedStorage['insuf-red'] && grade.value >= 1 && grade.value < Number(syncedStorage['suf-threshold']),
+                    insuf: syncedStorage['insuf-red'] && !grade.isSufficient && grade?.weegfactor > 0,
                     hidden: grade.hidden || this.options.filter == 'never' || (this.options.filter == 'sufficient' && !grade.isSufficient),
                 }
             });
