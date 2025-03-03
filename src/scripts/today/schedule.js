@@ -128,18 +128,22 @@ class Schedule {
         this.#updateHeaderStrip();
     }
 
+    /** Clear all cached elements with keys containing 'event' */
     async #eventChanged() {
-        // Clear all cached elements with keys containing 'event'
         Object.keys(magisterApi.cache).forEach(key => {
             if (key.includes('event')) delete magisterApi.cache[key];
         });
 
-        // Clear the state and completely redraw the schedule
+        this.redraw();
+    }
+
+    /** Clear the state and completely redraw the schedule */
+    async redraw() {
         this.days = [];
-        this.#body.innerHTML = '';
-        this.#header.innerHTML = '';
+        this.#body.querySelectorAll('.st-sch-day-body').forEach(day => day.remove());
+        this.#header.querySelectorAll('.st-sch-day-head').forEach(day => day.remove());
         await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
-        await this.#updateDayColumns();
+        this.#updateDayColumns();
     }
 
     #fetchAndAppendEvents(gatherStart, gatherEnd) {
@@ -173,7 +177,7 @@ class Schedule {
 
             for (const day of this.days) {
                 // If the column should be shown, populate it with events
-                if (!day.rendered && this.positionInRange(day.date) > -1) await day.drawEvents();
+                if ((!day.rendered) && this.positionInRange(day.date) > -1) await day.drawEvents();
 
                 setTimeout(() => {
                     day.body.dataset.visible = this.positionInRange(day.date) > -1;
@@ -637,8 +641,6 @@ class ScheduleEventDialog extends Dialog {
             this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, dateFormat) : '-');
             this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, dateFormat) : '-');
         }
-
-        console.log(this.event);
 
         if (this.event.Bijlagen?.length > 0) {
             const fileTypes = [

@@ -1,6 +1,5 @@
 let schedule,
     events = [],
-    teacherNamesSetting = syncedStorage['start-teacher-names'] || {},
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list',
     listViewEnabled = listViewEnabledSetting,
     showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
@@ -25,7 +24,6 @@ async function today() {
         widgetControlsWrapper = element('div', 'st-widget-controls-wrapper', container, { class: 'st-visible' }),
         widgetControls = element('div', 'st-widget-controls', widgetControlsWrapper)
 
-    teacherNamesSetting = syncedStorage['start-teacher-names'] || {}
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
     listViewEnabled = listViewEnabledSetting
     showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
@@ -113,55 +111,13 @@ async function today() {
         }, 2000)
     }
 
-    let editTeachers
-    (async () => {
-        editTeachers = element('dialog', 'st-start-edit-teachers', document.body, { class: 'st-overlay' })
-        let editTeachersHeading = element('div', 'st-start-edit-teachers-heading', editTeachers),
-            editTeachersTitle = element('span', 'st-start-edit-teachers-title', editTeachersHeading, { class: 'st-title', innerText: i18n('teacherNicknames') }),
-            editTeachersClose = element('button', 'st-start-edit-teachers-close', editTeachersHeading, { class: 'st-button', 'data-icon': '', innerText: i18n('close') }),
-            editTeachersWrapper = element('div', 'st-start-edit-teachers-wrapper', editTeachers, { class: 'st-list st-tile' }),
-            editTeachersList = element('div', 'st-start-edit-teachers-list', editTeachersWrapper)
-        editTeachersClose.addEventListener('click', () => {
-            editTeachers.close()
-            todayWidgets()
-        })
-
-        const events = await magisterApi.events()
-
-        if (!events) return
-
-        const eventsTeachers = events?.flatMap(item => item.Docenten).filter((value, index, self) =>
-            index === self.findIndex((t) => (
-                t.Docentcode === value.Docentcode
-            ))
-        )
-
-        const allTeacherNames = {
-            ...teacherNamesSetting,
-            ...eventsTeachers.reduce((obj, item) => (obj[item.Docentcode] = teacherNamesSetting[item.Docentcode] || null, obj), {})
-        }
-
-        for (const key in allTeacherNames) {
-            if (Object.hasOwnProperty.call(allTeacherNames, key)) {
-                const value = allTeacherNames[key],
-                    teacherName = eventsTeachers.find(item => item.Docentcode === key)?.Naam
-                let wrapper = element('div', `st-start-edit-teachers-list-${key}`, editTeachersList)
-                let label = element('label', `st-start-edit-teachers-list-${key}-label`, wrapper, { innerText: key, style: `text-decoration: ${teacherName ? 'underline' : 'none'}`, title: teacherName ? (value ? `Je hebt ${key} (${teacherName}) een bijnaam gegeven en\ndeze docent komt ook voor in je rooster van de komende 6 weken.` : `Je hebt ${key} (${teacherName}) geen bijnaam gegeven, maar\ndeze docent komt wel voor in je rooster van de komende 6 weken.`) : `Je hebt ${key} eerder een bijnaam gegeven, maar\ndeze docent komt niet voor in je rooster van de komende 6 weken.` })
-                let input = element('input', `st-start-edit-teachers-list-${key}-input`, wrapper, { class: 'st-input', value: value || '', placeholder: teacherName || '' })
-                input.addEventListener('change', async () => {
-                    teacherNamesSetting[key] = input.value
-                    teacherNamesSetting = Object.fromEntries(Object.entries(teacherNamesSetting).filter(([_, v]) => v != null && v.length > 0))
-                    await saveToStorage('start-teacher-names', teacherNamesSetting)
-                })
-            }
-        }
-    })()
-
-    // Editor invoke button
-    let invokeEditTeachers = element('button', 'st-start-invoke-editor', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editTeachers') })
-    invokeEditTeachers.addEventListener('click', async () => {
-        editTeachers.showModal()
+    // Teacher names editor button
+    widgetControls.createChildElement('button', {
+        class: 'st-button icon',
+        dataset: { icon: '' },
+        title: i18n('editTeachers')
     })
+        .addEventListener('click', () => new TeacherNamesDialog().show())
 
     // Side panel collapse/expand button
     todayCollapseWidgets = element('button', 'st-sch-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
@@ -450,7 +406,7 @@ function eventSubjects(event) {
 function eventTeachers(event) {
     let teachersArray = event.Docenten ? event.Docenten : event;
     return (teachersArray?.map((docent) => {
-        return (teacherNamesSetting?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
+        return (syncedStorage['start-teacher-names']?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
     }) || []).join(', ');
 }
 
@@ -504,4 +460,88 @@ async function createGreetingMessage(element) {
 
     element.innerText = greeting.slice(0, -1);
     element.dataset.lastLetter = greeting.slice(-1);
+}
+
+class TeacherNamesDialog extends Dialog {
+    #progressBar;
+    #list;
+    #newTeacherNames = {};
+
+    constructor() {
+        super({
+            buttons: [
+                {
+                    innerText: i18n('save'),
+                    dataset: { icon: '' },
+                    callback: () => this.save()
+                }
+            ],
+            closeText: i18n('cancel')
+        });
+        this.body.classList.add('st-teacher-names-dialog');
+
+        this.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('editTeachers') });
+
+        this.#list = this.body.createChildElement('div', { class: 'st-teacher-names-list' });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#loadAdditionalTeachers();
+    }
+
+    async save() {
+        syncedStorage['start-teacher-names'] = this.#newTeacherNames;
+        await saveToStorage('start-teacher-names', this.#newTeacherNames);
+        schedule?.redraw();
+        // todayWidgets();
+
+        notify('snackbar', i18n('teacherNicknamesSaved'));
+
+        this.close();
+    }
+
+    async #loadAdditionalTeachers() {
+        const events = await magisterApi.events();
+        if (!events) return;
+
+        const eventsTeachers = events?.flatMap(item => item.Docenten).filter((value, index, self) =>
+            index === self.findIndex((t) => (
+                t.Docentcode === value.Docentcode
+            ))
+        );
+
+        const allTeacherNames = {
+            ...syncedStorage['start-teacher-names'],
+            ...eventsTeachers.reduce((obj, item) => (obj[item.Docentcode] = syncedStorage['start-teacher-names']?.[item.Docentcode] || null, obj), {})
+        };
+
+        this.#newTeacherNames = { ...syncedStorage['start-teacher-names'] };
+
+        for (const [key, value] of Object.entries(allTeacherNames).sort((a, b) => a[0].localeCompare(b[0])) || []) {
+            const teacherName = eventsTeachers.find(item => item.Docentcode === key)?.Naam
+            this.#list.createChildElement('div')
+                .createChildElement('label', {
+                    innerText: key,
+                    style: { textDecoration: teacherName ? 'underline' : 'none' },
+                    title: teacherName
+                        ? (value
+                            ? `Je hebt ${key} (${teacherName}) een bijnaam gegeven en\ndeze docent komt ook voor in je rooster van de komende 6 weken.`
+                            : `Je hebt ${key} (${teacherName}) geen bijnaam gegeven, maar\ndeze docent komt wel voor in je rooster van de komende 6 weken.`)
+                        : `Je hebt ${key} eerder een bijnaam gegeven, maar\ndeze docent komt niet voor in je rooster van de komende 6 weken.`
+                })
+                .createSiblingElement('input', { class: 'st-input', value: value || '', placeholder: teacherName || '' })
+                .addEventListener('change', async (event) => {
+                    const newValue = event.target.value;
+
+                    if (!newValue || newValue.length === 0) {
+                        delete this.#newTeacherNames[key];
+                    } else {
+                        this.#newTeacherNames[key] = newValue;
+                    }
+                });
+
+            this.#progressBar.dataset.visible = false;
+        }
+    }
 }
