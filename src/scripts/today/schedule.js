@@ -5,7 +5,7 @@ class Schedule {
     days = [];
     #body;
     #header;
-    #headerControls = {};
+    headerControls = {};
     #progressBar;
 
     #hourHeight = 115;
@@ -232,12 +232,12 @@ class Schedule {
             input.showPicker();
         });
 
-        this.#headerControls.title = headerTextWrapper.createChildElement('span', {
+        this.headerControls.title = headerTextWrapper.createChildElement('span', {
             id: 'st-start-header-title',
             class: 'st-title',
             innerText: i18n('loading').replace('.', ''),
         });
-        this.#headerControls.shortTitle = headerTextWrapper.createChildElement('span', {
+        this.headerControls.shortTitle = headerTextWrapper.createChildElement('span', {
             id: 'st-start-header-short-title',
             class: 'st-title',
             innerText: i18n('loading').replace('.', ''),
@@ -252,20 +252,20 @@ class Schedule {
         let headerControls = headerStrip.createChildElement('div', { id: 'st-start-header-buttons' });
 
         // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
-        this.#headerControls.moveReset = element('button', 'st-start-today-offset-zero', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
-        this.#headerControls.moveReset.addEventListener('click', () => {
+        this.headerControls.moveReset = element('button', 'st-start-today-offset-zero', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
+        this.headerControls.moveReset.addEventListener('click', () => {
             this.scheduleDate = dates.today;
         })
-        this.#headerControls.moveBackward = element('button', 'st-start-today-offset-minus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
-        this.#headerControls.moveBackward.addEventListener('click', () => {
+        this.headerControls.moveBackward = element('button', 'st-start-today-offset-minus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
+        this.headerControls.moveBackward.addEventListener('click', () => {
             this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? -7 : (-1 * this.scheduleSize));
         })
-        this.#headerControls.moveForward = element('button', 'st-start-today-offset-plus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
-        this.#headerControls.moveForward.addEventListener('click', () => {
+        this.headerControls.moveForward = element('button', 'st-start-today-offset-plus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
+        this.headerControls.moveForward.addEventListener('click', () => {
             this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? 7 : this.scheduleSize);
         })
 
-        this.#headerControls.viewMode = element('button', 'st-start-today-view', headerControls, { class: 'st-segmented-control' })
+        this.headerControls.viewMode = element('button', 'st-start-today-view', headerControls, { class: 'st-segmented-control' })
             .createDropdown(
                 {
                     'day': i18n('dates.day'), // 1 day
@@ -280,39 +280,39 @@ class Schedule {
     }
 
     #updateHeaderStrip() {
-        this.#headerControls.moveReset.disabled = schedule.positionInRange(dates.today) > -1;
+        this.headerControls.moveReset.disabled = schedule.positionInRange(dates.today) > -1;
 
         const dateOptions = { timeZone: 'Europe/Amsterdam' };
         if (isYearNotCurrent(schedule.scheduleRange.start.getFullYear()) || isYearNotCurrent(schedule.scheduleRange.end.getFullYear())) dateOptions.year = 'numeric';
 
         if (schedule.snapToMonday) {
             if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
-                this.#headerControls.title.innerText =
+                this.headerControls.title.innerText =
                     `${i18n('dates.week')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'long' })})`;
-                this.#headerControls.shortTitle.innerText =
+                this.headerControls.shortTitle.innerText =
                     `${i18n('dates.weekShort')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
 
             } else {
-                this.#headerControls.title.innerText =
+                this.headerControls.title.innerText =
                     `${i18n('dates.week')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
-                this.#headerControls.shortTitle.innerText =
+                this.headerControls.shortTitle.innerText =
                     `${i18n('dates.weekShort')} ${schedule.scheduleRange.start.getWeek()} (${schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, month: 'short' })})`;
             }
         } else if (schedule.scheduleSize > 1) {
             if (schedule.scheduleRange.start.getMonth() === schedule.scheduleRange.end.getMonth()) {
-                this.#headerControls.title.innerText = this.#headerControls.shortTitle.innerText =
+                this.headerControls.title.innerText = this.headerControls.shortTitle.innerText =
                     `${schedule.scheduleRange.start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', day: 'numeric', month: 'long' })}`;
             } else {
-                this.#headerControls.title.innerText = this.#headerControls.shortTitle.innerText =
+                this.headerControls.title.innerText = this.headerControls.shortTitle.innerText =
                     `${schedule.scheduleRange.start.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' })}–${schedule.scheduleRange.end.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', day: 'numeric', month: 'short' })}`;
             }
         } else {
-            this.#headerControls.title.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'long', month: 'long', day: 'numeric' });
-            this.#headerControls.shortTitle.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', month: 'short', day: 'numeric' });
+            this.headerControls.title.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'long', month: 'long', day: 'numeric' });
+            this.headerControls.shortTitle.innerText = schedule.scheduleRange.start.toLocaleDateString(locale, { ...dateOptions, weekday: 'short', month: 'short', day: 'numeric' });
         }
 
-        this.#headerControls.title.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
-        this.#headerControls.shortTitle.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
+        this.headerControls.title.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
+        this.headerControls.shortTitle.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
     }
 }
 
@@ -380,7 +380,28 @@ class ScheduleDay {
 
     async drawEvents() {
         return new Promise((resolve, _) => {
-            this.events.forEach(event => {
+            if (!this.events?.length > 0) {
+                // let seed = cyrb128(String(day.date.getTime()))
+                // element('i', `st-start-col-${i}-fa`, column, {
+                //     class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)}`
+                // })
+                // element('span', `st-start-col-${i}-disclaimer`, column, {
+                //     class: 'st-start-disclaimer',
+                //     innerText: events.length === 0
+                //         ? i18n('noEventsUntilDate', { date: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'long' }), dateShort: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) })
+                //         : day.today
+                //             ? i18n('noEventsToday')
+                //             : i18n('noEvents')
+                // })
+                this.head.createChildElement('span', {
+                    class: 'st-sch-day-no-events',
+                    innerText: this.isToday
+                        ? i18n('noEventsToday')
+                        : i18n('noEvents')
+                });
+            }
+
+            for (const event of this.events) {
                 const eventWrapperElement = createElement('div', event.DuurtHeleDag ? this.head : this.body, {
                     class: 'st-event-wrapper', textContent: event.title, style: {
                         '--top': `calc(${event.startH} * var(--hour-height))`,
@@ -452,7 +473,7 @@ class ScheduleDay {
                 chips.forEach(chip => {
                     eventChipsWrapperEl.createChildElement('span', { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                 })
-            });
+            }
 
             this.rendered = true;
 

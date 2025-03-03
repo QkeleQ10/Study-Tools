@@ -95,12 +95,22 @@
         border-left: var(--st-border);
     }
 
-    .st-sch-day-date {
+    .st-sch-day-date,
+    .st-sch-day-no-events {
         grid-column: calc(2 + var(--index)*3);
-        margin: 6px;
+        margin-inline: 6px;
 
         font: 12px var(--st-font-family-secondary);
         text-align: center;
+    }
+
+    .st-sch-day-date {
+        margin-block: 6px;
+    }
+
+    .st-sch-day-no-events {
+        font-size: 11px;
+        opacity: 0.75;
     }
 
     .st-event-wrapper {
@@ -115,6 +125,13 @@
 #st-sch[data-size="1"] {
     .st-sch-day-date {
         display: none;
+    }
+
+    .st-sch-day-no-events {
+        text-align: left;
+        font-size: 14px;
+        opacity: 1;
+        margin-bottom: 16px;
     }
 }
 

@@ -93,7 +93,6 @@ async function today() {
     const stopEditWidgets = element('button', 'st-start-editor-done', widgetControls, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('editFinish') })
     stopEditWidgets.addEventListener('click', () => {
         closeWidgetEditor()
-        todayWidgets()
     })
 
     if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('start-widgets-edit-known', 'local') ?? false)) {
@@ -147,13 +146,12 @@ async function today() {
     // Allow for keyboard navigation
     document.addEventListener('keydown', event => {
         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-        if (event.key === 'ArrowLeft' && !todayDecreaseOffset.disabled) todayDecreaseOffset.click()
-        else if (event.key === 'ArrowRight' && !todayIncreaseOffset.disabled) todayIncreaseOffset.click()
+        if (event.key === 'ArrowLeft') schedule?.headerControls.moveBackward.click();
+        else if (event.key === 'ArrowRight') schedule?.headerControls.moveForward.click();
     })
 
     async function todayWidgets() {
         widgetsList.innerText = ''
-
 
         await magisterApi.updateApiPermissions()
 
@@ -184,7 +182,7 @@ async function today() {
     }
 
     async function closeWidgetEditor() {
-        magisterApi.useSampleData = false; // TODO: THIS WON'T ALWAYS RUN!
+        magisterApi.useSampleData = false; // TODO: this will not run if the editor is not closed manually!
 
         editor.classList.add('st-hidden')
         widgets.classList.remove('editing')
@@ -307,27 +305,27 @@ async function today() {
                 })
 
                 // Widget options
-                if (widgetClass.possibleOptions) {
-                    for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                        let optionWrapper = element('div', `st-start-edit-${opt.key}`, editorOptions, { class: 'st-option' })
-                        let optionTitle = element('label', `st-start-edit-${opt.key}-title`, optionWrapper, { for: `st-start-edit-${opt.key}-input`, innerText: opt.title })
-                        switch (opt.type) {
-                            case 'select':
-                            default:
-                                let choices = opt.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
-                                let selectedChoice = await getFromStorage(`widget-${key}-${optKey}`) || opt.choices.find(item => item.default)?.value || opt.choices[0].value
-                                element('div', `st-start-edit-${opt.key}-input`, optionWrapper, { name: opt.title })
-                                    .createDropdown(choices, selectedChoice, async (newValue) => {
-                                        await saveToStorage(`widget-${key}-${optKey}`, newValue)
-                                        widgetsList.innerText = ''
-                                        widgets.classList.remove('editing')
-                                        widgetControls.classList.remove('editing')
-                                        invokeWidgetEditor(widgetElement.id)
-                                    })
-                                break
+                console.log(widgetClass.possibleOptions)
+                for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
+                    console.log(optKey, opt)
+                    let optionWrapper = element('div', `st-start-edit-${key}-${optKey}`, editorOptions, { class: 'st-option' })
+                    let optionTitle = element('label', `st-start-edit-${key}-${optKey}-title`, optionWrapper, { for: `st-start-edit-${key}-${optKey}-input`, innerText: opt.title })
+                    switch (opt.type) {
+                        case 'select':
+                        default:
+                            let choices = opt.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
+                            let selectedChoice = await getFromStorage(`widget-${key}-${optKey}`) || opt.choices.find(item => item.default)?.value || opt.choices[0].value
+                            element('div', `st-start-edit-${key}-${optKey}-input`, optionWrapper, { name: opt.title })
+                                .createDropdown(choices, selectedChoice, async (newValue) => {
+                                    await saveToStorage(`widget-${key}-${optKey}`, newValue)
+                                    widgetsList.innerText = ''
+                                    widgets.classList.remove('editing')
+                                    widgetControls.classList.remove('editing')
+                                    invokeWidgetEditor(widgetElement.id)
+                                })
+                            break
 
-                            // Implement other option types as necessary
-                        }
+                        // Implement other option types as necessary
                     }
                 }
             })
