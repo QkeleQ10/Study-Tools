@@ -8,11 +8,13 @@ class Schedule {
     headerControls = {};
     #progressBar;
 
-    #hourHeight = 115;
+    #hourHeight = 110;
     get hourHeight() { return this.#hourHeight; }
     set hourHeight(newHeight) {
+        const newScroll = this.#body.scrollTop / this.#hourHeight * newHeight;
         this.#hourHeight = Math.min(Math.max(45, newHeight), 450);
         this.element.style.setProperty('--hour-height', `${newHeight}px`);
+        this.#body.scrollTop = newScroll;
         saveToStorage('start-hour-height', newHeight, 'local');
     }
 
@@ -177,7 +179,7 @@ class Schedule {
 
             for (const day of this.days) {
                 // If the column should be shown, populate it with events
-                if ((!day.rendered) && this.positionInRange(day.date) > -1) await day.drawEvents();
+                if ((!day.rendered) && this.positionInRange(day.date) > -1) await day.drawContents();
 
                 setTimeout(() => {
                     day.body.dataset.visible = this.positionInRange(day.date) > -1;
@@ -338,7 +340,10 @@ class ScheduleDay {
 
         const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' };
         if (isYearNotCurrent(this.date)) dateFormat.year = 'numeric';
-        this.head.createChildElement('span', { class: 'st-sch-day-date', innerText: date.toLocaleDateString(locale, dateFormat) });
+        this.head.createChildElement('span', {
+            class: this.isToday ? 'st-sch-day-date today' : 'st-sch-day-date',
+            innerText: date.toLocaleDateString(locale, dateFormat)
+        });
 
         // Create the day body
         this.body = createElement('div', null, {
@@ -376,21 +381,9 @@ class ScheduleDay {
         return this.events.some(event => new Date(event.Einde).getTime() > dates.now.getTime());
     }
 
-    async drawEvents() {
+    async drawContents() {
         return new Promise((resolve, _) => {
             if (!this.events?.length > 0) {
-                // let seed = cyrb128(String(day.date.getTime()))
-                // element('i', `st-start-col-${i}-fa`, column, {
-                //     class: `st-start-icon fa-duotone ${['fa-island-tropical', 'fa-snooze', 'fa-alarm-snooze', 'fa-house-day', 'fa-umbrella-beach', 'fa-bed', 'fa-face-smile-wink', 'fa-house-person-return', 'fa-house-chimney-user', 'fa-house-user', 'fa-house-heart', 'fa-calendar-heart', 'fa-skull', 'fa-rocket-launch', 'fa-bath', 'fa-bowling-ball-pin', 'fa-poo-storm', 'fa-block-question', 'fa-crab'].random(seed)}`
-                // })
-                // element('span', `st-start-col-${i}-disclaimer`, column, {
-                //     class: 'st-start-disclaimer',
-                //     innerText: events.length === 0
-                //         ? i18n('noEventsUntilDate', { date: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'long' }), dateShort: gatherEnd.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) })
-                //         : day.today
-                //             ? i18n('noEventsToday')
-                //             : i18n('noEvents')
-                // })
                 this.head.createChildElement('span', {
                     class: 'st-sch-day-no-events',
                     innerText: this.isToday
@@ -416,9 +409,9 @@ class ScheduleDay {
                 const eventElement = createElement('div', eventWrapperElement, {
                     class: 'st-event',
                     dataset: {
-                        temporalType: 'ongoing-check',
-                        temporalStart: event.Start,
-                        temporalEnd: event.Einde
+                        start: event.Start,
+                        end: event.Einde,
+                        ongoing: new Date(event.Start) < dates.now && new Date(event.Einde) > dates.now
                     }
                 });
 
@@ -471,6 +464,28 @@ class ScheduleDay {
                 chips.forEach(chip => {
                     eventChipsWrapperEl.createChildElement('span', { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name })
                 })
+            }
+
+            if (this.isToday) {
+                if (!listViewEnabled) {
+                    this.body.lastElementChild.scrollIntoView({ behavior: 'instant', block: 'center' });
+                    this.body.firstElementChild.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+
+                    const nowMarker = this.body.createChildElement('div', {
+                        class: 'st-now-marker',
+                        style: {
+                            '--top': `calc(${dates.now.getHoursWithDecimals()}`
+                        }
+                    })
+
+                    setTimeout(() => nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+                }
+
+                const interval = setInterval(() => {
+                    if (!this.body || (!listViewEnabled && !nowMarker)) return clearInterval(interval);
+                    if (!listViewEnabled) nowMarker.style.setProperty('--top', `calc(${dates.now.getHoursWithDecimals()})`);
+                    this.body.querySelectorAll('.st-event').forEach(event => event.dataset.ongoing = new Date(event.dataset.start) < dates.now && new Date(event.dataset.end) > dates.now);
+                }, 30000);
             }
 
             this.rendered = true;

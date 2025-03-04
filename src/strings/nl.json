@@ -113,6 +113,7 @@
     "Tegel": "Tegel",
     "scaleUp": "Schaal vergroten",
     "scaleDown": "Schaal verkleinen",
+    "scaleReset": "Schaal herstellen",
     "editWidgets": "Widgets bewerken",
     "editWidgetsEmpty": "Pas widgets aan door erop te klikken. Verander de volgorde van de widgets door te slepen.",
     "widget": "Widget",
@@ -201,5 +202,8 @@
         "hidden": "Verborgen",
         "periodN": "Periode {period}",
         "periodMissing": "Geen periode"
+    },
+    "tooltips": {
+        "startWidgetsNew": "Je startscherm is vernieuwd! Pas je widgetpaneel aan met deze knop."
     }
 }

@@ -14,7 +14,7 @@ async function today() {
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
-        hourHeightSetting = await getFromStorage('start-hour-height', 'local') || 115,
+        hourHeightSetting = await getFromStorage('start-hour-height', 'local') || 110,
         widgetsOrderSetting = Object.values(syncedStorage['widgets-order'] || []) || [],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
@@ -75,48 +75,90 @@ async function today() {
     // Controls (bottom right of page)
     setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
 
-    // Zoom buttons
-    let zoomOut = element('button', 'st-start-edit-zoom-out', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('scaleDown') })
-    let zoomIn = element('button', 'st-start-edit-zoom-in', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('scaleUp') })
-    zoomOut.addEventListener('click', () => {
-        schedule.hourHeight -= 5
-    })
-    zoomIn.addEventListener('click', () => {
-        schedule.hourHeight += 5
+    const zoomWrapper = widgetControls.createChildElement('div', {
+        id: 'st-start-edit-zoom',
+        class: 'st-widget-controls-button-group'
     })
 
-    const invokeEditWidgets = element('button', 'st-start-edit-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('editWidgets') })
-    invokeEditWidgets.addEventListener('click', () => {
-        invokeWidgetEditor()
-    })
+    zoomWrapper.createChildElement('button', {
+        id: 'st-start-edit-zoom-out',
+        class: 'st-button icon',
+        dataset: { icon: '' },
+        title: i18n('scaleDown')
+    }).addEventListener('click', () => modifyZoom(schedule.hourHeight - (0.05 * 110)));
 
-    const stopEditWidgets = element('button', 'st-start-editor-done', widgetControls, { class: 'st-button tertiary', 'data-icon': '', innerText: i18n('editFinish') })
-    stopEditWidgets.addEventListener('click', () => {
-        closeWidgetEditor()
-    })
+    const zoomReset = zoomWrapper.createChildElement('button', {
+        id: 'st-start-edit-zoom-reset',
+        class: 'st-button tertiary',
+        innerText: (schedule.hourHeight / 110).toLocaleString(locale, { style: 'percent' }),
+        title: i18n('scaleReset')
+    });
+    zoomReset.addEventListener('click', () => modifyZoom(110));
 
-    if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('start-widgets-edit-known', 'local') ?? false)) {
-        setTimeout(() => {
-            const rect = invokeEditWidgets.getBoundingClientRect()
-            const tooltip = element('div', 'st-start-widgets-edit-tooltip', document.body, { class: 'st-hidden', innerText: "Onder deze knop kun je het widgetpaneel compleet aanpassen.", style: `bottom: ${window.innerHeight - rect.top}px; right: ${window.innerWidth - rect.right}px; translate: 8px -16px;` })
-            setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
-            invokeEditWidgets.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('start-widgets-edit-known', true, 'local')
-            })
-            setTimeout(() => {
-                tooltip.classList.add('st-hidden')
-            }, 20000)
-        }, 2000)
+    zoomWrapper.createChildElement('button', {
+        id: 'st-start-edit-zoom-in',
+        class: 'st-button icon',
+        dataset: { icon: '' },
+        title: i18n('scaleUp')
+    }).addEventListener('click', () => modifyZoom(schedule.hourHeight + (0.05 * 110)));
+
+    function modifyZoom(newValue) {
+        schedule.hourHeight = newValue;
+        zoomReset.innerText = (schedule.hourHeight / 110).toLocaleString(locale, { style: 'percent' });
     }
 
+    const editWrapper = widgetControls.createChildElement('div', {
+        id: 'st-start-edit',
+        class: 'st-widget-controls-button-group'
+    })
+
+    // Widget editor invoke button
+    const invokeEditWidgets = editWrapper.createChildElement('button', {
+        id: 'st-start-edit-widgets',
+        class: 'st-button icon',
+        dataset: { icon: '' },
+        title: i18n('editWidgets')
+    });
+    invokeEditWidgets.addEventListener('click', () => invokeWidgetEditor());
+
     // Teacher names editor button
-    widgetControls.createChildElement('button', {
+    editWrapper.createChildElement('button', {
+        id: 'st-start-edit-teachers',
         class: 'st-button icon',
         dataset: { icon: '' },
         title: i18n('editTeachers')
     })
-        .addEventListener('click', () => new TeacherNamesDialog().show())
+        .addEventListener('click', () => new TeacherNamesDialog().show());
+
+    // Widget editor close button
+    widgetControls.createChildElement('button', {
+        id: 'st-start-editor-done',
+        class: 'st-button tertiary',
+        dataset: { icon: '' },
+        innerText: i18n('editFinish')
+    })
+        .addEventListener('click', () => closeWidgetEditor());
+
+    // Tooltip for the widget editor button
+    if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new', 'local') ?? false)) {
+        setTimeout(() => {
+            const rect = invokeEditWidgets.getBoundingClientRect()
+            const tooltip = document.body.createChildElement('div', {
+                id: 'st-start-widgets-edit-tooltip',
+                innerText: i18n('tooltips.startWidgetsNew'),
+                style: {
+                    bottom: `${window.innerHeight - rect.top}px`,
+                    right: `${window.innerWidth - rect.right}px`,
+                    translate: '8px -16px'
+                }
+            })
+            invokeEditWidgets.addEventListener('click', () => {
+                tooltip.classList.add('st-hidden')
+                saveToStorage('tooltipdismiss-start-widgets-new', true, 'local')
+            })
+            setTimeout(() => tooltip.classList.add('st-hidden'), 20000)
+        }, 2000)
+    }
 
     // Side panel collapse/expand button
     todayCollapseWidgets = element('button', 'st-sch-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
@@ -131,7 +173,7 @@ async function today() {
     if (widgetsCollapsed && (!(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false) || Math.random() < 0.01)) {
         setTimeout(() => {
             const rect = todayCollapseWidgets.getBoundingClientRect()
-            const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen.", style: `bottom: ${window.innerHeight - rect.top}px; right: ${window.innerWidth - rect.right}px; translate: 8px -16px;` })
+            const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen.", style: `bottom: ${window.innerHeight - rect.top} px; right: ${window.innerWidth - rect.right} px; translate: 8px - 16px; ` })
             setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
             todayCollapseWidgets.addEventListener('click', () => {
                 tooltip.classList.add('st-hidden')
@@ -162,11 +204,11 @@ async function today() {
         for (const key of widgetsOrderSetting) {
             const widgetClass = widgetClasses[key];
 
-            const displaySetting = parseBoolean(await getFromStorage(`widget-${key}-display`)) ?? widgetClass.displayByDefault;
+            const displaySetting = parseBoolean(await getFromStorage(`widget - ${key} -display`)) ?? widgetClass.displayByDefault;
             const options = {};
             for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
                 options[optKey] =
-                    await getFromStorage(`widget-${key}-${optKey}`)
+                    await getFromStorage(`widget - ${key} -${optKey} `)
                     || opt.choices.find(option => option.default)?.value
                     || opt.choices[0].value;
             }
@@ -211,11 +253,11 @@ async function today() {
         for (const key of widgetsOrderSetting) {
             const widgetClass = widgetClasses[key];
 
-            const displaySetting = parseBoolean(await getFromStorage(`widget-${key}-display`)) ?? widgetClass.displayByDefault;
+            const displaySetting = parseBoolean(await getFromStorage(`widget - ${key} -display`)) ?? widgetClass.displayByDefault;
             const options = {};
             for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
                 options[optKey] =
-                    await getFromStorage(`widget-${key}-${optKey}`)
+                    await getFromStorage(`widget - ${key} -${optKey} `)
                     || opt.choices.find(option => option.default)?.value
                     || opt.choices[0].value;
             }
@@ -223,11 +265,11 @@ async function today() {
             if (!displaySetting) {
                 const widgetAddButton = editorHiddenList.createChildElement('button', {
                     class: 'st-start-editor-add',
-                    innerText: i18n(`widgets.${widgetClass.id}`),
+                    innerText: i18n(`widgets.${widgetClass.id} `),
                     title: i18n('add')
                 })
                 widgetAddButton.addEventListener('click', async () => {
-                    await saveToStorage(`widget-${key}-display`, 'true')
+                    await saveToStorage(`widget - ${key} -display`, 'true')
                     invokeWidgetEditor()
                 })
 
@@ -283,7 +325,7 @@ async function today() {
                 widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
                 widgetElement.classList.add('focused')
 
-                editorWidgetTitle.innerText = `${i18n('widget')}: ${i18n(`widgets.${widgetClass.id}`)}`
+                editorWidgetTitle.innerText = `${i18n('widget')}: ${i18n(`widgets.${widgetClass.id}`)} `
 
                 // Widget disclaimer
                 editorDisclaimer.innerText = i18n(widgetClass.disclaimer || editorDisclaimer.innerText)
@@ -300,22 +342,22 @@ async function today() {
                     title: i18n('removeWidget')
                 })
                 widgetHideButton.addEventListener('click', () => {
-                    saveToStorage(`widget-${key}-display`, 'false')
+                    saveToStorage(`widget - ${key} -display`, 'false')
                     invokeWidgetEditor()
                 })
 
                 // Widget options
                 for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                    let optionWrapper = element('div', `st-start-edit-${key}-${optKey}`, editorOptions, { class: 'st-option' })
-                    let optionTitle = element('label', `st-start-edit-${key}-${optKey}-title`, optionWrapper, { for: `st-start-edit-${key}-${optKey}-input`, innerText: opt.title })
+                    let optionWrapper = element('div', `st - start - edit - ${key} -${optKey} `, editorOptions, { class: 'st-option' })
+                    let optionTitle = element('label', `st - start - edit - ${key} -${optKey} -title`, optionWrapper, { for: `st - start - edit - ${key} -${optKey} -input`, innerText: opt.title })
                     switch (opt.type) {
                         case 'select':
                         default:
                             let choices = opt.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
-                            let selectedChoice = await getFromStorage(`widget-${key}-${optKey}`) || opt.choices.find(item => item.default)?.value || opt.choices[0].value
-                            element('div', `st-start-edit-${key}-${optKey}-input`, optionWrapper, { name: opt.title })
+                            let selectedChoice = await getFromStorage(`widget - ${key} -${optKey} `) || opt.choices.find(item => item.default)?.value || opt.choices[0].value
+                            element('div', `st - start - edit - ${key} -${optKey} -input`, optionWrapper, { name: opt.title })
                                 .createDropdown(choices, selectedChoice, async (newValue) => {
-                                    await saveToStorage(`widget-${key}-${optKey}`, newValue)
+                                    await saveToStorage(`widget - ${key} -${optKey} `, newValue)
                                     widgetsList.innerText = ''
                                     widgets.classList.remove('editing')
                                     widgetControls.classList.remove('editing')
@@ -376,7 +418,7 @@ function getEventChips(event) {
     else if (event.Type === 7) chips.push({ name: i18n('chips.kwt'), type: 'info' })
     if (event.Type === 103) chips.push({ name: i18n('chips.exam'), type: 'info' })
     if (event.InfoType) {
-        let chip = infoTypes[event.InfoType] || { name: `Infotype ${event.InfoType}`, type: 'info' }
+        let chip = infoTypes[event.InfoType] || { name: `Infotype ${event.InfoType} `, type: 'info' }
         if (event.Afgerond) chip.type = 'ok'
         chips.push(chip)
     }

@@ -1,7 +1,7 @@
 @property --hour-height {
     syntax: "<length>";
     inherits: true;
-    initial-value: 115px;
+    initial-value: 110px;
 }
 
 @property --progress {
