@@ -186,11 +186,6 @@ class Schedule {
                     day.body.style.setProperty('--index', this.positionInRange(day.date));
                     day.head.dataset.visible = this.positionInRange(day.date) > -1;
                     day.head.style.setProperty('--index', this.positionInRange(day.date));
-
-                    // if (this.isInRange(day.date)) {
-                    //     day.body.dataset.leftmost = day.date.getTime() === this.#scheduleRange.start.getTime();
-                    //     day.body.dataset.rightmost = day.date.getTime() === this.#scheduleRange.end.getTime();
-                    // }
                 }, difference !== 0 ? 60 : 0);
             }
 
@@ -394,7 +389,9 @@ class ScheduleDay {
 
             for (const event of this.events) {
                 const eventWrapperElement = createElement('div', event.DuurtHeleDag ? this.head : this.body, {
-                    class: 'st-event-wrapper', textContent: event.title, style: {
+                    classList: ['st-event-wrapper', syncedStorage['start-event-display'] || 'normal'],
+                    textContent: event.title,
+                    style: {
                         '--top': `calc(${event.startH} * var(--hour-height))`,
                         '--height': `calc(${event.durationH} * var(--hour-height))`,
                         '--left': `calc(${event.left} * 100%)`,
@@ -407,7 +404,7 @@ class ScheduleDay {
                 });
 
                 const eventElement = createElement('div', eventWrapperElement, {
-                    class: 'st-event',
+                    classList: ['st-event',],
                     dataset: {
                         start: event.Start,
                         end: event.Einde,
@@ -440,8 +437,8 @@ class ScheduleDay {
                 // Draw the event details
                 const eventDetailsEl = eventElement.createChildElement('div', { class: 'st-event-details' })
                 const eventTitleWrapperEl = eventDetailsEl.createChildElement('span', { class: 'st-event-title' })
-                if (false) {
-                    eventTitleWrapperEl.createChildElement('b', { innerText: event.Lokatie ? `${event.Omschrijving} (${event.Lokatie})` : event.Omschrijving })
+                if (syncedStorage['start-event-display'] === 'legacy') {
+                    eventTitleWrapperEl.createChildElement('b', { innerText: event.Omschrijving })
                 } else {
                     eventTitleWrapperEl.createChildElement('b', { innerText: eventSubjects(event) || event.Omschrijving })
                     if (eventLocations(event)?.length > 0) eventTitleWrapperEl.createChildElement('span', { innerText: ` (${eventLocations(event)})` })
@@ -451,7 +448,7 @@ class ScheduleDay {
                 eventDetailsEl.createChildElement('span', { class: 'st-event-time', innerText: event.DuurtHeleDag ? i18n('allDay') : new Date(event.Start).getFormattedTime() + '–' + new Date(event.Einde).getFormattedTime() })
 
                 // Render the teacher label
-                if (!false && eventTeachers(event)?.length > 0) {
+                if (syncedStorage['start-event-display'] !== 'legacy' && eventTeachers(event)?.length > 0) {
                     const eventTeacherEl = eventDetailsEl.createChildElement('span', { class: 'st-event-teacher', innerText: eventTeachers(event) })
                     if (eventTeacherEl.innerText.includes('jeb_')) eventTeacherEl.setAttribute('style', 'animation: rainbow 5s linear 0s infinite; color: var(--st-accent-warn)')
                     if (eventTeacherEl.innerText.includes('dinnerbone')) eventTeacherEl.style.scale = '1 -1'
@@ -559,7 +556,7 @@ class ScheduleEventDialog extends Dialog {
 
         this.event = event;
 
-        if (schedule?.scheduleDate) schedule.scheduleDate = new Date(this.event.Start);
+        if (schedule?.scheduleDate && schedule.positionInRange(new Date(this.event.Start)) < 0) schedule.scheduleDate = new Date(this.event.Start);
 
         this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
         createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
@@ -719,4 +716,3 @@ class ScheduleEventDialog extends Dialog {
         return createElement('td', row, { innerText: value || '' });
     }
 }
-

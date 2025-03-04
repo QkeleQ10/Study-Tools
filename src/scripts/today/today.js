@@ -83,7 +83,7 @@ async function today() {
     zoomWrapper.createChildElement('button', {
         id: 'st-start-edit-zoom-out',
         class: 'st-button icon',
-        dataset: { icon: '' },
+        dataset: { icon: '' },
         title: i18n('scaleDown')
     }).addEventListener('click', () => modifyZoom(schedule.hourHeight - (0.05 * 110)));
 
@@ -98,7 +98,7 @@ async function today() {
     zoomWrapper.createChildElement('button', {
         id: 'st-start-edit-zoom-in',
         class: 'st-button icon',
-        dataset: { icon: '' },
+        dataset: { icon: '+' },
         title: i18n('scaleUp')
     }).addEventListener('click', () => modifyZoom(schedule.hourHeight + (0.05 * 110)));
 

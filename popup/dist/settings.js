@@ -203,7 +203,7 @@ export default [
             },
             {
                 id: "start-schedule-view",
-                title: "Rooster in Start",
+                title: "Roosterlay-out",
                 type: "SingleChoice",
                 default: "schedule",
                 conditions: [
@@ -223,8 +223,29 @@ export default [
                 ],
             },
             {
+                id: "start-event-display",
+                title: "Roosterafspraken",
+                type: "SingleChoice",
+                default: "normal",
+                conditions: [
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
+                ],
+                options: [
+                    {
+                        value: "normal",
+                        title: "Modern",
+                        icon: "psychology"
+                    },
+                    {
+                        value: "legacy",
+                        title: "Klassiek",
+                        icon: "smartphone"
+                    },
+                ],
+            },
+            {
                 id: "start-schedule-extra-day",
-                title: "Volgende dag tonen in Start",
+                title: "Volgende roosterdag tonen",
                 subtitle: "Springen naar de eerstvolgende dag met lessen wanneer er vandaag geen lessen (meer) zijn. Alleen in de weergavemodus 'Dag'.",
                 default: true,
                 conditions: [

@@ -496,7 +496,7 @@ class GradesWidget extends SlideshowWidget {
 
             let resultElement = itemElement.createChildElement('span', {
                 class: 'st-widget-grades-item-rslt',
-                innerText: grade.waarde,
+                innerText: grade.result,
                 dataset: {
                     great: this.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
                     insuf: syncedStorage['insuf-red'] && !grade.isSufficient && grade?.weegfactor > 0,

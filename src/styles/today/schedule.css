@@ -217,6 +217,20 @@
     container-type: size;
     container-name: event-wrapper;
     overflow: hidden;
+
+    &.legacy {
+        .st-event {
+            grid-template-columns: auto 1fr;
+
+            .st-event-number {
+                width: 42px;
+                height: 42px;
+                margin: 10px;
+                margin-right: -4px;
+                border-radius: 6px;
+            }
+        }
+    }
 }
 
 .st-sch-day-head .st-event-wrapper,
@@ -253,6 +267,10 @@
         &:last-of-type {
             border-bottom-left-radius: var(--st-border-radius);
             border-bottom-right-radius: var(--st-border-radius);
+        }
+
+        &.legacy {
+            height: 62px;
         }
     }
 }
