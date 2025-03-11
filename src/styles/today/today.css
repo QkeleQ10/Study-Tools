@@ -34,7 +34,8 @@
 #st-start-header-text-wrapper {
     display: grid;
     grid-template-columns: 100% 100%;
-    height: 100%;
+    height: 36px;
+    overflow: hidden;
 
     background-color: transparent;
     border: none;
@@ -45,10 +46,11 @@
     &>* {
         grid-area: 1 / 1 / 2 / 2;
         text-wrap: nowrap;
-        overflow: hidden;
         text-overflow: ellipsis;
         cursor: pointer;
-        height: max-content;
+        height: 100%;
+        margin-bottom: 0;
+        overflow: hidden;
 
         &.not-today {
             font-style: normal;
@@ -171,6 +173,12 @@
     grid-template:
         'schedule widgets' 1fr
         / 1fr 0px;
+
+    #st-start-fab {
+        min-width: 128px;
+        border-top-left-radius: var(--st-border-radius);
+        box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    }
 }
 
 .st-teacher-names-list {
@@ -196,58 +204,52 @@
     }
 }
 
-.st-overlay[id^="st-start"][open] {
-    display: grid;
-}
+#st-start-fab {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    min-width: 400px;
+    z-index: 2;
 
-.st-overlay[id^="st-start"]>div:first-child {
-    grid-area: heading;
-    display: grid;
-    grid-template:
-        'title buttons' auto
-        'subtitle subtitle' auto
-        / 1fr auto;
-}
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
 
-.st-overlay[id^="st-start"]>div:first-child>.st-title {
-    grid-area: title;
-}
+    color: var(--st-foreground-insignificant);
+    background-color: var(--st-background-secondary);
+    border-top: var(--st-border);
+    border-left: var(--st-border);
+    transition: min-width 200ms;
 
-.st-overlay[id^="st-start"]>div:first-child>.st-subtitle {
-    grid-area: subtitle;
-}
+    .st-button {
+        color: currentColor;
 
-.st-overlay[id^="st-start"]>div:first-child>.st-button,
-.st-overlay[id^="st-start"]>div:first-child>.st-button-wrapper {
-    grid-area: buttons;
-}
-
-@keyframes widgetsIn {
-    0% {
-        display: none;
+        &:hover {
+            color: var(--st-foreground-accent);
+            filter: brightness(var(--st-hover-brightness));
+        }
     }
 
-    1% {
+    .st-widget-controls-button-group {
+        color: currentColor;
         display: flex;
-        translate: 400px;
+        align-items: center;
+        gap: 4px;
+        padding: 4px;
+
+        border-radius: var(--st-border-radius);
+        background-color: hsl(from var(--st-background-secondary) h s calc(l - 1));
+
+        #st-start-edit-zoom-reset {
+            padding-inline: 0;
+            width: 42px;
+            background-color: hsl(from var(--st-background-secondary) h s calc(l - 1));
+        }
     }
 
-    100% {
-        translate: 0;
-    }
-}
-
-@keyframes widgetsOut {
-    0% {
-        translate: 0;
-    }
-
-    99% {
-        display: flex;
-        translate: 400px;
-    }
-
-    100% {
-        display: none;
+    #st-sch-collapse-widgets {
+        margin-left: auto;
     }
 }

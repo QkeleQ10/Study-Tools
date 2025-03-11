@@ -201,6 +201,12 @@
     }
 }
 
+#st-start[data-widgets-collapsed=true] {
+    #st-sch-body {
+        padding-bottom: 64px;
+    }
+}
+
 /* Events */
 
 .st-event-wrapper {

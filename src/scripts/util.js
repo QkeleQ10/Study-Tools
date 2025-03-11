@@ -26,6 +26,7 @@ const dates = {
 (async () => {
     if (chrome?.storage) {
         syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+        localStorage = await getFromStorageMultiple(null, 'local', true)
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
@@ -35,8 +36,6 @@ const dates = {
             const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`))
             i18nDataNl = await reqNl.json()
         }
-
-        localStorage = await getFromStorageMultiple(null, 'local', true)
     }
 
     verbose = syncedStorage['verbosity']
@@ -83,7 +82,10 @@ Element.prototype.createSiblingElement = function (tagName, attributes) {
     return createElement(tagName, this.parentElement, attributes)
 }
 
-parseBoolean = (value) => value === 'true' ? true : value === 'false' ? false : null
+parseBoolean = (value) =>
+    value === 'true' || value === true ? true
+        : value === 'false' || value === false ? false
+            : null
 
 /**
  * Wait for an element to be available in the DOM.
@@ -389,6 +391,8 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
             })
         }
     }
+
+    dropdownPopover.firstElementChild.focus();
 
     dropdown.addEventListener('click', (event) => {
         if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
@@ -747,7 +751,7 @@ class Dialog {
             this.element.addEventListener(event, (e) => {
                 resolve(e);
                 callback(e);
-            });
+            }, { once: !callback });
         });
     }
 }

@@ -1,3 +1,5 @@
+const defaultWidgetOrder = ['digitalclock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments'];
+
 class Widget {
     element;
     header;
@@ -15,6 +17,7 @@ class Widget {
     drawWidget(parentElement) {
         this.element = createElement('div', parentElement, {
             id: `st-widget-${this.constructor.id}`,
+            dataset: { key: this.constructor.id },
             class: 'st-widget',
         });
 
@@ -44,6 +47,26 @@ class Widget {
     static requiredPermissions = [];
     static displayByDefault = true;
     static possibleOptions = {};
+
+    static get hasRequiredPermissions() {
+        return this.requiredPermissions.every(permission => magisterApi.permissions.includes(permission));
+    }
+
+    static get isEnabled() {
+        return parseBoolean(localStorage[`widget-${this.id}-display`]) ?? this.displayByDefault;
+    }
+    static set isEnabled(value) {
+        localStorage[`widget-${this.id}-display`] = value;
+        saveToStorage(`widget-${this.id}-display`, value, 'local');
+    }
+
+    static get order() {
+        return parseInt(localStorage[`widget-${this.id}-order`] ?? defaultWidgetOrder.indexOf(this.id));
+    }
+    static set order(value) {
+        localStorage[`widget-${this.id}-order`] = value;
+        saveToStorage(`widget-${this.id}-order`, value, 'local');
+    }
 }
 
 class ListWidget extends Widget {
@@ -60,12 +83,14 @@ class ListWidget extends Widget {
     }
 
     async #drawList() {
+        this.#listElement.innerText = '';
+
         for (const item of this.listItems) {
             await this.drawListItem(item);
         }
 
         this.header.dataset.amount = this.listItems.length;
-        if (this.listItems.length < 1) this.element.style.display = 'none';
+        if (this.listItems.length < 1) this.element.remove();
 
         this.progressBar.dataset.visible = false;
     }
@@ -90,7 +115,7 @@ class SlideshowWidget extends Widget {
         this.#currentSlide = newValue;
         setTimeout(() => {
             this.#slideshowElement.querySelectorAll('div').forEach((node, i) => node.dataset.visible = i === newValue);
-            this.element.dataset.unread = this.listItems[newValue].unread;
+            this.element.dataset.unread = this.listItems[newValue]?.unread;
             this.#paginationElement.querySelectorAll('div').forEach((node, i) => node.dataset.current = i === newValue);
         }, 60);
 
@@ -134,13 +159,15 @@ class SlideshowWidget extends Widget {
     }
 
     async #drawSlideshow() {
+        this.#slideshowElement.innerText = '';
+
         for (const [index, item] of this.listItems.entries()) {
             await this.drawSlideItem(item, index);
         }
 
         this.header.dataset.amount = this.listItems.length;
-        if (this.listItems.length < 1) this.element.style.display = 'none';
-        this.element.dataset.unread = this.listItems[0].unread;
+        if (this.listItems.length < 1) this.element.remove();
+        this.element.dataset.unread = this.listItems[0]?.unread;
 
         this.progressBar.dataset.visible = false;
     }
@@ -396,7 +423,7 @@ class LogsWidget extends Widget {
         let logs = await magisterApi.logs();
 
         this.header.dataset.amount = logs.length;
-        if (logs.length < 1) this.element.style.display = 'none';
+        if (logs.length < 1) this.element.remove();
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
@@ -416,7 +443,7 @@ class ActivitiesWidget extends Widget {
         let logs = await magisterApi.activities();
 
         this.header.dataset.amount = logs.length;
-        if (logs.length < 1) this.element.style.display = 'none';
+        if (logs.length < 1) this.element.remove();
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
@@ -442,14 +469,14 @@ class GradesWidget extends SlideshowWidget {
             ...(magisterApi.permissions.includes('EloOpdracht') ? (await magisterApi.assignmentsTop()).filter(item => item.Beoordeling?.length > 0) : [])
         ]
             .map(item => {
+                const id = item.Id || item.kolomId;
                 const date = new Date(item.ingevoerdOp || item.BeoordeeldOp);
                 const unread = date > dates.now - (1000 * 60 * 60 * 24 * 7);
-                const hidden = this.#hiddenItems.has(item.kolomId || item.Id);
                 const result = item.waarde || item.Beoordeling || '?';
                 const value = isNaN(Number(result.replace(',', '.'))) ? null : Number(result.replace(',', '.'));
                 const isSufficient = item.isVoldoende ?? (value && value >= Number(syncedStorage['suf-threshold']) && value <= 10);
                 return {
-                    ...item, date, unread, hidden, result, value, isSufficient,
+                    ...item, id, date, unread, result, value, isSufficient,
                     omschrijving: item.omschrijving || item.Titel,
                     vak: item.vak || {
                         code: item.Vak ? `${item.Vak} (opdr.)` : "opdr.",
@@ -472,7 +499,7 @@ class GradesWidget extends SlideshowWidget {
             window.location.href = '#/cijfers';
         });
 
-        if (this.options.rotate == 'true') {
+        if (this.options.rotate == 'true' && this.listItems?.length > 1) {
             let interval = setInterval(() => {
                 if (!this.element || this.listItems?.length <= 1) clearInterval(interval)
                 if (this.element.matches(':hover')) return
@@ -489,18 +516,17 @@ class GradesWidget extends SlideshowWidget {
                 class: 'st-widget-grades-item',
                 dataset: {
                     unread: grade.unread,
-                    hidden: grade.hidden,
+                    hidden: this.#hiddenItems.has(grade.id) || this.options.filter == 'never' || (this.options.filter == 'sufficient' && !grade.isSufficient),
                     isAssignment: grade.isAssignment,
                 }
             });
 
-            let resultElement = itemElement.createChildElement('span', {
+            itemElement.createChildElement('span', {
                 class: 'st-widget-grades-item-rslt',
                 innerText: grade.result,
                 dataset: {
                     great: this.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
                     insuf: syncedStorage['insuf-red'] && !grade.isSufficient && grade?.weegfactor > 0,
-                    hidden: grade.hidden || this.options.filter == 'never' || (this.options.filter == 'sufficient' && !grade.isSufficient),
                 }
             });
 
@@ -516,25 +542,33 @@ class GradesWidget extends SlideshowWidget {
                 class: 'st-widget-grades-item-date',
                 innerText: makeTimestamp(grade.date)
             });
+
             let itemHide = itemElement.createChildElement('button', {
                 class: 'st-widget-grades-item-hide st-button icon tertiary',
-                dataset: { icon: grade.hidden ? '' : '' },
-                title: "Dit specifieke cijfer verbergen/weergeven"
+                dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
+                title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
             });
+
             itemHide.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
-                if (resultElement.dataset.hidden == 'true') {
-                    itemHide.dataset.icon = '';
-                    resultElement.dataset.hidden = false;
-                    this.#hiddenItems.delete(grade.kolomId);
+                if (this.#hiddenItems.has(grade.id)) {
+                    this.#hiddenItems.delete(grade.id);
                     saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
+                    itemHide.setAttributes({
+                        dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
+                        title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
+                    });
+                    itemElement.dataset.hidden = this.#hiddenItems.has(grade.id);
                 } else {
-                    itemHide.dataset.icon = '';
-                    resultElement.dataset.hidden = true;
-                    this.#hiddenItems.add(grade.kolomId);
+                    this.#hiddenItems.add(grade.id);
                     saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
+                    itemHide.setAttributes({
+                        dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
+                        title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
+                    });
+                    itemElement.dataset.hidden = this.#hiddenItems.has(grade.id);
                 }
                 return false;
             });
@@ -584,6 +618,9 @@ class GradesWidget extends SlideshowWidget {
 
 class DigitalClockWidget extends Widget {
     timeElement;
+    #interval;
+    #lessonPeriods;
+    #lessonPeriodsContainer;
 
     async initialise() {
         this.header.remove();
@@ -595,8 +632,12 @@ class DigitalClockWidget extends Widget {
             this.timeElement.createChildElement('span');
         }
 
-        this.updateClock();
-        setInterval(() => this.updateClock(), 1000);
+        this.#updateClock();
+        setTimeout(() => {
+            this.#interval = setIntervalImmediately(() => {
+                this.#updateClock();
+            }, 1000);
+        }, 1000 - (new Date().getTime() % 1000));
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
@@ -615,11 +656,11 @@ class DigitalClockWidget extends Widget {
             .map(event => JSON.parse(event))
             .sort((a, b) => new Date(a.start) - new Date(b.start));
 
-        const lessonPeriods = [];
+        this.#lessonPeriods = [];
 
         for (let i = 0; i < rawLessonPeriods.length; i++) {
             const current = rawLessonPeriods[i];
-            lessonPeriods.push(current);
+            this.#lessonPeriods.push(current);
 
             if (i < rawLessonPeriods.length - 1) {
                 const next = rawLessonPeriods[i + 1];
@@ -628,7 +669,7 @@ class DigitalClockWidget extends Widget {
 
                 // Insert break if there's a gap
                 if (currentEnd < nextStart) {
-                    lessonPeriods.push({
+                    this.#lessonPeriods.push({
                         start: current.end,
                         end: next.start,
                         break: true
@@ -637,28 +678,33 @@ class DigitalClockWidget extends Widget {
             }
         }
 
-        this.#displayEvents(lessonPeriods);
+        this.#displayEvents();
 
         this.progressBar.dataset.visible = false;
     }
 
-    async #displayEvents(lessonPeriods) {
-        if (!lessonPeriods?.length > 0) return;
-        const lessonPeriodsContainer = this.element.createChildElement('div', {
-            class: 'st-widget-digitalclock-lesson-periods',
+    async #displayEvents() {
+        if (!this.#lessonPeriods?.length > 0) return;
+        this.#lessonPeriodsContainer = this.element.createChildElement('div', {
+            id: 'st-widget-digitalclock-lesson-periods',
+            innerText: '',
         });
 
-        for (const period of lessonPeriods) {
-            lessonPeriodsContainer.createChildElement('div', {
+        for (const period of this.#lessonPeriods) {
+            this.#lessonPeriodsContainer.createChildElement('div', {
                 style: {
-                    flexGrow: (new Date(period.end) - new Date(period.start)),
+                    flexGrow: Math.max((new Date(period.end) - new Date(period.start)) / 60000, 1),
                     opacity: period.break ? 0.5 : 1
                 }
             })
         }
+
+        this.#updateClock();
     }
 
-    updateClock() {
+    #updateClock() {
+        if (!this.element) return clearInterval(this.#interval);
+
         let timeString = document.fullscreenElement || this.options.showSeconds == 'show'
             ? dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', second: '2-digit' })
             : dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
@@ -669,6 +715,17 @@ class DigitalClockWidget extends Widget {
         }
 
         // logic to update the progress bars
+        const now = new Date();
+        if (this.#lessonPeriodsContainer) {
+            for (const periodElement of this.#lessonPeriodsContainer.children) {
+                const period = this.#lessonPeriods[Array.from(this.#lessonPeriodsContainer.children).indexOf(periodElement)];
+                const start = new Date(period.start);
+                const end = new Date(period.end);
+                const progress = (now - start) / (end - start);
+                periodElement.style.setProperty('--progress', Math.min(Math.max(progress, 0), 1));
+                periodElement.dataset.done = now >= end;
+            }
+        }
     }
 
     static id = 'digitalclock';

@@ -2,7 +2,7 @@ let persistedScheduleView, persistedScheduleDate;
 
 class Schedule {
     element;
-    days = [];
+    days = {};
     #body;
     #header;
     headerControls = {};
@@ -68,13 +68,13 @@ class Schedule {
         }
         (async () => {
             // If any of the days in agendaRange don't have a corresponding entry in this.days, extend the schedule range to include it.
-            if (!this.days.some(day => day.date.getTime() === newRange.start.getTime())) {
+            if (!Object.values(this.days).some(day => day.date.getTime() === newRange.start.getTime())) {
                 await this.#fetchAndAppendEvents(
                     midnight(newRange.start, -13),
                     midnight(newRange.end, 1)
                 );
             }
-            if (!this.days.some(day => day.date.getTime() === newRange.end.getTime())) {
+            if (!Object.values(this.days).some(day => day.date.getTime() === newRange.end.getTime())) {
                 await this.#fetchAndAppendEvents(
                     midnight(newRange.start, 0),
                     midnight(newRange.end, 14)
@@ -131,7 +131,6 @@ class Schedule {
 
     /** Clear all cached elements with keys containing 'event' */
     async refresh() {
-        console.log(event);
         Object.keys(magisterApi.cache).forEach(key => {
             if (key.includes('event')) delete magisterApi.cache[key];
         });
@@ -141,7 +140,7 @@ class Schedule {
 
     /** Clear the state and completely redraw the schedule */
     async redraw() {
-        this.days = [];
+        this.days = {};
         this.#body.querySelectorAll('.st-sch-day-body').forEach(day => day.remove());
         this.#header.querySelectorAll('.st-sch-day-head').forEach(day => day.remove());
         await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
@@ -156,7 +155,7 @@ class Schedule {
             let events = await magisterApi.events(gatherStart, gatherEnd);
             for (let i = 0; i <= Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)); i++) {
                 const date = midnight(gatherStart, i);
-                if (this.days.some(day => day.date.getTime() === date.getTime())) continue;
+                if (Object.values(this.days).some(day => day.date.getTime() === date.getTime())) continue;
 
                 const eventsOfDay = events.filter(event => {
                     const startDate = new Date(event.Start);
@@ -164,8 +163,8 @@ class Schedule {
                 });
 
                 if (i === Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
-                if (this.#header.querySelector(`.st-sch-day-body[data-date="${date.toISOString()}"]`)) continue;
-                this.days.push(new ScheduleDay(date, eventsOfDay, this.#body, this.#header));
+                if (this.days[date.toISOString()] || this.#header.querySelector(`.st-sch-day-body[data-date="${date.toISOString()}"]`)) continue;
+                this.days[date.toISOString()] = new ScheduleDay(date, eventsOfDay, this.#body, this.#header);
             }
             resolve();
 
@@ -177,7 +176,7 @@ class Schedule {
         return new Promise(async (resolve, _) => {
             let difference = this.#scheduleDate.getTime() - new Date(this.element.dataset.date).getTime();
 
-            for (const day of this.days) {
+            for (const day of Object.values(this.days)) {
                 // If the column should be shown, populate it with events
                 if ((!day.rendered) && this.positionInRange(day.date) > -1) await day.drawContents();
 
@@ -318,7 +317,9 @@ class ScheduleDay {
     events;
     body;
     head;
+    #nowMarker;
     rendered = false;
+    #interval;
 
     constructor(date, eventsArray, body, header) {
         this.date = date;
@@ -332,13 +333,6 @@ class ScheduleDay {
                 date: date.toISOString()
             }
         })
-
-        const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' };
-        if (isYearNotCurrent(this.date)) dateFormat.year = 'numeric';
-        this.head.createChildElement('span', {
-            class: this.isToday ? 'st-sch-day-date today' : 'st-sch-day-date',
-            innerText: date.toLocaleDateString(locale, dateFormat)
-        });
 
         // Create the day body
         this.body = createElement('div', null, {
@@ -378,6 +372,16 @@ class ScheduleDay {
 
     async drawContents() {
         return new Promise((resolve, _) => {
+            this.head.innerText = '';
+            this.body.innerText = '';
+
+            const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short' };
+            if (isYearNotCurrent(this.date)) dateFormat.year = 'numeric';
+            this.head.createChildElement('span', {
+                class: this.isToday ? 'st-sch-day-date today' : 'st-sch-day-date',
+                innerText: this.date.toLocaleDateString(locale, dateFormat)
+            });
+
             if (!this.events?.length > 0) {
                 this.head.createChildElement('span', {
                     class: 'st-sch-day-no-events',
@@ -435,13 +439,20 @@ class ScheduleDay {
                 }
 
                 // Draw the event details
-                const eventDetailsEl = eventElement.createChildElement('div', { class: 'st-event-details' })
-                const eventTitleWrapperEl = eventDetailsEl.createChildElement('span', { class: 'st-event-title' })
-                if (syncedStorage['start-event-display'] === 'legacy') {
-                    eventTitleWrapperEl.createChildElement('b', { innerText: event.Omschrijving })
-                } else {
-                    eventTitleWrapperEl.createChildElement('b', { innerText: eventSubjects(event) || event.Omschrijving })
-                    if (eventLocations(event)?.length > 0) eventTitleWrapperEl.createChildElement('span', { innerText: ` (${eventLocations(event)})` })
+                const eventDetailsEl = eventElement.createChildElement('div', { class: 'st-event-details' });
+
+                const eventTitleWrapperEl = eventDetailsEl.createChildElement('span', { class: 'st-event-title' });
+
+                eventTitleWrapperEl.createChildElement('b', {
+                    innerText: syncedStorage['start-event-display'] === 'legacy'
+                        ? event.Omschrijving
+                        : eventSubjects(event) || event.Omschrijving?.split('-')[0]
+                });
+
+                if (eventLocations(event)?.length > 0) {
+                    eventTitleWrapperEl.createChildElement('span', {
+                        innerText: ` (${eventLocations(event)})`
+                    });
                 }
 
                 // Render the time label
@@ -468,27 +479,29 @@ class ScheduleDay {
                     this.body.lastElementChild.scrollIntoView({ behavior: 'instant', block: 'center' });
                     this.body.firstElementChild.scrollIntoView({ behavior: 'instant', block: 'nearest' });
 
-                    const nowMarker = this.body.createChildElement('div', {
+                    this.#nowMarker = this.body.createChildElement('div', {
                         class: 'st-now-marker',
                         style: {
-                            '--top': `calc(${dates.now.getHoursWithDecimals()}`
+                            '--top': `calc(${dates.now.getHoursWithDecimals()})`
                         }
-                    })
+                    });
 
-                    setTimeout(() => nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+                    setTimeout(() => this.#nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
                 }
 
-                const interval = setInterval(() => {
-                    if (!this.body || (!listViewEnabled && !nowMarker)) return clearInterval(interval);
-                    if (!listViewEnabled) nowMarker.style.setProperty('--top', `calc(${dates.now.getHoursWithDecimals()})`);
-                    this.body.querySelectorAll('.st-event').forEach(event => event.dataset.ongoing = new Date(event.dataset.start) < dates.now && new Date(event.dataset.end) > dates.now);
-                }, 30000);
+                setTimeout(() => {
+                    this.#interval = setIntervalImmediately(() => {
+                        if (!this.body || (!listViewEnabled && !this.#nowMarker)) return clearInterval(this.#interval);
+                        if (!listViewEnabled && this.#nowMarker) this.#nowMarker.style.setProperty('--top', `calc(${dates.now.getHoursWithDecimals()})`);
+                        this.body.querySelectorAll('.st-event').forEach(event => event.dataset.ongoing = new Date(event.dataset.start) < dates.now && new Date(event.dataset.end) > dates.now);
+                    }, 30000);
+                }, 60000 - (new Date().getTime() % 60000));
             }
 
             this.rendered = true;
 
             resolve();
-        })
+        });
     }
 
     #calculateEventOverlap(array) {

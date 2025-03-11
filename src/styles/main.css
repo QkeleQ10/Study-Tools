@@ -137,7 +137,7 @@ dialog.st-modal[open]::backdrop {
 
 .st-button.tertiary {
     background-color: var(--st-background-secondary);
-    color: var(--st-foreground-insignificant);
+    color: var(--st-foreground-secondary);
     outline: none;
 }
 
@@ -233,8 +233,11 @@ dialog.st-modal[open]::backdrop {
     color: var(--st-foreground-accent);
 }
 
-.st-dropdown-popover {
+.st-dropdown-popover,
+.st-context-menu {
     position: absolute;
+    width: max-content;
+    height: max-content;
 
     display: grid;
     grid-auto-rows: auto;
@@ -246,7 +249,7 @@ dialog.st-modal[open]::backdrop {
     border-radius: var(--st-border-radius);
     box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     z-index: 1001;
-    overflow-y: auto;
+    overflow: visible;
 
     display: none;
 }
@@ -256,12 +259,23 @@ dialog.st-modal[open]::backdrop {
     animation: dropdownIn 150ms both;
 }
 
+.st-context-menu.st-visible {
+    display: grid;
+    animation: opacityIn 100ms both;
+}
+
 .st-dropdown-popover.st-hidden {
     display: grid;
     animation: dropdownOut 150ms both;
 }
 
-.st-dropdown-segment {
+.st-context-menu.st-hidden {
+    display: grid;
+    animation: opacityOut 100ms both;
+}
+
+.st-dropdown-segment,
+.st-context-menu-item {
     width: 100%;
     text-align: left;
 }
@@ -290,6 +304,7 @@ dialog.st-modal[open]::backdrop {
 
 .st-button.segment:hover {
     color: var(--st-foreground-accent);
+    background-color: var(--st-highlight-primary);
 }
 
 .st-button.segment.active {
@@ -1397,7 +1412,8 @@ a.st-keyboard-hint.clicked {
     margin-top: -22px;
 }
 
-*[data-navigate='backwards'],*[data-navigate='backwards2'] {
+*[data-navigate='backwards'],
+*[data-navigate='backwards2'] {
     animation: 200ms navigation-move-backwards;
 }
 

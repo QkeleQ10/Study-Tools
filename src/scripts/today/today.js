@@ -1,5 +1,4 @@
-let schedule,
-    events = [],
+let schedule, widgets,
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list',
     listViewEnabled = listViewEnabledSetting,
     showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
@@ -15,37 +14,15 @@ async function today() {
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
         hourHeightSetting = await getFromStorage('start-hour-height', 'local') || 110,
-        widgetsOrderSetting = Object.values(syncedStorage['widgets-order'] || []) || [],
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
-        // header = element('div', 'st-start-header', container),
-        widgets = element('div', 'st-start-widgets', container),
-        widgetsList = element('div', 'st-start-widgets-list', widgets),
-        widgetControlsWrapper = element('div', 'st-widget-controls-wrapper', container, { class: 'st-visible' }),
-        widgetControls = element('div', 'st-widget-controls', widgetControlsWrapper)
+        fab = element('div', 'st-start-fab', container, { class: 'st-visible' })
 
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
     listViewEnabled = listViewEnabledSetting
     showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
-    const widgetsOrderDefault = ['digitalclock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments']
-    if (!widgetsOrderSetting || widgetsOrderSetting.length < 1 || widgetsOrderDefault.some(key => !widgetsOrderSetting.includes(key))) {
-        console.info(`Changing widgets-order`, widgetsOrderSetting, widgetsOrderDefault)
-        widgetsOrderSetting = widgetsOrderDefault
-        syncedStorage['widgets-order'] = widgetsOrderSetting
-        saveToStorage('widgets-order', widgetsOrderSetting)
-    }
-
     let todayCollapseWidgets
-    const widgetClasses = {
-        logs: LogsWidget,
-        activities: ActivitiesWidget,
-        grades: GradesWidget,
-        messages: MessagesWidget,
-        homework: HomeworkWidget,
-        assignments: AssignmentsWidget,
-        digitalclock: DigitalClockWidget
-    }
 
     // Automagically collapse the widgets panel when it's necessary
     widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
@@ -53,29 +30,16 @@ async function today() {
     verifyDisplayMode()
     window.addEventListener('resize', () => {
         widgetsCollapsed = widgetsCollapsed || window.innerWidth < 1100
-        if (widgets.classList.contains('editing')) widgetsCollapsed = false
         verifyDisplayMode()
     })
 
-    const editor = element('div', 'st-start-editor', container, { class: 'st-hidden' })
-    const editorView = element('div', 'st-start-editor-view', editor)
-    const editorWidgetTitle = element('span', 'st-start-editor-title', editorView, { innerText: i18n('editWidgets') })
-    const editorActionRow = element('div', 'st-start-editor-action-row', editorView, { 'data-empty-text': i18n('editWidgetsEmpty') })
-    const editorDisclaimer = element('div', 'st-start-editor-disclaimer', editorView, { class: 'st-disclaimer st-hidden' })
-    const editorOptions = element('div', 'st-start-editor-options', editorView)
-    const editorHidden = element('div', 'st-start-editor-hidden-view', editor)
-    const editorHiddenTitle = element('span', 'st-start-editor-hidden-view-title', editorHidden, { innerText: i18n('addWidgets') })
-    const editorHiddenList = element('div', 'st-start-editor-hidden-view-list', editorHidden, { 'data-empty-text': i18n('addWidgetsEmpty') })
-
-
     schedule = new Schedule(container, hourHeightSetting);
-
-    todayWidgets();
+    widgets = new Widgets(container);
 
     // Controls (bottom right of page)
-    setTimeout(() => widgetControlsWrapper.classList.remove('st-visible'), 2000)
+    setTimeout(() => fab.classList.remove('st-visible'), 2000)
 
-    const zoomWrapper = widgetControls.createChildElement('div', {
+    const zoomWrapper = fab.createChildElement('div', {
         id: 'st-start-edit-zoom',
         class: 'st-widget-controls-button-group'
     })
@@ -107,19 +71,10 @@ async function today() {
         zoomReset.innerText = (schedule.hourHeight / 110).toLocaleString(locale, { style: 'percent' });
     }
 
-    const editWrapper = widgetControls.createChildElement('div', {
+    const editWrapper = fab.createChildElement('div', {
         id: 'st-start-edit',
         class: 'st-widget-controls-button-group'
     })
-
-    // Widget editor invoke button
-    const invokeEditWidgets = editWrapper.createChildElement('button', {
-        id: 'st-start-edit-widgets',
-        class: 'st-button icon',
-        dataset: { icon: '' },
-        title: i18n('editWidgets')
-    });
-    invokeEditWidgets.addEventListener('click', () => invokeWidgetEditor());
 
     // Teacher names editor button
     editWrapper.createChildElement('button', {
@@ -130,41 +85,31 @@ async function today() {
     })
         .addEventListener('click', () => new TeacherNamesDialog().show());
 
-    // Widget editor close button
-    widgetControls.createChildElement('button', {
-        id: 'st-start-editor-done',
-        class: 'st-button tertiary',
-        dataset: { icon: '' },
-        innerText: i18n('editFinish')
-    })
-        .addEventListener('click', () => closeWidgetEditor());
-
-    // Tooltip for the widget editor button
-    if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new', 'local') ?? false)) {
-        setTimeout(() => {
-            const rect = invokeEditWidgets.getBoundingClientRect()
-            const tooltip = document.body.createChildElement('div', {
-                id: 'st-start-widgets-edit-tooltip',
-                innerText: i18n('tooltips.startWidgetsNew'),
-                style: {
-                    bottom: `${window.innerHeight - rect.top}px`,
-                    right: `${window.innerWidth - rect.right}px`,
-                    translate: '8px -16px'
-                }
-            })
-            invokeEditWidgets.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden')
-                saveToStorage('tooltipdismiss-start-widgets-new', true, 'local')
-            })
-            setTimeout(() => tooltip.classList.add('st-hidden'), 20000)
-        }, 2000)
-    }
+    // TODO: Tooltip for the widget editor button
+    // if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new', 'local') ?? false)) {
+    //     setTimeout(() => {
+    //         const rect = invokeEditWidgets.getBoundingClientRect()
+    //         const tooltip = document.body.createChildElement('div', {
+    //             id: 'st-widgets-edit-tooltip',
+    //             innerText: i18n('tooltips.startWidgetsNew'),
+    //             style: {
+    //                 bottom: `${window.innerHeight - rect.top}px`,
+    //                 right: `${window.innerWidth - rect.right}px`,
+    //                 translate: '8px -16px'
+    //             }
+    //         })
+    //         invokeEditWidgets.addEventListener('click', () => {
+    //             tooltip.classList.add('st-hidden')
+    //             saveToStorage('tooltipdismiss-start-widgets-new', true, 'local')
+    //         })
+    //         setTimeout(() => tooltip.classList.add('st-hidden'), 20000)
+    //     }, 2000)
+    // }
 
     // Side panel collapse/expand button
-    todayCollapseWidgets = element('button', 'st-sch-collapse-widgets', widgetControls, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
+    todayCollapseWidgets = element('button', 'st-sch-collapse-widgets', fab, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
     todayCollapseWidgets.addEventListener('click', () => {
         widgetsCollapsed = !widgetsCollapsed
-        if (widgets.classList.contains('editing')) widgetsCollapsed = false
         widgetsCollapsedSetting = widgetsCollapsed
         saveToStorage('start-widgets-collapsed', widgetsCollapsedSetting, 'local')
         verifyDisplayMode()
@@ -173,7 +118,7 @@ async function today() {
     if (widgetsCollapsed && (!(await getFromStorage('start-widgets-collapsed-known', 'local') ?? false) || Math.random() < 0.01)) {
         setTimeout(() => {
             const rect = todayCollapseWidgets.getBoundingClientRect()
-            const tooltip = element('div', 'st-start-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen.", style: `bottom: ${window.innerHeight - rect.top} px; right: ${window.innerWidth - rect.right} px; translate: 8px - 16px; ` })
+            const tooltip = element('div', 'st-widgets-collapsed-tooltip', document.body, { class: 'st-hidden', innerText: "Het widgetpaneel is ingeklapt. Gebruik de knop met de pijltjes om hem weer uit te klappen.", style: `bottom: ${window.innerHeight - rect.top} px; right: ${window.innerWidth - rect.right} px; translate: 8px - 16px; ` })
             setTimeout(() => tooltip.classList.remove('st-hidden'), 200)
             todayCollapseWidgets.addEventListener('click', () => {
                 tooltip.classList.add('st-hidden')
@@ -192,212 +137,211 @@ async function today() {
         else if (event.key === 'ArrowRight') schedule?.headerControls.moveForward.click();
     })
 
-    async function todayWidgets() {
-        widgetsList.innerText = ''
-
-        await magisterApi.updateApiPermissions()
-
-        // Ensure the user permission flags are up-to-date
-        await magisterApi.accountInfo()
-
-        // Draw the selected widgets in the specified order
-        for (const key of widgetsOrderSetting) {
-            const widgetClass = widgetClasses[key];
-
-            const displaySetting = parseBoolean(await getFromStorage(`widget - ${key} -display`)) ?? widgetClass.displayByDefault;
-            const options = {};
-            for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                options[optKey] =
-                    await getFromStorage(`widget - ${key} -${optKey} `)
-                    || opt.choices.find(option => option.default)?.value
-                    || opt.choices[0].value;
-            }
-
-            if (
-                !displaySetting
-                || !widgetClass.requiredPermissions?.every(p => magisterApi.permissions?.includes(p))
-            ) continue;
-
-            const widgetInstance = new widgetClass(options);
-            const widgetElement = widgetInstance.drawWidget(widgetsList);
-        }
-    }
-
-    async function closeWidgetEditor() {
-        magisterApi.useSampleData = false; // TODO: this will not run if the editor is not closed manually!
-
-        editor.classList.add('st-hidden')
-        widgets.classList.remove('editing')
-        widgetControls.classList.remove('editing')
-        todayWidgets()
-    }
-
-    async function invokeWidgetEditor(keepSelection) {
-        magisterApi.useSampleData = true;
-
-        widgetsList.innerText = '';
-        function emptySelection() {
-            editorWidgetTitle.innerText = i18n('editWidgets')
-            editorActionRow.innerText = ''
-            editorDisclaimer.classList.add('st-hidden')
-            editorOptions.innerText = ''
-            editorHiddenList.innerText = ''
-        }
-        if (!keepSelection) emptySelection()
-
-        editor.classList.remove('st-hidden')
-        widgets.classList.add('editing')
-        widgetControls.classList.add('editing')
-        if (widgetsCollapsed) todayCollapseWidgets.click()
-
-        for (const key of widgetsOrderSetting) {
-            const widgetClass = widgetClasses[key];
-
-            const displaySetting = parseBoolean(await getFromStorage(`widget - ${key} -display`)) ?? widgetClass.displayByDefault;
-            const options = {};
-            for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                options[optKey] =
-                    await getFromStorage(`widget - ${key} -${optKey} `)
-                    || opt.choices.find(option => option.default)?.value
-                    || opt.choices[0].value;
-            }
-
-            if (!displaySetting) {
-                const widgetAddButton = editorHiddenList.createChildElement('button', {
-                    class: 'st-start-editor-add',
-                    innerText: i18n(`widgets.${widgetClass.id} `),
-                    title: i18n('add')
-                })
-                widgetAddButton.addEventListener('click', async () => {
-                    await saveToStorage(`widget - ${key} -display`, 'true')
-                    invokeWidgetEditor()
-                })
-
-                const widgetInstance = new widgetClass(options);
-                const widgetElement = widgetInstance.drawWidget(widgetAddButton);
-                widgetElement.setAttribute('disabled', true)
-
-                continue
-            }
-
-            if (!widgetClass.requiredPermissions?.every(p => magisterApi.permissions?.includes(p))) continue;
-
-
-            const widgetInstance = new widgetClass(options);
-            const widgetElement = widgetInstance.drawWidget(widgetsList);
-
-            if (!widgetElement) continue
-
-            widgetElement.setAttribute('disabled', true)
-            widgetElement.querySelectorAll('*').forEach(c => c.setAttribute('inert', true))
-            widgetElement.setAttribute('draggable', true)
-            widgetElement.dataset.value = key
-            widgetsList.append(widgetElement)
-
-            if (!widgetElement.dataset.hasListeners) {
-                widgetElement.addEventListener('dragstart', event => {
-                    event.dataTransfer.effectAllowed = 'all'
-                    event.dataTransfer.setDragImage(element('img', null, null, { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' }), 0, 0)
-                    widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-                    setTimeout(() => {
-                        widgetElement.dataset.dragging = true
-                    }, 0)
-                })
-                widgetElement.addEventListener('dragend', () => {
-                    widgetElement.dataset.dragging = false
-
-                    widgetsOrderSetting = [...widgetsList.children].map(element => element.dataset.value)
-                    syncedStorage['widgets-order'] = widgetsOrderSetting
-                    saveToStorage('widgets-order', widgetsOrderSetting)
-                })
-                widgetElement.dataset.hasListeners = true
-            }
-
-            // Widget clicked
-            widgetElement.addEventListener('click', async () => {
-                if (widgetElement.classList.contains('focused')) {
-                    widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-                    emptySelection()
-                    return
-                }
-
-                // Focus only the correct widget
-                widgetsList.querySelectorAll('.st-widget.focused').forEach(e => e.classList.remove('focused'))
-                widgetElement.classList.add('focused')
-
-                editorWidgetTitle.innerText = `${i18n('widget')}: ${i18n(`widgets.${widgetClass.id}`)} `
-
-                // Widget disclaimer
-                editorDisclaimer.innerText = i18n(widgetClass.disclaimer || editorDisclaimer.innerText)
-                editorDisclaimer.classList.toggle('st-hidden', !widgetClass.disclaimer)
-
-                editorOptions.innerText = ''
-
-                // Widget display types
-                editorActionRow.innerText = ''
-                const widgetHideButton = editorActionRow.createChildElement('button', {
-                    class: 'st-button tertiary st-start-editor-remove',
-                    dataset: { icon: '' },
-                    innerText: i18n('remove'),
-                    title: i18n('removeWidget')
-                })
-                widgetHideButton.addEventListener('click', () => {
-                    saveToStorage(`widget - ${key} -display`, 'false')
-                    invokeWidgetEditor()
-                })
-
-                // Widget options
-                for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                    let optionWrapper = element('div', `st - start - edit - ${key} -${optKey} `, editorOptions, { class: 'st-option' })
-                    let optionTitle = element('label', `st - start - edit - ${key} -${optKey} -title`, optionWrapper, { for: `st - start - edit - ${key} -${optKey} -input`, innerText: opt.title })
-                    switch (opt.type) {
-                        case 'select':
-                        default:
-                            let choices = opt.choices.reduce((obj, item) => ({ ...obj, [item.value]: item.title }), ({}))
-                            let selectedChoice = await getFromStorage(`widget - ${key} -${optKey} `) || opt.choices.find(item => item.default)?.value || opt.choices[0].value
-                            element('div', `st - start - edit - ${key} -${optKey} -input`, optionWrapper, { name: opt.title })
-                                .createDropdown(choices, selectedChoice, async (newValue) => {
-                                    await saveToStorage(`widget - ${key} -${optKey} `, newValue)
-                                    widgetsList.innerText = ''
-                                    widgets.classList.remove('editing')
-                                    widgetControls.classList.remove('editing')
-                                    invokeWidgetEditor(widgetElement.id)
-                                })
-                            break
-
-                        // Implement other option types as necessary
-                    }
-                }
-            })
-
-            if (keepSelection === widgetElement.id) {
-                widgetElement.classList.add('focused')
-            }
-        }
-
-        if (!widgetsList.dataset.hasListeners) {
-            widgetsList.addEventListener('dragenter', (event) => {
-                event.preventDefault()
-                event.dataTransfer.dropEffect = 'move'
-
-                const draggedItem = widgetsList.querySelector('.st-widget[data-dragging=true]')
-                if (!draggedItem) return
-
-                let nextSibling = [...widgetsList.children].find(sibling => (
-                    sibling !== draggedItem &&
-                    event.clientY <= (sibling.getBoundingClientRect().y + sibling.getBoundingClientRect().height / 2)
-                ))
-
-                widgetsList.insertBefore(draggedItem, nextSibling)
-            })
-            widgetsList.dataset.hasListeners = true
-        }
-        // widgetsList.addEventListener('dragenter', e => e.preventDefault())
-    }
-
     function verifyDisplayMode() {
         container.setAttribute('data-widgets-collapsed', widgetsCollapsed)
         container.scrollLeft = 0
+    }
+}
+
+class Widgets {
+    element;
+    #widgetAddButton;
+
+    static widgetClasses = {
+        logs: LogsWidget,
+        activities: ActivitiesWidget,
+        grades: GradesWidget,
+        messages: MessagesWidget,
+        homework: HomeworkWidget,
+        assignments: AssignmentsWidget,
+        digitalclock: DigitalClockWidget
+    }
+
+    constructor(parentElement) {
+        this.element = parentElement.createChildElement('div', { id: 'st-widgets' });
+
+        this.#initialise();
+    }
+
+    async #initialise() {
+        await magisterApi.updateApiPermissions()
+
+        for (const [key, widgetClass] of Object.entries(this.constructor.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
+            if (widgetClass.isEnabled && widgetClass.hasRequiredPermissions) {
+                await this.#addWidget(widgetClass);
+            }
+        }
+
+        this.#widgetAddButton = this.element.createChildElement('button', {
+            id: 'st-widget-add',
+            class: 'st-button tertiary',
+            dataset: { icon: '+' },
+            innerText: i18n('addWidget'),
+            style: {
+                display: Object.values(this.constructor.widgetClasses).some(widgetClass => !widgetClass.isEnabled) ? '' : 'none'
+            }
+        });
+        this.#widgetAddButton.addEventListener('click', async () => {
+            const dialog = new WidgetSelectorDialog();
+            dialog.show();
+            dialog.on('confirm', async (event) => {
+                event.detail.isEnabled = true;
+                await this.#addWidget(event.detail);
+                this.#widgetAddButton.style.display = Object.values(this.constructor.widgetClasses).some(widgetClass => !widgetClass.isEnabled) ? '' : 'none';
+                this.#orderWidgets();
+            });
+        });
+    }
+
+    #addWidget(widgetClass) {
+        return new Promise(async (resolve) => {
+            const options = {};
+            for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
+                options[optKey] =
+                    await getFromStorage(`widget-${widgetClass.id}-${optKey}`)
+                    || opt.choices.find(option => option.default)?.value
+                    || opt.choices[0].value;
+            }
+
+            const widgetInstance = new widgetClass(options);
+            const widgetElement = widgetInstance.drawWidget(this.element);
+
+            widgetElement.addEventListener('contextmenu', (event) => this.#openWidgetSettings(event, widgetClass, widgetElement));
+
+            resolve(widgetElement);
+        });
+    }
+
+    #orderWidgets() {
+        const widgets = Object.values(this.constructor.widgetClasses);
+
+        widgets.sort((a, b) => a.order - b.order);
+
+        for (let i = 1; i < widgets.length; i++) {
+            if (widgets[i].order === widgets[i - 1].order) {
+                widgets[i].order++;
+            }
+        }
+
+        for (const [key] of Object.entries(this.constructor.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
+            const widgetElement = this.element.querySelector(`#st-widget-${key}`);
+            if (widgetElement) {
+                this.element.appendChild(widgetElement);
+            }
+        }
+
+        this.element.appendChild(this.#widgetAddButton);
+    }
+
+    #openWidgetSettings(event, widgetClass, widgetElement) {
+        event.preventDefault();
+
+        const dropdownPopover = document.body.createChildElement('div', {
+            class: 'st-widget-options-menu',
+            style: {
+                top: `${widgetElement.getBoundingClientRect().top}px`,
+            }
+        });
+
+        dropdownPopover.createChildElement('span', {
+            class: 'st-section-heading',
+            innerText: i18n('widget') + ': ' + i18n(`widgets.${widgetClass.id}`)
+        });
+
+        dropdownPopover.createChildElement('button', {
+            class: 'st-button tertiary st-widget-options-remove',
+            dataset: { icon: '' },
+            innerText: i18n('remove'),
+            title: i18n('removeWidget')
+        })
+            .addEventListener('click', () => {
+                widgetClass.isEnabled = false;
+                widgetElement.remove();
+                this.#widgetAddButton.style.display = Object.values(this.constructor.widgetClasses).some(widgetClass => !widgetClass.isEnabled) ? '' : 'none';
+
+                dropdownPopover.remove();
+            });
+
+        const previousWidgetClass = this.constructor.widgetClasses[widgetElement.previousElementSibling?.dataset.key];
+        const nextWidgetClass = this.constructor.widgetClasses[widgetElement.nextElementSibling?.dataset.key];
+
+        if (previousWidgetClass) dropdownPopover.createChildElement('button', {
+            class: 'st-button icon',
+            dataset: { icon: '' },
+            title: i18n('moveUp')
+        })
+            .addEventListener('click', () => {
+                const tempOrder = widgetClass.order;
+                widgetClass.order = previousWidgetClass.order;
+                previousWidgetClass.order = tempOrder;
+
+                dropdownPopover.remove();
+                this.#orderWidgets();
+            });
+
+        if (nextWidgetClass) dropdownPopover.createChildElement('button', {
+            class: 'st-button icon',
+            dataset: { icon: '' },
+            title: i18n('moveDown')
+        })
+            .addEventListener('click', () => {
+                const tempOrder = widgetClass.order;
+                widgetClass.order = nextWidgetClass.order;
+                nextWidgetClass.order = tempOrder;
+
+                dropdownPopover.remove();
+                this.#orderWidgets();
+            });
+
+        function windowClicked(e) {
+            if (dropdownPopover.contains(e.target)) return;
+            dropdownPopover.remove();
+            window.removeEventListener('mousedown', windowClicked);
+        }
+        window.addEventListener('mousedown', windowClicked);
+
+        dropdownPopover.firstElementChild.focus();
+    }
+}
+
+class WidgetSelectorDialog extends Dialog {
+    #progressBar;
+    #list;
+
+    constructor() {
+        super({
+            closeText: i18n('cancel')
+        });
+        this.body.classList.add('st-widget-selector-dialog');
+
+        this.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('addWidget') });
+
+        this.#list = this.body.createChildElement('div', { class: 'st-widget-selector-list' });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#loadAvailableWidgets();
+    }
+
+    async #loadAvailableWidgets() {
+        const widgets = Widgets.widgetClasses;
+        for (const [key, widgetClass] of Object.entries(widgets)) {
+            if (widgetClass.isEnabled || !widgetClass.hasRequiredPermissions) continue;
+            this.#list.createChildElement('button', {
+                class: 'st-button tertiary',
+                innerText: widgetClass.name,
+                dataset: { key }
+            })
+                .addEventListener('click', () => this.confirm(widgetClass));
+        }
+
+        this.#progressBar.dataset.visible = false;
+    }
+
+    async confirm(widgetClass) {
+        this.close();
+        this.element.dispatchEvent(new CustomEvent('confirm', { detail: widgetClass }));
     }
 }
 
