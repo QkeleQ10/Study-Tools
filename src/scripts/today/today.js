@@ -85,26 +85,25 @@ async function today() {
     })
         .addEventListener('click', () => new TeacherNamesDialog().show());
 
-    // TODO: Tooltip for the widget editor button
-    // if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new', 'local') ?? false)) {
-    //     setTimeout(() => {
-    //         const rect = invokeEditWidgets.getBoundingClientRect()
-    //         const tooltip = document.body.createChildElement('div', {
-    //             id: 'st-widgets-edit-tooltip',
-    //             innerText: i18n('tooltips.startWidgetsNew'),
-    //             style: {
-    //                 bottom: `${window.innerHeight - rect.top}px`,
-    //                 right: `${window.innerWidth - rect.right}px`,
-    //                 translate: '8px -16px'
-    //             }
-    //         })
-    //         invokeEditWidgets.addEventListener('click', () => {
-    //             tooltip.classList.add('st-hidden')
-    //             saveToStorage('tooltipdismiss-start-widgets-new', true, 'local')
-    //         })
-    //         setTimeout(() => tooltip.classList.add('st-hidden'), 20000)
-    //     }, 2000)
-    // }
+    if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new2', 'local') ?? false)) {
+        setTimeout(() => {
+            const rect = invokeEditWidgets.getBoundingClientRect()
+            const tooltip = document.body.createChildElement('div', {
+                id: 'st-widgets-edit-tooltip',
+                innerText: i18n('tooltips.startWidgetsNew'),
+                style: {
+                    bottom: `${window.innerHeight - rect.top}px`,
+                    right: `${window.innerWidth - rect.right}px`,
+                    translate: '8px -16px'
+                }
+            })
+            invokeEditWidgets.addEventListener('click', () => {
+                tooltip.classList.add('st-hidden')
+                saveToStorage('tooltipdismiss-start-widgets-new2', true, 'local')
+            })
+            setTimeout(() => tooltip.classList.add('st-hidden'), 20000)
+        }, 2000)
+    }
 
     // Side panel collapse/expand button
     todayCollapseWidgets = element('button', 'st-sch-collapse-widgets', fab, { class: 'st-button icon', 'data-icon': '', title: i18n('collapseWidgets') })
@@ -131,11 +130,8 @@ async function today() {
     }
 
     // Allow for keyboard navigation
-    document.addEventListener('keydown', event => {
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-        if (event.key === 'ArrowLeft') schedule?.headerControls.moveBackward.click();
-        else if (event.key === 'ArrowRight') schedule?.headerControls.moveForward.click();
-    })
+    document.removeEventListener('keydown', keydown); // Remove any existing listener
+    document.addEventListener('keydown', keydown);
 
     function verifyDisplayMode() {
         container.setAttribute('data-widgets-collapsed', widgetsCollapsed)
@@ -343,6 +339,12 @@ class WidgetSelectorDialog extends Dialog {
         this.close();
         this.element.dispatchEvent(new CustomEvent('confirm', { detail: widgetClass }));
     }
+}
+
+function keydown(event) {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    if (event.key === 'ArrowLeft') schedule?.headerControls.moveBackward.click();
+    else if (event.key === 'ArrowRight') schedule?.headerControls.moveForward.click();
 }
 
 function getEventChips(event) {

@@ -109,7 +109,7 @@ class Schedule {
 
         this.#createHeaderStrip();
 
-        this.#body = element('div', 'st-sch-body', this.element);
+        this.#body = this.element.createChildElement('div', { id: 'st-sch-body' });
         this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
         await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
@@ -163,7 +163,7 @@ class Schedule {
                 });
 
                 if (i === Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
-                if (this.days[date.toISOString()] || this.#header.querySelector(`.st-sch-day-body[data-date="${date.toISOString()}"]`)) continue;
+                if (this.days[date.toISOString()] || this.#header.querySelector(`#st-sch-day-body-${date.getTime()}`)) continue;
                 this.days[date.toISOString()] = new ScheduleDay(date, eventsOfDay, this.#body, this.#header);
             }
             resolve();
@@ -328,6 +328,7 @@ class ScheduleDay {
         // Create the day head
         this.head = createElement('div', null, {
             class: 'st-sch-day-head',
+            id: `st-sch-day-head-${date.getTime()}`,
             dataset: {
                 visible: false,
                 date: date.toISOString()
@@ -337,6 +338,7 @@ class ScheduleDay {
         // Create the day body
         this.body = createElement('div', null, {
             class: 'st-sch-day-body',
+            id: `st-sch-day-body-${date.getTime()}`,
             dataset: {
                 visible: false,
                 date: date.toISOString()
@@ -486,7 +488,9 @@ class ScheduleDay {
                         }
                     });
 
-                    setTimeout(() => this.#nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+                    if (schedule.positionInRange(this.date)) {
+                        setTimeout(() => this.#nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+                    }
                 }
 
                 setTimeout(() => {
