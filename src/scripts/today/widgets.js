@@ -3,12 +3,9 @@ const defaultWidgetOrder = ['digitalclock', 'grades', 'activities', 'messages', 
 class Widget {
     element;
     header;
-    options = {};
     progressBar;
 
-    constructor(options = {}) {
-        this.options = options;
-
+    constructor() {
         if (this.constructor == Widget) {
             throw new Error("Abstract classes can't be instantiated.");
         }
@@ -48,6 +45,29 @@ class Widget {
     static displayByDefault = true;
     static possibleOptions = {};
 
+    static get options() {
+        const options = {};
+        for (const key in this.possibleOptions) {
+            options[key] = syncedStorage[`widget-${this.id}-${key}`]
+                || this.possibleOptions[key].choices.find(choice => choice.default)?.value
+                || this.possibleOptions[key].choices[0].value;
+        }
+        return new Proxy(options, {
+            get: (target, key) => target[key],
+            set: (target, key, value) => {
+                if (key in this.possibleOptions) {
+                    target[key] = value;
+                    syncedStorage[`widget-${this.id}-${key}`] = value;
+                    console.log(`Set ${this.id} option ${key} to ${value}`);
+                    // saveToStorage(`widget-${this.id}-${key}`, value);
+
+                    return true; // Required for Proxy `set` to work
+                }
+                return false;
+            }
+        });
+    }
+
     static get hasRequiredPermissions() {
         return this.requiredPermissions.every(permission => magisterApi.permissions.includes(permission));
     }
@@ -57,7 +77,7 @@ class Widget {
     }
     static set isEnabled(value) {
         localStorage[`widget-${this.id}-display`] = value;
-        saveToStorage(`widget-${this.id}-display`, value, 'local');
+        // saveToStorage(`widget-${this.id}-display`, value, 'local');
     }
 
     static get order() {
@@ -65,7 +85,7 @@ class Widget {
     }
     static set order(value) {
         localStorage[`widget-${this.id}-order`] = value;
-        saveToStorage(`widget-${this.id}-order`, value, 'local');
+        // saveToStorage(`widget-${this.id}-order`, value, 'local');
     }
 }
 
@@ -192,7 +212,7 @@ class SlideshowWidget extends Widget {
 class HomeworkWidget extends ListWidget {
     async initialise() {
         this.listItems = (await magisterApi.events()).filter(event => {
-            if (this.options.filter == 'incomplete')
+            if (this.constructor.options.filter == 'incomplete')
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date() && !event.Afgerond)
             else
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date())
@@ -328,7 +348,7 @@ class MessagesWidget extends ListWidget {
 class AssignmentsWidget extends ListWidget {
     async initialise() {
         this.listItems = (await magisterApi.assignmentsTop()).filter(assignment => {
-            switch (this.options.pastDue) {
+            switch (this.constructor.options.pastDue) {
                 case 'all':
                     return (!assignment.Afgesloten && !assignment.IngeleverdOp);
                 case 'none':
@@ -499,7 +519,7 @@ class GradesWidget extends SlideshowWidget {
             window.location.href = '#/cijfers';
         });
 
-        if (this.options.rotate == 'true' && this.listItems?.length > 1) {
+        if (this.constructor.options.rotate == 'true' && this.listItems?.length > 1) {
             let interval = setInterval(() => {
                 if (!this.element || this.listItems?.length <= 1) clearInterval(interval)
                 if (this.element.matches(':hover')) return
@@ -516,7 +536,7 @@ class GradesWidget extends SlideshowWidget {
                 class: 'st-widget-grades-item',
                 dataset: {
                     unread: grade.unread,
-                    hidden: this.#hiddenItems.has(grade.id) || this.options.filter == 'never' || (this.options.filter == 'sufficient' && !grade.isSufficient),
+                    hidden: this.#hiddenItems.has(grade.id) || this.constructor.options.filter == 'never' || (this.constructor.options.filter == 'sufficient' && !grade.isSufficient),
                     isAssignment: grade.isAssignment,
                 }
             });
@@ -525,7 +545,7 @@ class GradesWidget extends SlideshowWidget {
                 class: 'st-widget-grades-item-rslt',
                 innerText: grade.result,
                 dataset: {
-                    great: this.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
+                    great: this.constructor.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
                     insuf: syncedStorage['insuf-red'] && !grade.isSufficient && grade?.weegfactor > 0,
                 }
             });
@@ -555,7 +575,8 @@ class GradesWidget extends SlideshowWidget {
                 event.stopImmediatePropagation();
                 if (this.#hiddenItems.has(grade.id)) {
                     this.#hiddenItems.delete(grade.id);
-                    saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
+                    localStorage['hiddenGrades'] = [...this.#hiddenItems];
+                    // saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
                     itemHide.setAttributes({
                         dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
                         title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
@@ -563,7 +584,8 @@ class GradesWidget extends SlideshowWidget {
                     itemElement.dataset.hidden = this.#hiddenItems.has(grade.id);
                 } else {
                     this.#hiddenItems.add(grade.id);
-                    saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
+                    localStorage['hiddenGrades'] = [...this.#hiddenItems];
+                    // saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
                     itemHide.setAttributes({
                         dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
                         title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
@@ -705,7 +727,7 @@ class DigitalClockWidget extends Widget {
     #updateClock() {
         if (!this.element) return clearInterval(this.#interval);
 
-        let timeString = document.fullscreenElement || this.options.showSeconds == 'show'
+        let timeString = document.fullscreenElement || this.constructor.options.showSeconds == 'show'
             ? dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit', second: '2-digit' })
             : dates.now.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' });
 

@@ -191,15 +191,7 @@ class Widgets {
 
     #addWidget(widgetClass) {
         return new Promise(async (resolve) => {
-            const options = {};
-            for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-                options[optKey] =
-                    await getFromStorage(`widget-${widgetClass.id}-${optKey}`)
-                    || opt.choices.find(option => option.default)?.value
-                    || opt.choices[0].value;
-            }
-
-            const widgetInstance = new widgetClass(options);
+            const widgetInstance = new widgetClass();
             const widgetElement = widgetInstance.drawWidget(this.element);
 
             widgetElement.addEventListener('contextmenu', (event) => this.#openWidgetSettings(event, widgetClass, widgetElement));
@@ -288,6 +280,28 @@ class Widgets {
                 dropdownPopover.remove();
                 this.#orderWidgets();
             });
+
+        const optionsContainer = dropdownPopover.createChildElement('div', { class: 'st-widget-options' });
+
+        console.log(widgetClass.options)
+
+        for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
+            optionsContainer.createChildElement('label', { innerText: opt.title });
+
+            const select = optionsContainer.createChildElement('select');
+            for (const choice of opt.choices) {
+                select.createChildElement('option', {
+                    innerText: choice.title,
+                    value: choice.value,
+                    selected: widgetClass.options[optKey] === choice.value ? true : undefined
+                });
+            }
+            select.addEventListener('change', () => {
+                // console.log(widgetClass.options, select.value)
+                widgetClass.options[optKey] = select.value;
+                // console.log(widgetClass.options)
+            });
+        }
 
         function windowClicked(e) {
             if (dropdownPopover.contains(e.target)) return;
@@ -476,7 +490,7 @@ class TeacherNamesDialog extends Dialog {
 
     async save() {
         syncedStorage['start-teacher-names'] = this.#newTeacherNames;
-        await saveToStorage('start-teacher-names', this.#newTeacherNames);
+        // await saveToStorage('start-teacher-names', this.#newTeacherNames);
         schedule?.redraw();
         // todayWidgets();
 

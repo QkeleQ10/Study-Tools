@@ -25,8 +25,24 @@ const dates = {
 
 (async () => {
     if (chrome?.storage) {
-        syncedStorage = await getFromStorageMultiple(null, 'sync', true)
-        localStorage = await getFromStorageMultiple(null, 'local', true)
+        const syncedStorageData = await getFromStorageMultiple(null, 'sync', true);
+        const localStorageData = await getFromStorageMultiple(null, 'local', true);
+
+        syncedStorage = new Proxy(syncedStorageData, {
+            set(target, property, value) {
+            target[property] = value;
+            saveToStorage(property, value, 'sync');
+            return true;
+            }
+        });
+
+        localStorage = new Proxy(localStorageData, {
+            set(target, property, value) {
+            target[property] = value;
+            saveToStorage(property, value, 'local');
+            return true;
+            }
+        });
 
         if (chrome?.runtime) {
             locale = syncedStorage['language']
@@ -189,7 +205,7 @@ Element.prototype.setAttributes = function (attributes) {
                 }
                 break;
             default:
-                elem.setAttribute(key, value);
+                if (value != null) elem.setAttribute(key, value);
                 break;
         }
     }

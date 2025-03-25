@@ -15,7 +15,8 @@ class Schedule {
         this.#hourHeight = Math.min(Math.max(45, newHeight), 450);
         this.element.style.setProperty('--hour-height', `${newHeight}px`);
         this.#body.scrollTop = newScroll;
-        saveToStorage('start-hour-height', newHeight, 'local');
+        localStorage['start-hour-height'] = newHeight;
+        // saveToStorage('start-hour-height', newHeight, 'local');
     }
 
     set scheduleView(newView) {
