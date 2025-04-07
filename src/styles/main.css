@@ -300,6 +300,10 @@ dialog.st-modal[open]::backdrop {
     background-color: transparent;
     color: var(--st-foreground-secondary);
     border: 1px solid transparent;
+
+    &.icon {
+        border-radius: calc(var(--st-border-radius) * 0.75);
+    }
 }
 
 .st-button.segment:hover {

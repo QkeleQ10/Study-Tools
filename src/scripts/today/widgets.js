@@ -110,7 +110,7 @@ class ListWidget extends Widget {
         }
 
         this.header.dataset.amount = this.listItems.length;
-        if (this.listItems.length < 1) this.element.remove();
+        if (this.listItems.length < 1) this.element.classList.add('empty');;
 
         this.progressBar.dataset.visible = false;
     }
@@ -186,7 +186,7 @@ class SlideshowWidget extends Widget {
         }
 
         this.header.dataset.amount = this.listItems.length;
-        if (this.listItems.length < 1) this.element.remove();
+        if (this.listItems.length < 1) this.element.classList.add('empty');;
         this.element.dataset.unread = this.listItems[0]?.unread;
 
         this.progressBar.dataset.visible = false;
@@ -217,6 +217,7 @@ class HomeworkWidget extends ListWidget {
             else
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date())
         });
+        console.log(this.listItems, this.constructor.options)
         super.initialise();
     }
 
@@ -358,6 +359,7 @@ class AssignmentsWidget extends ListWidget {
                     return (!assignment.Afgesloten && !assignment.IngeleverdOp && new Date(assignment.InleverenVoor).getTime() - dates.now.getTime() > -604800000);
             }
         });
+        console.log(this.listItems, this.constructor.options)
         super.initialise();
 
         this.element.tabIndex = 0;
@@ -443,7 +445,7 @@ class LogsWidget extends Widget {
         let logs = await magisterApi.logs();
 
         this.header.dataset.amount = logs.length;
-        if (logs.length < 1) this.element.remove();
+        if (logs.length < 1) this.element.classList.add('empty');;
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {
@@ -463,7 +465,7 @@ class ActivitiesWidget extends Widget {
         let logs = await magisterApi.activities();
 
         this.header.dataset.amount = logs.length;
-        if (logs.length < 1) this.element.remove();
+        if (logs.length < 1) this.element.classList.add('empty');;
 
         this.element.tabIndex = 0;
         this.element.addEventListener('click', () => {

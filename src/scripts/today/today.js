@@ -85,9 +85,17 @@ async function today() {
     })
         .addEventListener('click', () => new TeacherNamesDialog().show());
 
+    editWrapper.createChildElement('button', {
+        id: 'st-start-edit-widgets',
+        class: 'st-button icon',
+        dataset: { icon: '' },
+        title: i18n('editWidgets')
+    })
+        .addEventListener('click', () => new WidgetEditorDialog().show());
+
     if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new2', 'local') ?? false)) {
         setTimeout(() => {
-            const rect = invokeEditWidgets.getBoundingClientRect()
+            const rect = document.getElementById('st-start-edit-widgets').getBoundingClientRect()
             const tooltip = document.body.createChildElement('div', {
                 id: 'st-widgets-edit-tooltip',
                 innerText: i18n('tooltips.startWidgetsNew'),
@@ -97,7 +105,7 @@ async function today() {
                     translate: '8px -16px'
                 }
             })
-            invokeEditWidgets.addEventListener('click', () => {
+            document.getElementById('st-start-edit-widgets').addEventListener('click', () => {
                 tooltip.classList.add('st-hidden')
                 saveToStorage('tooltipdismiss-start-widgets-new2', true, 'local')
             })
@@ -194,8 +202,6 @@ class Widgets {
             const widgetInstance = new widgetClass();
             const widgetElement = widgetInstance.drawWidget(this.element);
 
-            widgetElement.addEventListener('contextmenu', (event) => this.#openWidgetSettings(event, widgetClass, widgetElement));
-
             resolve(widgetElement);
         });
     }
@@ -220,70 +226,149 @@ class Widgets {
 
         this.element.appendChild(this.#widgetAddButton);
     }
+}
 
-    #openWidgetSettings(event, widgetClass, widgetElement) {
-        event.preventDefault();
+class WidgetEditorDialog extends Dialog {
+    #progressBar;
+    #column1;
+    #column2;
 
-        const dropdownPopover = document.body.createChildElement('div', {
-            class: 'st-widget-options-menu',
-            style: {
-                top: `${widgetElement.getBoundingClientRect().top}px`,
+    constructor() {
+        super({
+            buttons: [
+                {
+                    innerText: i18n('save'),
+                    dataset: { icon: '' },
+                    callback: () => this.save()
+                }
+            ],
+            closeText: i18n('cancel')
+        });
+        this.body.classList.add('st-widget-editor-dialog');
+
+        this.#column1 = createElement('div', this.body, { class: 'st-dialog-column' });
+        this.#column1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('editWidgets') });
+
+        this.#column2 = createElement('div', this.body, { class: 'st-dialog-column' });
+        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('widget') });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#initialise();
+    }
+
+    async #initialise() {
+        await magisterApi.updateApiPermissions()
+
+        for (const [key, widgetClass] of Object.entries(Widgets.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
+            if (widgetClass.hasRequiredPermissions) {
+                const widgetElement = this.#column1.createChildElement('div', {
+                    class: 'st-widget-list-item',
+                });
+
+                widgetElement.createChildElement('h4', {
+                    innerText: i18n(`widgets.${widgetClass.id}`),
+                });
+
+                const displayToggleWrapper = widgetElement.createChildElement('div', {
+                    class: 'st-segmented-control'
+                });
+
+                const show = displayToggleWrapper.createChildElement('button', {
+                    class: widgetClass.isEnabled ? 'st-button segment icon active' : 'st-button segment icon',
+                    dataset: { icon: '' },
+                    title: 'TODO'
+                });
+                const hide = displayToggleWrapper.createChildElement('button', {
+                    class: widgetClass.isEnabled ? 'st-button segment icon' : 'st-button segment icon active',
+                    dataset: { icon: '' },
+                    title: 'TODO'
+                });
+                show.addEventListener('click', () => {
+                    widgetClass.isEnabled = true;
+                    show.classList.add('active');
+                    hide.classList.remove('active');
+                });
+                hide.addEventListener('click', () => {
+                    widgetClass.isEnabled = false;
+                    hide.classList.add('active');
+                    show.classList.remove('active');
+                });
+
+                const editButton = widgetElement.createChildElement('button', {
+                    class: 'st-button icon',
+                    dataset: { icon: '' },
+                    title: i18n('editWidget')
+                });
+
+                editButton.addEventListener('click', (event) => this.#openWidgetSettings(widgetClass, widgetElement));
             }
-        });
+        }
+    }
 
-        dropdownPopover.createChildElement('span', {
-            class: 'st-section-heading',
-            innerText: i18n('widget') + ': ' + i18n(`widgets.${widgetClass.id}`)
-        });
+    // #orderWidgets() {
+    //     const widgets = Object.values(Widgets.widgetClasses);
 
-        dropdownPopover.createChildElement('button', {
-            class: 'st-button tertiary st-widget-options-remove',
-            dataset: { icon: '' },
-            innerText: i18n('remove'),
-            title: i18n('removeWidget')
-        })
-            .addEventListener('click', () => {
-                widgetClass.isEnabled = false;
-                widgetElement.remove();
-                this.#widgetAddButton.style.display = Object.values(this.constructor.widgetClasses).some(widgetClass => !widgetClass.isEnabled) ? '' : 'none';
+    //     widgets.sort((a, b) => a.order - b.order);
 
-                dropdownPopover.remove();
-            });
+    //     for (let i = 1; i < widgets.length; i++) {
+    //         if (widgets[i].order === widgets[i - 1].order) {
+    //             widgets[i].order++;
+    //         }
+    //     }
 
-        const previousWidgetClass = this.constructor.widgetClasses[widgetElement.previousElementSibling?.dataset.key];
-        const nextWidgetClass = this.constructor.widgetClasses[widgetElement.nextElementSibling?.dataset.key];
+    //     for (const [key] of Object.entries(Widgets.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
+    //         const widgetElement = this.element.querySelector(`#st-widget-${key}`);
+    //         if (widgetElement) {
+    //             this.element.appendChild(widgetElement);
+    //         }
+    //     }
+    // }
 
-        if (previousWidgetClass) dropdownPopover.createChildElement('button', {
-            class: 'st-button icon',
-            dataset: { icon: '' },
-            title: i18n('moveUp')
-        })
-            .addEventListener('click', () => {
-                const tempOrder = widgetClass.order;
-                widgetClass.order = previousWidgetClass.order;
-                previousWidgetClass.order = tempOrder;
+    #openWidgetSettings(widgetClass, widgetElement) {
+        this.#column2.innerText = '';
 
-                dropdownPopover.remove();
-                this.#orderWidgets();
-            });
+        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('widget') + ': ' + i18n(`widgets.${widgetClass.id}`) });
 
-        if (nextWidgetClass) dropdownPopover.createChildElement('button', {
-            class: 'st-button icon',
-            dataset: { icon: '' },
-            title: i18n('moveDown')
-        })
-            .addEventListener('click', () => {
-                const tempOrder = widgetClass.order;
-                widgetClass.order = nextWidgetClass.order;
-                nextWidgetClass.order = tempOrder;
+        // this.#column2.createChildElement('button', {
+        //     class: 'st-button tertiary st-widget-options-remove',
+        //     dataset: { icon: '' },
+        //     innerText: i18n('remove'),
+        //     title: i18n('removeWidget')
+        // })
+        //     .addEventListener('click', () => {
+        //         widgetClass.isEnabled = false;
+        //     });
 
-                dropdownPopover.remove();
-                this.#orderWidgets();
-            });
+        // const previousWidgetClass = Widgets.widgetClasses[widgetElement.previousElementSibling?.dataset.key];
+        // const nextWidgetClass = Widgets.widgetClasses[widgetElement.nextElementSibling?.dataset.key];
 
-        const optionsContainer = dropdownPopover.createChildElement('div', { class: 'st-widget-options' });
+        // if (previousWidgetClass) this.#column2.createChildElement('button', {
+        //     class: 'st-button icon',
+        //     dataset: { icon: '' },
+        //     title: i18n('moveUp')
+        // })
+        //     .addEventListener('click', () => {
+        //         const tempOrder = widgetClass.order;
+        //         widgetClass.order = previousWidgetClass.order;
+        //         previousWidgetClass.order = tempOrder;
+        //         this.#orderWidgets();
+        //     });
 
-        console.log(widgetClass.options)
+        // if (nextWidgetClass) this.#column2.createChildElement('button', {
+        //     class: 'st-button icon',
+        //     dataset: { icon: '' },
+        //     title: i18n('moveDown')
+        // })
+        //     .addEventListener('click', () => {
+        //         const tempOrder = widgetClass.order;
+        //         widgetClass.order = nextWidgetClass.order;
+        //         nextWidgetClass.order = tempOrder;
+        //         this.#orderWidgets();
+        //     });
+
+        const optionsContainer = this.#column2.createChildElement('div', { class: 'st-widget-options' });
 
         for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
             optionsContainer.createChildElement('label', { innerText: opt.title });
@@ -297,20 +382,11 @@ class Widgets {
                 });
             }
             select.addEventListener('change', () => {
-                // console.log(widgetClass.options, select.value)
                 widgetClass.options[optKey] = select.value;
-                // console.log(widgetClass.options)
             });
         }
 
-        function windowClicked(e) {
-            if (dropdownPopover.contains(e.target)) return;
-            dropdownPopover.remove();
-            window.removeEventListener('mousedown', windowClicked);
-        }
-        window.addEventListener('mousedown', windowClicked);
-
-        dropdownPopover.firstElementChild.focus();
+        this.#column2.firstElementChild.focus();
     }
 }
 
