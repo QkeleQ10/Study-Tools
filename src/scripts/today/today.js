@@ -161,8 +161,8 @@ class Widgets {
         digitalclock: DigitalClockWidget
     }
 
-    constructor(parentElement) {
-        this.element = parentElement.createChildElement('div', { id: 'st-widgets' });
+    constructor(parentElement = document.getElementById('st-start')) {
+        this.element = parentElement.createChildElement('div', { id: 'st-widgets', innerText: '' });
 
         this.#initialise();
     }
@@ -249,13 +249,18 @@ class WidgetEditorDialog extends Dialog {
         this.#column1 = createElement('div', this.body, { class: 'st-dialog-column' });
         this.#column1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('editWidgets') });
 
-        this.#column2 = createElement('div', this.body, { class: 'st-dialog-column' });
+        this.#column2 = createElement('div', this.body, { class: 'st-dialog-column', style: { display: 'none' } });
         this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('widget') });
 
         this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
         this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
         this.#initialise();
+    }
+
+    async save() {
+        widgets = new Widgets();
+        this.close();
     }
 
     async #initialise() {
@@ -328,6 +333,7 @@ class WidgetEditorDialog extends Dialog {
 
     #openWidgetSettings(widgetClass, widgetElement) {
         this.#column2.innerText = '';
+        this.#column2.style.display = 'block';
 
         this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('widget') + ': ' + i18n(`widgets.${widgetClass.id}`) });
 
@@ -371,9 +377,9 @@ class WidgetEditorDialog extends Dialog {
         const optionsContainer = this.#column2.createChildElement('div', { class: 'st-widget-options' });
 
         for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
-            optionsContainer.createChildElement('label', { innerText: opt.title });
+            const label = optionsContainer.createChildElement('label', { innerText: opt.title });
 
-            const select = optionsContainer.createChildElement('select');
+            const select = label.createChildElement('select');
             for (const choice of opt.choices) {
                 select.createChildElement('option', {
                     innerText: choice.title,
