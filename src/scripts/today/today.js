@@ -281,25 +281,31 @@ class WidgetEditorDialog extends Dialog {
                 });
 
                 const show = displayToggleWrapper.createChildElement('button', {
-                    class: widgetClass.isEnabled ? 'st-button segment icon active' : 'st-button segment icon',
+                    class: 'st-button segment icon',
                     dataset: { icon: '' },
                     title: 'TODO'
                 });
                 const hide = displayToggleWrapper.createChildElement('button', {
-                    class: widgetClass.isEnabled ? 'st-button segment icon' : 'st-button segment icon active',
+                    class: 'st-button segment icon warn',
                     dataset: { icon: '' },
                     title: 'TODO'
                 });
                 show.addEventListener('click', () => {
                     widgetClass.isEnabled = true;
-                    show.classList.add('active');
-                    hide.classList.remove('active');
+                    updateState();
                 });
                 hide.addEventListener('click', () => {
                     widgetClass.isEnabled = false;
-                    hide.classList.add('active');
-                    show.classList.remove('active');
+                    updateState();
                 });
+
+                updateState();
+
+                function updateState() {
+                    widgetElement.classList.toggle('active', widgetClass.isEnabled);
+                    show.classList.toggle('active', widgetClass.isEnabled);
+                    hide.classList.toggle('active', !widgetClass.isEnabled);
+                }
 
                 const editButton = widgetElement.createChildElement('button', {
                     class: 'st-button icon',

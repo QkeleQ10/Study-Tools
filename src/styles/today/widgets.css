@@ -563,18 +563,28 @@
         gap: 8px;
         align-items: center;
 
-        width: 300px;
+        width: 400px;
         margin-block: 8px;
         padding: 4px 8px;
 
         background-color: var(--st-background-secondary);
         border: var(--st-border);
         border-radius: var(--st-border-radius);
+        color: var(--st-foreground-primary);
+        cursor: move;
+
+        &:not(.active) {
+            color: var(--st-foreground-insignificant);
+
+            h4 {
+                font-style: italic;
+            }
+        }
 
         &:before {
             content: '';
             font: 500 18px 'Font Awesome 6 Pro';
-            color: var(--st-foreground-insignificant);
+            opacity: .5;
             margin: 8px;
         }
 
@@ -582,6 +592,16 @@
             flex-grow: 1;
             margin-right: auto;
             font: 14px var(--st-font-family-secondary);
+            color: currentColor;
+        }
+
+        .st-button.segment.icon.warn {
+            --st-foreground-accent: var(--st-accent-warn);
+            --st-highlight-primary: var(--st-highlight-warn);
+        }
+
+        &>.st-button.icon {
+            color: currentColor;
         }
     }
 
