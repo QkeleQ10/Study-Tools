@@ -149,7 +149,6 @@ async function today() {
 
 class Widgets {
     element;
-    #widgetAddButton;
 
     static widgetClasses = {
         logs: LogsWidget,
@@ -175,26 +174,6 @@ class Widgets {
                 await this.#addWidget(widgetClass);
             }
         }
-
-        this.#widgetAddButton = this.element.createChildElement('button', {
-            id: 'st-widget-add',
-            class: 'st-button tertiary',
-            dataset: { icon: '+' },
-            innerText: i18n('addWidget'),
-            style: {
-                display: Object.values(this.constructor.widgetClasses).some(widgetClass => !widgetClass.isEnabled) ? '' : 'none'
-            }
-        });
-        this.#widgetAddButton.addEventListener('click', async () => {
-            const dialog = new WidgetSelectorDialog();
-            dialog.show();
-            dialog.on('confirm', async (event) => {
-                event.detail.isEnabled = true;
-                await this.#addWidget(event.detail);
-                this.#widgetAddButton.style.display = Object.values(this.constructor.widgetClasses).some(widgetClass => !widgetClass.isEnabled) ? '' : 'none';
-                this.#orderWidgets();
-            });
-        });
     }
 
     #addWidget(widgetClass) {
@@ -204,27 +183,6 @@ class Widgets {
 
             resolve(widgetElement);
         });
-    }
-
-    #orderWidgets() {
-        const widgets = Object.values(this.constructor.widgetClasses);
-
-        widgets.sort((a, b) => a.order - b.order);
-
-        for (let i = 1; i < widgets.length; i++) {
-            if (widgets[i].order === widgets[i - 1].order) {
-                widgets[i].order++;
-            }
-        }
-
-        for (const [key] of Object.entries(this.constructor.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
-            const widgetElement = this.element.querySelector(`#st-widget-${key}`);
-            if (widgetElement) {
-                this.element.appendChild(widgetElement);
-            }
-        }
-
-        this.element.appendChild(this.#widgetAddButton);
     }
 }
 
@@ -316,26 +274,9 @@ class WidgetEditorDialog extends Dialog {
                 editButton.addEventListener('click', (event) => this.#openWidgetSettings(widgetClass, widgetElement));
             }
         }
+
+        this.#progressBar.dataset.visible = false;
     }
-
-    // #orderWidgets() {
-    //     const widgets = Object.values(Widgets.widgetClasses);
-
-    //     widgets.sort((a, b) => a.order - b.order);
-
-    //     for (let i = 1; i < widgets.length; i++) {
-    //         if (widgets[i].order === widgets[i - 1].order) {
-    //             widgets[i].order++;
-    //         }
-    //     }
-
-    //     for (const [key] of Object.entries(Widgets.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
-    //         const widgetElement = this.element.querySelector(`#st-widget-${key}`);
-    //         if (widgetElement) {
-    //             this.element.appendChild(widgetElement);
-    //         }
-    //     }
-    // }
 
     #openWidgetSettings(widgetClass, widgetElement) {
         this.#column2.innerText = '';
@@ -399,47 +340,6 @@ class WidgetEditorDialog extends Dialog {
         }
 
         this.#column2.firstElementChild.focus();
-    }
-}
-
-class WidgetSelectorDialog extends Dialog {
-    #progressBar;
-    #list;
-
-    constructor() {
-        super({
-            closeText: i18n('cancel')
-        });
-        this.body.classList.add('st-widget-selector-dialog');
-
-        this.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('addWidget') });
-
-        this.#list = this.body.createChildElement('div', { class: 'st-widget-selector-list' });
-
-        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
-        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
-
-        this.#loadAvailableWidgets();
-    }
-
-    async #loadAvailableWidgets() {
-        const widgets = Widgets.widgetClasses;
-        for (const [key, widgetClass] of Object.entries(widgets)) {
-            if (widgetClass.isEnabled || !widgetClass.hasRequiredPermissions) continue;
-            this.#list.createChildElement('button', {
-                class: 'st-button tertiary',
-                innerText: widgetClass.name,
-                dataset: { key }
-            })
-                .addEventListener('click', () => this.confirm(widgetClass));
-        }
-
-        this.#progressBar.dataset.visible = false;
-    }
-
-    async confirm(widgetClass) {
-        this.close();
-        this.element.dispatchEvent(new CustomEvent('confirm', { detail: widgetClass }));
     }
 }
 

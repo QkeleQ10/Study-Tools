@@ -125,6 +125,10 @@
 #st-widgets {
     .st-widget {
 
+        &.empty {
+            display: none;
+        }
+
         &[tabindex="0"],
         .st-widget-subitem[tabindex="0"] {
             cursor: pointer;
