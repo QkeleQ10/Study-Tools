@@ -87,9 +87,9 @@ export const
         },
         {
             name: 'Glasplaten',
-            author: 'Astyll',
+            author: 'Jesse Nicolaï',
             thumbnail: "https://i.imgur.com/V0sugf6.png",
-            "ptheme": "auto,207,95,3",
+            "ptheme": "dark,207,95,3",
             "wallpaper": "custom,https://i.imgur.com/MAfI42c.jpg",
             "wallpaper-opacity": 0.85,
             "shape": 12,
