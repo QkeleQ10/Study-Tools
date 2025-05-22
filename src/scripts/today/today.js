@@ -160,29 +160,34 @@ class Widgets {
         digitalclock: DigitalClockWidget
     }
 
+    static get sortedWidgetClasses() {
+        const widgetOrder = Object.values(localStorage['start-widget-order'] || defaultWidgetOrder);
+        return Object.fromEntries(Object.entries(this.widgetClasses).sort((a, b) => {
+            const indexA = widgetOrder.indexOf(a[0]) ?? 999;
+            const indexB = widgetOrder.indexOf(b[0]) ?? 999;
+            return indexA - indexB;
+        }));
+    }
+
     constructor(parentElement = document.getElementById('st-start')) {
         this.element = parentElement.createChildElement('div', { id: 'st-widgets', innerText: '' });
 
-        this.#initialise();
+        this.#drawWidgets();
     }
 
-    async #initialise() {
-        await magisterApi.updateApiPermissions()
+    async #drawWidgets() {
+        await magisterApi.updateApiPermissions();
 
-        for (const [key, widgetClass] of Object.entries(this.constructor.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
+        for (const [widgetKey, widgetClass] of Object.entries(this.constructor.sortedWidgetClasses)) {
             if (widgetClass.isEnabled && widgetClass.hasRequiredPermissions) {
-                await this.#addWidget(widgetClass);
+                await new Promise(async (resolve) => {
+                    const widgetInstance = new widgetClass();
+                    const widgetElement = widgetInstance.drawWidget(this.element);
+
+                    resolve(widgetElement);
+                });
             }
         }
-    }
-
-    #addWidget(widgetClass) {
-        return new Promise(async (resolve) => {
-            const widgetInstance = new widgetClass();
-            const widgetElement = widgetInstance.drawWidget(this.element);
-
-            resolve(widgetElement);
-        });
     }
 }
 
@@ -192,141 +197,124 @@ class WidgetEditorDialog extends Dialog {
     #column2;
 
     constructor() {
-        super({
-            buttons: [
-                {
-                    innerText: i18n('save'),
-                    dataset: { icon: '' },
-                    callback: () => this.save()
-                }
-            ],
-            closeText: i18n('cancel')
-        });
+        super({ closeIcon: '' });
+
         this.body.classList.add('st-widget-editor-dialog');
 
         this.#column1 = createElement('div', this.body, { class: 'st-dialog-column' });
         this.#column1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('editWidgets') });
 
         this.#column2 = createElement('div', this.body, { class: 'st-dialog-column', style: { display: 'none' } });
-        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('widget') });
+        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('editWidget') });
 
         this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
         this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
-        this.#initialise();
+        this.#drawWidgetEditorDialog();
+
+        this.element.addEventListener('close', () => {
+            widgets = new Widgets();
+        })
     }
 
-    async save() {
-        widgets = new Widgets();
-        this.close();
-    }
-
-    async #initialise() {
+    async #drawWidgetEditorDialog() {
         await magisterApi.updateApiPermissions()
 
-        for (const [key, widgetClass] of Object.entries(Widgets.widgetClasses).sort(([, a], [, b]) => a.order - b.order)) {
-            if (widgetClass.hasRequiredPermissions) {
-                const widgetElement = this.#column1.createChildElement('div', {
-                    class: 'st-widget-list-item',
-                });
 
-                widgetElement.createChildElement('h4', {
-                    innerText: i18n(`widgets.${widgetClass.id}`),
-                });
+        for (const [widgetKey, widgetClass] of Object.entries(Widgets.sortedWidgetClasses)) {
+            const widgetElement = this.#column1.createChildElement('div', {
+                class: 'st-widget-list-item',
+                style: widgetClass.hasRequiredPermissions ? '' : 'display: none;',
+            });
 
-                const displayToggleWrapper = widgetElement.createChildElement('div', {
-                    class: 'st-segmented-control'
-                });
+            // Assign a data attribute to identify this widget and make it draggable
+            widgetElement.dataset.widgetId = widgetClass.id;
+            widgetElement.draggable = true;
 
-                const show = displayToggleWrapper.createChildElement('button', {
-                    class: 'st-button segment icon',
-                    dataset: { icon: '' },
-                    title: 'TODO'
-                });
-                const hide = displayToggleWrapper.createChildElement('button', {
-                    class: 'st-button segment icon warn',
-                    dataset: { icon: '' },
-                    title: 'TODO'
-                });
-                show.addEventListener('click', () => {
-                    widgetClass.isEnabled = true;
-                    updateState();
-                });
-                hide.addEventListener('click', () => {
-                    widgetClass.isEnabled = false;
-                    updateState();
-                });
-
-                updateState();
-
-                function updateState() {
-                    widgetElement.classList.toggle('active', widgetClass.isEnabled);
-                    show.classList.toggle('active', widgetClass.isEnabled);
-                    hide.classList.toggle('active', !widgetClass.isEnabled);
+            // Drag event listeners
+            widgetElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', widgetClass.id);
+                e.currentTarget.classList.add('dragging');
+            });
+            widgetElement.addEventListener('dragend', (e) => {
+                e.currentTarget.classList.remove('dragging');
+                this.#saveNewOrder();
+            });
+            widgetElement.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const dragging = this.#column1.querySelector('.dragging');
+                if (dragging && dragging !== widgetElement) {
+                    // Insert the dragged element before the current hovered element
+                    this.#column1.insertBefore(dragging, widgetElement);
                 }
+            });
 
-                const editButton = widgetElement.createChildElement('button', {
+            widgetElement.createChildElement('h4', {
+                innerText: i18n(`widgets.${widgetClass.id}`),
+            });
+
+            if (Object.keys(widgetClass.possibleOptions).length) {
+                widgetElement.createChildElement('button', {
                     class: 'st-button icon',
-                    dataset: { icon: '' },
+                    dataset: { icon: '' },
                     title: i18n('editWidget')
-                });
+                })
+                    .addEventListener('click', () => this.#drawWidgetSettings(widgetClass));
+            }
 
-                editButton.addEventListener('click', (event) => this.#openWidgetSettings(widgetClass, widgetElement));
+            const displayToggleWrapper = widgetElement.createChildElement('div', {
+                class: 'st-segmented-control'
+            });
+
+            const show = displayToggleWrapper.createChildElement('button', {
+                class: 'st-button segment icon',
+                dataset: { icon: '' },
+                title: i18n('show')
+            });
+            const hide = displayToggleWrapper.createChildElement('button', {
+                class: 'st-button segment icon warn',
+                dataset: { icon: '' },
+                title: i18n('hide')
+            });
+            show.addEventListener('click', () => {
+                widgetClass.isEnabled = true;
+                updateState();
+            });
+            hide.addEventListener('click', () => {
+                widgetClass.isEnabled = false;
+                updateState();
+            });
+
+            updateState();
+
+            function updateState() {
+                widgetElement.classList.toggle('active', widgetClass.isEnabled);
+                show.classList.toggle('active', widgetClass.isEnabled);
+                hide.classList.toggle('active', !widgetClass.isEnabled);
             }
         }
 
         this.#progressBar.dataset.visible = false;
     }
 
-    #openWidgetSettings(widgetClass, widgetElement) {
+    #saveNewOrder() {
+        const newOrder = Array.from(this.#column1.querySelectorAll('.st-widget-list-item'))
+            .map(el => el.dataset.widgetId);
+        localStorage['start-widget-order'] = newOrder;
+    }
+
+    #drawWidgetSettings(widgetClass) {
         this.#column2.innerText = '';
         this.#column2.style.display = 'block';
 
-        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('widget') + ': ' + i18n(`widgets.${widgetClass.id}`) });
-
-        // this.#column2.createChildElement('button', {
-        //     class: 'st-button tertiary st-widget-options-remove',
-        //     dataset: { icon: '' },
-        //     innerText: i18n('remove'),
-        //     title: i18n('removeWidget')
-        // })
-        //     .addEventListener('click', () => {
-        //         widgetClass.isEnabled = false;
-        //     });
-
-        // const previousWidgetClass = Widgets.widgetClasses[widgetElement.previousElementSibling?.dataset.key];
-        // const nextWidgetClass = Widgets.widgetClasses[widgetElement.nextElementSibling?.dataset.key];
-
-        // if (previousWidgetClass) this.#column2.createChildElement('button', {
-        //     class: 'st-button icon',
-        //     dataset: { icon: '' },
-        //     title: i18n('moveUp')
-        // })
-        //     .addEventListener('click', () => {
-        //         const tempOrder = widgetClass.order;
-        //         widgetClass.order = previousWidgetClass.order;
-        //         previousWidgetClass.order = tempOrder;
-        //         this.#orderWidgets();
-        //     });
-
-        // if (nextWidgetClass) this.#column2.createChildElement('button', {
-        //     class: 'st-button icon',
-        //     dataset: { icon: '' },
-        //     title: i18n('moveDown')
-        // })
-        //     .addEventListener('click', () => {
-        //         const tempOrder = widgetClass.order;
-        //         widgetClass.order = nextWidgetClass.order;
-        //         nextWidgetClass.order = tempOrder;
-        //         this.#orderWidgets();
-        //     });
+        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('editWidget') + ': ' + i18n(`widgets.${widgetClass.id}`) });
 
         const optionsContainer = this.#column2.createChildElement('div', { class: 'st-widget-options' });
 
         for (const [optKey, opt] of Object.entries(widgetClass.possibleOptions)) {
             const label = optionsContainer.createChildElement('label', { innerText: opt.title });
 
-            const select = label.createChildElement('select');
+            const select = label.createChildElement('select', { class: 'st-select' });
             for (const choice of opt.choices) {
                 select.createChildElement('option', {
                     innerText: choice.title,
@@ -499,7 +487,7 @@ class TeacherNamesDialog extends Dialog {
 
         const allTeacherNames = {
             ...syncedStorage['start-teacher-names'],
-            ...eventsTeachers.reduce((obj, item) => (obj[item.Docentcode] = syncedStorage['start-teacher-names']?.[item.Docentcode] || null, obj), {})
+            ...eventsTeachers.reduce((obj, item) => (obj[item.Docentcode] = syncedStorage['start-teacher-names']?.[item.Docentcode] || null, obj), {}),
         };
 
         this.#newTeacherNames = { ...syncedStorage['start-teacher-names'] };

@@ -1,7 +1,7 @@
 chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service worker
 
-let syncedStorage = {},
-    localStorage = {},
+let syncedStorage,
+    localStorage,
     locale = 'nl-NL',
     i18nData = {},
     i18nDataNl = {},
@@ -23,39 +23,44 @@ const dates = {
     get gatherEnd() { return midnight(null, 42) },
 };
 
-(async () => {
-    if (chrome?.storage) {
-        const syncedStorageData = await getFromStorageMultiple(null, 'sync', true);
-        const localStorageData = await getFromStorageMultiple(null, 'local', true);
+async function initialiseStorage() {
+    return new Promise(async (resolve, reject) => {
+        if (chrome?.storage) {
+            const syncedStorageData = await getFromStorageMultiple(null, 'sync', true);
+            const localStorageData = await getFromStorageMultiple(null, 'local', true);
 
-        syncedStorage = new Proxy(syncedStorageData, {
-            set(target, property, value) {
-            target[property] = value;
-            saveToStorage(property, value, 'sync');
-            return true;
+            syncedStorage = new Proxy(syncedStorageData, {
+                set(target, property, value) {
+                    target[property] = value;
+                    saveToStorage(property, value, 'sync');
+                    return true;
+                }
+            });
+
+            localStorage = new Proxy(localStorageData, {
+                set(target, property, value) {
+                    target[property] = value;
+                    saveToStorage(property, value, 'local');
+                    return true;
+                }
+            });
+
+            if (chrome?.runtime) {
+                locale = syncedStorage['language'];
+                if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'sv-SE', 'la-LA'].includes(locale)) locale = 'nl-NL';
+                const req = await fetch(chrome.runtime.getURL(`src/strings/${locale.split('-')[0]}.json`));
+                i18nData = await req.json();
+                const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`));
+                i18nDataNl = await reqNl.json();
             }
-        });
 
-        localStorage = new Proxy(localStorageData, {
-            set(target, property, value) {
-            target[property] = value;
-            saveToStorage(property, value, 'local');
-            return true;
-            }
-        });
+            resolve();
+        } else reject();
 
-        if (chrome?.runtime) {
-            locale = syncedStorage['language']
-            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'sv-SE', 'la-LA'].includes(locale)) locale = 'nl-NL'
-            const req = await fetch(chrome.runtime.getURL(`src/strings/${locale.split('-')[0]}.json`))
-            i18nData = await req.json()
-            const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`))
-            i18nDataNl = await reqNl.json()
-        }
-    }
-
-    verbose = syncedStorage['verbosity']
-})()
+        verbose = syncedStorage['verbosity'];
+    });
+}
+initialiseStorage();
 
 /**
  * 

@@ -179,6 +179,98 @@ dialog.st-modal[open]::backdrop {
     margin-right: 0;
 }
 
+
+.st-select {
+    appearance: base-select;
+
+    padding: 8px 12px;
+    height: 36px;
+    font: 600 14px var(--st-font-family-secondary);
+    background-color: var(--st-background-tertiary);
+    color: var(--st-foreground-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    cursor: pointer;
+
+    width: max-content;
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+
+    &:hover,
+    &:focus-visible {
+        color: var(--st-foreground-accent);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--st-foreground-accent);
+    }
+
+    &::picker-icon {
+        content: "";
+        padding-inline: 2px;
+        font: 600 16px "Font Awesome 6 Pro";
+        transition: transform 150ms;
+    }
+
+    &:open::picker-icon {
+        transform: rotateX(180deg);
+    }
+
+    &::picker(select) {
+        appearance: base-select;
+
+        padding: 4px;
+        background-color: var(--st-background-tertiary);
+        border: var(--st-border);
+        border-radius: var(--st-border-radius);
+        box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+
+        transform: scale(0.95);
+        opacity: 0;
+        transition: opacity 150ms, transform 150ms, display 150ms allow-discrete, overlay 150ms allow-discrete;
+    }
+
+    &:open::picker(select) {
+        transform: none;
+        opacity: 1;
+
+        @starting-style {
+            transform: translateY(-32px) scale(0.75);
+            opacity: 0;
+        }
+    }
+
+    option {
+        padding: 8px 12px;
+        background-color: transparent;
+        color: var(--st-foreground-secondary);
+        border: 1px solid transparent;
+        border-radius: var(--st-border-radius);
+
+        &:checked {
+            background-color: var(--st-highlight-primary);
+            color: var(--st-foreground-accent);
+            border-color: var(--st-border-color);
+        }
+
+        &:hover,
+        &:focus-visible {
+            color: var(--st-foreground-accent);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--st-foreground-accent);
+        }
+
+        &::checkmark {
+            content: "";
+            padding-inline: 2px;
+            font: 600 16px "Font Awesome 6 Pro";
+            transition: transform 150ms;
+        }
+    }
+}
+
 .st-dropdown,
 .st-dropdown:focus {
     display: flex;

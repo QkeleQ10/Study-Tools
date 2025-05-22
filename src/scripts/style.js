@@ -148,7 +148,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
 }
 
 async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
-    if (!dontUpdate && chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+    if (!dontUpdate && chrome?.storage) await initialiseStorage();
 
     let now = new Date()
 
@@ -1257,6 +1257,7 @@ aside .tabs li a, aside .tabs li.double-line-title>a {
     margin-right: 0;
     padding: 0;
     width: 18px;
+    color: currentcolor;
 }
 
 .menu-footer>a {
@@ -1689,6 +1690,21 @@ table.table-grid-layout>tbody>tr.selected {
 
 .menu-button a:focus-visible, .logo a:focus-visible {
     outline: 2px solid var(--st-foreground-primary);
+}
+
+#menu-cijfers {
+    img {
+        display: none;
+    }
+    
+    &:before {
+        margin-inline: 10px;
+        width: 20px;
+        height: 20px;
+        content: '';
+        background-color: currentcolor;
+        mask: url(assets/images/cijfers.svg) no-repeat center;
+    }
 }
 
 .app-container {

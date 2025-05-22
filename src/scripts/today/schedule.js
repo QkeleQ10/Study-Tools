@@ -120,7 +120,7 @@ class Schedule {
 
         if (!persistedScheduleDate && !persistedScheduleView && showNextDaySetting) {
             let nextDayWithEvents = Object.values(this.days).find(day => day.hasFutureEvents);
-            if (nextDayWithEvents) {
+            if (nextDayWithEvents && !nextDayWithEvents.isToday) {
                 this.scheduleDate = nextDayWithEvents.date;
                 notify('snackbar', i18n('toasts.jumpedToDate', { date: this.scheduleDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) }));
             }
@@ -622,6 +622,10 @@ class ScheduleEventDialog extends Dialog {
 
             const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
 
+            createElement('a', kwtColumn, { innerText: `Pas je KWT-keuze aan in de agenda.`, href: `#/agenda/huiswerk/${this.event.Id}?returnUrl=%252Fvandaag` })
+                .addEventListener('click', () => {
+                    this.close();
+                });
             if (kwtChoices?.[0]?.Keuzes?.[0]) {
                 kwtChoices[0].Keuzes.forEach(choice => {
                     const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers)
@@ -641,7 +645,6 @@ class ScheduleEventDialog extends Dialog {
                     //     this.#progressBar.dataset.visible = false;
                     // })
                 });
-                createElement('span', kwtColumn, { innerText: "Schrijf je in via de agenda. Klik op onderstaande knop." });
             } else {
                 createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
             }

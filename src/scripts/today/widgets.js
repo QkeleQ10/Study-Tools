@@ -39,6 +39,8 @@ class Widget {
 
     async initialise() { }
 
+    optionsUpdated() { }
+
     static id = '';
     static disclaimer = 'widgetDisclaimer';
     static requiredPermissions = [];
@@ -58,10 +60,7 @@ class Widget {
                 if (key in this.possibleOptions) {
                     target[key] = value;
                     syncedStorage[`widget-${this.id}-${key}`] = value;
-                    console.log(`Set ${this.id} option ${key} to ${value}`);
-                    // saveToStorage(`widget-${this.id}-${key}`, value);
-
-                    return true; // Required for Proxy `set` to work
+                    return true;
                 }
                 return false;
             }
@@ -78,14 +77,6 @@ class Widget {
     static set isEnabled(value) {
         localStorage[`widget-${this.id}-display`] = value;
         // saveToStorage(`widget-${this.id}-display`, value, 'local');
-    }
-
-    static get order() {
-        return parseInt(localStorage[`widget-${this.id}-order`] ?? defaultWidgetOrder.indexOf(this.id));
-    }
-    static set order(value) {
-        localStorage[`widget-${this.id}-order`] = value;
-        // saveToStorage(`widget-${this.id}-order`, value, 'local');
     }
 }
 
@@ -217,7 +208,6 @@ class HomeworkWidget extends ListWidget {
             else
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date())
         });
-        console.log(this.listItems, this.constructor.options)
         super.initialise();
     }
 
@@ -264,6 +254,10 @@ class HomeworkWidget extends ListWidget {
 
             resolve(itemElement);
         });
+    }
+
+    optionsUpdated() {
+        this.initialise();
     }
 
     static id = 'homework';
@@ -359,7 +353,6 @@ class AssignmentsWidget extends ListWidget {
                     return (!assignment.Afgesloten && !assignment.IngeleverdOp && new Date(assignment.InleverenVoor).getTime() - dates.now.getTime() > -604800000);
             }
         });
-        console.log(this.listItems, this.constructor.options)
         super.initialise();
 
         this.element.tabIndex = 0;
@@ -414,6 +407,10 @@ class AssignmentsWidget extends ListWidget {
 
             resolve(itemElement);
         });
+    }
+
+    optionsUpdated() {
+        this.initialise();
     }
 
     static id = 'assignments';
@@ -601,6 +598,10 @@ class GradesWidget extends SlideshowWidget {
         });
     }
 
+    optionsUpdated() {
+        this.initialise();
+    }
+
     static id = 'grades';
     static disclaimer = null;
     static requiredPermissions = ['Cijfers'];
@@ -750,6 +751,10 @@ class DigitalClockWidget extends Widget {
                 periodElement.dataset.done = now >= end;
             }
         }
+    }
+
+    optionsUpdated() {
+        this.#updateClock();
     }
 
     static id = 'digitalclock';
