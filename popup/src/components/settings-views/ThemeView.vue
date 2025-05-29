@@ -27,6 +27,9 @@ const applyPromptPreset = ref({})
 const isDeletePromptActive = ref(false)
 const deletePromptIndex = ref(0)
 
+const isNamePromptActive = ref(false)
+const namePromptContent = ref('')
+
 const storedThemes = computed({
     get() { return Object.values(localStorage.value?.storedThemes || []) },
     set(value) { localStorage.value.storedThemes = value }
@@ -111,6 +114,7 @@ async function storeCurrentTheme() {
     storedThemes.value = [
         ...storedThemes.value,
         {
+            name: namePromptContent?.length ? namePromptContent.value : 'Eigen thema',
             date: new Date().toISOString(),
             ...obj
         }
@@ -124,7 +128,7 @@ async function storeCurrentTheme() {
             <button class="tab" :class="{ active: selectedTab === 0 }" @click="selectedTab = 0">
                 <span>Catalogus</span>
             </button>
-            <button v-if="storedThemes.length" class="tab" :class="{ active: selectedTab === 1 }" @click="selectedTab = 1">
+            <button class="tab" :class="{ active: selectedTab === 1 }" @click="selectedTab = 1">
                 <span>Opgeslagen</span>
             </button>
             <button class="tab" :class="{ active: selectedTab === 2 }" @click="selectedTab = 2">
@@ -149,24 +153,31 @@ async function storeCurrentTheme() {
             </div>
 
             <div id="personal-presets">
-                <button v-for="(preset, i) in storedThemes" class="theme-preset"
-                    :class="{ matches: presetsMatch(preset) }" :title="preset.name" @click="promptPreset(preset)">
-                    <MagisterThemePreview class="theme-preset-preview" :preset="preset" :scale="1.2" />
-                    <div class="theme-preset-info">
-                        <span class="theme-preset-name">Eigen thema</span>
-                        <span class="theme-preset-author">{{ new Date(preset.date)?.toLocaleString('nl-NL') }}</span>
-                    </div>
-                    <div class="theme-actions">
-                        <button @click.stop="deletePromptIndex = i; isDeletePromptActive = true"
-                            title="Persoonlijk thema verwijderen">
-                            <Icon>delete</Icon>
-                        </button>
-                        <a @click.stop title="Persoonlijk thema exporteren naar bestand"
-                            :href="generatePresetUrl(preset)" :download="preset.date + '.sttheme'">
-                            <Icon>file_export</Icon>
-                        </a>
-                    </div>
-                </button>
+                <TransitionGroup name="list">
+                    <button v-for="(preset, i) in storedThemes" class="theme-preset" :key="preset.date || preset.name"
+                        :class="{ matches: presetsMatch(preset) }" :title="preset.name" @click="promptPreset(preset)">
+                        <MagisterThemePreview class="theme-preset-preview" :preset="preset" :scale="1.2" />
+                        <div class="theme-preset-info">
+                            <span class="theme-preset-name">Eigen thema</span>
+                            <span class="theme-preset-author">{{ new Date(preset.date)?.toLocaleString('nl-NL')
+                            }}</span>
+                        </div>
+                        <div class="theme-actions">
+                            <button @click.stop="deletePromptIndex = i; isDeletePromptActive = true"
+                                title="Persoonlijk thema verwijderen">
+                                <Icon>delete</Icon>
+                            </button>
+                            <a @click.stop title="Persoonlijk thema exporteren naar bestand"
+                                :href="generatePresetUrl(preset)" :download="preset.date + '.sttheme'">
+                                <Icon>file_export</Icon>
+                            </a>
+                        </div>
+                    </button>
+                </TransitionGroup>
+                <p v-if="!storedThemes.length" style="text-align: center;">
+                    Je hebt nog geen opgeslagen thema's.<br>
+                    Importeer er één of sla je huidige thema op met de knoppen hierboven.
+                </p>
             </div>
         </div>
 
@@ -270,12 +281,14 @@ async function storeCurrentTheme() {
 #theme-edit>.additional-options {
     overflow-y: auto;
     margin-inline: 4px;
-    border-radius: 12px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 #theme-edit>.additional-options>.surface-container {
     background-color: var(--color-surface-container);
-    border-radius: 12px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 .additional-options .setting-wrapper:nth-child(n+2) {
@@ -364,5 +377,20 @@ async function storeCurrentTheme() {
             }
         }
     }
+}
+
+.list-move,
+.list-enter-active,
+.list-leave-active {
+    transition: all 200ms ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+    opacity: 0;
+}
+
+.list-leave-active {
+    position: absolute;
 }
 </style>

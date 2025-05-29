@@ -24,7 +24,8 @@ const value = computed({
                 <slot name="subtitle"></slot>
             </span>
         </div>
-        <div class="button-wrapper">
+        <div class="button-wrapper"
+            :class="{ vertical: setting.options.length > 4, horizontal: setting.options.length <= 4 }">
             <button v-for="option in setting.options" :key="option.value" class="button-segment"
                 @click="value = option.value" :data-state="option.value === value" :data-has-icon="!!option.icon">
                 <div class="button-segment-icon-wrapper">
@@ -53,41 +54,69 @@ const value = computed({
 
 .button-wrapper {
     display: flex;
-    flex-wrap: wrap;
     width: 100%;
     box-sizing: border-box;
+}
+
+.button-wrapper.vertical {
+    flex-direction: column;
+    max-height: 240px;
+    overflow-y: auto;
 }
 
 .button-segment {
     position: relative;
     display: grid;
     align-items: center;
-    justify-content: center;
     grid-template-columns: 0px auto;
     gap: 8px;
-    flex: 1 1 0px;
     height: 40px;
     min-width: 48px;
     padding-inline: 12px;
-    margin-block: 4px;
     background-color: transparent;
     border: 1px solid var(--color-outline);
-    border-right: none;
     outline: none;
     cursor: pointer;
     overflow: hidden;
     transition: grid-template-columns 200ms;
 }
 
-.button-segment:first-of-type {
+.button-wrapper.horizontal>.button-segment {
+    border-right: none;
+    justify-content: center;
+    margin-block: 4px;
+    flex: 1 1 0px;
+}
+
+.button-wrapper.horizontal>.button-segment:first-of-type {
     border-top-left-radius: 20px;
     border-bottom-left-radius: 20px;
 }
 
-.button-segment:last-of-type {
+.button-wrapper.horizontal>.button-segment:last-of-type {
     border-top-right-radius: 20px;
     border-bottom-right-radius: 20px;
     border-right: 1px solid var(--color-outline);
+}
+
+.button-wrapper.vertical>.button-segment {
+    border-bottom: none;
+    flex: 0 0 40px;
+}
+
+.button-wrapper.vertical>.button-segment>.button-segment-text {
+    text-align: left;
+}
+
+.button-wrapper.vertical>.button-segment:first-of-type {
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.button-wrapper.vertical>.button-segment:last-of-type {
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-bottom: 1px solid var(--color-outline);
 }
 
 .button-segment[data-state=true] {
