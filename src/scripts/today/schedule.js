@@ -479,8 +479,8 @@ class ScheduleDay {
 
             if (this.isToday) {
                 if (!listViewEnabled) {
-                    this.body.lastElementChild.scrollIntoView({ behavior: 'instant', block: 'center' });
-                    this.body.firstElementChild.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+                    if (this.body.lastElementChild) this.body.lastElementChild.scrollIntoView({ behavior: 'instant', block: 'center' });
+                    if (this.body.firstElementChild) this.body.firstElementChild.scrollIntoView({ behavior: 'instant', block: 'nearest' });
 
                     this.#nowMarker = this.body.createChildElement('div', {
                         class: 'st-now-marker',
@@ -490,7 +490,7 @@ class ScheduleDay {
                     });
 
                     if (schedule.positionInRange(this.date)) {
-                        setTimeout(() => this.#nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+                        setTimeout(() => { if (this.#nowMarker) this.#nowMarker.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 200);
                     }
                 }
 
