@@ -46,6 +46,11 @@ const tabs = [
         name: 'ELO',
         icon: 'local_library'
     },
+{
+        id: 'store',
+        name: 'Store',
+        icon: 'store'
+    },
     {
         id: 'about',
         name: 'Over',
@@ -54,7 +59,7 @@ const tabs = [
 ]
 
 function navClick(id) {
-    let change = (value.value !== id)
+    const change = (value.value !== id)
     value.value = id
     emit('scrollToTop', change)
 }

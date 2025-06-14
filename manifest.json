@@ -91,6 +91,16 @@
                 "src/scripts/util.js",
                 "src/scripts/theme-store.js"
             ]
+        },
+        {
+            "matches": [
+                "*://localhost/*",
+                "*://127.0.0.1/*",
+                "*://testing.siemvk.nl/*"
+            ],
+            "js": [
+                "src/scripts/theme-store.js"
+            ]
         }
     ],
     "web_accessible_resources": [
