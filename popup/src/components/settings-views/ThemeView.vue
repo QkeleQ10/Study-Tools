@@ -158,9 +158,8 @@ async function storeCurrentTheme() {
                         :class="{ matches: presetsMatch(preset) }" :title="preset.name" @click="promptPreset(preset)">
                         <MagisterThemePreview class="theme-preset-preview" :preset="preset" :scale="1.2" />
                         <div class="theme-preset-info">
-                            <span class="theme-preset-name">Eigen thema</span>
-                            <span class="theme-preset-author">{{ new Date(preset.date)?.toLocaleString('nl-NL')
-                            }}</span>
+                            <span class="theme-preset-name">{{ preset.name }}</span>
+                            <span class="theme-preset-author">Door {{ preset.author || 'Onbekend' }}</span>
                         </div>
                         <div class="theme-actions">
                             <button @click.stop="deletePromptIndex = i; isDeletePromptActive = true"
