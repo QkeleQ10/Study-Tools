@@ -27,8 +27,9 @@ const applyPromptPreset = ref({})
 const isDeletePromptActive = ref(false)
 const deletePromptIndex = ref(0)
 
-const isNamePromptActive = ref(false)
-const namePromptContent = ref('')
+const isSavePromptActive = ref(false)
+const savePromptName = ref('')
+const savePromptAuthor = ref('')
 
 const storedThemes = computed({
     get() { return Object.values(localStorage.value?.storedThemes || []) },
@@ -103,6 +104,12 @@ function generatePresetUrl(preset) {
     return "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj))
 }
 
+async function promptSave() {
+    isSavePromptActive.value = true
+    savePromptName.value = ''
+    savePromptAuthor.value = ''
+}
+
 async function storeCurrentTheme() {
     const fallbackPreset = presets[0]
 
@@ -114,7 +121,8 @@ async function storeCurrentTheme() {
     storedThemes.value = [
         ...storedThemes.value,
         {
-            name: namePromptContent?.length ? namePromptContent.value : 'Eigen thema',
+            name: savePromptName.value.length ? savePromptName.value : '',
+            author: savePromptAuthor.value.length ? savePromptAuthor.value : '',
             date: new Date().toISOString(),
             ...obj
         }
@@ -146,7 +154,7 @@ async function storeCurrentTheme() {
                     <Icon>upload_file</Icon>
                     <span>Importeren</span>
                 </button>
-                <button v-if="!allPresets.some(p => presetsMatch(p))" class="button tonal" @click="storeCurrentTheme">
+                <button v-if="!allPresets.some(p => presetsMatch(p))" class="button tonal" @click="promptSave">
                     <Icon>library_add</Icon>
                     <span>Huidig thema opslaan</span>
                 </button>
@@ -158,8 +166,12 @@ async function storeCurrentTheme() {
                         :class="{ matches: presetsMatch(preset) }" :title="preset.name" @click="promptPreset(preset)">
                         <MagisterThemePreview class="theme-preset-preview" :preset="preset" :scale="1.2" />
                         <div class="theme-preset-info">
-                            <span class="theme-preset-name">{{ preset.name }}</span>
-                            <span class="theme-preset-author">Door {{ preset.author || 'Onbekend' }}</span>
+                            <span class="theme-preset-name" v-if="preset.name?.length">{{ preset.name }}</span>
+                            <span class="theme-preset-name" v-else>Eigen thema</span>
+                            <span class="theme-preset-author" v-if="preset.author?.length">{{ preset.author }}</span>
+                            <span class="theme-preset-date">
+                                {{ new Date(preset.date)?.toLocaleString('nl-NL') }}
+                            </span>
                         </div>
                         <div class="theme-actions">
                             <button @click.stop="deletePromptIndex = i; isDeletePromptActive = true"
@@ -225,6 +237,26 @@ async function storeCurrentTheme() {
                 <button
                     @click="storedThemes = storedThemes.filter((v, i) => i !== deletePromptIndex); isDeletePromptActive = false">Verwijderen</button>
                 <button @click="isDeletePromptActive = false">Annuleren</button>
+            </template>
+        </Dialog>
+
+        <Dialog v-model:active="isSavePromptActive">
+            <template #icon>library_add</template>
+            <template #headline>Thema opslaan</template>
+            <template #text>
+                Als je wilt, kun je dit thema een naam geven en een auteur toevoegen.
+                <TextInput v-model="savePromptName"
+                    style="margin-top: 16px; --context-color: var(--color-surface-container-high);">
+                    <template #title>Naam thema</template>
+                </TextInput>
+                <TextInput v-model="savePromptAuthor"
+                    style="margin-top: 16px; --context-color: var(--color-surface-container-high);">
+                    <template #title>Auteur</template>
+                </TextInput>
+            </template>
+            <template #buttons>
+                <button @click="storeCurrentTheme(); isSavePromptActive = false">Opslaan</button>
+                <button @click="isSavePromptActive = false">Annuleren</button>
             </template>
         </Dialog>
     </div>
