@@ -57,9 +57,9 @@ function presetMatches(preset) {
 <style></style>
 
 <style scoped>
-#theme-preview.image {
+/* #theme-preview.image {
     overflow: hidden;
     width: 100%;
     height: 100%;
-}
+} */
 </style>
