@@ -113,16 +113,6 @@
                 "*://*.magister.net/*",
                 "*://study-tools.nl/*"
             ]
-        },
-        {
-            "matches": [
-                "*://localhost/*",
-                "*://127.0.0.1/*",
-                "*://testing.siemvk.nl/*"
-            ],
-            "js": [
-                "src/scripts/theme-store.js"
-            ]
         }
     ],
     "action": {
