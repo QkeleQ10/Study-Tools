@@ -96,6 +96,11 @@ export default [
         ]
     },
     {
+        // er is een custom pagina voor de store
+        id: "store",
+        settings: []
+    },
+    {
         id: "login",
         settings: [
             {
@@ -428,22 +433,6 @@ export default [
                 ],
             },
             // TODO: setting to disable color adaptation for dark theme
-        ]
-    },
-    {
-        id: "store",
-        title: "theme Store",
-        subtitle: "Thema's en decoraties",
-        settings: [
-            {
-                id: "theme-store",
-                title: "Thema Store",
-                subtitle: "beschikbaar op https://testing.siemvk.nl/ omdat ik niet weet hoe ik hier een custom pagina moet maken.",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
-            },
         ]
     }
 ]

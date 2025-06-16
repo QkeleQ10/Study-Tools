@@ -95,6 +95,7 @@ function openInNewTab(url) {
         <main id="main" ref="main">
             <template v-for="category in settings">
                 <ThemeView v-if="category.id === 'theme' && category.id === selectedCategory" />
+                <StoreView v-if="category.id === 'store' && category.id === selectedCategory" />
                 <div class="options-category auto" v-else-if="category.id === selectedCategory" :key="category.id"
                     :data-category="category.id">
                     <About v-if="category.id === 'about'" key="about" @reset-settings="resetSettingDefaults" />

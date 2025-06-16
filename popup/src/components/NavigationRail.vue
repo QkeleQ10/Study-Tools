@@ -22,6 +22,11 @@ const tabs = [
         icon: 'format_paint'
     },
     {
+        id: 'store',
+        name: 'Store',
+        icon: 'store'
+    },
+    {
         id: 'login',
         name: 'Inloggen',
         icon: 'key'
@@ -45,11 +50,6 @@ const tabs = [
         id: 'studyguide',
         name: 'ELO',
         icon: 'local_library'
-    },
-{
-        id: 'store',
-        name: 'Store',
-        icon: 'store'
     },
     {
         id: 'about',
