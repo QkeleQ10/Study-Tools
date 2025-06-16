@@ -1,26 +1,39 @@
 const storedThemes = {
     get value() {
         return new Promise((resolve) => {
-            if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.get(['storedThemes'], (result) => {
-                    resolve(result.storedThemes || []);
+            if (
+                typeof chrome !== "undefined" &&
+                chrome.storage &&
+                chrome.storage.local
+            ) {
+                chrome.storage.local.get(["storedThemes"], (result) => {
+                    const themes = Array.isArray(result.storedThemes)
+                        ? result.storedThemes
+                        : result.storedThemes
+                            ? Object.values(result.storedThemes)
+                            : [];
+                    resolve(themes);
                 });
             } else {
-                // Fallback for non-extension environments
                 resolve([]);
             }
         });
     },
     set value(val) {
-        if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        if (
+            typeof chrome !== "undefined" &&
+            chrome.storage &&
+            chrome.storage.local
+        ) {
             chrome.storage.local.set({ storedThemes: val });
         }
-        // Optionally handle fallback for non-extension environments
-    }
+    },
 };
 
-document.getElementById('magisterStudyToolsInstalledNotVisible').style.display = 'none';
-document.getElementById('magisterStudyToolsInstalledVisible').style.display = 'block';
+document.getElementById("magisterStudyToolsInstalledNotVisible").style.display =
+    "none";
+document.getElementById("magisterStudyToolsInstalledVisible").style.display =
+    "block";
 
 const observer = new MutationObserver(function () {
     const load = document.querySelector("StudyToolLoadComand");
@@ -34,15 +47,15 @@ observer.observe(document, { childList: true, subtree: true });
 async function storeCustomTheme(themeJson) {
     let currentThemes = await storedThemes.value;
     if (!Array.isArray(currentThemes)) {
-        currentThemes = [];
+        throw new Error(
+            "Stored themes should be an array, but got: " + typeof currentThemes
+        );
     }
-    // Prevent adding duplicate themes based on a unique property, e.g., 'name'
-    if (!currentThemes.some(theme => theme.name === themeJson.name)) {
-        storedThemes.value = [
-            ...currentThemes,
-            {
-                ...themeJson
-            }
-        ];
+
+    if (!themeJson) {
+        return;
+    }
+    if (!currentThemes.some((t) => t.id === themeJson.id)) {
+        storedThemes.value = [...currentThemes, themeJson];
     }
 }

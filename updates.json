@@ -1,4 +1,5 @@
 {
+    "3.13.0": "Thema store",
     "3.12.0": "Nieuwe widget- en thema-editor.",
     "3.11.0": "Magister Wrapped reimagined",
     "3.10.0": "Geavanceerde thema-instellingen!",
@@ -25,7 +26,7 @@
     "2.5.0": "Cijferstatistieken toegevoegd aan het cijferoverzicht en verscheidene updates aan uiterlijk en stabiliteit.",
     "2.4.1": "Verbeteringen aan stabiliteit en uiterlijk.",
     "2.4.0": "Je cijferoverzicht kan nu worden geback-upt! Ook is het configuratiepaneel helemaal opnieuw gebouwd.",
-    "2.3.2": "Updates aan onder andere het configuratiepaneel en stabiliteit.", 
+    "2.3.2": "Updates aan onder andere het configuratiepaneel en stabiliteit.",
     "2.3.1": "Cijfercalculator overzichtelijker, rooster 'Vandaag' updatet nu live, veel kleine aanpassingen.",
     "2.3.0": "Configuratiepaneel heeft nu twee delen en is overzichtelijker, het scala aan opties uitgebreid.",
     "2.2.2": "Verbeterde arcering van huidige afspraak, update-meldingen, problemen opgelost.",
