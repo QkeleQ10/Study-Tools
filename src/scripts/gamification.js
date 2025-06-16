@@ -3,21 +3,20 @@ let user = {}
 let years = []
 let wrappedPage = 0
 
-const range1 = { start: new Date(now.getFullYear() + '-06-12 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 12th - September 15th
-const range2 = { start: new Date(now.getFullYear() + '-06-21 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // June 21st - September 15th
-const range3 = { start: new Date(now.getFullYear() + '-07-04 00:00'), end: new Date(now.getFullYear() + '-09-16 00:00') } // July 4th - September 15th
-// vakantie N: 07-20 to 09-01
-// vakantie M: 07-13 to 08-25
-// vakantie Z: 07-06 to 08-18
+const range1 = { start: new Date(now.getFullYear() + '-06-12 16:00'), end: new Date(now.getFullYear() + '-09-23 00:00') } // June 12 - September 22
+const range2 = { start: new Date(now.getFullYear() + '-06-27 00:00'), end: new Date(now.getFullYear() + '-09-23 00:00') } // June 27 - September 22
+const range3 = { start: new Date(now.getFullYear() + '-07-04 00:00'), end: new Date(now.getFullYear() + '-09-23 00:00') } // July  4 - September 22
+const isInRange = (range) => now >= range.start && now <= range.end;
+// vakantie N: 12 juli t/m 24 augustus 2025
+// vakantie M: 19 juli t/m 31 augustus 2025
+// vakantie Z: 5 juli t/m 17 augustus 2025
 
 const gradients = ['linear-gradient(to right, #485563, #29323c)', 'linear-gradient(105deg, #485596, #29326A)', 'linear-gradient(105deg, #775596, #55326A)', 'linear-gradient(105deg, rgb(150,85,128), rgb(106,50,95))', 'linear-gradient(105deg, rgb(150,85,99), rgb(106,50,50))', 'linear-gradient(105deg, rgb(150,110,85), rgb(106,75,50))', 'linear-gradient(105deg, rgb(150,138,85), rgb(106,99,70))', 'linear-gradient(105deg, rgb(134,150,85), rgb(91,106,50))', 'linear-gradient(105deg, rgb(106,150,85), rgb(59,106,50))', 'linear-gradient(105deg, rgb(72,130,90), rgb(46,96,62))', 'linear-gradient(105deg, rgb(85,150,129), rgb(50,106,97))', 'linear-gradient(105deg, rgb(85,139,150), rgb(50,92,106))', 'linear-gradient(105deg, rgb(85,117,150), rgb(50,73,106))', 'linear-gradient(105deg, rgb(85,97,150), rgb(50,51,106))', 'linear-gradient(105deg, rgb(120,160,160), rgb(50,99,96))', 'linear-gradient(105deg, rgb(154,140,80), rgb(110,106,60))']
 
-checkWrapped()
-
-window.checkWrapped = checkWrapped()
+checkWrapped();
 
 async function checkWrapped() {
-    if ((now >= range1.start && now <= range1.end) ) {
+    if ((now >= range1.start && now <= range1.end)) {
 
         user = await magisterApi.accountInfo()
 
@@ -25,20 +24,31 @@ async function checkWrapped() {
             .filter(year => Number(year.einde.split('-')[0]) <= now.getFullYear()) // Filter years to not include the upcoming school year
             .sort((a, b) => new Date(a.begin) - new Date(b.begin))
 
-        const examInfo = await magisterApi.exams.info(years.at(-1))
-        years[years.length - 1].examInfo = examInfo
+        let examInfo = {}
+        let recentGrades = []
 
-        const recentGrades = await magisterApi.gradesRecent()
+        try {
+            examInfo = await magisterApi.examsInfo(years.at(-1));
+            years[years.length - 1].examInfo = examInfo;
+        } catch (error) {
+        }
 
-        if ((examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig) ) {
-            // Continue if it's inside 'range 1' and the student has had their final exams
-            commenceWrapped(true)
-        } else if (now >= range2.start && now <= range2.end && recentGrades?.length > 0) {
-            // Else, continue if it's inside 'range 2' and the student has grades
-            commenceWrapped(false)
-        } else if (now >= range3.start && now <= range3.end) {
-            // Else, continue if it's inside 'range 3'
-            commenceWrapped(false)
+        try {
+            recentGrades = await magisterApi.gradesRecent();
+        } catch (error) {
+        }
+
+        // Determine if Wrapped should be shown
+
+        if (examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig && isInRange(range1)) {
+            // Final year student after exams in range1
+            commenceWrapped(true);
+        } else if (isInRange(range2) && recentGrades?.length > 0) {
+            // Any student with grades in range2
+            commenceWrapped(false);
+        } else if (isInRange(range3)) {
+            // Any student in range3
+            commenceWrapped(false);
         }
     }
 }
@@ -154,13 +164,14 @@ async function constructWrapped(lastYearOnly) {
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
                 const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
-                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas` })
+                const yearTitleText = i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas`
+                const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: yearTitleText })
                 let cards = []
 
                 yearTitle.addEventListener('click', () => {
                     yearTitle.innerText = `Study Tools Wrapped: ${year.groep?.omschrijving || '?'}`
                     setTimeout(() => {
-                        yearTitle.innerText = i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas`
+                        yearTitle.innerText = yearTitleText
                     }, 2000)
                 })
 
@@ -181,21 +192,31 @@ async function constructWrapped(lastYearOnly) {
                     year.absences = years.flatMap(obj => obj.absences)
                     year.assignments = years.flatMap(obj => obj.assignments)
                 } else {
-                    if ((years.length - i) <= 2) year.examInfo ??= await magisterApi.exams.info(year) || null
-                    if ((years.length - i) <= 2) year.exams = await magisterApi.exams.list(year) || []
-                    year.grades = (await magisterApi.gradesForYear(year) || [])
-                        .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
-                        .filter((grade, index, self) =>
-                            index === self.findIndex((g) =>
-                                g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
-                                g?.CijferKolom?.KolomNaam === grade.CijferKolom.KolomNaam &&
-                                g?.CijferStr === grade.CijferStr
+                    try {
+                        if ((years.length - i) <= 2) year.examInfo ??= await magisterApi.examsInfo(year) || null
+                        if ((years.length - i) <= 2) year.exams = await magisterApi.examsList(year) || []
+                    } catch (error) { year.examInfo = null; year.exams = [] }
+                    try {
+                        year.grades = (await magisterApi.gradesForYear(year) || [])
+                            .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
+                            .filter((grade, index, self) =>
+                                index === self.findIndex((g) =>
+                                    g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
+                                    g?.CijferKolom?.KolomNaam === grade.CijferKolom.KolomNaam &&
+                                    g?.CijferStr === grade.CijferStr
+                                )
                             )
-                        )
-                        .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
-                    year.events = (await magisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks')) || []
-                    year.absences = await magisterApi.absencesForYear(year) || []
-                    year.assignments = await magisterApi.assignmentsForYear(year) || []
+                            .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+                    } catch (error) { year.grades = [] }
+                    try {
+                        year.events = (await magisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks')) || []
+                    } catch (error) { year.events = [] }
+                    try {
+                        year.absences = await magisterApi.absencesForYear(year) || []
+                    } catch (error) { year.absences = [] }
+                    try {
+                        year.assignments = await magisterApi.assignmentsForYear(year) || []
+                    } catch (error) { year.assignments = [] }
                 }
 
                 years[i] = year

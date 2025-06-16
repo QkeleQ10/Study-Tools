@@ -303,6 +303,13 @@ export default [
                 subtitle: "Alleen in het cijferoverzicht en in de cijferwidget.",
                 default: true,
             },
+            {
+                id: "ignore-grade-columns",
+                title: "Te negeren cijferkolommen",
+                subtitle: "Cijferkolomkoppen met deze namen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",
+                type: "Text",
+                default: "%klaar;#tedoen;#gedaan;gedr;verantw;welb;capa"
+            } 
         ]
     },
     {
