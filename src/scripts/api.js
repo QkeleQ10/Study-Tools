@@ -145,23 +145,20 @@ class MagisterApiRequest {
 
     get(options = {}) {
 
-        return new Promise(async (resolve, reject) => {
-            if (!window.location.pathname.includes('magister')) reject();
+        if (!window.location.pathname.includes('magister')) return Promise.reject();
 
-            if (magisterApi.useSampleData && this.sample) {
-                resolve(this.sample);
-            } else if (!this.identifier || !this.path) {
-                reject();
-            } else if (magisterApi.cache[this.identifier] && !magisterApi.cache[this.identifier].then) {
-                resolve(magisterApi.cache[this.identifier]);
-            } else {
-                let res = await this.#fetchWrapper(
-                    `https://${magisterApi.schoolName}.magister.net/${this.path}`,
-                    options
-                );
-                resolve(res);
-            }
-        });
+        if (magisterApi.useSampleData && this.sample) {
+            return Promise.resolve(this.sample);
+        } else if (!this.identifier || !this.path) {
+            return Promise.reject();
+        } else if (magisterApi.cache[this.identifier] && !magisterApi.cache[this.identifier].then) {
+            return Promise.resolve(magisterApi.cache[this.identifier]);
+        } else {
+            return this.#fetchWrapper(
+                `https://${magisterApi.schoolName}.magister.net/${this.path}`,
+                options
+            );
+        }
     }
 
     async put(body = {}, options = {}) {
@@ -224,20 +221,25 @@ class MagisterApiRequest {
                 await magisterApi.updateApiCredentials()
                     .catch(err => console.error(err));
             }
-            let res = await fetch(url.replace(/(\$USERID)/gi, magisterApi.userId), {
-                headers: {
-                    Authorization: magisterApi.userToken,
-                    'X-Request-Source': 'study-tools'
-                },
-                ...options
-            });
-            if (res.ok) {
+
+            try {
+                let res = await fetch(url.replace(/(\$USERID)/gi, magisterApi.userId), {
+                    headers: {
+                        Authorization: magisterApi.userToken,
+                        'X-Request-Source': 'study-tools'
+                    },
+                    ...options
+                });
+
+                if (!res.ok)
+                    throw new Error(`Request failed: ${res.status} ${res.statusText} (@ ${this.identifier})`);
+
                 let json = await res.json();
                 console.info(`APIRQ OK after ${new Date() - calledAt} ms (@ ${this.identifier})`);
                 resolve(json);
-            } else {
-                console.info(`APIRQ ERR: ${res.status}.`);
-                reject(res);
+            } catch (error) {
+                console.error(error);
+                reject(error);
             }
         });
     }
@@ -346,7 +348,7 @@ class MagisterApiRequestGradesForYear extends MagisterApiRequest {
         this.identifier = `gradesYear${year?.id}`;
         this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
     }
-    outputFormat = (res) => res.Items;
+    outputFormat = (res) => res.Items.filter(item => !syncedStorage['ignore-grade-columns'].includes(item.CijferKolom?.KolomKop || 'undefined'));
 }
 
 class MagisterApiRequestGradesColumnInfo extends MagisterApiRequest {
