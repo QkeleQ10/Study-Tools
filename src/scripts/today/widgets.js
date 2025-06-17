@@ -88,6 +88,7 @@ class ListWidget extends Widget {
         this.#listElement = this.element.createChildElement('ul', {
             id: `st-widget-${this.constructor.id}-list`,
             class: 'st-widget-list',
+            style: this.constructor.options.view === 'compact' ? 'display: none;' : '',
         });
 
         this.#drawList();
@@ -277,6 +278,21 @@ class HomeworkWidget extends ListWidget {
                     default: true
                 },
             ]
+        },
+        view: {
+            title: "Weergave",
+            type: 'select',
+            choices: [
+                {
+                    title: "Lijst",
+                    value: 'regular',
+                    default: true
+                },
+                {
+                    title: "Alleen aantal",
+                    value: 'compact'
+                }
+            ]
         }
     };
 
@@ -338,6 +354,23 @@ class MessagesWidget extends ListWidget {
 
     static id = 'messages';
     static requiredPermissions = ['Berichten'];
+    static possibleOptions = {
+        view: {
+            title: "Weergave",
+            type: 'select',
+            choices: [
+                {
+                    title: "Lijst",
+                    value: 'regular',
+                    default: true
+                },
+                {
+                    title: "Alleen aantal",
+                    value: 'compact'
+                }
+            ]
+        }
+    }
 }
 
 class AssignmentsWidget extends ListWidget {
@@ -431,6 +464,21 @@ class AssignmentsWidget extends ListWidget {
                 {
                     title: "Tonen",
                     value: 'all'
+                }
+            ]
+        },
+        view: {
+            title: "Weergave",
+            type: 'select',
+            choices: [
+                {
+                    title: "Lijst",
+                    value: 'regular',
+                    default: true
+                },
+                {
+                    title: "Alleen aantal",
+                    value: 'compact'
                 }
             ]
         }

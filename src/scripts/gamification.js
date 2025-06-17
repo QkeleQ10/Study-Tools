@@ -27,16 +27,18 @@ async function checkWrapped() {
         let examInfo = {}
         let recentGrades = []
 
-        try {
-            examInfo = await magisterApi.examsInfo(years.at(-1));
-            years[years.length - 1].examInfo = examInfo;
-        } catch (error) {
-        }
+        if (magisterApi.permissions.includes('ExamenTijdvak'))
+            try {
+                examInfo = await magisterApi.examsInfo(years.at(-1));
+                years[years.length - 1].examInfo = examInfo;
+            } catch (error) {
+            }
 
-        try {
-            recentGrades = await magisterApi.gradesRecent();
-        } catch (error) {
-        }
+        if (magisterApi.permissions.includes('Cijfers'))
+            try {
+                recentGrades = await magisterApi.gradesRecent();
+            } catch (error) {
+            }
 
         // Determine if Wrapped should be shown
 
@@ -51,6 +53,16 @@ async function checkWrapped() {
             commenceWrapped(false);
         }
     }
+
+    let pressedKeys = [], konamiCode = "ArrowUp,ArrowUp,ArrowDown,ArrowDown,ArrowLeft,ArrowRight,ArrowLeft,ArrowRight,KeyB,KeyA";
+    window.addEventListener("keydown", function (e) {
+        pressedKeys.push(e.code);
+        if (pressedKeys.toString().indexOf(konamiCode) >= 0) {
+            console.log("Konami code activated");
+            pressedKeys = [];
+            commenceWrapped(true);
+        }
+    }, true);
 }
 
 async function commenceWrapped(isFinalYearStudent) {
@@ -73,7 +85,7 @@ async function commenceWrapped(isFinalYearStudent) {
         wrappedInvoke.classList.add('spinning')
 
         let promiseArray = [constructWrapped(!isFinalYearStudent)]
-        if ((now < range2.start) && !used) promiseArray.push(notify('dialog', "Als examenleerling heb je toegang tot een voorproefje van Wrapped. Er kan nog het één en ander veranderen.\n\nVergeet niet het overzicht van álle leerjaren aan het eind te bekijken!", null, null, { closeIcon: '', closeText: "Begrepen" }))
+        if ((now < range2.start) && !used) promiseArray.push(notify('dialog', "Je hebt toegang tot een voorproefje van Study Tools Wrapped. Er kan nog het één en ander veranderen.\n\nVergeet niet het overzicht van álle leerjaren aan het eind te bekijken!", null, null, { closeIcon: '', closeText: "Begrepen" }))
 
         const [wrappedDialog] = await Promise.all(promiseArray)
 
@@ -163,8 +175,8 @@ async function constructWrapped(lastYearOnly) {
                 let seed = cyrb128((year.groep?.code + year.lesperiode?.code) || (user.Persoon.Roepnaam + i))
                 let rand = sfc32(seed[0], seed[1], seed[2], seed[3])
 
-                const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.replace(/\D/gi, '')}.svg')` })
-                const yearTitleText = i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.replace(/\D/gi, ''), true)} klas`
+                const yearElement = element('div', null, null, { class: 'st-wrapped-year', style: `--gradient: ${gradients.random(seed)} ; --pattern: url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/decorations/wrapped/${i === years.length ? 'a' : year.studie.code.match(/\d/gi)?.[0]}.svg')` })
+                const yearTitleText = i === years.length ? "Study Tools Wrapped: alle leerjaren" : `Study Tools Wrapped: ${formatOrdinals(year.studie.code.match(/\d/gi)?.[0], true)} klas`
                 const yearTitle = element('span', null, yearElement, { class: 'st-wrapped-year-title', innerText: yearTitleText })
                 let cards = []
 
@@ -180,7 +192,7 @@ async function constructWrapped(lastYearOnly) {
                 })
 
                 if (i === years.length) {
-                    year.grades = years.flatMap(obj => obj.grades)
+                    year.grades = years.filter(y => y.grades?.length).flatMap(y => y.grades)
                         .filter((grade, index, self) =>
                             index === self.findIndex((g) =>
                                 g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
@@ -188,35 +200,40 @@ async function constructWrapped(lastYearOnly) {
                                 g?.CijferStr === grade.CijferStr
                             )
                         )
-                    year.events = years.flatMap(obj => obj.events)
-                    year.absences = years.flatMap(obj => obj.absences)
-                    year.assignments = years.flatMap(obj => obj.assignments)
+                    year.events = years.filter(y => y.events?.length).flatMap(y => y.events)
+                    year.absences = years.filter(y => y.absences?.length).flatMap(y => y.absences)
+                    year.assignments = years.filter(y => y.assignments?.length).flatMap(y => y.assignments)
                 } else {
-                    try {
-                        if ((years.length - i) <= 2) year.examInfo ??= await magisterApi.examsInfo(year) || null
-                        if ((years.length - i) <= 2) year.exams = await magisterApi.examsList(year) || []
-                    } catch (error) { year.examInfo = null; year.exams = [] }
-                    try {
-                        year.grades = (await magisterApi.gradesForYear(year) || [])
-                            .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
-                            .filter((grade, index, self) =>
-                                index === self.findIndex((g) =>
-                                    g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
-                                    g?.CijferKolom?.KolomNaam === grade.CijferKolom.KolomNaam &&
-                                    g?.CijferStr === grade.CijferStr
+                    if (magisterApi.permissions.includes('ExamenTijdvak'))
+                        try {
+                            if ((years.length - i) <= 2) year.examInfo ??= await magisterApi.examsInfo(year) || null
+                            if ((years.length - i) <= 2) year.exams = await magisterApi.examsList(year) || []
+                        } catch (error) { year.examInfo = null; year.exams = [] }
+                    if (magisterApi.permissions.includes('Cijfers'))
+                        try {
+                            year.grades = (await magisterApi.gradesForYear(year) || [])
+                                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
+                                .filter((grade, index, self) =>
+                                    index === self.findIndex((g) =>
+                                        g?.CijferKolom?.KolomKop === grade.CijferKolom.KolomKop &&
+                                        g?.CijferKolom?.KolomNaam === grade.CijferKolom.KolomNaam &&
+                                        g?.CijferStr === grade.CijferStr
+                                    )
                                 )
-                            )
-                            .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
-                    } catch (error) { year.grades = [] }
-                    try {
-                        year.events = (await magisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks')) || []
-                    } catch (error) { year.events = [] }
-                    try {
-                        year.absences = await magisterApi.absencesForYear(year) || []
-                    } catch (error) { year.absences = [] }
-                    try {
-                        year.assignments = await magisterApi.assignmentsForYear(year) || []
-                    } catch (error) { year.assignments = [] }
+                                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+                        } catch (error) { year.grades = [] }
+                    if (magisterApi.permissions.includes('Afspraken'))
+                        try {
+                            year.events = (await magisterApi.events(new Date(year.begin), new Date(year.einde))).filter(event => !event.Omschrijving.includes('DrumWorks')) || []
+                        } catch (error) { year.events = [] }
+                    if (magisterApi.permissions.includes('Absenties'))
+                        try {
+                            year.absences = await magisterApi.absencesForYear(year) || []
+                        } catch (error) { year.absences = [] }
+                    if (magisterApi.permissions.includes('EloOpdracht'))
+                        try {
+                            year.assignments = await magisterApi.assignmentsForYear(year) || []
+                        } catch (error) { year.assignments = [] }
                 }
 
                 years[i] = year

@@ -306,7 +306,7 @@ export default [
             {
                 id: "ignore-grade-columns",
                 title: "Te negeren cijferkolommen",
-                subtitle: "Cijferkolomkoppen met deze namen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",
+                subtitle: "Cijferkolommen met deze kolomkoppen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",
                 type: "Text",
                 default: "%klaar;#tedoen;#gedaan;gedr;verantw;welb;capa"
             } 
