@@ -1,7 +1,7 @@
 chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service worker
 
-let syncedStorage = {},
-    localStorage = {},
+let syncedStorage,
+    localStorage,
     locale = 'nl-NL',
     i18nData = {},
     i18nDataNl = {},
@@ -14,24 +14,53 @@ let eggs = [],
     announcements = [],
     snackbarQueue = [];
 
-(async () => {
-    if (chrome?.storage) {
-        syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+const dates = {
+    get now() { return new Date() },
+    get today() { return midnight() },
+    get tomorrow() { return midnight(null, 1) },
+    get gatherStart() { return midnight(null, -7) },
+    get gatherEarlyStart() { return midnight(null, -42) },
+    get gatherEnd() { return midnight(null, 42) },
+};
 
-        if (chrome?.runtime) {
-            locale = syncedStorage['language']
-            if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'sv-SE', 'la-LA'].includes(locale)) locale = 'nl-NL'
-            const req = await fetch(chrome.runtime.getURL(`src/strings/${locale.split('-')[0]}.json`))
-            i18nData = await req.json()
-            const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`))
-            i18nDataNl = await reqNl.json()
-        }
+async function initialiseStorage() {
+    return new Promise(async (resolve, reject) => {
+        if (chrome?.storage) {
+            const syncedStorageData = await getFromStorageMultiple(null, 'sync', true);
+            const localStorageData = await getFromStorageMultiple(null, 'local', true);
 
-        localStorage = await getFromStorageMultiple(null, 'local', true)
-    }
+            syncedStorage = new Proxy(syncedStorageData, {
+                set(target, property, value) {
+                    target[property] = value;
+                    saveToStorage(property, value, 'sync');
+                    return true;
+                }
+            });
 
-    verbose = syncedStorage['verbosity']
-})()
+            localStorage = new Proxy(localStorageData, {
+                set(target, property, value) {
+                    target[property] = value;
+                    saveToStorage(property, value, 'local');
+                    return true;
+                }
+            });
+
+            if (chrome?.runtime) {
+                locale = syncedStorage['language'];
+                if (!['nl-NL', 'en-GB', 'fr-FR', 'de-DE', 'sv-SE', 'la-LA'].includes(locale)) locale = 'nl-NL';
+                const req = await fetch(chrome.runtime.getURL(`src/strings/${locale.split('-')[0]}.json`));
+                i18nData = await req.json();
+                const reqNl = await fetch(chrome.runtime.getURL(`src/strings/nl.json`));
+                i18nDataNl = await reqNl.json();
+            }
+
+            resolve();
+        } else reject();
+
+        verbose = syncedStorage['verbosity'];
+    });
+}
+initialiseStorage();
 
 /**
  * 
@@ -45,28 +74,42 @@ function setIntervalImmediately(func, interval) {
 
 /**
  * Creates an element if it doesn't exist already and applies the specified properties to it.
- * @param {string} [tagName] The element's tag name
- * @param {string} [id] The element's ID
- * @param {HTMLElement} [parent] The element's parent
- * @param {Object} [attributes] The attributes to assign to the element
- * @param {string} [attributes.innerText] The element's inner text
- * @returns {HTMLElement} The created element.
+ * @param {string} tagName - The element's tag name
+ * @param {HTMLElement} [parent] - The element's parent
+ * @param {Object} [attributes] - The attributes to assign to the element
+ * @param {string} [attributes.id] - The element's ID
+ * @param {string} [attributes.innerText] - The element's inner text
+ * @param {Object|string} [attributes.style] - The element's style
+ * @returns {HTMLElement} - The created or updated element.
  */
-function element(tagName, id, parent, attributes) {
-    let elem = id ? document.getElementById(id) : undefined
-    if (!elem) {
-        elem = document.createElement(tagName)
-        if (id) elem.id = id
-        if (parent) parent.append(elem)
-        if (attributes) elem.setAttributes(attributes)
-    } else {
-        if (attributes) elem.setAttributes(attributes)
+function createElement(tagName, parent, attributes = {}) {
+    let element = attributes.id ? document.getElementById(attributes.id) : null;
+    if (!element) { // Create element if it doesn't exist
+        element = document.createElement(tagName);
     }
-    return elem
+    element.setAttributes(attributes);
+    if (parent) parent.append(element);
+    return element;
+}
+function element(tagName, id, parent, attributes) {
+    return createElement(tagName, parent, { id, ...attributes })
 }
 
+Element.prototype.createChildElement = function (tagName, attributes) {
+    return createElement(tagName, this, attributes)
+}
+
+Element.prototype.createSiblingElement = function (tagName, attributes) {
+    return createElement(tagName, this.parentElement, attributes)
+}
+
+parseBoolean = (value) =>
+    value === 'true' || value === true ? true
+        : value === 'false' || value === false ? false
+            : null
+
 /**
- * 
+ * Wait for an element to be available in the DOM.
  * @param {string} querySelector 
  * @param {boolean} [all=false] 
  * @param {number} [duration=10000] 
@@ -131,12 +174,45 @@ function saveToStorage(key, value, location) {
 
 Element.prototype.setAttributes = function (attributes) {
     const elem = this
-    for (var key in attributes) {
-        if (key === 'innerText') elem.innerText = attributes[key]
-        else if (key === 'innerHTML') elem.innerHTML = attributes[key]
-        else if (key === 'outerHTML') elem.outerHTML = attributes[key]
-        else if (key === 'viewBox') elem.setAttributeNS(null, 'viewBox', attributes[key])
-        else elem.setAttribute(key, attributes[key])
+    for (const [key, value] of Object.entries(attributes)) {
+        switch (key) {
+            case 'innerText':
+            case 'textContent':
+            case 'innerHTML':
+            case 'outerHTML':
+                elem[key] = value;
+                break;
+            case 'viewBox':
+                elem.setAttributeNS(null, 'viewBox', value);
+                break;
+            case 'style':
+                if (typeof value === 'object') {
+                    for (let subKey in value) {
+                        if (/^[a-z]+([A-Z][a-z]*)*$/.test(subKey)) elem.style[subKey] = value[subKey];
+                        else elem.style.setProperty(subKey, value[subKey]);
+                    }
+                    break;
+                } // else, fall through
+            case 'dataset':
+                if (typeof value === 'object') {
+                    for (let subKey in value) {
+                        elem[key][subKey] = value[subKey];
+                    }
+                } else {
+                    elem.setAttribute(key, value);
+                }
+                break;
+            case 'classList':
+                if (Array.isArray(value)) {
+                    elem.classList.add(...value);
+                } else {
+                    elem.classList.add(...value.split(' '));
+                }
+                break;
+            default:
+                if (value != null) elem.setAttribute(key, value);
+                break;
+        }
     }
 }
 
@@ -198,7 +274,7 @@ function updateTemporalBindings() {
                 break
 
             case 'style-hours':
-                element.style.setProperty('--relative-start', now.getHoursWithDecimals())
+                element.style.setProperty('--start-time', now.getHoursWithDecimals())
                 break
 
             case 'ongoing-check':
@@ -233,9 +309,15 @@ setIntervalImmediately(updateTemporalBindings, 1000)
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
 
-function midnight(targetDate) {
-    const date = new Date();
-    date.setDate(targetDate || date.getDate());
+function midnight(targetDate, offset = 0) {
+    let date;
+    if (targetDate instanceof Date) {
+        date = new Date(targetDate);
+        date.setDate(targetDate.getDate() + offset);
+    } else {
+        date = new Date();
+        date.setDate(date.getDate() + offset);
+    }
     date.setHours(0, 0, 0, 0);
     return date;
 }
@@ -258,9 +340,15 @@ Date.prototype.getFormattedDay = function () {
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
 Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
-Date.prototype.isTomorrow = function (offset = 0) { return this >= midnight(new Date().getDate() + 1 + offset) && this < midnight(new Date().getDate() + 2 + offset) }
-Date.prototype.isToday = function (offset = 0) { return this >= midnight(new Date().getDate() + offset) && this < midnight(new Date().getDate() + 1 + offset) }
-Date.prototype.isYesterday = function (offset = 0) { return this >= midnight(new Date().getDate() - 1 + offset) && this < midnight(new Date().getDate() + offset) }
+Date.prototype.addDays = function (days) {
+    let date = new Date(this)
+    date.setDate(date.getDate() + days)
+    return date
+}
+
+Date.prototype.isToday = function (offset = 0) { return this >= midnight(null, offset) && this < midnight(null, 1 + offset) }
+Date.prototype.isTomorrow = function () { return this.isToday(1) }
+Date.prototype.isYesterday = function () { return this.isToday(-1) }
 
 Array.prototype.random = function (seed) {
     let randomValue = Math.random()
@@ -282,17 +370,21 @@ Array.prototype.mode = function () {
     ).at(-1)
 }
 
+String.prototype.toSentenceCase = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1)
+}
+
 Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeholder' }, selectedOption = 'placeholder', onChange, onClick) {
     const dropdown = this
     dropdown.classList.add('st-dropdown')
     dropdown.innerText = ''
     dropdown.dataset.clickFunction = !!onClick
 
-    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption].replace(i18n('sw.hideStudyguide'), i18n('sw.hidden')) })
+    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption]?.replace(i18n('sw.hideStudyguide'), i18n('sw.hidden')) })
     if (onClick) {
         selectedOptionElement.addEventListener('click', event => {
             if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
-            onClick(selectedOption)
+            dropdown.changeValue(onClick(selectedOption))
         })
     }
 
@@ -320,6 +412,8 @@ Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeho
             })
         }
     }
+
+    dropdownPopover.firstElementChild.focus();
 
     dropdown.addEventListener('click', (event) => {
         if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
@@ -558,7 +652,8 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
 
         case 'dialog':
             return new Promise(resolve => {
-                const dialog = element('dialog', null, document.body, { class: 'st-dialog', innerText: body })
+                const dialog = element('dialog', null, document.body, { class: 'st-dialog' })
+                const dialogBody = element('div', null, dialog, { class: 'st-dialog-body', innerText: body })
                 dialog.showModal()
 
                 const buttonsWrapper = element('div', null, dialog, { class: 'st-button-wrapper' })
@@ -592,7 +687,7 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
                     })
                     resolve(dialog)
                 } else {
-                    const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || "Sluiten" })
+                    const dialogDismiss = element('button', null, buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') })
                     if (options?.index && options?.length) {
                         dialogDismiss.classList.add('st-step')
                         dialogDismiss.innerText = `${options.index} / ${options.length}`
@@ -614,13 +709,81 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
     }
 }
 
+class Dialog {
+    element;
+    body;
+    #buttonsWrapper;
+
+    constructor(options = {}) {
+        this.element = createElement('dialog', document.body, { class: 'st-dialog' });
+        this.body = createElement('div', this.element, { class: 'st-dialog-body', innerText: options.innerText || '' });
+
+        this.#buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' });
+        if (options?.buttons?.length > 0) {
+            options.buttons.forEach(item => {
+                const button = createElement('button', this.#buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` });
+                if (item.innerText) button.innerText = item.innerText;
+                if (item.clickSelector) {
+                    button.addEventListener('click', event => {
+                        document.querySelector(item.clickSelector)?.click();
+                        event.stopPropagation();
+                    });
+                } else if (item.href) {
+                    button.addEventListener('click', event => {
+                        window.open(item.href, '_blank').focus();
+                        event.stopPropagation();
+                    });
+                } else if (item.callback || item.onclick) {
+                    button.addEventListener('click', event => {
+                        if (item.callback) item.callback(event);
+                        if (item.onclick) item.onclick(event);
+                        event.stopPropagation();
+                    });
+                } else button.addEventListener('click', event => event.stopPropagation());
+            });
+        }
+
+        if (typeof options.allowClose === 'boolean' && options.allowClose === false) {
+            this.element.addEventListener('cancel', (event) => {
+                event.preventDefault();
+            });
+        } else {
+            const dialogDismiss = createElement('button', this.#buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') });
+            if (options?.index && options?.length) {
+                dialogDismiss.classList.add('st-step');
+                dialogDismiss.innerText = `${options.index} / ${options.length}`;
+                if (options.index !== options.length) dialogDismiss.dataset.icon = '';
+            }
+            dialogDismiss.addEventListener('click', () => this.close());
+        }
+    }
+
+    show() {
+        this.element.showModal();
+    }
+
+    close(maintain = false) {
+        this.element.close();
+        if (!maintain) setTimeout(() => this.element.remove(), 200);
+    }
+
+    on(event, callback) {
+        return new Promise(resolve => {
+            this.element.addEventListener(event, (e) => {
+                resolve(e);
+                callback(e);
+            }, { once: !callback });
+        });
+    }
+}
+
 function showSnackbar(object) {
     const { id, body, buttons, duration } = object
     snackbarQueue.splice(snackbarQueue.findIndex(item => item.id === id), 1)
 
     const snackbar = element('div', `st-snackbar-${id}`, document.body, { class: 'st-snackbar', innerText: body })
 
-    if (buttons?.length > 0) {
+    if (buttons?.[0] && buttons?.forEach) {
         const buttonsWrapper = element('div', null, snackbar, { class: 'st-button-wrapper' })
         buttons.forEach(item => {
             const button = element('button', null, buttonsWrapper, { ...item, class: 'st-button tertiary' })

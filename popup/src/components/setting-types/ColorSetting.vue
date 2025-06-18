@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
-import { useFocus } from '@vueuse/core'
+import { computed } from 'vue';
 
 import ColorPicker from '../inputs/ColorPicker.vue'
 

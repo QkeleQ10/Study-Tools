@@ -4,6 +4,8 @@ class MagisterApi {
     }
 
     async #initialize() {
+        if (!window.location.pathname.includes('magister')) return;
+
         this.cache = {};
         this.schoolName = window.location.hostname.split('.')[0];
         this.userId = await this.getFromStorage('user-id', 'sync');
@@ -13,14 +15,16 @@ class MagisterApi {
         this.updateApiCredentials();
 
         this.permissions = await this.updateApiPermissions();
-        this.gatherStart = midnight(new Date().getDate() - (new Date().getDay() + 6) % 7);
-        this.gatherEarlyStart = midnight(new Date().getDate() - 42);
-        this.gatherEnd = midnight(new Date().getDate() + 42);
+        this.gatherStart = dates.gatherStart;
+        this.gatherEarlyStart = dates.gatherEarlyStart;
+        this.gatherEnd = dates.gatherEnd;
         this.useSampleData = false;
 
     }
 
     async updateApiCredentials() {
+        if (!window.location.pathname.includes('magister')) return;
+
         const calledAt = new Date();
         const storageLocation = chrome.storage.session?.get ? 'session' : 'local';
 
@@ -80,6 +84,22 @@ class MagisterApi {
         return new MagisterApiRequestEvents(start, end).get();
     }
 
+    event(id) {
+        return new MagisterApiRequestEvent(id).get();
+    }
+
+    putEvent(id, body) {
+        return new MagisterApiRequestEvent(id).put(body);
+    }
+
+    eventAttachment(id) {
+        return new MagisterApiRequestEventAttachment(id).get();
+    }
+
+    kwtChoices(start = dates.now, end = dates.now) {
+        return new MagisterApiRequestKwtChoices(start, end).get();
+    }
+
     gradesRecent() {
         return new MagisterApiRequestGradesRecent().get();
     }
@@ -123,25 +143,50 @@ class MagisterApiRequest {
         this.path;
     }
 
-    get() {
+    get(options = {}) {
+
+        if (!window.location.pathname.includes('magister')) return Promise.reject();
+
+        if (magisterApi.useSampleData && this.sample) {
+            return Promise.resolve(this.sample);
+        } else if (!this.identifier || !this.path) {
+            return Promise.reject();
+        } else if (magisterApi.cache[this.identifier] && !magisterApi.cache[this.identifier].then) {
+            return Promise.resolve(magisterApi.cache[this.identifier]);
+        } else {
+            return this.#fetchWrapper(
+                `https://${magisterApi.schoolName}.magister.net/${this.path}`,
+                options
+            );
+        }
+    }
+
+    async put(body = {}, options = {}) {
         return new Promise(async (resolve, reject) => {
-            if (magisterApi.useSampleData && this.sample) {
-                resolve(this.sample);
-            } else if (!this.identifier || !this.path) {
-                reject();
-            } else if (magisterApi.cache[this.identifier] && !magisterApi.cache[this.identifier].then) {
-                resolve(magisterApi.cache[this.identifier]);
-            } else {
-                let res = await this.#fetchWrapper(
-                    `https://${magisterApi.schoolName}.magister.net/${this.path}`,
-                );
-                resolve(res);
-            }
+            if (!window.location.pathname.includes('magister')) reject();
+
+            let res = await fetch(
+                `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
+                {
+                    method: 'PUT',
+                    body: JSON.stringify(body),
+                    headers: {
+                        Authorization: magisterApi.userToken,
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        'X-Request-Source': 'study-tools'
+                    },
+                    ...options
+                }
+            );
+            resolve(res);
         });
+        // this.get({ method: 'PUT', body: JSON.stringify(body), ...options });
     }
 
     #fetchWrapper(url, options = {}) {
         return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
             if (!magisterApi.userId || !magisterApi.userToken) {
                 await magisterApi.updateApiCredentials()
                     .catch(err => console.error(err));
@@ -170,24 +215,31 @@ class MagisterApiRequest {
     #executeRequest(url, options = {}) {
         const calledAt = new Date();
         return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
             if (!magisterApi.userId || !magisterApi.userToken) {
                 await magisterApi.updateApiCredentials()
                     .catch(err => console.error(err));
             }
-            let res = await fetch(url.replace(/(\$USERID)/gi, magisterApi.userId), {
-                headers: {
-                    Authorization: magisterApi.userToken,
-                    'X-Request-Source': 'study-tools'
-                },
-                ...options
-            });
-            if (res.ok) {
+
+            try {
+                let res = await fetch(url.replace(/(\$USERID)/gi, magisterApi.userId), {
+                    headers: {
+                        Authorization: magisterApi.userToken,
+                        'X-Request-Source': 'study-tools'
+                    },
+                    ...options
+                });
+
+                if (!res.ok)
+                    throw new Error(`Request failed: ${res.status} ${res.statusText} (@ ${this.identifier})`);
+
                 let json = await res.json();
                 console.info(`APIRQ OK after ${new Date() - calledAt} ms (@ ${this.identifier})`);
                 resolve(json);
-            } else {
-                console.info(`APIRQ ERR: ${res.status}.`);
-                reject(res);
+            } catch (error) {
+                console.error(error);
+                reject(error);
             }
         });
     }
@@ -250,7 +302,34 @@ class MagisterApiRequestEvents extends MagisterApiRequest {
         this.path = `api/personen/$USERID/afspraken?van=${start?.toISOString().substring(0, 10)}&tot=${end?.toISOString().substring(0, 10)}`;
     }
     outputFormat = (res) => res.Items;
-    sample = [{ "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], "Start": now.toISOString().split('T')[0] + " 09:00", "Einde": now.toISOString().split('T')[0] + " 10:00", "Id": 1, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 2, "LesuurVan": 2, "Lokalen": [{ "Naam": "11s" }], "Omschrijving": "fatl - oba", "Lokatie": "11s", "Status": 5, "Vakken": [{ "Naam": "Franse taal" }] }, { "Docenten": [{ "Naam": "G. Gifje", "Docentcode": "GIF" }], "Start": now.toISOString().split('T')[0] + " 10:00", "Einde": now.toISOString().split('T')[0] + " 11:00", "Id": 2, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 3, "LesuurVan": 3, "Lokalen": [{ "Naam": "11s" }], "Omschrijving": "mem - gif", "Lokatie": "11s", "Vakken": [{ "Naam": "memekunde" }] }, { "Docenten": [{ "Naam": "M. Millenial", "Docentcode": "MMI" }], "Start": now.toISOString().split('T')[0] + " 11:30", "Einde": now.toISOString().split('T')[0] + " 12:30", "Id": 3, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 4, "LesuurVan": 4, "Lokalen": [{ "Naam": "11l" }], "Omschrijving": "stk - mmi", "Lokatie": "11l", "Vakken": [{ "Naam": "straattaalkunde" }] }, { "Docenten": [{ "Id": 0, "Naam": "E. Musk", "Docentcode": "EMU" }], "Start": now.toISOString().split('T')[0] + " 12:30", "Einde": now.toISOString().split('T')[0] + " 13:30", "Id": 4, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 5, "LesuurVan": 5, "Lokalen": [{ "Naam": "binas6" }], "Omschrijving": "na - emu", "Lokatie": "binas6", "Vakken": [{ "Naam": "natuurkunde" }] }, { "Docenten": [{ "Id": 0, "Naam": "B. Baan", "Docentcode": "BBA" }], "Start": now.toISOString().split('T')[0] + " 14:00", "Einde": now.toISOString().split('T')[0] + " 15:00", "Id": 5, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 6, "LesuurVan": 6, "Lokalen": [{ "Naam": "at1_ondersteboven" }], "Omschrijving": "ka - bba", "Lokatie": "at1_ondersteboven", "Type": 7, "Vakken": [{ "Naam": "kinderarbeid" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 122400000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 125100000), Inhoud: "<p>Dit is een onvoltooid huiswerkitem.</p>", Opmerking: null, InfoType: 1, Afgerond: false, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Niet-bestaand vak" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Inhoud: "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>", Opmerking: null, InfoType: 2, Afgerond: false, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Lichamelijke opvoeding" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Inhoud: "<p>Dit item heb je al wel voltooid. Good job.</p>", Opmerking: null, InfoType: 1, Afgerond: true, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Jouw favoriete vak" }] }];
+    sample = [{ "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], "Start": new Date().toISOString().split('T')[0] + " 09:00", "Einde": new Date().toISOString().split('T')[0] + " 10:00", "Id": 1, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 2, "LesuurVan": 2, "Lokalen": [{ "Naam": "11s" }], "Omschrijving": "fatl - oba", "Lokatie": "11s", "Status": 5, "Vakken": [{ "Naam": "Franse taal" }] }, { "Docenten": [{ "Naam": "G. Gifje", "Docentcode": "GIF" }], "Start": new Date().toISOString().split('T')[0] + " 10:00", "Einde": new Date().toISOString().split('T')[0] + " 11:00", "Id": 2, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 3, "LesuurVan": 3, "Lokalen": [{ "Naam": "11s" }], "Omschrijving": "mem - gif", "Lokatie": "11s", "Vakken": [{ "Naam": "memekunde" }] }, { "Docenten": [{ "Naam": "M. Millenial", "Docentcode": "MMI" }], "Start": new Date().toISOString().split('T')[0] + " 11:30", "Einde": new Date().toISOString().split('T')[0] + " 12:30", "Id": 3, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 4, "LesuurVan": 4, "Lokalen": [{ "Naam": "11l" }], "Omschrijving": "stk - mmi", "Lokatie": "11l", "Vakken": [{ "Naam": "straattaalkunde" }] }, { "Docenten": [{ "Id": 0, "Naam": "E. Musk", "Docentcode": "EMU" }], "Start": new Date().toISOString().split('T')[0] + " 12:30", "Einde": new Date().toISOString().split('T')[0] + " 13:30", "Id": 4, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 5, "LesuurVan": 5, "Lokalen": [{ "Naam": "binas6" }], "Omschrijving": "na - emu", "Lokatie": "binas6", "Vakken": [{ "Naam": "natuurkunde" }] }, { "Docenten": [{ "Id": 0, "Naam": "B. Baan", "Docentcode": "BBA" }], "Start": new Date().toISOString().split('T')[0] + " 14:00", "Einde": new Date().toISOString().split('T')[0] + " 15:00", "Id": 5, "InfoType": 0, "Inhoud": null, "LesuurTotMet": 6, "LesuurVan": 6, "Lokalen": [{ "Naam": "at1_ondersteboven" }], "Omschrijving": "ka - bba", "Lokatie": "at1_ondersteboven", "Type": 7, "Vakken": [{ "Naam": "kinderarbeid" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 122400000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 125100000), Inhoud: "<p>Dit is een onvoltooid huiswerkitem.</p>", Opmerking: null, InfoType: 1, Afgerond: false, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Niet-bestaand vak" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Inhoud: "<p>In deze les heb je een schriftelijke overhoring. Neem je oortjes mee.</p>", Opmerking: null, InfoType: 2, Afgerond: false, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Lichamelijke opvoeding" }] }, { Start: new Date(new Date().setHours(0, 0, 0, 0) + 297900000), Einde: new Date(new Date().setHours(0, 0, 0, 0) + 300600000), Inhoud: "<p>Dit item heb je al wel voltooid. Good job.</p>", Opmerking: null, InfoType: 1, Afgerond: true, "Docenten": [{ "Naam": "O. Baguette", "Docentcode": "OBA" }], Vakken: [{ Naam: "Jouw favoriete vak" }] }];
+}
+
+class MagisterApiRequestEvent extends MagisterApiRequest {
+    constructor(id) {
+        super();
+        this.identifier = `event${id}`;
+        this.path = `api/personen/$USERID/afspraken/${id}`;
+    }
+}
+
+class MagisterApiRequestEventAttachment extends MagisterApiRequest {
+    constructor(id) {
+        super();
+        this.identifier = `event${id}`;
+        this.path = `api/personen/$USERID/afspraken/bijlagen/${id}?redirect_type=body`;
+    }
+}
+
+class MagisterApiRequestKwtChoices extends MagisterApiRequest {
+    constructor(start, end) {
+        super();
+        this.identifier = `kwtChoices${start?.toISOString()}${end?.toISOString()}`;
+        this.path = `api/leerlingen/$USERID/keuzewerktijd/keuzes?van=${start?.toISOString().substring(0, 10)}+${start?.toISOString().substring(11, 16)
+            }&tot=${end?.toISOString().substring(0, 10)}+${end?.toISOString().substring(11, 16)
+            }`;
+    }
+    outputFormat = (res) => res.Items;
 }
 
 class MagisterApiRequestGradesRecent extends MagisterApiRequest {
@@ -269,7 +348,7 @@ class MagisterApiRequestGradesForYear extends MagisterApiRequest {
         this.identifier = `gradesYear${year?.id}`;
         this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
     }
-    outputFormat = (res) => res.Items;
+    outputFormat = (res) => res.Items.filter(item => !syncedStorage['ignore-grade-columns'].includes(item.CijferKolom?.KolomKop || 'undefined'));
 }
 
 class MagisterApiRequestGradesColumnInfo extends MagisterApiRequest {

@@ -3,6 +3,8 @@ chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service
 // Run when the extension and page are loaded
 main()
 async function main() {
+    handleAnnouncements();
+
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
     let appbar = await awaitElement('.appbar'),
@@ -191,14 +193,8 @@ async function main() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
-    handleAnnouncements()
-})
-
 async function handleAnnouncements() {
-    let response = await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)
-    if (!response.ok) return
-    announcements = Object.values(await response.json())
+    const announcements = await (await fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/announcements.json`)).json();
 
     announcements
         .filter(announcement => announcement.type === 'snackbar' || announcement.type === 'dialog')
@@ -325,9 +321,8 @@ async function upgradeAssistant() {
             newSyncedStorage = JSON.parse(document.querySelector('meta#copy-settings-sync')?.innerText)
             newLocalStorage = JSON.parse(document.querySelector('meta#copy-settings-local')?.innerText)
             await chrome.storage.sync.set(newSyncedStorage)
-            syncedStorage = newSyncedStorage
             await chrome.storage.local.set(newLocalStorage)
-            localStorage = newLocalStorage
+            initialiseStorage();
             element('meta', 'copy-settings-success', document.head)
         }, 250)
     } else if (otherExtensionInstances.length > 0) {

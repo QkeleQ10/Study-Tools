@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { ref } from 'vue';
 
 import Icon from './Icon.vue';
 import Dialog from './Dialog.vue'

@@ -148,7 +148,7 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
 }
 
 async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
-    if (!dontUpdate && chrome?.storage) syncedStorage = await getFromStorageMultiple(null, 'sync', true)
+    if (!dontUpdate && chrome?.storage) await initialiseStorage();
 
     let now = new Date()
 
@@ -313,7 +313,6 @@ body>.container>.view {
     min-width: calc(100vw - 304px);
     width: 100%;
     max-width: calc(100vw - 304px);
-    transition: min-width 200ms, max-width 200ms;
 }
 
 .view section.main {
@@ -613,7 +612,7 @@ footer.endlink {
     border-radius: 0 0 8px 8px
 }
 
-a:not(.user-content a, .st-button, .st-metric, .st-keyboard-hint, .st-widget, .st-widget-title, .st-list-item), table.table-grid-layout td a,
+a:not(.user-content a, .st-button, .st-metric, .st-keyboard-hint, .st-widget, .st-widget-title, .st-widget-subitem), table.table-grid-layout td a,
 .k-calendar .k-header .k-nav-fast {
     color: var(--st-foreground-accent);
     text-decoration: none;
@@ -769,7 +768,7 @@ span.datetime-label,
 .widget li,
 dl.list-dl dd,
 dl.list-dl dt,
-table *, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li>a>span, #studiewijzer-container div.studiewijzer-list div.head span:first-child, 
+table:not(.st) *, #studiewijzer-container div.studiewijzer-list>ul>li, #studiewijzer-container div.studiewijzer-list div.head, #studiewijzer-container div.studiewijzer-list>ul>li>a>span, #studiewijzer-container div.studiewijzer-list div.head span:first-child, 
 form .radio input[type=radio]~label, fieldset .radio input[type=radio]~label,
 .k-dropdown .k-dropdown-wrap.k-state-default,
 .projects li.selected, .projects li:hover,
@@ -1258,6 +1257,7 @@ aside .tabs li a, aside .tabs li.double-line-title>a {
     margin-right: 0;
     padding: 0;
     width: 18px;
+    color: currentcolor;
 }
 
 .menu-footer>a {
@@ -1334,27 +1334,33 @@ dna-card {
 }
 
 dna-button {
-    border-width: 1px;
-}
+    --_color: var(--st-foreground-accent);
+    --color: var(--_color);
+    --_background: var(--st-background-secondary);
+    --background: var(--_background);
+    --_border-width: 1px;
+    --border-width: var(--_border-width);
+    --_border-color: var(--st-accent-primary);
+    --border-color: var(--_border-color);
 
-dna-button[variant=primary] {
-    --color: var(--st-contrast-accent);
-    --background: var(--st-accent-primary);
+    &[variant=primary] {
+        --_color: var(--st-contrast-accent);
+        --_background: var(--st-accent-primary);
+    }
+
+    &[fill=clear] {
+        --_background: transparent;
+        --_border-color: transparent;
+    }
+
+    &:hover {
+        filter: brightness(var(--st-hover-brightness));
+    }
 }
 
 dna-breadcrumbs > dna-breadcrumb > a,
 .podium header h1 {
     --color: var(--st-foreground-accent) !important;
-}
-
-dna-button:not([variant=primary], [fill=clear]) {
-    --color: var(--st-foreground-accent);
-    --background: var(--st-background-secondary);
-    border-color: var(--st-accent-primary);
-}
-
-dna-button:hover {
-    filter: brightness(var(--st-hover-brightness));
 }
 
 dna-card-title.ng-binding, dna-card-title, .content.content-auto.background-white, .opdrachten-details-row, .gegevens-container, .empty-message, .label, .capitalize.ng-binding, .examen-cijfer.ng-binding {
@@ -1684,6 +1690,21 @@ table.table-grid-layout>tbody>tr.selected {
 
 .menu-button a:focus-visible, .logo a:focus-visible {
     outline: 2px solid var(--st-foreground-primary);
+}
+
+#menu-cijfers {
+    img {
+        display: none;
+    }
+    
+    &:before {
+        margin-inline: 10px;
+        width: 20px;
+        height: 20px;
+        content: '';
+        background-color: currentcolor;
+        mask: url(assets/images/cijfers.svg) no-repeat center;
+    }
 }
 
 .app-container {

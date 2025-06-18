@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineEmits, defineProps, defineOptions } from 'vue'
+import { ref, computed } from 'vue'
 import { useFocus } from '@vueuse/core'
 
 const props = defineProps(['id', 'modelValue'])

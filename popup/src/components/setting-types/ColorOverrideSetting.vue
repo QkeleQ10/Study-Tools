@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { ref, computed } from 'vue'
 import ColorWheelSheet from '../sheets/ColorWheelSheet.vue';
 import Icon from '../Icon.vue';
 import SegmentedButton from '../inputs/SegmentedButton.vue';

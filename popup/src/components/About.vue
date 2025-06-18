@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineEmits, inject } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useManifest } from '@/composables/chrome.js'
 
 import Icon from './Icon.vue'

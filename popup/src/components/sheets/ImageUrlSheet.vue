@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps(['modelValue', 'pickerOpen'])
 const emit = defineEmits(['update:modelValue', 'update:pickerOpen'])

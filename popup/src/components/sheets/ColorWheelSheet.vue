@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineProps, defineEmits } from 'vue'
+import { ref, computed } from 'vue'
 import BottomSheet from '../BottomSheet.vue';
 import Icon from '../Icon.vue';
 import { useEyeDropper, useMousePressed } from '@vueuse/core';
