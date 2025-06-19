@@ -1,5 +1,6 @@
 <script setup>
 import { ref, inject } from 'vue'
+import settings from '/public/settings.js'
 import { presets, propertyKeys } from '/public/themePresets.js'
 import MagisterThemePreview from '@/components/MagisterThemePreview.vue'
 import SwitchInput from '@/components/SwitchInput.vue'
@@ -18,8 +19,14 @@ const optionTypes = { SwitchInput, Slider, ImageInput, ShortcutsEditor, Text, Si
 const syncedStorage = inject('syncedStorage')
 const localStorage = inject('localStorage')
 
+// JOUW ADMIN KEY HIER!! NIET DELEN
+const admin = 'key';
+
 const importDialog = ref(false)
 const selectedThemeId = ref(null)
+const isgDialog = ref(false);
+const GAWEGDialog = ref(false);
+
 
 let store = ref({
     version: "1.0",
@@ -30,7 +37,7 @@ import { onMounted } from 'vue'
 
 onMounted(async () => {
     try {
-        const response = await fetch('http://localhost:9478/themes')
+        const response = await fetch('http://localhost:9478/themes/reviewRequired')
         if (!response.ok) throw new Error('Network response was not ok')
         const themes = await response.json()
         store.value = {
@@ -48,6 +55,36 @@ onMounted(async () => {
         }
     }
 })
+async function allowTheme(themeId) {
+    try {
+        const response = await fetch(`http://localhost:9478/themes/${themeId}/${admin}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        if (!response.ok) throw new Error('Network response was not ok')
+        const data = await response.json()
+        store.value.themes = store.value.themes.filter(t => t.id !== themeId)
+    } catch (error) {
+        console.error('Error allowing theme:', error)
+    }
+}
+async function disallowTheme(themeId) {
+    try {
+        const response = await fetch(`http://localhost:9478/themes/${themeId}/${admin}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        if (!response.ok) throw new Error('Network response was not ok')
+        const data = await response.json()
+        store.value.themes = store.value.themes.filter(t => t.id !== themeId)
+    } catch (error) {
+        console.error('Error allowing theme:', error)
+    }
+}
 
 const applyPreset = () => {
     if (!selectedThemeId.value) return
@@ -66,6 +103,7 @@ const applyPreset = () => {
 
     selectedThemeId.value = null
 }
+
 </script>
 
 <template>
@@ -75,11 +113,34 @@ const applyPreset = () => {
             <template #headline>Thema importeren</template>
             <template #text>
                 Weet je zeker dat je "{{store.themes.find(t => t.id === selectedThemeId)?.name}}" wilt importeren?
-                Dit overschrijdt je huidige instellingen.
             </template>
             <template #buttons>
                 <button class="primary" @click="applyPreset(); importDialog = false">Importeren</button>
                 <button @click="importDialog = false">Annuleren</button>
+            </template>
+        </Dialog>
+
+        <Dialog v-model:active="isgDialog">
+            <template #icon>format_paint</template>
+            <template #headline>Thema toestaan</template>
+            <template #text>
+                Weet je zeker dat je "{{store.themes.find(t => t.id === selectedThemeId)?.name}}" wilt toestaan op de themestore?
+            </template>
+            <template #buttons>
+                <button class="primary" @click="allowTheme(selectedThemeId); isgDialog = false">Ja</button>
+                <button @click="isgDialog = false">Annuleren</button>
+            </template>
+        </Dialog>
+        
+        <Dialog v-model:active="GAWEGDialog">
+            <template #icon>format_paint</template>
+            <template #headline>Thema toestaan</template>
+            <template #text>
+                Weet je zeker dat je "{{store.themes.find(t => t.id === selectedThemeId)?.name}}" niet wilt toestaan op de themestore?
+            </template>
+            <template #buttons>
+                <button class="primary" @click="disallowTheme(selectedThemeId); GAWEGDialog = false">Ja</button>
+                <button @click="GAWEGDialog = false">Annuleren</button>
             </template>
         </Dialog>
 
@@ -95,11 +156,17 @@ const applyPreset = () => {
                         <a @click.stop="selectedThemeId = preset.id; importDialog = true;" title="Inladen">
                             <Icon>file_export</Icon>
                         </a>
+                        <a @click.stop="selectedThemeId = preset.id; isgDialog = true;" title="isg">
+                            <Icon>check</Icon>
+                        </a>
+                        <a @click.stop="selectedThemeId = preset.id; GAWEGDialog = true;" title="NEE NEE NEE GA WEG DIT IS NIET GOED GA WEG">
+                            <Icon>close</Icon>
+                        </a>
                     </div>
                 </button>
             </TransitionGroup>
             <p v-if="store.themes.length === 0" style="text-align: center;">
-                De theme store is leeg! <br />
+                Geen nieuwe verzoeken! <br />
                 Kom later terug
             </p>
         </div>

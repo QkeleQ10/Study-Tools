@@ -31,6 +31,10 @@ const isSavePromptActive = ref(false)
 const savePromptName = ref('')
 const savePromptAuthor = ref('')
 
+const dialogUpload = ref(false)
+const uploadJsonWorkPlz = ref('')
+
+
 const storedThemes = computed({
     get() { return Object.values(localStorage.value?.storedThemes || []) },
     set(value) { localStorage.value.storedThemes = value }
@@ -71,6 +75,18 @@ async function presetUploaded(files) {
             ...obj
         }
     ]
+}
+async function upload(json){
+    const response = await fetch('http://localhost:9478/themes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(json)
+    })
+    if (!response.ok) throw new Error('Network response was not ok')
+    const data = await response.json()
+    return data
 }
 
 function presetsMatch(preset1, preset2 = syncedStorage.value) {
@@ -178,6 +194,9 @@ async function storeCurrentTheme() {
                                 title="Persoonlijk thema verwijderen">
                                 <Icon>delete</Icon>
                             </button>
+                            <button @click.stop="uploadJsonWorkPlz = preset; dialogUpload = true; " title="Persoonlijk thema uploaden naar de store">
+                                <Icon>cloud_upload</Icon>
+                            </button>
                             <a @click.stop title="Persoonlijk thema exporteren naar bestand"
                                 :href="generatePresetUrl(preset)" :download="preset.date + '.sttheme'">
                                 <Icon>file_export</Icon>
@@ -224,6 +243,21 @@ async function storeCurrentTheme() {
             <template #buttons>
                 <button @click="applyPreset(); isApplyPromptActive = false">Toepassen</button>
                 <button @click="isApplyPromptActive = false">Annuleren</button>
+            </template>
+        </Dialog>
+
+                <Dialog v-model:active="dialogUpload">
+            <template #icon>cloud_upload</template>
+            <template #headline>Let op!</template>
+            <template #text>
+                Je gaat een thema uploaden naar de Magister Theme Store. Dit thema wordt openbaar en kan door iedereen
+                worden gebruikt.
+                <br>
+                Weet je zeker dat je dit wilt doen?
+            </template>
+            <template #buttons>
+                <button @click="upload(uploadJsonWorkPlz); dialogUpload = false">Ja!!</button>
+                <button @click="dialogUpload = false">Annuleren</button>
             </template>
         </Dialog>
 

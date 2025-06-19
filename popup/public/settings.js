@@ -314,7 +314,7 @@ export default [
                 subtitle: "Cijferkolomkoppen met deze namen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",
                 type: "Text",
                 default: "%klaar;#tedoen;#gedaan;gedr;verantw;welb;capa"
-            } 
+            }
         ]
     },
     {
@@ -440,6 +440,11 @@ export default [
                 ],
             },
             // TODO: setting to disable color adaptation for dark theme
+        ]
+    },
+    {
+        id: "admin",
+        settings: [
         ]
     }
 ]

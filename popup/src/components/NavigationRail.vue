@@ -55,7 +55,12 @@ const tabs = [
         id: 'about',
         name: 'Over',
         icon: 'info'
-    }
+    },
+    // {
+    //     id: 'admin',
+    //     name: 'admin',
+    //     icon: 'store'
+    // }
 ]
 
 function navClick(id) {
