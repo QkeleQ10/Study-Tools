@@ -37,7 +37,7 @@ import { onMounted } from 'vue'
 
 onMounted(async () => {
     try {
-        const response = await fetch('http://localhost:9478/themes/reviewRequired')
+        const response = await fetch('http://themestore.polarlearn.tech/themes/reviewRequired')
         if (!response.ok) throw new Error('Network response was not ok')
         const themes = await response.json()
         store.value = {
@@ -57,7 +57,7 @@ onMounted(async () => {
 })
 async function allowTheme(themeId) {
     try {
-        const response = await fetch(`http://localhost:9478/themes/${themeId}/${admin}/approve`, {
+        const response = await fetch(`http://themestore.polarlearn.tech/themes/${themeId}/${admin}/approve`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -72,7 +72,7 @@ async function allowTheme(themeId) {
 }
 async function disallowTheme(themeId) {
     try {
-        const response = await fetch(`http://localhost:9478/themes/${themeId}/${admin}/reject`, {
+        const response = await fetch(`http://themestore.polarlearn.tech/themes/${themeId}/${admin}/reject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

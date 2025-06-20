@@ -30,7 +30,7 @@ import { onMounted } from 'vue'
 
 onMounted(async () => {
     try {
-        const response = await fetch('http://localhost:9478/themes')
+        const response = await fetch('http://themestore.polarlearn.tech/themes')
         if (!response.ok) throw new Error('Network response was not ok')
         const themes = await response.json()
         store.value = {
@@ -75,7 +75,7 @@ const applyPreset = () => {
             <template #headline>Thema importeren</template>
             <template #text>
                 Weet je zeker dat je "{{store.themes.find(t => t.id === selectedThemeId)?.name}}" wilt importeren?
-                Dit overschrijdt je huidige instellingen.
+
             </template>
             <template #buttons>
                 <button class="primary" @click="applyPreset(); importDialog = false">Importeren</button>
@@ -100,7 +100,7 @@ const applyPreset = () => {
             </TransitionGroup>
             <p v-if="store.themes.length === 0" style="text-align: center;">
                 De theme store is leeg! <br />
-                Kom later terug
+                Wacht tot de admin thema's toestaan.
             </p>
         </div>
     </div>

@@ -77,7 +77,7 @@ async function presetUploaded(files) {
     ]
 }
 async function upload(json){
-    const response = await fetch('http://localhost:9478/themes', {
+    const response = await fetch('http://themestore.polarlearn.tech/themes', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
