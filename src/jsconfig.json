@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "checkJs": true,
+        "types": [
+            "chrome"
+        ]
+    },
+    "include": [
+        "./**/*.js",
+        "./globals.d.ts"
+    ]
+}

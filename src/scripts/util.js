@@ -1,6 +1,7 @@
 chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Revive the service worker
 
 let syncedStorage,
+    // @ts-ignore
     localStorage,
     locale = 'nl-NL',
     i18nData = {},
@@ -64,7 +65,7 @@ initialiseStorage();
 
 /**
  * 
- * @param {TimerHandler} func 
+ * @param {Function} func 
  * @param {number} [interval]
  */
 function setIntervalImmediately(func, interval) {
@@ -73,20 +74,29 @@ function setIntervalImmediately(func, interval) {
 }
 
 /**
+ * @typedef {Object} CreateElementAttributes
+ * @property {string} [id] - The element's ID.
+ * @property {string} [innerText] - The element's inner text.
+ * @property {Object|string} [style] - The element's style.
+ */
+
+/**
  * Creates an element if it doesn't exist already and applies the specified properties to it.
- * @param {string} tagName - The element's tag name
- * @param {HTMLElement} [parent] - The element's parent
- * @param {Object} [attributes] - The attributes to assign to the element
- * @param {string} [attributes.id] - The element's ID
- * @param {string} [attributes.innerText] - The element's inner text
- * @param {Object|string} [attributes.style] - The element's style
- * @returns {HTMLElement} - The created or updated element.
+ *
+ * @template {keyof HTMLElementTagNameMap} K
+ * @param {K} tagName - The element's tag name.
+ * @param {HTMLElement} [parent] - The element's parent.
+ * @param {CreateElementAttributes & Record<string, any>} [attributes] - The attributes to assign to the element.
+ * @returns {HTMLElementTagNameMap[K]} The created or updated element.
  */
 function createElement(tagName, parent, attributes = {}) {
-    let element = attributes.id ? document.getElementById(attributes.id) : null;
-    if (!element) { // Create element if it doesn't exist
+    /** @type {HTMLElementTagNameMap[K] | null} */
+    let element = attributes.id ? /** @type {any} */ (document.getElementById(attributes.id)) : null;
+
+    if (!element) {
         element = document.createElement(tagName);
     }
+
     element.setAttributes(attributes);
     if (parent) parent.append(element);
     return element;
@@ -95,15 +105,31 @@ function element(tagName, id, parent, attributes) {
     return createElement(tagName, parent, { id, ...attributes })
 }
 
-Element.prototype.createChildElement = function (tagName, attributes) {
+HTMLElement.prototype.createChildElement = function (tagName, attributes) {
     return createElement(tagName, this, attributes)
 }
 
-Element.prototype.createSiblingElement = function (tagName, attributes) {
+HTMLElement.prototype.createSiblingElement = function (tagName, attributes) {
     return createElement(tagName, this.parentElement, attributes)
 }
 
-parseBoolean = (value) =>
+HTMLElement.prototype.setAttributes = function (attributes) {
+    for (const [key, value] of Object.entries(attributes)) {
+        if (value == null) continue;
+        if (['innerText', 'textContent', 'innerHTML', 'outerHTML'].includes(key)) this[key] = value;
+        else if (key === 'viewBox') this.setAttributeNS(null, 'viewBox', value);
+        else if (key === 'style' && typeof value === 'object')
+            Object.entries(value).forEach(([k, v]) =>
+                /^[a-z]+([A-Z][a-z]*)*$/.test(k) ? this.style[k] = v : this.style.setProperty(k, v));
+        else if (key === 'dataset' && typeof value === 'object')
+            Object.assign(this.dataset, value);
+        else if (key === 'classList')
+            Array.isArray(value) ? this.classList.add(...value) : this.classList.add(...value.split(' '));
+        else this.setAttribute(key, value);
+    }
+}
+
+const parseBoolean = (value) =>
     value === 'true' || value === true ? true
         : value === 'false' || value === false ? false
             : null
@@ -172,50 +198,6 @@ function saveToStorage(key, value, location) {
     })
 }
 
-Element.prototype.setAttributes = function (attributes) {
-    const elem = this
-    for (const [key, value] of Object.entries(attributes)) {
-        switch (key) {
-            case 'innerText':
-            case 'textContent':
-            case 'innerHTML':
-            case 'outerHTML':
-                elem[key] = value;
-                break;
-            case 'viewBox':
-                elem.setAttributeNS(null, 'viewBox', value);
-                break;
-            case 'style':
-                if (typeof value === 'object') {
-                    for (let subKey in value) {
-                        if (/^[a-z]+([A-Z][a-z]*)*$/.test(subKey)) elem.style[subKey] = value[subKey];
-                        else elem.style.setProperty(subKey, value[subKey]);
-                    }
-                    break;
-                } // else, fall through
-            case 'dataset':
-                if (typeof value === 'object') {
-                    for (let subKey in value) {
-                        elem[key][subKey] = value[subKey];
-                    }
-                } else {
-                    elem.setAttribute(key, value);
-                }
-                break;
-            case 'classList':
-                if (Array.isArray(value)) {
-                    elem.classList.add(...value);
-                } else {
-                    elem.classList.add(...value.split(' '));
-                }
-                break;
-            default:
-                if (value != null) elem.setAttribute(key, value);
-                break;
-        }
-    }
-}
-
 function formatTimestamp(start, end, now, includeTime) {
     now ??= new Date()
     start ??= end ?? now
@@ -257,55 +239,6 @@ function formatTimestamp(start, end, now, includeTime) {
     return timestamp
 }
 
-// Elements with a temporal binding are updated every second, or whenever the function is invoked manually.
-function updateTemporalBindings() {
-    let elementsWithTemporalBinding = document.querySelectorAll('[data-temporal-type]')
-    elementsWithTemporalBinding.forEach(element => {
-
-        let now = new Date(),
-            type = element.dataset.temporalType,
-            start = new Date(element.dataset.temporalStart || now),
-            end = new Date(element.dataset.temporalEnd || element.dataset.temporalStart || now)
-
-        switch (type) {
-            case 'timestamp':
-                timestamp = formatTimestamp(start, end, now, true)
-                if (element.dataset.time != timestamp) element.dataset.time = timestamp
-                break
-
-            case 'style-hours':
-                element.style.setProperty('--start-time', now.getHoursWithDecimals())
-                break
-
-            case 'ongoing-check':
-                element.dataset.ongoing = (start <= now && end >= now)
-                break
-
-            case 'style-progress':
-                let progress = (now - start) / (end - start)
-                element.style.setProperty('--progress', Math.min(Math.max(0, progress), 1))
-                element.dataset.done = progress >= 1
-                break
-
-            case 'current-time-long': {
-                const timef = now.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', seconds: '2-digit' })
-                element.dataset.time = timef
-                break
-            }
-
-            case 'current-time-short': {
-                const timef = now.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hours: '2-digit', minutes: '2-digit', timeStyle: 'short' })
-                element.dataset.time = timef
-                break
-            }
-
-            default:
-                break
-        }
-    })
-}
-setIntervalImmediately(updateTemporalBindings, 1000)
-
 let minToMs = (minutes = 1) => minutes * 60000
 let daysToMs = (days = 1) => days * 8.64e7
 
@@ -327,9 +260,11 @@ Date.prototype.getWeek = function () {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)),
-        weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+        weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
     return weekNo
 }
+
+Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
 Date.prototype.getFormattedDay = function () {
     let d = this
@@ -338,7 +273,6 @@ Date.prototype.getFormattedDay = function () {
 }
 
 Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString(locale, { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' }) }
-Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (this.getMinutes() / 60) }
 
 Date.prototype.addDays = function (days) {
     let date = new Date(this)
@@ -370,89 +304,99 @@ Array.prototype.mode = function () {
     ).at(-1)
 }
 
-String.prototype.toSentenceCase = function () {
-    return this.charAt(0).toUpperCase() + this.slice(1)
-}
+class Dropdown {
+    element;
 
-Element.prototype.createDropdown = function (options = { 'placeholder': 'Placeholder' }, selectedOption = 'placeholder', onChange, onClick) {
-    const dropdown = this
-    dropdown.classList.add('st-dropdown')
-    dropdown.innerText = ''
-    dropdown.dataset.clickFunction = !!onClick
+    constructor(element = document.createElement('button'), options = {}, selectedOption = '', onChange, onClick) {
+        this.element = element;
+        this.element.classList.add('st-dropdown');
+        this.options = options;
+        this.selectedOption = selectedOption;
+        this.onChange = onChange;
+        this.onClick = onClick;
 
-    const selectedOptionElement = element(!!onClick ? 'button' : 'div', null, dropdown, { class: 'st-dropdown-current', innerText: options[selectedOption]?.replace(i18n('sw.hideStudyguide'), i18n('sw.hidden')) })
-    if (onClick) {
-        selectedOptionElement.addEventListener('click', event => {
-            if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
-            dropdown.changeValue(onClick(selectedOption))
-        })
+        this.dropdownPopover = document.body.createChildElement('div', { id: this.element.id ? `${this.element.id}-popover` : null, class: 'st-dropdown-popover' });
+        this.dropdownPopover.innerText = '';
+
+        this.render();
+
+        this.element.addEventListener('click', (event) => {
+            if (!this.dropdownPopover.classList.contains('st-visible')) event.stopPropagation();
+            const rect = this.element.getBoundingClientRect();
+            this.dropdownPopover.setAttribute('style', `top: ${rect.top + rect.height + 8}px; right: ${window.innerWidth - rect.right}px;`);
+            this.dropdownPopover.classList.remove('st-hidden');
+            this.dropdownPopover.classList.add('st-visible');
+            this.element.classList.add('active');
+
+            this.dropdownPopover.style.bottom = (window.innerHeight - this.dropdownPopover.getBoundingClientRect().bottom) < 100 ? '15px' : 'auto';
+
+            window.addEventListener('click', () => {
+                setTimeout(() => {
+                    this.dropdownPopover.classList.remove('st-visible');
+                    this.dropdownPopover.classList.add('st-hidden');
+                    this.element.classList.remove('active');
+                }, 5);
+            }, { once: true });
+        });
     }
 
-    const dropdownPopover = element('div', dropdown.id ? `${dropdown.id}-popover` : null, document.body, { class: 'st-dropdown-popover' })
-    dropdownPopover.innerText = ''
+    render() {
+        this.element.innerText = '';
+        this.element.dataset.clickFunction = this.onClick ? 'true' : 'false';
 
-    for (const key in options) {
-        if (key === 'divider') {
-            const dividerElement = element('div', null, dropdownPopover, {
-                class: 'st-line horizontal'
-            })
-        } else if (Object.hasOwnProperty.call(options, key)) {
-            const title = options[key]
-            const optionElement = element('button', null, dropdownPopover, {
-                class: 'st-button segment st-dropdown-segment',
-                innerText: title,
-                'data-key': key
-            })
+        this.selectedOptionElement = this.element.createChildElement(this.onClick ? 'button' : 'div', {
+            class: 'st-dropdown-current',
+            innerText: this.options[this.selectedOption]?.replace(i18n('sw.hideStudyguide'), i18n('sw.hidden'))
+        });
 
-            if (selectedOption === key) optionElement.classList.add('active')
-            else optionElement.classList.remove('active')
+        if (this.onClick) {
+            this.selectedOptionElement.addEventListener('click', event => {
+                if (!this.dropdownPopover.classList.contains('st-visible')) event.stopPropagation();
+                this.changeValue(this.onClick(this.selectedOption));
+            });
+        }
 
-            optionElement.addEventListener('click', event => {
-                dropdown.changeValue(key)
-            })
+        this.dropdownPopover.innerText = '';
+        for (const key in this.options) {
+            if (key === 'divider') {
+                this.dropdownPopover.createChildElement('div', {
+                    class: 'st-line horizontal'
+                });
+            } else if (Object.hasOwnProperty.call(this.options, key)) {
+                const title = this.options[key];
+                const optionElement = this.dropdownPopover.createChildElement('button', {
+                    class: 'st-button segment st-dropdown-segment',
+                    innerText: title,
+                    'data-key': key
+                });
+
+                if (this.selectedOption === key) optionElement.classList.add('active');
+                else optionElement.classList.remove('active');
+
+                optionElement.addEventListener('click', event => {
+                    this.changeValue(key);
+                });
+            }
+        }
+
+        if (this.dropdownPopover.firstElementChild) {
+            (this.dropdownPopover.firstElementChild instanceof HTMLElement) && this.dropdownPopover.firstElementChild.focus();
         }
     }
 
-    dropdownPopover.firstElementChild.focus();
-
-    dropdown.addEventListener('click', (event) => {
-        if (!dropdownPopover.classList.contains('st-visible')) event.stopPropagation()
-        const rect = dropdown.getBoundingClientRect()
-        dropdownPopover.setAttribute('style', `top: ${rect.top + rect.height + 8}px; right: ${window.innerWidth - rect.right}px;`)
-        dropdownPopover.classList.remove('st-hidden')
-        dropdownPopover.classList.add('st-visible')
-        dropdown.classList.add('active')
-
-        dropdownPopover.style.bottom = (window.innerHeight - dropdownPopover.getBoundingClientRect().bottom) < 100 ? '15px' : 'auto'
-
-        window.addEventListener('click', () => {
-            setTimeout(() => {
-                dropdownPopover.classList.remove('st-visible')
-                dropdownPopover.classList.add('st-hidden')
-                dropdown.classList.remove('active')
-            }, 5)
-        }, { once: true })
-    })
-
-    dropdown.options = options
-
-    dropdown.selectedOption = selectedOption
-
-    dropdown.changeValue = function (newValue) {
-        onChange?.(newValue)
-        selectedOption = newValue
-        dropdown.selectedOption = selectedOption
-        selectedOptionElement.innerText = options[selectedOption].replace(i18n('sw.hideStudyguide'), i18n('sw.hidden'))
-        dropdownPopover.querySelectorAll('.st-dropdown-segment').forEach(e => {
-            if (selectedOption === e.dataset.key) e.classList.add('active')
-            else e.classList.remove('active')
-        })
+    changeValue(newValue) {
+        this.onChange?.(newValue);
+        this.selectedOption = newValue;
+        this.selectedOptionElement.innerText = this.options[this.selectedOption].replace(i18n('sw.hideStudyguide'), i18n('sw.hidden'));
+        this.dropdownPopover.querySelectorAll('.st-dropdown-segment').forEach(e => {
+            const el = /** @type {HTMLElement} */ (e);
+            if (this.selectedOption === el.dataset.key) el.classList.add('active');
+            else el.classList.remove('active');
+        });
     }
-
-    return dropdown
 }
 
-Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true, showRemainder = true, itemCap = 100) {
+HTMLElement.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true, showRemainder = true, itemCap = 100) {
     const chartArea = this
     if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-line-chart')
@@ -505,7 +449,7 @@ Element.prototype.createBarChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold, rotateHue = true) {
+HTMLElement.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold, rotateHue = true) {
     const chartArea = this
     chartArea.innerText = ''
     chartArea.classList.remove('st-bar-chart', 'st-line-chart')
@@ -572,10 +516,11 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
         hoveredElement.classList.add('active')
 
         let key, frequency
-        if (!hoveredElement?.dataset.key || !hoveredElement?.dataset.value) {
+        const hoveredHTMLElement = /** @type {HTMLElement} */ (hoveredElement);
+        if (!hoveredHTMLElement?.dataset.key || !hoveredHTMLElement?.dataset.value) {
             [key, frequency] = filteredAndSortedFrequencyMap[0]
         } else {
-            [key, frequency] = [hoveredElement.dataset.key, hoveredElement.dataset.value]
+            [key, frequency] = [hoveredHTMLElement.dataset.key, hoveredHTMLElement.dataset.value]
         }
 
         if (key === 'remainder') {
@@ -593,7 +538,7 @@ Element.prototype.createPieChart = function (frequencyMap = {}, labels = {}, thr
     return chartArea
 }
 
-Element.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue, showProgressiveMean = false) {
+HTMLElement.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue, showProgressiveMean = false) {
     const chartArea = this
     if (!chartArea.classList.contains('st-line-chart')) chartArea.innerText = ''
     chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
@@ -841,6 +786,14 @@ function createStyle(content, id) {
     return styleElem
 }
 
+/**
+ * Internationalization function to retrieve localized strings.
+ * @param {string} key - The key for the translation string, using dot notation for nested keys.
+ * @param {Object} [variables={}] - Variables to replace in the translation string.
+ * @param {boolean} [useDefaultLanguage=false] - Whether to use the default language data.
+ * @param {boolean} [fallBackToNull=false] - Whether to fall back to null if not found.
+ * @returns {string}
+ */
 function i18n(key, variables = {}, useDefaultLanguage = false, fallBackToNull = false) {
     if (!(key.length > 0)) return ''
 
@@ -861,7 +814,7 @@ function i18n(key, variables = {}, useDefaultLanguage = false, fallBackToNull = 
         }
     }
 
-    return value || ''
+    return (typeof value === 'string' ? value : '') || ''
 }
 
 function formatOrdinals(number, feminine) {

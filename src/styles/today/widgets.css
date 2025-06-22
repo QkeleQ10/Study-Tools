@@ -394,14 +394,13 @@
     inset: 0;
     transform: translateX(100%);
     z-index: 1;
-    animation: glint 3s infinite;
+    animation: grade-glint 3s infinite;
     pointer-events: none;
 
     background: linear-gradient(105deg, #ffffff00 25%, #ffffff69 50%, #ffffff00 75%);
 }
 
-
-@keyframes glint {
+@keyframes grade-glint {
     0% {
         transform: translateX(-100%);
     }
