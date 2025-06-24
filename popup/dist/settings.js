@@ -253,14 +253,23 @@ export default [
                 ],
             },
             {
-                id: "start-schedule-persist",
+                id: "start-schedule-view-persist",
                 title: "Laatst bekeken roosterweergave onthouden",
-                subtitle: "De laatst gebruikte roosterweergave en -bereik worden onthouden tot je Magister opnieuw opent.",
-                default: true,
+                subtitle: "De laatst gebruikte roosterweergave wordt onthouden zelfs als je Magister sluit.",
+                default: false,
                 conditions: [
                     { settingId: 'start-enabled', operator: 'equal', value: true }
                 ],
             },
+            {
+                id: "start-event-details",
+                title: "Afspraakdetails in dialoogvenster",
+                subtitle: "Als je klikt op een roosterafspraak, wordt er een dialoogvenster geopend met meer informatie over de afspraak.",
+                default: true,
+                conditions: [
+                    { settingId: 'start-enabled', operator: 'equal', value: true }
+                ],
+            }
         ]
     },
     {
@@ -309,7 +318,7 @@ export default [
                 subtitle: "Cijferkolommen met deze kolomkoppen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",
                 type: "Text",
                 default: "%klaar;#tedoen;#gedaan;gedr;verantw;welb;capa"
-            } 
+            }
         ]
     },
     {

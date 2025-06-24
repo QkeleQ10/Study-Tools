@@ -268,7 +268,7 @@ Date.prototype.getHoursWithDecimals = function () { return this.getHours() + (th
 
 Date.prototype.getFormattedDay = function () {
     let d = this
-    const weekDays = i18n('dates.weekdays')
+    const weekDays = i18nArray('dates.weekdays')
     return weekDays[d.getDay()]
 }
 
@@ -688,7 +688,7 @@ class Dialog {
             });
         }
 
-        if (typeof options.allowClose === 'boolean' && options.allowClose === false) {
+        if (options.allowClose === false) {
             this.element.addEventListener('cancel', (event) => {
                 event.preventDefault();
             });
@@ -700,6 +700,17 @@ class Dialog {
                 if (options.index !== options.length) dialogDismiss.dataset.icon = '';
             }
             dialogDismiss.addEventListener('click', () => this.close());
+
+            this.element.addEventListener('click', (event) => {
+                if (
+                    event.target instanceof Element &&
+                    !event.target.closest('.st-dialog-body') &&
+                    !event.target.closest('.st-button-wrapper')
+                ) {
+                    this.close();
+                }
+
+            });
         }
     }
 
@@ -814,7 +825,38 @@ function i18n(key, variables = {}, useDefaultLanguage = false, fallBackToNull = 
         }
     }
 
-    return (typeof value === 'string' ? value : '') || ''
+    return typeof value === 'string' ? value : ''
+}
+
+/**
+ * Internationalization function to retrieve localized strings.
+ * @param {string} key - The key for the translation string, using dot notation for nested keys.
+ * @param {Object} [variables={}] - Variables to replace in the translation string.
+ * @param {boolean} [useDefaultLanguage=false] - Whether to use the default language data.
+ * @param {boolean} [fallBackToNull=false] - Whether to fall back to null if not found.
+ * @returns {string[]}
+ */
+function i18nArray(key, variables = {}, useDefaultLanguage = false, fallBackToNull = false) {
+    if (!(key.length > 0)) return []
+
+    const keys = key.split('.')
+    let value = useDefaultLanguage ? i18nDataNl : i18nData
+
+    for (const k of keys) {
+        value = value[k]
+        if (!value) value = fallBackToNull ? null : useDefaultLanguage ? key : i18n(key, variables, true)
+    }
+
+    if (value) {
+        for (const variableName in variables) {
+            if (Object.hasOwnProperty.call(variables, variableName)) {
+                const variableContent = variables[variableName]
+                value = value.replace(new RegExp(`{${variableName}}`, 'g'), variableContent)
+            }
+        }
+    }
+
+    return Array.isArray(value) ? value : typeof value === 'string' ? [value] : []
 }
 
 function formatOrdinals(number, feminine) {

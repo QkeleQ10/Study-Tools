@@ -1,4 +1,4 @@
-let persistedScheduleView, persistedScheduleDate;
+let persistedScheduleView = localStorage['start-schedule-persisted-view'], persistedScheduleDate;
 
 class Schedule {
     element;
@@ -27,6 +27,7 @@ class Schedule {
             default: this.scheduleSize = parseInt(newView.replace('day', '')); this.snapToMonday = false; break;
         };
         persistedScheduleView = newView;
+        if (syncedStorage['start-schedule-view-persist']) localStorage['start-schedule-persisted-view'] = newView;
     }
     get scheduleView() {
         if (this.#snapToMonday && this.#scheduleSize === 5) return 'workweek';
@@ -108,8 +109,6 @@ class Schedule {
 
         this.#header = element('div', 'st-start-header', this.element);
 
-        this.#createHeaderStrip();
-
         this.#body = this.element.createChildElement('div', { id: 'st-sch-body' });
         this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
@@ -130,6 +129,7 @@ class Schedule {
         }
 
         await this.#updateDayColumns();
+        this.#createHeaderStrip();
         this.#updateHeaderStrip();
     }
 
@@ -153,7 +153,7 @@ class Schedule {
 
     #fetchAndAppendEvents(gatherStart, gatherEnd) {
         return new Promise(async (resolve, _) => {
-            console.info(`Fetching events between ${gatherStart} and ${gatherEnd}...`);
+            console.debug(`Fetching events between ${gatherStart} and ${gatherEnd}...`);
             this.#progressBar.dataset.visible = true;
 
             let events = await magisterApi.events(gatherStart, gatherEnd);
@@ -230,6 +230,14 @@ class Schedule {
             dialog.show();
             input.focus();
             input.showPicker();
+        });
+        headerTextWrapper.addEventListener('auxclick', (e) => {
+            e.preventDefault();
+            let greeting = document.getElementById('st-start-header-greeting');
+            if (headerTextWrapper.classList.contains('greet')) return;
+            createGreetingMessage(greeting);
+            headerTextWrapper.classList.add('greet');
+            setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
         });
 
         this.headerControls.title = headerTextWrapper.createChildElement('span', {
@@ -422,7 +430,12 @@ class ScheduleDay {
                 });
 
                 // Event click handler
-                eventWrapperElement.addEventListener('click', () => new ScheduleEventDialog(event).show());
+                eventWrapperElement.addEventListener('click', () => {
+                    if (syncedStorage['start-event-details'])
+                        new ScheduleEventDialog(event).show();
+                    else
+                        window.location.hash = `#/agenda/${(event.Type === 1 || event.Type === 16) ? 'afspraak' : 'huiswerk'}/${event.Id}?returnUrl=%252Fvandaag`;
+                });
 
                 // Draw the school hour label
                 let eventHours = (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}-${event.LesuurTotMet}`

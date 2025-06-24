@@ -16,7 +16,6 @@ interface HTMLElement {
         attributes?: CreateElementAttributes & Record<string, any>
     ): HTMLElementTagNameMap[K];
 
-
     /**
      * Creates a sibling element under the parent of this element.
      * @template {keyof HTMLElementTagNameMap} K

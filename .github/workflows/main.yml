@@ -13,22 +13,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Compress Chromium build
-        run: |
-          zip -r chromium.zip _locales icons popup/dist src manifest.json updates.json
+      - name: Upload Chromium build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chromium release
+          path: |
+            _locales
+            icons
+            popup/dist
+            src/scripts
+            src/strings
+            src/styles
+            src/service-worker.js
+            manifest.json
+            updates.json
 
-      - name: Compress Firefox build
+      - name: Convert manifest for Firefox
         run: |
           mv manifest.json manifest-chromium.json
           mv manifest-firefox.json manifest.json
-          zip -r firefox.zip _locales icons popup/dist src manifest.json updates.json
-          mv manifest.json manifest-firefox.json
-          mv manifest-chromium.json manifest.json
 
-      - name: Upload as artifacts
+      - name: Upload Firefox build
         uses: actions/upload-artifact@v4
         with:
-          name: Releases
+          name: Firefox release
           path: |
-            chromium.zip
-            firefox.zip
+            _locales
+            icons
+            popup/dist
+            src/scripts
+            src/strings
+            src/styles
+            src/background.js
+            manifest.json
+            updates.json
+
+      - name: Restore Chromium manifest
+        run: |
+          mv manifest.json manifest-firefox.json
+          mv manifest-chromium.json manifest.json

@@ -696,6 +696,9 @@ class DigitalClockWidget extends Widget {
     async initialise() {
         this.header.remove();
 
+        if (this.constructor.options.shape == 'strip')
+            this.element.classList.add('strip');
+
         this.timeElement = this.element.createChildElement('p', {
             id: 'st-widget-digitalclock-time',
         });
@@ -818,6 +821,21 @@ class DigitalClockWidget extends Widget {
                 {
                     title: "Verbergen",
                     value: 'hide'
+                }
+            ]
+        },
+        shape: {
+            title: "Vorm",
+            type: 'select',
+            choices: [
+                {
+                    title: "Tegel",
+                    value: 'regular'
+                },
+                {
+                    title: "Strook",
+                    value: 'strip',
+                    default: true
                 }
             ]
         }

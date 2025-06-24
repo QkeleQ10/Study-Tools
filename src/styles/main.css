@@ -802,6 +802,7 @@ dialog.st-modal[open]::backdrop {
         border-radius: min(var(--st-border-radius), 2px);
         background-color: var(--st-accent-primary);
         transform-origin: 0% 50%;
+        overflow: hidden;
 
         transition: width 100ms;
 
@@ -814,7 +815,7 @@ dialog.st-modal[open]::backdrop {
             animation: glint 1.5s infinite;
             pointer-events: none;
 
-            background: linear-gradient(105deg, transparent 25%, hsl(from var(--st-background-primary) h s l / 60%) 50%, transparent 75%);
+            background: linear-gradient(105deg, transparent 25%, hsl(from var(--st-accent-primary) h s calc(l + 20) / 70%) 50%, transparent 75%);
         }
 
         &.indeterminate {

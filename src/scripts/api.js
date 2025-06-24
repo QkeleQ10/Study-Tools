@@ -33,8 +33,8 @@ class MagisterApi {
         this.userTokenDate = await getFromStorage('token-date', storageLocation);
 
         if (this.userId && this.userToken && this.userTokenDate && new Date(this.userTokenDate)) {
-            if (Math.abs(new Date() - new Date(this.userTokenDate)) < 60000) {
-                console.info(`CREDS OK after ${new Date() - calledAt} ms`);
+            if (Math.abs(new Date().getTime() - new Date(this.userTokenDate).getTime()) < 60000) {
+                console.debug(`CREDS OK after ${new Date().getTime() - calledAt.getTime()} ms`);
             } else {
                 console.info(`CREDS WARN: Data too old! Retrying...`);
                 setTimeout(() => this.updateApiCredentials(), 200);
@@ -138,9 +138,10 @@ class MagisterApi {
 }
 
 class MagisterApiRequest {
+    identifier;
+    path;
+
     constructor() {
-        this.identifier;
-        this.path;
     }
 
     get(options = {}) {
@@ -235,7 +236,7 @@ class MagisterApiRequest {
                     throw new Error(`Request failed: ${res.status} ${res.statusText} (@ ${this.identifier})`);
 
                 let json = await res.json();
-                console.info(`APIRQ OK after ${new Date() - calledAt} ms (@ ${this.identifier})`);
+                console.debug(`APIRQ OK after ${new Date().getTime() - calledAt.getTime()} ms (@ ${this.identifier})`);
                 resolve(json);
             } catch (error) {
                 console.error(error);
@@ -339,7 +340,7 @@ class MagisterApiRequestGradesRecent extends MagisterApiRequest {
         this.path = `api/personen/$USERID/cijfers/laatste?top=20&skip=0`;
     }
     outputFormat = (res) => res.items;
-    sample = [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0, isVoldoende: true }, { omschrijving: "Baguette", ingevoerdOp: new Date(now - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0, isVoldoende: true }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }];
+    sample = [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now.getTime() - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0, isVoldoende: true }, { omschrijving: "Baguette", ingevoerdOp: new Date(now.getTime() - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0, isVoldoende: true }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now.getTime() - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }];
 }
 
 class MagisterApiRequestGradesForYear extends MagisterApiRequest {
@@ -385,7 +386,7 @@ class MagisterApiRequestMessages extends MagisterApiRequest {
         this.path = 'api/berichten/postvakin/berichten?top=20&skip=0&gelezenStatus=ongelezen';
     }
     outputFormat = (res) => res.items;
-    sample = [{ onderwerp: "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️", afzender: { naam: "Quinten Althues (V6E)" }, heeftBijlagen: true, verzondenOp: new Date(now - 3032000000) }, { onderwerp: "Wie gebruikt Berichten in vredesnaam?", afzender: { naam: "Quinten Althues (V6E)" }, heeftPrioriteit: true, verzondenOp: new Date(now - 1000000) }];
+    sample = [{ onderwerp: "🔥😂💚🍀😔🐜😝🙏👍🪢💀☠️", afzender: { naam: "Quinten Althues (V6E)" }, heeftBijlagen: true, verzondenOp: new Date(now.getTime() - 3032000000) }, { onderwerp: "Wie gebruikt Berichten in vredesnaam?", afzender: { naam: "Quinten Althues (V6E)" }, heeftPrioriteit: true, verzondenOp: new Date(now.getTime() - 1000000) }];
 }
 
 class MagisterApiRequestActivities extends MagisterApiRequest {

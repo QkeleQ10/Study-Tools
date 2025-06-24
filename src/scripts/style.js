@@ -159,7 +159,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
     else if (themeAuto) currentTheme[0] = 'light'
 
-    if (verbose) console.info(`STYLE START with theme ${currentTheme.join(', ')}`)
+    if (verbose) console.debug(`STYLE START with theme ${currentTheme.join(', ')}`)
 
     const rootVarsGeneral = `
     --st-font-family-primary: 'arboria', sans-serif;

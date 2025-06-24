@@ -26,6 +26,9 @@ jobs:
             _locales
             icons
             popup/dist
-            src
+            src/scripts
+            src/strings
+            src/styles
+            src/service-worker.js
             manifest.json
             updates.json
