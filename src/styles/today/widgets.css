@@ -246,6 +246,7 @@
 
     #st-widget-grades-title {
         justify-content: center;
+        z-index: 1;
 
         &::after {
             display: none;
@@ -370,8 +371,12 @@
     color: var(--st-accent-info);
 }
 
-.st-widget-grades-item-rslt[data-great=true] {
-    background-image: linear-gradient(rgba(255, 0, 0, 1) 0%, rgba(255, 154, 0, 1) 10%, rgba(208, 222, 33, 1) 20%, rgba(79, 220, 74, 1) 30%, rgba(63, 218, 216, 1) 40%, rgba(47, 201, 226, 1) 50%, rgba(28, 127, 238, 1) 60%, rgba(95, 21, 242, 1) 70%, rgba(186, 12, 248, 1) 80%, rgba(251, 7, 217, 1) 90%, rgba(255, 0, 0, 1) 100%);
+.st-widget-grades-item[data-insuf=true] .st-widget-grades-item-rslt {
+    color: var(--st-accent-warn);
+}
+
+.st-widget-grades-item[data-great=true] .st-widget-grades-item-rslt {
+    background-image: linear-gradient(in hsl longer hue to bottom, hsl(0, 100%, 50%) 0 100%);
     background-position: 0 0;
     background-size: 100% 200%;
     background-clip: text;
@@ -379,15 +384,30 @@
     animation: great-grade 2s linear infinite;
 }
 
-.st-widget-grades-item-rslt[data-insuf=true] {
-    color: var(--st-accent-warn);
+.st-widget-grades-item[data-unread=true][data-great=true] .st-widget-grades-item-rslt {
+    background-image: linear-gradient(in hsl longer hue to bottom, hsl(0, 100%, 80%) 0 100%);
 }
 
-.st-widget-grades-item[data-unread=true] .st-widget-grades-item-rslt[data-great=true] {
-    background-image: linear-gradient(in hsl longer hue, hsl(0, 100%, 80%) 0 0);
-    background-clip: text;
-    color: transparent;
-    animation: great-grade 2s linear infinite;
+.st-widget-grades-item[data-unread=true][data-great=true]:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(100%);
+    z-index: 1;
+    animation: grade-glint 3s infinite;
+    pointer-events: none;
+
+    background: linear-gradient(105deg, #ffffff00 25%, #ffffff69 50%, #ffffff00 75%);
+}
+
+@keyframes grade-glint {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    30% {
+        transform: translateX(100%);
+    }
 }
 
 @keyframes great-grade {
@@ -484,6 +504,16 @@
         #st-widget-digitalclock-lesson-periods {
             height: 32px;
         }
+    }
+
+    &.strip {
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        border-bottom: var(--st-border);
+        height: 85px;
+        padding-top: 20px;
+        box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     }
 }
 

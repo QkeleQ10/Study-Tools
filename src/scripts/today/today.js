@@ -9,7 +9,11 @@ addEventListener('hashchange', today)
 
 // Page 'Vandaag'
 async function today() {
-    if (!window.location.hash.startsWith('#/vandaag') || !syncedStorage['start-enabled']) return
+    console.info('hashchange', document.location.href)
+
+    if (!(document.location.href.includes('#/vandaag') && syncedStorage['start-enabled'])) return
+
+    console.info("Rendering Start")
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
@@ -178,7 +182,7 @@ class Widgets {
     async #drawWidgets() {
         await magisterApi.updateApiPermissions();
 
-        for (const [widgetKey, widgetClass] of Object.entries(this.constructor.sortedWidgetClasses)) {
+        for (const [widgetKey, widgetClass] of Object.entries(Widgets.sortedWidgetClasses)) {
             if (widgetClass.isEnabled && widgetClass.hasRequiredPermissions) {
                 await new Promise(async (resolve) => {
                     const widgetInstance = new widgetClass();
@@ -299,7 +303,7 @@ class WidgetEditorDialog extends Dialog {
 
     #saveNewOrder() {
         const newOrder = Array.from(this.#column1.querySelectorAll('.st-widget-list-item'))
-            .map(el => el.dataset.widgetId);
+            .map(el => (el instanceof HTMLElement ? el.dataset.widgetId : undefined));
         localStorage['start-widget-order'] = newOrder;
     }
 
@@ -326,8 +330,6 @@ class WidgetEditorDialog extends Dialog {
                 widgetClass.options[optKey] = select.value;
             });
         }
-
-        this.#column2.firstElementChild.focus();
     }
 }
 
@@ -373,7 +375,7 @@ function eventSubjects(event) {
         if (i === 0) return vak.Naam.charAt(0).toUpperCase() + vak.Naam.slice(1)
         return vak.Naam
     }) || []).join(', ');
-    if (!subjectsF?.length > 0) return null;
+    if (!subjectsF?.length) return null;
     return subjectsF;
 }
 
@@ -402,7 +404,7 @@ function makeTimestamp(d) {
     else if (d.isYesterday())
         return i18n('dates.yesterdayAtTime', { time: d.toLocaleString(locale, { ...dateFormat }) })
     else if (d.getTime() - dates.today.getTime() < daysToMs(5) && d.getTime() - dates.today.getTime() > 0)
-        return i18n('dates.weekdayAtTime', { weekday: i18n('dates.weekdays')[d.getDay()], time: d.toLocaleString(locale, { ...dateFormat }) })
+        return i18n('dates.weekdayAtTime', { weekday: i18nArray('dates.weekdays')[d.getDay()], time: d.toLocaleString(locale, { ...dateFormat }) })
     else
         return d.toLocaleString(locale, { weekday: 'short', day: 'numeric', month: 'short', ...dateFormat })
 }
@@ -420,7 +422,7 @@ async function createGreetingMessage(element) {
     let possibleGreetings = []
     for (let i = 0; i < greetingsByHour.length; i++) {
         const e = greetingsByHour[i]
-        if (dates.now.getHours() >= e[0]) {
+        if (dates.now.getHours() >= Number(e[0])) {
             e.shift()
             possibleGreetings.push(...e, ...e, ...e) // hour-bound greetings have 3x more chance than generic ones
             break
@@ -428,8 +430,9 @@ async function createGreetingMessage(element) {
     }
     possibleGreetings.push(...greetingsGeneric)
     const greeting = possibleGreetings.random()
-        .replace('#', Math.random() < 0.8 ? '.' : '!').replace('%s', i18n('dates.weekdays')[dates.now.getDay()])
-        .replace('%n', (await magisterApi.accountInfo())?.Persoon?.Roepnaam || '')
+        .replace('#', Math.random() < 0.8 ? '.' : '!')
+        .replace('%s', dates.now.getFormattedDay())
+        .replace('%n', (await magisterApi.accountInfo())?.Persoon?.Roepnaam || '');
     if (locale === 'fr-FR') greeting.replace(/\s*(!|\?)+/, ' $1')
 
     element.innerText = greeting.slice(0, -1);

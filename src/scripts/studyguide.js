@@ -152,11 +152,12 @@ async function studyguideIndividual() {
                 }
             }
 
-            dropdown = element('button', 'st-sw-subject-dropdown', buttons, { class: 'st-segmented-control', title: i18n('sw.subjectPrompt') })
-                .createDropdown(
-                    allSubjects,
-                    savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
-                    dropdownChange)
+            dropdown = new Dropdown(
+                buttons.createChildElement('button', { id: 'st-sw-subject-dropdown', class: 'st-segmented-control', title: i18n('sw.subjectPrompt') }),
+                allSubjects,
+                savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
+                dropdownChange
+            );
         }
     }
 

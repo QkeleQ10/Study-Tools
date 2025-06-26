@@ -187,7 +187,10 @@
         "title": "Cijfercalculator"
     },
     "cb": {
-        "title": "Cijferback-up"
+        "title": "Cijferback-up",
+        "export": "Back-up maken",
+        "import": "Back-up herstellen",
+        "error": "Er is een fout opgetreden bij het maken van de back-up. Wacht een minuutje en probeer het opnieuw."
     },
     "cs": {
         "title": "Statistieken",

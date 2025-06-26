@@ -1,4 +1,4 @@
-let persistedScheduleView, persistedScheduleDate;
+let persistedScheduleView = localStorage['start-schedule-persisted-view'], persistedScheduleDate;
 
 class Schedule {
     element;
@@ -27,6 +27,7 @@ class Schedule {
             default: this.scheduleSize = parseInt(newView.replace('day', '')); this.snapToMonday = false; break;
         };
         persistedScheduleView = newView;
+        if (syncedStorage['start-schedule-view-persist']) localStorage['start-schedule-persisted-view'] = newView;
     }
     get scheduleView() {
         if (this.#snapToMonday && this.#scheduleSize === 5) return 'workweek';
@@ -39,7 +40,7 @@ class Schedule {
     get scheduleSize() { return this.#scheduleSize; }
     set scheduleSize(newSize) {
         this.#scheduleSize = Math.min(Math.max(1, newSize), 7);
-        this.element.style.setProperty('--size', this.#scheduleSize);
+        this.element.style.setProperty('--size', this.#scheduleSize.toString());
         this.scheduleDate = this.scheduleDate;
     }
 
@@ -108,8 +109,6 @@ class Schedule {
 
         this.#header = element('div', 'st-start-header', this.element);
 
-        this.#createHeaderStrip();
-
         this.#body = this.element.createChildElement('div', { id: 'st-sch-body' });
         this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
@@ -122,11 +121,15 @@ class Schedule {
             let nextDayWithEvents = Object.values(this.days).find(day => day.hasFutureEvents);
             if (nextDayWithEvents && !nextDayWithEvents.isToday) {
                 this.scheduleDate = nextDayWithEvents.date;
-                notify('snackbar', i18n('toasts.jumpedToDate', { date: this.scheduleDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) }));
+                notify('snackbar',
+                    i18n('toasts.jumpedToDate', { date: this.scheduleDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) })
+                    + (this.scheduleDate.isTomorrow() ? ` (${i18n('dates.tomorrow')})` : ''),
+                );
             }
         }
 
         await this.#updateDayColumns();
+        this.#createHeaderStrip();
         this.#updateHeaderStrip();
     }
 
@@ -150,7 +153,7 @@ class Schedule {
 
     #fetchAndAppendEvents(gatherStart, gatherEnd) {
         return new Promise(async (resolve, _) => {
-            console.info(`Fetching events between ${gatherStart} and ${gatherEnd}...`);
+            console.debug(`Fetching events between ${gatherStart} and ${gatherEnd}...`);
             this.#progressBar.dataset.visible = true;
 
             let events = await magisterApi.events(gatherStart, gatherEnd);
@@ -160,7 +163,7 @@ class Schedule {
 
                 const eventsOfDay = events.filter(event => {
                     const startDate = new Date(event.Start);
-                    return (startDate - date) < 86400000 && (startDate - date) >= 0;
+                    return (startDate.getTime() - date.getTime()) < 86400000 && (startDate.getTime() - date.getTime()) >= 0;
                 });
 
                 if (i === Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
@@ -193,7 +196,7 @@ class Schedule {
             this.#body.dataset.navigate = 'still';
             setTimeout(() => {
                 this.#body.dataset.navigate = difference > 0 ? 'forwards' : difference < 0 ? 'backwards' : 'still';
-                this.element.dataset.size = this.#scheduleSize;
+                this.element.dataset.size = this.#scheduleSize.toString();
                 this.element.dataset.date = this.#scheduleDate.toISOString();
 
                 resolve();
@@ -203,7 +206,7 @@ class Schedule {
 
     positionInRange(date) {
         if (date >= this.#scheduleRange.start && date <= this.#scheduleRange.end) {
-            return Math.round((date - this.#scheduleRange.start) / 86400000);
+            return Math.round((date.getTime() - this.#scheduleRange.start.getTime()) / 86400000);
         } else return -1;
     }
 
@@ -227,6 +230,14 @@ class Schedule {
             dialog.show();
             input.focus();
             input.showPicker();
+        });
+        headerTextWrapper.addEventListener('auxclick', (e) => {
+            e.preventDefault();
+            let greeting = document.getElementById('st-start-header-greeting');
+            if (headerTextWrapper.classList.contains('greet')) return;
+            createGreetingMessage(greeting);
+            headerTextWrapper.classList.add('greet');
+            setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
         });
 
         this.headerControls.title = headerTextWrapper.createChildElement('span', {
@@ -262,18 +273,17 @@ class Schedule {
             this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? 7 : this.scheduleSize);
         })
 
-        this.headerControls.viewMode = element('button', 'st-start-today-view', headerControls, { class: 'st-segmented-control' })
-            .createDropdown(
-                {
-                    'day': i18n('dates.day'), // 1 day
-                    ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
-                    'workweek': i18n('dates.workweek'), // workweek
-                    'week': i18n('dates.week') // week
-                },
-                this.scheduleView,
-                (newValue) => this.scheduleView = newValue,
-                (currentValue) => currentValue === 'day' ? 'workweek' : 'day'
-            );
+        this.headerControls.viewMode = new Dropdown(
+            createElement('button', headerControls, { id: 'st-start-today-view', class: 'st-segmented-control' }),
+            {
+                'day': i18n('dates.day'), // 1 day
+                ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
+                'workweek': i18n('dates.workweek'), // workweek
+                'week': i18n('dates.week') // week
+            },
+            this.scheduleView,
+            (newValue) => this.scheduleView = newValue,
+            (currentValue) => currentValue === 'day' ? 'workweek' : 'day')
     }
 
     #updateHeaderStrip() {
@@ -385,7 +395,7 @@ class ScheduleDay {
                 innerText: this.date.toLocaleDateString(locale, dateFormat)
             });
 
-            if (!this.events?.length > 0) {
+            if (!this.events?.length) {
                 this.head.createChildElement('span', {
                     class: 'st-sch-day-no-events',
                     innerText: this.isToday
@@ -420,7 +430,12 @@ class ScheduleDay {
                 });
 
                 // Event click handler
-                eventWrapperElement.addEventListener('click', () => new ScheduleEventDialog(event, this.body).show());
+                eventWrapperElement.addEventListener('click', () => {
+                    if (syncedStorage['start-event-details'])
+                        new ScheduleEventDialog(event).show();
+                    else
+                        window.location.hash = `#/agenda/${(event.Type === 1 || event.Type === 16) ? 'afspraak' : 'huiswerk'}/${event.Id}?returnUrl=%252Fvandaag`;
+                });
 
                 // Draw the school hour label
                 let eventHours = (event.LesuurVan === event.LesuurTotMet) ? event.LesuurVan : `${event.LesuurVan}-${event.LesuurTotMet}`
@@ -438,7 +453,7 @@ class ScheduleDay {
 
                 // Cancelled label
                 if (event.Status == 4 || event.Status == 5) {
-                    eventElement.dataset.cancelled = true
+                    eventElement.dataset.cancelled = 'true';
                 }
 
                 // Draw the event details
@@ -498,7 +513,9 @@ class ScheduleDay {
                     this.#interval = setIntervalImmediately(() => {
                         if (!this.body || (!listViewEnabled && !this.#nowMarker)) return clearInterval(this.#interval);
                         if (!listViewEnabled && this.#nowMarker) this.#nowMarker.style.setProperty('--top', `calc(${dates.now.getHoursWithDecimals()})`);
-                        this.body.querySelectorAll('.st-event').forEach(event => event.dataset.ongoing = new Date(event.dataset.start) < dates.now && new Date(event.dataset.end) > dates.now);
+                        this.body.querySelectorAll('.st-event').forEach(event => {
+                            (event instanceof HTMLElement) && (event.dataset.ongoing = ((new Date(event.dataset.start) < dates.now && new Date(event.dataset.end) > dates.now) ? 'true' : 'false'));
+                        });
                     }, 30000);
                 }, 60000 - (new Date().getTime() % 60000));
             }
@@ -591,10 +608,9 @@ class ScheduleEventDialog extends Dialog {
                 ? i18n('schoolHourNum', { num: event.LesuurVan, numOrdinal: formatOrdinals(event.LesuurVan) })
                 : i18n('closedInterval', { start: i18n('schoolHourNum', { num: event.LesuurVan, numOrdinal: formatOrdinals(event.LesuurVan) }), end: i18n('schoolHourNum', { num: event.LesuurTotMet, numOrdinal: formatOrdinals(event.LesuurTotMet) }) })
             : '-');
-        const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
-        if (isYearNotCurrent(new Date(event.Start)) || isYearNotCurrent(new Date(event.Einde))) dateFormat.year = 'numeric';
-        this.#addRowToTable(table1, i18n('start'), new Date(event.Start).toLocaleString(locale, dateFormat));
-        this.#addRowToTable(table1, i18n('end'), new Date(event.Einde).toLocaleString(locale, dateFormat));
+        const showYear = isYearNotCurrent(new Date(event.Start)) || isYearNotCurrent(new Date(event.Einde));
+        this.#addRowToTable(table1, i18n('start'), new Date(event.Start).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
+        this.#addRowToTable(table1, i18n('end'), new Date(event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
         this.#addRowToTable(table1, i18n('location'), eventLocations(event) || '-');
         this.#addRowToTable(table1, i18n('teacher'), eventTeachers(event) || '-');
         if (event.Opmerking) this.#addRowToTable(table1, i18n('note'), event.Opmerking);
@@ -614,7 +630,7 @@ class ScheduleEventDialog extends Dialog {
     async #loadAdditionalEventInfo() {
         const moreInfo = await magisterApi.event(this.event.Id);
         if (moreInfo) this.event = { ...this.event, ...moreInfo };
-        this.#progressBar.dataset.visible = false;
+        this.#progressBar.dataset.visible = 'false';
 
         if (this.event.Type === 7) {
             const kwtColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
@@ -630,7 +646,7 @@ class ScheduleEventDialog extends Dialog {
                 kwtChoices[0].Keuzes.forEach(choice => {
                     const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers)
                     const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
-                    createElement('b', label, { innerText: choice.Omschrijving.toSentenceCase() });
+                    createElement('b', label, { innerText: choice.Omschrijving.charAt(0).toUpperCase() + choice.Omschrijving.slice(1) });
                     createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
                     createElement('span', label, { innerText: `(${choice.AantalDeelnemers}/${choice.MaxDeelnemers}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip' });
                     createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
@@ -669,25 +685,24 @@ class ScheduleEventDialog extends Dialog {
             const input = createElement('input', label, { id: `st-start-${this.event.Id}-hw-complete`, class: 'st-checkbox-input', type: 'checkbox' });
             input.checked = this.event.Afgerond;
             input.addEventListener('input', async () => {
-                this.#progressBar.dataset.visible = true;
+                this.#progressBar.dataset.visible = 'true';
                 await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
                 schedule.refresh();
                 this.event.Afgerond = input.checked;
                 this.body.querySelectorAll('.st-chip').forEach(chip => {
-                    if (chip.innerText === infoTypes[this.event.InfoType].name) {
+                    if ((chip instanceof HTMLElement) && chip.innerText === infoTypes[this.event.InfoType].name) {
                         chip.classList.toggle('ok', input.checked);
                         chip.classList.toggle('info', !input.checked);
                     }
                 });
-                this.#progressBar.dataset.visible = false;
+                this.#progressBar.dataset.visible = 'false';
             });
 
             let table2 = createElement('table', homeworkColumn, { class: 'st' });
 
-            const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            if (isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp))) dateFormat.year = 'numeric';
-            this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, dateFormat) : '-');
-            this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, dateFormat) : '-');
+            const showYear = (isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp)))
+            this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+            this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
         }
 
         if (this.event.Bijlagen?.length > 0) {
@@ -724,9 +739,8 @@ class ScheduleEventDialog extends Dialog {
                 let table2 = createElement('table', attachmentsColumn, { class: 'st' });
                 this.#addRowToTable(table2, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : '-');
                 this.#addRowToTable(table2, i18n('fileType'), i18n('typeFile', { type: fileType?.name || /(?:\.([^.]+))?$/.exec(bijlage.Naam.toUpperCase())[1] }));
-                const dateFormat = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-                if (isYearNotCurrent(new Date(bijlage.Datum))) dateFormat.year = 'numeric';
-                this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, dateFormat) : '-');
+                const showYear = isYearNotCurrent(new Date(bijlage.Datum));
+                this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
             });
         }
     }

@@ -385,6 +385,8 @@
     z-index: 10;
 }
 
+/*  Grade Backup  */
+
 #st-cb-modal-close {
     position: absolute;
     top: 35px;
@@ -451,6 +453,33 @@
     background-color: var(--st-background-secondary);
     border-radius: var(--st-border-radius);
     border: var(--st-border);
+}
+
+.st-grade-backup-dialog {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    margin: -24px;
+    padding: 24px;
+    border-radius: var(--st-border-radius);
+    overflow-y: auto;
+
+    .st-dialog-column:first-of-type {
+        &.st-disabled {
+            opacity: .5;
+            pointer-events: none;
+        }
+
+        .st-button {
+            display: block;
+            margin-block: 8px;
+            width: 100%;
+
+            &::first-letter {
+                text-transform: uppercase;
+            }
+        }
+    }
 }
 
 #st-aside-resize {

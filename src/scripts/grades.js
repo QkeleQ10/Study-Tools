@@ -22,6 +22,10 @@ async function gradeList() {
     const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
 
     if (syncedStorage['cb']) {
+        // const gradeBackupButton = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
+        // gradeBackupButton.addEventListener('click', async () => {
+        //     new GradeBackupDialog().show()
+
         const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
         cbPreOpen.addEventListener('click', async () => {
             document.location.hash = '#/cijfers/cijferoverzicht'
@@ -131,7 +135,7 @@ async function gradeCalculator(buttonWrapper) {
 
     buttonWrapper.append(clOpen)
 
-    let years = (await magisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+    let years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
 
     let apiGrades = {},
         gradeColumns = {},
@@ -151,7 +155,7 @@ async function gradeCalculator(buttonWrapper) {
         gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px) !important;max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
 
         if (!document.querySelector('#st-cb-aside')) {
-            let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+            let schoolYearId = /** @type {HTMLOptionElement} */(document.querySelector('#aanmeldingenSelect>option[selected=selected]')).value
             let schoolYear = years.find(y => y.id == schoolYearId)
             apiGrades[schoolYearId] ??= await magisterApi.gradesForYear(schoolYear)
         }
@@ -159,6 +163,17 @@ async function gradeCalculator(buttonWrapper) {
             await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
             accessedBefore = true
             saveToStorage('cf-calc-accessed', true, 'local')
+        }
+        console.log(!localStorage['cc-accessed'])
+        if (!localStorage['cc-accessed']) {
+            new Dialog({
+                innerText: "De afgelopen tijd zijn er wat problemen geweest bij het toevoegen van cijfers. \n\nDat is hopelijk nu opgelost. Sorry voor het ongemak! \n\nLaat het me weten als je nog steeds problemen ondervindt.",
+                buttons: [
+                    { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+                    { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
+                ]
+            }).show();
+            localStorage['cc-accessed'] = true;
         }
     })
 
@@ -227,7 +242,7 @@ async function gradeCalculator(buttonWrapper) {
                 return resolve()
             }
 
-            const gradeElement = document.querySelector(`.grade[id="${id}"]`)
+            const gradeElement =  /** @type {HTMLElement} */(document.querySelector(`.grade[id="${id}"]`))
 
             let ghostSourcePosition = gradeElement.getBoundingClientRect()
             const ghostElement = element('span', null, document.body, {
@@ -247,7 +262,7 @@ async function gradeCalculator(buttonWrapper) {
                 column = gradeElement.parentElement.dataset.column
                 title = gradeElement.parentElement.dataset.title
             } else {
-                let schoolYearId = document.querySelector('#aanmeldingenSelect>option[selected=selected]').value
+                let schoolYearId = /** @type {HTMLOptionElement} */(document.querySelector('#aanmeldingenSelect>option[selected=selected]')).value
                 let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === id || `${item.Vak.Afkorting}_${item.CijferKolom.KolomKop}_${item.CijferKolom.KolomNummer}` === id).CijferKolom.Id
                 gradeColumns[gradeColumnId] ??= await magisterApi.gradesColumnInfo({ id: schoolYearId }, gradeColumnId)
                 weight = gradeColumns[gradeColumnId].Weging
@@ -348,19 +363,19 @@ async function gradeCalculator(buttonWrapper) {
     clCanvas.addEventListener('mousemove', event => {
         if (addedToCalculation.length < 1) return
 
-        const hoverX = document.querySelector('#st-cc-canvas-x'),
-            hoverY = document.querySelector('#st-cc-canvas-y')
+        const hoverX = /** @type {HTMLElement} */(document.querySelector('#st-cc-canvas-x')),
+            hoverY = /** @type {HTMLElement} */(document.querySelector('#st-cc-canvas-y'))
 
         let mouseLeftPart = (event.pageX - event.currentTarget.offsetLeft) / event.currentTarget.offsetWidth
         let hypotheticalGrade = Math.round(0.9 * mouseLeftPart * 100 + 10) / 10
 
-        hoverX.dataset.grade = hypotheticalGrade
-        hoverX.style.setProperty('--grade', hypotheticalGrade)
+        hoverX.dataset.grade = hypotheticalGrade.toString()
+        hoverX.style.setProperty('--grade', hypotheticalGrade.toString())
 
         let hypotheticalMean = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][Math.round(0.9 * mouseLeftPart * 100)]
 
         hoverY.dataset.grade = hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        hoverY.style.setProperty('--grade', hypotheticalMean)
+        hoverY.style.setProperty('--grade', hypotheticalMean.toString())
 
         if (hypotheticalMean.toFixed(2) === calcMean.toFixed(2)) {
             clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan blijf je gemiddeld een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
@@ -473,6 +488,182 @@ async function gradeCalculator(buttonWrapper) {
 
 }
 
+class GradeBackupDialog extends Dialog {
+    years = [];
+    busy = false;
+    #progressBar;
+    #column1;
+    #column2;
+
+    constructor() {
+        super();
+
+        this.body.classList.add('st-grade-backup-dialog');
+
+        this.#column1 = createElement('div', this.body, { class: 'st-dialog-column' });
+        this.#column1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
+
+        this.#column2 = createElement('div', this.body, { class: 'st-dialog-column' });
+        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#initialise();
+    }
+
+    async #initialise() {
+        const input = this.#column2.createChildElement('input', { type: 'file', accept: '.json' })
+        input.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const json = JSON.parse(typeof e.target.result === 'string' ? e.target.result : new TextDecoder().decode(e.target.result));
+                await this.#importBackup(json);
+            };
+            reader.readAsText(file);
+        });
+
+        years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
+
+        years.forEach((year, i, a) => {
+            this.#column1.createChildElement('button', {
+                class: i === a.length - 1 ? 'st-button' : 'st-button secondary',
+                innerText: `${year.studie.code} (lesperiode ${year.lesperiode.code}, ${year.groep.omschrijving || year.groep.code})`,
+            })
+                .addEventListener('click', async () => {
+                    if (this.busy) return;
+                    this.#exportGrades(year);
+                });
+        })
+
+        this.#progressBar.dataset.visible = 'false';
+    }
+
+    async #exportGrades(year) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                this.busy = true;
+                this.#column1.classList.add('st-disabled');
+
+                const grades = await this.#gatherGrades(year);
+
+                this.#progressBar.dataset.visible = 'true';
+
+                let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify(
+                    {
+                        date: new Date(),
+                        year: { groep: { omschrijving: year.groep.omschrijving, code: year.groep.code }, studie: { code: year.studie.code }, lesperiode: { code: year.lesperiode.code } },
+                        grades
+                    }
+                ))))}`,
+                    a = element('a', 'st-cb-temp', document.body, {
+                        download: `Cijferback-up ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`,
+                        href: uri,
+                        type: 'application/json'
+                    });
+                a.click();
+                a.remove();
+
+                setTimeout(() => {
+                    this.#progressBar.dataset.visible = 'false';
+                }, 500);
+
+                setTimeout(() => {
+                    this.#column1.classList.remove('st-disabled');
+                    this.busy = false;
+                    resolve();
+                }, 10000)
+
+            } catch (error) {
+                reject(error);
+                this.close();
+                new Dialog({ innerText: i18n('cb.error') }).show();
+            }
+        });
+    }
+
+    async #gatherGrades(year) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                this.#progressBar.firstElementChild.classList.remove('indeterminate');
+                this.#progressBar.dataset.visible = 'true';
+
+                const grades = await magisterApi.gradesForYear(year);
+
+                for (let i = 0; i < grades.length; i++) {
+                    this.#progressBar.firstElementChild.style.width = `${(i / grades.length) * 100}%`;
+
+                    await new Promise(resolve => setTimeout(resolve, (i > 0 && i % 100 === 0) ? 8000 : grades.length > 100 ? 20 : 5));
+
+                    const gradeColumnInfo = await magisterApi.gradesColumnInfo(year, grades[i].CijferKolom.Id);
+
+                    grades[i] = {
+                        ...grades[i],
+                        CijferKolom: { ...grades[i].CijferKolom, ...gradeColumnInfo }
+                    }
+                }
+
+                this.#progressBar.firstElementChild.removeAttribute('style');
+                this.#progressBar.firstElementChild.classList.add('indeterminate');
+                this.#progressBar.dataset.visible = 'false';
+
+                resolve(grades);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async #importBackup(json) {
+        const { date, year, grades } = json;
+
+        const gradeColumns = [...new Set(grades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer)).map(g => g.CijferKolom?.KolomNummer))];
+        console.log(gradeColumns)
+        const gradeSubjects = [...new Set(grades.map(g => g.Vak?.Omschrijving))];
+
+        const contentContainer = await awaitElement('section.main>div');
+        contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
+
+        const table = contentContainer.createChildElement('table', { class: 'st-cb-table' });
+
+        const headerRow = table.createChildElement('tr');
+        headerRow.createChildElement('th');
+        for (const column of gradeColumns) {
+            headerRow.createChildElement('th', { innerText: column });
+        }
+
+        for (const subject of gradeSubjects) {
+            const subjectRow = table.createChildElement('tr');
+            subjectRow.createChildElement('th', { innerText: subject });
+
+            for (const column of gradeColumns) {
+                const grade = grades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
+                if (grade) {
+                    subjectRow.createChildElement('td', { innerText: grade.CijferStr, classList: [].filter(c => c[1]).map(c => c[0]) });
+                } else {
+                    subjectRow.createChildElement('td');
+                }
+            }
+        }
+    }
+}
+
+// Grade backup
+// async function gradeBackup(buttonWrapper) {
+//     if (!syncedStorage['cb']) return
+//     const aside = await awaitElement('#cijfers-container > aside'),
+//         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
+//         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
+//         gradeBackupButton = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') })
+
+//     gradeBackupButton.addEventListener('click', async () => {
+//         new GradeBackupDialog().show()
+//     })
+
 // Grade backup
 async function gradeBackup(buttonWrapper) {
     if (!syncedStorage['cb']) return
@@ -480,6 +671,8 @@ async function gradeBackup(buttonWrapper) {
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
         bkInvoke = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') }),
+
+
         // TODO: Give this modal the same treatment as the today.js edit modal.
         bkModal = element('dialog', 'st-cb-modal', document.body, { class: 'st-overlay' }),
         bkModalClose = element('button', 'st-cb-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: i18n('close') }),
@@ -524,10 +717,11 @@ async function gradeBackup(buttonWrapper) {
         bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
         bkModalImListTitle.dataset.description = "Upload een eerder geëxporteerde cijferlijst"
 
+        // @ts-ignore
         document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
         if (yearsArray?.length > 0) return
 
-        yearsArray = (await magisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+        yearsArray = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
         yearsArray.reverse()
 
         yearsArray.forEach((year, i) => {
@@ -548,7 +742,7 @@ async function gradeBackup(buttonWrapper) {
         bkModalExListTitle.dataset.description = "Wachten op cijfers..."
 
         const gradesArray = await magisterApi.gradesForYear(year)
-        if (!gradesArray?.length > 0) {
+        if (!gradesArray?.length) {
             bkModalExListTitle.dataset.description = "Geen cijfers gevonden!"
             busy = false
             return
@@ -644,7 +838,7 @@ async function gradeBackup(buttonWrapper) {
         reader.onload = async event => {
             bkModalImListTitle.dataset.description = "Cijfers op pagina plaatsen..."
 
-            let json = JSON.parse(event.target.result)
+            let json = JSON.parse(typeof event.target.result === 'string' ? event.target.result : new TextDecoder().decode(event.target.result))
             list = json.list
             gradesContainer.innerText = ''
             let div1 = document.createElement('div')
@@ -661,7 +855,7 @@ async function gradeBackup(buttonWrapper) {
                 existingTabs = document.querySelectorAll('#cijfers-container > aside > div.head-bar > ul > li[data-ng-class]'),
                 bkTab = element('li', 'st-cb-tab', tabs, { class: 'st-tab asideTrigger' }),
                 bkTabLink = element('a', 'st-cb-tab-link', bkTab, { innerText: "Back-upinformatie" })
-            existingTabs.forEach(e => e.style.display = 'none')
+            existingTabs.forEach(e => (e instanceof HTMLElement) && (e.style.display = 'none'))
 
             tabs.addEventListener('click', (event) => {
                 let bkTabClicked = event.target.id.startsWith('st-cb-tab')
@@ -693,15 +887,15 @@ async function gradeBackup(buttonWrapper) {
 
             for (let i = 0; i < list.length; i++) {
                 bkModalImMagister.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
-                item = list[i]
+                let item = list[i]
                 await appendImportedGrade(item, gradesContainer.querySelector('table'), aside)
                     .then(() => {
                         return
                     })
             }
 
-            document.querySelectorAll('*[id^="st-cs-filter"]').forEach(e => e.style.display = 'none')
-            document.querySelectorAll('#st-cs').forEach(e => e.dataset.filters = false)
+            document.querySelectorAll('*[id^="st-cs-filter"]').forEach(e => (e instanceof HTMLElement) && (e.style.display = 'none'))
+            document.querySelectorAll('#st-cs').forEach(e => (e instanceof HTMLElement) && (e.dataset.filters = 'false'))
 
             displayStatistics(true)
 
@@ -824,8 +1018,8 @@ async function gradeStatistics() {
 
     const scFilters = element('div', 'st-cs-filters', scContainer),
         scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n('cs.filters') }),
-        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n('cs.years') })
-    scYearFilter = element('div', 'st-cs-year-filter', scFilters),
+        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n('cs.years') }),
+        scYearFilter = element('div', 'st-cs-year-filter', scFilters),
         scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
         scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)
 
@@ -863,7 +1057,7 @@ async function gradeStatistics() {
     })
 
     // Gather all years and populate the year filter
-    years = (await magisterApi.years()).sort((a, b) => new Date(a.begin) - new Date(b.begin))
+    years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
     years.forEach(async (year, i, a) => {
         let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.match(/\d/gi)?.[0], title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
         if (!(label.innerText?.length > 0)) label.innerText = i + 1
@@ -881,7 +1075,7 @@ async function gradeStatistics() {
                         g.CijferStr === grade.CijferStr
                     )
                 )
-                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+                .sort((a, b) => new Date(a.DatumIngevoerd).getTime() - new Date(b.DatumIngevoerd).getTime())
             statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
 
             let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
@@ -967,7 +1161,7 @@ async function gradeStatistics() {
                 )
             )
             // Sort from old to new
-            .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+            .sort((a, b) => new Date(a.DatumIngevoerd).getTime() - new Date(b.DatumIngevoerd).getTime())
         return filtered
     }
 
@@ -986,7 +1180,7 @@ async function gradeStatistics() {
             if (fromBackup) {
                 filteredGrades = statsGrades
                     .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn' && grade.result >= 1 && grade.result <= 10)
-                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                 scStatsHeading.dataset.amount = filteredGrades.length
 
                 scStatsInfo.innerText = "Statistieken kunnen in Magister niet cor-\nrect worden weergegeven voor back-ups."
@@ -999,7 +1193,7 @@ async function gradeStatistics() {
                     type: 'conjunction',
                 }).format(
                     [...includedYears]
-                        .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin) - new Date(years.find(y => y.id === idB).begin))
+                        .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin).getTime() - new Date(years.find(y => y.id === idB).begin).getTime())
                         .map(id => years.find(y => y.id === id).studie.code)
                 )
                 if (includedYears.size === 1 && includedYears.has(years.at(-1).id)) yearsText = `Dit leerjaar (${years.at(-1)?.studie?.code})`

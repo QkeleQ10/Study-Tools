@@ -242,7 +242,7 @@ window.addEventListener('popstate', popstate)
 async function popstate() {
     chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
 
-    element('meta', `st-${chrome.runtime.id}`, document.head)
+    element('meta', `st-${chrome.runtime.id.replace(/[^a-zA-Z0-9-_ ]/g, '')}`, document.head)
     setTimeout(upgradeAssistant, 200)
 
     document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-cc"], *[id^="st-cs"], *[id^="st-cb"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
@@ -297,7 +297,7 @@ async function popstate() {
 
 // The upgrade assistant ensures no two versions are installed at the same time, on top of offering an upgrade from the Edge Add-Ons version to the Chrome Web Store version
 async function upgradeAssistant() {
-    const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id})`)].map(e => e.id.split('-')[1])
+    const otherExtensionInstances = [...document.querySelectorAll(`meta[id^="st-"]:not(#st-${chrome.runtime.id.replace(/[^a-zA-Z0-9-_ ]/g, '')})`)].map(e => e.id.split('-')[1])
 
     if (otherExtensionInstances.length > 0) console.info('This instance:', chrome.runtime.id, 'Other instances:', otherExtensionInstances)
 

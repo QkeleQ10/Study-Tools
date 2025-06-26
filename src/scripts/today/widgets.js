@@ -584,6 +584,8 @@ class GradesWidget extends SlideshowWidget {
                 dataset: {
                     unread: grade.unread,
                     hidden: this.#hiddenItems.has(grade.id) || this.constructor.options.filter == 'never' || (this.constructor.options.filter == 'sufficient' && !grade.isSufficient),
+                    great: this.constructor.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
+                    insuf: syncedStorage['insuf-red'] && !grade.isSufficient && grade?.weegfactor > 0,
                     isAssignment: grade.isAssignment,
                 }
             });
@@ -591,10 +593,6 @@ class GradesWidget extends SlideshowWidget {
             itemElement.createChildElement('span', {
                 class: 'st-widget-grades-item-rslt',
                 innerText: grade.result,
-                dataset: {
-                    great: this.constructor.options.rotate == 'true' && grade.value > 8.9 && grade.value <= 10,
-                    insuf: syncedStorage['insuf-red'] && !grade.isSufficient && grade?.weegfactor > 0,
-                }
             });
 
             itemElement.createChildElement('span', {
@@ -697,6 +695,9 @@ class DigitalClockWidget extends Widget {
 
     async initialise() {
         this.header.remove();
+
+        if (this.constructor.options.shape == 'strip')
+            this.element.classList.add('strip');
 
         this.timeElement = this.element.createChildElement('p', {
             id: 'st-widget-digitalclock-time',
@@ -820,6 +821,21 @@ class DigitalClockWidget extends Widget {
                 {
                     title: "Verbergen",
                     value: 'hide'
+                }
+            ]
+        },
+        shape: {
+            title: "Vorm",
+            type: 'select',
+            choices: [
+                {
+                    title: "Tegel",
+                    value: 'regular'
+                },
+                {
+                    title: "Strook",
+                    value: 'strip',
+                    default: true
                 }
             ]
         }
