@@ -164,6 +164,17 @@ async function gradeCalculator(buttonWrapper) {
             accessedBefore = true
             saveToStorage('cf-calc-accessed', true, 'local')
         }
+        console.log(!localStorage['cc-accessed'])
+        if (!localStorage['cc-accessed']) {
+            new Dialog({
+                innerText: "De afgelopen tijd zijn er wat problemen geweest bij het toevoegen van cijfers. \n\nDat is hopelijk nu opgelost. Sorry voor het ongemak! \n\nLaat het me weten als je nog steeds problemen ondervindt.",
+                buttons: [
+                    { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+                    { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
+                ]
+            }).show();
+            localStorage['cc-accessed'] = true;
+        }
     })
 
     clClose.addEventListener('click', () => {

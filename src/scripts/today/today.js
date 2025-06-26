@@ -9,7 +9,7 @@ addEventListener('hashchange', today)
 
 // Page 'Vandaag'
 async function today() {
-    console.info('today()')
+    console.info('hashchange', document.location.href)
 
     if (!(document.location.href.includes('#/vandaag') && syncedStorage['start-enabled'])) return
 
