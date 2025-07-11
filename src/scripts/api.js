@@ -19,7 +19,6 @@ class MagisterApi {
         this.gatherEarlyStart = dates.gatherEarlyStart;
         this.gatherEnd = dates.gatherEnd;
         this.useSampleData = false;
-
     }
 
     async updateApiCredentials() {
