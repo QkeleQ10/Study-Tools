@@ -164,7 +164,6 @@ async function gradeCalculator(buttonWrapper) {
             accessedBefore = true
             saveToStorage('cf-calc-accessed', true, 'local')
         }
-        console.log(!localStorage['cc-accessed'])
         if (!localStorage['cc-accessed']) {
             new Dialog({
                 innerText: "De afgelopen tijd zijn er wat problemen geweest bij het toevoegen van cijfers. \n\nDat is hopelijk nu opgelost. Sorry voor het ongemak! \n\nLaat het me weten als je nog steeds problemen ondervindt.",
@@ -757,50 +756,59 @@ async function gradeBackup(buttonWrapper) {
 
         list = await Promise.all(array.map(async (td, i) => {
             return new Promise(async (resolve, reject) => {
-                let type = (!td.innerText || td.innerText.trim().length < 1) ? 'filler' : (td.firstElementChild?.classList.contains('text')) ? 'rowheader' : 'grade',
-                    className = td.firstElementChild?.className
+                try {
+                    bkModalExListTitle.dataset.description = `Cijfers verwerken (${i}/${array.length})...`
 
-                if (type === 'filler') {
-                    resolve({
-                        type, className
-                    })
-                } else if (type === 'rowheader') {
-                    let title = td.firstElementChild?.innerText
+                    let type = (!td.innerText || td.innerText.trim().length < 1) ? 'filler' : (td.firstElementChild?.classList.contains('text')) ? 'rowheader' : 'grade',
+                        className = td.firstElementChild?.className
 
-                    resolve({
-                        title, type, className
-                    })
-                } else {
-                    let columnComponents = td.firstElementChild?.id.replace(/(\w+)\1+/g, '$1').split('_'),
-                        columnName = columnComponents[0] + columnComponents[1].padStart(3, '0')
-
-                    let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName)
-
-                    let result = gradeBasis?.CijferStr || gradeBasis?.Cijfer
-                    let date = gradeBasis?.DatumIngevoerd
-
-                    if (Math.floor(i / 400) * 10000 >= 10000) {
-                        bkModalExListTitle.dataset.description = `10 seconden wachten...`
-                        let secondsRemaining = 10
-                        var interval = setInterval(function () {
-                            if (secondsRemaining <= 1) clearInterval(interval)
-                            bkModalExListTitle.dataset.description = `${secondsRemaining - 1} seconden wachten...`
-                            secondsRemaining--
-                        }, 1000)
-                        setTimeout(() => { bkModalExListTitle.dataset.description = `Cijfers verwerken...` }, 10000)
-                    }
-
-                    setTimeout(async () => {
-                        const gradeExtra = await magisterApi.gradesColumnInfo(year, gradeBasis?.CijferKolom?.Id)
-
-                        let weight = Number(gradeExtra.Weging),
-                            column = gradeExtra.KolomNaam,
-                            title = gradeExtra.KolomOmschrijving
+                    if (type === 'filler') {
+                        resolve({
+                            type, className
+                        })
+                    } else if (type === 'rowheader') {
+                        let title = td.firstElementChild?.innerText
 
                         resolve({
-                            result, weight, column, title, date, type, className, year: year.id
+                            title, type, className
                         })
-                    }, Math.floor(i / 400) * 10000)
+                    } else {
+                        let columnComponents = td.firstElementChild?.id.replace(/(\w+)\1+/g, '$1').split('_'),
+                            columnName = columnComponents[0] + columnComponents[1].padStart(3, '0')
+
+                        let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName) || gradesArray.find(e => e.CijferKolom.KolomNummer === columnName.replace(/^\D+/g, '') && td.innerText.includes(e.CijferStr))
+
+                        if (!gradeBasis) console.warn(`Grade basis not found for column ${columnName}`, td, gradesArray)
+
+                        let result = gradeBasis?.CijferStr || gradeBasis?.Cijfer
+                        let date = gradeBasis?.DatumIngevoerd
+
+                        if (Math.floor(i / 400) * 10000 >= 10000) {
+                            bkModalExListTitle.dataset.description = `10 seconden wachten...`
+                            let secondsRemaining = 10
+                            var interval = setInterval(function () {
+                                if (secondsRemaining <= 1) clearInterval(interval)
+                                bkModalExListTitle.dataset.description = `${secondsRemaining - 1} seconden wachten...`
+                                secondsRemaining--
+                            }, 1000)
+                            setTimeout(() => { bkModalExListTitle.dataset.description = `Cijfers verwerken (${i}/${array.length})...` }, 10000)
+                        }
+
+                        setTimeout(async () => {
+                            const gradeExtra = await magisterApi.gradesColumnInfo(year, gradeBasis?.CijferKolom?.Id)
+
+                            let weight = Number(gradeExtra.Weging),
+                                column = gradeExtra.KolomNaam,
+                                title = gradeExtra.KolomOmschrijving
+
+                            resolve({
+                                result, weight, column, title, date, type, className, year: year.id
+                            })
+                        }, Math.floor(i / 400) * 10000)
+                    }
+                } catch (error) {
+                    console.error(`Error processing grade at index ${i}:`, error);
+                    reject(error);
                 }
             })
         }))

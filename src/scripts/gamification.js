@@ -27,14 +27,16 @@ async function checkWrapped() {
         let examInfo = {}
         let recentGrades = []
 
-        if (magisterApi.permissions.includes('ExamenTijdvak'))
+        await magisterApi.updateApiPermissions();
+
+        if (magisterApi.permissions?.includes('ExamenTijdvak'))
             try {
                 examInfo = await magisterApi.examsInfo(years.at(-1));
                 years[years.length - 1].examInfo = examInfo;
             } catch (error) {
             }
 
-        if (magisterApi.permissions.includes('Cijfers'))
+        if (magisterApi.permissions?.includes('Cijfers'))
             try {
                 recentGrades = await magisterApi.gradesRecent();
             } catch (error) {
@@ -58,7 +60,7 @@ async function checkWrapped() {
     window.addEventListener("keydown", function (e) {
         pressedKeys.push(e.code);
         if (pressedKeys.toString().indexOf(konamiCode) >= 0) {
-            console.log("Konami code activated");
+            console.info("Konami code activated");
             pressedKeys = [];
             commenceWrapped(true);
         }
@@ -319,7 +321,7 @@ async function constructWrapped(lastYearOnly) {
                             eventSubjectHashmap[subject] ??= 0
                             eventSubjectHashmap[subject]++
                         })
-                        const mostCommonEventSubject = (Object.entries(eventSubjectHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                        const mostCommonEventSubject = (Object.entries(eventSubjectHashmap).sort((a, b) => b[1] - a[1])?.[0]) || ['onbekend', 0]
                         let el1 = element('span', null, card2, { class: 'st-w-text-small', innerText: `De meeste van je blokken waren ${mostCommonEventSubject[0]} (${mostCommonEventSubject[1]}×).` })
                         cards.push(card2)
                         let eventLocationHashmap = {}
@@ -327,14 +329,14 @@ async function constructWrapped(lastYearOnly) {
                             eventLocationHashmap[location] ??= 0
                             eventLocationHashmap[location]++
                         })
-                        const mostCommonEventLocation = (Object.entries(eventLocationHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                        const mostCommonEventLocation = (Object.entries(eventLocationHashmap).sort((a, b) => b[1] - a[1])?.[0]) || ['onbekend', 0]
                         let el2 = element('span', null, card2, { class: 'st-w-text-small', innerText: `Je had de meeste lessen in ${mostCommonEventLocation[0]} (${mostCommonEventLocation[1]}×)` })
                         let eventTeacherHashmap = {}
                         year.events.filter(event => event.Docenten?.[0]?.Docentcode?.length > 0).map(event => teacherNames[event.Docenten?.[0]?.Docentcode] || event.Docenten?.[0]?.Naam || event.Docenten?.[0]?.Docentcode).forEach(teacher => {
                             eventTeacherHashmap[teacher] ??= 0
                             eventTeacherHashmap[teacher]++
                         })
-                        const mostCommonEventTeacher = (Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1])?.[0])
+                        const mostCommonEventTeacher = (Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1])?.[0]) || ['onbekend', 0]
                         let el3 = element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
                         cards.push(card2)
 
