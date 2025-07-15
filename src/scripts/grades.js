@@ -1,10 +1,11 @@
 let statsGrades = [],
+    collectedGrades = [],
     displayStatistics
 
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
-function popstate() {
+async function popstate() {
     if (document.location.href.includes('cijfers')) {
         if (document.location.href.includes('cijferoverzicht')) {
             gradeOverview()
@@ -22,15 +23,9 @@ async function gradeList() {
     const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
 
     if (syncedStorage['cb']) {
-        // const gradeBackupButton = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
-        // gradeBackupButton.addEventListener('click', async () => {
-        //     new GradeBackupDialog().show()
-
-        const cbPreOpen = element('button', 'st-cb-pre-open', buttons, { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
-        cbPreOpen.addEventListener('click', async () => {
-            document.location.hash = '#/cijfers/cijferoverzicht'
-            const cbOpen = await awaitElement('#st-cb')
-            cbOpen.click()
+        const gradeBackupButton = buttons.createChildElement('button', { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
+        gradeBackupButton.addEventListener('click', async () => {
+            new GradeBackupDialog().show()
         })
     }
 
@@ -49,8 +44,12 @@ async function gradeOverview() {
 
     allowAsideResize()
     gradeCalculator(buttons)
-    gradeBackup(buttons)
     gradeStatistics()
+
+    const gradeBackupButton = buttons.createChildElement('button', { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
+    gradeBackupButton.addEventListener('click', async () => {
+        new GradeBackupDialog().show()
+    })
 
     // Set grade type to All
     const gradeTypeSelect = await awaitElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span')
@@ -620,48 +619,76 @@ class GradeBackupDialog extends Dialog {
     async #importBackup(json) {
         const { date, year, grades } = json;
 
-        const gradeColumns = [...new Set(grades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer)).map(g => g.CijferKolom?.KolomNummer))];
-        console.log(gradeColumns)
-        const gradeSubjects = [...new Set(grades.map(g => g.Vak?.Omschrijving))];
+        collectedGrades.unshift({
+            title: `Back-up van ${year.studie.code} (${year.lesperiode.code}) ${date.toLocaleString()}`,
+            grades
+        })
 
         const contentContainer = await awaitElement('section.main>div');
         contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
 
-        const table = contentContainer.createChildElement('table', { class: 'st-cb-table' });
+        const asideDetails = await awaitElement('#idDetails>.tabsheet>div[ng-transclude]');
+        asideDetails.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
 
-        const headerRow = table.createChildElement('tr');
-        headerRow.createChildElement('th');
+        drawGradeTable(grades, contentContainer, (grade, event) => {
+            
+        });
+    }
+}
+
+function drawGradeTable(grades, parentElement, gradeClicked) {
+    const sortedColumns = grades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer));
+    const gradePeriods = [...new Set(sortedColumns.map(g => g.CijferPeriode?.Naam))];
+    const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.KolomNummer))];
+    const gradeSubjects = [...new Set(grades.sort((a, b) => a.Vak?.Volgnr - b.Vak?.Volgnr).map(g => g.Vak?.Omschrijving))];
+
+    const table = parentElement.createChildElement('table', { class: 'st-grade-table' });
+
+    const headerRow1 = table.createChildElement('tr');
+    headerRow1.createChildElement('th');
+    for (const period of gradePeriods) {
+        const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.KolomNummer)).size;
+        console.log(numColumns);
+        headerRow1.createChildElement('th', { innerText: period, colSpan: numColumns });
+    }
+
+    const headerRow2 = table.createChildElement('tr');
+    headerRow2.createChildElement('th');
+    for (const column of gradeColumns) {
+        headerRow2.createChildElement('th', { innerText: column });
+    }
+
+    for (const subject of gradeSubjects) {
+        const subjectRow = table.createChildElement('tr');
+        subjectRow.createChildElement('th', { innerText: subject });
+
         for (const column of gradeColumns) {
-            headerRow.createChildElement('th', { innerText: column });
-        }
-
-        for (const subject of gradeSubjects) {
-            const subjectRow = table.createChildElement('tr');
-            subjectRow.createChildElement('th', { innerText: subject });
-
-            for (const column of gradeColumns) {
-                const grade = grades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
-                if (grade) {
-                    subjectRow.createChildElement('td', { innerText: grade.CijferStr, classList: [].filter(c => c[1]).map(c => c[0]) });
-                } else {
-                    subjectRow.createChildElement('td');
-                }
+            const grade = grades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
+            if (grade) {
+                subjectRow.createChildElement('td', {
+                    innerText: grade.CijferStr, classList: [
+                        ['insufficient', grade.IsVoldoende === false],
+                        ['inh', grade.Inhalen],
+                        ['vr', grade.Vrijstelling],
+                        ['not-counted', grade.TeltMee === false],
+                        [`column-type-${grade.CijferKolom?.KolomSoort}`, true],
+                        ['column-resit', grade.CijferKolom?.IsHerkansingKolom],
+                        ['column-teacher', grade.CijferKolom?.IsDocentKolom],
+                        ['column-underlying', grade.CijferKolom?.HeeftOnderliggendeKolommen],
+                        ['column-pta', grade.CijferKolom?.IsPTAKolom],
+                    ].filter(c => c[1]).map(c => c[0])
+                })
+                    .addEventListener('click', (event) => {
+                        if (gradeClicked) {
+                            gradeClicked(grade, event);
+                        }
+                    });
+            } else {
+                subjectRow.createChildElement('td', { class: 'empty' });
             }
         }
     }
 }
-
-// Grade backup
-// async function gradeBackup(buttonWrapper) {
-//     if (!syncedStorage['cb']) return
-//     const aside = await awaitElement('#cijfers-container > aside'),
-//         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
-//         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-//         gradeBackupButton = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') })
-
-//     gradeBackupButton.addEventListener('click', async () => {
-//         new GradeBackupDialog().show()
-//     })
 
 // Grade backup
 async function gradeBackup(buttonWrapper) {
@@ -669,320 +696,11 @@ async function gradeBackup(buttonWrapper) {
     const aside = await awaitElement('#cijfers-container > aside'),
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-        bkInvoke = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') }),
+        gradeBackupButton = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') })
 
-
-        // TODO: Give this modal the same treatment as the today.js edit modal.
-        bkModal = element('dialog', 'st-cb-modal', document.body, { class: 'st-overlay' }),
-        bkModalClose = element('button', 'st-cb-modal-close', bkModal, { class: 'st-button', 'data-icon': '', innerText: i18n('close') }),
-        bkModalTitle = element('span', 'st-cb-title', bkModal, { class: 'st-title', innerText: i18n('cb.title') }),
-        bkModalSubtitle = element('span', 'st-cb-subtitle', bkModal, { class: 'st-subtitle', innerText: "Exporteer of importeer je cijferlijst zodat je er altijd bij kunt." }),
-        bkModalWrapper = element('div', 'st-cb-modal-wrapper', bkModal),
-        bkModalEx = element('div', 'st-cb-ex', bkModalWrapper, { class: 'st-list st-tile' }),
-        bkModalExListTitle = element('span', 'st-cb-ex-title', bkModalEx, { class: 'st-section-title', 'data-icon': '', innerText: "Exporteren" }),
-        bkModalIm = element('div', 'st-cb-im', bkModalWrapper, { class: 'st-list st-tile' }),
-        bkModalImListTitle = element('span', 'st-cb-im-title', bkModalIm, { class: 'st-section-title', 'data-icon': '', innerText: "Importeren" }),
-        bkModalImExternal = element('button', 'st-cb-im-external', bkModalIm, { class: 'st-button', 'data-icon': '', innerText: "Importeren via website" }),
-        bkModalImExtTip = element('span', 'st-cb-im-ext-tip', bkModalIm, { class: 'st-tip', innerText: "Website speciaal ontwikkeld voor het\nimporteren van cijferback-ups (aanbevolen)\n\n" }),
-        bkModalImMagister = element('label', 'st-cb-import', bkModalIm, { class: 'st-button secondary', 'data-icon': '', innerText: "Importeren in Magister" }),
-        bkModalImMagTip = element('span', 'st-cb-im-mag-tip', bkModalIm, { class: 'st-tip', innerText: "Niet aanbevolen" }),
-        bkImportInput = element('input', 'st-cb-import-input', bkModalImMagister, { type: 'file', accept: '.json', style: 'display:none' })
-
-    buttonWrapper.prepend(bkInvoke)
-
-    const bkI = element('div', 'st-cb-i', aside, { class: 'st-sheet', 'data-visible': 'false' }),
-        bkIHeading = element('span', 'st-cb-i-heading', bkI, { innerText: "Back-upinformatie", 'data-amount': 0 }),
-        bkIInfo = element('span', 'st-cb-i-info', bkI, { innerText: "Laden..." }),
-        bkIMetrics = element('div', 'st-cb-i-metrics', bkI),
-        bkIResult = element('div', 'st-cb-i-result', bkIMetrics, { class: 'st-metric', 'data-description': "Resultaat", innerText: "?" }),
-        bkIWeight = element('div', 'st-cb-i-weight', bkIMetrics, { class: 'st-metric secondary', 'data-description': "Weegfactor", innerText: "?" }),
-        bkIColumn = element('div', 'st-cb-i-column', bkI, { class: 'st-metric secondary', 'data-description': "Kolomnaam", innerText: "?" }),
-        bkITitle = element('div', 'st-cb-i-title', bkI, { class: 'st-metric secondary', 'data-description': "Kolomkop", innerText: "?" })
-
-    let yearsArray = [],
-        busy = false,
-        list = []
-
-    bkModalClose.addEventListener('click', () => bkModal.close())
-
-    bkInvoke.addEventListener('click', async () => {
-        bkModal.showModal()
-
-        if (bkModalExListTitle.disabled) {
-            bkModalImListTitle.dataset.description = "Upload een andere cijferback-up"
-            return
-        }
-
-        bkModalExListTitle.dataset.description = "Kies een cijferlijst om te exporteren"
-        bkModalImListTitle.dataset.description = "Upload een eerder geëxporteerde cijferlijst"
-
-        // @ts-ignore
-        document.querySelector("#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(1) > div > span").click()
-        if (yearsArray?.length > 0) return
-
-        yearsArray = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
-        yearsArray.reverse()
-
-        yearsArray.forEach((year, i) => {
-            const button = element('button', `st-cb-ex-opt-${year.id}`, bkModalEx, { class: `st-button ${i === 0 ? '' : 'secondary'}`, innerText: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`, 'data-icon': i === 0 ? '' : '' })
-            button.addEventListener('click', () => exportGradesForYear({ ...year, i, button }))
-        })
+    gradeBackupButton.addEventListener('click', async () => {
+        new GradeBackupDialog().show()
     })
-
-    async function exportGradesForYear(year) {
-        if (busy) return
-
-        busy = true
-        bkModalExListTitle.dataset.description = "Schooljaar selecteren..."
-
-        let yearElement = await awaitElement(`#aanmeldingenSelect_listbox>li:nth-child(${year.i + 1})`)
-        yearElement.click()
-
-        bkModalExListTitle.dataset.description = "Wachten op cijfers..."
-
-        const gradesArray = await magisterApi.gradesForYear(year)
-        if (!gradesArray?.length) {
-            bkModalExListTitle.dataset.description = "Geen cijfers gevonden!"
-            busy = false
-            return
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        bkModalExListTitle.dataset.description = `Cijfers verwerken...`
-
-        let nodeList = gradesContainer.querySelectorAll('td:not([style])'),
-            array = [...nodeList]
-
-        list = await Promise.all(array.map(async (td, i) => {
-            return new Promise(async (resolve, reject) => {
-                try {
-                    bkModalExListTitle.dataset.description = `Cijfers verwerken (${i}/${array.length})...`
-
-                    let type = (!td.innerText || td.innerText.trim().length < 1) ? 'filler' : (td.firstElementChild?.classList.contains('text')) ? 'rowheader' : 'grade',
-                        className = td.firstElementChild?.className
-
-                    if (type === 'filler') {
-                        resolve({
-                            type, className
-                        })
-                    } else if (type === 'rowheader') {
-                        let title = td.firstElementChild?.innerText
-
-                        resolve({
-                            title, type, className
-                        })
-                    } else {
-                        let columnComponents = td.firstElementChild?.id.replace(/(\w+)\1+/g, '$1').split('_'),
-                            columnName = columnComponents[0] + columnComponents[1].padStart(3, '0')
-
-                        let gradeBasis = gradesArray.find(e => e.CijferKolom.KolomNaam === columnName) || gradesArray.find(e => e.CijferKolom.KolomNummer === columnName.replace(/^\D+/g, '') && td.innerText.includes(e.CijferStr))
-
-                        if (!gradeBasis) console.warn(`Grade basis not found for column ${columnName}`, td, gradesArray)
-
-                        let result = gradeBasis?.CijferStr || gradeBasis?.Cijfer
-                        let date = gradeBasis?.DatumIngevoerd
-
-                        if (Math.floor(i / 400) * 10000 >= 10000) {
-                            bkModalExListTitle.dataset.description = `10 seconden wachten...`
-                            let secondsRemaining = 10
-                            var interval = setInterval(function () {
-                                if (secondsRemaining <= 1) clearInterval(interval)
-                                bkModalExListTitle.dataset.description = `${secondsRemaining - 1} seconden wachten...`
-                                secondsRemaining--
-                            }, 1000)
-                            setTimeout(() => { bkModalExListTitle.dataset.description = `Cijfers verwerken (${i}/${array.length})...` }, 10000)
-                        }
-
-                        setTimeout(async () => {
-                            const gradeExtra = await magisterApi.gradesColumnInfo(year, gradeBasis?.CijferKolom?.Id)
-
-                            let weight = Number(gradeExtra.Weging),
-                                column = gradeExtra.KolomNaam,
-                                title = gradeExtra.KolomOmschrijving
-
-                            resolve({
-                                result, weight, column, title, date, type, className, year: year.id
-                            })
-                        }, Math.floor(i / 400) * 10000)
-                    }
-                } catch (error) {
-                    console.error(`Error processing grade at index ${i}:`, error);
-                    reject(error);
-                }
-            })
-        }))
-
-        bkModalExListTitle.dataset.description = "In bestand opslaan..."
-
-        let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify({ date: new Date(), list: list }))))}`,
-            a = element('a', 'st-cb-temp', document.body, {
-                download: `Cijferlijst ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`,
-                href: uri,
-                type: 'application/json'
-            })
-        a.click()
-        a.remove()
-        bkModalExListTitle.dataset.description = "Controleer je downloads!"
-        busy = false
-        setTimeout(() => bkModal.close(), 2000)
-    }
-
-    bkModalImExternal.addEventListener('click', () => window.open('https://qkeleq10.github.io/studytools/grades', '_blank'))
-
-    bkImportInput.addEventListener('change', async event => {
-        if (busy) return
-
-        busy = true
-        bkModalImListTitle.dataset.description = "Wachten op bestand..."
-
-        bkModalExListTitle.dataset.description = `Vernieuw de pagina om te exporteren`
-        bkModalExListTitle.disabled = true
-        bkModalEx.querySelectorAll(`[id*='st-cb-ex-opt']`).forEach(e => e.remove())
-        gradesContainer.setAttribute('style', 'opacity: .6; pointer-events: none')
-        list = []
-
-        let reader = new FileReader()
-        reader.onload = async event => {
-            bkModalImListTitle.dataset.description = "Cijfers op pagina plaatsen..."
-
-            let json = JSON.parse(typeof event.target.result === 'string' ? event.target.result : new TextDecoder().decode(event.target.result))
-            list = json.list
-            gradesContainer.innerText = ''
-            let div1 = document.createElement('div')
-            div1.setAttributes({ id: 'cijferoverzichtgrid', 'data-role': 'grid', class: 'cijfers-k-grid ng-isolate-scope k-grid k-widget', style: 'height: 100%' })
-            gradesContainer.append(div1)
-            let div2 = document.createElement('div')
-            div2.setAttributes({ class: 'k-grid-content', style: 'height: 100% !important' })
-            div1.append(div2)
-            let table = document.createElement('table')
-            table.setAttributes({ role: 'grid', 'data-role': 'selectable', class: 'k-selectable', style: 'width: auto' })
-            div2.append(table)
-
-            const tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
-                existingTabs = document.querySelectorAll('#cijfers-container > aside > div.head-bar > ul > li[data-ng-class]'),
-                bkTab = element('li', 'st-cb-tab', tabs, { class: 'st-tab asideTrigger' }),
-                bkTabLink = element('a', 'st-cb-tab-link', bkTab, { innerText: "Back-upinformatie" })
-            existingTabs.forEach(e => (e instanceof HTMLElement) && (e.style.display = 'none'))
-
-            tabs.addEventListener('click', (event) => {
-                let bkTabClicked = event.target.id.startsWith('st-cb-tab')
-                if (bkTabClicked) {
-                    bkTab.classList.add('active')
-                    bkI.dataset.visible = true
-                    asideContent.style.display = 'none'
-                } else {
-                    bkTab.classList.remove('active')
-                    bkI.dataset.visible = false
-                    if (!tabs.querySelector('.st-tab.active')) asideContent.style.display = ''
-                }
-            })
-
-            bkTab.click()
-
-            bkIHeading.dataset.amount = list.filter(grade => grade.result?.length > 1).length
-
-            bkIInfo.innerText = "Geïmporteerd uit back-up van \n" + new Date(json.date).toLocaleString(locale, {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "numeric",
-                minute: "numeric"
-            })
-
-            statsGrades = []
-
-            for (let i = 0; i < list.length; i++) {
-                bkModalImMagister.style.backgroundPosition = `-${(i + 1) / list.length * 100}% 0`
-                let item = list[i]
-                await appendImportedGrade(item, gradesContainer.querySelector('table'), aside)
-                    .then(() => {
-                        return
-                    })
-            }
-
-            document.querySelectorAll('*[id^="st-cs-filter"]').forEach(e => (e instanceof HTMLElement) && (e.style.display = 'none'))
-            document.querySelectorAll('#st-cs').forEach(e => (e instanceof HTMLElement) && (e.dataset.filters = 'false'))
-
-            displayStatistics(true)
-
-            gradesContainer.removeAttribute('style')
-            bkModalImListTitle.dataset.description = "Cijferlijst geüpload!"
-            busy = false
-            setTimeout(() => bkModal.close(), 200)
-        }
-        reader.readAsText(event.target.files[0])
-    })
-
-    async function appendImportedGrade(item, container, aside) {
-        return new Promise(async (resolve, reject) => {
-            let tr = container.querySelector(`tr:last-child`), td, span
-            switch (item.type) {
-                case 'rowheader':
-                    tr = document.createElement('tr')
-                    tr.role = 'row'
-                    container.append(tr)
-                    let tdPre = document.createElement('td')
-                    tdPre.role = 'gridcell'
-                    tdPre.style.display = 'none'
-                    td = document.createElement('td')
-                    td.role = 'gridcell'
-                    tr.append(tdPre, td)
-                    span = document.createElement('span')
-                    span.className = item.className
-                    span.innerText = item.title
-                    td.append(span)
-                    break
-
-                case 'filler':
-                    if (!tr) {
-                        tr = document.createElement('tr')
-                        tr.role = 'row'
-                        container.append(tr)
-                    }
-                    td = document.createElement('td')
-                    td.role = 'gridcell'
-                    tr.append(td)
-                    span = document.createElement('span')
-                    span.className = item.className
-                    span.style.height = '40px'
-                    td.append(span)
-                    break
-
-                default:
-                    if (!tr) {
-                        tr = document.createElement('tr')
-                        tr.role = 'row'
-                        container.append(tr)
-                    }
-                    td = document.createElement('td')
-                    td.role = 'gridcell'
-                    td.dataset.result = item.result
-                    td.dataset.weight = item.weight
-                    td.dataset.column = item.column
-                    td.dataset.title = item.title
-                    tr.append(td)
-                    span = document.createElement('span')
-                    span.className = item.className
-                    span.innerText = item.result
-                    span.title = item.result
-                    span.id = item.column
-                    td.append(span)
-                    statsGrades.push({ ...item, result: Number(item.result.replace(',', '.')) })
-                    td.addEventListener('click', () => {
-                        document.querySelectorAll('.k-state-selected').forEach(e => e.classList.remove('k-state-selected'))
-                        td.classList.add('k-state-selected')
-                        bkIResult.innerText = item.result
-                        bkIWeight.innerText = item.weight
-                        bkIColumn.innerText = item.column
-                        bkITitle.innerText = item.title
-                    })
-                    break
-            }
-            resolve()
-        })
-    }
 }
 
 // Grade statistics
