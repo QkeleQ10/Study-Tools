@@ -179,6 +179,11 @@ class Widgets {
         this.#drawWidgets();
     }
 
+    async refresh() {
+        this.element.innerText = '';
+        await this.#drawWidgets();
+    }
+
     async #drawWidgets() {
         await magisterApi.updateApiPermissions();
 

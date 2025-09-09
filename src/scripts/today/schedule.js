@@ -136,7 +136,7 @@ class Schedule {
     /** Clear all cached elements with keys containing 'event' */
     async refresh() {
         Object.keys(magisterApi.cache).forEach(key => {
-            if (key.includes('event')) delete magisterApi.cache[key];
+            if (['event', 'kwt'].some(type => key.includes(type))) delete magisterApi.cache[key];
         });
 
         this.redraw();
@@ -596,27 +596,33 @@ class ScheduleEventDialog extends Dialog {
         this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
         createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
 
+        this.#drawDialogContents();
+    }
+
+    async #drawDialogContents() {
+        this.body.innerText = '';
+
         const column1 = createElement('div', this.body, { class: 'st-event-dialog-column' });
-        createElement('h3', column1, { class: 'st-section-heading', innerText: (event.Type === 1 || event.Type === 16) ? 'Afspraakdetails' : 'Lesdetails' });
+        createElement('h3', column1, { class: 'st-section-heading', innerText: (this.event.Type === 1 || this.event.Type === 16) ? 'Afspraakdetails' : 'Lesdetails' });
 
         let table1 = createElement('table', column1, { class: 'st' });
 
-        this.#addRowToTable(table1, i18n('title'), event.Omschrijving || '-');
-        this.#addRowToTable(table1, i18n('subject'), eventSubjects(event) || '-');
-        this.#addRowToTable(table1, i18n('schoolHour'), event.LesuurVan
-            ? (event.LesuurVan === event.LesuurTotMet)
-                ? i18n('schoolHourNum', { num: event.LesuurVan, numOrdinal: formatOrdinals(event.LesuurVan) })
-                : i18n('closedInterval', { start: i18n('schoolHourNum', { num: event.LesuurVan, numOrdinal: formatOrdinals(event.LesuurVan) }), end: i18n('schoolHourNum', { num: event.LesuurTotMet, numOrdinal: formatOrdinals(event.LesuurTotMet) }) })
+        this.#addRowToTable(table1, i18n('title'), this.event.Omschrijving || '-');
+        this.#addRowToTable(table1, i18n('subject'), eventSubjects(this.event) || '-');
+        this.#addRowToTable(table1, i18n('schoolHour'), this.event.LesuurVan
+            ? (this.event.LesuurVan === this.event.LesuurTotMet)
+                ? i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) })
+                : i18n('closedInterval', { start: i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) }), end: i18n('schoolHourNum', { num: this.event.LesuurTotMet, numOrdinal: formatOrdinals(this.event.LesuurTotMet) }) })
             : '-');
-        const showYear = isYearNotCurrent(new Date(event.Start)) || isYearNotCurrent(new Date(event.Einde));
-        this.#addRowToTable(table1, i18n('start'), new Date(event.Start).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
-        this.#addRowToTable(table1, i18n('end'), new Date(event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
-        this.#addRowToTable(table1, i18n('location'), eventLocations(event) || '-');
-        this.#addRowToTable(table1, i18n('teacher'), eventTeachers(event) || '-');
-        if (event.Opmerking) this.#addRowToTable(table1, i18n('note'), event.Opmerking);
-        if (event.Herhaling) this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
+        const showYear = isYearNotCurrent(new Date(this.event.Start)) || isYearNotCurrent(new Date(this.event.Einde));
+        this.#addRowToTable(table1, i18n('start'), new Date(this.event.Start).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
+        this.#addRowToTable(table1, i18n('end'), new Date(this.event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
+        this.#addRowToTable(table1, i18n('location'), eventLocations(this.event) || '-');
+        this.#addRowToTable(table1, i18n('teacher'), eventTeachers(this.event) || '-');
+        if (this.event.Opmerking) this.#addRowToTable(table1, i18n('note'), this.event.Opmerking);
+        if (this.event.Herhaling) this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
 
-        let chips = getEventChips(event);
+        let chips = getEventChips(this.event);
         if (chips.length > 0) {
             const chipsWrapper = this.#addRowToTable(table1, i18n('extra'));
             chipsWrapper.classList.add('st-chips-wrapper');
@@ -638,28 +644,35 @@ class ScheduleEventDialog extends Dialog {
 
             const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
 
-            createElement('a', kwtColumn, { innerText: `Pas je KWT-keuze aan in de agenda.`, href: `#/agenda/huiswerk/${this.event.Id}?returnUrl=%252Fvandaag` })
-                .addEventListener('click', () => {
-                    this.close();
-                });
             if (kwtChoices?.[0]?.Keuzes?.[0]) {
                 kwtChoices[0].Keuzes.forEach(choice => {
                     const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers)
                     const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
-                    createElement('b', label, { innerText: choice.Omschrijving.charAt(0).toUpperCase() + choice.Omschrijving.slice(1) });
+                    createElement('b', label, { innerText: choice.Omschrijving });
                     createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
-                    createElement('span', label, { innerText: `(${choice.AantalDeelnemers}/${choice.MaxDeelnemers}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip' });
+                    createElement('span', label, { innerText: `(${choice.AantalDeelnemers}/${choice.MaxDeelnemers}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
                     createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
                     const input = createElement('input', label, { id: `st-start-${choice.Id}-kwt-choice`, class: 'st-checkbox-input', type: 'checkbox' });
-                    input.checked = choice.Status == 2;
-                    input.disabled = true || !kwtChoices[0].MagInschrijven;
-                    // input.addEventListener('input', async () => {
-                    //     this.#progressBar.dataset.visible = true;
-                    //     // await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
-                    //     this.#invokerElement.dispatchEvent(new CustomEvent('eventchanged'));
-                    //     choice.Status == 2
-                    //     this.#progressBar.dataset.visible = false;
-                    // })
+                    input.checked = choice.Status > 0;
+                    input.disabled = !kwtChoices[0].MagInschrijven;
+                    input.addEventListener('input', async () => {
+                        this.#progressBar.dataset.visible = 'true';
+                        kwtColumn.querySelectorAll('input').forEach(i => i.disabled = true);
+                        try {
+                            if (choice.Status == 0) {
+                                await magisterApi.postKwtRegistration(choice);
+                            } else {
+                                await magisterApi.deleteKwtRegistration(choice.Id);
+                            }
+                        } catch (e) {
+                            new Dialog({ innerText: (await e.json())?.Message || i18n('error') }).show();
+                        } finally {
+                            if (schedule?.refresh) schedule.refresh();
+                            if (widgets?.refresh) widgets.refresh();
+                            this.event = (await magisterApi.events(dates.gatherStart, dates.gatherEnd)).find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
+                            this.#drawDialogContents();
+                        }
+                    });
                 });
             } else {
                 createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
@@ -687,7 +700,8 @@ class ScheduleEventDialog extends Dialog {
             input.addEventListener('input', async () => {
                 this.#progressBar.dataset.visible = 'true';
                 await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
-                schedule.refresh();
+                if (schedule?.refresh) schedule.refresh();
+                if (widgets?.refresh) widgets.refresh();
                 this.event.Afgerond = input.checked;
                 this.body.querySelectorAll('.st-chip').forEach(chip => {
                     if ((chip instanceof HTMLElement) && chip.innerText === infoTypes[this.event.InfoType].name) {
