@@ -307,10 +307,32 @@ export default [
                 ],
             },
             {
-                id: "insuf-red",
-                title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht en in de cijferwidget.",
-                default: true,
+                id: "insufficient",
+                title: "Onvoldoendes in cijferoverzicht",
+                type: "SingleChoice",
+                default: "underline",
+                options: [
+                    {
+                        value: "underline",
+                        title: "Rode onderstreping",
+                        icon: "format_underlined"
+                    },
+                    {
+                        value: "textcolor",
+                        title: "Rode tekstkleur",
+                        icon: "format_color_text"
+                    },
+                    {
+                        value: "background",
+                        title: "Rode achtergrond",
+                        icon: "format_color_fill"
+                    },
+                    {
+                        value: "off",
+                        title: "Niet anders kleuren",
+                        icon: "block"
+                    },
+                ]
             },
             {
                 id: "ignore-grade-columns",

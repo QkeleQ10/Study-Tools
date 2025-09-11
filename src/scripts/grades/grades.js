@@ -23,7 +23,7 @@ async function gradeList() {
     const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
 
     if (syncedStorage['cb']) {
-        const gradeBackupButton = buttons.createChildElement('button', { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
+        const gradeBackupButton = buttons.createChildElement('button', { id: 'st-grade-backup-button', class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
         gradeBackupButton.addEventListener('click', async () => {
             new GradeBackupDialog().show()
         })
@@ -46,10 +46,12 @@ async function gradeOverview() {
     gradeCalculator(buttons)
     gradeStatistics()
 
-    const gradeBackupButton = buttons.createChildElement('button', { class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
-    gradeBackupButton.addEventListener('click', async () => {
-        new GradeBackupDialog().show()
-    })
+    if (syncedStorage['cb']) {
+        const gradeBackupButton = buttons.createChildElement('button', { id: 'st-grade-backup-button', class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
+        gradeBackupButton.addEventListener('click', async () => {
+            new GradeBackupDialog().show()
+        })
+    }
 
     // Set grade type to All
     const gradeTypeSelect = await awaitElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span')
@@ -74,13 +76,17 @@ async function allowAsideResize() {
         aside = await awaitElement('#cijfers-container > aside'),
         asideResizer = element('div', 'st-aside-resize', document.body, { innerText: '' })
 
-    function asideResize(e) {
+    function resizerMoved(e) {
         let dx = m_pos - e.x
         m_pos = e.x
         asidePreferenceWidth += dx
 
-        asideDisplayWidth = Math.max(Math.min(600, asidePreferenceWidth), 294)
-        if (asidePreferenceWidth < 100) asideDisplayWidth = 0
+        setAsideWidth(asidePreferenceWidth);
+    }
+
+    function setAsideWidth(width) {
+        asideDisplayWidth = Math.max(Math.min(600, width), 294)
+        if (width < 100) asideDisplayWidth = 0
 
         aside.style.width = (asideDisplayWidth) + 'px'
         gradeContainer.style.paddingRight = (20 + asideDisplayWidth) + 'px'
@@ -89,11 +95,11 @@ async function allowAsideResize() {
 
     asideResizer.addEventListener("mousedown", function (e) {
         m_pos = e.x
-        document.addEventListener("mousemove", asideResize, false)
+        document.addEventListener("mousemove", resizerMoved, false)
     }, false)
     document.addEventListener("mouseup", function () {
         asidePreferenceWidth = asideDisplayWidth
-        document.removeEventListener("mousemove", asideResize, false)
+        document.removeEventListener("mousemove", resizerMoved, false)
     }, false)
 }
 
@@ -153,11 +159,6 @@ async function gradeCalculator(buttonWrapper) {
         clOverlay.setAttribute('open', true)
         gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px) !important;max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
 
-        if (!document.querySelector('#st-cb-aside')) {
-            let schoolYearId = /** @type {HTMLOptionElement} */(document.querySelector('#aanmeldingenSelect>option[selected=selected]')).value
-            let schoolYear = years.find(y => y.id == schoolYearId)
-            apiGrades[schoolYearId] ??= await magisterApi.gradesForYear(schoolYear)
-        }
         if (!accessedBefore) {
             await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
             accessedBefore = true
@@ -486,161 +487,20 @@ async function gradeCalculator(buttonWrapper) {
 
 }
 
-class GradeBackupDialog extends Dialog {
-    years = [];
-    busy = false;
-    #progressBar;
-    #column1;
-    #column2;
-
-    constructor() {
-        super();
-
-        this.body.classList.add('st-grade-backup-dialog');
-
-        this.#column1 = createElement('div', this.body, { class: 'st-dialog-column' });
-        this.#column1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
-
-        this.#column2 = createElement('div', this.body, { class: 'st-dialog-column' });
-        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
-
-        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
-        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
-
-        this.#initialise();
-    }
-
-    async #initialise() {
-        const input = this.#column2.createChildElement('input', { type: 'file', accept: '.json' })
-        input.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const json = JSON.parse(typeof e.target.result === 'string' ? e.target.result : new TextDecoder().decode(e.target.result));
-                await this.#importBackup(json);
-            };
-            reader.readAsText(file);
-        });
-
-        years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
-
-        years.forEach((year, i, a) => {
-            this.#column1.createChildElement('button', {
-                class: i === a.length - 1 ? 'st-button' : 'st-button secondary',
-                innerText: `${year.studie.code} (lesperiode ${year.lesperiode.code}, ${year.groep.omschrijving || year.groep.code})`,
-            })
-                .addEventListener('click', async () => {
-                    if (this.busy) return;
-                    this.#exportGrades(year);
-                });
-        })
-
-        this.#progressBar.dataset.visible = 'false';
-    }
-
-    async #exportGrades(year) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                this.busy = true;
-                this.#column1.classList.add('st-disabled');
-
-                const grades = await this.#gatherGrades(year);
-
-                this.#progressBar.dataset.visible = 'true';
-
-                let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify(
-                    {
-                        date: new Date(),
-                        year: { groep: { omschrijving: year.groep.omschrijving, code: year.groep.code }, studie: { code: year.studie.code }, lesperiode: { code: year.lesperiode.code } },
-                        grades
-                    }
-                ))))}`,
-                    a = element('a', 'st-cb-temp', document.body, {
-                        download: `Cijferback-up ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`,
-                        href: uri,
-                        type: 'application/json'
-                    });
-                a.click();
-                a.remove();
-
-                setTimeout(() => {
-                    this.#progressBar.dataset.visible = 'false';
-                }, 500);
-
-                setTimeout(() => {
-                    this.#column1.classList.remove('st-disabled');
-                    this.busy = false;
-                    resolve();
-                }, 10000)
-
-            } catch (error) {
-                reject(error);
-                this.close();
-                new Dialog({ innerText: i18n('cb.error') }).show();
-            }
-        });
-    }
-
-    async #gatherGrades(year) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                this.#progressBar.firstElementChild.classList.remove('indeterminate');
-                this.#progressBar.dataset.visible = 'true';
-
-                const grades = await magisterApi.gradesForYear(year);
-
-                for (let i = 0; i < grades.length; i++) {
-                    this.#progressBar.firstElementChild.style.width = `${(i / grades.length) * 100}%`;
-
-                    await new Promise(resolve => setTimeout(resolve, (i > 0 && i % 100 === 0) ? 8000 : grades.length > 100 ? 20 : 5));
-
-                    const gradeColumnInfo = await magisterApi.gradesColumnInfo(year, grades[i].CijferKolom.Id);
-
-                    grades[i] = {
-                        ...grades[i],
-                        CijferKolom: { ...grades[i].CijferKolom, ...gradeColumnInfo }
-                    }
-                }
-
-                this.#progressBar.firstElementChild.removeAttribute('style');
-                this.#progressBar.firstElementChild.classList.add('indeterminate');
-                this.#progressBar.dataset.visible = 'false';
-
-                resolve(grades);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    async #importBackup(json) {
-        const { date, year, grades } = json;
-
-        collectedGrades.unshift({
-            title: `Back-up van ${year.studie.code} (${year.lesperiode.code}) ${date.toLocaleString()}`,
-            grades
-        })
-
-        const contentContainer = await awaitElement('section.main>div');
-        contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
-
-        const asideDetails = await awaitElement('#idDetails>.tabsheet>div[ng-transclude]');
-        asideDetails.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
-
-        drawGradeTable(grades, contentContainer, (grade, event) => {
-            
-        });
-    }
-}
-
 function drawGradeTable(grades, parentElement, gradeClicked) {
     const sortedColumns = grades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer));
     const gradePeriods = [...new Set(sortedColumns.map(g => g.CijferPeriode?.Naam))];
     const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.KolomNummer))];
     const gradeSubjects = [...new Set(grades.sort((a, b) => a.Vak?.Volgnr - b.Vak?.Volgnr).map(g => g.Vak?.Omschrijving))];
+
+    const detailsPopover = createElement('div', document.body, { id: 'st-grade-details-popover', popover: 'auto' });
+    const detailsPopoverTable = detailsPopover.createChildElement('table', { class: 'st-grade-details-table' });
+    const detailsPopoverEntries = [].map((value, i) => {
+        const tr = createElement('tr', detailsPopoverTable)
+        const th = createElement('th', tr, { innerText: i18n(value) })
+        const td = createElement('td', tr)
+        return { th, td }
+    });
 
     const table = parentElement.createChildElement('table', { class: 'st-grade-table' });
 
@@ -648,7 +508,6 @@ function drawGradeTable(grades, parentElement, gradeClicked) {
     headerRow1.createChildElement('th');
     for (const period of gradePeriods) {
         const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.KolomNummer)).size;
-        console.log(numColumns);
         headerRow1.createChildElement('th', { innerText: period, colSpan: numColumns });
     }
 
@@ -662,21 +521,42 @@ function drawGradeTable(grades, parentElement, gradeClicked) {
         const subjectRow = table.createChildElement('tr');
         subjectRow.createChildElement('th', { innerText: subject });
 
+
         for (const column of gradeColumns) {
             const grade = grades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
             if (grade) {
                 subjectRow.createChildElement('td', {
-                    innerText: grade.CijferStr, classList: [
+                    innerText: grade.CijferStr,
+                    classList: [
                         ['insufficient', grade.IsVoldoende === false],
                         ['inh', grade.Inhalen],
                         ['vr', grade.Vrijstelling],
                         ['not-counted', grade.TeltMee === false],
-                        [`column-type-${grade.CijferKolom?.KolomSoort}`, true],
+                        [`column-type-${grade.CijferKolom?.KolomSoort}`],
                         ['column-resit', grade.CijferKolom?.IsHerkansingKolom],
                         ['column-teacher', grade.CijferKolom?.IsDocentKolom],
                         ['column-underlying', grade.CijferKolom?.HeeftOnderliggendeKolommen],
                         ['column-pta', grade.CijferKolom?.IsPTAKolom],
-                    ].filter(c => c[1]).map(c => c[0])
+                    ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]),
+                    title:
+                        `${new Date(grade.DatumIngevoerd)?.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}
+${grade.CijferKolom?.KolomOmschrijving}
+${grade.CijferKolom?.KolomNaam}, ${grade.CijferKolom?.KolomKop}
+
+${grade.CijferStr} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.Weging}×)` : ''}
+
+` + [
+                            ['onvoldoende', grade.IsVoldoende === false],
+                            ['inhalen', grade.Inhalen],
+                            ['vrijstelling', grade.Vrijstelling],
+                            ['telt niet mee', grade.TeltMee === false],
+                            ['gemiddeldekolom', grade.CijferKolom?.KolomSoort === 2],
+                            ['PTA-kolom', grade.CijferKolom?.IsPTAKolom],
+                            ['docentenkolom', grade.CijferKolom?.IsDocentKolom],
+                            ['heeft herkansing', grade.CijferKolom?.IsHerkansingKolom],
+                            ['heeft onderliggende kolommen', grade.CijferKolom?.HeeftOnderliggendeKolommen],
+                        ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]).join(', '),
+                    popovertarget: 'st-grade-details-popover',
                 })
                     .addEventListener('click', (event) => {
                         if (gradeClicked) {
@@ -688,19 +568,6 @@ function drawGradeTable(grades, parentElement, gradeClicked) {
             }
         }
     }
-}
-
-// Grade backup
-async function gradeBackup(buttonWrapper) {
-    if (!syncedStorage['cb']) return
-    const aside = await awaitElement('#cijfers-container > aside'),
-        asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
-        gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-        gradeBackupButton = element('button', 'st-cb', buttonWrapper, { class: 'st-button', 'data-icon': '', innerText: i18n('cb.title') })
-
-    gradeBackupButton.addEventListener('click', async () => {
-        new GradeBackupDialog().show()
-    })
 }
 
 // Grade statistics

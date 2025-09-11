@@ -158,6 +158,10 @@
     "attachments": "Bijlagen",
     "attachment": "Bijlage",
     "viewInAgenda": "In agenda openen",
+    "column": "Kolom",
+    "description": "Omschrijving",
+    "weight": "Weegfactor",
+    "assessment": "Beoordeling",
     "title": "Titel",
     "subject": "Vak",
     "schoolHour": "Lesuur",
@@ -170,6 +174,7 @@
     "extra": "Extra",
     "added": "Toegevoegd",
     "uploaded": "Geüpload",
+    "taken": "Afgenomen",
     "lastModified": "Laatst gewijzigd",
     "fileSize": "Bestandsgrootte",
     "fileType": "Bestandsindeling",
@@ -190,7 +195,9 @@
         "title": "Cijferback-up",
         "export": "Back-up maken",
         "import": "Back-up herstellen",
-        "error": "Er is een fout opgetreden bij het maken van de back-up. Wacht een minuutje en probeer het opnieuw."
+        "browse": "Bladeren...",
+        "error": "Er is een fout opgetreden bij het maken van de back-up. Wacht een minuutje en probeer het opnieuw.",
+        "importInfo": "Cijferstatistieken en -calculator werken nog niet met back-ups."
     },
     "cs": {
         "title": "Statistieken",

@@ -482,6 +482,10 @@ div.loading-overlay>div:before {
     border-radius: var(--st-border-radius)
 }
 
+#cijfers-container .main div.content-container-cijfers:has(.st-grade-table) {
+    overflow: auto;
+}
+
 .content.content-auto.background-white li>span,
 .content.content-auto.background-white li>strong {
     color: #000
@@ -1918,21 +1922,21 @@ table.table-grid-layout>tbody>tr.selected {
 `, 'study-tools-cs')
     } else { createStyle('', 'study-tools-cs') }
 
-    if (syncedStorage['insuf-red']) {
+    if (syncedStorage['insufficient'] !== 'off') {
         let insufArray = []
         for (let i = 1.0; i < Number(syncedStorage['suf-threshold']) - 0.005; i += 0.1) {
             insufArray.push(parseFloat(i.toFixed(1)))
         }
         createStyle(`
-${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}"]`).join(',')} {
-    color: var(--st-accent-warn) !important;
-    font-weight: 700;
-}
+        ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}"]`).join(',')} {
+            color: var(--st-accent-warn) !important;
+            font-weight: 700;
+        }
 
-.grade.grade.grade.grade[title^="10,0"] {
-    color: var(--st-accent-ok) !important;
-    font-weight: 700;
-}`, 'study-tools-insuf-red')
+        .grade.grade.grade.grade[title^="10,0"] {
+            color: var(--st-accent-ok) !important;
+            font-weight: 700;
+        }`, 'study-tools-insuf-red')
     } else { createStyle('', 'study-tools-insuf-red') }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {
@@ -1940,6 +1944,43 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
     } else if (syncedStorage['magister-picture'] !== 'show') {
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
     } else { createStyle('', 'study-tools-pfp') }
+
+    switch (syncedStorage['insufficient']) {
+        case 'underline':
+            createStyle(`
+            .st-grade-table tr:nth-child(n+3) td:not(:first-child).insufficient {
+                font-weight: bold;
+                text-decoration: underline var(--st-accent-warn) 2px;
+                text-underline-offset: 2px;
+            }`, 'study-tools-insufficient')
+            break
+
+        case 'background':
+            createStyle(`
+            .st-grade-table tr:nth-child(n+3) td:not(:first-child).insufficient {
+                font-weight: bold;
+                background-color: var(--st-highlight-warn);
+
+                &.column-type-2 {
+                    background-color: var(--st-accent-warn);
+                }
+
+                &.column-underlying {
+                    background-color: color-mix(in hsl, var(--st-highlight-warn) 65%, (--st-highlight-subtle));
+                }
+            }`, 'study-tools-insufficient')
+            break
+
+        case 'textcolor':
+            createStyle(`
+            .st-grade-table tr:nth-child(n+3) td:not(:first-child).insufficient {
+                font-weight: bold;
+                color: var(--st-accent-warn);
+            }`, 'study-tools-insufficient')
+            break
+
+        default: createStyle('', 'study-tools-insufficient')
+    }
 
     if (syncedStorage['custom-css'] || syncedStorage['custom-css2']) {
         createStyle(((syncedStorage['custom-css'] ?? '') + (syncedStorage['custom-css2'] ?? '')), 'study-tools-custom-css')

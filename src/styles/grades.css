@@ -411,6 +411,19 @@
             }
         }
     }
+
+    #st-grade-backup-import {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 75px;
+        width: 100%;
+        margin-bottom: 16px;
+
+        background: linear-gradient(35deg, hsl(from var(--st-accent-primary-dark) h s calc(l - 5)), hsl(from var(--st-accent-primary-dark) h s calc(l + 10)));
+        box-shadow: 2px 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    }
 }
 
 .st-grade-table {
@@ -436,6 +449,7 @@
 
         th:not(:first-child) {
             width: 36px;
+            min-width: 36px;
             height: 36px;
             rotate: -90deg;
             vertical-align: middle;
@@ -492,11 +506,11 @@
 
             &.column-resit::before {
                 position: absolute;
-                top: 3px;
-                left: 3px;
+                top: 2.5px;
+                left: 2.5px;
                 content: '';
                 color: var(--st-foreground-accent);
-                font: bold 6px "Font Awesome 6 Pro";
+                font: bold 4px "Font Awesome 6 Pro";
                 visibility: visible;
             }
 
@@ -504,11 +518,6 @@
             &.vr {
                 font-style: italic;
                 color: var(--st-foreground-insignificant);
-            }
-
-            &.insufficient {
-                color: var(--st-accent-warn);
-                font-weight: 700;
             }
         }
     }
