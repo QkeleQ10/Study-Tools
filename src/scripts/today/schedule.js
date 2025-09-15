@@ -114,6 +114,10 @@ class Schedule {
 
         await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
 
+        await this.#updateDayColumns();
+        await this.#createHeaderStrip();
+        this.#updateHeaderStrip();
+
         if (persistedScheduleDate) this.scheduleDate = persistedScheduleDate;
         if (persistedScheduleView) this.scheduleView = persistedScheduleView;
 
@@ -128,9 +132,6 @@ class Schedule {
             }
         }
 
-        await this.#updateDayColumns();
-        this.#createHeaderStrip();
-        this.#updateHeaderStrip();
     }
 
     /** Clear all cached elements with keys containing 'event' */
@@ -211,79 +212,84 @@ class Schedule {
     }
 
     #createHeaderStrip() {
-        let headerStrip = this.#header.createChildElement('div', { id: 'st-start-header-strip' });
+        return new Promise((resolve, _) => {
+            let headerStrip = this.#header.createChildElement('div', { id: 'st-start-header-strip' });
 
-        let headerTextWrapper = headerStrip.createChildElement('button', {
-            id: 'st-start-header-text-wrapper',
-            class: (persistedScheduleDate || persistedScheduleView) ? '' : 'greet',
-            title: i18n('selectDate'),
-        });
-        headerTextWrapper.addEventListener('click', () => {
-            const dialog = new Dialog({ closeText: i18n('done'), closeIcon: '' });
-            dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('selectDate') });
-            const input = dialog.body.createChildElement('input', {
-                class: 'st-input',
-                type: 'date',
-                value: `${this.scheduleDate.getFullYear()}-${String(this.scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(this.scheduleDate.getDate()).padStart(2, '0')}`,
+            let headerTextWrapper = headerStrip.createChildElement('button', {
+                id: 'st-start-header-text-wrapper',
+                class: (persistedScheduleDate || persistedScheduleView) ? '' : 'greet',
+                title: i18n('selectDate'),
             });
-            dialog.on('close', () => this.scheduleDate = new Date(input.value));
-            dialog.show();
-            input.focus();
-            input.showPicker();
-        });
-        headerTextWrapper.addEventListener('auxclick', (e) => {
-            e.preventDefault();
-            let greeting = document.getElementById('st-start-header-greeting');
-            if (headerTextWrapper.classList.contains('greet')) return;
-            createGreetingMessage(greeting);
-            headerTextWrapper.classList.add('greet');
+            headerTextWrapper.addEventListener('click', () => {
+                const dialog = new Dialog({ closeText: i18n('done'), closeIcon: '' });
+                dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('selectDate') });
+                const input = dialog.body.createChildElement('input', {
+                    class: 'st-input',
+                    type: 'date',
+                    value: `${this.scheduleDate.getFullYear()}-${String(this.scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(this.scheduleDate.getDate()).padStart(2, '0')}`,
+                });
+                dialog.on('close', () => this.scheduleDate = new Date(input.value));
+                dialog.show();
+                input.focus();
+                input.showPicker();
+            });
+            headerTextWrapper.addEventListener('auxclick', (e) => {
+                e.preventDefault();
+                let greeting = document.getElementById('st-start-header-greeting');
+                if (headerTextWrapper.classList.contains('greet')) return;
+                createGreetingMessage(greeting);
+                headerTextWrapper.classList.add('greet');
+                setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
+            });
+
+            this.headerControls.title = headerTextWrapper.createChildElement('span', {
+                id: 'st-start-header-title',
+                class: 'st-title',
+                innerText: i18n('loading').replace('.', ''),
+            });
+            this.headerControls.shortTitle = headerTextWrapper.createChildElement('span', {
+                id: 'st-start-header-short-title',
+                class: 'st-title',
+                innerText: i18n('loading').replace('.', ''),
+            });
+            createGreetingMessage(headerTextWrapper.createChildElement('span', {
+                id: 'st-start-header-greeting',
+                class: 'st-title',
+                innerText: i18n('loading').replace('.', ''),
+            }));
             setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
+
+            let headerControls = headerStrip.createChildElement('div', { id: 'st-start-header-buttons' });
+
+            // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
+            this.headerControls.moveReset = element('button', 'st-start-today-offset-zero', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
+            this.headerControls.moveReset.addEventListener('click', () => {
+                this.scheduleDate = dates.today;
+            })
+            this.headerControls.moveBackward = element('button', 'st-start-today-offset-minus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
+            this.headerControls.moveBackward.addEventListener('click', () => {
+                this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? -7 : (-1 * this.scheduleSize));
+            })
+            this.headerControls.moveForward = element('button', 'st-start-today-offset-plus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
+            this.headerControls.moveForward.addEventListener('click', () => {
+                this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? 7 : this.scheduleSize);
+            })
+
+            this.headerControls.viewMode = new Dropdown(
+                createElement('button', headerControls, { id: 'st-start-today-view', class: 'st-segmented-control' }),
+                {
+                    'day': i18n('dates.day'), // 1 day
+                    ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
+                    'workweek': i18n('dates.workweek'), // workweek
+                    'week': i18n('dates.week') // week
+                },
+                this.scheduleView,
+                (newValue) => this.scheduleView = newValue,
+                (currentValue) => currentValue === 'day' ? 'workweek' : 'day'
+            );
+
+            resolve();
         });
-
-        this.headerControls.title = headerTextWrapper.createChildElement('span', {
-            id: 'st-start-header-title',
-            class: 'st-title',
-            innerText: i18n('loading').replace('.', ''),
-        });
-        this.headerControls.shortTitle = headerTextWrapper.createChildElement('span', {
-            id: 'st-start-header-short-title',
-            class: 'st-title',
-            innerText: i18n('loading').replace('.', ''),
-        });
-        createGreetingMessage(headerTextWrapper.createChildElement('span', {
-            id: 'st-start-header-greeting',
-            class: 'st-title',
-            innerText: i18n('loading').replace('.', ''),
-        }));
-        setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
-
-        let headerControls = headerStrip.createChildElement('div', { id: 'st-start-header-buttons' });
-
-        // Buttons for moving one day backwards, moving to today's date, and moving one day forwards.
-        this.headerControls.moveReset = element('button', 'st-start-today-offset-zero', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vandaag'), disabled: true })
-        this.headerControls.moveReset.addEventListener('click', () => {
-            this.scheduleDate = dates.today;
-        })
-        this.headerControls.moveBackward = element('button', 'st-start-today-offset-minus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Achteruit') })
-        this.headerControls.moveBackward.addEventListener('click', () => {
-            this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? -7 : (-1 * this.scheduleSize));
-        })
-        this.headerControls.moveForward = element('button', 'st-start-today-offset-plus', headerControls, { class: 'st-button icon', 'data-icon': '', title: i18n('Vooruit') })
-        this.headerControls.moveForward.addEventListener('click', () => {
-            this.scheduleDate = this.scheduleDate.addDays(this.snapToMonday ? 7 : this.scheduleSize);
-        })
-
-        this.headerControls.viewMode = new Dropdown(
-            createElement('button', headerControls, { id: 'st-start-today-view', class: 'st-segmented-control' }),
-            {
-                'day': i18n('dates.day'), // 1 day
-                ...Object.fromEntries([2, 3, 4, 5].map(num => [`${num}day`, i18n('dates.nDays', { num })])), // 2, 3, 4, 5 days
-                'workweek': i18n('dates.workweek'), // workweek
-                'week': i18n('dates.week') // week
-            },
-            this.scheduleView,
-            (newValue) => this.scheduleView = newValue,
-            (currentValue) => currentValue === 'day' ? 'workweek' : 'day')
     }
 
     #updateHeaderStrip() {
@@ -603,7 +609,7 @@ class ScheduleEventDialog extends Dialog {
         this.body.innerText = '';
 
         const column1 = createElement('div', this.body, { class: 'st-event-dialog-column' });
-        createElement('h3', column1, { class: 'st-section-heading', innerText: (this.event.Type === 1 || this.event.Type === 16) ? 'Afspraakdetails' : 'Lesdetails' });
+        createElement('h3', column1, { class: 'st-section-heading', innerText: (this.event.Type === 1 || this.event.Type === 16) ? i18n('eventDetails') : i18n('lessonDetails') });
 
         let table1 = createElement('table', column1, { class: 'st' });
 

@@ -469,6 +469,11 @@
 
         td:not(:first-child) {
             width: 36px;
+            max-width: 36px;
+            max-height: 36px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
             text-align: center;
             vertical-align: middle;
 

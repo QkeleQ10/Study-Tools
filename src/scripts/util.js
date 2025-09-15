@@ -719,7 +719,7 @@ class Dialog {
     }
 
     close(maintain = false) {
-        this.element.close();
+        this.element.close?.();
         if (!maintain) setTimeout(() => this.element.remove(), 200);
     }
 
