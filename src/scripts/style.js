@@ -1866,6 +1866,37 @@ table.table-grid-layout>tbody>tr.selected {
 }
 `, 'study-tools')
 
+    new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList') {
+                applyShadowStylesRecursively(mutation.target)
+            }
+        }
+    }).observe(document, { childList: true, subtree: true });
+
+    function applyShadowStylesRecursively(el) {
+        if (el.shadowRoot) {
+            applyShadowStyles(el);
+            el.shadowRoot.querySelectorAll('*').forEach(applyShadowStylesRecursively);
+        }
+        el.querySelectorAll('*').forEach(child => {
+            if (child.shadowRoot) {
+                applyShadowStyles(child);
+                child.shadowRoot.querySelectorAll('*').forEach(applyShadowStylesRecursively);
+            }
+        });
+    }
+
+    function applyShadowStyles(el) {
+        if (el.tagName === 'DNA-BREADCRUMBS') return;
+        el.setAttribute('style', `
+            --dna-background: var(--st-background-primary) !important;
+            --dna-primary-hue: ${currentTheme[1]} !important;
+            --dna-primary-sat: ${currentTheme[2]}% !important;
+            --att-details-background: var(--st-background-primary) !important;
+            `);
+    }
+
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
     if (syncedStorage['start-enabled']) {
