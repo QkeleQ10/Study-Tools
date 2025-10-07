@@ -366,6 +366,7 @@ function getEventChips(event) {
         chips.push(chip)
     }
     if (event.HeeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
+    if (event.Aantekening?.length) chips.push({ name: i18n('chips.annotation'), type: 'info' })
 
     return chips
 }

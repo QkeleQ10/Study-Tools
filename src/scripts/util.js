@@ -657,16 +657,16 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
 class Dialog {
     element;
     body;
-    #buttonsWrapper;
+    buttonsWrapper;
 
     constructor(options = {}) {
         this.element = createElement('dialog', document.body, { class: 'st-dialog' });
         this.body = createElement('div', this.element, { class: 'st-dialog-body', innerText: options.innerText || '' });
 
-        this.#buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' });
+        this.buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' });
         if (options?.buttons?.length > 0) {
             options.buttons.forEach(item => {
-                const button = createElement('button', this.#buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` });
+                const button = createElement('button', this.buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` });
                 if (item.innerText) button.innerText = item.innerText;
                 if (item.clickSelector) {
                     button.addEventListener('click', event => {
@@ -693,7 +693,7 @@ class Dialog {
                 event.preventDefault();
             });
         } else {
-            const dialogDismiss = createElement('button', this.#buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') });
+            const dialogDismiss = createElement('button', this.buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') });
             if (options?.index && options?.length) {
                 dialogDismiss.classList.add('st-step');
                 dialogDismiss.innerText = `${options.index} / ${options.length}`;

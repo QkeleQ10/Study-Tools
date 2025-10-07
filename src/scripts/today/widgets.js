@@ -204,6 +204,7 @@ class SlideshowWidget extends Widget {
 class HomeworkWidget extends ListWidget {
     async initialise() {
         this.listItems = (await magisterApi.events()).filter(event => {
+            if (this.constructor.options.annotations == 'true' && event.Aantekening?.length > 0 && new Date(event.Einde) > new Date()) return true;
             if (this.constructor.options.filter == 'incomplete')
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date() && !event.Afgerond)
             else
@@ -239,7 +240,7 @@ class HomeworkWidget extends ListWidget {
             })
                 .createChildElement('div', {
                     class: 'st-widget-subitem-content',
-                    innerHTML: event.Inhoud.replace(/(<br ?\/?>)/gi, ''),
+                    innerHTML: (event.Afgerond ? (event.Aantekening || event.Inhoud) : (event.Inhoud || event.Aantekening)).replace(/(<br ?\/?>)/gi, ''),
                 });
 
             let chips = getEventChips(event)
@@ -276,6 +277,21 @@ class HomeworkWidget extends ListWidget {
                     title: "Alleen onvoltooid",
                     value: 'incomplete',
                     default: true
+                },
+            ]
+        },
+        annotations: {
+            title: "Aantekeningen tonen",
+            type: 'select',
+            choices: [
+                {
+                    title: "Ja",
+                    value: 'true',
+                    default: true
+                },
+                {
+                    title: "Nee",
+                    value: 'false'
                 },
             ]
         },

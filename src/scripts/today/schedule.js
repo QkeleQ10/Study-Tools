@@ -586,6 +586,7 @@ class ScheduleEventDialog extends Dialog {
     constructor(event) {
         super({
             buttons: [{
+                'data-icon': '',
                 innerText: i18n('viewInAgenda'),
                 callback: () => {
                     window.location.hash = `#/agenda/${(event.Type === 1 || event.Type === 16) ? 'afspraak' : 'huiswerk'}/${event.Id}?returnUrl=%252Fvandaag`;
@@ -763,6 +764,25 @@ class ScheduleEventDialog extends Dialog {
                 this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
             });
         }
+
+        const annotationColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
+        createElement('h3', annotationColumn, { class: 'st-section-heading', innerText: i18n('annotation') });
+
+        const annotationContents = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Aantekening || '', contenteditable: true });
+
+        const saveButton = createElement('button', annotationColumn, { class: 'st-button', innerText: i18n('save'), style: { display: 'none' } });
+        saveButton.addEventListener('click', async () => {
+            this.#progressBar.dataset.visible = 'true';
+            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationContents.innerHTML?.replace(/^\<br\>$/, '').length ? annotationContents.innerHTML : null });
+            if (schedule?.refresh) schedule.refresh();
+            if (widgets?.refresh) widgets.refresh();
+            saveButton.style.display = 'none';
+            this.#progressBar.dataset.visible = 'false';
+        });
+
+        annotationContents.addEventListener('input', () => {
+            saveButton.style.display = annotationContents.innerHTML.replace(/^\<br\>$/, '') !== (this.event.Aantekening || '') ? '' : 'none';
+        });
     }
 
     #addRowToTable(parentElement, label, value) {
