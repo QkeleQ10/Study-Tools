@@ -194,6 +194,9 @@
     "register": "Inschrijven",
     "registered": "Ingeschreven",
     "allDay": "Hele dag",
+    "bold": "Vet",
+    "italic": "Cursief",
+    "underline": "Onderstrepen",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"

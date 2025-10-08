@@ -770,19 +770,25 @@ class ScheduleEventDialog extends Dialog {
 
         const annotationContents = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Aantekening || '', contenteditable: true, placeholder: i18n('addAnnotation') });
 
-        const saveButton = createElement('button', annotationColumn, { class: 'st-button', innerText: i18n('save'), style: { display: 'none' } });
+        const annotationHint = annotationContents.createSiblingElement('p', { class: 'st-event-dialog-event-content-hint' });
+        Object.entries({ bold: ['Ctrl', 'B'], italic: ['Ctrl', 'I'], underline: ['Ctrl', 'U'] }).forEach(([value, keys]) => {
+            keys.forEach(k => annotationHint.createChildElement('kbd', { innerText: k }));
+            annotationHint.createChildElement('span', { innerText: i18n(value) });
+        });
+
+        const saveButton = createElement('button', annotationColumn, { class: 'st-button st-hidden st-event-dialog-event-content-save', innerText: i18n('save') });
         saveButton.addEventListener('click', async () => {
             this.#progressBar.dataset.visible = 'true';
             await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationContents.innerHTML?.replace(/^\<br\>$/, '').length ? annotationContents.innerHTML : null });
             if (schedule?.refresh) schedule.refresh();
             if (widgets?.refresh) widgets.refresh();
-            saveButton.style.display = 'none';
+            saveButton.classList.add('st-hidden');
             this.#progressBar.dataset.visible = 'false';
         });
 
         annotationContents.addEventListener('input', () => {
             annotationContents.classList.toggle('empty', annotationContents.innerHTML.replace(/^\<br\>$/, '') === '');
-            saveButton.style.display = annotationContents.innerHTML.replace(/^\<br\>$/, '') !== (this.event.Aantekening || '') ? '' : 'none';
+            saveButton.classList.toggle('st-hidden', annotationContents.innerHTML.replace(/^\<br\>$/, '') === (this.event.Aantekening || ''));
         });
     }
 

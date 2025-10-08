@@ -468,9 +468,52 @@
         border-radius: var(--st-border-radius);
         font-size: 12px;
 
-        &[placeholder]:empty::before, &[placeholder].empty::before {
+        &[placeholder]:empty::before,
+        &[placeholder].empty::before {
             content: attr(placeholder);
+            opacity: .5;
+            pointer-events: none;
+        }
+
+        &[placeholder]:empty:focus::before,
+        &[placeholder].empty:focus::before {
+            content: '';
             color: var(--st-foreground-secondary);
+            pointer-events: none;
+        }
+
+        &:focus~.st-event-dialog-event-content-hint {
+            opacity: .75;
+        }
+    }
+
+    .st-event-dialog-event-content-hint {
+        opacity: 0;
+        transition: opacity 200ms;
+
+        kbd {
+            display: inline-block;
+            margin-right: 2px;
+            padding: 0 2px;
+            min-width: 16px;
+            background-color: var(--st-background-tertiary);
+            border: var(--st-border);
+            border-radius: calc(var(--st-border-radius) / 2);
+            box-shadow: 0 2px 0 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+            font-family: var(--st-font-family-secondary);
+            text-align: center;
+        }
+
+        kbd~span {
+            margin-right: 12px;
+        }
+    }
+
+    .st-event-dialog-event-content-save {
+        transition: opacity 200ms;
+
+        &.st-hidden {
+            opacity: 0;
             pointer-events: none;
         }
     }
