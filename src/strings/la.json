@@ -57,6 +57,7 @@
         "info": "Informationes",
         "important": "Maximus",
         "attachments": "Attachiamenta",
+        "remark": "Opmerking",
         "annotation": "Aantekening",
         "graded": "Certum",
         "exam": "Ultima Examinatio"
@@ -173,7 +174,7 @@
     "start": "Begin",
     "end": "Einde",
     "location": "Locatie",
-    "note": "Opmerking",
+    "remark": "Opmerking",
     "annotation": "Aantekening",
     "addAnnotation": "Aantekening maken",
     "teacher": "Docent",

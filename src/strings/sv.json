@@ -57,6 +57,7 @@
         "info": "Information",
         "important": "Viktig",
         "attachments": "Bilagor",
+        "remark": "Opmerking",
         "annotation": "Aantekening",
         "graded": "Betygsatt",
         "exam": "Slutprov"
@@ -173,7 +174,7 @@
     "start": "Begin",
     "end": "Einde",
     "location": "Locatie",
-    "note": "Opmerking",
+    "remark": "Opmerking",
     "annotation": "Aantekening",
     "addAnnotation": "Aantekening maken",
     "teacher": "Docent",

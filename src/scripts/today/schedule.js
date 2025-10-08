@@ -626,7 +626,7 @@ class ScheduleEventDialog extends Dialog {
         this.#addRowToTable(table1, i18n('end'), new Date(this.event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
         this.#addRowToTable(table1, i18n('location'), eventLocations(this.event) || '-');
         this.#addRowToTable(table1, i18n('teacher'), eventTeachers(this.event) || '-');
-        if (this.event.Opmerking) this.#addRowToTable(table1, i18n('note'), this.event.Opmerking);
+        if (this.event.Opmerking) this.#addRowToTable(table1, i18n('remark'), this.event.Opmerking);
         if (this.event.Herhaling) this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
 
         let chips = getEventChips(this.event);

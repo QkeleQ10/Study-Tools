@@ -57,6 +57,7 @@
         "info": "Informacje",
         "important": "Belangrijk",
         "attachments": "Bijlagen",
+        "remark": "Opmerking",
         "annotation": "Aantekening",
         "graded": "Beoordeeld",
         "exam": "Examen"
@@ -173,7 +174,7 @@
     "start": "Begin",
     "end": "Einde",
     "location": "Locatie",
-    "note": "Opmerking",
+    "remark": "Opmerking",
     "annotation": "Aantekening",
     "addAnnotation": "Aantekening maken",
     "teacher": "Docent",

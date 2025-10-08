@@ -57,6 +57,7 @@
         "info": "Information",
         "important": "Important",
         "attachments": "Attachments",
+        "remark": "Remark",
         "annotation": "Annotation",
         "graded": "Graded",
         "exam": "Finals"
@@ -173,7 +174,7 @@
     "start": "Start",
     "end": "End",
     "location": "Location",
-    "note": "Note",
+    "remark": "Remark",
     "annotation": "Annotation",
     "addAnnotation": "Annotate",
     "teacher": "Teacher",
