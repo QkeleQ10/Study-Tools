@@ -768,7 +768,7 @@ class ScheduleEventDialog extends Dialog {
         const annotationColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
         createElement('h3', annotationColumn, { class: 'st-section-heading', innerText: i18n('annotation') });
 
-        const annotationContents = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Aantekening || '', contenteditable: true });
+        const annotationContents = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Aantekening || '', contenteditable: true, placeholder: i18n('addAnnotation') });
 
         const saveButton = createElement('button', annotationColumn, { class: 'st-button', innerText: i18n('save'), style: { display: 'none' } });
         saveButton.addEventListener('click', async () => {
@@ -781,6 +781,7 @@ class ScheduleEventDialog extends Dialog {
         });
 
         annotationContents.addEventListener('input', () => {
+            annotationContents.classList.toggle('empty', annotationContents.innerHTML.replace(/^\<br\>$/, '') === '');
             saveButton.style.display = annotationContents.innerHTML.replace(/^\<br\>$/, '') !== (this.event.Aantekening || '') ? '' : 'none';
         });
     }

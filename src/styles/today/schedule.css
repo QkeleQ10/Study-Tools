@@ -467,6 +467,12 @@
         border: var(--st-border);
         border-radius: var(--st-border-radius);
         font-size: 12px;
+
+        &[placeholder]:empty::before, &[placeholder].empty::before {
+            content: attr(placeholder);
+            color: var(--st-foreground-secondary);
+            pointer-events: none;
+        }
     }
 
     .st-event-dialog-event-attachment {
