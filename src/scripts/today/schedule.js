@@ -657,7 +657,7 @@ class ScheduleEventDialog extends Dialog {
                     const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
                     createElement('b', label, { innerText: choice.Omschrijving });
                     createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
-                    createElement('span', label, { innerText: `(${choice.AantalDeelnemers}/${choice.MaxDeelnemers}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
+                    createElement('span', label, { innerText: `(${choice.AantalDeelnemers ?? '?'}/${choice.MaxDeelnemers ?? '?'}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
                     createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
                     const input = createElement('input', label, { id: `st-start-${choice.Id}-kwt-choice`, class: 'st-checkbox-input', type: 'checkbox' });
                     input.checked = choice.Status > 0;
