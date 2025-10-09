@@ -167,93 +167,41 @@ class GradeBackupDialog extends Dialog {
         container.style.paddingRight = '20px';
         if (asideResizer) asideResizer.setAttribute('style', `display:none`);
 
-        collectedGrades.unshift({
-            title: `Back-up van ${year.studie.code} (${year.lesperiode.code}) ${date.toLocaleString()}`,
+        if (collectedGrades.find(t => t.date?.getTime() === new Date(date).getTime())) {
+            notify('snackbar', "Je hebt deze back-up al geïmporteerd.");
+            return;
+        }
+
+        collectedGrades.push({
+            date: new Date(date),
             grades
-        })
+        });
+
+        const label = document.getElementById('st-grades-year-filter')
+            .createChildElement('label', {
+                class: 'st-checkbox-label',
+                for: `st-year-filter-yearimport${new Date(date).getTime()}`,
+                innerText: '',
+                title: `Back-up van ${year.studie.code} (${year.lesperiode.code}) ${new Date(date).toLocaleString()}`,
+                style: 'font-family: "Font Awesome 6 Pro"'
+            });
+        const input = label.createChildElement('input', { id: `st-year-filter-yearimport${new Date(date).getTime()}`, class: 'st-checkbox-input', name: 'st-year-filter', type: 'radio' });
+
+        input.checked = true;
 
         const contentContainer = await awaitElement('section.main>div');
-        contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
-
-        const asideDetails = await awaitElement('#idDetails>.tabsheet>div[ng-transclude]');
-        asideDetails.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
 
         drawGradeTable(grades, contentContainer, (grade, event) => {
             const dialog = new GradeDetailDialog(grade);
             dialog.show();
         });
-    }
-}
 
-class GradeDetailDialog extends Dialog {
-    grade;
-    year;
-    #progressBar;
-
-    constructor(grade, year) {
-        super();
-        this.body.classList.add('st-grade-detail-dialog');
-
-        this.grade = grade;
-        if (year) this.year = year;
-
-        this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
-        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
-
-        this.#drawDialogContents();
-    }
-
-    async #drawDialogContents() {
-        this.body.innerText = '';
-
-        if (this.grade.CijferKolom.Weging === null && this.year) {
-            const gradeColumnInfo = await magisterApi.gradesColumnInfo(this.year, this.grade.CijferKolom.Id);
-
-            this.grade = {
-                ...this.grade,
-                CijferKolom: { ...this.grade.CijferKolom, ...gradeColumnInfo }
-            }
-        }
-
-        const column1 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
-        createElement('h3', column1, { class: 'st-section-heading', innerText: this.grade.CijferKolom.KolomOmschrijving || i18n('details') });
-
-        const metricsStrip = createElement('div', column1, { style: 'display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;' });
-
-        if (this.grade.CijferStr.length < 5)
-            createElement('div', metricsStrip, { class: 'st-metric', innerText: this.grade.CijferStr || '-', dataset: { description: i18n('assessment') }, style: syncedStorage['insufficient'] !== 'off' && this.grade.IsVoldoende === false ? 'color: var(--st-accent-warn)' : '' });
-        if (this.grade.CijferKolom?.Weging >= 0)
-            createElement('div', metricsStrip, { class: 'st-metric', innerText: `${this.grade.CijferKolom.Weging}x`, dataset: { description: i18n('weight') } });
-
-        let table1 = createElement('table', column1, { class: 'st' });
-
-        this.#addRowToTable(table1, i18n('column'), this.grade.CijferKolom.KolomKop ? `${this.grade.CijferKolom.KolomKop} (${this.grade.CijferKolom.KolomNaam})` : this.grade.CijferKolom.KolomNaam);
-        this.#addRowToTable(table1, i18n('description'), this.grade.CijferKolom.KolomOmschrijving || '-');
-        this.#addRowToTable(table1, i18n('level'), this.grade.CijferKolom.KolomNiveau || '-');
-        this.#addRowToTable(table1, i18n('weight'), this.grade.CijferKolom.Weging >= 0 ? `${this.grade.CijferKolom.Weging}x` : '-');
-        this.#addRowToTable(table1, i18n('assessment'), this.grade.CijferStr || '-');
-        const showYear = isYearNotCurrent(new Date(this.grade.DatumIngevoerd)) || isYearNotCurrent(new Date(this.grade.CijferKolom.WerkinformatieDatumIngevoerd));
-        this.#addRowToTable(table1, i18n('entered'),
-            ((this.grade.DatumIngevoerd && new Date(this.grade.DatumIngevoerd).getTime() > 0)
-                ? new Date(this.grade.DatumIngevoerd).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined })
-                : '') + (this.grade.IngevoerdDoor ? ` ${i18n('by')} ${this.grade.IngevoerdDoor}` : '')
-        );
-        this.#addRowToTable(table1, i18n('taken'),
-            (this.grade.CijferKolom.WerkinformatieDatumIngevoerd && new Date(this.grade.CijferKolom.WerkinformatieDatumIngevoerd).getTime() > 0)
-                ? new Date(this.grade.CijferKolom.WerkinformatieDatumIngevoerd).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', year: showYear ? 'numeric' : undefined })
-                : '-'
-        );
-        this.#addRowToTable(table1, i18n('productDescription'), this.grade.CijferKolom.WerkInformatieOmschrijving || '-');
-        this.#addRowToTable(table1, i18n('teacher'), this.grade.Docent || '-');
-        this.#addRowToTable(table1, i18n('subject'), this.grade.Vak?.Omschrijving || '-');
-        this.#addRowToTable(table1, i18n('period'), this.grade.CijferPeriode?.Naam || '-');
-
-        this.#progressBar.dataset.visible = 'false';
-    }
-
-    #addRowToTable(parentElement, label, value) {
-        let row = createElement('tr', parentElement);
-        createElement('td', row, { innerText: label || '' });
-        return createElement('td', row, { innerText: value || '' });
+        input.addEventListener('change', () => {
+            if (!input.checked) return;
+            drawGradeTable(grades, contentContainer, (grade, event) => {
+                const dialog = new GradeDetailDialog(grade);
+                dialog.show();
+            });
+        });
     }
 }

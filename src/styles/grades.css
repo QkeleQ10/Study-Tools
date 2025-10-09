@@ -427,6 +427,7 @@
 }
 
 .st-grade-table {
+    margin-right: 200px;
 
     &,
     th,
@@ -437,6 +438,11 @@
     }
 
     tr:first-child {
+        height: 32px;
+
+        th:first-child {
+            border: none;
+        }
 
         th:not(:first-child) {
             text-align: center;
@@ -446,6 +452,10 @@
 
     tr:nth-child(2) {
         height: 52px;
+
+        th:first-child {
+            border: none;
+        }
 
         th:not(:first-child) {
             width: 36px;
@@ -762,7 +772,19 @@
     text-overflow: ellipsis;
 }
 
-#st-cs-year-filter,
+#st-grades-year-filter {
+    position: absolute;
+    top: 125px;
+    right: 0px;
+    padding: 8px;
+    background-color: var(--st-background-overlay);
+    border: var(--st-border);
+    border-top-right-radius: var(--st-border-radius);
+    border-bottom-left-radius: var(--st-border-radius);
+    z-index: 10;
+}
+
+.st-year-filter,
 #st-cs-subject-filter {
     display: flex;
     flex-direction: column;
@@ -788,12 +810,12 @@
     font: 500 14px var(--st-font-family-primary);
 }
 
-#st-cs-year-filter {
+.st-year-filter {
     flex-direction: row;
     gap: 2px;
 }
 
-#st-cs-year-filter .st-checkbox-label {
+.st-year-filter .st-checkbox-label {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -809,11 +831,11 @@
     transition: background-color 200ms, color 200ms;
 }
 
-#st-cs-year-filter .st-checkbox-label:before {
+.st-year-filter .st-checkbox-label:before {
     display: none;
 }
 
-#st-cs-year-filter .st-checkbox-label:has(.st-checkbox-input:checked) {
+.st-year-filter .st-checkbox-label:has(.st-checkbox-input:checked) {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
 }

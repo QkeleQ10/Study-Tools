@@ -1997,7 +1997,7 @@ table.table-grid-layout>tbody>tr.selected {
                 }
 
                 &.column-underlying {
-                    background-color: color-mix(in hsl, var(--st-highlight-warn) 65%, (--st-highlight-subtle));
+                    background-color: color-mix(in hsl, var(--st-highlight-warn) 65%, var(--st-highlight-subtle));
                 }
             }`, 'study-tools-insufficient')
             break

@@ -287,24 +287,9 @@ export default [
             },
             {
                 id: "cc",
-                title: "Cijfercalculator",
-                subtitle: "Zie wat je moet halen of wat je komt te staan op basis van je cijferlijst en/of aangepaste cijfers.",
+                title: "Vernieuwd cijferoverzicht",
+                subtitle: "Met handige cijfercalculator, leuke statistieken en een back-upfunctie.",
                 default: true,
-            },
-            {
-                id: "cs",
-                title: "Cijferstatistieken",
-                subtitle: "Nieuw tabblad in het cijferoverzicht met statistieken, grafiekjes en handige filters.",
-                default: true,
-            },
-            {
-                id: "cb",
-                title: "Cijferback-up",
-                subtitle: "Knop in het cijferoverzicht om je cijferlijst te exporteren en te importeren.",
-                default: true,
-                links: [
-                    { icon: 'upload', label: "Cijferback-up importeren", href: 'https://qkeleq10.github.io/studytools/grades' }
-                ],
             },
             {
                 id: "insufficient",

@@ -19,51 +19,72 @@ async function gradeList() {
     await awaitElement('#cijferslaatstbehaalderesultaten-uitgebreideweergave')
 
     saveToStorage('viewedGrades', new Date().getTime(), 'local')
-
-    const buttons = element('div', 'st-grades-pre-button-wrapper', document.body, { class: 'st-button-wrapper' })
-
-    if (syncedStorage['cb']) {
-        const gradeBackupButton = buttons.createChildElement('button', { id: 'st-grade-backup-button', class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
-        gradeBackupButton.addEventListener('click', async () => {
-            new GradeBackupDialog().show()
-        })
-    }
-
-    if (syncedStorage['cc']) {
-        const ccPreOpen = element('button', 'st-cc-pre-open', buttons, { class: 'st-button', innerText: i18n('cc.title'), 'data-icon': '' })
-        ccPreOpen.addEventListener('click', async () => {
-            document.location.hash = '#/cijfers/cijferoverzicht'
-            const ccOpen = await awaitElement('#st-cc-open')
-            ccOpen.click()
-        })
-    }
 }
 
 async function gradeOverview() {
-    const buttons = element('div', 'st-grades-button-wrapper', document.body, { class: 'st-button-wrapper' })
+    if (!syncedStorage['cc']) return;
 
-    allowAsideResize()
+    const contentContainer = await awaitElement('section.main>div');
+    const gradeContainer = contentContainer.parentElement.parentElement;
+
+    const buttons = document.body.createChildElement('div', { id: 'st-grades-button-wrapper', class: 'st-button-wrapper' });
+    const yearFilter = contentContainer.parentElement.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-year-filter' });
+
+    const progressBar = gradeContainer.createChildElement('div', { class: 'st-progress-bar' });
+    progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+    (await awaitElement('aside')).style.display = 'none';
+    gradeContainer.style.paddingRight = '20px';
+
+    // allowAsideResize()
     gradeCalculator(buttons)
-    gradeStatistics()
+    // gradeStatistics()
 
-    if (syncedStorage['cb']) {
-        const gradeBackupButton = buttons.createChildElement('button', { id: 'st-grade-backup-button', class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
-        gradeBackupButton.addEventListener('click', async () => {
-            new GradeBackupDialog().show()
-        })
-    }
+    const gradeBackupButton = buttons.createChildElement('button', { id: 'st-grade-backup-button', class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
+    gradeBackupButton.addEventListener('click', async () => {
+        new GradeBackupDialog().show()
+    })
 
-    // Set grade type to All
-    const gradeTypeSelect = await awaitElement('#idWeergave > div > div:nth-child(1) > div > div > form > div:nth-child(2) > div > span')
-    gradeTypeSelect.click()
-    const gradeTypeOptionAll = await awaitElement('#cijferSoortSelect_listbox > li:nth-child(1)')
-    gradeTypeOptionAll.click()
+    const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 
-    // Set column type to Column numbers
-    const colTypeSelect = await awaitElement('#idWeergave > div > div:nth-child(2) > div > div > form > div > div > span')
-    colTypeSelect.click()
-    const colTypeOptionNums = await awaitElement('#kolomweergave_listbox > li:nth-child(2)')
-    colTypeOptionNums.click()
+    years.forEach(async (year, i) => {
+        let label = yearFilter.createChildElement('label', { class: 'st-checkbox-label', for: `st-year-filter-year${year.id}`, innerText: year.studie.code.match(/\d/gi)?.[0], title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` });
+        if (!(label.innerText?.length > 0)) label.innerText = i + 1;
+        let input = label.createChildElement('input', { id: `st-year-filter-year${year.id}`, class: 'st-checkbox-input', name: 'st-year-filter', type: 'radio' });
+
+        if (i === years.length - 1) {
+            input.checked = true;
+
+            collectedGrades.push({
+                yearId: year.id,
+                grades: await magisterApi.gradesForYear(year)
+            });
+            drawGradeTable(collectedGrades[collectedGrades.length - 1].grades, contentContainer, async (grade, event) => {
+                const dialog = new GradeDetailDialog(grade, year);
+                dialog.show();
+                grade = dialog.grade;
+            });
+        };
+
+        input.addEventListener('change', async () => {
+            progressBar.dataset.visible = 'true';
+            if (!input.checked) return;
+            if (!collectedGrades.find(t => t.yearId === year.id)) {
+                collectedGrades.push({
+                    yearId: year.id,
+                    grades: await magisterApi.gradesForYear(year)
+                });
+            }
+            drawGradeTable(collectedGrades.find(t => t.yearId === year.id).grades, contentContainer, async (grade, event) => {
+                const dialog = new GradeDetailDialog(grade, year);
+                dialog.show();
+                grade = dialog.grade;
+            });
+            progressBar.dataset.visible = 'false';
+        });
+    });
+
+    progressBar.dataset.visible = 'false';
 }
 
 async function allowAsideResize() {
@@ -105,390 +126,394 @@ async function allowAsideResize() {
 
 // Grade calculator
 async function gradeCalculator(buttonWrapper) {
-    if (!syncedStorage['cc']) return
+    // let accessedBefore = await getFromStorage('cf-calc-accessed', 'local') || false
 
-    let accessedBefore = await getFromStorage('cf-calc-accessed', 'local') || false
+    // const aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
+    //     gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
+    //     gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl')
 
-    const aside = await awaitElement('#cijfers-container aside, #cijfers-laatst-behaalde-resultaten-container aside'),
-        gradesContainer = await awaitElement('.content-container-cijfers, .content-container'),
-        gradeDetails = await awaitElement('#idDetails>.tabsheet .block .content dl')
+    const clOpen = element('button', 'st-cc-open', buttonWrapper, { class: 'st-button', innerText: i18n('cc.title'), 'data-icon': '' })
+    // const
+    //     clOverlay = element('div', 'st-cc', document.body, { class: 'st-overlay' }),
+    //     clTitle = element('span', 'st-cc-title', clOverlay, { class: 'st-title', innerText: i18n('cc.title') }),
+    //     clSubtitle = element('span', 'st-cc-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt." }),
+    //     clButtons = element('div', 'st-cc-buttons', clOverlay),
+    //     clBugReport = element('button', 'st-cc-bugs', clButtons, { class: 'st-button icon', title: "Ervaar je problemen?", 'data-icon': '' }),
+    //     clHelp = element('button', 'st-cc-help', clButtons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
+    //     clClose = element('button', 'st-cc-close', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
+    //     clSidebar = element('div', 'st-cc-sidebar', clOverlay),
+    //     clAdded = element('div', 'st-cc-added', clSidebar, { 'data-amount': 0 }),
+    //     clAddedList = element('div', 'st-cc-added-list', clAdded),
+    //     clCustomButtons = element('div', 'st-cc-custom-buttons', clAdded),
+    //     clAddCustomResult = element('input', 'st-cf-custom-result', clCustomButtons, { class: 'st-input', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 }),
+    //     clAddCustomWeight = element('input', 'st-cf-custom-weight', clCustomButtons, { class: 'st-input', type: 'number', placeholder: 'Weegfactor', min: 1 }),
+    //     clAddCustom = element('button', 'st-cc-custom', clCustomButtons, { class: 'st-button secondary', innerText: "Eigen cijfer toevoegen", 'data-icon': '' }),
+    //     clAveragesWrapper = element('div', 'st-cc-averages', clSidebar),
+    //     clMean = element('div', 'st-cc-mean', clAveragesWrapper, { class: 'st-metric', 'data-description': "Gewogen gemiddelde" }),
+    //     clMedian = element('div', 'st-cc-median', clAveragesWrapper, { class: 'st-metric secondary', 'data-description': "Mediaan" }),
+    //     clWeight = element('div', 'st-cc-weight', clAveragesWrapper, { class: 'st-metric secondary', 'data-description': "Gewicht" }),
+    //     clPredictionWrapper = element('div', 'st-cc-prediction', clSidebar),
+    //     clFutureWeightLabel = element('label', 'st-cc-future-weight-label', clPredictionWrapper, { innerText: "Weegfactor:" }),
+    //     clFutureWeightInput = element('input', 'st-cc-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
+    //     clFutureDesc = element('p', 'st-cc-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
+    //     clCanvas = element('div', 'st-cc-canvas', clPredictionWrapper)
 
-    const clOpen = element('button', 'st-cc-open', buttonWrapper, { class: 'st-button', innerText: i18n('cc.title'), 'data-icon': '' }),
-        clOverlay = element('div', 'st-cc', document.body, { class: 'st-overlay' }),
-        clTitle = element('span', 'st-cc-title', clOverlay, { class: 'st-title', innerText: i18n('cc.title') }),
-        clSubtitle = element('span', 'st-cc-subtitle', clOverlay, { class: 'st-subtitle', innerText: "Voeg cijfers toe en zie wat je moet halen of wat je gemiddelde wordt." }),
-        clButtons = element('div', 'st-cc-buttons', clOverlay),
-        clBugReport = element('button', 'st-cc-bugs', clButtons, { class: 'st-button icon', title: "Ervaar je problemen?", 'data-icon': '' }),
-        clHelp = element('button', 'st-cc-help', clButtons, { class: 'st-button icon', title: "Hulp", 'data-icon': '' }),
-        clClose = element('button', 'st-cc-close', clButtons, { class: 'st-button', innerText: "Wissen en sluiten", 'data-icon': '' }),
-        clSidebar = element('div', 'st-cc-sidebar', clOverlay),
-        clAdded = element('div', 'st-cc-added', clSidebar, { 'data-amount': 0 }),
-        clAddedList = element('div', 'st-cc-added-list', clAdded),
-        clCustomButtons = element('div', 'st-cc-custom-buttons', clAdded),
-        clAddCustomResult = element('input', 'st-cf-custom-result', clCustomButtons, { class: 'st-input', type: 'number', placeholder: 'Cijfer', max: 10, step: 0.1, min: 1 }),
-        clAddCustomWeight = element('input', 'st-cf-custom-weight', clCustomButtons, { class: 'st-input', type: 'number', placeholder: 'Weegfactor', min: 1 }),
-        clAddCustom = element('button', 'st-cc-custom', clCustomButtons, { class: 'st-button secondary', innerText: "Eigen cijfer toevoegen", 'data-icon': '' }),
-        clAveragesWrapper = element('div', 'st-cc-averages', clSidebar),
-        clMean = element('div', 'st-cc-mean', clAveragesWrapper, { class: 'st-metric', 'data-description': "Gewogen gemiddelde" }),
-        clMedian = element('div', 'st-cc-median', clAveragesWrapper, { class: 'st-metric secondary', 'data-description': "Mediaan" }),
-        clWeight = element('div', 'st-cc-weight', clAveragesWrapper, { class: 'st-metric secondary', 'data-description': "Gewicht" }),
-        clPredictionWrapper = element('div', 'st-cc-prediction', clSidebar),
-        clFutureWeightLabel = element('label', 'st-cc-future-weight-label', clPredictionWrapper, { innerText: "Weegfactor:" }),
-        clFutureWeightInput = element('input', 'st-cc-future-weight-input', clFutureWeightLabel, { class: 'st-input', type: 'number', placeholder: "Weegfactor", min: 1 }),
-        clFutureDesc = element('p', 'st-cc-future-desc', clPredictionWrapper, { innerText: "Bereken wat je moet halen of zie wat je komt te staan." }),
-        clCanvas = element('div', 'st-cc-canvas', clPredictionWrapper)
+    // buttonWrapper.append(clOpen)
 
-    buttonWrapper.append(clOpen)
+    // let years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
 
-    let years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
-
-    let apiGrades = {},
-        gradeColumns = {},
-        addedToCalculation = [],
-        hypotheticalWeight,
-        fallbackHypotheticalWeight,
-        calcMean,
-        calcMedian,
-        advice
+    // let apiGrades = {},
+    //     gradeColumns = {},
+    //     addedToCalculation = [],
+    //     hypotheticalWeight,
+    //     fallbackHypotheticalWeight,
+    //     calcMean,
+    //     calcMedian,
+    //     advice
 
     clOpen.addEventListener('click', async () => {
-        addedToCalculation = []
-        clAddedList.innerText = ''
-        updateCalculations()
+        new Dialog({ innerText: "In deze bètaversie is de cijfercalculator niet beschikbaar." }).show();
+        return;
 
-        clOverlay.setAttribute('open', true)
-        gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px) !important;max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
+        // addedToCalculation = []
+        // clAddedList.innerText = ''
+        // updateCalculations()
 
-        if (!accessedBefore) {
-            await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
-            accessedBefore = true
-            saveToStorage('cf-calc-accessed', true, 'local')
-        }
-        if (!localStorage['cc-accessed']) {
-            new Dialog({
-                innerText: "De afgelopen tijd zijn er wat problemen geweest bij het toevoegen van cijfers. \n\nDat is hopelijk nu opgelost. Sorry voor het ongemak! \n\nLaat het me weten als je nog steeds problemen ondervindt.",
-                buttons: [
-                    { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
-                    { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
-                ]
-            }).show();
-            localStorage['cc-accessed'] = true;
-        }
+        // clOverlay.setAttribute('open', true)
+        // gradesContainer.setAttribute('style', 'z-index: 9999999;max-width: calc(100vw - 476px) !important;max-height: calc(100vh - 139px);position: fixed;left: 20px;top: 123px;right: 456px;bottom: 16px;')
+
+        // if (!accessedBefore) {
+        //     await notify('dialog', "Welkom bij de nieuwe cijfercalculator!\n\nJe kunt cijfers toevoegen door ze aan te klikken. Je kunt ook de naam van een vak aanklikken om meteen alle cijfers\nvan dat vak toe te voegen aan de berekening. Natuurlijk kun je ook handmatig cijfers toevoegen.")
+        //     accessedBefore = true
+        //     saveToStorage('cf-calc-accessed', true, 'local')
+        // }
+        // if (!localStorage['cc-accessed']) {
+        //     new Dialog({
+        //         innerText: "De afgelopen tijd zijn er wat problemen geweest bij het toevoegen van cijfers. \n\nDat is hopelijk nu opgelost. Sorry voor het ongemak! \n\nLaat het me weten als je nog steeds problemen ondervindt.",
+        //         buttons: [
+        //             { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+        //             { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
+        //         ]
+        //     }).show();
+        //     localStorage['cc-accessed'] = true;
+        // }
     })
 
-    clClose.addEventListener('click', () => {
-        gradesContainer.removeAttribute('style')
-        clOverlay.removeAttribute('open')
-        createStyle('', 'st-calculation-added')
-    })
+    // clClose.addEventListener('click', () => {
+    //     gradesContainer.removeAttribute('style')
+    //     clOverlay.removeAttribute('open')
+    //     createStyle('', 'st-calculation-added')
+    // })
 
-    clBugReport.addEventListener('click', () => {
-        notify(
-            'dialog',
-            "Ervaar je problemen met de cijfercalculator?\n\nJe kunt nog steeds handmatig je cijfers toevoegen. Stuur me ook even een berichtje of een mailtje om me te laten weten wat er misgaat. Zo kan ik het oplossen!",
-            [
-                { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
-                { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
-            ]
-        )
-    })
+    // clBugReport.addEventListener('click', () => {
+    //     notify(
+    //         'dialog',
+    //         "Ervaar je problemen met de cijfercalculator?\n\nJe kunt nog steeds handmatig je cijfers toevoegen. Stuur me ook even een berichtje of een mailtje om me te laten weten wat er misgaat. Zo kan ik het oplossen!",
+    //         [
+    //             { innerText: "E-mail verzenden", onclick: `window.open('mailto:quinten@althues.nl')` },
+    //             { innerText: "Discord", onclick: `window.open('https://discord.gg/2rP7pfeAKf')` }
+    //         ]
+    //     )
+    // })
 
-    clHelp.addEventListener('click', async () => {
-        await notify('dialog', "Welkom in de cijfercalculator!\n\nMet de cijfercalculator kun je gemakkelijk zien wat je moet halen of wat je gemiddelde zou kunnen worden.", null, null, { index: 1, length: 3 })
+    // clHelp.addEventListener('click', async () => {
+    //     await notify('dialog', "Welkom in de cijfercalculator!\n\nMet de cijfercalculator kun je gemakkelijk zien wat je moet halen of wat je gemiddelde zou kunnen worden.", null, null, { index: 1, length: 3 })
 
-        await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.", null, null, { index: 2, length: 3 })
+    //     await notify('dialog', "Je kunt cijfers toevoegen aan de berekening door ze aan te klikken in het cijferoverzicht.\n\nJe kunt ook de naam van een vak aanklikken om meteen alle cijfers van dat vak toe te voegen. Handig!\n\nNatuurlijk kun je ook handmatig cijfers toevoegen. Dat kan in het paneel aan de rechterkant.", null, null, { index: 2, length: 3 })
 
-        await notify('dialog', "In het zijpaneel zie je alle cijfers die je hebt toegevoegd, samen met wat centrummaten.\n\nHelemaal onderin zie je een diagram. Die geeft op de x-as de cijfers 1 t/m 10 weer, met op de y-as de \ngemiddelden die je zou kunnen komen te staan als je voor je volgende cijfer x haalt. Vergeet niet \nom de weegfactor goed in te stellen.", null, null, { index: 3, length: 3 })
-    })
+    //     await notify('dialog', "In het zijpaneel zie je alle cijfers die je hebt toegevoegd, samen met wat centrummaten.\n\nHelemaal onderin zie je een diagram. Die geeft op de x-as de cijfers 1 t/m 10 weer, met op de y-as de \ngemiddelden die je zou kunnen komen te staan als je voor je volgende cijfer x haalt. Vergeet niet \nom de weegfactor goed in te stellen.", null, null, { index: 3, length: 3 })
+    // })
 
-    gradesContainer.addEventListener('click', async (event) => {
-        if (!clOverlay.hasAttribute('open')) return
+    // gradesContainer.addEventListener('click', async (event) => {
+    //     if (!clOverlay.hasAttribute('open')) return
 
-        if (event.target.closest('td:nth-child(2)')) {
-            // If this is true, a subject title has been clicked. Add every belonging grade to the calculation.
-            const gradeElements = event.target.closest('td:nth-child(2)').parentElement.querySelectorAll('.grade[id]:not(.empty)')
-            for (const elem of gradeElements) {
-                const result = Number(elem?.title?.replace(',', '.'))
+    //     if (event.target.closest('td:nth-child(2)')) {
+    //         // If this is true, a subject title has been clicked. Add every belonging grade to the calculation.
+    //         const gradeElements = event.target.closest('td:nth-child(2)').parentElement.querySelectorAll('.grade[id]:not(.empty)')
+    //         for (const elem of gradeElements) {
+    //             const result = Number(elem?.title?.replace(',', '.'))
 
-                if (
-                    result && !isNaN(result) &&
-                    result >= 1 && result <= 10 &&
-                    !(
-                        elem.classList.contains('gemiddeldecolumn') &&
-                        !elem.classList.contains('heeftonderliggendekolommen') &&
-                        !elem.classList.contains('herkansingKolom')
-                    )
-                ) {
-                    await addOrRemoveGrade(elem.id, true)
-                } else {
-                    elem.classList.add('st-cannot-add')
-                    setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
-                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
-                }
-            }
-        } else {
-            const gradeElement = event.target.closest('.grade[id]:not(.empty)')
-            if (gradeElement) await addOrRemoveGrade(gradeElement.id)
-        }
+    //             if (
+    //                 result && !isNaN(result) &&
+    //                 result >= 1 && result <= 10 &&
+    //                 !(
+    //                     elem.classList.contains('gemiddeldecolumn') &&
+    //                     !elem.classList.contains('heeftonderliggendekolommen') &&
+    //                     !elem.classList.contains('herkansingKolom')
+    //                 )
+    //             ) {
+    //                 await addOrRemoveGrade(elem.id, true)
+    //             } else {
+    //                 elem.classList.add('st-cannot-add')
+    //                 setTimeout(() => elem.classList.remove('st-cannot-add'), 500)
+    //                 createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+    //             }
+    //         }
+    //     } else {
+    //         const gradeElement = event.target.closest('.grade[id]:not(.empty)')
+    //         if (gradeElement) await addOrRemoveGrade(gradeElement.id)
+    //     }
 
-    })
+    // })
 
-    function addOrRemoveGrade(id, lowVerbosity) {
-        return new Promise(async (resolve) => {
-            const alreadyAddedElement = clAddedList.querySelector(`.st-cc-added-element[data-id="${id}"]`)
-            if (alreadyAddedElement) {
-                alreadyAddedElement.click()
-                return resolve()
-            }
+    // function addOrRemoveGrade(id, lowVerbosity) {
+    //     return new Promise(async (resolve) => {
+    //         const alreadyAddedElement = clAddedList.querySelector(`.st-cc-added-element[data-id="${id}"]`)
+    //         if (alreadyAddedElement) {
+    //             alreadyAddedElement.click()
+    //             return resolve()
+    //         }
 
-            const gradeElement =  /** @type {HTMLElement} */(document.querySelector(`.grade[id="${id}"]`))
+    //         const gradeElement =  /** @type {HTMLElement} */(document.querySelector(`.grade[id="${id}"]`))
 
-            let ghostSourcePosition = gradeElement.getBoundingClientRect()
-            const ghostElement = element('span', null, document.body, {
-                class: 'st-cf-ghost',
-                innerText: gradeElement.title,
-                style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
-            })
-            setTimeout(() => { if (ghostElement) ghostElement.remove() }, 5000)
+    //         let ghostSourcePosition = gradeElement.getBoundingClientRect()
+    //         const ghostElement = element('span', null, document.body, {
+    //             class: 'st-cf-ghost',
+    //             innerText: gradeElement.title,
+    //             style: `top: ${ghostSourcePosition.top}px; right: ${window.innerWidth - ghostSourcePosition.right}px; background-color: ${window.getComputedStyle(gradeElement).backgroundColor}; color: ${window.getComputedStyle(gradeElement).color}`
+    //         })
+    //         setTimeout(() => { if (ghostElement) ghostElement.remove() }, 5000)
 
-            let result = Number(gradeElement.title.replace(',', '.')),
-                weight,
-                column = '?',
-                title = '?'
+    //         let result = Number(gradeElement.title.replace(',', '.')),
+    //             weight,
+    //             column = '?',
+    //             title = '?'
 
-            if (gradeElement.parentElement.dataset.weight && gradeElement.parentElement.dataset.column && gradeElement.parentElement.dataset.title) {
-                weight = Number(gradeElement.parentElement.dataset.weight)
-                column = gradeElement.parentElement.dataset.column
-                title = gradeElement.parentElement.dataset.title
-            } else {
-                let schoolYearId = /** @type {HTMLOptionElement} */(document.querySelector('#aanmeldingenSelect>option[selected=selected]')).value
-                let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === id || `${item.Vak.Afkorting}_${item.CijferKolom.KolomKop}_${item.CijferKolom.KolomNummer}` === id).CijferKolom.Id
-                gradeColumns[gradeColumnId] ??= await magisterApi.gradesColumnInfo({ id: schoolYearId }, gradeColumnId)
-                weight = gradeColumns[gradeColumnId].Weging
-                gradeElement.parentElement.dataset.weight = weight
-                column = gradeColumns[gradeColumnId].KolomNaam
-                gradeElement.parentElement.dataset.column = column
-                title = gradeColumns[gradeColumnId].KolomOmschrijving
-                gradeElement.parentElement.dataset.title = title
-            }
+    //         if (gradeElement.parentElement.dataset.weight && gradeElement.parentElement.dataset.column && gradeElement.parentElement.dataset.title) {
+    //             weight = Number(gradeElement.parentElement.dataset.weight)
+    //             column = gradeElement.parentElement.dataset.column
+    //             title = gradeElement.parentElement.dataset.title
+    //         } else {
+    //             let schoolYearId = /** @type {HTMLOptionElement} */(document.querySelector('#aanmeldingenSelect>option[selected=selected]')).value
+    //             let gradeColumnId = apiGrades[schoolYearId].find(item => `${item.Vak.Afkorting}_${item.CijferKolom.KolomNummer}_${item.CijferKolom.KolomNummer}` === id || `${item.Vak.Afkorting}_${item.CijferKolom.KolomKop}_${item.CijferKolom.KolomNummer}` === id).CijferKolom.Id
+    //             gradeColumns[gradeColumnId] ??= await magisterApi.gradesColumnInfo({ id: schoolYearId }, gradeColumnId)
+    //             weight = gradeColumns[gradeColumnId].Weging
+    //             gradeElement.parentElement.dataset.weight = weight
+    //             column = gradeColumns[gradeColumnId].KolomNaam
+    //             gradeElement.parentElement.dataset.column = column
+    //             title = gradeColumns[gradeColumnId].KolomOmschrijving
+    //             gradeElement.parentElement.dataset.title = title
+    //         }
 
-            if (!result || isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
-                ghostElement.remove()
-                if (!lowVerbosity) notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
-                gradeElement.classList.add('st-cannot-add')
-                setTimeout(() => gradeElement.classList.remove('st-cannot-add'), 500)
-                return resolve()
-            }
-            if (!weight || weight <= 0) {
-                ghostElement.remove()
-                if (!lowVerbosity) notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
-                gradeElement.classList.add('st-cannot-add')
-                setTimeout(() => gradeElement.classList.remove('st-cannot-add'), 500)
-                return resolve()
-            }
+    //         if (!result || isNaN(result) || isNaN(weight) || result < 1 || result > 10) {
+    //             ghostElement.remove()
+    //             if (!lowVerbosity) notify('snackbar', 'Dit cijfer kan niet worden toegevoegd aan de berekening.')
+    //             gradeElement.classList.add('st-cannot-add')
+    //             setTimeout(() => gradeElement.classList.remove('st-cannot-add'), 500)
+    //             return resolve()
+    //         }
+    //         if (!weight || weight <= 0) {
+    //             ghostElement.remove()
+    //             if (!lowVerbosity) notify('snackbar', 'Dit cijfer telt niet mee en is niet toegevoegd aan de berekening.')
+    //             gradeElement.classList.add('st-cannot-add')
+    //             setTimeout(() => gradeElement.classList.remove('st-cannot-add'), 500)
+    //             return resolve()
+    //         }
 
-            let addedElement = element('span', null, clAddedList, {
-                class: 'st-cc-added-element',
-                innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
-                'data-insufficient': result < Number(syncedStorage['suf-threshold']),
-                'data-type': 'table',
-                'data-id': id
-            })
-            addedElement.addEventListener('click', event => {
-                addedToCalculation = addedToCalculation.filter(item => item.id !== id)
-                event.target.classList.add('remove')
-                setTimeout(() => {
-                    event.target.remove()
-                    createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
-                }, 100)
-                updateCalculations()
-            })
-            addedElement.scrollIntoView({ behavior: 'smooth' })
-            createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+    //         let addedElement = element('span', null, clAddedList, {
+    //             class: 'st-cc-added-element',
+    //             innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n`,
+    //             'data-insufficient': result < Number(syncedStorage['suf-threshold']),
+    //             'data-type': 'table',
+    //             'data-id': id
+    //         })
+    //         addedElement.addEventListener('click', event => {
+    //             addedToCalculation = addedToCalculation.filter(item => item.id !== id)
+    //             event.target.classList.add('remove')
+    //             setTimeout(() => {
+    //                 event.target.remove()
+    //                 createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
+    //             }, 100)
+    //             updateCalculations()
+    //         })
+    //         addedElement.scrollIntoView({ behavior: 'smooth' })
+    //         createStyle(Array.from(clAddedList.children).map(element => `span.grade[id="${element.dataset.id}"]`).join(', ') + ` {box-shadow: inset -0.5px 0 0 4px var(--st-accent-ok) !important;}`, 'st-calculation-added')
 
-            let ghostTargetPosition = addedElement.getBoundingClientRect()
-            ghostElement.style.top = `${ghostTargetPosition.top}px`
-            ghostElement.style.right = `${window.innerWidth - ghostTargetPosition.right}px`
-            ghostElement.classList.add('st-cf-ghost-moving')
-            setTimeout(() => ghostElement.remove(), 400)
+    //         let ghostTargetPosition = addedElement.getBoundingClientRect()
+    //         ghostElement.style.top = `${ghostTargetPosition.top}px`
+    //         ghostElement.style.right = `${window.innerWidth - ghostTargetPosition.right}px`
+    //         ghostElement.classList.add('st-cf-ghost-moving')
+    //         setTimeout(() => ghostElement.remove(), 400)
 
-            addedToCalculation.push({ id, result, weight })
-            updateCalculations()
-            return resolve()
-        })
-    }
+    //         addedToCalculation.push({ id, result, weight })
+    //         updateCalculations()
+    //         return resolve()
+    //     })
+    // }
 
-    clAddCustom.addEventListener('click', event => {
-        let id = Date.now()
-        let result = Number(clAddCustomResult.value.replace(',', '.'))
-        let weight = Number(clAddCustomWeight.value.replace(',', '.'))
+    // clAddCustom.addEventListener('click', event => {
+    //     let id = Date.now()
+    //     let result = Number(clAddCustomResult.value.replace(',', '.'))
+    //     let weight = Number(clAddCustomWeight.value.replace(',', '.'))
 
-        if (isNaN(result)) return notify('snackbar', 'Geef een geldig cijfer op.')
-        if (result < 1) return notify('snackbar', 'Een cijfer kan niet lager zijn dan 1,0.')
-        if (result > 10) return notify('snackbar', 'Een cijfer kan niet hoger zijn dan 10,0.')
-        if (isNaN(weight) || weight <= 0) {
-            weight = 1
-            notify('snackbar', '1× genomen als weegfactor.')
-        }
+    //     if (isNaN(result)) return notify('snackbar', 'Geef een geldig cijfer op.')
+    //     if (result < 1) return notify('snackbar', 'Een cijfer kan niet lager zijn dan 1,0.')
+    //     if (result > 10) return notify('snackbar', 'Een cijfer kan niet hoger zijn dan 10,0.')
+    //     if (isNaN(weight) || weight <= 0) {
+    //         weight = 1
+    //         notify('snackbar', '1× genomen als weegfactor.')
+    //     }
 
-        let addedElement = element('span', null, clAddedList, {
-            class: 'st-cc-added-element',
-            innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — handmatig ingevoerd\n`,
-            'data-insufficient': result < Number(syncedStorage['suf-threshold']),
-            'data-type': 'manual',
-            'data-id': id
-        })
-        addedElement.addEventListener('click', event => {
-            addedToCalculation = addedToCalculation.filter(item => item.id !== id)
-            event.target.classList.add('remove')
-            setTimeout(() => event.target.remove(), 100)
-            updateCalculations()
-        })
-        addedElement.scrollIntoView({ behavior: 'smooth' })
+    //     let addedElement = element('span', null, clAddedList, {
+    //         class: 'st-cc-added-element',
+    //         innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — handmatig ingevoerd\n`,
+    //         'data-insufficient': result < Number(syncedStorage['suf-threshold']),
+    //         'data-type': 'manual',
+    //         'data-id': id
+    //     })
+    //     addedElement.addEventListener('click', event => {
+    //         addedToCalculation = addedToCalculation.filter(item => item.id !== id)
+    //         event.target.classList.add('remove')
+    //         setTimeout(() => event.target.remove(), 100)
+    //         updateCalculations()
+    //     })
+    //     addedElement.scrollIntoView({ behavior: 'smooth' })
 
-        addedToCalculation.push({ id, result, weight })
-        updateCalculations()
-    })
+    //     addedToCalculation.push({ id, result, weight })
+    //     updateCalculations()
+    // })
 
-    clFutureWeightInput.addEventListener('input', async () => {
-        hypotheticalWeight = Number(clFutureWeightInput.value)
-        if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) {
-            hypotheticalWeight = null
-            clFutureWeightInput.value = null
-        }
-        updateCalculations()
-    })
+    // clFutureWeightInput.addEventListener('input', async () => {
+    //     hypotheticalWeight = Number(clFutureWeightInput.value)
+    //     if (isNaN(hypotheticalWeight) || hypotheticalWeight < 1) {
+    //         hypotheticalWeight = null
+    //         clFutureWeightInput.value = null
+    //     }
+    //     updateCalculations()
+    // })
 
-    clCanvas.addEventListener('mousemove', event => {
-        if (addedToCalculation.length < 1) return
+    // clCanvas.addEventListener('mousemove', event => {
+    //     if (addedToCalculation.length < 1) return
 
-        const hoverX = /** @type {HTMLElement} */(document.querySelector('#st-cc-canvas-x')),
-            hoverY = /** @type {HTMLElement} */(document.querySelector('#st-cc-canvas-y'))
+    //     const hoverX = /** @type {HTMLElement} */(document.querySelector('#st-cc-canvas-x')),
+    //         hoverY = /** @type {HTMLElement} */(document.querySelector('#st-cc-canvas-y'))
 
-        let mouseLeftPart = (event.pageX - event.currentTarget.offsetLeft) / event.currentTarget.offsetWidth
-        let hypotheticalGrade = Math.round(0.9 * mouseLeftPart * 100 + 10) / 10
+    //     let mouseLeftPart = (event.pageX - event.currentTarget.offsetLeft) / event.currentTarget.offsetWidth
+    //     let hypotheticalGrade = Math.round(0.9 * mouseLeftPart * 100 + 10) / 10
 
-        hoverX.dataset.grade = hypotheticalGrade.toString()
-        hoverX.style.setProperty('--grade', hypotheticalGrade.toString())
+    //     hoverX.dataset.grade = hypotheticalGrade.toString()
+    //     hoverX.style.setProperty('--grade', hypotheticalGrade.toString())
 
-        let hypotheticalMean = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][Math.round(0.9 * mouseLeftPart * 100)]
+    //     let hypotheticalMean = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][Math.round(0.9 * mouseLeftPart * 100)]
 
-        hoverY.dataset.grade = hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        hoverY.style.setProperty('--grade', hypotheticalMean.toString())
+    //     hoverY.dataset.grade = hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    //     hoverY.style.setProperty('--grade', hypotheticalMean.toString())
 
-        if (hypotheticalMean.toFixed(2) === calcMean.toFixed(2)) {
-            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan blijf je gemiddeld een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
-        } else if (hypotheticalMean > calcMean) {
-            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan stijgt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
-        } else {
-            clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan daalt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
-        }
-        clFutureDesc.style.color = hypotheticalMean < Number(syncedStorage['suf-threshold']) ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
-    })
+    //     if (hypotheticalMean.toFixed(2) === calcMean.toFixed(2)) {
+    //         clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan blijf je gemiddeld een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} staan.`
+    //     } else if (hypotheticalMean > calcMean) {
+    //         clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan stijgt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+    //     } else {
+    //         clFutureDesc.innerText = `Als je een ${hypotheticalGrade.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} haalt, \ndan daalt je gemiddelde tot een ${hypotheticalMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+    //     }
+    //     clFutureDesc.style.color = hypotheticalMean < Number(syncedStorage['suf-threshold']) ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
+    // })
 
-    clCanvas.addEventListener('mouseleave', event => {
-        advice = formulateGradeAdvice()
-        clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
-        clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
-    })
+    // clCanvas.addEventListener('mouseleave', event => {
+    //     advice = formulateGradeAdvice()
+    //     clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
+    //     clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
+    // })
 
-    function updateCalculations() {
-        calcMean = calculateMean(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight))
-        calcMedian = calculateMedian(addedToCalculation.map(item => item.result))
-        clMean.innerText = isNaN(calcMean)
-            ? '?'
-            : calcMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        clMedian.innerText = isNaN(calcMedian)
-            ? '?'
-            : calcMedian.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-        clWeight.innerText = addedToCalculation.map(item => item.weight).reduce((acc, curr) => acc + curr, 0) + '×'
+    // function updateCalculations() {
+    //     calcMean = calculateMean(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight))
+    //     calcMedian = calculateMedian(addedToCalculation.map(item => item.result))
+    //     clMean.innerText = isNaN(calcMean)
+    //         ? '?'
+    //         : calcMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    //     clMedian.innerText = isNaN(calcMedian)
+    //         ? '?'
+    //         : calcMedian.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+    //     clWeight.innerText = addedToCalculation.map(item => item.weight).reduce((acc, curr) => acc + curr, 0) + '×'
 
-        clAdded.dataset.amount = addedToCalculation.length
+    //     clAdded.dataset.amount = addedToCalculation.length
 
-        if (calcMean < Number(syncedStorage['suf-threshold'])) clMean.classList.add('insufficient')
-        else clMean.classList.remove('insufficient')
+    //     if (calcMean < Number(syncedStorage['suf-threshold'])) clMean.classList.add('insufficient')
+    //     else clMean.classList.remove('insufficient')
 
-        fallbackHypotheticalWeight = Math.round(calculateMedian(addedToCalculation.map(item => item.weight)) || 1)
-        clFutureWeightInput.placeholder = fallbackHypotheticalWeight + '×'
+    //     fallbackHypotheticalWeight = Math.round(calculateMedian(addedToCalculation.map(item => item.weight)) || 1)
+    //     clFutureWeightInput.placeholder = fallbackHypotheticalWeight + '×'
 
-        advice = formulateGradeAdvice()
-        clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
-        clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
-        renderGradeChart()
-    }
+    //     advice = formulateGradeAdvice()
+    //     clFutureDesc.innerText = advice.text || "Bereken wat je moet halen of zie wat je komt te staan."
+    //     clFutureDesc.style.color = advice.color === 'warn' ? 'var(--st-accent-warn)' : 'var(--st-foreground-primary)'
+    //     renderGradeChart()
+    // }
 
-    function renderGradeChart() {
-        clCanvas.dataset.irrelevant = addedToCalculation.length < 1
+    // function renderGradeChart() {
+    //     clCanvas.dataset.irrelevant = addedToCalculation.length < 1
 
-        let minGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][0],
-            maxGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][90]
+    //     let minGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][0],
+    //         maxGrade = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight)[0][90]
 
-        const line = element('div', 'st-cc-canvas-line', clCanvas, {
-            'data-min-grade': minGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            'data-min-grade-insufficient': minGrade < Number(syncedStorage['suf-threshold']),
-            'data-max-grade': maxGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            'data-max-grade-insufficient': maxGrade < Number(syncedStorage['suf-threshold']),
-            style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
-        })
+    //     const line = element('div', 'st-cc-canvas-line', clCanvas, {
+    //         'data-min-grade': minGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    //         'data-min-grade-insufficient': minGrade < Number(syncedStorage['suf-threshold']),
+    //         'data-max-grade': maxGrade.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    //         'data-max-grade-insufficient': maxGrade < Number(syncedStorage['suf-threshold']),
+    //         style: `--min-grade: ${minGrade}; --max-grade: ${maxGrade};`
+    //     })
 
-        const currentMean = element('div', 'st-cc-canvas-mean', clCanvas, {
-            'data-grade': calcMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            style: `--grade: ${calcMean}`
-        })
+    //     const currentMean = element('div', 'st-cc-canvas-mean', clCanvas, {
+    //         'data-grade': calcMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    //         style: `--grade: ${calcMean}`
+    //     })
 
-        let hoverX = element('div', 'st-cc-canvas-x', clCanvas)
-        let hoverY = element('div', 'st-cc-canvas-y', clCanvas)
-    }
+    //     let hoverX = element('div', 'st-cc-canvas-x', clCanvas)
+    //     let hoverY = element('div', 'st-cc-canvas-y', clCanvas)
+    // }
 
-    function weightedPossibleMeans(valueArray, weightArray, newWeight = 1) {
-        let means = [],
-            grades = []
-        for (let i = 1.0; i <= 10; i += 0.1) {
-            grades.push(Number(i))
-            means.push(Number(calculateMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
-        }
-        return [means, grades]
-    }
+    // function weightedPossibleMeans(valueArray, weightArray, newWeight = 1) {
+    //     let means = [],
+    //         grades = []
+    //     for (let i = 1.0; i <= 10; i += 0.1) {
+    //         grades.push(Number(i))
+    //         means.push(Number(calculateMean(valueArray.concat([i]), weightArray.concat([newWeight]))))
+    //     }
+    //     return [means, grades]
+    // }
 
-    function formulateGradeAdvice() {
-        let means = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight),
-            weight = hypotheticalWeight || fallbackHypotheticalWeight,
-            mean = calcMean
+    // function formulateGradeAdvice() {
+    //     let means = weightedPossibleMeans(addedToCalculation.map(item => item.result), addedToCalculation.map(item => item.weight), hypotheticalWeight || fallbackHypotheticalWeight),
+    //         weight = hypotheticalWeight || fallbackHypotheticalWeight,
+    //         mean = calcMean
 
-        let text = "Bereken wat je moet halen of zie wat je komt te staan. Voeg eerst cijfers toe aan de berekening.",
-            color = 'normal'
+    //     let text = "Bereken wat je moet halen of zie wat je komt te staan. Voeg eerst cijfers toe aan de berekening.",
+    //         color = 'normal'
 
-        if (addedToCalculation.length < 1) return { text, color }
+    //     if (addedToCalculation.length < 1) return { text, color }
 
-        const hypotheticalMeans = means[0],
-            hypotheticalGrades = means[1]
-        const minimumMean = Math.min(...hypotheticalMeans)
+    //     const hypotheticalMeans = means[0],
+    //         hypotheticalGrades = means[1]
+    //     const minimumMean = Math.min(...hypotheticalMeans)
 
-        for (let i = 0; i < hypotheticalMeans.length; i++) {
-            let meanH = hypotheticalMeans[i],
-                gradeH = hypotheticalGrades[i] || 1.0
-            if (meanH >= (Number(syncedStorage['suf-threshold']) - 0.005)) {
-                color = 'normal'
-                text = `Haal een ${gradeH.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < Number(syncedStorage['suf-threshold']) ? 'komen te' : 'te blijven'} staan.`
-                if (gradeH <= 1.0) {
-                    text = `Met een cijfer dat ${weight}× meetelt\nkun je niet lager komen te staan dan een ${minimumMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
-                } else if (gradeH > 9.9) {
-                    text = `Haal een 10,0 die ${weight}× meetelt\nom een voldoende ${mean < Number(syncedStorage['suf-threshold']) ? 'komen te' : 'te blijven'} staan.`
-                }
-                break
-            } else {
-                color = 'warn'
-                text = `Met een cijfer dat ${weight}× meetelt\nkun je geen voldoende komen te staan.`
-            }
-        }
+    //     for (let i = 0; i < hypotheticalMeans.length; i++) {
+    //         let meanH = hypotheticalMeans[i],
+    //             gradeH = hypotheticalGrades[i] || 1.0
+    //         if (meanH >= (Number(syncedStorage['suf-threshold']) - 0.005)) {
+    //             color = 'normal'
+    //             text = `Haal een ${gradeH.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} of hoger die ${weight}× meetelt\nom een voldoende ${mean < Number(syncedStorage['suf-threshold']) ? 'komen te' : 'te blijven'} staan.`
+    //             if (gradeH <= 1.0) {
+    //                 text = `Met een cijfer dat ${weight}× meetelt\nkun je niet lager komen te staan dan een ${minimumMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+    //             } else if (gradeH > 9.9) {
+    //                 text = `Haal een 10,0 die ${weight}× meetelt\nom een voldoende ${mean < Number(syncedStorage['suf-threshold']) ? 'komen te' : 'te blijven'} staan.`
+    //             }
+    //             break
+    //         } else {
+    //             color = 'warn'
+    //             text = `Met een cijfer dat ${weight}× meetelt\nkun je geen voldoende komen te staan.`
+    //         }
+    //     }
 
-        return { text, color }
-    }
+    //     return { text, color }
+    // }
 
 }
 
 function drawGradeTable(grades, parentElement, gradeClicked) {
-    const sortedColumns = grades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer));
+    const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
+
+    const sortedColumns = filteredGrades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer));
     const gradePeriods = [...new Set(sortedColumns.map(g => g.CijferPeriode?.Naam))];
     const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.KolomNummer))];
     const gradeSubjects = [...new Set(grades.sort((a, b) => a.Vak?.Volgnr - b.Vak?.Volgnr).map(g => g.Vak?.Omschrijving))];
@@ -501,6 +526,9 @@ function drawGradeTable(grades, parentElement, gradeClicked) {
         const td = createElement('td', tr)
         return { th, td }
     });
+
+    parentElement.querySelectorAll('.st-grade-table').forEach(e => e.remove());
+    parentElement.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
 
     const table = parentElement.createChildElement('table', { class: 'st-grade-table' });
 
@@ -523,7 +551,7 @@ function drawGradeTable(grades, parentElement, gradeClicked) {
 
 
         for (const column of gradeColumns) {
-            const grade = grades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
+            const grade = filteredGrades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
             if (grade) {
                 subjectRow.createChildElement('td', {
                     innerText: grade.CijferStr,
@@ -539,11 +567,11 @@ function drawGradeTable(grades, parentElement, gradeClicked) {
                         ['column-pta', grade.CijferKolom?.IsPTAKolom],
                     ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]),
                     title:
-                        `${new Date(grade.DatumIngevoerd)?.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}
-${grade.CijferKolom?.KolomOmschrijving}
-${grade.CijferKolom?.KolomNaam}, ${grade.CijferKolom?.KolomKop}
+                        `${new Date(grade.DatumIngevoerd)?.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' }) || '?'}
+${grade.CijferKolom?.KolomOmschrijving || '?'}
+${grade.CijferKolom?.KolomNaam || '?'}, ${grade.CijferKolom?.KolomKop || '?'}
 
-${grade.CijferStr} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.Weging}×)` : ''}
+${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.Weging}×)` : ''}
 
 ` + [
                             ['onvoldoende', grade.IsVoldoende === false],
@@ -572,7 +600,6 @@ ${grade.CijferStr} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.Weging}�
 
 // Grade statistics
 async function gradeStatistics() {
-    if (!syncedStorage['cs']) return
     const aside = await awaitElement('#cijfers-container > aside'),
         asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
         tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
@@ -883,5 +910,81 @@ async function gradeStatistics() {
                 scUnweightedMean.classList.add('secondary')
             }
         })
+    }
+}
+
+class GradeDetailDialog extends Dialog {
+    grade;
+    year;
+    #progressBar;
+
+    constructor(grade, year) {
+        super();
+        this.body.classList.add('st-grade-detail-dialog');
+
+        this.grade = grade;
+        if (year) this.year = year;
+
+        this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
+        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
+
+        this.#drawDialogContents();
+    }
+
+    async #drawDialogContents() {
+        this.body.innerText = '';
+
+        const column1 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
+        createElement('h3', column1, { class: 'st-section-heading', innerText: this.grade.CijferKolom.KolomOmschrijving || i18n('details') });
+
+        const metricsStrip = createElement('div', column1, { style: 'display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;' });
+
+        if (this.grade.CijferStr.length < 5)
+            createElement('div', metricsStrip, { class: 'st-metric', innerText: this.grade.CijferStr || '-', dataset: { description: i18n('assessment') }, style: syncedStorage['insufficient'] !== 'off' && this.grade.IsVoldoende === false ? 'color: var(--st-accent-warn)' : '' });
+        if (this.grade.CijferKolom?.Weging >= 0)
+            createElement('div', metricsStrip, { class: 'st-metric', innerText: `${this.grade.CijferKolom.Weging}x`, dataset: { description: i18n('weight') } });
+
+        let table1 = createElement('table', column1, { class: 'st' });
+
+        this.#addRowToTable(table1, i18n('column'), this.grade.CijferKolom.KolomKop ? `${this.grade.CijferKolom.KolomKop} (${this.grade.CijferKolom.KolomNaam})` : this.grade.CijferKolom.KolomNaam);
+        this.#addRowToTable(table1, i18n('description'), this.grade.CijferKolom.KolomOmschrijving || '-');
+        this.#addRowToTable(table1, i18n('level'), this.grade.CijferKolom.KolomNiveau || '-');
+        this.#addRowToTable(table1, i18n('weight'), this.grade.CijferKolom.Weging >= 0 ? `${this.grade.CijferKolom.Weging}x` : '-');
+        this.#addRowToTable(table1, i18n('assessment'), this.grade.CijferStr || '-');
+        const showYear = isYearNotCurrent(new Date(this.grade.DatumIngevoerd)) || isYearNotCurrent(new Date(this.grade.CijferKolom.WerkinformatieDatumIngevoerd));
+        this.#addRowToTable(table1, i18n('entered'),
+            ((this.grade.DatumIngevoerd && new Date(this.grade.DatumIngevoerd).getTime() > 0)
+                ? new Date(this.grade.DatumIngevoerd).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined })
+                : '') + (this.grade.IngevoerdDoor ? ` ${i18n('by')} ${this.grade.IngevoerdDoor}` : '')
+        );
+        this.#addRowToTable(table1, i18n('taken'),
+            (this.grade.CijferKolom.WerkinformatieDatumIngevoerd && new Date(this.grade.CijferKolom.WerkinformatieDatumIngevoerd).getTime() > 0)
+                ? new Date(this.grade.CijferKolom.WerkinformatieDatumIngevoerd).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', year: showYear ? 'numeric' : undefined })
+                : '-'
+        );
+        this.#addRowToTable(table1, i18n('productDescription'), this.grade.CijferKolom.WerkInformatieOmschrijving || '-');
+        this.#addRowToTable(table1, i18n('teacher'), this.grade.Docent || '-');
+        this.#addRowToTable(table1, i18n('subject'), this.grade.Vak?.Omschrijving || '-');
+        this.#addRowToTable(table1, i18n('period'), this.grade.CijferPeriode?.Naam || '-');
+
+
+        if (this.grade.CijferKolom.Weging == null && this.year) {
+            const gradeColumnInfo = await magisterApi.gradesColumnInfo(this.year, this.grade.CijferKolom.Id);
+
+            this.grade = {
+                ...this.grade,
+                CijferKolom: { ...this.grade.CijferKolom, ...gradeColumnInfo }
+            }
+
+            this.#drawDialogContents();
+        }
+
+        this.#progressBar.dataset.visible = 'false';
+    }
+
+    #addRowToTable(parentElement, label, value) {
+        let row = createElement('tr', parentElement);
+        createElement('td', row, { innerText: label || '' });
+        return createElement('td', row, { innerText: value || '' });
     }
 }
