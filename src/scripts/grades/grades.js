@@ -25,46 +25,54 @@ async function gradeOverview() {
     if (!syncedStorage['cc']) return;
 
     const contentContainer = await awaitElement('section.main>div');
-    const gradeContainer = contentContainer.parentElement.parentElement;
+    const mainSection = contentContainer.parentElement;
+    const gradeContainer = mainSection.parentElement;
 
-    const buttons = document.body.createChildElement('div', { id: 'st-grades-button-wrapper', class: 'st-button-wrapper' });
-    const yearFilter = contentContainer.parentElement.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-year-filter' });
+    mainSection.setAttribute('style', 'display: grid; grid-template-rows: auto 1fr; grid-template-columns: 1fr auto; padding-bottom: 0 !important;');
+    contentContainer.setAttribute('style', 'grid-column: 1; grid-row: 2; border-top-left-radius: 0; border-top-right-radius: 0;');
+    gradeContainer.style.paddingRight = '20px';
+    (await awaitElement('aside')).style.display = 'none';
+
+    const toolbar = contentContainer.createSiblingElement('div', { id: 'st-grades-toolbar' });
+    const yearFilter = toolbar.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-horizontal-icon-radio' });
+    const tools = toolbar.createChildElement('div', { class: 'st-horizontal-icon-radio' });
 
     const progressBar = gradeContainer.createChildElement('div', { class: 'st-progress-bar' });
     progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
-    (await awaitElement('aside')).style.display = 'none';
-    gradeContainer.style.paddingRight = '20px';
+    const statisticsPane = new GradeStatisticsPane(mainSection);
+    const calculatorPane = new GradeCalculatorPane(mainSection);
 
-    // allowAsideResize()
-    gradeCalculator(buttons)
-    // gradeStatistics()
+    tools.createChildElement('button', { id: 'st-grade-backup-button', class: 'icon', title: i18n('cb.title'), innerText: '' })
+        .addEventListener('click', () => new GradeBackupDialog().show());
 
-    const gradeBackupButton = buttons.createChildElement('button', { id: 'st-grade-backup-button', class: 'st-button', innerText: i18n('cb.title'), 'data-icon': '' })
-    gradeBackupButton.addEventListener('click', async () => {
-        new GradeBackupDialog().show()
-    })
+    const csLabel = tools.createChildElement('label', { id: 'st-grade-statistics-button', class: 'st-checkbox-label icon', title: i18n('cs.title'), innerText: '' })
+    const csInput = csLabel.createChildElement('input', { id: 'st-grade-statistics-input', class: 'st-checkbox-input', type: 'checkbox' })
+    csInput.addEventListener('change', () => {
+        statisticsPane.toggle(csInput.checked);
+        if (ccInput.checked) ccInput.click();
+        contentContainer.style.borderBottomRightRadius = csInput.checked ? '0' : 'var(--st-border-radius)';
+    });
+
+    const ccLabel = tools.createChildElement('label', { id: 'st-grade-calculator-button', class: 'st-checkbox-label icon', title: i18n('cc.title'), innerText: '' })
+    const ccInput = ccLabel.createChildElement('input', { id: 'st-grade-calculator-input', class: 'st-checkbox-input', type: 'checkbox' })
+    ccInput.addEventListener('change', () => {
+        calculatorPane.toggle(ccInput.checked);
+        if (csInput.checked) csInput.click();
+        contentContainer.style.borderBottomRightRadius = ccInput.checked ? '0' : 'var(--st-border-radius)';
+    });
 
     const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 
     years.forEach(async (year, i) => {
-        let label = yearFilter.createChildElement('label', { class: 'st-checkbox-label', for: `st-year-filter-year${year.id}`, innerText: year.studie.code.match(/\d/gi)?.[0], title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` });
+        let label = yearFilter.createChildElement('label', {
+            class: 'st-checkbox-label',
+            for: `st-year-filter-year${year.id}`,
+            innerText: year.studie.code.match(/\d/gi)?.[0],
+            title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`
+        });
         if (!(label.innerText?.length > 0)) label.innerText = i + 1;
         let input = label.createChildElement('input', { id: `st-year-filter-year${year.id}`, class: 'st-checkbox-input', name: 'st-year-filter', type: 'radio' });
-
-        if (i === years.length - 1) {
-            input.checked = true;
-
-            collectedGrades.push({
-                yearId: year.id,
-                grades: await magisterApi.gradesForYear(year)
-            });
-            drawGradeTable(collectedGrades[collectedGrades.length - 1].grades, contentContainer, async (grade, event) => {
-                const dialog = new GradeDetailDialog(grade, year);
-                dialog.show();
-                grade = dialog.grade;
-            });
-        };
 
         input.addEventListener('change', async () => {
             progressBar.dataset.visible = 'true';
@@ -82,6 +90,10 @@ async function gradeOverview() {
             });
             progressBar.dataset.visible = 'false';
         });
+
+        if (i === years.length - 1) {
+            input.click();
+        };
     });
 
     progressBar.dataset.visible = 'false';

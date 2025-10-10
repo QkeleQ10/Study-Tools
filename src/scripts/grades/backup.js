@@ -179,11 +179,10 @@ class GradeBackupDialog extends Dialog {
 
         const label = document.getElementById('st-grades-year-filter')
             .createChildElement('label', {
-                class: 'st-checkbox-label',
+                class: 'st-checkbox-label icon',
                 for: `st-year-filter-yearimport${new Date(date).getTime()}`,
-                innerText: '',
-                title: `Back-up van ${year.studie.code} (${year.lesperiode.code}) ${new Date(date).toLocaleString()}`,
-                style: 'font-family: "Font Awesome 6 Pro"'
+                innerText: '',
+                title: `Back-up van ${year.studie.code} (${year.lesperiode.code}) ${new Date(date).toLocaleString()}`
             });
         const input = label.createChildElement('input', { id: `st-year-filter-yearimport${new Date(date).getTime()}`, class: 'st-checkbox-input', name: 'st-year-filter', type: 'radio' });
 

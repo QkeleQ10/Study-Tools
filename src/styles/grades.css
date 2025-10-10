@@ -427,13 +427,11 @@
 }
 
 .st-grade-table {
-    margin-right: 200px;
 
     &,
     th,
     td {
         position: relative;
-        border: var(--st-border);
         border-collapse: collapse;
     }
 
@@ -535,6 +533,21 @@
                 color: var(--st-foreground-insignificant);
             }
         }
+    }
+
+    td,
+    th {
+        border: var(--st-border);
+    }
+
+    tr:first-child td,
+    tr:first-child th {
+        border-top: none;
+    }
+
+    tr td:first-child,
+    tr th:first-child {
+        border-left: none;
     }
 }
 
@@ -772,50 +785,29 @@
     text-overflow: ellipsis;
 }
 
-#st-grades-year-filter {
-    position: absolute;
-    top: 125px;
-    right: 0px;
-    padding: 8px;
-    background-color: var(--st-background-overlay);
-    border: var(--st-border);
-    border-top-right-radius: var(--st-border-radius);
-    border-bottom-left-radius: var(--st-border-radius);
-    z-index: 10;
-}
+/* NEW */
 
-.st-year-filter,
-#st-cs-subject-filter {
+#st-grades-toolbar {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    justify-content: space-between;
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-bottom: none;
+    border-top-left-radius: var(--st-border-radius);
+    border-top-right-radius: var(--st-border-radius);
+    grid-row: 1;
+    grid-column: 1 / -1;
+    padding: 8px;
+}
+
+.st-horizontal-icon-radio {
+    display: flex;
+    gap: 4px;
     position: relative;
-    margin-bottom: 4px;
 }
 
-#st-cs-year-filter-all,
-#st-cs-subject-filter-all {
-    margin-left: auto;
-    translate: 0 6px;
-}
-
-#st-cs-subject-filter:before {
-    content: "Leerjaren";
-    position: absolute;
-    top: -28px;
-    font: 500 14px var(--st-font-family-primary);
-}
-
-#st-cs-year-filter-heading {
-    font: 500 14px var(--st-font-family-primary);
-}
-
-.st-year-filter {
-    flex-direction: row;
-    gap: 2px;
-}
-
-.st-year-filter .st-checkbox-label {
+.st-horizontal-icon-radio .st-checkbox-label,
+.st-horizontal-icon-radio button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -828,17 +820,50 @@
     border-radius: calc(var(--st-border-radius) * 0.75);
     font-weight: 600;
     font-size: 13.5px;
-    transition: background-color 200ms, color 200ms;
+    cursor: pointer;
+    transition: background-color 200ms, color 200ms, margin-bottom 200ms, padding-bottom 200ms, height 200ms, border-radius 200ms;
+
+    &:focus-visible {
+        outline: 2px solid var(--st-foreground-accent);
+    }
+
+    &.icon {
+        font-family: 'Font Awesome 6 Pro';
+        font-weight: 600;
+        font-size: 16px;
+    }
 }
 
-.st-year-filter .st-checkbox-label:before {
+.st-horizontal-icon-radio .st-checkbox-label:before {
     display: none;
 }
 
-.st-year-filter .st-checkbox-label:has(.st-checkbox-input:checked) {
+.st-horizontal-icon-radio .st-checkbox-label:has(.st-checkbox-input:checked) {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
+
+    margin-bottom: -8px;
+    padding-bottom: 8px;
+    height: 40px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
+
+.st-pane {
+    position: relative;
+    min-width: 300px;
+    max-width: 900px;
+    padding: 16px;
+    border: var(--st-border);
+    border-left: none;
+    border-bottom-right-radius: var(--st-border-radius);
+
+    &.st-hidden {
+        display: none;
+    }
+}
+
+/* OLD */
 
 #st-cs-subject-filter:before {
     content: "Vakken";
