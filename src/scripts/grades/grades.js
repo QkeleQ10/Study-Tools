@@ -1,5 +1,38 @@
+class Pane {
+    parentElement;
+    element;
+    progressBar;
+
+    constructor(parentElement) {
+        this.parentElement = parentElement;
+
+        this.element = this.parentElement.createChildElement('div', { class: 'st-pane st-hidden' });
+
+        this.progressBar = this.element.createChildElement('div', {
+            class: 'st-progress-bar', dataset: { visible: 'false' },
+        });
+        createElement('div', this.progressBar, {
+            class: 'st-progress-bar-value indeterminate',
+        });
+    }
+
+    show() {
+        this.element.classList.remove('st-hidden');
+    }
+
+    hide() {
+        this.element.classList.add('st-hidden');
+    }
+
+    toggle(force) {
+        if (!force) this.hide();
+        else this.show();
+    }
+}
+
 let statsGrades = [],
     collectedGrades = [],
+    currentGradeTable = null,
     displayStatistics
 
 // Run at start and when the URL changes
@@ -40,17 +73,27 @@ async function gradeOverview() {
     const progressBar = gradeContainer.createChildElement('div', { class: 'st-progress-bar' });
     progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
+    const backupPane = new GradeBackupPane(mainSection);
     const statisticsPane = new GradeStatisticsPane(mainSection);
     const calculatorPane = new GradeCalculatorPane(mainSection);
 
-    tools.createChildElement('button', { id: 'st-grade-backup-button', class: 'icon', title: i18n('cb.title'), innerText: '' })
-        .addEventListener('click', () => new GradeBackupDialog().show());
+    const cbLabel = tools.createChildElement('label', { id: 'st-grade-backup-button', class: 'st-checkbox-label icon', title: i18n('cb.title'), innerText: '' });
+    const cbInput = cbLabel.createChildElement('input', { id: 'st-grade-backup-input', class: 'st-checkbox-input', type: 'checkbox' });
+    cbInput.addEventListener('change', () => {
+        backupPane.toggle(cbInput.checked);
+        // close other panes
+        if (csInput.checked) csInput.click();
+        if (ccInput.checked) ccInput.click();
+        contentContainer.style.borderBottomRightRadius = cbInput.checked ? '0' : 'var(--st-border-radius)';
+    });
 
     const csLabel = tools.createChildElement('label', { id: 'st-grade-statistics-button', class: 'st-checkbox-label icon', title: i18n('cs.title'), innerText: '' })
     const csInput = csLabel.createChildElement('input', { id: 'st-grade-statistics-input', class: 'st-checkbox-input', type: 'checkbox' })
     csInput.addEventListener('change', () => {
         statisticsPane.toggle(csInput.checked);
+        // close other panes
         if (ccInput.checked) ccInput.click();
+        if (cbInput.checked) cbInput.click();
         contentContainer.style.borderBottomRightRadius = csInput.checked ? '0' : 'var(--st-border-radius)';
     });
 
@@ -58,7 +101,9 @@ async function gradeOverview() {
     const ccInput = ccLabel.createChildElement('input', { id: 'st-grade-calculator-input', class: 'st-checkbox-input', type: 'checkbox' })
     ccInput.addEventListener('change', () => {
         calculatorPane.toggle(ccInput.checked);
+        // close other panes
         if (csInput.checked) csInput.click();
+        if (cbInput.checked) cbInput.click();
         contentContainer.style.borderBottomRightRadius = ccInput.checked ? '0' : 'var(--st-border-radius)';
     });
 
@@ -89,7 +134,7 @@ async function gradeOverview() {
                 grade = dialog.grade;
             });
             progressBar.dataset.visible = 'false';
-        });
+        }, year);
 
         if (i === years.length - 1) {
             input.click();
@@ -522,7 +567,7 @@ async function gradeCalculator(buttonWrapper) {
 
 }
 
-function drawGradeTable(grades, parentElement, gradeClicked) {
+function drawGradeTable(grades, parentElement, gradeClicked, year = null) {
     const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
 
     const sortedColumns = filteredGrades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer));
@@ -608,6 +653,8 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
             }
         }
     }
+
+    currentGradeTable = { grades, year };
 }
 
 // Grade statistics

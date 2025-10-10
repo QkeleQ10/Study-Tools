@@ -1,37 +1,33 @@
-
-
-class GradeBackupDialog extends Dialog {
+class GradeBackupPane extends Pane {
     years = [];
-    busy = false;
-    #progressBar;
-    #column1;
-    #column2;
+    #busy = false;
+    #div1;
+    #div2;
+    #initialised = false;
 
-    constructor() {
-        super();
+    constructor(parentElement) {
+        super(parentElement);
 
-        this.body.classList.add('st-grade-backup-dialog');
+        this.element.id = 'st-grade-backup-pane';
 
-        this.#column1 = createElement('div', this.body, { class: 'st-dialog-column' });
-        this.#column1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
+        this.#div1 = this.element.createChildElement('div', {class: 'st-div'});
+        this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
 
-        this.#column2 = createElement('div', this.body, { class: 'st-dialog-column' });
-        this.#column2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
+        this.#div2 = this.element.createChildElement('div', {class: 'st-div'});
+        this.#div2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
+    }
 
-        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
-        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
-
-        this.#initialise();
+    show() {
+        if (!this.#initialised) this.#initialise();
+        super.show();
     }
 
     async #initialise() {
-        const importButton = this.#column2.createChildElement('button', { id: 'st-grade-backup-import', class: 'st-button', innerText: i18n('cb.browse'), 'data-icon': '' });
-        this.#column2.createChildElement('p', { innerText: i18n('cb.importInfo'), style: 'max-width:200px;text-wrap:balance;font-size:smaller;text-align:center' });
-        const input = this.#column2.createChildElement('input', { type: 'file', accept: '.json', style: 'display:none' });
-        importButton.addEventListener('click', () => {
-            if (this.busy) return;
-            input.click();
-        });
+        const exportButton = this.#div1.createChildElement('button', { id: 'st-grade-backup-export', class: 'st-button hero', innerText: i18n('cb.exportThis'), 'data-icon': '' });
+
+        const importButton = this.#div2.createChildElement('button', { id: 'st-grade-backup-import', class: 'st-button hero', innerText: i18n('cb.browse'), 'data-icon': '' });
+        const input = this.#div2.createChildElement('input', { type: 'file', accept: '.json', style: 'display:none' });
+        importButton.addEventListener('click', () => input.click());
         input.addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -47,29 +43,30 @@ class GradeBackupDialog extends Dialog {
         years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
 
         years.forEach((year, i, a) => {
-            this.#column1.createChildElement('button', {
+            this.#div1.createChildElement('button', {
                 class: i === a.length - 1 ? 'st-button' : 'st-button secondary',
                 innerText: `${year.studie.code} (lesperiode ${year.lesperiode.code}, ${year.groep.omschrijving || year.groep.code})`,
             })
                 .addEventListener('click', async () => {
-                    if (this.busy) return;
+                    if (this.#busy) return;
                     this.#exportGrades(year);
                 });
         })
 
-        this.#progressBar.dataset.visible = 'false';
+        this.#initialised = true;
+        this.progressBar.dataset.visible = 'false';
     }
 
     async #exportGrades(year) {
         return new Promise(async (resolve, reject) => {
             try {
 
-                this.busy = true;
-                this.#column1.classList.add('st-disabled');
+                this.#busy = true;
+                this.#div1.classList.add('st-disabled');
 
                 const grades = await this.#gatherGrades(year);
 
-                this.#progressBar.dataset.visible = 'true';
+                this.progressBar.dataset.visible = 'true';
 
                 let uri = `data:application/json;base64,${window.btoa(unescape(encodeURIComponent(JSON.stringify(
                     {
@@ -87,20 +84,20 @@ class GradeBackupDialog extends Dialog {
                 a.remove();
 
                 setTimeout(() => {
-                    this.#progressBar.dataset.visible = 'false';
+                    this.progressBar.dataset.visible = 'false';
                 }, 500);
 
                 new Dialog({ innerText: i18n('cb.done') }).show();
 
                 setTimeout(() => {
-                    this.#column1.classList.remove('st-disabled');
+                    this.#div1.classList.remove('st-disabled');
                     this.busy = false;
                     resolve();
                 }, 10000)
 
             } catch (error) {
                 reject(error);
-                this.close();
+                // this.close();
                 new Dialog({ innerText: i18n('cb.error') }).show();
             }
         });
@@ -109,13 +106,13 @@ class GradeBackupDialog extends Dialog {
     async #gatherGrades(year) {
         return new Promise(async (resolve, reject) => {
             try {
-                this.#progressBar.firstElementChild.classList.remove('indeterminate');
-                this.#progressBar.dataset.visible = 'true';
+                this.progressBar.firstElementChild.classList.remove('indeterminate');
+                this.progressBar.dataset.visible = 'true';
 
                 const grades = (await magisterApi.gradesForYear(year)).filter(grade => grade.CijferKolom?.Id > 0);
 
                 for (let i = 0; i < grades.length; i++) {
-                    this.#progressBar.firstElementChild.style.width = `${(i / grades.length) * 100}%`;
+                    this.progressBar.firstElementChild.style.width = `${(i / grades.length) * 100}%`;
 
                     await new Promise((resolve) => {
                         let delay = 5;
@@ -138,9 +135,9 @@ class GradeBackupDialog extends Dialog {
                     }
                 }
 
-                this.#progressBar.firstElementChild.removeAttribute('style');
-                this.#progressBar.firstElementChild.classList.add('indeterminate');
-                this.#progressBar.dataset.visible = 'false';
+                this.progressBar.firstElementChild.removeAttribute('style');
+                this.progressBar.firstElementChild.classList.add('indeterminate');
+                this.progressBar.dataset.visible = 'false';
 
                 resolve(grades);
             } catch (error) {
@@ -160,7 +157,7 @@ class GradeBackupDialog extends Dialog {
             return;
         }
 
-        this.close();
+        // this.close();
 
         const aside = await awaitElement('aside'), container = await awaitElement('.container[id$=container]'), asideResizer = document.querySelector('#st-aside-resize');
         aside.setAttribute('style', 'display:none;width:0px;');

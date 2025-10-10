@@ -1,35 +1,3 @@
-class Pane {
-    parentElement;
-    element;
-    progressBar;
-
-    constructor(parentElement) {
-        this.parentElement = parentElement;
-
-        this.element = this.parentElement.createChildElement('div', { class: 'st-pane st-hidden' });
-
-        this.progressBar = this.element.createChildElement('div', {
-            class: 'st-progress-bar', dataset: { visible: 'false' },
-        });
-        createElement('div', this.progressBar, {
-            class: 'st-progress-bar-value indeterminate',
-        });
-    }
-
-    show() {
-        this.element.classList.remove('st-hidden');
-    }
-
-    hide() {
-        this.element.classList.add('st-hidden');
-    }
-
-    toggle(force) {
-        if (!force) this.hide();
-        else this.show();
-    }
-}
-
 class GradeStatisticsPane extends Pane {
     #initialised = false;
 

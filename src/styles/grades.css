@@ -386,16 +386,10 @@
 }
 
 /*  Grade Backup  */
-.st-grade-backup-dialog {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 32px;
-    margin: -24px;
-    padding: 24px;
-    border-radius: var(--st-border-radius);
-    overflow-y: auto;
+#st-grade-backup-pane {
+    max-width: 300px;
 
-    .st-dialog-column:first-of-type {
+    .st-div:not(:last-child) {
         &.st-disabled {
             opacity: .5;
             pointer-events: none;
@@ -412,18 +406,21 @@
         }
     }
 
-    #st-grade-backup-import {
+    .st-button.hero {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         height: 75px;
         width: 100%;
-        margin-bottom: 16px;
 
         background: linear-gradient(35deg, hsl(from var(--st-accent-primary-dark) h s calc(l - 5)), hsl(from var(--st-accent-primary-dark) h s calc(l + 10)));
         box-shadow: 2px 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     }
+
+    /* #st-grade-backup-import {
+        margin-bottom: 16px;
+    } */
 }
 
 .st-grade-table {
