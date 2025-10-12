@@ -10,10 +10,10 @@ class GradeBackupPane extends Pane {
 
         this.element.id = 'st-grade-backup-pane';
 
-        this.#div1 = this.element.createChildElement('div', {class: 'st-div'});
+        this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
         this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
 
-        this.#div2 = this.element.createChildElement('div', {class: 'st-div'});
+        this.#div2 = this.element.createChildElement('div', { class: 'st-div' });
         this.#div2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
     }
 
@@ -164,15 +164,13 @@ class GradeBackupPane extends Pane {
         container.style.paddingRight = '20px';
         if (asideResizer) asideResizer.setAttribute('style', `display:none`);
 
-        if (collectedGrades.find(t => t.date?.getTime() === new Date(date).getTime())) {
+        if (gradeTables.find(t => t.date?.getTime() === new Date(date).getTime())) {
             notify('snackbar', "Je hebt deze back-up al geïmporteerd.");
             return;
         }
 
-        collectedGrades.push({
-            date: new Date(date),
-            grades
-        });
+        const newGradeTable = new GradeTable(grades, { backupDate: new Date(date), backupYear: year });
+        gradeTables.push(newGradeTable);
 
         const label = document.getElementById('st-grades-year-filter')
             .createChildElement('label', {
@@ -185,19 +183,15 @@ class GradeBackupPane extends Pane {
 
         input.checked = true;
 
-        const contentContainer = await awaitElement('section.main>div');
-
-        drawGradeTable(grades, contentContainer, (grade, event) => {
-            const dialog = new GradeDetailDialog(grade);
-            dialog.show();
-        });
-
         input.addEventListener('change', () => {
             if (!input.checked) return;
-            drawGradeTable(grades, contentContainer, (grade, event) => {
-                const dialog = new GradeDetailDialog(grade);
-                dialog.show();
-            });
+            currentGradeTable?.destroy();
+            currentGradeTable = newGradeTable;
+            currentGradeTable.draw();
         });
+
+        currentGradeTable?.destroy();
+        currentGradeTable = newGradeTable;
+        currentGradeTable.draw();
     }
 }

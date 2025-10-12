@@ -31,7 +31,7 @@ class Pane {
 }
 
 let statsGrades = [],
-    collectedGrades = [],
+    gradeTables = [],
     currentGradeTable = null,
     displayStatistics
 
@@ -65,6 +65,7 @@ async function gradeOverview() {
     contentContainer.setAttribute('style', 'grid-column: 1; grid-row: 2; border-top-left-radius: 0; border-top-right-radius: 0;');
     gradeContainer.style.paddingRight = '20px';
     (await awaitElement('aside')).style.display = 'none';
+    contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
 
     const toolbar = contentContainer.createSiblingElement('div', { id: 'st-grades-toolbar' });
     const yearFilter = toolbar.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-horizontal-icon-radio' });
@@ -122,17 +123,14 @@ async function gradeOverview() {
         input.addEventListener('change', async () => {
             progressBar.dataset.visible = 'true';
             if (!input.checked) return;
-            if (!collectedGrades.find(t => t.yearId === year.id)) {
-                collectedGrades.push({
-                    yearId: year.id,
-                    grades: await magisterApi.gradesForYear(year)
-                });
+            let gradeTable = gradeTables.find(t => t.identifier.year?.id === year.id);
+            if (!gradeTable) {
+                gradeTable = new GradeTable(await magisterApi.gradesForYear(year), { year });
+                gradeTables.push(gradeTable);
             }
-            drawGradeTable(collectedGrades.find(t => t.yearId === year.id).grades, contentContainer, async (grade, event) => {
-                const dialog = new GradeDetailDialog(grade, year);
-                dialog.show();
-                grade = dialog.grade;
-            });
+            currentGradeTable?.destroy();
+            currentGradeTable = gradeTable;
+            currentGradeTable.draw();
             progressBar.dataset.visible = 'false';
         }, year);
 
@@ -142,43 +140,6 @@ async function gradeOverview() {
     });
 
     progressBar.dataset.visible = 'false';
-}
-
-async function allowAsideResize() {
-    // Allow resizing aside
-    let m_pos,
-        asidePreferenceWidth = 294,
-        asideDisplayWidth = 294
-
-    const gradeContainer = await awaitElement('#cijfers-container'),
-        aside = await awaitElement('#cijfers-container > aside'),
-        asideResizer = element('div', 'st-aside-resize', document.body, { innerText: '' })
-
-    function resizerMoved(e) {
-        let dx = m_pos - e.x
-        m_pos = e.x
-        asidePreferenceWidth += dx
-
-        setAsideWidth(asidePreferenceWidth);
-    }
-
-    function setAsideWidth(width) {
-        asideDisplayWidth = Math.max(Math.min(600, width), 294)
-        if (width < 100) asideDisplayWidth = 0
-
-        aside.style.width = (asideDisplayWidth) + 'px'
-        gradeContainer.style.paddingRight = (20 + asideDisplayWidth) + 'px'
-        asideResizer.style.right = (asideDisplayWidth + 8) + 'px'
-    }
-
-    asideResizer.addEventListener("mousedown", function (e) {
-        m_pos = e.x
-        document.addEventListener("mousemove", resizerMoved, false)
-    }, false)
-    document.addEventListener("mouseup", function () {
-        asidePreferenceWidth = asideDisplayWidth
-        document.removeEventListener("mousemove", resizerMoved, false)
-    }, false)
 }
 
 // Grade calculator
@@ -567,94 +528,121 @@ async function gradeCalculator(buttonWrapper) {
 
 }
 
-function drawGradeTable(grades, parentElement, gradeClicked, year = null) {
-    const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
+class GradeTable {
+    grades = [];
+    identifier = {};
+    date = null;
+    #parentElement = null;
+    #table = null;
 
-    const sortedColumns = filteredGrades.sort((a, b) => a.CijferPeriode?.VolgNummer - b.CijferPeriode?.VolgNummer || Number(a.CijferKolom?.KolomVolgNummer) - Number(b.CijferKolom?.KolomVolgNummer));
-    const gradePeriods = [...new Set(sortedColumns.map(g => g.CijferPeriode?.Naam))];
-    const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.KolomNummer))];
-    const gradeSubjects = [...new Set(grades.sort((a, b) => a.Vak?.Volgnr - b.Vak?.Volgnr).map(g => g.Vak?.Omschrijving))];
-
-    const detailsPopover = createElement('div', document.body, { id: 'st-grade-details-popover', popover: 'auto' });
-    const detailsPopoverTable = detailsPopover.createChildElement('table', { class: 'st-grade-details-table' });
-    const detailsPopoverEntries = [].map((value, i) => {
-        const tr = createElement('tr', detailsPopoverTable)
-        const th = createElement('th', tr, { innerText: i18n(value) })
-        const td = createElement('td', tr)
-        return { th, td }
-    });
-
-    parentElement.querySelectorAll('.st-grade-table').forEach(e => e.remove());
-    parentElement.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
-
-    const table = parentElement.createChildElement('table', { class: 'st-grade-table' });
-
-    const headerRow1 = table.createChildElement('tr');
-    headerRow1.createChildElement('th');
-    for (const period of gradePeriods) {
-        const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.KolomNummer)).size;
-        headerRow1.createChildElement('th', { innerText: period, colSpan: numColumns });
+    constructor(grades = [], identifier = {}, parentElement = document.querySelector('section.main>div')) {
+        this.grades = grades;
+        this.identifier = identifier;
+        this.#parentElement = parentElement;
     }
 
-    const headerRow2 = table.createChildElement('tr');
-    headerRow2.createChildElement('th');
-    for (const column of gradeColumns) {
-        headerRow2.createChildElement('th', { innerText: column });
-    }
+    draw() {
+        const grades = this.grades;
 
-    for (const subject of gradeSubjects) {
-        const subjectRow = table.createChildElement('tr');
-        subjectRow.createChildElement('th', { innerText: subject });
+        const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
 
+        const sortedColumns = filteredGrades.sort((a, b) =>
+            (a.CijferPeriode?.VolgNummer ?? 0) - (b.CijferPeriode?.VolgNummer ?? 0) ||
+            Number(a.CijferKolom?.KolomVolgNummer ?? 0) - Number(b.CijferKolom?.KolomVolgNummer ?? 0)
+        );
+        const gradePeriods = [...new Set(sortedColumns.map(g => g.CijferPeriode?.Naam))];
+        const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.KolomNummer))];
+        const gradeSubjects = [...new Set(grades
+            .slice()
+            .sort((a, b) => (a.Vak?.Volgnr ?? 0) - (b.Vak?.Volgnr ?? 0))
+            .map(g => g.Vak?.Omschrijving))];
 
+        let detailsPopover = document.getElementById('st-grade-details-popover');
+        if (!detailsPopover) {
+            detailsPopover = createElement('div', document.body, { id: 'st-grade-details-popover', popover: 'auto' });
+            const detailsPopoverTable = detailsPopover.createChildElement('table', { class: 'st-grade-details-table' });
+            [].map((value, i) => {
+                const tr = createElement('tr', detailsPopoverTable);
+                const th = createElement('th', tr, { innerText: i18n(value) });
+                const td = createElement('td', tr);
+                return { th, td };
+            });
+        }
+
+        // Create and store table element
+        this.#table = this.#parentElement.createChildElement('table', { class: 'st-grade-table' });
+
+        const headerRow1 = this.#table.createChildElement('tr');
+        headerRow1.createChildElement('th');
+        for (const period of gradePeriods) {
+            const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.KolomNummer)).size;
+            headerRow1.createChildElement('th', { innerText: period, colSpan: numColumns });
+        }
+
+        const headerRow2 = this.#table.createChildElement('tr');
+        headerRow2.createChildElement('th');
         for (const column of gradeColumns) {
-            const grade = filteredGrades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
-            if (grade) {
-                subjectRow.createChildElement('td', {
-                    innerText: grade.CijferStr,
-                    classList: [
-                        ['insufficient', grade.IsVoldoende === false],
-                        ['inh', grade.Inhalen],
-                        ['vr', grade.Vrijstelling],
-                        ['not-counted', grade.TeltMee === false],
-                        [`column-type-${grade.CijferKolom?.KolomSoort}`],
-                        ['column-resit', grade.CijferKolom?.IsHerkansingKolom],
-                        ['column-teacher', grade.CijferKolom?.IsDocentKolom],
-                        ['column-underlying', grade.CijferKolom?.HeeftOnderliggendeKolommen],
-                        ['column-pta', grade.CijferKolom?.IsPTAKolom],
-                    ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]),
-                    title:
-                        `${new Date(grade.DatumIngevoerd)?.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' }) || '?'}
+            headerRow2.createChildElement('th', { innerText: column });
+        }
+
+        for (const subject of gradeSubjects) {
+            const subjectRow = this.#table.createChildElement('tr');
+            subjectRow.createChildElement('th', { innerText: subject });
+
+            for (const column of gradeColumns) {
+                let grade = filteredGrades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
+                if (grade) {
+                    subjectRow.createChildElement('td', {
+                        innerText: grade.CijferStr,
+                        classList: [
+                            ['insufficient', grade.IsVoldoende === false],
+                            ['inh', grade.Inhalen],
+                            ['vr', grade.Vrijstelling],
+                            ['not-counted', grade.TeltMee === false],
+                            [`column-type-${grade.CijferKolom?.KolomSoort}`],
+                            ['column-resit', grade.CijferKolom?.IsHerkansingKolom],
+                            ['column-teacher', grade.CijferKolom?.IsDocentKolom],
+                            ['column-underlying', grade.CijferKolom?.HeeftOnderliggendeKolommen],
+                            ['column-pta', grade.CijferKolom?.IsPTAKolom],
+                        ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]),
+                        title:
+                            `${new Date(grade.DatumIngevoerd)?.toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' }) || '?'}
 ${grade.CijferKolom?.KolomOmschrijving || '?'}
 ${grade.CijferKolom?.KolomNaam || '?'}, ${grade.CijferKolom?.KolomKop || '?'}
 
 ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.Weging}×)` : ''}
 
 ` + [
-                            ['onvoldoende', grade.IsVoldoende === false],
-                            ['inhalen', grade.Inhalen],
-                            ['vrijstelling', grade.Vrijstelling],
-                            ['telt niet mee', grade.TeltMee === false],
-                            ['gemiddeldekolom', grade.CijferKolom?.KolomSoort === 2],
-                            ['PTA-kolom', grade.CijferKolom?.IsPTAKolom],
-                            ['docentenkolom', grade.CijferKolom?.IsDocentKolom],
-                            ['heeft herkansing', grade.CijferKolom?.IsHerkansingKolom],
-                            ['heeft onderliggende kolommen', grade.CijferKolom?.HeeftOnderliggendeKolommen],
-                        ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]).join(', '),
-                    popovertarget: 'st-grade-details-popover',
-                })
-                    .addEventListener('click', (event) => {
-                        if (gradeClicked) {
-                            gradeClicked(grade, event);
-                        }
-                    });
-            } else {
-                subjectRow.createChildElement('td', { class: 'empty' });
+                                ['onvoldoende', grade.IsVoldoende === false],
+                                ['inhalen', grade.Inhalen],
+                                ['vrijstelling', grade.Vrijstelling],
+                                ['telt niet mee', grade.TeltMee === false],
+                                ['gemiddeldekolom', grade.CijferKolom?.KolomSoort === 2],
+                                ['PTA-kolom', grade.CijferKolom?.IsPTAKolom],
+                                ['docentenkolom', grade.CijferKolom?.IsDocentKolom],
+                                ['heeft herkansing', grade.CijferKolom?.IsHerkansingKolom],
+                                ['heeft onderliggende kolommen', grade.CijferKolom?.HeeftOnderliggendeKolommen],
+                            ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]).join(', '),
+                        popovertarget: 'st-grade-details-popover',
+                    })
+                        .addEventListener('click', async (event) => {
+                            const dialog = new GradeDetailDialog(grade, this.identifier.year);
+                            dialog.show();
+                            grade = dialog.grade;
+                        });
+                } else {
+                    subjectRow.createChildElement('td', { class: 'empty' });
+                }
             }
         }
     }
 
-    currentGradeTable = { grades, year };
+    destroy() {
+        if (this.#table) {
+            this.#table.remove();
+            this.#table = null;
+        }
+    }
 }
 
 // Grade statistics
