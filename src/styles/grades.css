@@ -390,37 +390,32 @@
     max-width: 300px;
 
     .st-div:not(:last-child) {
-        &.st-disabled {
-            opacity: .5;
-            pointer-events: none;
-        }
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: var(--st-border);
+    }
 
-        .st-button {
-            display: block;
-            margin-block: 8px;
-            width: 100%;
+    .st-div>p {
+        margin-top: 12px;
+        margin-bottom: 12px;
+    }
 
-            &::first-letter {
-                text-transform: uppercase;
-            }
-        }
+    .st-disabled {
+        opacity: .5;
+        pointer-events: none;
     }
 
     .st-button.hero {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 4px;
         height: 75px;
         width: 100%;
 
         background: linear-gradient(35deg, hsl(from var(--st-accent-primary-dark) h s calc(l - 5)), hsl(from var(--st-accent-primary-dark) h s calc(l + 10)));
         box-shadow: 2px 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     }
-
-    /* #st-grade-backup-import {
-        margin-bottom: 16px;
-    } */
 }
 
 .st-grade-table {

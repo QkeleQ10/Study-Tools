@@ -2,6 +2,14 @@ class Pane {
     parentElement;
     element;
     progressBar;
+    get isVisible() {
+        return !this.element.classList.contains('st-hidden');
+    }
+
+    set isVisible(visible) {
+        if (visible) this.show();
+        else this.hide();
+    }
 
     constructor(parentElement) {
         this.parentElement = parentElement;
@@ -54,6 +62,8 @@ async function gradeList() {
     saveToStorage('viewedGrades', new Date().getTime(), 'local')
 }
 
+let backupPane, statisticsPane, calculatorPane;
+
 async function gradeOverview() {
     if (!syncedStorage['cc']) return;
 
@@ -74,9 +84,9 @@ async function gradeOverview() {
     const progressBar = gradeContainer.createChildElement('div', { class: 'st-progress-bar' });
     progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
-    const backupPane = new GradeBackupPane(mainSection);
-    const statisticsPane = new GradeStatisticsPane(mainSection);
-    const calculatorPane = new GradeCalculatorPane(mainSection);
+    backupPane = new GradeBackupPane(mainSection);
+    statisticsPane = new GradeStatisticsPane(mainSection);
+    calculatorPane = new GradeCalculatorPane(mainSection);
 
     const cbLabel = tools.createChildElement('label', { id: 'st-grade-backup-button', class: 'st-checkbox-label icon', title: i18n('cb.title'), innerText: '' });
     const cbInput = cbLabel.createChildElement('input', { id: 'st-grade-backup-input', class: 'st-checkbox-input', type: 'checkbox' });
@@ -542,6 +552,8 @@ class GradeTable {
     }
 
     draw() {
+        if (backupPane.isVisible) backupPane.redraw();
+
         const grades = this.grades;
 
         const filteredGrades = grades.filter(g => g.CijferKolom?.Id);

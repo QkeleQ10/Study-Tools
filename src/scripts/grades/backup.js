@@ -9,22 +9,37 @@ class GradeBackupPane extends Pane {
         super(parentElement);
 
         this.element.id = 'st-grade-backup-pane';
-
         this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
-        this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
-
         this.#div2 = this.element.createChildElement('div', { class: 'st-div' });
-        this.#div2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
     }
 
     show() {
-        if (!this.#initialised) this.#initialise();
+        this.redraw();
         super.show();
     }
 
-    async #initialise() {
-        const exportButton = this.#div1.createChildElement('button', { id: 'st-grade-backup-export', class: 'st-button hero', innerText: i18n('cb.exportThis'), 'data-icon': '' });
+    redraw() {
+        this.#div1.innerHTML = '';
+        this.#div2.innerHTML = '';
 
+        this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.thisTable') });
+        this.#div2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
+
+        const year = currentGradeTable?.identifier?.year;
+        const { backupYear, backupDate } = currentGradeTable?.identifier || {};
+
+        if (currentGradeTable?.identifier?.year?.id) {
+            this.#div1.createChildElement('p', { innerText: i18n('cb.exportDesc', { study: year.studie.code, period: year.lesperiode.code }) });
+            const exportButton = this.#div1.createChildElement('button', { id: 'st-grade-backup-export', class: 'st-button hero', innerText: i18n('cb.createBackup'), 'data-icon': '' });
+            exportButton.addEventListener('click', async () => {
+                if (!currentGradeTable?.identifier?.year?.id) return;
+                await this.#exportGrades(currentGradeTable);
+            });
+        } else if (backupYear && backupDate) {
+            this.#div1.createChildElement('p', { innerText: i18n('cb.importedDesc', { study: backupYear.studie.code, period: backupYear.lesperiode.code, date: new Date(backupDate).toLocaleString(locale) }) });
+        }
+
+        this.#div2.createChildElement('p', { innerText: i18n('cb.importDesc') });
         const importButton = this.#div2.createChildElement('button', { id: 'st-grade-backup-import', class: 'st-button hero', innerText: i18n('cb.browse'), 'data-icon': '' });
         const input = this.#div2.createChildElement('input', { type: 'file', accept: '.json', style: 'display:none' });
         importButton.addEventListener('click', () => input.click());
@@ -40,31 +55,19 @@ class GradeBackupPane extends Pane {
             reader.readAsText(file);
         });
 
-        years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
-
-        years.forEach((year, i, a) => {
-            this.#div1.createChildElement('button', {
-                class: i === a.length - 1 ? 'st-button' : 'st-button secondary',
-                innerText: `${year.studie.code} (lesperiode ${year.lesperiode.code}, ${year.groep.omschrijving || year.groep.code})`,
-            })
-                .addEventListener('click', async () => {
-                    if (this.#busy) return;
-                    this.#exportGrades(year);
-                });
-        })
-
         this.#initialised = true;
         this.progressBar.dataset.visible = 'false';
+
     }
 
-    async #exportGrades(year) {
+    async #exportGrades(gradeTable) {
         return new Promise(async (resolve, reject) => {
             try {
-
                 this.#busy = true;
                 this.#div1.classList.add('st-disabled');
 
-                const grades = await this.#gatherGrades(year);
+                const grades = await this.#gatherGrades(gradeTable);
+                const year = gradeTable.identifier.year;
 
                 this.progressBar.dataset.visible = 'true';
 
@@ -103,13 +106,13 @@ class GradeBackupPane extends Pane {
         });
     }
 
-    async #gatherGrades(year) {
+    async #gatherGrades(gradeTable) {
         return new Promise(async (resolve, reject) => {
             try {
                 this.progressBar.firstElementChild.classList.remove('indeterminate');
                 this.progressBar.dataset.visible = 'true';
 
-                const grades = (await magisterApi.gradesForYear(year)).filter(grade => grade.CijferKolom?.Id > 0);
+                const grades = gradeTable.grades.filter(grade => grade.CijferKolom?.Id > 0);
 
                 for (let i = 0; i < grades.length; i++) {
                     this.progressBar.firstElementChild.style.width = `${(i / grades.length) * 100}%`;
@@ -127,7 +130,7 @@ class GradeBackupPane extends Pane {
                         setTimeout(resolve, delay);
                     });
 
-                    const gradeColumnInfo = await magisterApi.gradesColumnInfo(year, grades[i].CijferKolom.Id);
+                    const gradeColumnInfo = await magisterApi.gradesColumnInfo(gradeTable.identifier.year, grades[i].CijferKolom.Id);
 
                     grades[i] = {
                         ...grades[i],

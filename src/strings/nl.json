@@ -208,8 +208,12 @@
         "title": "Cijferback-up",
         "export": "Back-up maken",
         "import": "Back-up herstellen",
-        "exportThis": "Dit exporteren",
+        "createBackup": "Back-up maken",
+        "thisTable": "Deze cijferlijst",
         "browse": "Bladeren...",
+        "exportDesc": "Kies deze optie om een back-up te maken van {study} ({period}).",
+        "importDesc": "Heb je een back-upbestand? Kies dan deze optie.",
+        "importedDesc": "Je bekijkt een back-up van {study} ({period}) die is gemaakt op {date}.",
         "error": "Er is een fout opgetreden bij het maken van de back-up. Wacht een minuutje en probeer het opnieuw.",
         "avoidingRateLimit": "Er wordt een paar seconden gewacht, zodat Magister de verzoeken niet blokkeert. Even geduld...",
         "done": "Back-up voltooid! Controleer je downloads."
