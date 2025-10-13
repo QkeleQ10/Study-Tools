@@ -14,7 +14,7 @@ class Pane {
     constructor(parentElement) {
         this.parentElement = parentElement;
 
-        this.element = this.parentElement.createChildElement('div', { class: 'st-pane st-hidden' });
+        this.element = this.parentElement.createChildElement('div', { class: 'st-pane st-hidden', style: 'width: 300px;' });
 
         this.progressBar = this.element.createChildElement('div', {
             class: 'st-progress-bar', dataset: { visible: 'false' },
@@ -552,8 +552,6 @@ class GradeTable {
     }
 
     draw() {
-        if (backupPane.isVisible) backupPane.redraw();
-
         const grades = this.grades;
 
         const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
@@ -582,7 +580,7 @@ class GradeTable {
         }
 
         // Create and store table element
-        this.#table = this.#parentElement.createChildElement('table', { class: 'st-grade-table' });
+        this.#table = this.#parentElement.createChildElement('table', { class: 'st st-grade-table' });
 
         const headerRow1 = this.#table.createChildElement('tr');
         headerRow1.createChildElement('th');
@@ -599,12 +597,22 @@ class GradeTable {
 
         for (const subject of gradeSubjects) {
             const subjectRow = this.#table.createChildElement('tr');
-            subjectRow.createChildElement('th', { innerText: subject });
+            subjectRow.createChildElement('th', { innerText: subject })
+                .addEventListener('click', () => {
+                    if (calculatorPane.isVisible) {
+                        const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2);
+                        for (const grade of subjectGrades) {
+                            calculatorPane.toggleGrade(grade, this.identifier.year);
+                        }
+                        return;
+                    }
+                });
 
             for (const column of gradeColumns) {
                 let grade = filteredGrades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
                 if (grade) {
-                    subjectRow.createChildElement('td', {
+                    const td = subjectRow.createChildElement('td', {
+                        id: grade.CijferId,
                         innerText: grade.CijferStr,
                         classList: [
                             ['insufficient', grade.IsVoldoende === false],
@@ -636,17 +644,30 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
                                 ['heeft onderliggende kolommen', grade.CijferKolom?.HeeftOnderliggendeKolommen],
                             ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]).join(', '),
                         popovertarget: 'st-grade-details-popover',
-                    })
-                        .addEventListener('click', async (event) => {
-                            const dialog = new GradeDetailDialog(grade, this.identifier.year);
-                            dialog.show();
-                            grade = dialog.grade;
-                        });
+                    });
+                    td.addEventListener('click', () => {
+                        if (calculatorPane.isVisible) {
+                            calculatorPane.toggleGrade(grade, this.identifier.year);
+                            return;
+                        }
+                        const dialog = new GradeDetailDialog(grade, this.identifier.year);
+                        dialog.show();
+                        grade = dialog.grade;
+                    });
+                    td.addEventListener('auxclick', event => {
+                        event.preventDefault();
+                        const dialog = new GradeDetailDialog(grade, this.identifier.year);
+                        dialog.show();
+                        grade = dialog.grade;
+                    });
                 } else {
                     subjectRow.createChildElement('td', { class: 'empty' });
                 }
             }
         }
+
+        if (backupPane.isVisible) backupPane.redraw();
+        if (calculatorPane.isVisible) calculatorPane.redraw();
     }
 
     destroy() {

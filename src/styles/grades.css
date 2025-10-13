@@ -396,8 +396,8 @@
     }
 
     .st-div>p {
-        margin-top: 12px;
-        margin-bottom: 12px;
+        margin-top: 8px;
+        margin-bottom: 8px;
     }
 
     .st-disabled {
@@ -465,6 +465,7 @@
             padding: 8px;
             text-wrap: nowrap;
             border-right-width: 2px;
+            cursor: pointer;
         }
 
         td:not(:first-child) {
@@ -846,6 +847,7 @@
     min-width: 300px;
     max-width: 900px;
     padding: 16px;
+    background-color: var(--st-background-secondary);
     border: var(--st-border);
     border-left: none;
     border-bottom-right-radius: var(--st-border-radius);
@@ -853,6 +855,11 @@
     &.st-hidden {
         display: none;
     }
+}
+
+.st-grade-calculator-selected {
+    outline: 2px solid var(--st-foreground-accent);
+    outline-offset: -2px;
 }
 
 /* OLD */

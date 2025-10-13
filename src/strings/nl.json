@@ -202,7 +202,8 @@
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
     },
     "cc": {
-        "title": "Cijfercalculator"
+        "title": "Cijfercalculator",
+        "emptyDesc": "Klik op een vak of selecteer individuele cijfers om te beginnen."
     },
     "cb": {
         "title": "Cijferback-up",
