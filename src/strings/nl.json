@@ -203,7 +203,12 @@
     },
     "cc": {
         "title": "Cijfercalculator",
-        "emptyDesc": "Klik op een vak of selecteer individuele cijfers om te beginnen."
+        "emptyDesc": "Klik op een vak of selecteer individuele cijfers om te beginnen.",
+        "gradesInCalculation": "Cijfers in berekening",
+        "addedManually": "Handmatig ingevoerd",
+        "weightedAverage": "Gewogen gemiddelde",
+        "median": "Mediaan",
+        "totalWeight": "Gewicht"
     },
     "cb": {
         "title": "Cijferback-up",

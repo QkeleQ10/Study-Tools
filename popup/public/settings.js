@@ -276,6 +276,16 @@ export default [
         id: "grades",
         settings: [
             {
+                id: "c-minimum",
+                title: "Ondergrens cijfers",
+                type: "Slider",
+                default: 1.0,
+                decimals: 1,
+                min: 0,
+                max: 100,
+                step: 0.1,
+            },
+            {
                 id: "suf-threshold",
                 title: "Voldoendegrens",
                 type: "Slider",

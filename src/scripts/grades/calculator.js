@@ -1,13 +1,11 @@
 class GradeCalculatorPane extends Pane {
-    #div1;
     selectedGrades = [];
+    futureWeight = null;
 
     constructor(parentElement) {
         super(parentElement);
         this.element.id = 'st-grade-calculator-pane';
 
-        this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.title') });
-        this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
     }
 
     show() {
@@ -23,20 +21,36 @@ class GradeCalculatorPane extends Pane {
     async redraw() {
         this.progressBar.dataset.visible = 'true';
 
-        this.#div1.innerHTML = '';
+        this.element.innerHTML = '';
         document.querySelectorAll('.st-grade-calculator-selected').forEach(elem => elem.classList.remove('st-grade-calculator-selected'));
 
+        // === EMPTY ===
+
         if (this.selectedGrades.length === 0) {
-            this.#div1.createChildElement('p', { innerText: i18n('cc.emptyDesc') });
+            this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.title') });
+            this.element.createChildElement('p', { innerText: i18n('cc.emptyDesc') });
             this.progressBar.dataset.visible = 'false';
             return;
         }
 
-        for (const { id, result, weight, column, title } of this.selectedGrades) {
-            this.#div1.createChildElement('p', { innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}×) — ${column}, ${title}\n` });
+        // === ADDED GRADES ===
+
+        this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.gradesInCalculation') + ` (${this.selectedGrades.length})` });
+
+        for (const { id, result, weight, column, title } of this.selectedGrades.sort((a, b) => a.index - b.index)) {
+            this.element.createChildElement('p', {
+                innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ` + (column && title ? `${column}, ${title}` : i18n('cc.addedManually')),
+                title: i18n('remove'),
+            })
+                .addEventListener('click', () => {
+                    this.selectedGrades = this.selectedGrades.filter(g => g.id !== id);
+                    this.redraw();
+                });
             const elem = document.getElementById(id);
             if (elem) elem.classList.add('st-grade-calculator-selected');
         }
+
+        // === CENTRAL TENDENCY MEASURES ===
 
         const N = this.selectedGrades.length;
         const totalWeight = this.selectedGrades.reduce((sum, grade) => sum + grade.weight, 0);
@@ -44,10 +58,41 @@ class GradeCalculatorPane extends Pane {
         const unweightedTotal = this.selectedGrades.reduce((sum, grade) => sum + grade.result, 0);
         const weightedAverage = totalWeight > 0 ? weightedTotal / totalWeight : 0;
         const unweightedAverage = N > 0 ? unweightedTotal / N : 0;
+        const median = calculateMedian(this.selectedGrades.map(item => item.result))
 
-        this.#div1.createChildElement('p', { innerText: `\n\nN=${N}\nTotal Weight=${totalWeight}\nWeighted Average=${weightedAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nUnweighted Average=${unweightedAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` });
+        this.element.createChildElement('hr');
+
+        const tendencyMeasures = this.element.createChildElement('div', { style: { display: 'flex' } });
+        tendencyMeasures.createChildElement('div', { class: 'st-metric', dataset: { description: i18n(`cc.weightedAverage`) }, innerText: weightedAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
+        tendencyMeasures.createChildElement('div', { class: 'st-metric', dataset: { description: i18n(`cc.median`) }, innerText: median.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
+        tendencyMeasures.createChildElement('div', { class: 'st-metric', dataset: { description: i18n(`cc.totalWeight`) }, innerText: `${totalWeight}x` });
+
+        // === PREDICTION ===
+
+        this.element.createChildElement('p', { innerText: i18n('cc.futureDesc') });
+        const futureWeightInput = this.element.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', step: '1', placeholder: i18n('weight') });
+        const predictionSection = this.element.createChildElement('div', { style: { marginTop: '10px' } });
+        futureWeightInput.addEventListener('input', () => this.drawPredictionSection(predictionSection, weightedAverage, totalWeight));
+        this.drawPredictionSection(predictionSection, weightedAverage, totalWeight);
 
         this.progressBar.dataset.visible = 'false';
+    }
+
+    async drawPredictionSection(section, currentScore, currentWeight) {
+        const target = (syncedStorage['suf-threshold'] || 5.5);
+        const newWeight = this.futureWeight || Math.round(calculateMedian(this.selectedGrades.map(item => item.weight)) || 1);
+        const newScore = (target * (currentWeight + newWeight) - (currentScore * currentWeight)) / newWeight;
+
+        // newWeightedAverage = (weightedTotal + (newResult * newWeight)) / (totalWeight + newWeight)
+        // newResult = 
+
+        section.createChildElement('p', {
+            innerText:
+                
+                `Voor een ${target.toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} heb je ${(Math.ceil(newScore * 10) / 10).toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} nodig.`
+        });
+
+        const canvas = this.element.createChildElement('div');
     }
 
     async toggleGrade(grade, year) {
@@ -68,11 +113,12 @@ class GradeCalculatorPane extends Pane {
             if (isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) return; // not a valid number
 
             this.selectedGrades.push({
-                id: grade.CijferId || new Date().getTime(),
+                id: grade.CijferId,
                 result,
                 weight: grade.CijferKolom.Weging || 0,
                 column: grade.CijferKolom.KolomNaam || '',
                 title: grade.CijferKolom.KolomOmschrijving || '',
+                index: grade.CijferKolom.KolomVolgNummer || 0,
             });
         }
 

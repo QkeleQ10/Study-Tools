@@ -389,12 +389,6 @@
 #st-grade-backup-pane {
     max-width: 300px;
 
-    .st-div:not(:last-child) {
-        margin-bottom: 16px;
-        padding-bottom: 16px;
-        border-bottom: var(--st-border);
-    }
-
     .st-div>p {
         margin-top: 8px;
         margin-bottom: 8px;
@@ -855,11 +849,17 @@
     &.st-hidden {
         display: none;
     }
+
+    hr {
+        border-bottom: var(--st-border);
+        border-top: none;
+        margin: 16px 0;
+    }
 }
 
 .st-grade-calculator-selected {
     outline: 2px solid var(--st-foreground-accent);
-    outline-offset: -2px;
+    outline-offset: -3px;
 }
 
 /* OLD */

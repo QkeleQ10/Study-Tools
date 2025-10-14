@@ -10,6 +10,7 @@ class GradeBackupPane extends Pane {
 
         this.element.id = 'st-grade-backup-pane';
         this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
+        this.element.createChildElement('hr');
         this.#div2 = this.element.createChildElement('div', { class: 'st-div' });
     }
 
