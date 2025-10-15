@@ -1,11 +1,13 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/material.css'
 
 const props = defineProps(['modelValue', 'id', 'setting'])
 const emit = defineEmits(['update:modelValue'])
+
+const syncedStorage = inject('syncedStorage');
 
 const value = computed({
     get() {
@@ -45,9 +47,16 @@ function formatValue(val) {
                 <slot name="subtitle"></slot>
             </span>
         </div>
-        <VueSlider :min="setting.min" :max="setting.max" :interval="setting.step" :duration="0.2"
-            :tooltip-formatter="val => formatValue(val)" :tooltip-style="{}" v-model.lazy="value" />
-    </div>
+        <VueSlider
+            :min="typeof setting.min === 'string' ? syncedStorage[setting.min] : setting.min"
+            :max="typeof setting.max === 'string' ? syncedStorage[setting.max] : setting.max"
+            :interval="setting.step"
+            :duration="0.2"
+            :tooltip-formatter="val => formatValue(val)"
+            :tooltip-style="{}"
+            v-model.lazy="value"
+        />
+        </div>
 </template>
 
 <style>

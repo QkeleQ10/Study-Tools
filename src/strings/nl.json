@@ -176,7 +176,7 @@
     "location": "Locatie",
     "remark": "Opmerking",
     "annotation": "Aantekening",
-    "addAnnotation": "Aantekening maken",
+    "addAnnotation": "Typ hier om een aantekening toe te voegen...",
     "teacher": "Docent",
     "extra": "Extra",
     "productDescription": "Werkomschrijving",
@@ -208,7 +208,12 @@
         "addedManually": "Handmatig ingevoerd",
         "weightedAverage": "Gewogen gemiddelde",
         "median": "Mediaan",
-        "totalWeight": "Gewicht"
+        "totalWeight": "Gewicht",
+        "adviceCurrentlyNotPassing": "Haal tenminste een {newResult} die {newWeight}x meetelt om een voldoende komen te staan.",
+        "adviceCurrentlyPassing": "Haal tenminste een {newResult} die {newWeight}x meetelt om een voldoende te blijven staan.",
+        "adviceAboveUpperBound": "Met een cijfer dat {newWeight}x meetelt, kun je niet hoger dan een {newAverage} komen te staan.",
+        "adviceBelowLowerBound": "Met een cijfer dat {newWeight}x meetelt, kun je niet lager dan een {newAverage} komen te staan.",
+        "futureDesc": "Hoe vaak telt het volgende cijfer mee?"
     },
     "cb": {
         "title": "Cijferback-up",

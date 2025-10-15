@@ -560,6 +560,7 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
                     });
                     td.addEventListener('auxclick', event => {
                         event.preventDefault();
+                        event.stopPropagation();
                         const dialog = new GradeDetailDialog(grade, this.identifier.year);
                         dialog.show();
                         grade = dialog.grade;

@@ -69,28 +69,61 @@ class GradeCalculatorPane extends Pane {
 
         // === PREDICTION ===
 
+        this.element.createChildElement('hr');
+
         this.element.createChildElement('p', { innerText: i18n('cc.futureDesc') });
         const futureWeightInput = this.element.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', step: '1', placeholder: i18n('weight') });
         const predictionSection = this.element.createChildElement('div', { style: { marginTop: '10px' } });
-        futureWeightInput.addEventListener('input', () => this.drawPredictionSection(predictionSection, weightedAverage, totalWeight));
-        this.drawPredictionSection(predictionSection, weightedAverage, totalWeight);
+        futureWeightInput.addEventListener('input', () => {
+            this.futureWeight = Math.max(0, Math.round(Number(futureWeightInput.value)));
+            this.drawPredictionSection(predictionSection, weightedTotal, totalWeight)
+        });
+        this.drawPredictionSection(predictionSection, weightedTotal, totalWeight);
 
         this.progressBar.dataset.visible = 'false';
     }
 
-    async drawPredictionSection(section, currentScore, currentWeight) {
+    async drawPredictionSection(section, weightedTotal, totalWeight) {
+        section.innerHTML = '';
+
         const target = (syncedStorage['suf-threshold'] || 5.5);
         const newWeight = this.futureWeight || Math.round(calculateMedian(this.selectedGrades.map(item => item.weight)) || 1);
-        const newScore = (target * (currentWeight + newWeight) - (currentScore * currentWeight)) / newWeight;
 
-        // newWeightedAverage = (weightedTotal + (newResult * newWeight)) / (totalWeight + newWeight)
-        // newResult = 
+        const x = (target * (totalWeight + newWeight) - weightedTotal) / newWeight;
 
-        section.createChildElement('p', {
-            innerText:
-                
-                `Voor een ${target.toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} heb je ${(Math.ceil(newScore * 10) / 10).toLocaleString(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} nodig.`
-        });
+        const upperBound = (syncedStorage['c-maximum'] ?? 10);
+        const lowerBound = (syncedStorage['c-minimum'] ?? 1);
+
+        let res = {
+            achievable: true,
+            message: i18n((weightedTotal / totalWeight) < target ? 'cc.adviceCurrentlyNotPassing' : 'cc.adviceCurrentlyPassing', {
+                newResult: x.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1, roundingMode: 'ceil' }),
+                newWeight,
+                target: target.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+            }),
+        };
+
+        if (x > upperBound) {
+            const newAverage = (weightedTotal + (upperBound * newWeight)) / (totalWeight + newWeight);
+            res = {
+                achievable: false,
+                message: i18n('cc.adviceAboveUpperBound', {
+                    newWeight,
+                    newAverage: newAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                }),
+            };
+        } else if (x < lowerBound) {
+            const newAverage = (weightedTotal + (lowerBound * newWeight)) / (totalWeight + newWeight);
+            res = {
+                achievable: true,
+                message: i18n('cc.adviceBelowLowerBound', {
+                    newWeight,
+                    newAverage: newAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                }),
+            };
+        }
+
+        section.createChildElement('p', { innerText: res.message });
 
         const canvas = this.element.createChildElement('div');
     }
