@@ -845,14 +845,15 @@
     border: var(--st-border);
     border-left: none;
     border-bottom-right-radius: var(--st-border-radius);
+    overflow: auto;
 
     &.st-hidden {
         display: none;
     }
 
     hr {
+        border: none;
         border-bottom: var(--st-border);
-        border-top: none;
         margin: 16px 0;
     }
 }
@@ -860,6 +861,42 @@
 .st-grade-calculator-selected {
     outline: 2px solid var(--st-foreground-accent);
     outline-offset: -3px;
+}
+
+#st-grade-calculator-pane {
+    display: flex;
+    flex-direction: column;
+
+    &.st-hidden {
+        display: none;
+    }
+
+    .added-list {
+        flex: 1;
+        min-height: 75px;
+        overflow: auto;
+
+        &>.entry {
+            cursor: pointer;
+            overflow: hidden;
+            text-wrap: nowrap;
+            text-overflow: ellipsis;
+
+            &:hover {
+                background-color: var(--st-highlight-warn);
+            }
+        }
+    }
+
+    .st-linear-line-chart {
+        position: relative;
+        overflow: hidden;
+        border: var(--st-border);
+        border-radius: var(--st-border-radius);
+        height: 160px;
+        max-height: 20vh;
+        margin-top: 16px;
+    }
 }
 
 /* OLD */

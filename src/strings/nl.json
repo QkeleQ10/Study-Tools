@@ -203,17 +203,19 @@
     },
     "cc": {
         "title": "Cijfercalculator",
-        "emptyDesc": "Klik op een vak of selecteer individuele cijfers om te beginnen.",
+        "emptyDesc": "Klik op een vak in het cijferoverzicht of selecteer individuele cijfers om te beginnen.",
         "gradesInCalculation": "Cijfers in berekening",
         "addedManually": "Handmatig ingevoerd",
         "weightedAverage": "Gewogen gemiddelde",
         "median": "Mediaan",
         "totalWeight": "Gewicht",
+        "addCustomGrade": "Cijfer handmatig toevoegen",
         "adviceCurrentlyNotPassing": "Haal tenminste een {newResult} die {newWeight}x meetelt om een voldoende komen te staan.",
         "adviceCurrentlyPassing": "Haal tenminste een {newResult} die {newWeight}x meetelt om een voldoende te blijven staan.",
         "adviceAboveUpperBound": "Met een cijfer dat {newWeight}x meetelt, kun je niet hoger dan een {newAverage} komen te staan.",
         "adviceBelowLowerBound": "Met een cijfer dat {newWeight}x meetelt, kun je niet lager dan een {newAverage} komen te staan.",
-        "futureDesc": "Hoe vaak telt het volgende cijfer mee?"
+        "futureWeight": "Hoe vaak telt het volgende cijfer mee?",
+        "invalidGradeValue": "Voer een geldig cijfer in tussen {min} en {max}. Decimalen moeten met een punt worden ingevoerd."
     },
     "cb": {
         "title": "Cijferback-up",

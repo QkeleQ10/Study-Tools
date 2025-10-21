@@ -24,21 +24,54 @@ class GradeCalculatorPane extends Pane {
         this.element.innerHTML = '';
         document.querySelectorAll('.st-grade-calculator-selected').forEach(elem => elem.classList.remove('st-grade-calculator-selected'));
 
-        // === EMPTY ===
-
-        if (this.selectedGrades.length === 0) {
-            this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.title') });
-            this.element.createChildElement('p', { innerText: i18n('cc.emptyDesc') });
-            this.progressBar.dataset.visible = 'false';
-            return;
-        }
-
         // === ADDED GRADES ===
 
-        this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.gradesInCalculation') + ` (${this.selectedGrades.length})` });
+        const listSection = this.element.createChildElement('div', { class: 'added-list' });
+
+        if (this.selectedGrades.length === 0) {
+            listSection.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.title') });
+            listSection.createChildElement('p', { innerText: i18n('cc.emptyDesc') });
+        } else {
+            listSection.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.gradesInCalculation') + ` (${this.selectedGrades.length})` });
+        }
+
+        const addCustomGradeButton = listSection.createChildElement('button', { class: 'st-button icon', 'data-icon': '+', title: i18n('cc.addCustomGrade'), style: { position: 'absolute', top: '12px', right: '12px' } });
+        addCustomGradeButton.addEventListener('click', async () => {
+            const dialog = new Dialog();
+            dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.addCustomGrade') });
+            const flex = dialog.body.createChildElement('div', { style: { display: 'flex', gap: '8px' } });
+            const gradeInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('assessment'), min: (syncedStorage['c-minimum'] ?? 1), max: (syncedStorage['c-maximum'] ?? 10), step: '0.1', style: { flex: '1' } });
+            const weightInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('weight'), min: '0', step: '1', style: { flex: '1' } });
+
+            dialog.buttonsWrapper.createChildElement('button', {
+                innerText: i18n('add'),
+                'data-icon': '+',
+                class: 'st-button primary',
+            })
+                .addEventListener('click', () => {
+                    const gradeValue = Number(gradeInput.value);
+                    const weightValue = Math.max(0, Math.round(Number(weightInput.value)));
+                    if (isNaN(gradeValue) || gradeValue < (syncedStorage['c-minimum'] ?? 1) || gradeValue > (syncedStorage['c-maximum'] ?? 10)) {
+                        new Dialog({ innerText: i18n('cc.invalidGradeValue', { min: (syncedStorage['c-minimum'] ?? 1), max: (syncedStorage['c-maximum'] ?? 10) }) }).show();
+                        return;
+                    }
+                    this.selectedGrades.push({
+                        id: `custom-grade-${Date.now()}`,
+                        result: gradeValue,
+                        weight: weightValue,
+                        column: null,
+                        title: null,
+                        index: Infinity,
+                    });
+                    this.redraw();
+                });
+
+            dialog.show();
+        });
 
         for (const { id, result, weight, column, title } of this.selectedGrades.sort((a, b) => a.index - b.index)) {
-            this.element.createChildElement('p', {
+            listSection.createChildElement('p', {
+                class: 'entry',
                 innerText: `${result.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} (${weight}x) — ` + (column && title ? `${column}, ${title}` : i18n('cc.addedManually')),
                 title: i18n('remove'),
             })
@@ -49,6 +82,10 @@ class GradeCalculatorPane extends Pane {
             const elem = document.getElementById(id);
             if (elem) elem.classList.add('st-grade-calculator-selected');
         }
+
+        // === EMPTY ===
+
+        if (this.selectedGrades.length === 0) return;
 
         // === CENTRAL TENDENCY MEASURES ===
 
@@ -63,17 +100,23 @@ class GradeCalculatorPane extends Pane {
         this.element.createChildElement('hr');
 
         const tendencyMeasures = this.element.createChildElement('div', { style: { display: 'flex' } });
-        tendencyMeasures.createChildElement('div', { class: 'st-metric', dataset: { description: i18n(`cc.weightedAverage`) }, innerText: weightedAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
-        tendencyMeasures.createChildElement('div', { class: 'st-metric', dataset: { description: i18n(`cc.median`) }, innerText: median.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
-        tendencyMeasures.createChildElement('div', { class: 'st-metric', dataset: { description: i18n(`cc.totalWeight`) }, innerText: `${totalWeight}x` });
+        tendencyMeasures.createChildElement('div', { class: 'st-metric secondary', dataset: { description: i18n(`cc.weightedAverage`) }, innerText: weightedAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
+        tendencyMeasures.createChildElement('div', { class: 'st-metric secondary', dataset: { description: i18n(`cc.median`) }, innerText: median.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
+        tendencyMeasures.createChildElement('div', { class: 'st-metric secondary', dataset: { description: i18n(`cc.totalWeight`) }, innerText: `${totalWeight}x` });
+
+        // === FUTURE WEIGHT ===
+
+        this.element.createChildElement('hr');
+
+        const futureWeightSection = this.element.createChildElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlock: '-10px' } });
+        futureWeightSection.createChildElement('p', { innerText: i18n('cc.futureWeight'), style: { textWrap: 'balance', flex: '2' } });
+        const futureWeightInput = futureWeightSection.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', step: '1', placeholder: `${Math.round(calculateMedian(this.selectedGrades.map(item => item.weight)) || 1)}x`, style: { flex: '1' } });
 
         // === PREDICTION ===
 
         this.element.createChildElement('hr');
 
-        this.element.createChildElement('p', { innerText: i18n('cc.futureDesc') });
-        const futureWeightInput = this.element.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', step: '1', placeholder: i18n('weight') });
-        const predictionSection = this.element.createChildElement('div', { style: { marginTop: '10px' } });
+        const predictionSection = this.element.createChildElement('div');
         futureWeightInput.addEventListener('input', () => {
             this.futureWeight = Math.max(0, Math.round(Number(futureWeightInput.value)));
             this.drawPredictionSection(predictionSection, weightedTotal, totalWeight)
@@ -123,9 +166,18 @@ class GradeCalculatorPane extends Pane {
             };
         }
 
-        section.createChildElement('p', { innerText: res.message });
+        section.createChildElement('p', { innerText: res.message, style: { color: res.achievable ? 'var(--st-foreground-primary)' : 'var(--st-accent-warn)', textWrap: 'balance' } });
 
-        const canvas = this.element.createChildElement('div');
+        const chartContainer = section.createChildElement('div');
+
+        // Calculate the linear function: newAverage = a * newResult + b
+        //                                           = (weightedTotal + newResult * newWeight) / (totalWeight + newWeight)
+        // Rearranging:                              = (newWeight / (totalWeight + newWeight)) * newResult + (weightedTotal / (totalWeight + newWeight))
+
+        const slope = newWeight / (totalWeight + newWeight);
+        const intercept = weightedTotal / (totalWeight + newWeight);
+
+        chartContainer.createLinearLineChart(slope, intercept, lowerBound, upperBound, lowerBound, upperBound, upperBound - lowerBound, upperBound - lowerBound, (x, y) => `${x.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ➜ ${y.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 0.1);
     }
 
     async toggleGrade(grade, year) {

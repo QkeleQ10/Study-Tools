@@ -649,6 +649,12 @@ dialog.st-modal[open]::backdrop {
 
 .st-input[type=number] {
     width: 75px;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        opacity: 1;
+        color: var(--st-foreground-accent);
+    }
 }
 
 .st-input:focus {
@@ -924,8 +930,11 @@ a.st-metric {
         'desc' auto
         'result' auto
         / auto;
-    gap: 2px;
-    font: 500 20px/22px var(--st-font-family-primary);
+    gap: 0.1em;
+    font-size: 20px;
+    line-height: 1.1em;
+    font-family: var(--st-font-family-primary);
+    font-weight: 500;
     text-decoration: none;
     border: none;
     outline: none;
@@ -941,7 +950,7 @@ a.st-metric {
 }
 
 .st-metric.secondary {
-    font: 500 18px/20px var(--st-font-family-primary);
+    font-size: 18px;
 }
 
 .st-metric:before {
@@ -949,13 +958,8 @@ a.st-metric {
 
     content: attr(data-description);
     white-space: pre-wrap;
-    font: 600 12px var(--st-font-family-secondary);
+    font: 500 0.6em var(--st-font-family-secondary);
     opacity: 0.8;
-}
-
-.st-metric.secondary:before {
-    font: 600 11px var(--st-font-family-secondary);
-    opacity: 0.6;
 }
 
 .st-metric[data-extra]:after {
@@ -964,7 +968,7 @@ a.st-metric {
 
     content: ' (' attr(data-extra) ')';
     white-space: pre-wrap;
-    font: 12px var(--st-font-family-secondary);
+    font: 0.6em var(--st-font-family-secondary);
 }
 
 a.st-metric:hover,

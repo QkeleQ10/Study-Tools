@@ -38,6 +38,7 @@ interface HTMLElement {
     createBarChart();
     createPieChart();
     createLineChart();
+    createLinearLineChart();
 }
 
 interface Date {

@@ -586,6 +586,152 @@ HTMLElement.prototype.createLineChart = function (values = [], labels = [], minV
     return chartArea
 }
 
+HTMLElement.prototype.createLinearLineChart = function (slope = 1, intercept = 0, minX = 0, maxX = 100, minY = 0, maxY = 100, xGridCount = 10, yGridCount = 10, label = (x, y) => `(${x.toFixed(2)}: ${y.toFixed(2)})`, xStep = 0.1) {
+    const chartArea = this
+    if (!chartArea.classList.contains('st-linear-line-chart')) chartArea.innerText = ''
+    chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
+    chartArea.classList.add('st-linear-line-chart', 'st-chart')
+    chartArea.style.position = 'relative'
+    chartArea.style.overflow = 'hidden'
+
+    const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+    const normX = (x) => ((x - minX) / (maxX - minX)) * 100;
+    const normY = (y) => 100 - ((y - minY) / (maxY - minY)) * 100;
+    const invNormX = (px) => minX + (px / 100) * (maxX - minX);
+    const invNormY = (py) => minY + ((100 - py) / 100) * (maxY - minY);
+
+    // Compute line endpoints
+    const y1 = clamp(slope * minX + intercept, minY, maxY);
+    const y2 = clamp(slope * maxX + intercept, minY, maxY);
+    const x1p = normX(minX);
+    const y1p = normY(y1);
+    const x2p = normX(maxX);
+    const y2p = normY(y2);
+
+    // Generate gridlines
+    let xGridLines = '';
+    for (let i = 1; i < xGridCount; i++) {
+        const x = (i / xGridCount) * 100;
+        xGridLines += `<line x1="${x}" y1="0" x2="${x}" y2="100" stroke="var(--st-border-color)" stroke-width="0.125"/>`;
+    }
+    let yGridLines = '';
+    for (let i = 1; i < yGridCount; i++) {
+        const y = (i / yGridCount) * 100;
+        yGridLines += `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="var(--st-border-color)" stroke-width="0.25"/>`;
+    }
+
+    // Full SVG
+    const cMin = syncedStorage['c-minimum'] ?? 1;
+    const cMax = syncedStorage['c-maximum'] ?? 10;
+    const sufThreshold = syncedStorage['suf-threshold'] ?? 5.5;
+    
+    // Calculate horizontal position (0-100%) based on where threshold falls between min and max
+    const thresholdX = ((sufThreshold - cMin) / (cMax - cMin)) * 100;
+    
+    // Calculate vertical position (0-100%) based on where threshold falls in the Y range
+    const thresholdY = 100 - ((sufThreshold - minY) / (maxY - minY)) * 100;
+    
+    const svgHTML = `
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none"
+         style="position:absolute;top:0;left:0;width:100%;height:100%;">
+      ${xGridLines}
+      ${yGridLines}
+      <rect x="0" y="0" width="${thresholdX}" height="100" fill="var(--st-accent-warn)" fill-opacity="0.05"/>
+      <rect x="0" y="${thresholdY}" width="100" height="${100 - thresholdY}" fill="var(--st-accent-warn)" fill-opacity="0.05"/>
+      <line x1="${x1p}" y1="${y1p}" x2="${x2p}" y2="${y2p}" stroke="var(--st-foreground-accent)"
+            stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    </svg>
+  `;
+    chartArea.innerHTML = svgHTML;
+
+    // Create dot element
+    const dot = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute',
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: 'var(--st-foreground-accent)',
+            pointerEvents: 'none',
+            transform: 'translate(-50%, -50%)',
+            display: 'none',
+            zIndex: 10,
+        },
+    });
+
+    // Create tooltip
+    const tooltip = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute',
+            background: 'var(--st-background-tertiary)',
+            color: 'var(--st-foreground-primary)',
+            padding: '2px 6px',
+            borderRadius: 'calc(var(--st-border-radius) * 0.5)',
+            fontSize: '12px',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            display: 'none',
+            zIndex: 20,
+            transform: 'translate(-50%, -120%)',
+        },
+    });
+
+    // Mouse move handler
+    chartArea.addEventListener('mousemove', (e) => {
+        const rect = chartArea.getBoundingClientRect();
+        let px = ((e.clientX - rect.left) / rect.width) * 100;
+        if (px < 0 || px > 100) {
+            dot.style.display = 'none';
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        let xValue = invNormX(px);
+
+        // Snap to step if xStep > 0
+        if (xStep > 0) {
+            xValue = Math.round(xValue / xStep) * xStep;
+            xValue = clamp(xValue, minX, maxX);
+            px = normX(xValue);
+        }
+
+        let yValue = clamp(slope * xValue + intercept, minY, maxY);
+        const py = normY(yValue);
+
+        // Dot position
+        dot.style.left = `${px}%`;
+        dot.style.top = `${py}%`;
+        dot.style.display = 'block';
+
+        // Tooltip content
+        tooltip.innerText = label(xValue, yValue);
+        tooltip.style.display = 'block';
+        tooltip.style.color = yValue >= sufThreshold ? 'var(--st-accent-ok)' : 'var(--st-accent-warn)';
+
+        // Tooltip horizontal constraint
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const halfTooltipPercent = (tooltipRect.width / 2 / rect.width) * 100;
+        let tooltipLeft = px;
+        if (px - halfTooltipPercent < 0) tooltipLeft = halfTooltipPercent;
+        if (px + halfTooltipPercent > 100) tooltipLeft = 100 - halfTooltipPercent;
+        tooltip.style.left = `${tooltipLeft}%`;
+
+        // Tooltip vertical flip
+        const tooltipHeightPx = tooltipRect.height;
+        const pyPx = (py / 100) * rect.height;
+        tooltip.style.transform = pyPx - tooltipHeightPx - 8 < 0
+            ? 'translate(-50%, 20%)'
+            : 'translate(-50%, -120%)';
+
+        tooltip.style.top = `${py}%`;
+    });
+
+    chartArea.addEventListener('mouseleave', () => {
+        dot.style.display = 'none';
+        tooltip.style.display = 'none';
+    });
+}
+
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
     switch (type) {
         case 'snackbar':

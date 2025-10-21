@@ -18,8 +18,7 @@ class GradeStatisticsPane extends Pane {
 
         // initialisation here
 
-        await new Promise((r) => setTimeout(r, 500)); // simulate loading
-        this.element.createChildElement('p', { innerText: 'initialised' });
+        this.element.createChildElement('p', { innerText: 'not implemented' });
 
         await this.#updateStats();
         this.#initialised = true;
@@ -29,9 +28,6 @@ class GradeStatisticsPane extends Pane {
         this.progressBar.dataset.visible = 'true';
 
         // update stats here
-
-        await new Promise((r) => setTimeout(r, 500)); // simulate loading
-        this.element.createChildElement('p', { innerText: 'updated' });
 
         this.progressBar.dataset.visible = 'false';
     }
