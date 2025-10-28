@@ -340,6 +340,22 @@ export default [
                 ]
             },
             {
+                id: "grade-col-grouping",
+                title: "Cijfers groeperen op",
+                type: "SingleChoice",
+                default: "KolomNummer",
+                options: [
+                    {
+                        value: "KolomNummer",
+                        title: "Kolomnummer"
+                    },
+                    {
+                        value: "KolomKop",
+                        title: "Kolomkop"
+                    },
+                ]
+            },
+            {
                 id: "ignore-grade-columns",
                 title: "Te negeren cijferkolommen",
                 subtitle: "Cijferkolommen met deze kolomkoppen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",

@@ -626,8 +626,8 @@ class ScheduleEventDialog extends Dialog {
         this.#addRowToTable(table1, i18n('end'), new Date(this.event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
         this.#addRowToTable(table1, i18n('location'), eventLocations(this.event) || '-');
         this.#addRowToTable(table1, i18n('teacher'), eventTeachers(this.event) || '-');
-        if (this.event.Opmerking) this.#addRowToTable(table1, i18n('remark'), this.event.Opmerking);
-        if (this.event.Herhaling) this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
+        if (this.event.Herhaling)
+            this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
 
         let chips = getEventChips(this.event);
         if (chips.length > 0) {
@@ -684,6 +684,12 @@ class ScheduleEventDialog extends Dialog {
             } else {
                 createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
             }
+        }
+
+        if (this.event.Opmerking) {
+            const remarkColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
+            createElement('h3', remarkColumn, { class: 'st-section-heading', innerText: i18n('remark') });
+            createElement('div', remarkColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Opmerking });
         }
 
         if (this.event.Inhoud?.length > 0) {

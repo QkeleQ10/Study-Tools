@@ -458,6 +458,8 @@ class GradeTable {
     draw() {
         const grades = this.grades;
 
+        const groupingVariable = syncedStorage['grade-col-grouping'] || 'KolomNummer';
+
         const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
 
         const sortedColumns = filteredGrades.sort((a, b) =>
@@ -465,7 +467,7 @@ class GradeTable {
             Number(a.CijferKolom?.KolomVolgNummer ?? 0) - Number(b.CijferKolom?.KolomVolgNummer ?? 0)
         );
         const gradePeriods = [...new Set(sortedColumns.map(g => g.CijferPeriode?.Naam))];
-        const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.KolomNummer))];
+        const gradeColumns = [...new Set(sortedColumns.map(g => g.CijferKolom?.[groupingVariable]))];
         const gradeSubjects = [...new Set(grades
             .slice()
             .sort((a, b) => (a.Vak?.Volgnr ?? 0) - (b.Vak?.Volgnr ?? 0))
@@ -489,14 +491,15 @@ class GradeTable {
         const headerRow1 = this.#table.createChildElement('tr');
         headerRow1.createChildElement('th');
         for (const period of gradePeriods) {
-            const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.KolomNummer)).size;
+            const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.[groupingVariable])).size;
             headerRow1.createChildElement('th', { innerText: period, colSpan: numColumns });
         }
 
         const headerRow2 = this.#table.createChildElement('tr');
         headerRow2.createChildElement('th');
         for (const column of gradeColumns) {
-            headerRow2.createChildElement('th', { innerText: column });
+            headerRow2.createChildElement('th')
+                .createChildElement('span', { innerText: column });
         }
 
         for (const subject of gradeSubjects) {
@@ -513,7 +516,7 @@ class GradeTable {
                 });
 
             for (const column of gradeColumns) {
-                let grade = filteredGrades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomNummer === column);
+                let grade = filteredGrades.find(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.[groupingVariable] === column);
                 if (grade) {
                     const td = subjectRow.createChildElement('td', {
                         id: grade.CijferId,

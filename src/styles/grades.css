@@ -435,19 +435,29 @@
     }
 
     tr:nth-child(2) {
-        height: 52px;
 
         th:first-child {
             border: none;
         }
 
         th:not(:first-child) {
-            width: 36px;
-            min-width: 36px;
-            height: 36px;
-            rotate: -90deg;
-            vertical-align: middle;
             border-bottom-width: 2px;
+
+            width: 36px;
+            padding: 4px;
+            vertical-align: bottom;
+            text-align: center;
+            
+            &>span {
+                min-height: 32px;
+                display: inline-block;
+                writing-mode: vertical-rl;
+                transform: rotate(180deg);
+                white-space: nowrap;
+                line-height: 1;
+                margin: 0 auto;
+                text-align: start;
+            }
         }
     }
 
