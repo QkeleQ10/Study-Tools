@@ -1,4 +1,5 @@
 class GradeCalculatorPane extends Pane {
+    #div1;
     selectedGrades = [];
     futureWeight = null;
 
@@ -6,6 +7,7 @@ class GradeCalculatorPane extends Pane {
         super(parentElement);
         this.element.id = 'st-grade-calculator-pane';
 
+        this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
     }
 
     show() {
@@ -21,12 +23,12 @@ class GradeCalculatorPane extends Pane {
     async redraw() {
         this.progressBar.dataset.visible = 'true';
 
-        this.element.innerHTML = '';
+        this.#div1.innerHTML = '';
         document.querySelectorAll('.st-grade-calculator-selected').forEach(elem => elem.classList.remove('st-grade-calculator-selected'));
 
         // === ADDED GRADES ===
 
-        const listSection = this.element.createChildElement('div', { class: 'added-list' });
+        const listSection = this.#div1.createChildElement('div', { class: 'added-list' });
 
         if (this.selectedGrades.length === 0) {
             listSection.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.title') });
@@ -85,7 +87,10 @@ class GradeCalculatorPane extends Pane {
 
         // === EMPTY ===
 
-        if (this.selectedGrades.length === 0) return;
+        if (this.selectedGrades.length === 0) {
+            this.progressBar.dataset.visible = 'false';
+            return;
+        }
 
         // === CENTRAL TENDENCY MEASURES ===
 
@@ -97,26 +102,26 @@ class GradeCalculatorPane extends Pane {
         const unweightedAverage = N > 0 ? unweightedTotal / N : 0;
         const median = calculateMedian(this.selectedGrades.map(item => item.result))
 
-        this.element.createChildElement('hr');
+        this.#div1.createChildElement('hr');
 
-        const tendencyMeasures = this.element.createChildElement('div', { style: { display: 'flex' } });
+        const tendencyMeasures = this.#div1.createChildElement('div', { style: { display: 'flex' } });
         tendencyMeasures.createChildElement('div', { class: 'st-metric secondary', dataset: { description: i18n(`cc.weightedAverage`) }, innerText: weightedAverage.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
         tendencyMeasures.createChildElement('div', { class: 'st-metric secondary', dataset: { description: i18n(`cc.median`) }, innerText: median.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
         tendencyMeasures.createChildElement('div', { class: 'st-metric secondary', dataset: { description: i18n(`cc.totalWeight`) }, innerText: `${totalWeight}x` });
 
         // === FUTURE WEIGHT ===
 
-        this.element.createChildElement('hr');
+        this.#div1.createChildElement('hr');
 
-        const futureWeightSection = this.element.createChildElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlock: '-10px' } });
+        const futureWeightSection = this.#div1.createChildElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlock: '-10px' } });
         futureWeightSection.createChildElement('p', { innerText: i18n('cc.futureWeight'), style: { textWrap: 'balance', flex: '2' } });
         const futureWeightInput = futureWeightSection.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', step: '1', placeholder: `${Math.round(calculateMedian(this.selectedGrades.map(item => item.weight)) || 1)}x`, style: { flex: '1' } });
 
         // === PREDICTION ===
 
-        this.element.createChildElement('hr');
+        this.#div1.createChildElement('hr');
 
-        const predictionSection = this.element.createChildElement('div');
+        const predictionSection = this.#div1.createChildElement('div');
         futureWeightInput.addEventListener('input', () => {
             this.futureWeight = Math.max(0, Math.round(Number(futureWeightInput.value)));
             this.drawPredictionSection(predictionSection, weightedTotal, totalWeight)
@@ -181,6 +186,8 @@ class GradeCalculatorPane extends Pane {
     }
 
     async toggleGrade(grade, year) {
+        this.progressBar.dataset.visible = 'true';
+
         if (this.selectedGrades.some(g => g.id === grade.CijferId)) {
             this.selectedGrades = this.selectedGrades.filter(g => g.id !== grade.CijferId);
         } else {
@@ -195,7 +202,11 @@ class GradeCalculatorPane extends Pane {
             }
 
             const result = Number(grade.CijferStr.replace(',', '.'));
-            if (isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) return; // not a valid number
+            if (isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) {
+                // not a valid number
+                this.progressBar.dataset.visible = 'false';
+                return;
+            }
 
             this.selectedGrades.push({
                 id: grade.CijferId,
