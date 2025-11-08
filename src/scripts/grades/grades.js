@@ -195,6 +195,8 @@ class GradeTable {
             });
         }
 
+        if (!document.body.contains(this.#parentElement)) this.#parentElement = document.querySelector('section.main>div');
+
         // Create and store table element
         this.#table = this.#parentElement.createChildElement('table', { class: 'st st-grade-table' });
 

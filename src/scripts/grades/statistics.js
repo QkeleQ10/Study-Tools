@@ -120,6 +120,40 @@ class GradeStatisticsPane extends Pane {
                 `${values.length} cijfers\ngemiddelde = ${calculateMean(values)}, mediaan = ${calculateMedian(values)}, modus = ${calculateMode(values).modes.join(', ')}, variantie = ${calculateVariance(values)}\n\n[${values.join(', ')}]`
         });
 
+        const divCentralTendencies = this.#div1.createChildElement('div', { id: 'st-cs-central-tendencies' });
+        divCentralTendencies.createChildElement('div', {
+            class: 'st-metric',
+            'data-description': i18n('cs.mean'),
+            title: i18n('cs.mean.title'),
+            innerText: calculateMean(values).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        });
+        divCentralTendencies.createChildElement('div', {
+            class: 'st-metric secondary',
+            'data-description': i18n('cs.median'),
+            title: i18n('cs.median.title'),
+            innerText: calculateMedian(values).toLocaleString(locale)
+        });
+        const { modes, occurrences } = calculateMode(values);
+        divCentralTendencies.createChildElement('div', {
+            class: 'st-metric secondary',
+            'data-description': i18n(modes.length > 1 ? 'cs.modes' : 'cs.mode'),
+            title: i18n('cs.mode.title'),
+            innerText: modes.length > 0 ? modes.map(m => m.toLocaleString(locale)).join(', ') : i18n('none'),
+            'data-extra': modes.length > 0 ? `${occurrences}x` : null
+        });
+        divCentralTendencies.createChildElement('div', {
+            class: 'st-metric secondary',
+            'data-description': i18n('cs.standardDeviation'),
+            title: i18n('cs.standardDeviation.title'),
+            innerText: calculateStandardDeviation(values).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        });
+
+        // const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
+        //     scWeightedMean = element('div', 'st-cs-weighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Gemiddelde", title: "De gemiddelde waarde met weegfactoren." }),
+        //     scUnweightedMean = element('div', 'st-cs-unweighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
+        //     scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
+        //     scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." })
+
         this.progressBar.dataset.visible = 'false';
     }
 }

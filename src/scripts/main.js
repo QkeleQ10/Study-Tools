@@ -408,3 +408,8 @@ function calculateVariance(values = []) {
     const variance = calculateMean(squareDiffs)
     return variance
 }
+
+function calculateStandardDeviation(values = []) {
+    const variance = calculateVariance(values)
+    return Math.sqrt(variance)
+}

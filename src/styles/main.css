@@ -162,17 +162,12 @@ dialog.st-modal[open]::backdrop {
     transition: color 200ms, background-color 200ms, transform 200ms, opacity 200ms;
 }
 
-.st-button.icon:hover {
+.st-button.icon:hover, .st-button.icon:active {
+    background-color: var(--st-highlight-primary);
     color: var(--st-foreground-accent);
     filter: none;
     font-weight: 600;
     transition: none;
-}
-
-.st-button.icon:active {
-    background-color: var(--st-highlight-primary);
-    color: var(--st-foreground-accent);
-    filter: none;
 }
 
 .st-button.icon[data-icon]:before {

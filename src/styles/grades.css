@@ -922,23 +922,26 @@
 
 /* OLD */
 
-#st-cs-subject-filter:before {
-    content: "Vakken";
-}
-
 #st-cs-central-tendencies {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
     gap: 12px;
     place-items: baseline;
 
-    background-color: var(--st-background-secondary);
-    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-    margin-inline: -4px;
-    padding: 12px;
+    /* background-color: var(--st-background-secondary);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)); */
+    /* margin-inline: -4px; */
+    padding: 8px 12px 12px;
     border-radius: var(--st-border-radius);
     border: var(--st-border);
+
+    &>.st-metric {
+        grid-row: 1;
+    }
+
+    &>.st-metric.secondary {
+        grid-row: 2;
+    }
 }
 
 #st-cs-central-tendencies[data-great=true] {

@@ -135,6 +135,7 @@
     "save": "Opslaan",
     "saved": "Opgeslagen",
     "cancel": "Annuleren",
+    "renameX": "\"{item}\" hernoemen",
     "collapseWidgets": "Widgetpaneel weergeven of verbergen",
     "show": "Weergeven",
     "hide": "Verbergen",
@@ -144,6 +145,7 @@
     "Nieuwer": "Nieuwer",
     "Ouder": "Ouder",
     "selectDate": "Datum selecteren",
+    "none": "Geen",
     "noEvents": "Geen afspraken",
     "noEventsToday": "Geen afspraken vandaag",
     "noEventsUntilDate": "Geen afspraken\n(tot in elk geval {date})",
@@ -235,7 +237,12 @@
         "title": "Statistieken",
         "filters": "Filters",
         "years": "Leerjaren",
-        "subjects": "Vakken"
+        "subjects": "Vakken",
+        "mean": "Gemiddelde",
+        "median": "Mediaan",
+        "mode": "Modus",
+        "modes": "Modi",
+        "standardDeviation": "St.dev."
     },
     "sw": {
         "searchPlaceholder": "Zoeken",
