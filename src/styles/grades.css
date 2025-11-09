@@ -843,10 +843,9 @@
 .st-horizontal-icon-radio .st-checkbox-label:has(.st-checkbox-input:checked) {
     background-color: var(--st-accent-primary);
     color: var(--st-contrast-accent);
-
 }
 
-#st-grades-year-filter.st-horizontal-icon-radio .st-checkbox-label:has(.st-checkbox-input:checked) {
+.st-horizontal-icon-radio.st-tabs .st-checkbox-label:has(.st-checkbox-input:checked) {
     margin-bottom: -8px;
     padding-bottom: 8px;
     height: 40px;
@@ -854,18 +853,45 @@
     border-bottom-right-radius: 0;
 }
 
-.st-pane {
+.st-panes-container {
     position: relative;
+    overflow: hidden;
+    min-width: 300px;
+
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-bottom-right-radius: var(--st-border-radius);
+
+    transition: display 100ms;
+    transition-behavior: allow-discrete;
+
+    &.st-hidden {
+        display: none;
+        border-left: none;
+    }
+}
+
+.st-pane {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
     min-width: 300px;
     max-width: 900px;
     padding: 16px;
-    background-color: var(--st-background-secondary);
-    border: var(--st-border);
-    border-left: none;
-    border-bottom-right-radius: var(--st-border-radius);
     overflow: auto;
+    transition: transform 100ms, opacity 100ms, display 100ms;
+    transition-behavior: allow-discrete;
+
+    @starting-style {
+        transform: translateX(20px);
+        opacity: 0;
+    }
 
     &.st-hidden {
+        transform: translateX(20px);
+        opacity: 0;
         display: none;
     }
 

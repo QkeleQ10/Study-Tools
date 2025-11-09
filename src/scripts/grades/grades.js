@@ -78,15 +78,19 @@ async function gradeOverview() {
     contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
 
     const toolbar = contentContainer.createSiblingElement('div', { id: 'st-grades-toolbar' });
-    const yearFilter = toolbar.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-horizontal-icon-radio' });
-    const tools = toolbar.createChildElement('div', { class: 'st-horizontal-icon-radio' });
+    const yearFilter = toolbar.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-horizontal-icon-radio st-tabs' });
+    const tools = toolbar.createChildElement('div', { class: 'st-horizontal-icon-radio st-tabs' });
 
     const progressBar = gradeContainer.createChildElement('div', { class: 'st-progress-bar' });
     progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
-    backupPane = new GradeBackupPane(mainSection);
-    statisticsPane = new GradeStatisticsPane(mainSection);
-    calculatorPane = new GradeCalculatorPane(mainSection);
+    const panesContainer = mainSection.createChildElement('div', { class: 'st-panes-container st-hidden' });
+
+    backupPane = new GradeBackupPane(panesContainer);
+    statisticsPane = new GradeStatisticsPane(panesContainer);
+    calculatorPane = new GradeCalculatorPane(panesContainer);
+
+    let panesVisible = () => backupPane.isVisible || statisticsPane.isVisible || calculatorPane.isVisible;
 
     const cbLabel = tools.createChildElement('label', { id: 'st-grade-backup-button', class: 'st-checkbox-label icon', title: i18n('cb.title'), innerText: '' });
     const cbInput = cbLabel.createChildElement('input', { id: 'st-grade-backup-input', class: 'st-checkbox-input', type: 'checkbox' });
@@ -95,7 +99,9 @@ async function gradeOverview() {
         // close other panes
         if (csInput.checked) csInput.click();
         if (ccInput.checked) ccInput.click();
-        contentContainer.style.borderBottomRightRadius = cbInput.checked ? '0' : 'var(--st-border-radius)';
+        panesContainer.classList.toggle('st-hidden', !panesVisible());
+        contentContainer.style.borderRight = panesVisible() ? 'none' : '';
+        contentContainer.style.borderBottomRightRadius = panesVisible() ? '0' : '';
     });
 
     const csLabel = tools.createChildElement('label', { id: 'st-grade-statistics-button', class: 'st-checkbox-label icon', title: i18n('cs.title'), innerText: '' })
@@ -105,7 +111,9 @@ async function gradeOverview() {
         // close other panes
         if (ccInput.checked) ccInput.click();
         if (cbInput.checked) cbInput.click();
-        contentContainer.style.borderBottomRightRadius = csInput.checked ? '0' : 'var(--st-border-radius)';
+        panesContainer.classList.toggle('st-hidden', !panesVisible());
+        contentContainer.style.borderRight = panesVisible() ? 'none' : '';
+        contentContainer.style.borderBottomRightRadius = panesVisible() ? '0' : '';
     });
 
     const ccLabel = tools.createChildElement('label', { id: 'st-grade-calculator-button', class: 'st-checkbox-label icon', title: i18n('cc.title'), innerText: '' })
@@ -115,7 +123,9 @@ async function gradeOverview() {
         // close other panes
         if (csInput.checked) csInput.click();
         if (cbInput.checked) cbInput.click();
-        contentContainer.style.borderBottomRightRadius = ccInput.checked ? '0' : 'var(--st-border-radius)';
+        panesContainer.classList.toggle('st-hidden', !panesVisible());
+        contentContainer.style.borderRight = panesVisible() ? 'none' : '';
+        contentContainer.style.borderBottomRightRadius = panesVisible() ? '0' : '';
     });
 
     const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
