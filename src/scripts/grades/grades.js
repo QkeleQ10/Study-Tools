@@ -44,48 +44,35 @@ let statsGrades = [],
     displayStatistics
 
 // Run at start and when the URL changes
-popstate()
-window.addEventListener('popstate', popstate)
-async function popstate() {
-    if (document.location.href.includes('cijfers')) {
-        if (document.location.href.includes('cijferoverzicht')) {
-            gradeOverview()
-        } else {
-            gradeList()
-        }
-    }
-}
+gradeOverview()
+window.addEventListener('popstate', gradeOverview)
 
-async function gradeList() {
-    await awaitElement('#cijferslaatstbehaalderesultaten-uitgebreideweergave')
-
-    saveToStorage('viewedGrades', new Date().getTime(), 'local') // TODO: implement this in the overview as well, with a nice animation
-}
-
-let backupPane, statisticsPane, calculatorPane;
+let recentsPane, backupPane, statisticsPane, calculatorPane;
 
 async function gradeOverview() {
-    if (!syncedStorage['cc']) return;
+    if (!document.location.href.includes('cijfers') || !syncedStorage['cc']) return;
 
-    const contentContainer = await awaitElement('section.main>div');
-    const mainSection = contentContainer.parentElement;
-    const gradeContainer = mainSection.parentElement;
+    (await awaitElement('#cijfers-laatst-behaalde-resultaten-container, #cijfers-container')).style.display = 'none';
 
-    mainSection.setAttribute('style', 'display: grid; grid-template-rows: auto 1fr; grid-template-columns: 1fr auto; padding-bottom: 0 !important;');
-    contentContainer.setAttribute('style', 'grid-column: 1; grid-row: 2; border-top-left-radius: 0; border-top-right-radius: 0;');
-    gradeContainer.style.paddingRight = '20px';
-    (await awaitElement('aside')).style.display = 'none';
-    contentContainer.querySelectorAll('*').forEach(child => { child.style.display = 'none'; });
+    const mainView = await awaitElement('div.view.ng-scope'),
+        container = mainView.createChildElement('div', { id: 'st-grades' }),
+        progressBar = container.createChildElement('div', { class: 'st-progress-bar' }),
+        header = container.createChildElement('div'),
+        contentContainer = container.createChildElement('div', { id: 'st-grades-main' });
 
-    const toolbar = contentContainer.createSiblingElement('div', { id: 'st-grades-toolbar' });
+    progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+    header.createChildElement('span', { class: 'st-title', innerText: i18n('views.Cijfers'), });
+
+    const toolbar = contentContainer.createChildElement('div', { id: 'st-grades-toolbar' });
     const yearFilter = toolbar.createChildElement('div', { id: 'st-grades-year-filter', class: 'st-horizontal-icon-radio st-tabs' });
     const tools = toolbar.createChildElement('div', { class: 'st-horizontal-icon-radio st-tabs' });
 
-    const progressBar = gradeContainer.createChildElement('div', { class: 'st-progress-bar' });
-    progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+    const gradesContainer = contentContainer.createChildElement('div', { id: 'st-grades-container' });
 
-    const panesContainer = mainSection.createChildElement('div', { class: 'st-panes-container st-hidden' });
+    const panesContainer = contentContainer.createChildElement('div', { class: 'st-panes-container st-hidden' });
 
+    // recentsPane = new GradeRecentsPane(panesContainer);
     backupPane = new GradeBackupPane(panesContainer);
     statisticsPane = new GradeStatisticsPane(panesContainer);
     calculatorPane = new GradeCalculatorPane(panesContainer);
@@ -100,8 +87,6 @@ async function gradeOverview() {
         if (csInput.checked) csInput.click();
         if (ccInput.checked) ccInput.click();
         panesContainer.classList.toggle('st-hidden', !panesVisible());
-        contentContainer.style.borderRight = panesVisible() ? 'none' : '';
-        contentContainer.style.borderBottomRightRadius = panesVisible() ? '0' : '';
     });
 
     const csLabel = tools.createChildElement('label', { id: 'st-grade-statistics-button', class: 'st-checkbox-label icon', title: i18n('cs.title'), innerText: '' })
@@ -112,8 +97,6 @@ async function gradeOverview() {
         if (ccInput.checked) ccInput.click();
         if (cbInput.checked) cbInput.click();
         panesContainer.classList.toggle('st-hidden', !panesVisible());
-        contentContainer.style.borderRight = panesVisible() ? 'none' : '';
-        contentContainer.style.borderBottomRightRadius = panesVisible() ? '0' : '';
     });
 
     const ccLabel = tools.createChildElement('label', { id: 'st-grade-calculator-button', class: 'st-checkbox-label icon', title: i18n('cc.title'), innerText: '' })
@@ -124,8 +107,6 @@ async function gradeOverview() {
         if (csInput.checked) csInput.click();
         if (cbInput.checked) cbInput.click();
         panesContainer.classList.toggle('st-hidden', !panesVisible());
-        contentContainer.style.borderRight = panesVisible() ? 'none' : '';
-        contentContainer.style.borderBottomRightRadius = panesVisible() ? '0' : '';
     });
 
     const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
@@ -169,7 +150,7 @@ class GradeTable {
     #parentElement = null;
     element = null;
 
-    constructor(grades = [], identifier = {}, parentElement = document.querySelector('section.main>div')) {
+    constructor(grades = [], identifier = {}, parentElement = document.querySelector('#st-grades-container')) {
         this.grades = grades;
         this.identifier = identifier;
         this.#parentElement = parentElement;
@@ -205,7 +186,7 @@ class GradeTable {
             });
         }
 
-        if (!document.body.contains(this.#parentElement)) this.#parentElement = document.querySelector('section.main>div');
+        if (!document.body.contains(this.#parentElement)) this.#parentElement = document.querySelector('#st-grades-container');
 
         // Create and store table element
         this.element = this.#parentElement.createChildElement('table', { class: 'st st-grade-table' });

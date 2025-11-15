@@ -1,3 +1,37 @@
+#st-grades {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template:
+        'header' auto
+        'contents' 1fr
+        / 1fr;
+    overflow: hidden;
+    padding: 32px;
+    gap: 16px;
+
+    &>.st-progress-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    #st-grades-main {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        grid-template-columns: 1fr auto;
+        grid-column: 1;
+        grid-row: 2;
+        border: var(--st-border);
+        border-radius: var(--st-border-radius);
+        overflow: hidden;
+    }
+}
+
 .st-grade-table {
 
     &,
@@ -175,6 +209,7 @@
 .st-histogram {
     display: grid;
     gap: 2px;
+    font: 11px var(--st-font-family-secondary);
 
     .st-cs-histogram-bar-label {
         font-weight: bold;
@@ -266,8 +301,7 @@
     display: flex;
     justify-content: space-between;
     background-color: var(--st-background-secondary);
-    border: var(--st-border);
-    border-bottom: none;
+    border-bottom: var(--st-border);
     border-top-left-radius: var(--st-border-radius);
     border-top-right-radius: var(--st-border-radius);
     grid-row: 1;
@@ -326,13 +360,17 @@
     border-bottom-right-radius: 0;
 }
 
+#st-grades-container {
+    overflow: auto;
+}
+
 .st-panes-container {
     position: relative;
     overflow: hidden;
     min-width: 300px;
 
     background-color: var(--st-background-secondary);
-    border: var(--st-border);
+    border-left: var(--st-border);
     border-bottom-right-radius: var(--st-border-radius);
 
     transition: display 100ms;

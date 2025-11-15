@@ -9,11 +9,11 @@ addEventListener('hashchange', today)
 
 // Page 'Vandaag'
 async function today() {
-    console.info('hashchange', document.location.href)
+    console.debug('hashchange', document.location.href)
 
     if (!(document.location.href.includes('#/vandaag') && syncedStorage['start-enabled'])) return
 
-    console.info("Rendering Start")
+    console.debug("Rendering Start")
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,

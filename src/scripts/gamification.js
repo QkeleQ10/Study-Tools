@@ -281,7 +281,7 @@ async function constructWrapped(lastYearOnly) {
                     element('div', null, card2, { class: 'st-w-line-vertical', style: 'grid-row: 1 / -1; grid-column: 2;' })
                     element('div', null, card2, { class: 'st-w-text-tiny', innerText: Number(syncedStorage['suf-threshold']) === 5.5 ? 'voldoendes' : `voldoendes (≥ ${Number(syncedStorage['suf-threshold']).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })})`, style: 'grid-row: 1; grid-column: 3;' })
                     element('div', null, card2, { class: 'st-w-metric-med', innerText: (year.grades.filter(grade => { return Number(grade.CijferStr?.replace(',', '.')) >= Number(syncedStorage['suf-threshold']) }).length / year.grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '%', style: 'grid-row: 2; grid-column: 3;' })
-                    card2.addEventListener('click', async (event) => { event.stopPropagation(); dialog.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cs-tab-link')).click(); })
+                    card2.addEventListener('click', async (event) => { event.stopPropagation(); dialog.close(); window.location.hash = '#/cijfers/cijferoverzicht'; })
                     cards.push(card2)
                 }
 
@@ -446,7 +446,7 @@ async function constructWrapped(lastYearOnly) {
                     element('span', null, card1, { class: 'st-w-text-small', innerText: `Vergeet niet dat je e-mailadres van school waarschijnlijk binnenkort wordt verwijderd.` })
                     element('span', null, card1, { class: 'st-w-text-small', innerText: `Maak ook even een back-up van je cijferlijst!` })
                     cards.push(card1)
-                    card1.addEventListener('click', async (event) => { event.stopPropagation(); dialog.close(); window.location.hash = '#/cijfers/cijferoverzicht'; (await awaitElement('#st-cb')).click(); })
+                    card1.addEventListener('click', async (event) => { event.stopPropagation(); dialog.close(); window.location.hash = '#/cijfers/cijferoverzicht'; })
                 }
 
                 cards.forEach(card => {

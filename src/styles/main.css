@@ -1061,12 +1061,6 @@ a.st-metric:focus-visible {
     color: var(--st-foreground-accent);
 }
 
-#st-cs-tab.active:after {
-    width: calc(100% - 24px);
-    height: 3px;
-    translate: -50%;
-}
-
 #st-sch>ul>li:hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
