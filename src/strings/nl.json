@@ -199,6 +199,8 @@
     "bold": "Vet",
     "italic": "Cursief",
     "underline": "Onderstrepen",
+    "toggleAll": "Alles (de)selecteren",
+    "selection": "Selectie",
     "hb": {
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
@@ -217,7 +219,8 @@
         "adviceAboveUpperBound": "Met een cijfer dat {newWeight}x meetelt, kun je niet hoger dan een {newAverage} komen te staan.",
         "adviceBelowLowerBound": "Met een cijfer dat {newWeight}x meetelt, kun je niet lager dan een {newAverage} komen te staan.",
         "futureWeight": "Hoe vaak telt het volgende cijfer mee?",
-        "invalidGradeValue": "Voer een geldig cijfer in tussen {min} en {max}. Decimalen moeten met een punt worden ingevoerd."
+        "invalidGradeValue": "Voer een geldig cijfer in tussen {min} en {max}. Decimalen moeten met een punt worden ingevoerd.",
+        "howToAdd": "Hier kun je handmatig een cijfer toevoegen aan de berekening. \nWil je een cijfer toevoegen dat al in Magister staat? Zoek hem dan op \nin het cijferoverzicht en klik erop. Of klik op de naam van het vak."
     },
     "cb": {
         "title": "Cijferback-up",
@@ -235,14 +238,25 @@
     },
     "cs": {
         "title": "Statistieken",
-        "filters": "Filters",
-        "years": "Leerjaren",
-        "subjects": "Vakken",
+        "emptyDesc": "Selecteer cijferlijsten of individuele cijfers om statistieken te bekijken.",
+        "xGrade": "{num} cijfer",
+        "xGrades": "{num} cijfers",
         "mean": "Gemiddelde",
+        "meanDescription": "Het ongewogen gemiddelde: het rekenkundig gemiddelde van de cijfers.",
         "median": "Mediaan",
+        "medianDescription": "De mediaan: het middelste cijfer wanneer alle cijfers op volgorde worden gezet.",
         "mode": "Modus",
+        "modeDescription": "De modus: het cijfer dat het vaakst voorkomt.",
         "modes": "Modi",
-        "standardDeviation": "St.dev."
+        "standardDeviation": "St.afw.",
+        "standardDeviationDescription": "De standaardafwijking: een maat voor de spreiding van de cijfers rondom het gemiddelde.",
+        "sufficient": "Voldoendes",
+        "sufficientDescription": "Het aantal cijfers dat een voldoende is.",
+        "insufficient": "Onvoldoendes",
+        "insufficientDescription": "Het aantal cijfers dat een onvoldoende is.",
+        "histogram": "Histogram",
+        "histogramBarDescription": "{frequency} cijfers tussen {rangeStart} en {rangeEnd}",
+        "howToAdd": "Selecteer en deselecteer losse cijfers, hele vakken of hele cijferlijsten door erop te klikken \nin het cijferoverzicht. \nJe kunt ook cijfers uit meerdere cijferlijsten selecteren. Gebruik de lijstkiezer linksboven."
     },
     "sw": {
         "searchPlaceholder": "Zoeken",

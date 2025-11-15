@@ -59,7 +59,7 @@ async function popstate() {
 async function gradeList() {
     await awaitElement('#cijferslaatstbehaalderesultaten-uitgebreideweergave')
 
-    saveToStorage('viewedGrades', new Date().getTime(), 'local')
+    saveToStorage('viewedGrades', new Date().getTime(), 'local') // TODO: implement this in the overview as well, with a nice animation
 }
 
 let backupPane, statisticsPane, calculatorPane;
@@ -167,7 +167,7 @@ class GradeTable {
     identifier = {};
     date = null;
     #parentElement = null;
-    #table = null;
+    element = null;
 
     constructor(grades = [], identifier = {}, parentElement = document.querySelector('section.main>div')) {
         this.grades = grades;
@@ -208,31 +208,52 @@ class GradeTable {
         if (!document.body.contains(this.#parentElement)) this.#parentElement = document.querySelector('section.main>div');
 
         // Create and store table element
-        this.#table = this.#parentElement.createChildElement('table', { class: 'st st-grade-table' });
+        this.element = this.#parentElement.createChildElement('table', { class: 'st st-grade-table' });
 
-        const headerRow1 = this.#table.createChildElement('tr');
-        headerRow1.createChildElement('th');
+        const headerRow1 = this.element.createChildElement('tr');
+        headerRow1.createChildElement('th')
+            .addEventListener('click', async () => {
+                if (statisticsPane.isVisible) {
+                    const subjectGrades = filteredGrades.filter(g => g.CijferKolom?.KolomSoort !== 2);
+                    await statisticsPane.toggleMultipleGrades(subjectGrades);
+                    statisticsPane.redraw();
+                    return;
+                }
+            });
         for (const period of gradePeriods) {
             const numColumns = new Set(sortedColumns.filter(col => col.CijferPeriode?.Naam === period).map(g => g.CijferKolom?.[groupingVariable])).size;
             headerRow1.createChildElement('th', { innerText: period, colSpan: numColumns });
         }
 
-        const headerRow2 = this.#table.createChildElement('tr');
-        headerRow2.createChildElement('th');
+        const headerRow2 = this.element.createChildElement('tr');
+        headerRow2.createChildElement('th', { innerText: i18n('toggleAll') })
+            .addEventListener('click', async () => {
+                if (statisticsPane.isVisible) {
+                    const subjectGrades = filteredGrades.filter(g => g.CijferKolom?.KolomSoort !== 2);
+                    await statisticsPane.toggleMultipleGrades(subjectGrades);
+                    statisticsPane.redraw();
+                    return;
+                }
+            });
         for (const column of gradeColumns) {
             headerRow2.createChildElement('th')
                 .createChildElement('span', { innerText: column });
         }
 
         for (const subject of gradeSubjects) {
-            const subjectRow = this.#table.createChildElement('tr');
+            const subjectRow = this.element.createChildElement('tr');
             subjectRow.createChildElement('th', { innerText: subject })
-                .addEventListener('click', () => {
+                .addEventListener('click', async () => {
                     if (calculatorPane.isVisible) {
                         const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2);
-                        for (const grade of subjectGrades) {
-                            calculatorPane.toggleGrade(grade, this.identifier.year);
-                        }
+                        await calculatorPane.toggleMultipleGrades(subjectGrades, this.identifier.year);
+                        calculatorPane.redraw();
+                        return;
+                    }
+                    if (statisticsPane.isVisible) {
+                        const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2);
+                        await statisticsPane.toggleMultipleGrades(subjectGrades);
+                        statisticsPane.redraw();
                         return;
                     }
                 });
@@ -274,9 +295,15 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
                             ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]).join(', '),
                         popovertarget: 'st-grade-details-popover',
                     });
-                    td.addEventListener('click', () => {
+                    td.addEventListener('click', async () => {
                         if (calculatorPane.isVisible) {
-                            calculatorPane.toggleGrade(grade, this.identifier.year);
+                            await calculatorPane.toggleGrade(grade, this.identifier.year);
+                            calculatorPane.redraw();
+                            return;
+                        }
+                        if (statisticsPane.isVisible) {
+                            await statisticsPane.toggleGrade(grade);
+                            statisticsPane.redraw();
                             return;
                         }
                         const dialog = new GradeDetailDialog(grade, this.identifier.year);
@@ -298,328 +325,14 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
 
         if (backupPane.isVisible) backupPane.redraw();
         if (calculatorPane.isVisible) calculatorPane.redraw();
+        if (statisticsPane.isVisible) statisticsPane.redraw();
     }
 
     destroy() {
-        if (this.#table) {
-            this.#table.remove();
-            this.#table = null;
+        if (this.element) {
+            this.element.remove();
+            this.element = null;
         }
-    }
-}
-
-// Grade statistics
-async function gradeStatistics() {
-    const aside = await awaitElement('#cijfers-container > aside'),
-        asideContent = await awaitElement('#cijfers-container > aside > .content-container'),
-        tabs = await awaitElement('#cijfers-container > aside > div.head-bar > ul'),
-        scTab = element('li', 'st-cs-tab', tabs, { class: 'st-tab asideTrigger' }),
-        scTabLink = element('a', 'st-cs-tab-link', scTab, { innerText: i18n('cs.title') })
-
-    const scContainer = element('div', 'st-cs', aside, { class: 'st-sheet', 'data-visible': 'false' }),
-        scFilterButton = element('button', 'st-cs-filter-button', scContainer, { class: 'st-button icon primary', 'data-icon': '', title: "Leerjaren en vakken selecteren" }),
-        scFilterButtonTooltip = element('div', 'st-cs-filter-button-tooltip', scContainer, { innerText: "Selecteer hier welke vakken en leerjaren worden getoond!" })
-
-    const scStats = element('div', 'st-cs-stats', scContainer),
-        scStatsHeading = element('span', 'st-cs-stats-heading', scStats, { innerText: i18n('cs.title'), 'data-amount': 0 }),
-        scStatsInfo = element('span', 'st-cs-stats-info', scStats, { innerText: "Laden..." })
-
-    const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
-        scWeightedMean = element('div', 'st-cs-weighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Gemiddelde", title: "De gemiddelde waarde met weegfactoren." }),
-        scUnweightedMean = element('div', 'st-cs-unweighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
-        scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
-        scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." })
-
-    const scSufInsuf = element('div', 'st-cs-suf-insuf', scStats),
-        scSufficient = element('div', 'st-cs-sufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Voldoendes", title: "Het aantal cijfers hoger dan of gelijk aan de voldoendegrens." }),
-        scSufInsufChart = element('div', 'st-cs-suf-insuf-chart', scSufInsuf, { class: 'donut', title: "Het percentage cijfers hoger dan of gelijk aan de voldoendegrens." }),
-        scInsufficient = element('div', 'st-cs-insufficient', scSufInsuf, { class: 'st-metric secondary', 'data-description': "Onvoldoendes", title: "Het aantal cijfers lager dan de voldoendegrens." }),
-        scSufInsufDisclaimer = element('div', 'st-cs-suf-insuf-disclaimer', scSufInsuf, { innerText: `Voldoende: ≥ ${Number(syncedStorage['suf-threshold']).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}` })
-
-    const scRoundedHeading = element('span', 'st-cs-rounded-heading', scStats, { class: 'st-section-heading', innerText: "Afgerond behaalde cijfers" }),
-        scRoundedChart = element('div', 'st-cs-rounded-chart', scStats)
-
-    const scHistory = element('div', 'st-cs-history', scStats),
-        scHistoryHeading = element('span', 'st-cs-history-heading', scHistory, { class: 'st-section-heading', innerText: "Behaalde cijfers" }),
-        scMin = element('div', 'st-cs-min', scHistory, { class: 'st-metric secondary', 'data-description': "Laagste cijfer", title: "Het laagst behaalde cijfer." }),
-        scMax = element('div', 'st-cs-max', scHistory, { class: 'st-metric secondary', 'data-description': "Hoogste cijfer", title: "Het hoogst behaalde cijfer." }),
-        scVariance = element('div', 'st-cs-variance', scHistory, { class: 'st-metric secondary', 'data-description': "Variantie", title: "De gemiddelde afwijking van alle meetwaarden tot de gemiddelde waarde." }),
-        scLineChart = element('div', 'st-cs-history-chart', scHistory, { style: `--suf-threshold-p: ${(1 - ((Number(syncedStorage['suf-threshold']) - 1) / 9)) * 100}%` })
-
-    const scFilters = element('div', 'st-cs-filters', scContainer),
-        scFiltersHeading = element('span', 'st-cs-filters-heading', scFilters, { innerText: i18n('cs.filters') }),
-        scYearFilterHeading = element('span', 'st-cs-year-filter-heading', scFilters, { innerText: i18n('cs.years') }),
-        scYearFilter = element('div', 'st-cs-year-filter', scFilters),
-        scSubjectFilterAll = element('button', 'st-cs-subject-filter-all', scFilters, { class: 'st-button icon', 'data-icon': '', title: "Selectie omkeren" }),
-        scSubjectFilter = element('div', 'st-cs-subject-filter', scFilters)
-
-    let years = [],
-        gatheredYears = new Set(),
-        includedYears = new Set(),
-        subjects = new Set(),
-        excludedSubjects = new Set()
-
-
-    tabs.addEventListener('click', (event) => {
-        let scTabClicked = event.target.id.startsWith('st-cs-tab')
-        if (scTabClicked) {
-            scTab.classList.add('active')
-            scContainer.dataset.visible = true
-            asideContent.style.display = 'none'
-        } else {
-            scTab.classList.remove('active')
-            scContainer.dataset.visible = false
-            if (!tabs.querySelector('.st-tab.active')) asideContent.style.display = ''
-        }
-    })
-
-    scFilterButton.addEventListener('click', () => {
-        scFilterButtonTooltip.classList.add('hidden')
-        if ((scContainer.dataset.filters == 'true')) {
-            scContainer.dataset.filters = false
-        } else {
-            scContainer.dataset.filters = true
-        }
-    })
-
-    scSubjectFilterAll.addEventListener('click', () => {
-        [...scSubjectFilter.children].forEach(e => e.click())
-    })
-
-    // Gather all years and populate the year filter
-    years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
-    years.forEach(async (year, i, a) => {
-        let label = element('label', `st-cs-year-${year.id}-label`, scYearFilter, { class: 'st-checkbox-label', for: `st-cs-year-${year.id}`, innerText: year.studie.code.match(/\d/gi)?.[0], title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})` })
-        if (!(label.innerText?.length > 0)) label.innerText = i + 1
-        let input = element('input', `st-cs-year-${year.id}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
-
-
-        if (i === a.length - 1) {
-            input.checked = true
-            let yearGrades = (await magisterApi.gradesForYear(year))
-                .filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.'))) && (Number(grade.CijferStr.replace(',', '.')) <= 10) && (Number(grade.CijferStr.replace(',', '.')) >= 1))
-                .filter((grade, index, self) =>
-                    index === self.findIndex((g) =>
-                        g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
-                        g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
-                        g.CijferStr === grade.CijferStr
-                    )
-                )
-                .sort((a, b) => new Date(a.DatumIngevoerd).getTime() - new Date(b.DatumIngevoerd).getTime())
-            statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
-
-            let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
-            subjects = new Set([...subjects, ...yearSubjects])
-
-            gatheredYears.add(year.id)
-            includedYears.add(year.id)
-
-            buildSubjectFilter()
-            displayStatistics()
-        }
-
-        label.addEventListener('contextmenu', (event) => {
-            event.preventDefault()
-            scYearFilter.querySelectorAll('input').forEach(child => {
-                if (child.checked) child.click()
-            })
-            input.click()
-        })
-
-        input.addEventListener('input', async () => {
-            if (!gatheredYears.has(year.id)) {
-                let yearGrades = (await magisterApi.gradesForYear(year))
-                statsGrades.push(...yearGrades.filter(grade => grade.CijferKolom.KolomSoort == 1 && !isNaN(Number(grade.CijferStr.replace(',', '.')))).map(e => ({ ...e, result: Number(e.CijferStr.replace(',', '.')), year: year.id })))
-
-                gatheredYears.add(year.id)
-            }
-
-            input.checked ? includedYears.add(year.id) : includedYears.delete(year.id)
-
-            let yearSubjects = statsGrades.filter(e => e.year === year.id).map(e => e.Vak.Omschrijving)
-            subjects = new Set([...subjects, ...yearSubjects])
-
-            buildSubjectFilter()
-            displayStatistics()
-        })
-    })
-
-    function buildSubjectFilter() {
-        scSubjectFilter.innerText = ''
-
-        subjects = new Set([...subjects]
-            .filter(subject => statsGrades.filter(e => includedYears.has(e.year)).find(e => e.Vak.Omschrijving === subject))
-            .sort((a, b) => a.localeCompare(b, locale, { sensitivity: 'base' })))
-
-        let subjectsArray = [...subjects]
-        subjectsArray.forEach(subjectName => {
-            let label = element('label', `st-cs-subject-${subjectName}-label`, scSubjectFilter, { class: 'st-checkbox-label', for: `st-cs-subject-${subjectName}`, innerText: subjectName })
-            let input = element('input', `st-cs-subject-${subjectName}`, label, { class: 'st-checkbox-input', type: 'checkbox' })
-            input.checked = !excludedSubjects.has(subjectName)
-
-            input.addEventListener('input', async () => {
-                excludedSubjects.has(subjectName) ? excludedSubjects.delete(subjectName) : excludedSubjects.add(subjectName)
-                displayStatistics()
-            })
-
-            label.addEventListener('contextmenu', (event) => {
-                event.preventDefault()
-                scSubjectFilter.querySelectorAll('input').forEach(child => {
-                    if (child.checked) child.click()
-                })
-                input.click()
-            })
-        })
-
-        let excludedSubjectsArray = [...excludedSubjects]
-        excludedSubjects = new Set(excludedSubjectsArray.filter(e => subjects.has(e)))
-    }
-
-    function filterGrades() {
-        const filtered = statsGrades
-            // Remove grades that don't match filter
-            .filter(e =>
-                includedYears.has(e.year) &&
-                !excludedSubjects.has(e.Vak.Omschrijving)
-            )
-            // Remove any duplicates (based on column num, column name and result)
-            .filter((grade, index, self) =>
-                index === self.findIndex((g) =>
-                    g.CijferKolom.KolomKop === grade.CijferKolom.KolomKop &&
-                    g.CijferKolom.KolomNaam === grade.CijferKolom.KolomNaam &&
-                    g.CijferStr === grade.CijferStr
-                )
-            )
-            // Sort from old to new
-            .sort((a, b) => new Date(a.DatumIngevoerd).getTime() - new Date(b.DatumIngevoerd).getTime())
-        return filtered
-    }
-
-    displayStatistics = async (fromBackup = false) => {
-        return new Promise(async (resolve, reject) => {
-            scContainer.classList.remove('empty')
-            scContainer.classList.remove('with-weights')
-            scUnweightedMean.classList.remove('secondary')
-
-            let includedSubjects = [...subjects]
-                .filter(subject => !excludedSubjects.has(subject))
-                .sort((a, b) => a.localeCompare(b, locale, { sensitivity: 'base' }))
-
-            let filteredGrades = []
-
-            if (fromBackup) {
-                filteredGrades = statsGrades
-                    .filter(grade => !isNaN(grade.result) && grade.weight > 0 && grade.className !== 'grade gemiddeldecolumn' && grade.result >= 1 && grade.result <= 10)
-                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                scStatsHeading.dataset.amount = filteredGrades.length
-
-                scStatsInfo.innerText = "Statistieken kunnen in Magister niet cor-\nrect worden weergegeven voor back-ups."
-            } else {
-                filteredGrades = filterGrades()
-                scStatsHeading.dataset.amount = filteredGrades.length
-
-                let yearsText = new Intl.ListFormat(locale, {
-                    style: 'short',
-                    type: 'conjunction',
-                }).format(
-                    [...includedYears]
-                        .sort((idA, idB) => new Date(years.find(y => y.id === idA).begin).getTime() - new Date(years.find(y => y.id === idB).begin).getTime())
-                        .map(id => years.find(y => y.id === id).studie.code)
-                )
-                if (includedYears.size === 1 && includedYears.has(years.at(-1).id)) yearsText = `Dit leerjaar (${years.at(-1)?.studie?.code})`
-                else if (includedYears.size === years.length) yearsText = `Alle ${years.length} leerjaren (${years.at(-1)?.studie?.code} t/m ${years.at(0)?.studie?.code})`
-
-                let subjectsText = includedSubjects.join(', ')
-                if (includedSubjects.length > 3) subjectsText = `${includedSubjects.length} van de ${subjects.size} vakken`
-                if (excludedSubjects.size === 1) subjectsText = `Alle ${subjects.size} vakken behalve ${[...excludedSubjects][0]}`
-                if (excludedSubjects.size === 0) subjectsText = `Alle ${subjects.size} vakken`
-
-                scStatsInfo.innerText = [yearsText, subjectsText].join('\n')
-            }
-
-
-            if (filteredGrades.length < 1) {
-                scContainer.dataset.filters = true
-                scContainer.classList.add('empty')
-                return
-            }
-
-            let filteredResults = filteredGrades.map(grade => grade.result),
-                roundedFrequencies = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
-
-            filteredResults.forEach(result => roundedFrequencies[Math.round(result)]++)
-
-
-            let unweightedMean = calculateMean(filteredResults)
-            scUnweightedMean.innerText = unweightedMean.toLocaleString(locale, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-
-            scCentralTendencies.dataset.great = unweightedMean >= 7.0 ? true : false
-
-            let median = calculateMedian(filteredResults)
-            scMedian.innerText = median.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-
-            let { modes, occurrences } = calculateMode(filteredResults)
-            scMode.innerText = modes.map(e => e.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join(' & ')
-            scMode.dataset.extra = occurrences + '×'
-            scMode.dataset.description = modes.length <= 1 ? "Modus" : "Modi"
-            if (scMode.innerText.length < 1) {
-                scMode.innerText = "geen"
-                scMode.removeAttribute('data-extra')
-            }
-
-            let variance = calculateVariance(filteredResults)
-            scVariance.innerText = variance.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-            let minResult = Math.min(...filteredResults)
-            scMin.innerText = minResult.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-            scMin.dataset.extra = filteredResults.filter(result => result === minResult).length + '×'
-
-            let maxResult = Math.max(...filteredResults)
-            scMax.innerText = maxResult.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-            scMax.dataset.extra = filteredResults.filter(result => result === maxResult).length + '×'
-
-            let resultsSufficient = filteredResults.filter((e) => { return e >= Number(syncedStorage['suf-threshold']) })
-            scSufficient.innerText = resultsSufficient.length
-
-            let resultsInsufficient = filteredResults.filter((e) => { return e < Number(syncedStorage['suf-threshold']) })
-            scInsufficient.innerText = resultsInsufficient.length
-            scInsufficient.dataset.has = resultsInsufficient.length > 0
-
-            scRoundedChart.createBarChart(roundedFrequencies, null, 0, false, false)
-
-            scSufInsufChart.style.backgroundImage = `
-            url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-warn').replace('#', '%23')}' stroke-width='7' stroke-dasharray='${(resultsInsufficient.length / filteredResults.length) * 278}%25%2c 10000%25' stroke-dashoffset='0'/%3e%3c/svg%3e"),
-            url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='90%25' height='90%25' x='3.75' y='3.75' fill='none' rx='100' ry='100' stroke='${getComputedStyle(document.body).getPropertyValue('--st-accent-primary').replace('#', '%23')}' stroke-width='6.9'/%3e%3c/svg%3e")`
-            scSufInsufChart.dataset.percentage = `${(resultsSufficient.length / filteredResults.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
-
-            scLineChart.createLineChart(filteredResults, filteredGrades.map(e => `${new Date(e.DatumIngevoerd || e.date).toLocaleDateString(locale, { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'long', year: 'numeric' })}\n${e.Vak?.Omschrijving || ''}\n${e.CijferKolom?.KolomNaam || e.column}, ${e.CijferKolom?.KolomKop || e.title || 'cijfer'}\n`), 1, 10)
-            // TODO: also incorporate mean and (if subject selected) weighted mean (requires fetching every grade!)
-
-            resolve()
-
-            // Add weighted stats afterwards in case there's only one subject and year selected
-            if (!fromBackup && includedYears.size === 1 && includedSubjects.length === 1) {
-                for (const e of filteredGrades) {
-                    e.weight ??= (await magisterApi.gradesColumnInfo({ id: [...includedYears][0] }, e.CijferKolom.Id)).Weging
-                    statsGrades[statsGrades.findIndex(f => f.CijferKolom.Id === e.CijferKolom.Id)].weight ??= e.weight
-                }
-
-                if (!filteredGrades.every(grade => grade.weight) || !filteredGrades.some(grade => grade.weight > 0)) return
-
-                scWeightedMean.innerText = calculateMean(
-                    filteredGrades
-                        .filter(grade => grade.weight > 0)
-                        .map(grade => grade.result),
-                    filteredGrades
-                        .filter(grade => grade.weight > 0)
-                        .map(grade => grade.weight)
-                ).toLocaleString(locale, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-
-
-                scContainer.classList.add('with-weights')
-                scUnweightedMean.classList.add('secondary')
-            }
-        })
     }
 }
 

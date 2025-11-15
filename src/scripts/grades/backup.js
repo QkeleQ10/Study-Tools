@@ -42,7 +42,7 @@ class GradeBackupPane extends Pane {
 
         this.#div2.createChildElement('p', { innerText: i18n('cb.importDesc') });
         const importButton = this.#div2.createChildElement('button', { id: 'st-grade-backup-import', class: 'st-button hero', innerText: i18n('cb.browse'), 'data-icon': '' });
-        const input = this.#div2.createChildElement('input', { type: 'file', accept: '.json', style: 'display:none' });
+        const input = this.#div2.createChildElement('input', { type: 'file', accept: '.stgrades', style: 'display:none' });
         importButton.addEventListener('click', () => input.click());
         input.addEventListener('change', async (event) => {
             const file = event.target.files[0];
@@ -80,7 +80,7 @@ class GradeBackupPane extends Pane {
                     }
                 ))))}`,
                     a = element('a', 'st-grade-backup-temp', document.body, {
-                        download: `Cijferback-up ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}`,
+                        download: `Cijferback-up ${year.studie.code} (${year.lesperiode.code}) ${(new Date).toLocaleString()}.stgrades`,
                         href: uri,
                         type: 'application/json'
                     });

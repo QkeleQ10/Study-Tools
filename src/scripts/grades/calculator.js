@@ -17,6 +17,7 @@ class GradeCalculatorPane extends Pane {
 
     hide() {
         document.querySelectorAll('.st-grade-calculator-selected').forEach(elem => elem.classList.remove('st-grade-calculator-selected'));
+        currentGradeTable.element.classList.remove('st-cc-open');
         super.hide();
     }
 
@@ -24,7 +25,9 @@ class GradeCalculatorPane extends Pane {
         this.progressBar.dataset.visible = 'true';
 
         this.#div1.innerHTML = '';
+        
         document.querySelectorAll('.st-grade-calculator-selected').forEach(elem => elem.classList.remove('st-grade-calculator-selected'));
+        currentGradeTable.element.classList.add('st-cc-open');
 
         // === ADDED GRADES ===
 
@@ -41,6 +44,8 @@ class GradeCalculatorPane extends Pane {
         addCustomGradeButton.addEventListener('click', async () => {
             const dialog = new Dialog();
             dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cc.addCustomGrade') });
+            dialog.body.createChildElement('p', { innerText: i18n('cc.howToAdd') });
+            dialog.body.createChildElement('br');
             const flex = dialog.body.createChildElement('div', { style: { display: 'flex', gap: '8px' } });
             const gradeInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('assessment'), min: (syncedStorage['c-minimum'] ?? 1), max: (syncedStorage['c-maximum'] ?? 10), step: '0.1', style: { flex: '1' } });
             const weightInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('weight'), min: '0', step: '1', style: { flex: '1' } });
@@ -185,10 +190,10 @@ class GradeCalculatorPane extends Pane {
         chartContainer.createLinearLineChart(slope, intercept, lowerBound, upperBound, lowerBound, upperBound, upperBound - lowerBound, upperBound - lowerBound, (x, y) => `${x.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ➜ ${y.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 0.1);
     }
 
-    async toggleGrade(grade, year) {
+    async toggleGrade(grade, year, force) {
         this.progressBar.dataset.visible = 'true';
 
-        if (this.selectedGrades.some(g => g.id === grade.CijferId)) {
+        if ((this.selectedGrades.some(g => g.id === grade.CijferId) || force === false) && force !== true) {
             this.selectedGrades = this.selectedGrades.filter(g => g.id !== grade.CijferId);
         } else {
 
@@ -217,7 +222,13 @@ class GradeCalculatorPane extends Pane {
                 index: grade.CijferKolom.KolomVolgNummer || 0,
             });
         }
+    }
 
-        this.redraw();
+    async toggleMultipleGrades(grades, year) {
+        const someAlreadySelected = grades.some(g => this.selectedGrades.some(sg => sg.id === g.CijferId));
+
+        for (const grade of grades) {
+            await this.toggleGrade(grade, year, !someAlreadySelected);
+        }
     }
 }

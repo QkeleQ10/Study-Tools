@@ -1,8 +1,8 @@
 class GradeStatisticsPane extends Pane {
     #div1;
+    #div2;
+    selectedGrades = [];
     #initialised = false;
-    includedTables = new Set();
-    excludedSubjects = new Set();
 
     constructor(parentElement) {
         super(parentElement);
@@ -10,150 +10,216 @@ class GradeStatisticsPane extends Pane {
 
         this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cs.title') });
         this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
+        this.#div2 = this.element.createChildElement('div', { class: 'st-div' });
     }
 
     show() {
-        if (!this.#initialised) this.#initialise();
+        this.redraw();
         super.show();
     }
 
-    async #initialise() {
+    hide() {
+        document.querySelectorAll('.st-grade-statistics-selected').forEach(elem => elem.classList.remove('st-grade-statistics-selected'));
+        currentGradeTable.element.classList.remove('st-cs-open');
+        super.hide();
+    }
+
+    async redraw() {
         this.progressBar.dataset.visible = 'true';
 
-        // initialisation here
-
-        const filtersButton = this.element.createChildElement('button', { class: 'st-button icon', 'data-icon': '', title: i18n('cs.filters'), style: { position: 'absolute', top: '12px', right: '12px' } });
-        filtersButton.addEventListener('click', async () => {
-            const dialog = new Dialog();
-            dialog.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cs.filters') });
-
-            const yearFilter = dialog.body.createChildElement('div', { id: 'st-cs-year-filter', class: 'st-horizontal-icon-radio' });
-
-            const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
-
-            for (const year of years) {
-                let label = yearFilter.createChildElement('label', {
-                    class: 'st-checkbox-label',
-                    for: `st-cs-year-filter-year${year.id}`,
-                    innerText: year.studie.code.match(/\d/gi)?.[0],
-                    title: `${year.groep.omschrijving || year.groep.code} (${year.studie.code} in ${year.lesperiode.code})`
-                });
-                if (!(label.innerText?.length > 0)) label.innerText = '?';
-                let input = label.createChildElement('input', {
-                    id: `st-cs-year-filter-year${year.id}`,
-                    class: 'st-checkbox-input',
-                    name: 'st-cs-year-filter',
-                    type: 'checkbox'
-                });
-                input.checked = [...this.includedTables].some(t => t.identifier.year?.id === year.id);
-
-                input.addEventListener('change', async () => {
-                    this.progressBar.dataset.visible = 'true';
-                    let gradeTable = gradeTables.find(t => t.identifier.year?.id === year.id);
-                    if (!gradeTable) {
-                        gradeTable = new GradeTable(await magisterApi.gradesForYear(year), { year });
-                        gradeTables.push(gradeTable);
-                    }
-                    if (input.checked)
-                        this.includedTables.add(gradeTable);
-                    else
-                        this.includedTables.delete(gradeTable);
-
-                    await this.#updateStats();
-                    this.progressBar.dataset.visible = 'false';
-                });
+        if (!this.#initialised && this.selectedGrades.length === 0) {
+            for (const grade of currentGradeTable.grades) {
+                await this.toggleGrade(grade);
             }
+            this.#initialised = true;
+        }
 
-            for (const table of gradeTables) {
-                if (years.some(y => y.id === table.identifier.year?.id)) continue;
+        this.#div1.innerHTML = '';
+        this.#div2.innerHTML = '';
 
-                let label = yearFilter.createChildElement('label', {
-                    class: 'st-checkbox-label icon',
-                    for: `st-cs-year-filter-yearimport${table.identifier.backupDate.getTime()}`,
-                    innerText: '',
-                    title: `Back-up van ${table.identifier.backupYear.studie.code} (${table.identifier.backupYear.lesperiode.code}) ${table.identifier.backupDate.toLocaleString()}`
-                });
-                if (!(label.innerText?.length > 0)) label.innerText = '?';
-                let input = label.createChildElement('input', {
-                    id: `st-cs-year-filter-yearimport${table.identifier.backupDate.getTime()}`,
-                    class: 'st-checkbox-input',
-                    name: 'st-cs-year-filter',
-                    type: 'checkbox'
-                });
-                input.checked = this.includedTables.has(table);
+        document.querySelectorAll('.st-grade-statistics-selected').forEach(elem => elem.classList.remove('st-grade-statistics-selected'));
+        currentGradeTable.element.classList.add('st-cs-open');
 
-                input.addEventListener('change', async () => {
-                    this.progressBar.dataset.visible = 'true';
-                    if (input.checked)
-                        this.includedTables.add(table);
-                    else
-                        this.includedTables.delete(table);
+        let grades = this.selectedGrades;
+        let values = grades.map(({ result }) => result);
 
-                    await this.#updateStats();
-                    this.progressBar.dataset.visible = 'false';
-                });
-            }
+        for (const { id } of grades) {
+            const elem = document.getElementById(id);
+            if (elem) elem.classList.add('st-grade-statistics-selected');
+        }
 
+        const filterButton = this.#div1.createChildElement('button', { class: 'st-button icon', 'data-icon': '', title: i18n('selection'), style: { position: 'absolute', top: '12px', right: '12px' } });
+        filterButton.addEventListener('click', async () => {
+            const dialog = new Dialog({
+                innerText: i18n('cs.howToAdd'),
+            });
             dialog.show();
         });
 
-        this.includedTables.add(currentGradeTable);
+        // === EMPTY ===
 
-        await this.#updateStats();
-        this.#initialised = true;
-    }
+        if (this.selectedGrades.length === 0) {
+            this.#div1.createChildElement('p', { innerText: i18n('cs.emptyDesc') });
+            this.progressBar.dataset.visible = 'false';
+            return;
+        } else {
+            this.#div1.createChildElement('p', {
+                class: 'remove',
+                innerText: i18n(
+                    grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades',
+                    { num: grades.length }
+                ),
+                title: i18n('remove')
+            })
+                .addEventListener('click', () => {
+                    this.selectedGrades = [];
+                    this.redraw();
+                });
+        }
 
-    async #updateStats() {
-        this.progressBar.dataset.visible = 'true';
-        this.#div1.innerHTML = '';
+        // === CENTRAL TENDENCIES ===
 
-        let values = [...this.includedTables].flatMap(t => t.grades.filter(grade => {
-            if (this.excludedSubjects.has(grade.Vak.Omschrijving)) return false; // excluded subject
-            if (grade.CijferKolom?.KolomSoort == 2 || !grade.TeltMee) return false; // not a relevant grade
-            const result = Number(grade.CijferStr?.replace(',', '.'));
-            if (isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) return false; // not a valid number
-            return true;
-        }).map(grade => Number(grade.CijferStr.replace(',', '.'))));
-
-        this.#div1.createChildElement('p', {
-            innerText: i18n(this.includedTables.size == 1 ? '{tables} cijferlijst' : '{tables} cijferlijsten', { tables: this.includedTables.size }) + '\n' +
-                `${values.length} cijfers\ngemiddelde = ${calculateMean(values)}, mediaan = ${calculateMedian(values)}, modus = ${calculateMode(values).modes.join(', ')}, variantie = ${calculateVariance(values)}\n\n[${values.join(', ')}]`
-        });
-
-        const divCentralTendencies = this.#div1.createChildElement('div', { id: 'st-cs-central-tendencies' });
+        const divCentralTendencies = this.#div2.createChildElement('div', { class: 'st-cs-tile', id: 'st-cs-central-tendencies' });
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric',
             'data-description': i18n('cs.mean'),
-            title: i18n('cs.mean.title'),
+            title: i18n('cs.meanDescription'),
             innerText: calculateMean(values).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         });
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n('cs.median'),
-            title: i18n('cs.median.title'),
+            title: i18n('cs.medianDescription'),
             innerText: calculateMedian(values).toLocaleString(locale)
         });
         const { modes, occurrences } = calculateMode(values);
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n(modes.length > 1 ? 'cs.modes' : 'cs.mode'),
-            title: i18n('cs.mode.title'),
+            title: i18n('cs.modeDescription'),
             innerText: modes.length > 0 ? modes.map(m => m.toLocaleString(locale)).join(', ') : i18n('none'),
             'data-extra': modes.length > 0 ? `${occurrences}x` : null
         });
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n('cs.standardDeviation'),
-            title: i18n('cs.standardDeviation.title'),
+            title: i18n('cs.standardDeviationDescription'),
             innerText: calculateStandardDeviation(values).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         });
 
-        // const scCentralTendencies = element('div', 'st-cs-central-tendencies', scStats),
-        //     scWeightedMean = element('div', 'st-cs-weighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Gemiddelde", title: "De gemiddelde waarde met weegfactoren." }),
-        //     scUnweightedMean = element('div', 'st-cs-unweighted-mean', scCentralTendencies, { class: 'st-metric', 'data-description': "Ongewogen gemiddelde", title: "De gemiddelde waarde, zonder weegfactoren." }),
-        //     scMedian = element('div', 'st-cs-median', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Mediaan", title: "De middelste waarde, wanneer je alle cijfers van laag naar hoog op een rijtje zou zetten.\nBij een even aantal waarden: het gemiddelde van de twee middelste waarden." }),
-        //     scMode = element('div', 'st-cs-mode', scCentralTendencies, { class: 'st-metric secondary', 'data-description': "Modus", title: "De waarde die het meest voorkomt." })
+        // === SUFFICIENT / INSUFFICIENT ===
+
+        const numSufficient = grades.filter(g => g.sufficient).length;
+
+        const divSufInsuf = this.#div2.createChildElement('div', { class: 'st-cs-tile', id: 'st-cs-suf-insuf' });
+        const pieChart = divSufInsuf.createChildElement('div', { id: 'st-cs-pie' });
+        pieChart.createChildElement('div', {
+            class: 'st-circle-sector', style: {
+                '--start': `0%`,
+                '--end': `${(grades.length - numSufficient) / grades.length * 100}%`,
+                outlineColor: 'var(--st-accent-warn)',
+            }
+        });
+        pieChart.createChildElement('div', {
+            class: 'st-circle-sector', style: {
+                '--start': `${(grades.length - numSufficient) / grades.length * 100}%`,
+                '--end': `100%`,
+                outlineColor: 'var(--st-accent-ok)',
+            }
+        });
+        divSufInsuf.createChildElement('div', {
+            class: 'st-metric secondary',
+            'data-description': i18n('cs.sufficient'),
+            title: i18n('cs.sufficientDescription'),
+            innerText: numSufficient,
+            'data-extra': `${(numSufficient / grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+        });
+        divSufInsuf.createChildElement('div', {
+            class: 'st-metric secondary',
+            'data-description': i18n('cs.insufficient'),
+            title: i18n('cs.insufficientDescription'),
+            innerText: grades.length - numSufficient,
+            'data-extra': `${((grades.length - numSufficient) / grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+        });
+
+        // === HISTOGRAM ===
+
+        const lowerBound = (syncedStorage['c-minimum'] ?? 1);
+        const upperBound = (syncedStorage['c-maximum'] ?? 10);
+        const range = upperBound - lowerBound;
+        const stepSize = Math.floor(range / 10) || 1;
+        const roundedFrequencies = {};
+        for (let i = Math.ceil(lowerBound); i <= Math.floor(upperBound); i += stepSize) {
+            roundedFrequencies[i] = 0;
+        }
+        for (const value of values) {
+            let roundedValue = Math.round((value - lowerBound) / stepSize) * stepSize + lowerBound;
+            roundedFrequencies[roundedValue]++;
+        }
+
+        const divHistogram = this.#div2.createChildElement('div', { class: 'st-cs-tile', id: 'st-cs-histogram' });
+        divHistogram.createChildElement('h4', { innerText: i18n('cs.histogram'), style: { marginBottom: '4px' } });
+        const histogram = divHistogram.createChildElement('div', { class: 'st-histogram horizontal' });
+        const maxFrequency = Math.max(...Object.values(roundedFrequencies));
+        for (const [roundedValue, frequency] of Object.entries(roundedFrequencies)) {
+            histogram.createChildElement('div', { class: 'st-cs-histogram-bar-label', innerText: roundedValue });
+            histogram
+                .createChildElement('div', {
+                    class: 'st-cs-histogram-bar-container',
+                    title: i18n('cs.histogramBarDescription', {
+                        frequency,
+                        rangeStart: Math.max(lowerBound, Number(roundedValue) - stepSize / 2).toLocaleString(locale),
+                        rangeEnd: Math.min(upperBound, Number(roundedValue) + stepSize / 2).toLocaleString(locale)
+                    }),
+                })
+                .createChildElement('div', {
+                    class: 'st-cs-histogram-bar',
+                    style: {
+                        '--percentage': `${(frequency / maxFrequency) * 100}%`,
+                        backgroundColor: roundedValue >= (syncedStorage['suf-threshold'] ?? 5.5) ? 'var(--st-accent-ok)' : 'var(--st-accent-warn)',
+                    },
+                    'data-percentage': frequency ? `${(frequency / values.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` : '',
+                })
+        }
+
+        // === LINE CHART ===
+
+        const divLineChart = this.#div2.createChildElement('div', { class: 'st-cs-tile' });
+        divLineChart.createChildElement('h4', { innerText: i18n('cs.trend'), style: { marginBottom: '4px' } });
+        divLineChart.createChildElement('p', { innerText: "Deze grafiek werkt niet naar behoren en zal worden vervangen.", style: { marginBottom: '4px' } });
+        divLineChart.createChildElement('div', { id: 'st-cs-line-chart', style: { width: '100%', height: '300px' } })
+            .createLineChart(values, null, lowerBound, upperBound);
+
 
         this.progressBar.dataset.visible = 'false';
+    }
+
+    async toggleGrade(grade, force) {
+        this.progressBar.dataset.visible = 'true';
+
+        if ((this.selectedGrades.some(g => g.id === grade.CijferId) || force === false) && force !== true) {
+            this.selectedGrades = this.selectedGrades.filter(g => g.id !== grade.CijferId);
+        } else {
+            const result = Number(grade.CijferStr?.replace(',', '.'));
+            if (grade.CijferKolom?.KolomSoort == 2 || !grade.TeltMee || isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) {
+                // not a valid number or not a relevant grade
+                this.progressBar.dataset.visible = 'false';
+                return;
+            }
+
+            this.selectedGrades.push({
+                id: grade.CijferId,
+                result,
+                sufficient: grade.IsVoldoende
+            });
+        }
+    }
+
+    async toggleMultipleGrades(grades) {
+        const someAlreadySelected = grades.some(g => this.selectedGrades.some(sg => sg.id === g.CijferId));
+
+        for (const grade of grades) {
+            await this.toggleGrade(grade, !someAlreadySelected);
+        }
     }
 }
