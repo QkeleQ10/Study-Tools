@@ -205,6 +205,16 @@
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
     },
+    "cl": {
+        "title": "Lijstweergave",
+        "recents": "Laatste cijfers",
+        "emptyDesc": "Er zijn geen cijfers in deze cijferlijst.",
+        "sortBy": "Sorteren op",
+        "sortByDateDesc": "Datum (nieuwste eerst)",
+        "sortByDateAsc": "Datum (oudste eerst)",
+        "sortByResultDesc": "Resultaat (hoogste eerst)",
+        "sortByResultAsc": "Resultaat (laagste eerst)"
+    },
     "cc": {
         "title": "Cijfercalculator",
         "emptyDesc": "Klik op een vak in het cijferoverzicht of selecteer individuele cijfers om te beginnen.",

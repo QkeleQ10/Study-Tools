@@ -66,6 +66,7 @@
                 "src/scripts/today/today.js",
                 "src/scripts/gamification.js",
                 "src/scripts/grades/grades.js",
+                "src/scripts/grades/list.js",
                 "src/scripts/grades/backup.js",
                 "src/scripts/grades/statistics.js",
                 "src/scripts/grades/calculator.js",

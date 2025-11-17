@@ -424,6 +424,24 @@
     outline-offset: -3px;
 }
 
+#st-grade-recents-pane {
+    max-width: 300px;
+
+    .st-grade-list {
+
+        .st-grade-list-item {
+            font-family: var(--st-font-family-secondary);
+
+            .st-grade-list-item-result {
+                font-size: 16px;
+                font-weight: 500;
+                font-family: var(--st-font-family-primary);
+                display: block;
+            }
+        }
+    }
+}
+
 #st-grade-backup-pane {
     max-width: 300px;
 

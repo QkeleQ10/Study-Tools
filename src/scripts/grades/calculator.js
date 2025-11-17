@@ -1,4 +1,7 @@
 class GradeCalculatorPane extends Pane {
+    id = 'cc';
+    icon = '';
+    
     #div1;
     selectedGrades = [];
     futureWeight = null;

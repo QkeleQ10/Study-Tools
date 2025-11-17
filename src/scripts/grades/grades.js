@@ -1,43 +1,3 @@
-class Pane {
-    parentElement;
-    element;
-    progressBar;
-    get isVisible() {
-        return !this.element.classList.contains('st-hidden');
-    }
-
-    set isVisible(visible) {
-        if (visible) this.show();
-        else this.hide();
-    }
-
-    constructor(parentElement) {
-        this.parentElement = parentElement;
-
-        this.element = this.parentElement.createChildElement('div', { class: 'st-pane st-hidden', style: 'width: 300px;' });
-
-        this.progressBar = this.element.createChildElement('div', {
-            class: 'st-progress-bar', dataset: { visible: 'false' },
-        });
-        createElement('div', this.progressBar, {
-            class: 'st-progress-bar-value indeterminate',
-        });
-    }
-
-    show() {
-        this.element.classList.remove('st-hidden');
-    }
-
-    hide() {
-        this.element.classList.add('st-hidden');
-    }
-
-    toggle(force) {
-        if (!force) this.hide();
-        else this.show();
-    }
-}
-
 let statsGrades = [],
     gradeTables = [],
     currentGradeTable = null,
@@ -47,7 +7,7 @@ let statsGrades = [],
 gradeOverview()
 window.addEventListener('popstate', gradeOverview)
 
-let recentsPane, backupPane, statisticsPane, calculatorPane;
+let listPane, backupPane, statisticsPane, calculatorPane;
 
 async function gradeOverview() {
     if (!document.location.href.includes('cijfers') || !syncedStorage['cc']) return;
@@ -72,41 +32,41 @@ async function gradeOverview() {
 
     const panesContainer = contentContainer.createChildElement('div', { class: 'st-panes-container st-hidden' });
 
-    // recentsPane = new GradeRecentsPane(panesContainer);
+    listPane = new GradeListPane(panesContainer);
     backupPane = new GradeBackupPane(panesContainer);
     statisticsPane = new GradeStatisticsPane(panesContainer);
     calculatorPane = new GradeCalculatorPane(panesContainer);
 
-    let panesVisible = () => backupPane.isVisible || statisticsPane.isVisible || calculatorPane.isVisible;
+    const panes = [
+        { instance: listPane },
+        { instance: backupPane },
+        { instance: statisticsPane },
+        { instance: calculatorPane },
+    ];
 
-    const cbLabel = tools.createChildElement('label', { id: 'st-grade-backup-button', class: 'st-checkbox-label icon', title: i18n('cb.title'), innerText: '' });
-    const cbInput = cbLabel.createChildElement('input', { id: 'st-grade-backup-input', class: 'st-checkbox-input', type: 'checkbox' });
-    cbInput.addEventListener('change', () => {
-        backupPane.toggle(cbInput.checked);
-        // close other panes
-        if (csInput.checked) csInput.click();
-        if (ccInput.checked) ccInput.click();
-        panesContainer.classList.toggle('st-hidden', !panesVisible());
-    });
+    const panesVisible = () => panes.some(p => p.instance.isVisible);
 
-    const csLabel = tools.createChildElement('label', { id: 'st-grade-statistics-button', class: 'st-checkbox-label icon', title: i18n('cs.title'), innerText: '' })
-    const csInput = csLabel.createChildElement('input', { id: 'st-grade-statistics-input', class: 'st-checkbox-input', type: 'checkbox' })
-    csInput.addEventListener('change', () => {
-        statisticsPane.toggle(csInput.checked);
-        // close other panes
-        if (ccInput.checked) ccInput.click();
-        if (cbInput.checked) cbInput.click();
-        panesContainer.classList.toggle('st-hidden', !panesVisible());
-    });
-
-    const ccLabel = tools.createChildElement('label', { id: 'st-grade-calculator-button', class: 'st-checkbox-label icon', title: i18n('cc.title'), innerText: '' })
-    const ccInput = ccLabel.createChildElement('input', { id: 'st-grade-calculator-input', class: 'st-checkbox-input', type: 'checkbox' })
-    ccInput.addEventListener('change', () => {
-        calculatorPane.toggle(ccInput.checked);
-        // close other panes
-        if (csInput.checked) csInput.click();
-        if (cbInput.checked) cbInput.click();
-        panesContainer.classList.toggle('st-hidden', !panesVisible());
+    panes.forEach(config => {
+        const label = tools.createChildElement('label', {
+            id: `st-grade-${config.instance.id}-button`,
+            class: 'st-checkbox-label icon',
+            title: i18n(`${config.instance.id}.title`),
+            innerText: config.instance.icon,
+        });
+        const input = label.createChildElement('input', {
+            id: `st-grade-${config.instance.id}-input`,
+            class: 'st-checkbox-input',
+            type: 'checkbox',
+        });
+        config.input = input;
+        input.addEventListener('change', () => {
+            config.instance.toggle(input.checked);
+            // close other panes
+            panes.filter(p => p !== config).forEach(p => {
+                if (p.input?.checked) p.input.click();
+            });
+            panesContainer.classList.toggle('st-hidden', !panesVisible());
+        });
     });
 
     const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
@@ -141,6 +101,50 @@ async function gradeOverview() {
     });
 
     progressBar.dataset.visible = 'false';
+}
+
+class Pane {
+    id;
+    icon;
+
+    parentElement;
+    element;
+    progressBar;
+
+    get isVisible() {
+        return !this.element.classList.contains('st-hidden');
+    }
+
+    set isVisible(visible) {
+        if (visible) this.show();
+        else this.hide();
+    }
+
+    constructor(parentElement) {
+        this.parentElement = parentElement;
+
+        this.element = this.parentElement.createChildElement('div', { class: 'st-pane st-hidden', style: 'width: 300px;' });
+
+        this.progressBar = this.element.createChildElement('div', {
+            class: 'st-progress-bar', dataset: { visible: 'false' },
+        });
+        createElement('div', this.progressBar, {
+            class: 'st-progress-bar-value indeterminate',
+        });
+    }
+
+    show() {
+        this.element.classList.remove('st-hidden');
+    }
+
+    hide() {
+        this.element.classList.add('st-hidden');
+    }
+
+    toggle(force) {
+        if (!force) this.hide();
+        else this.show();
+    }
 }
 
 class GradeTable {
@@ -304,6 +308,7 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
             }
         }
 
+        if (listPane.isVisible) listPane.redraw();
         if (backupPane.isVisible) backupPane.redraw();
         if (calculatorPane.isVisible) calculatorPane.redraw();
         if (statisticsPane.isVisible) statisticsPane.redraw();

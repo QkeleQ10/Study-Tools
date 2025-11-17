@@ -1,9 +1,9 @@
 class GradeBackupPane extends Pane {
-    years = [];
-    #busy = false;
+    id = 'cb';
+    icon = '';
+
     #div1;
     #div2;
-    #initialised = false;
 
     constructor(parentElement) {
         super(parentElement);
@@ -56,15 +56,12 @@ class GradeBackupPane extends Pane {
             reader.readAsText(file);
         });
 
-        this.#initialised = true;
         this.progressBar.dataset.visible = 'false';
-
     }
 
     async #exportGrades(gradeTable) {
         return new Promise(async (resolve, reject) => {
             try {
-                this.#busy = true;
                 this.#div1.classList.add('st-disabled');
 
                 const grades = await this.#gatherGrades(gradeTable);
@@ -95,13 +92,11 @@ class GradeBackupPane extends Pane {
 
                 setTimeout(() => {
                     this.#div1.classList.remove('st-disabled');
-                    this.busy = false;
                     resolve();
                 }, 10000)
 
             } catch (error) {
                 reject(error);
-                // this.close();
                 new Dialog({ innerText: i18n('cb.error') }).show();
             }
         });

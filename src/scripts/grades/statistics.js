@@ -1,4 +1,7 @@
 class GradeStatisticsPane extends Pane {
+    id = 'cs';
+    icon = '';
+
     #div1;
     #div2;
     selectedGrades = [];
