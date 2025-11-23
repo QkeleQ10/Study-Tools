@@ -1979,7 +1979,7 @@ table.table-grid-layout>tbody>tr.selected {
     switch (syncedStorage['insufficient']) {
         case 'underline':
             createStyle(`
-            .st-grade-table tr:nth-child(n+3) td:not(:first-child).insufficient {
+            .st-insufficient {
                 font-weight: bold;
                 text-decoration: underline var(--st-accent-warn) 2px;
                 text-underline-offset: 2px;
@@ -1988,7 +1988,7 @@ table.table-grid-layout>tbody>tr.selected {
 
         case 'background':
             createStyle(`
-            .st-grade-table tr:nth-child(n+3) td:not(:first-child).insufficient {
+            .st-insufficient {
                 font-weight: bold;
                 background-color: var(--st-highlight-warn);
 
@@ -2004,7 +2004,7 @@ table.table-grid-layout>tbody>tr.selected {
 
         case 'textcolor':
             createStyle(`
-            .st-grade-table tr:nth-child(n+3) td:not(:first-child).insufficient {
+            .st-insufficient {
                 font-weight: bold;
                 color: var(--st-accent-warn);
             }`, 'study-tools-insufficient')

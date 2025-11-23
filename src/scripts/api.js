@@ -111,8 +111,8 @@ class MagisterApi {
         return new MagisterApiRequestKwtRegistration(id).delete();
     }
 
-    gradesRecent() {
-        return new MagisterApiRequestGradesRecent().get();
+    gradesRecent(size = 25) {
+        return new MagisterApiRequestGradesRecent(size).get();
     }
 
     gradesForYear(year) {
@@ -408,10 +408,10 @@ class MagisterApiRequestKwtRegistration extends MagisterApiRequest {
 }
 
 class MagisterApiRequestGradesRecent extends MagisterApiRequest {
-    constructor() {
+    constructor(size = 25) {
         super();
         this.identifier = 'gradesRecent';
-        this.path = `api/personen/$USERID/cijfers/laatste?top=20&skip=0`;
+        this.path = `api/personen/$USERID/cijfers/laatste?top=${size}&skip=0`;
     }
     outputFormat = (res) => res.items;
     sample = [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now.getTime() - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0, isVoldoende: true }, { omschrijving: "Baguette", ingevoerdOp: new Date(now.getTime() - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0, isVoldoende: true }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now.getTime() - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }];

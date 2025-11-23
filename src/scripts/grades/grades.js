@@ -30,7 +30,7 @@ async function gradeOverview() {
 
     const gradesContainer = contentContainer.createChildElement('div', { id: 'st-grades-container' });
 
-    const panesContainer = contentContainer.createChildElement('div', { class: 'st-panes-container st-hidden' });
+    const panesContainer = contentContainer.createChildElement('div', { class: 'st-panes-container' });
 
     listPane = new GradeListPane(panesContainer);
     backupPane = new GradeBackupPane(panesContainer);
@@ -56,8 +56,9 @@ async function gradeOverview() {
         const input = label.createChildElement('input', {
             id: `st-grade-${config.instance.id}-input`,
             class: 'st-checkbox-input',
-            type: 'checkbox',
+            type: 'checkbox'
         });
+        if (config.instance.isVisible) input.checked = true;
         config.input = input;
         input.addEventListener('change', () => {
             config.instance.toggle(input.checked);
@@ -250,7 +251,7 @@ class GradeTable {
                         id: grade.CijferId,
                         innerText: grade.CijferStr,
                         classList: [
-                            ['insufficient', grade.IsVoldoende === false],
+                            ['st-insufficient', grade.IsVoldoende === false],
                             ['inh', grade.Inhalen],
                             ['vr', grade.Vrijstelling],
                             ['not-counted', grade.TeltMee === false],
@@ -346,12 +347,16 @@ class GradeDetailDialog extends Dialog {
         const column1 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
         createElement('h3', column1, { class: 'st-section-heading', innerText: this.grade.CijferKolom.KolomOmschrijving || i18n('details') });
 
-        const metricsStrip = createElement('div', column1, { style: 'display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;' });
+        const gradeItem = column1.createChildElement('div', { class: 'st-grade-item', style: 'font-size: 12.5px;' });
 
-        if (this.grade.CijferStr.length < 5)
-            createElement('div', metricsStrip, { class: 'st-metric', innerText: this.grade.CijferStr || '-', dataset: { description: i18n('assessment') }, style: syncedStorage['insufficient'] !== 'off' && this.grade.IsVoldoende === false ? 'color: var(--st-accent-warn)' : '' });
-        if (this.grade.CijferKolom?.Weging >= 0)
-            createElement('div', metricsStrip, { class: 'st-metric', innerText: `${this.grade.CijferKolom.Weging}x`, dataset: { description: i18n('weight') } });
+        const col1 = gradeItem.createChildElement('div')
+        col1.createChildElement('div', { innerText: this.grade.Vak?.Omschrijving || '-' })
+        col1.createChildElement('div', { innerText: this.grade.CijferKolom.WerkInformatieOmschrijving || this.grade.CijferKolom.KolomOmschrijving || '-' })
+        col1.createChildElement('div', { innerText: new Date(this.grade.DatumIngevoerd).toLocaleDateString(locale) });
+
+        const col2 = gradeItem.createChildElement('div')
+        col2.createChildElement('div', { innerText: this.grade.CijferStr, classList: this.grade.IsVoldoende === false ? ['st-insufficient'] : [] })
+        col2.createChildElement('div', { innerText: (this.grade.CijferKolom?.Weging ?? '?') + 'x' });
 
         let table1 = createElement('table', column1, { class: 'st' });
 

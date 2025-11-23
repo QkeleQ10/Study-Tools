@@ -209,7 +209,7 @@
         "title": "Lijstweergave",
         "recents": "Laatste cijfers",
         "emptyDesc": "Er zijn geen cijfers in deze cijferlijst.",
-        "sortBy": "Sorteren op",
+        "sort": "Sorteren",
         "sortByDateDesc": "Datum (nieuwste eerst)",
         "sortByDateAsc": "Datum (oudste eerst)",
         "sortByResultDesc": "Resultaat (hoogste eerst)",

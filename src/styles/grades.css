@@ -300,7 +300,7 @@
 #st-grades-toolbar {
     display: flex;
     justify-content: space-between;
-    background-color: var(--st-background-secondary);
+    background-color: var(--st-background-tertiary);
     border-bottom: var(--st-border);
     border-top-left-radius: var(--st-border-radius);
     border-top-right-radius: var(--st-border-radius);
@@ -324,7 +324,7 @@
     height: 32px;
     padding: 0;
     margin: 0;
-    background-color: var(--st-background-tertiary);
+    background-color: var(--st-background-secondary);
     border: var(--st-border);
     border-radius: calc(var(--st-border-radius) * 0.75);
     font-weight: 600;
@@ -358,6 +358,54 @@
     height: 40px;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+}
+
+.st-grade-item {
+    display: grid;
+    grid-template-columns: 1fr 2.8em;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+
+    font-family: var(--st-font-family-secondary);
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+
+    & * {
+        text-overflow: ellipsis;
+        overflow-x: hidden;
+        white-space: nowrap;
+    }
+
+    &>div:first-child {
+        &>div {
+            font-size: .9em;
+        }
+
+        &>div:first-child {
+            font-size: 1.25em;
+            font-weight: 500;
+            font-family: var(--st-font-family-primary);
+        }
+    }
+
+    &>div:last-child {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        &>div:first-child {
+            font-size: 1.45em;
+            font-weight: 500;
+            font-family: var(--st-font-family-primary);
+            padding: 4px;
+            margin: -4px;
+            margin-bottom: -2px;
+        }
+    }
 }
 
 #st-grades-container {
@@ -427,19 +475,7 @@
 #st-grade-recents-pane {
     max-width: 300px;
 
-    .st-grade-list {
-
-        .st-grade-list-item {
-            font-family: var(--st-font-family-secondary);
-
-            .st-grade-list-item-result {
-                font-size: 16px;
-                font-weight: 500;
-                font-family: var(--st-font-family-primary);
-                display: block;
-            }
-        }
-    }
+    .st-grade-list {}
 }
 
 #st-grade-backup-pane {
@@ -539,12 +575,6 @@
         &>.st-metric.secondary {
             grid-row: 2;
         }
-    }
-
-    /* TODO: use */
-    #st-cs-central-tendencies[data-great=true] {
-        background-image: linear-gradient(35deg, var(--st-accent-primary), var(--st-accent-primary-dark));
-        color: var(--st-contrast-accent);
     }
 
     #st-cs-suf-insuf {
