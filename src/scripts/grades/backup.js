@@ -23,7 +23,7 @@ class GradeBackupPane extends Pane {
         this.#div1.innerHTML = '';
         this.#div2.innerHTML = '';
 
-        this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.thisTable') });
+        this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.export') });
         this.#div2.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cb.import') });
 
         const year = currentGradeTable?.identifier?.year;
@@ -31,7 +31,7 @@ class GradeBackupPane extends Pane {
 
         if (currentGradeTable?.identifier?.year?.id) {
             this.#div1.createChildElement('p', { innerText: i18n('cb.exportDesc', { study: year.studie.code, period: year.lesperiode.code }) });
-            const exportButton = this.#div1.createChildElement('button', { id: 'st-grade-backup-export', class: 'st-button hero', innerText: i18n('cb.createBackup'), 'data-icon': '' });
+            const exportButton = this.#div1.createChildElement('button', { id: 'st-grade-backup-export', class: 'st-button hero', innerText: i18n('cb.backUpThisTable'), 'data-icon': '' });
             exportButton.addEventListener('click', async () => {
                 if (!currentGradeTable?.identifier?.year?.id) return;
                 await this.#exportGrades(currentGradeTable);

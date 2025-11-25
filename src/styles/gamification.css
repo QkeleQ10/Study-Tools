@@ -236,31 +236,6 @@
     border-left: 1px solid #ffffff33;
 }
 
-.st-wrapped-card .st-w-grade-chart {
-    --suf-threshold-p: 50%;
-    width: 100%;
-    background-image:
-        linear-gradient(to bottom, transparent calc(100% - 1px), #ffffff20 1px),
-        linear-gradient(to bottom, transparent calc(var(--suf-threshold-p) - 0.75px), #f78888c4 1px, transparent calc(var(--suf-threshold-p) + 0.75px));
-    background-size: calc((100% / 9) + (1px / 9)) calc((100% / 9) - (1px / 9)), 100% 100%;
-    background-position: 0 1px, 0 0;
-}
-
-.st-wrapped-card .st-w-bar-chart {
-    height: 100%;
-    width: min(max-content, 100%);
-    overflow: visible;
-    max-width: max-content;
-}
-
-.st-wrapped-card .st-line-chart-col,
-.st-wrapped-card .st-bar-chart-col {
-    --color: #ffffff;
-    --background-color: #ffffff;
-    --st-foreground-primary: #ffffff;
-    --st-highlight-primary: #ffffff22;
-}
-
 #st-wrapped .st-button.icon {
     color: #ffffff;
 }

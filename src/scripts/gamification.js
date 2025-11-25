@@ -20,9 +20,9 @@ async function checkWrapped() {
 
         user = await magisterApi.accountInfo()
 
-        years = (await magisterApi.years())
+        years = [...await magisterApi.years()]
             .filter(year => Number(year.einde.split('-')[0]) <= now.getFullYear()) // Filter years to not include the upcoming school year
-            .sort((a, b) => new Date(a.begin) - new Date(b.begin))
+            .sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime())
 
         let examInfo = {}
         let recentGrades = []

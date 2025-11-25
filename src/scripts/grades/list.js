@@ -85,7 +85,7 @@ class GradeListPane extends Pane {
             });
         } else {
             this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cl.recents') });
-            this.#div1.createChildElement('button', { class: 'st-button icon', 'data-icon': '', title: i18n('cl.sort'), style: { position: 'absolute', top: '12px', right: '12px' } })
+            this.#div1.createChildElement('button', { class: 'st-button icon', 'data-icon': '', title: i18n('cl.sort'), style: { position: 'absolute', top: '12px', right: '12px' } })
                 .addEventListener('click', () => {
                     this.sortingShown = true;
                     this.redraw();
@@ -95,13 +95,13 @@ class GradeListPane extends Pane {
 
         const recentGrades = await magisterApi.gradesRecent(currentGradeTable.grades.length);
 
-        const grades = currentGradeTable.grades.filter(grade => grade.CijferStr?.length > 0 && grade.CijferKolom?.KolomSoort !== 2);
+        const grades = currentGradeTable.grades.filter(g => g.CijferStr?.length > 0 && g.CijferKolom?.KolomSoort !== 2 && !syncedStorage['ignore-grade-columns'].includes(g.CijferKolom?.KolomKop || 'undefined'));
         grades.sort(this.sortingOption.comparator);
 
         // === EMPTY ===
 
         if (grades.length === 0) {
-            this.#div2.createChildElement('p', { innerText: i18n('cl.noGrades') });
+            this.#div2.createChildElement('p', { innerText: i18n('cl.emptyDesc') });
             this.progressBar.dataset.visible = 'false';
             return;
         }
@@ -121,18 +121,23 @@ class GradeListPane extends Pane {
             const col1 = gradeItem.createChildElement('div')
             col1.createChildElement('div', { innerText: grade.Vak?.Omschrijving || '-' })
             if (grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving) col1.createChildElement('div', { innerText: grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving || '-' })
-            col1.createChildElement('div', { innerText: new Date(grade.DatumIngevoerd).toLocaleDateString(locale) });
+            col1.createChildElement('div', { innerText: makeTimestamp(grade.DatumIngevoerd) });
 
             const col2 = gradeItem.createChildElement('div')
             col2.createChildElement('div', { innerText: grade.CijferStr, classList: grade.IsVoldoende === false ? ['st-insufficient'] : [] })
             if (grade.CijferKolom?.Weging ?? recentGrade) col2.createChildElement('div', { innerText: (grade.CijferKolom?.Weging ?? recentGrade?.weegfactor ?? '?') + 'x' });
 
-            gradeItem.style.cursor = 'pointer';
+            if (new Date(grade.DatumIngevoerd) >= new Date(new Date(localStorage['st-grade-last-viewed'] || 0)))
+                gradeItem.classList.add('st-highlight');
+
+            gradeItem.classList.add('st-clickable');
             gradeItem.addEventListener('click', () => {
                 const dialog = new GradeDetailDialog(grade, currentGradeTable.identifier.year);
                 dialog.show();
             });
         }
+
+        localStorage['st-grade-last-viewed'] = new Date().toISOString();
 
         this.progressBar.dataset.visible = 'false';
     }

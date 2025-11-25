@@ -71,7 +71,10 @@ class GradeStatisticsPane extends Pane {
                 innerText: i18n(
                     grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades',
                     { num: grades.length }
-                ),
+                ) + ' ' + i18n('cs.rangeDesc', {
+                    min: Math.min(...values).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+                    max: Math.max(...values).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                }),
                 title: i18n('remove')
             })
                 .addEventListener('click', () => {
@@ -100,7 +103,7 @@ class GradeStatisticsPane extends Pane {
             class: 'st-metric secondary',
             'data-description': i18n(modes.length > 1 ? 'cs.modes' : 'cs.mode'),
             title: i18n('cs.modeDescription'),
-            innerText: modes.length > 0 ? modes.map(m => m.toLocaleString(locale)).join(', ') : i18n('none'),
+            innerText: modes.length > 0 ? modes.map(m => m.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join('; ') : i18n('none'),
             'data-extra': modes.length > 0 ? `${occurrences}x` : null
         });
         divCentralTendencies.createChildElement('div', {
@@ -187,12 +190,27 @@ class GradeStatisticsPane extends Pane {
 
         // === LINE CHART ===
 
-        const divLineChart = this.#div2.createChildElement('div', { class: 'st-cs-tile' });
-        divLineChart.createChildElement('h4', { innerText: i18n('cs.trend'), style: { marginBottom: '4px' } });
-        divLineChart.createChildElement('p', { innerText: "Deze grafiek werkt niet naar behoren en zal worden vervangen.", style: { marginBottom: '4px' } });
-        divLineChart.createChildElement('div', { id: 'st-cs-line-chart', style: { width: '100%', height: '300px' } })
-            .createLineChart(values, null, lowerBound, upperBound);
+        const divLineChart = this.#div2.createChildElement('div', {
+            style: {
+                position: 'relative',
+                border: 'var(--st-border)',
+                borderRadius: 'var(--st-border-radius)',
+                height: '240px',
+                cursor: 'pointer'
+            }
+        });
 
+        createIndexedLineChart(divLineChart, values, i => {
+            const grade = currentGradeTable.grades.find(g => g.CijferId === grades[i].id);
+            const dialog = new GradeDetailDialog(grade, currentGradeTable.identifier.year);
+            dialog.show();
+        }, {
+            minY: lowerBound,
+            maxY: upperBound,
+            yGridCount: upperBound - lowerBound,
+            showMovingAverage: true,
+            label: (_i, v, _mv) => `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        });
 
         this.progressBar.dataset.visible = 'false';
     }
@@ -204,7 +222,7 @@ class GradeStatisticsPane extends Pane {
             this.selectedGrades = this.selectedGrades.filter(g => g.id !== grade.CijferId);
         } else {
             const result = Number(grade.CijferStr?.replace(',', '.'));
-            if (grade.CijferKolom?.KolomSoort == 2 || !grade.TeltMee || isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) {
+            if (grade.CijferKolom?.KolomSoort == 2 || syncedStorage['ignore-grade-columns'].includes(grade.CijferKolom?.KolomKop || 'undefined') || !grade.TeltMee || isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) {
                 // not a valid number or not a relevant grade
                 this.progressBar.dataset.visible = 'false';
                 return;

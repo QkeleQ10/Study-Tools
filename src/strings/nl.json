@@ -236,10 +236,9 @@
         "title": "Cijferback-up",
         "export": "Back-up maken",
         "import": "Back-up herstellen",
-        "createBackup": "Back-up maken",
-        "thisTable": "Deze cijferlijst",
+        "backUpThisTable": "Dit back-uppen",
         "browse": "Bladeren...",
-        "exportDesc": "Kies deze optie om een back-up te maken van {study} ({period}).",
+        "exportDesc": "Kies deze optie om een back-up te maken van deze cijferlijst: {study} ({period}).",
         "importDesc": "Heb je een back-upbestand? Kies dan deze optie.",
         "importedDesc": "Je bekijkt een back-up van {study} ({period}) die is gemaakt op {date}.",
         "error": "Er is een fout opgetreden bij het maken van de back-up. Wacht een minuutje en probeer het opnieuw.",
@@ -251,6 +250,7 @@
         "emptyDesc": "Selecteer cijferlijsten of individuele cijfers om statistieken te bekijken.",
         "xGrade": "{num} cijfer",
         "xGrades": "{num} cijfers",
+        "rangeDesc": "tussen {min} en {max}",
         "mean": "Gemiddelde",
         "meanDescription": "Het ongewogen gemiddelde: het rekenkundig gemiddelde van de cijfers.",
         "median": "Mediaan",
@@ -266,6 +266,7 @@
         "insufficientDescription": "Het aantal cijfers dat een onvoldoende is.",
         "histogram": "Histogram",
         "histogramBarDescription": "{frequency} cijfers tussen {rangeStart} en {rangeEnd}",
+        "trend": "Lijndiagram",
         "howToAdd": "Selecteer en deselecteer losse cijfers, hele vakken of hele cijferlijsten door erop te klikken \nin het cijferoverzicht. \nJe kunt ook cijfers uit meerdere cijferlijsten selecteren. Gebruik de lijstkiezer linksboven."
     },
     "sw": {

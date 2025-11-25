@@ -34,11 +34,6 @@ interface HTMLElement {
      * @returns {void}
      */
     setAttributes(attributes: CreateElementAttributes & Record<string, any>): void;
-
-    createBarChart();
-    createPieChart();
-    createLineChart();
-    createLinearLineChart();
 }
 
 interface Date {

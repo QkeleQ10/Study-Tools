@@ -70,7 +70,7 @@ async function gradeOverview() {
         });
     });
 
-    const years = (await magisterApi.years()).sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
+    const years = [...await magisterApi.years()].sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 
     years.forEach(async (year, i) => {
         let label = yearFilter.createChildElement('label', {
@@ -200,7 +200,7 @@ class GradeTable {
         headerRow1.createChildElement('th')
             .addEventListener('click', async () => {
                 if (statisticsPane.isVisible) {
-                    const subjectGrades = filteredGrades.filter(g => g.CijferKolom?.KolomSoort !== 2);
+                    const subjectGrades = filteredGrades.filter(g => g.CijferKolom?.KolomSoort !== 2 && !syncedStorage['ignore-grade-columns'].includes(g.CijferKolom?.KolomKop || 'undefined'));
                     await statisticsPane.toggleMultipleGrades(subjectGrades);
                     statisticsPane.redraw();
                     return;
@@ -215,7 +215,7 @@ class GradeTable {
         headerRow2.createChildElement('th', { innerText: i18n('toggleAll') })
             .addEventListener('click', async () => {
                 if (statisticsPane.isVisible) {
-                    const subjectGrades = filteredGrades.filter(g => g.CijferKolom?.KolomSoort !== 2);
+                    const subjectGrades = filteredGrades.filter(g => g.CijferKolom?.KolomSoort !== 2 && !syncedStorage['ignore-grade-columns'].includes(g.CijferKolom?.KolomKop || 'undefined'));
                     await statisticsPane.toggleMultipleGrades(subjectGrades);
                     statisticsPane.redraw();
                     return;
@@ -231,13 +231,13 @@ class GradeTable {
             subjectRow.createChildElement('th', { innerText: subject })
                 .addEventListener('click', async () => {
                     if (calculatorPane.isVisible) {
-                        const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2);
+                        const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2 && !syncedStorage['ignore-grade-columns'].includes(g.CijferKolom?.KolomKop || 'undefined'));
                         await calculatorPane.toggleMultipleGrades(subjectGrades, this.identifier.year);
                         calculatorPane.redraw();
                         return;
                     }
                     if (statisticsPane.isVisible) {
-                        const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2);
+                        const subjectGrades = filteredGrades.filter(g => g.Vak?.Omschrijving === subject && g.CijferKolom?.KolomSoort !== 2 && !syncedStorage['ignore-grade-columns'].includes(g.CijferKolom?.KolomKop || 'undefined'));
                         await statisticsPane.toggleMultipleGrades(subjectGrades);
                         statisticsPane.redraw();
                         return;
@@ -329,7 +329,19 @@ class GradeDetailDialog extends Dialog {
     #progressBar;
 
     constructor(grade, year) {
-        super();
+        if (location.href.includes('#/cijfers'))
+            super();
+        else
+            super({
+                buttons: [
+                    {
+                        innerText: i18n('views.Cijferoverzicht'),
+                        onclick: () => { window.location.href = '#/cijfers'; this.close(); },
+                        primary: true,
+                        'data-icon': ''
+                    }
+                ]
+            });
         this.body.classList.add('st-grade-detail-dialog');
 
         this.grade = grade;
@@ -344,6 +356,11 @@ class GradeDetailDialog extends Dialog {
     async #drawDialogContents() {
         this.body.innerText = '';
 
+        if (!this.grade?.CijferKolom) {
+            this.body.innerText = i18n('unknown');
+            return;
+        }
+
         const column1 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
         createElement('h3', column1, { class: 'st-section-heading', innerText: this.grade.CijferKolom.KolomOmschrijving || i18n('details') });
 
@@ -352,7 +369,7 @@ class GradeDetailDialog extends Dialog {
         const col1 = gradeItem.createChildElement('div')
         col1.createChildElement('div', { innerText: this.grade.Vak?.Omschrijving || '-' })
         col1.createChildElement('div', { innerText: this.grade.CijferKolom.WerkInformatieOmschrijving || this.grade.CijferKolom.KolomOmschrijving || '-' })
-        col1.createChildElement('div', { innerText: new Date(this.grade.DatumIngevoerd).toLocaleDateString(locale) });
+        col1.createChildElement('div', { innerText: makeTimestamp(this.grade.DatumIngevoerd) });
 
         const col2 = gradeItem.createChildElement('div')
         col2.createChildElement('div', { innerText: this.grade.CijferStr, classList: this.grade.IsVoldoende === false ? ['st-insufficient'] : [] })
@@ -380,7 +397,6 @@ class GradeDetailDialog extends Dialog {
         this.#addRowToTable(table1, i18n('teacher'), this.grade.Docent || '-');
         this.#addRowToTable(table1, i18n('subject'), this.grade.Vak?.Omschrijving || '-');
         this.#addRowToTable(table1, i18n('period'), this.grade.CijferPeriode?.Naam || '-');
-
 
         if (this.grade.CijferKolom.Weging == null && this.year) {
             const gradeColumnInfo = await magisterApi.gradesColumnInfo(this.year, this.grade.CijferKolom.Id);

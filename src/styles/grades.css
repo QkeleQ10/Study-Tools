@@ -11,7 +11,7 @@
         / 1fr;
     overflow: hidden;
     padding: 32px;
-    gap: 16px;
+    gap: 8px;
 
     &>.st-progress-bar {
         position: absolute;
@@ -28,6 +28,7 @@
         grid-row: 2;
         border: var(--st-border);
         border-radius: var(--st-border-radius);
+        box-shadow: 1px 1px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
         overflow: hidden;
     }
 }
@@ -39,6 +40,7 @@
     td {
         position: relative;
         border-collapse: collapse;
+        background-color: var(--st-background-secondary);
     }
 
     tr:first-child {
@@ -124,10 +126,10 @@
             &.empty {
                 background-color: var(--st-background-tertiary);
                 background-image: repeating-linear-gradient(45deg,
-                        #00000007,
-                        #00000007 5px,
-                        transparent 5px,
-                        transparent 10px);
+                        hsl(from var(--st-background-secondary) h s calc(l - 5)),
+                        hsl(from var(--st-background-secondary) h s calc(l - 5)) 5px,
+                        var(--st-background-tertiary) 5px,
+                        var(--st-background-tertiary) 10px);
             }
 
             &.column-type-2 {
@@ -297,6 +299,61 @@
     }
 }
 
+.st-line-chart {
+    position: relative;
+    margin-inline: -5px;
+    cursor: pointer;
+
+    .st-line-chart-cols {
+        display: flex;
+        height: 100%;
+        width: 100%;
+
+        .st-line-chart-col {
+            flex: 1 1 0%;
+            position: relative;
+
+            &:first-child {
+                flex: 0 0 0%;
+                padding-left: 5px;
+            }
+
+            &:last-child {
+                flex: 0 0 0%;
+                padding-right: 5px;
+            }
+
+            .st-line-chart-line {
+                position: absolute;
+                transform-origin: 0 0;
+                height: 2px;
+                background-color: var(--st-foreground-secondary);
+            }
+
+            .st-line-chart-dot {
+                position: absolute;
+                right: 0;
+                translate: 50% -50%;
+                width: 7px;
+                aspect-ratio: 1;
+                border-radius: 50%;
+                background-color: var(--st-foreground-accent);
+                z-index: 2;
+            }
+        }
+    }
+
+    .st-line-chart-threshold {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        translate: 0 1px;
+        background-color: var(--st-foreground-secondary);
+        opacity: .1;
+    }
+}
+
 #st-grades-toolbar {
     display: flex;
     justify-content: space-between;
@@ -396,6 +453,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        overflow: hidden;
 
         &>div:first-child {
             font-size: 1.45em;
@@ -406,10 +464,29 @@
             margin-bottom: -2px;
         }
     }
+
+    &.st-clickable {
+        cursor: pointer;
+
+        &:hover {
+            color: var(--st-foreground-accent);
+        }
+    }
+
+    &.st-highlight {
+        background: linear-gradient(35deg, hsl(from var(--st-accent-primary-dark) h s calc(l - 5)), hsl(from var(--st-accent-primary-dark) h s calc(l + 5)));
+        color: var(--st-contrast-accent);
+
+        &.st-clickable:hover {
+            background: linear-gradient(35deg, var(--st-accent-primary-dark), hsl(from var(--st-accent-primary-dark) h s calc(l + 10)));
+            color: var(--st-contrast-accent);
+        }
+    }
 }
 
 #st-grades-container {
     overflow: auto;
+    background-color: var(--st-background-secondary);
 }
 
 .st-panes-container {
@@ -420,6 +497,9 @@
     background-color: var(--st-background-secondary);
     border-left: var(--st-border);
     border-bottom-right-radius: var(--st-border-radius);
+
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    clip-path: inset(0 0 0 -8px);
 
     transition: display 100ms;
     transition-behavior: allow-discrete;
@@ -474,8 +554,6 @@
 
 #st-grade-recents-pane {
     max-width: 300px;
-
-    .st-grade-list {}
 }
 
 #st-grade-backup-pane {
@@ -570,6 +648,10 @@
 
         &>.st-metric {
             grid-row: 1;
+
+            &:first-child:not(.secondary) {
+                grid-column: 1 / -1;
+            }
         }
 
         &>.st-metric.secondary {

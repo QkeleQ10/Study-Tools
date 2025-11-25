@@ -410,7 +410,7 @@ class MagisterApiRequestKwtRegistration extends MagisterApiRequest {
 class MagisterApiRequestGradesRecent extends MagisterApiRequest {
     constructor(size = 25) {
         super();
-        this.identifier = 'gradesRecent';
+        this.identifier = `gradesRecent${size}`;
         this.path = `api/personen/$USERID/cijfers/laatste?top=${size}&skip=0`;
     }
     outputFormat = (res) => res.items;
@@ -423,7 +423,7 @@ class MagisterApiRequestGradesForYear extends MagisterApiRequest {
         this.identifier = `gradesYear${year?.id}`;
         this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
     }
-    outputFormat = (res) => res.Items.filter(item => !syncedStorage['ignore-grade-columns'].includes(item.CijferKolom?.KolomKop || 'undefined'));
+    outputFormat = (res) => res.Items;
 }
 
 class MagisterApiRequestGradesColumnInfo extends MagisterApiRequest {

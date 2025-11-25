@@ -1,7 +1,7 @@
 class GradeCalculatorPane extends Pane {
     id = 'cc';
     icon = '';
-    
+
     #div1;
     selectedGrades = [];
     futureWeight = null;
@@ -28,7 +28,7 @@ class GradeCalculatorPane extends Pane {
         this.progressBar.dataset.visible = 'true';
 
         this.#div1.innerHTML = '';
-        
+
         document.querySelectorAll('.st-grade-calculator-selected').forEach(elem => elem.classList.remove('st-grade-calculator-selected'));
         currentGradeTable.element.classList.add('st-cc-open');
 
@@ -190,7 +190,7 @@ class GradeCalculatorPane extends Pane {
         const slope = newWeight / (totalWeight + newWeight);
         const intercept = weightedTotal / (totalWeight + newWeight);
 
-        chartContainer.createLinearLineChart(slope, intercept, lowerBound, upperBound, lowerBound, upperBound, upperBound - lowerBound, upperBound - lowerBound, (x, y) => `${x.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ➜ ${y.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 0.1);
+        createLinearLineChart(chartContainer, slope, intercept, lowerBound, upperBound, lowerBound, upperBound, upperBound - lowerBound, upperBound - lowerBound, (x, y) => `${x.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ➜ ${y.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 0.1);
     }
 
     async toggleGrade(grade, year, force) {

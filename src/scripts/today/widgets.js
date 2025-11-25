@@ -572,7 +572,7 @@ class GradesWidget extends SlideshowWidget {
             .map(item => {
                 const id = item.Id || item.kolomId;
                 const date = new Date(item.ingevoerdOp || item.BeoordeeldOp);
-                const unread = date > dates.now - (1000 * 60 * 60 * 24 * 7);
+                const unread = date > new Date(new Date(localStorage['st-grade-last-viewed'] || 0));
                 const result = item.waarde || item.Beoordeling || '?';
                 const value = isNaN(Number(result.replace(',', '.'))) ? null : Number(result.replace(',', '.'));
                 const isSufficient = item.isVoldoende ?? (value && value >= Number(syncedStorage['suf-threshold']) && value <= 10);
@@ -595,10 +595,10 @@ class GradesWidget extends SlideshowWidget {
         this.header.innerText = this.listItems.some(grade => grade.unread) ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
 
         this.element.tabIndex = 0;
-        this.element.addEventListener('click', () => {
-            if (this.element.getAttribute('disabled') == 'true') return;
-            window.location.href = '#/cijfers';
-        });
+        // this.element.addEventListener('click', () => {
+        //     if (this.element.getAttribute('disabled') == 'true') return;
+        //     window.location.href = '#/cijfers';
+        // });
 
         if (this.constructor.options.rotate == 'true' && this.listItems?.length > 1) {
             let interval = setInterval(() => {
@@ -655,7 +655,6 @@ class GradesWidget extends SlideshowWidget {
                 if (this.#hiddenItems.has(grade.id)) {
                     this.#hiddenItems.delete(grade.id);
                     localStorage['hiddenGrades'] = [...this.#hiddenItems];
-                    // saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
                     itemHide.setAttributes({
                         dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
                         title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
@@ -664,14 +663,23 @@ class GradesWidget extends SlideshowWidget {
                 } else {
                     this.#hiddenItems.add(grade.id);
                     localStorage['hiddenGrades'] = [...this.#hiddenItems];
-                    // saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
                     itemHide.setAttributes({
                         dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
                         title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
                     });
                     itemElement.dataset.hidden = this.#hiddenItems.has(grade.id);
                 }
-                return false;
+            });
+
+            itemElement.addEventListener('click', async (e) => {
+                const years = await magisterApi.years();
+                const gradesForYear = await magisterApi.gradesForYear(years[0]);
+
+                const g = gradesForYear.find(g => grade.kolomId === g.CijferKolom.Id);
+                if (!g) return;
+
+                const dialog = new GradeDetailDialog(g, years[0]);
+                dialog.show();
             });
 
             resolve(itemElement);
