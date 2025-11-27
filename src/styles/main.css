@@ -162,7 +162,8 @@ dialog.st-modal[open]::backdrop {
     transition: color 200ms, background-color 200ms, transform 200ms, opacity 200ms;
 }
 
-.st-button.icon:hover, .st-button.icon:active {
+.st-button.icon:hover,
+.st-button.icon:active {
     background-color: var(--st-highlight-primary);
     color: var(--st-foreground-accent);
     filter: none;
@@ -174,6 +175,47 @@ dialog.st-modal[open]::backdrop {
     margin-right: 0;
 }
 
+.st-tooltip {
+    position: fixed;
+    width: fit-content;
+    min-width: 100px;
+    max-width: 300px;
+
+    padding: 8px 14px;
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    font: 600 12px var(--st-font-family-secondary);
+    text-align: center;
+    text-wrap: balance;
+    z-index: 100;
+    opacity: 1;
+    pointer-events: none;
+    transition: scale 200ms, opacity 200ms;
+
+    @starting-style {
+        scale: 0.5;
+        opacity: 0;
+    }
+
+    &:after {
+        content: '';
+        position: absolute;
+        left: auto;
+        right: 20px;
+        top: 100%;
+        margin-top: 0;
+        border-width: 5px;
+        border-style: solid;
+        border-color: var(--st-accent-primary) transparent transparent transparent;
+    }
+
+    &.st-hidden {
+        scale: 0.5;
+        opacity: 0;
+    }
+}
 
 .st-select {
     appearance: base-select;

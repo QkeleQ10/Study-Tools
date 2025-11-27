@@ -1790,14 +1790,26 @@ table.table-grid-layout>tbody>tr.selected {
     }
 }
 
+.podium {
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+.podium .dna-input-group, .podium .completed-challenge {
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+
+    input {
+        border-radius: var(--st-border-radius);
+    }
+}
+
 .podium .completed-challenge {
     background-color: var(--st-background-tertiary);
 }
 
-.podium .dna-input-group {
-    background-color: var(--st-background-secondary);
-    border: var(--st-border);
-}
 
 .podium .dna-input-group:hover {
     border-color: var(--st-foreground-accent);

@@ -217,7 +217,7 @@
     },
     "cc": {
         "title": "Cijfercalculator",
-        "emptyDesc": "Klik op een vak in het cijferoverzicht of selecteer individuele cijfers om te beginnen.",
+        "emptyDesc": "Bereken hier welk cijfer je moet halen of wat je gemiddelde zal zijn. \n\nKlik op een vak in het cijferoverzicht of selecteer individuele cijfers om te beginnen.",
         "gradesInCalculation": "Cijfers in berekening",
         "addedManually": "Handmatig ingevoerd",
         "weightedAverage": "Gewogen gemiddelde",
@@ -281,6 +281,12 @@
         "periodMissing": "Geen periode"
     },
     "tooltips": {
-        "startWidgetsNew": "Je startscherm is vernieuwd! Pas je widgetpaneel aan met deze knop."
+        "startWidgetsNew": "Pas je widgetpaneel aan met deze knop.",
+        "cNewH": "Je cijferoverzicht is vernieuwd!",
+        "cNewDesc": "Omdat je gebruikmaakt van Study Tools, zie je een volledig vernieuwd cijferoverzicht met handige extra functies zoals een cijfercalculator en statistieken. \n\nKlik om een rondleiding te krijgen.",
+        "clNew": "Je ziet je laatste cijfers aan de rechterkant, en je cijferoverzicht aan de linkerkant.",
+        "ccNew": "De cijfercalculator bevindt zich nu hier.",
+        "csNew": "Hier kun je statistieken bekijken.",
+        "csSwitched": "Het statistiekenpaneel geeft nog statistieken weer voor een andere cijferlijst! \nSelectie wissen? Klik op '{text}'."
     }
 }

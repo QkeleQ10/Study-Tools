@@ -70,6 +70,8 @@ async function gradeOverview() {
         });
     });
 
+    handleTooltips();
+
     const years = [...await magisterApi.years()].sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 
     years.forEach(async (year, i) => {
@@ -102,6 +104,91 @@ async function gradeOverview() {
     });
 
     progressBar.dataset.visible = 'false';
+}
+
+async function handleTooltips() {
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    if (!localStorage['st-tutorial-shown']) {
+        const overlay = document.getElementById('st-grades').createChildElement('div', {
+            style: {
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--st-background-overlay)',
+                transition: 'opacity 200ms',
+                opacity: 0,
+                zIndex: 1000,
+                cursor: 'pointer',
+            }
+        });
+        overlay.createChildElement('span', {
+            class: 'st-title',
+            innerText: i18n('tooltips.cNewH').slice(0, -1),
+            dataset: { lastLetter: i18n('tooltips.cNewH').at(-1) }
+        })
+        overlay.createChildElement('p', {
+            class: 'st-subtitle',
+            innerText: i18n('tooltips.cNewDesc'),
+            style: {
+                maxWidth: '500px',
+                marginTop: '12px',
+                textAlign: 'center',
+            }
+        });
+
+        overlay.style.opacity = '1';
+
+        overlay.addEventListener('click', () => {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 200);
+            localStorage['st-tutorial-shown'] = true;
+            handleTooltips();
+        }, { once: true });
+
+        return;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const tooltipConfigs = [
+        { key: 'st-tooltip-clNew-shown', textKey: 'tooltips.clNew', style: { top: '76px', right: '280px' }, trigger: 'body' },
+        { key: 'st-tooltip-ccNew-shown', textKey: 'tooltips.ccNew', style: { top: '48px', right: '32px' }, triggerId: 'st-grade-cc-button' },
+        { key: 'st-tooltip-csNew-shown', textKey: 'tooltips.csNew', style: { top: '48px', right: '68px' }, triggerId: 'st-grade-cs-button' },
+    ];
+
+    for (const cfg of tooltipConfigs) {
+        if (localStorage[cfg.key]) continue;
+
+        const tooltip = document.body.createChildElement('div', {
+            class: 'st-tooltip bottom-right',
+            innerText: i18n(cfg.textKey),
+            style: {
+                ...cfg.style,
+                position: 'fixed',
+                zIndex: 10,
+            }
+        });
+
+        const closeHandler = () => {
+            tooltip.classList.add('st-hidden');
+            setTimeout(() => tooltip.remove(), 200);
+            localStorage[cfg.key] = true;
+            handleTooltips();
+        };
+
+        if (cfg.trigger === 'body') {
+            document.body.addEventListener('click', closeHandler, { once: true });
+        } else {
+            const el = document.getElementById(cfg.triggerId);
+            if (el) el.addEventListener('click', closeHandler, { once: true });
+        }
+
+        return;
+    }
 }
 
 class Pane {
@@ -307,6 +394,18 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
                     subjectRow.createChildElement('td', { class: 'empty' });
                 }
             }
+        }
+
+        if (!this.grades.length) {
+            this.element.remove();
+            this.element = this.#parentElement.createChildElement('p', {
+                innerText: i18n('cl.emptyDesc'), colSpan: gradeColumns.length + 1, style: {
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                }
+            });
         }
 
         if (listPane.isVisible) listPane.redraw();

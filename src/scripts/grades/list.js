@@ -127,7 +127,10 @@ class GradeListPane extends Pane {
             col2.createChildElement('div', { innerText: grade.CijferStr, classList: grade.IsVoldoende === false ? ['st-insufficient'] : [] })
             if (grade.CijferKolom?.Weging ?? recentGrade) col2.createChildElement('div', { innerText: (grade.CijferKolom?.Weging ?? recentGrade?.weegfactor ?? '?') + 'x' });
 
-            if (new Date(grade.DatumIngevoerd) >= new Date(new Date(localStorage['st-grade-last-viewed'] || 0)))
+            if (
+                new Date(grade.DatumIngevoerd) >= new Date(new Date(localStorage['st-grade-last-viewed'] || 0))
+                && new Date(grade.DatumIngevoerd) >= new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000)
+            )
                 gradeItem.classList.add('st-highlight');
 
             gradeItem.classList.add('st-clickable');

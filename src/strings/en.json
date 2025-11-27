@@ -205,9 +205,19 @@
         "title": "Recommended",
         "subtitle": "A curated collection of helpful resources to help you master the subject matter"
     },
+    "cl": {
+        "title": "List view",
+        "recents": "Recent grades",
+        "emptyDesc": "This report card contains no grades.",
+        "sort": "Sort",
+        "sortByDateDesc": "Date (newest first)",
+        "sortByDateAsc": "Date (oldest first)",
+        "sortByResultDesc": "Result (highest first)",
+        "sortByResultAsc": "Result (lowest first)"
+    },
     "cc": {
         "title": "Grade calculation",
-        "emptyDesc": "Click a subject in the report card or select individual grades to begin.",
+        "emptyDesc": "Find out what your next grade should be or calculate your future mean. \n\nClick a subject in the report card or select individual grades to begin.",
         "gradesInCalculation": "Grades taken into consideration",
         "addedManually": "Added manually",
         "weightedAverage": "Weighted average",
@@ -226,10 +236,9 @@
         "title": "Grade backup",
         "export": "Create backup",
         "import": "Restore backup",
-        "createBackup": "Create backup",
-        "thisTable": "This report card",
+        "backUpThisTable": "Back up this",
         "browse": "Browse...",
-        "exportDesc": "Select this option to create a backup of {study} ({period}).",
+        "exportDesc": "Select this option to create a backup of this report card: {study} ({period}).",
         "importDesc": "Already have a backup file? Select this option.",
         "importedDesc": "Viewing a backup of {study} ({period}) which was made on {date}.",
         "error": "An error occurred while creating the backup. Wait a little while before trying again.",
@@ -241,6 +250,7 @@
         "emptyDesc": "Select report cards or individual grades to view statistics.",
         "xGrade": "{num} grade",
         "xGrades": "{num} grades",
+        "rangeDesc": "between {min} and {max}",
         "mean": "Mean",
         "meanDescription": "The unweighted mean: the arithmetic mean of all selected grades.",
         "median": "Median",
@@ -256,6 +266,7 @@
         "insufficientDescription": "The number of grades that are marked as insufficient.",
         "histogram": "Histogram",
         "histogramBarDescription": "{frequency} grades between {rangeStart} and {rangeEnd}",
+        "trend": "Line chart",
         "howToAdd": "Select and deselect individual grades or all grades for a specific subject or year \nby clicking them in your report card. \nYou may also add grades from different years. Use the report card selector at the top left."
     },
     "sw": {
@@ -270,6 +281,12 @@
         "periodMissing": "Term not defined"
     },
     "tooltips": {
-        "startWidgetsNew": "Your Start page has been upgraded! Edit the widgets pane here."
+        "startWidgetsNew": "Edit your widgets pane here.",
+        "cNewH": "Your Grades view has been upgraded!",
+        "cNewDesc": "Because you're using Study Tools, you have access to a refreshed Grades view with useful extra features, such as a grade calculator and statistics. \n\nClick to take a tour.",
+        "clNew": "Your latest grades will appear in the right pane, while your report card is on the left.",
+        "ccNew": "The grade calculator is now right here.",
+        "csNew": "You can check out statistics here.",
+        "csSwitched": "The statistics pane is still showing data for another report card! \nWant to clear selection? Click '{text}'."
     }
 }

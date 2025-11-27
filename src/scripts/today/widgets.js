@@ -595,10 +595,6 @@ class GradesWidget extends SlideshowWidget {
         this.header.innerText = this.listItems.some(grade => grade.unread) ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
 
         this.element.tabIndex = 0;
-        // this.element.addEventListener('click', () => {
-        //     if (this.element.getAttribute('disabled') == 'true') return;
-        //     window.location.href = '#/cijfers';
-        // });
 
         if (this.constructor.options.rotate == 'true' && this.listItems?.length > 1) {
             let interval = setInterval(() => {
@@ -676,7 +672,10 @@ class GradesWidget extends SlideshowWidget {
                 const gradesForYear = await magisterApi.gradesForYear(years[0]);
 
                 const g = gradesForYear.find(g => grade.kolomId === g.CijferKolom.Id);
-                if (!g) return;
+                if (!g) {
+                    notify('snackbar', "Dit specifieke cijfer kon niet worden gevonden in je cijferlijst.");
+                    return;
+                }
 
                 const dialog = new GradeDetailDialog(g, years[0]);
                 dialog.show();

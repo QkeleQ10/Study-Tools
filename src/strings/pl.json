@@ -205,9 +205,19 @@
         "title": "Aanbevelingen",
         "subtitle": "Een gecureerde collectie hulpbronnen die je de toetsstof helpen beheersen"
     },
+    "cl": {
+        "title": "Lijstweergave",
+        "recents": "Laatste cijfers",
+        "emptyDesc": "Er zijn geen cijfers in deze cijferlijst.",
+        "sort": "Sorteren",
+        "sortByDateDesc": "Datum (nieuwste eerst)",
+        "sortByDateAsc": "Datum (oudste eerst)",
+        "sortByResultDesc": "Resultaat (hoogste eerst)",
+        "sortByResultAsc": "Resultaat (laagste eerst)"
+    },
     "cc": {
         "title": "Cijfercalculator",
-        "emptyDesc": "Klik op een vak in het cijferoverzicht of selecteer individuele cijfers om te beginnen.",
+        "emptyDesc": "Bereken hier welk cijfer je moet halen of wat je gemiddelde zal zijn. \n\nKlik op een vak in het cijferoverzicht of selecteer individuele cijfers om te beginnen.",
         "gradesInCalculation": "Cijfers in berekening",
         "addedManually": "Handmatig ingevoerd",
         "weightedAverage": "Gewogen gemiddelde",
@@ -226,10 +236,9 @@
         "title": "Cijferback-up",
         "export": "Back-up maken",
         "import": "Back-up herstellen",
-        "createBackup": "Back-up maken",
-        "thisTable": "Deze cijferlijst",
+        "backUpThisTable": "Dit back-uppen",
         "browse": "Bladeren...",
-        "exportDesc": "Kies deze optie om een back-up te maken van {study} ({period}).",
+        "exportDesc": "Kies deze optie om een back-up te maken van deze cijferlijst: {study} ({period}).",
         "importDesc": "Heb je een back-upbestand? Kies dan deze optie.",
         "importedDesc": "Je bekijkt een back-up van {study} ({period}) die is gemaakt op {date}.",
         "error": "Er is een fout opgetreden bij het maken van de back-up. Wacht een minuutje en probeer het opnieuw.",
@@ -241,6 +250,7 @@
         "emptyDesc": "Selecteer cijferlijsten of individuele cijfers om statistieken te bekijken.",
         "xGrade": "{num} cijfer",
         "xGrades": "{num} cijfers",
+        "rangeDesc": "tussen {min} en {max}",
         "mean": "Gemiddelde",
         "meanDescription": "Het ongewogen gemiddelde: het rekenkundig gemiddelde van de cijfers.",
         "median": "Mediaan",
@@ -256,6 +266,7 @@
         "insufficientDescription": "Het aantal cijfers dat een onvoldoende is.",
         "histogram": "Histogram",
         "histogramBarDescription": "{frequency} cijfers tussen {rangeStart} en {rangeEnd}",
+        "trend": "Lijndiagram",
         "howToAdd": "Selecteer en deselecteer losse cijfers, hele vakken of hele cijferlijsten door erop te klikken \nin het cijferoverzicht. \nJe kunt ook cijfers uit meerdere cijferlijsten selecteren. Gebruik de lijstkiezer linksboven."
     },
     "sw": {
@@ -270,6 +281,12 @@
         "periodMissing": "Geen periode"
     },
     "tooltips": {
-        "startWidgetsNew": "Je startscherm is vernieuwd! Pas je widgetpaneel aan met deze knop."
+        "startWidgetsNew": "Pas je widgetpaneel aan met deze knop.",
+        "cNewH": "Je cijferoverzicht is vernieuwd!",
+        "cNewDesc": "Omdat je gebruikmaakt van Study Tools, zie je een volledig vernieuwd cijferoverzicht met handige extra functies zoals een cijfercalculator en statistieken. \n\nKlik om een rondleiding te krijgen.",
+        "clNew": "Je ziet je laatste cijfers aan de rechterkant, en je cijferoverzicht aan de linkerkant.",
+        "ccNew": "De cijfercalculator bevindt zich nu hier.",
+        "csNew": "Hier kun je statistieken bekijken.",
+        "csSwitched": "Het statistiekenpaneel geeft nog statistieken weer voor een andere cijferlijst! \nSelectie wissen? Klik op '{text}'."
     }
 }

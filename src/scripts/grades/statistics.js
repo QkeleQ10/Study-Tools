@@ -212,7 +212,39 @@ class GradeStatisticsPane extends Pane {
             label: (_i, v, _mv) => `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         });
 
+        // === DONE ===
+
         this.progressBar.dataset.visible = 'false';
+
+
+        // === SWITCHED TOOLTIP ===
+
+        if (!localStorage['st-tooltip-csSwitched'] && this.selectedGrades.some(g => !currentGradeTable.grades.some(cg => cg.CijferId === g.id))) {
+            const tooltip = document.body.createChildElement('div', {
+                class: 'st-tooltip bottom-right',
+                innerText: i18n('tooltips.csSwitched', {
+                    text:
+                        i18n(
+                            grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades',
+                            { num: grades.length }
+                        ) + ' ' + i18n('cs.rangeDesc').slice(0, 6) + '...'
+                }),
+                style: {
+                    position: 'fixed',
+                    top: '100px',
+                    right: '260px',
+                    zIndex: 10,
+                }
+            });
+
+            document.body.addEventListener('click', () => {
+                tooltip.classList.add('st-hidden');
+                setTimeout(() => tooltip.remove(), 200);
+                localStorage['st-tooltip-csSwitched'] = true;
+            }, { once: true });
+
+            return;
+        }
     }
 
     async toggleGrade(grade, force) {
