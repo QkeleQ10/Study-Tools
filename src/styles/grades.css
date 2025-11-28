@@ -462,6 +462,10 @@
             padding: 4px;
             margin: -4px;
             margin-bottom: -2px;
+
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
 

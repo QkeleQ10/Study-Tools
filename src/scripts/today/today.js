@@ -339,7 +339,10 @@ class WidgetEditorDialog extends Dialog {
 }
 
 function keydown(event) {
-    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    // guard against focusing inputs, textareas or content-editable elements
+    if (document.activeElement instanceof HTMLInputElement
+        || document.activeElement instanceof HTMLTextAreaElement
+        || (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable)) return;
     if (event.key === 'ArrowLeft') schedule?.headerControls.moveBackward.click();
     else if (event.key === 'ArrowRight') schedule?.headerControls.moveForward.click();
 }

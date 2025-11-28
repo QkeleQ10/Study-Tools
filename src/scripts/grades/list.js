@@ -42,7 +42,6 @@ class GradeListPane extends Pane {
         },
     ];
     sortingOption = this.sortingOptions[0];
-    sortingShown = false;
 
     constructor(parentElement) {
         super(parentElement);
@@ -52,6 +51,20 @@ class GradeListPane extends Pane {
 
         this.#div1 = this.element.createChildElement('div', { class: 'st-div', style: 'margin-bottom: 16px' });
         this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cl.title') });
+        const select = this.#div1.createChildElement('select', { class: 'st-select', style: 'width: 100%' });
+        for (const option of this.sortingOptions) {
+            const optionElement = select.createChildElement('option', { value: option.id, innerText: option.label });
+            if (option === this.sortingOption) {
+                optionElement.selected = true;
+            }
+        }
+        select.addEventListener('change', () => {
+            const selectedOption = this.sortingOptions.find(option => option.id === select.value);
+            if (selectedOption && selectedOption !== this.sortingOption) {
+                this.sortingOption = selectedOption;
+                this.redraw();
+            }
+        });
         this.element.createChildElement('hr');
         this.#div2 = this.element.createChildElement('div', { class: 'st-div' });
     }
@@ -64,34 +77,9 @@ class GradeListPane extends Pane {
     async redraw() {
         this.progressBar.dataset.visible = 'true';
 
-        this.#div1.innerHTML = '';
         this.#div2.innerHTML = '';
 
-        if (this.sortingShown) {
-            this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cl.title') });
-            const select = this.#div1.createChildElement('select', { class: 'st-select', style: 'width: 100%' });
-            for (const option of this.sortingOptions) {
-                const optionElement = select.createChildElement('option', { value: option.id, innerText: option.label });
-                if (option === this.sortingOption) {
-                    optionElement.selected = true;
-                }
-            }
-            select.addEventListener('change', () => {
-                const selectedOption = this.sortingOptions.find(option => option.id === select.value);
-                if (selectedOption && selectedOption !== this.sortingOption) {
-                    this.sortingOption = selectedOption;
-                    this.redraw();
-                }
-            });
-        } else {
-            this.#div1.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cl.recents') });
-            this.#div1.createChildElement('button', { class: 'st-button icon', 'data-icon': '', title: i18n('cl.sort'), style: { position: 'absolute', top: '12px', right: '12px' } })
-                .addEventListener('click', () => {
-                    this.sortingShown = true;
-                    this.redraw();
-                });
-        }
-        this.element.querySelector('hr').style.display = this.sortingShown ? 'block' : 'none';
+        this.#div1.firstElementChild.innerText = this.sortingOption.id === 'date_desc' ? i18n('cl.recents') : i18n('cl.title');
 
         const recentGrades = await magisterApi.gradesRecent(currentGradeTable.grades.length);
 
@@ -111,11 +99,7 @@ class GradeListPane extends Pane {
         const list = this.#div2.createChildElement('ul', { class: 'st-grade-list' });
         for (const grade of grades) {
             const recentGrade = recentGrades.find(rg => rg.kolomId === grade.CijferKolom.Id);
-            if (!recentGrade && !this.sortingShown) {
-                this.sortingShown = true;
-                this.redraw();
-                return;
-            }
+            
             const gradeItem = list.createChildElement('li', { class: 'st-grade-item' });
 
             const col1 = gradeItem.createChildElement('div')
