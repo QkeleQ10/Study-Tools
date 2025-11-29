@@ -362,12 +362,16 @@ ${grade.CijferStr || '?'} ${grade.CijferKolom?.Weging ? `(${grade.CijferKolom?.W
                                 ['telt niet mee', grade.TeltMee === false],
                                 ['gemiddeldekolom', grade.CijferKolom?.KolomSoort === 2],
                                 ['PTA-kolom', grade.CijferKolom?.IsPTAKolom],
-                                ['docentenkolom', grade.CijferKolom?.IsDocentKolom],
+                                ['docentkolom', grade.CijferKolom?.IsDocentKolom],
                                 ['heeft herkansing', grade.CijferKolom?.IsHerkansingKolom],
                                 ['heeft onderliggende kolommen', grade.CijferKolom?.HeeftOnderliggendeKolommen],
                             ].filter(c => c[1] === true || (c.length === 1 && c[0])).map(c => c[0]).join(', '),
                         popovertarget: 'st-grade-details-popover',
                     });
+                    if (grade.CijferStr.length > 5 && isNaN(Number(grade.CijferStr.replace(',', '.')))) {
+                        td.classList.add('non-numeric');
+                        td.innerText = '';
+                    }
                     td.addEventListener('click', async () => {
                         if (calculatorPane.isVisible) {
                             await calculatorPane.toggleGrade(grade, this.identifier.year);
@@ -466,7 +470,7 @@ class GradeDetailDialog extends Dialog {
         const gradeItem = column1.createChildElement('div', { class: 'st-grade-item', style: 'font-size: 12.5px;' });
 
         const col1 = gradeItem.createChildElement('div')
-        col1.createChildElement('div', { innerText: this.grade.Vak?.Omschrijving || '-' })
+        col1.createChildElement('div', { class: 'st-subject', innerText: this.grade.Vak?.Omschrijving || '-' })
         col1.createChildElement('div', { innerText: this.grade.CijferKolom.WerkInformatieOmschrijving || this.grade.CijferKolom.KolomOmschrijving || '-' })
         col1.createChildElement('div', { innerText: makeTimestamp(this.grade.DatumIngevoerd) });
 
@@ -506,6 +510,43 @@ class GradeDetailDialog extends Dialog {
             }
 
             this.#drawDialogContents();
+            return;
+        }
+
+        const relatedColumns = await magisterApi.gradesRelatedColumns(this.grade.CijferKolom.Id);
+        if (relatedColumns?.length > 0) {
+            const column2 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
+            createElement('h3', column2, { class: 'st-section-heading', innerText: i18n('calculation') });
+
+            for (const relatedColumn of relatedColumns) {
+                let relatedGrade = currentGradeTable.grades.find(g => g.CijferKolom?.KolomNaam === relatedColumn.Kolomnaam);
+                const relatedGradeColumnInfo = await magisterApi.gradesColumnInfo(this.year, relatedGrade.CijferKolom.Id);
+
+                relatedGrade = {
+                    ...relatedGrade,
+                    CijferKolom: {
+                        ...relatedGrade?.CijferKolom,
+                        ...relatedGradeColumnInfo,
+                    }
+                }
+
+                const relatedGradeItem = column2.createChildElement('div', { class: 'st-grade-item', style: 'font-size: 11px;' });
+
+                const col1 = relatedGradeItem.createChildElement('div')
+                col1.createChildElement('div', { innerText: relatedGrade.CijferKolom.WerkInformatieOmschrijving || relatedGrade.CijferKolom.KolomOmschrijving || relatedColumn.Kolomkop || '-' })
+                col1.createChildElement('div', { innerText: makeTimestamp(relatedGrade.DatumIngevoerd) });
+
+                const col2 = relatedGradeItem.createChildElement('div')
+                col2.createChildElement('div', { innerText: relatedColumn.Cijfer, classList: relatedColumn.IsVoldoende === false ? ['st-insufficient'] : [] })
+                col2.createChildElement('div', { innerText: (relatedColumn.Weegfactor ?? '?') + 'x' });
+
+                relatedGradeItem.classList.add('st-clickable');
+                relatedGradeItem.addEventListener('click', () => {
+                    if (!relatedGrade) return;
+                    const dialog = new GradeDetailDialog(relatedGrade, this.year);
+                    dialog.show();
+                });
+            }
         }
 
         this.#progressBar.dataset.visible = 'false';

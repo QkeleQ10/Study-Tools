@@ -103,7 +103,7 @@ class GradeListPane extends Pane {
             const gradeItem = list.createChildElement('li', { class: 'st-grade-item' });
 
             const col1 = gradeItem.createChildElement('div')
-            col1.createChildElement('div', { innerText: grade.Vak?.Omschrijving || '-' })
+            col1.createChildElement('div', { class: 'st-subject', innerText: grade.Vak?.Omschrijving || '-' })
             if (grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving) col1.createChildElement('div', { innerText: grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving || '-' })
             col1.createChildElement('div', { innerText: makeTimestamp(grade.DatumIngevoerd) });
 

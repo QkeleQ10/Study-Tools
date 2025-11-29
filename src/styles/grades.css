@@ -152,6 +152,12 @@
                 visibility: visible;
             }
 
+            &.non-numeric {
+                font-family: 'Font Awesome 6 Pro';
+                font-weight: 600;
+                font-size: 16px;
+            }
+
             &.inh,
             &.vr {
                 font-style: italic;
@@ -425,6 +431,8 @@
     padding: 6px 10px;
     margin-bottom: 6px;
     font-size: 11px;
+    min-width: 18em;
+    max-width: 36em;
 
     font-family: var(--st-font-family-secondary);
     background-color: var(--st-background-secondary);
@@ -439,10 +447,10 @@
 
     &>div:first-child {
         &>div {
-            font-size: .9em;
+            margin-block: 2px;
         }
 
-        &>div:first-child {
+        &>div.st-subject {
             font-size: 1.25em;
             font-weight: 500;
             font-family: var(--st-font-family-primary);
@@ -486,6 +494,16 @@
             color: var(--st-contrast-accent);
         }
     }
+}
+
+.st-grade-detail-dialog {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    gap: 32px;
+    margin: -24px;
+    padding: 24px;
+    border-radius: var(--st-border-radius);
 }
 
 #st-grades-container {

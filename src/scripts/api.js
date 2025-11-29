@@ -123,6 +123,10 @@ class MagisterApi {
         return new MagisterApiRequestGradesColumnInfo(year, columnId).get();
     }
 
+    gradesRelatedColumns(columnId) {
+        return new MagisterApiRequestGradesRelatedColumns(columnId).get();
+    }
+
     assignmentsTop(start = this.gatherEarlyStart, end = this.gatherEnd) {
         return new MagisterApiRequestAssignmentsTop(start, end).get();
     }
@@ -432,6 +436,15 @@ class MagisterApiRequestGradesColumnInfo extends MagisterApiRequest {
         this.identifier = `gradesYear${year?.id}Col${columnId}`;
         this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/extracijferkolominfo/${columnId}`;
     }
+}
+
+class MagisterApiRequestGradesRelatedColumns extends MagisterApiRequest {
+    constructor(columnId) {
+        super();
+        this.identifier = `gradesRelatedCol${columnId}`;
+        this.path = `api/personen/$USERID/cijfers/gerelateerdekolommen/${columnId}`;
+    }
+    outputFormat = (res) => res.Items || [];
 }
 
 class MagisterApiRequestAssignmentsTop extends MagisterApiRequest {
