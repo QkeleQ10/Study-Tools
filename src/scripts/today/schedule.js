@@ -235,9 +235,8 @@ class Schedule {
             });
             headerTextWrapper.addEventListener('auxclick', (e) => {
                 e.preventDefault();
-                let greeting = document.getElementById('st-start-header-greeting');
                 if (headerTextWrapper.classList.contains('greet')) return;
-                createGreetingMessage(greeting);
+                createGreetingMessage(this.headerControls.greeting);
                 headerTextWrapper.classList.add('greet');
                 setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
             });
@@ -252,11 +251,13 @@ class Schedule {
                 class: 'st-title',
                 innerText: i18n('loading').replace('.', ''),
             });
-            createGreetingMessage(headerTextWrapper.createChildElement('span', {
+            this.headerControls.greeting = headerTextWrapper.createChildElement('span', {
                 id: 'st-start-header-greeting',
                 class: 'st-title',
                 innerText: i18n('loading').replace('.', ''),
-            }));
+            });
+            createGreetingMessage(this.headerControls.greeting);
+            headerTextWrapper.classList.add('greet');
             setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
 
             let headerControls = headerStrip.createChildElement('div', { id: 'st-start-header-buttons' });

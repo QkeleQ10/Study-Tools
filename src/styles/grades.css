@@ -419,7 +419,7 @@
 
 .st-grade-item {
     display: grid;
-    grid-template-columns: 1fr 2.8em;
+    grid-template-columns: 1fr 5ch;
     align-items: center;
     gap: 4px;
     padding: 6px 10px;

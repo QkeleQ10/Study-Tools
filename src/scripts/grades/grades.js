@@ -156,8 +156,8 @@ async function handleTooltips() {
 
     const tooltipConfigs = [
         { key: 'st-tooltip-clNew-shown', textKey: 'tooltips.clNew', style: { top: '76px', right: '280px' }, trigger: 'body' },
-        { key: 'st-tooltip-ccNew-shown', textKey: 'tooltips.ccNew', style: { top: '48px', right: '32px' }, triggerId: 'st-grade-cc-button' },
-        { key: 'st-tooltip-csNew-shown', textKey: 'tooltips.csNew', style: { top: '48px', right: '68px' }, triggerId: 'st-grade-cs-button' },
+        { key: 'st-tooltip-ccNew-shown', textKey: 'tooltips.ccNew', style: { top: '40px', right: '32px' }, triggerId: 'st-grade-cc-button' },
+        { key: 'st-tooltip-csNew-shown', textKey: 'tooltips.csNew', style: { top: '40px', right: '68px' }, triggerId: 'st-grade-cs-button' },
     ];
 
     for (const cfg of tooltipConfigs) {

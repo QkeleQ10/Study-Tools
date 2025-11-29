@@ -89,17 +89,18 @@ async function today() {
     })
         .addEventListener('click', () => new TeacherNamesDialog().show());
 
-    editWrapper.createChildElement('button', {
+    const editWidgetsButton = editWrapper.createChildElement('button', {
         id: 'st-start-edit-widgets',
         class: 'st-button icon',
         dataset: { icon: '' },
         title: i18n('editWidgets')
-    })
-        .addEventListener('click', () => new WidgetEditorDialog().show());
+    });
+    editWidgetsButton.addEventListener('click', () => new WidgetEditorDialog().show());
 
     if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new2', 'local') ?? false)) {
         setTimeout(() => {
-            const rect = document.getElementById('st-start-edit-widgets').getBoundingClientRect()
+            if(!document.body.contains(editWidgetsButton)) return;
+            const rect = editWidgetsButton.getBoundingClientRect()
             const tooltip = document.body.createChildElement('div', {
                 id: 'st-widgets-edit-tooltip',
                 innerText: i18n('tooltips.startWidgetsNew'),
@@ -109,7 +110,7 @@ async function today() {
                     translate: '8px -16px'
                 }
             })
-            document.getElementById('st-start-edit-widgets').addEventListener('click', () => {
+            editWidgetsButton.addEventListener('click', () => {
                 tooltip.classList.add('st-hidden')
                 saveToStorage('tooltipdismiss-start-widgets-new2', true, 'local')
             })
