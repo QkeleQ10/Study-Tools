@@ -51,7 +51,7 @@ class GradeCalculatorPane extends Pane {
             dialog.body.createChildElement('br');
             const flex = dialog.body.createChildElement('div', { style: { display: 'flex', gap: '8px' } });
             const gradeInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('assessment'), min: (syncedStorage['c-minimum'] ?? 1), max: (syncedStorage['c-maximum'] ?? 10), step: '0.1', style: { flex: '1' } });
-            const weightInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('weight'), min: '0', step: '1', style: { flex: '1' } });
+            const weightInput = flex.createChildElement('input', { type: 'number', class: 'st-input', placeholder: i18n('weight'), min: '0', style: { flex: '1' } });
 
             dialog.buttonsWrapper.createChildElement('button', {
                 innerText: i18n('add'),
@@ -60,7 +60,7 @@ class GradeCalculatorPane extends Pane {
             })
                 .addEventListener('click', () => {
                     const gradeValue = Number(gradeInput.value);
-                    const weightValue = Math.max(0, Math.round(Number(weightInput.value)));
+                    const weightValue = Math.max(0, Number(weightInput.value));
                     if (isNaN(gradeValue) || gradeValue < (syncedStorage['c-minimum'] ?? 1) || gradeValue > (syncedStorage['c-maximum'] ?? 10)) {
                         new Dialog({ innerText: i18n('cc.invalidGradeValue', { min: (syncedStorage['c-minimum'] ?? 1), max: (syncedStorage['c-maximum'] ?? 10) }) }).show();
                         return;
@@ -123,7 +123,7 @@ class GradeCalculatorPane extends Pane {
 
         const futureWeightSection = this.#div1.createChildElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlock: '-10px' } });
         futureWeightSection.createChildElement('p', { innerText: i18n('cc.futureWeight'), style: { textWrap: 'balance', flex: '2' } });
-        const futureWeightInput = futureWeightSection.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', step: '1', placeholder: `${Math.round(calculateMedian(this.selectedGrades.map(item => item.weight)) || 1)}x`, style: { flex: '1' } });
+        const futureWeightInput = futureWeightSection.createChildElement('input', { type: 'number', class: 'st-input', value: this.futureWeight, min: '0', placeholder: `${Math.round(calculateMedian(this.selectedGrades.map(item => item.weight)) || 1)}x`, style: { flex: '1' } });
 
         // === PREDICTION ===
 
@@ -131,7 +131,7 @@ class GradeCalculatorPane extends Pane {
 
         const predictionSection = this.#div1.createChildElement('div');
         futureWeightInput.addEventListener('input', () => {
-            this.futureWeight = Math.max(0, Math.round(Number(futureWeightInput.value)));
+            this.futureWeight = Math.max(0, Number(futureWeightInput.value));
             this.drawPredictionSection(predictionSection, weightedTotal, totalWeight)
         });
         this.drawPredictionSection(predictionSection, weightedTotal, totalWeight);

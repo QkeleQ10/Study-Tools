@@ -43,7 +43,7 @@ class GradeStatisticsPane extends Pane {
         document.querySelectorAll('.st-grade-statistics-selected').forEach(elem => elem.classList.remove('st-grade-statistics-selected'));
         currentGradeTable.element.classList.add('st-cs-open');
 
-        let grades = this.selectedGrades;
+        let grades = this.selectedGrades.sort((a, b) => a.date && b.date ? a.date - b.date : 0);
         let values = grades.map(({ result }) => result);
 
         for (const { id } of grades) {
@@ -263,7 +263,8 @@ class GradeStatisticsPane extends Pane {
             this.selectedGrades.push({
                 id: grade.CijferId,
                 result,
-                sufficient: grade.IsVoldoende
+                sufficient: grade.IsVoldoende,
+                date: grade.DatumIngevoerd ? new Date(grade.DatumIngevoerd) : null,
             });
         }
     }
