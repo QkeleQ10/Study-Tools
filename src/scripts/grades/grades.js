@@ -513,12 +513,13 @@ class GradeDetailDialog extends Dialog {
             return;
         }
 
-        const relatedColumns = await magisterApi.gradesRelatedColumns(this.grade.CijferKolom.Id);
+        const relatedColumns = (await magisterApi.gradesRelatedColumns(this.grade.CijferKolom.Id)).filter(rc => rc.Kolomnaam !== this.grade.CijferKolom.KolomNaam);
         if (relatedColumns?.length > 0) {
             const column2 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
             createElement('h3', column2, { class: 'st-section-heading', innerText: i18n('calculation') });
 
             for (const relatedColumn of relatedColumns) {
+
                 let relatedGrade = currentGradeTable.grades.find(g => g.CijferKolom?.KolomNaam === relatedColumn.Kolomnaam);
                 const relatedGradeColumnInfo = await magisterApi.gradesColumnInfo(this.year, relatedGrade.CijferKolom.Id);
 

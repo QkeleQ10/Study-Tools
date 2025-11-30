@@ -61,11 +61,11 @@ async function main() {
     })
 
     // Easter egg
-    if (Math.random() < 0.006) /* 0,6% */ setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
-    if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => createStyle(`:root{--mg-logo-expanded:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg')}`), 2000)
-    if (Math.random() < 0.010) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
+    if (Math.random() < 0.004) /* 0,6% */ setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
+    if (Math.random() < 0.006) /* 0,8% */ setTimeout(() => createStyle(`:root{--mg-logo-expanded:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg')}`), 2000)
+    if (Math.random() < 0.008) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
     if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
-    if (Math.random() < 0.004) /* 0,4% */ setTimeout(() => {
+    if (Math.random() < 0.003) /* 0,4% */ setTimeout(() => {
         const amogus = element('img', 'st-amogus', document.body, {
             src: 'https://static.wikia.nocookie.net/fnaf-tower-defense/images/7/77/Among-us-red-png-01.png', style: `position: absolute; bottom: 0; left: 20px; height: 32px; animation: 1000ms peekInLeft; z-index: 9000;`
         })
