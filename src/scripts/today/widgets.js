@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const defaultWidgetOrder = ['digitalclock', 'grades', 'activities', 'messages', 'logs', 'homework', 'assignments'];
 
 class Widget {
@@ -204,6 +206,8 @@ class SlideshowWidget extends Widget {
 class HomeworkWidget extends ListWidget {
     async initialise() {
         this.listItems = (await magisterApi.events()).filter(event => {
+            if (this.constructor.options.annotations == 'true' && event.Aantekening?.length > 0 && new Date(event.Einde) > new Date()) return true;
+            if (this.constructor.options.remarks == 'true' && event.Opmerking?.length > 0 && new Date(event.Einde) > new Date()) return true;
             if (this.constructor.options.filter == 'incomplete')
                 return (event.Inhoud?.length > 0 && new Date(event.Einde) > new Date() && !event.Afgerond)
             else
@@ -239,7 +243,7 @@ class HomeworkWidget extends ListWidget {
             })
                 .createChildElement('div', {
                     class: 'st-widget-subitem-content',
-                    innerHTML: event.Inhoud.replace(/(<br ?\/?>)/gi, ''),
+                    innerHTML: (event.Afgerond ? (event.Aantekening || event.Opmerking || event.Inhoud) : (event.Inhoud || event.Aantekening || event.Opmerking)).replace(/(<br ?\/?>)/gi, ''),
                 });
 
             let chips = getEventChips(event)
@@ -276,6 +280,36 @@ class HomeworkWidget extends ListWidget {
                     title: "Alleen onvoltooid",
                     value: 'incomplete',
                     default: true
+                },
+            ]
+        },
+        annotations: {
+            title: "Aantekeningen tonen",
+            type: 'select',
+            choices: [
+                {
+                    title: "Ja",
+                    value: 'true',
+                    default: true
+                },
+                {
+                    title: "Nee",
+                    value: 'false'
+                },
+            ]
+        },
+        remarks: {
+            title: "Opmerkingen tonen",
+            type: 'select',
+            choices: [
+                {
+                    title: "Ja",
+                    value: 'true',
+                    default: true
+                },
+                {
+                    title: "Nee",
+                    value: 'false'
                 },
             ]
         },
@@ -538,7 +572,7 @@ class GradesWidget extends SlideshowWidget {
             .map(item => {
                 const id = item.Id || item.kolomId;
                 const date = new Date(item.ingevoerdOp || item.BeoordeeldOp);
-                const unread = date > dates.now - (1000 * 60 * 60 * 24 * 7);
+                const unread = date > new Date(new Date(localStorage['st-grade-last-viewed'] || 0));
                 const result = item.waarde || item.Beoordeling || '?';
                 const value = isNaN(Number(result.replace(',', '.'))) ? null : Number(result.replace(',', '.'));
                 const isSufficient = item.isVoldoende ?? (value && value >= Number(syncedStorage['suf-threshold']) && value <= 10);
@@ -561,10 +595,6 @@ class GradesWidget extends SlideshowWidget {
         this.header.innerText = this.listItems.some(grade => grade.unread) ? i18n('widgets.newGrades') : i18n('widgets.latestGrade')
 
         this.element.tabIndex = 0;
-        this.element.addEventListener('click', () => {
-            if (this.element.getAttribute('disabled') == 'true') return;
-            window.location.href = '#/cijfers';
-        });
 
         if (this.constructor.options.rotate == 'true' && this.listItems?.length > 1) {
             let interval = setInterval(() => {
@@ -621,7 +651,6 @@ class GradesWidget extends SlideshowWidget {
                 if (this.#hiddenItems.has(grade.id)) {
                     this.#hiddenItems.delete(grade.id);
                     localStorage['hiddenGrades'] = [...this.#hiddenItems];
-                    // saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
                     itemHide.setAttributes({
                         dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
                         title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
@@ -630,14 +659,26 @@ class GradesWidget extends SlideshowWidget {
                 } else {
                     this.#hiddenItems.add(grade.id);
                     localStorage['hiddenGrades'] = [...this.#hiddenItems];
-                    // saveToStorage('hiddenGrades', [...this.#hiddenItems], 'local');
                     itemHide.setAttributes({
                         dataset: { icon: this.#hiddenItems.has(grade.id) ? '' : '' },
                         title: this.#hiddenItems.has(grade.id) ? i18n('show') : i18n('hide')
                     });
                     itemElement.dataset.hidden = this.#hiddenItems.has(grade.id);
                 }
-                return false;
+            });
+
+            itemElement.addEventListener('click', async (e) => {
+                const years = await magisterApi.years();
+                const gradesForYear = await magisterApi.gradesForYear(years[0]);
+
+                const g = gradesForYear.find(g => grade.kolomId === g.CijferKolom.Id);
+                if (!g) {
+                    notify('snackbar', "Dit specifieke cijfer kon niet worden gevonden in je cijferlijst.");
+                    return;
+                }
+
+                const dialog = new GradeDetailDialog(g, years[0]);
+                dialog.show();
             });
 
             resolve(itemElement);

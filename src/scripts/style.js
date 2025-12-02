@@ -482,6 +482,10 @@ div.loading-overlay>div:before {
     border-radius: var(--st-border-radius)
 }
 
+#cijfers-container .main div.content-container-cijfers:has(.st-grade-table) {
+    overflow: auto;
+}
+
 .content.content-auto.background-white li>span,
 .content.content-auto.background-white li>strong {
     color: #000
@@ -949,6 +953,10 @@ span.nrblock,
 
 .k-scheduler .k-event {border-radius: calc(var(--st-border-radius) * 0.75);}
 
+.k-scheduler .k-event:has(.additional-appointment.not-enrolled) {
+    background-color: hsl(from var(--st-highlight-warn) 25deg s l);
+}
+
 .endlink a:first-letter {
     text-transform: uppercase
 }
@@ -1061,7 +1069,7 @@ aside, aside .block,
     transition: box-shadow 200ms, color 200ms, opacity 200ms;
 }
 
-.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
+.cijfers-k-grid.k-grid .k-grid-header th.k-header, .cijfers-k-grid.k-grid .grade.herkansingKolom, .cijfers-k-grid.k-grid .grade.docentkolom, .cijfers-k-grid.k-grid .k-grid-content tr td span, .cijfers-k-grid.k-grid .grade.eloopdracht, .column-container .rest-column, .column-container .first-column {
     background-color: var(--st-background-secondary) !important;
 }
 
@@ -1786,14 +1794,26 @@ table.table-grid-layout>tbody>tr.selected {
     }
 }
 
+.podium {
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+}
+.podium .dna-input-group, .podium .completed-challenge {
+    background-color: var(--st-background-secondary);
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+
+    input {
+        border-radius: var(--st-border-radius);
+    }
+}
+
 .podium .completed-challenge {
     background-color: var(--st-background-tertiary);
 }
 
-.podium .dna-input-group {
-    background-color: var(--st-background-secondary);
-    border: var(--st-border);
-}
 
 .podium .dna-input-group:hover {
     border-color: var(--st-foreground-accent);
@@ -1862,6 +1882,37 @@ table.table-grid-layout>tbody>tr.selected {
 }
 `, 'study-tools')
 
+    new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList') {
+                applyShadowStylesRecursively(mutation.target)
+            }
+        }
+    }).observe(document, { childList: true, subtree: true });
+
+    function applyShadowStylesRecursively(el) {
+        if (el.shadowRoot) {
+            applyShadowStyles(el);
+            el.shadowRoot.querySelectorAll('*').forEach(applyShadowStylesRecursively);
+        }
+        el.querySelectorAll('*').forEach(child => {
+            if (child.shadowRoot) {
+                applyShadowStyles(child);
+                child.shadowRoot.querySelectorAll('*').forEach(applyShadowStylesRecursively);
+            }
+        });
+    }
+
+    function applyShadowStyles(el) {
+        if (el.tagName === 'DNA-BREADCRUMBS') return;
+        el.setAttribute('style', `
+            --dna-background: var(--st-background-primary) !important;
+            --dna-primary-hue: ${currentTheme[1]} !important;
+            --dna-primary-sat: ${currentTheme[2]}% !important;
+            --att-details-background: var(--st-background-primary) !important;
+            `);
+    }
+
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
     if (syncedStorage['start-enabled']) {
@@ -1918,21 +1969,21 @@ table.table-grid-layout>tbody>tr.selected {
 `, 'study-tools-cs')
     } else { createStyle('', 'study-tools-cs') }
 
-    if (syncedStorage['insuf-red']) {
+    if (syncedStorage['insufficient'] !== 'off') {
         let insufArray = []
         for (let i = 1.0; i < Number(syncedStorage['suf-threshold']) - 0.005; i += 0.1) {
             insufArray.push(parseFloat(i.toFixed(1)))
         }
         createStyle(`
-${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}"]`).join(',')} {
-    color: var(--st-accent-warn) !important;
-    font-weight: 700;
-}
+        ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}"]`).join(',')} {
+            color: var(--st-accent-warn) !important;
+            font-weight: 700;
+        }
 
-.grade.grade.grade.grade[title^="10,0"] {
-    color: var(--st-accent-ok) !important;
-    font-weight: 700;
-}`, 'study-tools-insuf-red')
+        .grade.grade.grade.grade[title^="10,0"] {
+            color: var(--st-accent-ok) !important;
+            font-weight: 700;
+        }`, 'study-tools-insuf-red')
     } else { createStyle('', 'study-tools-insuf-red') }
 
     if (syncedStorage['magister-picture'] === 'custom' && syncedStorage['magister-picture-source']?.length > 10) {
@@ -1940,6 +1991,43 @@ ${insufArray.map(x => `.grade.grade.grade.grade[title^="${x.toLocaleString('nl-N
     } else if (syncedStorage['magister-picture'] !== 'show') {
         createStyle(`.menu-button figure img,.photo.photo-high img{display: none}`, 'study-tools-pfp')
     } else { createStyle('', 'study-tools-pfp') }
+
+    switch (syncedStorage['insufficient']) {
+        case 'underline':
+            createStyle(`
+            .st-insufficient {
+                font-weight: bold;
+                text-decoration: underline var(--st-accent-warn) 2px;
+                text-underline-offset: 2px;
+            }`, 'study-tools-insufficient')
+            break
+
+        case 'background':
+            createStyle(`
+            .st-insufficient {
+                font-weight: bold;
+                background-color: var(--st-highlight-warn);
+
+                &.column-type-2 {
+                    background-color: var(--st-accent-warn);
+                }
+
+                &.column-underlying {
+                    background-color: color-mix(in hsl, var(--st-highlight-warn) 65%, var(--st-highlight-subtle));
+                }
+            }`, 'study-tools-insufficient')
+            break
+
+        case 'textcolor':
+            createStyle(`
+            .st-insufficient {
+                font-weight: bold;
+                color: var(--st-accent-warn);
+            }`, 'study-tools-insufficient')
+            break
+
+        default: createStyle('', 'study-tools-insufficient')
+    }
 
     if (syncedStorage['custom-css'] || syncedStorage['custom-css2']) {
         createStyle(((syncedStorage['custom-css'] ?? '') + (syncedStorage['custom-css2'] ?? '')), 'study-tools-custom-css')

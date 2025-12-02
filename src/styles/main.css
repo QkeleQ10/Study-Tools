@@ -162,23 +162,60 @@ dialog.st-modal[open]::backdrop {
     transition: color 200ms, background-color 200ms, transform 200ms, opacity 200ms;
 }
 
-.st-button.icon:hover {
+.st-button.icon:hover,
+.st-button.icon:active {
+    background-color: var(--st-highlight-primary);
     color: var(--st-foreground-accent);
     filter: none;
     font-weight: 600;
     transition: none;
 }
 
-.st-button.icon:active {
-    background-color: var(--st-highlight-primary);
-    color: var(--st-foreground-accent);
-    filter: none;
-}
-
 .st-button.icon[data-icon]:before {
     margin-right: 0;
 }
 
+.st-tooltip {
+    position: fixed;
+    width: fit-content;
+    min-width: 100px;
+    max-width: 300px;
+
+    padding: 8px 14px;
+    background-color: var(--st-accent-primary);
+    color: var(--st-contrast-accent);
+    border-radius: var(--st-border-radius);
+    box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    font: 600 12px var(--st-font-family-secondary);
+    text-align: center;
+    text-wrap: balance;
+    z-index: 100;
+    opacity: 1;
+    pointer-events: none;
+    transition: scale 200ms, opacity 200ms;
+
+    @starting-style {
+        scale: 0.5;
+        opacity: 0;
+    }
+
+    &:after {
+        content: '';
+        position: absolute;
+        left: auto;
+        right: 20px;
+        top: 100%;
+        margin-top: 0;
+        border-width: 5px;
+        border-style: solid;
+        border-color: var(--st-accent-primary) transparent transparent transparent;
+    }
+
+    &.st-hidden {
+        scale: 0.5;
+        opacity: 0;
+    }
+}
 
 .st-select {
     appearance: base-select;
@@ -649,6 +686,12 @@ dialog.st-modal[open]::backdrop {
 
 .st-input[type=number] {
     width: 75px;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        opacity: 1;
+        color: var(--st-foreground-accent);
+    }
 }
 
 .st-input:focus {
@@ -924,8 +967,11 @@ a.st-metric {
         'desc' auto
         'result' auto
         / auto;
-    gap: 2px;
-    font: 500 20px/22px var(--st-font-family-primary);
+    gap: 0.1em;
+    font-size: 20px;
+    line-height: 1.1em;
+    font-family: var(--st-font-family-primary);
+    font-weight: 500;
     text-decoration: none;
     border: none;
     outline: none;
@@ -941,7 +987,7 @@ a.st-metric {
 }
 
 .st-metric.secondary {
-    font: 500 18px/20px var(--st-font-family-primary);
+    font-size: 18px;
 }
 
 .st-metric:before {
@@ -949,13 +995,8 @@ a.st-metric {
 
     content: attr(data-description);
     white-space: pre-wrap;
-    font: 600 12px var(--st-font-family-secondary);
+    font: 500 0.6em var(--st-font-family-secondary);
     opacity: 0.8;
-}
-
-.st-metric.secondary:before {
-    font: 600 11px var(--st-font-family-secondary);
-    opacity: 0.6;
 }
 
 .st-metric[data-extra]:after {
@@ -964,7 +1005,7 @@ a.st-metric {
 
     content: ' (' attr(data-extra) ')';
     white-space: pre-wrap;
-    font: 12px var(--st-font-family-secondary);
+    font: 0.6em var(--st-font-family-secondary);
 }
 
 a.st-metric:hover,
@@ -1062,12 +1103,6 @@ a.st-metric:focus-visible {
     color: var(--st-foreground-accent);
 }
 
-#st-cs-tab.active:after {
-    width: calc(100% - 24px);
-    height: 3px;
-    translate: -50%;
-}
-
 #st-sch>ul>li:hover {
     filter: brightness(var(--st-hover-brightness));
     transition: filter 200ms, transform 200ms;
@@ -1157,332 +1192,6 @@ a.st-keyboard-hint.clicked {
 .border-bottom-radius-none>span:nth-child(3) {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
-}
-
-.st-chart-about {
-    width: calc(var(--size) / 2);
-    max-height: var(--size);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.st-pie-chart.donut .st-chart-about {
-    display: none;
-}
-
-.st-chart-label {
-    font: 700 16px/24px var(--st-font-family-primary);
-}
-
-.st-chart-info {
-    font: 14px/22px var(--st-font-family-secondary);
-}
-
-.st-bar-chart {
-    --size: 256px;
-    display: flex;
-    justify-content: space-between;
-    height: var(--size);
-    padding-bottom: 48px;
-}
-
-.st-bar-chart-col {
-    --hue-rotate: 0;
-    --bar-fill-amount: 0;
-    --background-color: var(--st-accent-ok);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    height: 100%;
-    padding-inline: 2px;
-    filter: hue-rotate(calc(var(--hue-rotate) * 1deg));
-    transition: --bar-fill-amount 200ms;
-}
-
-.st-bar-chart-col:hover {
-    background-color: var(--st-highlight-primary);
-}
-
-.st-bar-chart-bar {
-    width: 25px;
-    height: calc(var(--bar-fill-amount) * 100%);
-    border-radius: var(--st-border-radius) var(--st-border-radius) 0 0;
-    background-color: var(--background-color);
-    transition: filter 200ms;
-}
-
-.st-bar-chart-col:hover .st-bar-chart-bar {
-    filter: brightness(0.95)
-}
-
-.st-bar-chart-col[data-value]:not([data-value="0"]):before {
-    content: attr(data-value);
-    width: 100%;
-    height: 0;
-    translate: 0 6px;
-    color: var(--st-contrast-accent);
-    font: 600 12px var(--st-font-family-secondary);
-    text-align: center;
-    transition: none;
-}
-
-.st-bar-chart-col[data-y-tight=true][data-value]:not([data-value="0"]):before {
-    color: var(--st-foreground-primary);
-    translate: 0 -16px;
-}
-
-.st-bar-chart-col[data-percentage]:not([data-percentage="0"]):hover:before {
-    content: attr(data-percentage) '%';
-    text-align: left;
-    font-weight: normal;
-    rotate: 90deg;
-    translate: 8px 22px;
-    z-index: 1;
-}
-
-.st-bar-chart-col[data-y-tight=true][data-percentage]:not([data-percentage="0"]):hover:before {
-    text-align: right;
-    translate: 8px -16px;
-}
-
-.st-bar-chart-col:after {
-    content: attr(title);
-    width: 0;
-    height: 0;
-    rotate: 45deg;
-    translate: 2px 4px;
-    font: 11px var(--st-font-family-secondary);
-    text-wrap: nowrap;
-}
-
-.st-pie-chart {
-    position: relative;
-    --size: 256px;
-    --radius: calc(var(--size) / 2);
-    display: flex;
-    gap: 12px;
-}
-
-.st-pie-chart:before {
-    content: '';
-    display: block;
-    width: var(--size);
-    height: var(--size);
-}
-
-.st-pie-chart.donut:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: calc(var(--size) * 0.2);
-    left: calc(var(--size) * 0.2);
-    width: calc(var(--size) * 0.6);
-    height: calc(var(--size) * 0.6);
-    background-color: var(--st-background-secondary);
-    border-radius: 100%;
-}
-
-.st-pie-chart.donut .st-pie-chart-slice::after {
-    --y: calc(var(--radius) - 8px);
-}
-
-.st-pie-chart-slice {
-    --hue-rotate: 0;
-    --background-color: var(--st-accent-ok);
-    --pie-offset: 0;
-    --pie-size: 1;
-    --angle: calc(var(--pie-size) * 360deg);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: var(--size);
-    height: var(--size);
-    transform: rotate(calc(var(--pie-offset) * 1turn));
-    filter: hue-rotate(calc(var(--hue-rotate) * 1deg));
-}
-
-.st-pie-chart-slice:after {
-    --angle-in-radians: calc(var(--pie-size) * 1turn);
-    --y: calc(cos(var(--angle-in-radians) / 2) * var(--radius));
-    content: attr(data-value);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 25px;
-    height: 25px;
-    translate: -50% -50%;
-    color: var(--st-contrast-accent);
-    font: 600 12px var(--st-font-family-secondary);
-    transform:
-        rotate(calc(var(--angle) / 2)) translateY(calc(-0.85 * var(--y))) rotate(calc(-1 * var(--angle) / 2)) rotate(calc(-1 * var(--pie-offset) * 1turn));
-}
-
-.st-pie-chart-slice:has(.st-pie-chart-slice-box2:hover):after,
-.st-pie-chart-slice[data-more-than-half=true]:has(.st-pie-chart-slice-box1:hover):after {
-    content: attr(data-percentage) '%';
-    font-weight: normal;
-}
-
-.st-pie-chart-slice-box1 {
-    position: absolute;
-    top: 0;
-    left: calc(var(--size) / 2);
-    height: var(--size);
-    width: calc(var(--size) / 2);
-    border-radius: 0 var(--size) var(--size) 0;
-    transform-origin: left;
-    overflow: hidden;
-    transition: transform 200ms, filter 200ms;
-}
-
-.st-pie-chart-slice[data-more-than-half=true] .st-pie-chart-slice-box1 {
-    background-color: var(--background-color);
-    overflow: visible;
-}
-
-.st-pie-chart-slice-box2 {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: var(--size);
-    width: calc(var(--size) / 2);
-    translate: -100%;
-    border-radius: var(--size) 0 0 var(--size);
-    transform-origin: right;
-    transform: rotate(calc(var(--pie-size) * 1turn));
-    background-color: var(--background-color);
-}
-
-.st-pie-chart-slice,
-.st-pie-chart-slice-box1 {
-    pointer-events: none;
-}
-
-.st-pie-chart-slice-box2,
-.st-pie-chart-slice[data-more-than-half=true] .st-pie-chart-slice-box1 {
-    pointer-events: all;
-}
-
-.st-pie-chart-slice.active .st-pie-chart-slice-box1 {
-    filter: brightness(0.95);
-    transform: scale(1.05);
-}
-
-.st-line-chart {
-    --size: 256px;
-    display: flex;
-    justify-content: stretch;
-    height: var(--size);
-}
-
-.st-line-chart-col {
-    --hue-rotate: 0;
-    --color: var(--st-accent-ok);
-    --mean-color: #ffffff44;
-    --point-height: 0;
-    flex-grow: 1;
-    position: relative;
-    height: 100%;
-    filter: hue-rotate(calc(var(--hue-rotate) * 1deg));
-    transition: --point-height 200ms;
-}
-
-.st-line-chart-col:hover {
-    background-color: var(--st-highlight-primary);
-}
-
-.st-line-chart-point {
-    position: absolute;
-    top: calc((1 - var(--point-height)) * 100%);
-    left: 50%;
-    translate: -50% -50%;
-    width: 100%;
-    max-width: 6px;
-    aspect-ratio: 1;
-    border-radius: 100%;
-    background-color: var(--color);
-    z-index: 1;
-}
-
-.st-line-chart-col[data-delta="rise"]:before {
-    content: '';
-    display: block;
-    position: absolute;
-    top: calc((1 - var(--point-height)) * 100%);
-    right: 0;
-    translate: -50%;
-    width: 100%;
-    height: calc((1 * (var(--point-height) - var(--previous-point-height))) * 100%);
-    min-height: 2px;
-    background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--color), transparent calc(50% + 1px));
-}
-
-.st-line-chart-col[data-delta="fall"]:before {
-    content: '';
-    display: block;
-    position: absolute;
-    top: calc((1 - var(--previous-point-height)) * 100%);
-    right: 0;
-    translate: -50%;
-    width: 100%;
-    height: calc((1 * (var(--previous-point-height) - var(--point-height))) * 100%);
-    min-height: 2px;
-    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--color), transparent calc(50% + 1px));
-}
-
-.st-line-chart-col[data-delta="equal"]:before {
-    content: '';
-    display: block;
-    position: absolute;
-    top: calc((1 - var(--point-height)) * 100%);
-    right: 0;
-    translate: -50%;
-    width: 100%;
-    height: 1px;
-    background-color: var(--color);
-}
-
-.st-line-chart-col[data-mean-delta="rise"]:after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: calc((1 - var(--mean-height)) * 100%);
-    right: 0;
-    translate: -50%;
-    width: 100%;
-    height: calc((1 * (var(--mean-height) - var(--previous-mean-height))) * 100%);
-    min-height: 2px;
-    background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--mean-color), transparent calc(50% + 1px));
-}
-
-.st-line-chart-col[data-mean-delta="fall"]:after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: calc((1 - var(--previous-mean-height)) * 100%);
-    right: 0;
-    translate: -50%;
-    width: 100%;
-    height: calc((1 * (var(--previous-mean-height) - var(--mean-height))) * 100%);
-    min-height: 2px;
-    background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--mean-color), transparent calc(50% + 1px));
-}
-
-.st-line-chart-col[data-mean-delta="equal"]:after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: calc((1 - var(--mean-height)) * 100%);
-    right: 0;
-    translate: -50%;
-    width: 100%;
-    height: 1px;
-    background-color: var(--mean-color);
 }
 
 #st-decoration-disable {

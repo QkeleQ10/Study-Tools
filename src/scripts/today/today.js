@@ -9,11 +9,11 @@ addEventListener('hashchange', today)
 
 // Page 'Vandaag'
 async function today() {
-    console.info('hashchange', document.location.href)
+    console.debug('hashchange', document.location.href)
 
     if (!(document.location.href.includes('#/vandaag') && syncedStorage['start-enabled'])) return
 
-    console.info("Rendering Start")
+    console.debug("Rendering Start")
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
@@ -89,17 +89,18 @@ async function today() {
     })
         .addEventListener('click', () => new TeacherNamesDialog().show());
 
-    editWrapper.createChildElement('button', {
+    const editWidgetsButton = editWrapper.createChildElement('button', {
         id: 'st-start-edit-widgets',
         class: 'st-button icon',
         dataset: { icon: '' },
         title: i18n('editWidgets')
-    })
-        .addEventListener('click', () => new WidgetEditorDialog().show());
+    });
+    editWidgetsButton.addEventListener('click', () => new WidgetEditorDialog().show());
 
     if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new2', 'local') ?? false)) {
         setTimeout(() => {
-            const rect = document.getElementById('st-start-edit-widgets').getBoundingClientRect()
+            if(!document.body.contains(editWidgetsButton)) return;
+            const rect = editWidgetsButton.getBoundingClientRect()
             const tooltip = document.body.createChildElement('div', {
                 id: 'st-widgets-edit-tooltip',
                 innerText: i18n('tooltips.startWidgetsNew'),
@@ -109,7 +110,7 @@ async function today() {
                     translate: '8px -16px'
                 }
             })
-            document.getElementById('st-start-edit-widgets').addEventListener('click', () => {
+            editWidgetsButton.addEventListener('click', () => {
                 tooltip.classList.add('st-hidden')
                 saveToStorage('tooltipdismiss-start-widgets-new2', true, 'local')
             })
@@ -177,6 +178,11 @@ class Widgets {
         this.element = parentElement.createChildElement('div', { id: 'st-widgets', innerText: '' });
 
         this.#drawWidgets();
+    }
+
+    async refresh() {
+        this.element.innerText = '';
+        await this.#drawWidgets();
     }
 
     async #drawWidgets() {
@@ -334,7 +340,10 @@ class WidgetEditorDialog extends Dialog {
 }
 
 function keydown(event) {
-    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    // guard against focusing inputs, textareas or content-editable elements
+    if (document.activeElement instanceof HTMLInputElement
+        || document.activeElement instanceof HTMLTextAreaElement
+        || (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable)) return;
     if (event.key === 'ArrowLeft') schedule?.headerControls.moveBackward.click();
     else if (event.key === 'ArrowRight') schedule?.headerControls.moveForward.click();
 }
@@ -361,6 +370,8 @@ function getEventChips(event) {
         chips.push(chip)
     }
     if (event.HeeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
+    if (event.Opmerking?.length) chips.push({ name: i18n('chips.remark'), type: 'info' })
+    if (event.Aantekening?.length) chips.push({ name: i18n('chips.annotation'), type: 'info' })
 
     return chips
 }

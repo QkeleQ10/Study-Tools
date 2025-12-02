@@ -396,194 +396,315 @@ class Dropdown {
     }
 }
 
-HTMLElement.prototype.createBarChart = function (frequencyMap = {}, labels = {}, threshold, sort = true, rotateHue = true, showRemainder = true, itemCap = 100) {
-    const chartArea = this
-    if (!chartArea.classList.contains('st-bar-chart')) chartArea.innerText = ''
-    chartArea.classList.remove('st-pie-chart', 'st-line-chart')
-    chartArea.classList.add('st-bar-chart', 'st-chart')
+function createLinearLineChart(chartArea, slope = 1, intercept = 0, minX = 0, maxX = 100, minY = 0, maxY = 100, xGridCount = 10, yGridCount = 10, label = (x, y) => `(${x.toFixed(2)}: ${y.toFixed(2)})`, xStep = 0.1) {
+    if (!chartArea.classList.contains('st-linear-line-chart')) chartArea.innerText = ''
+    chartArea.classList.add('st-linear-line-chart', 'st-chart')
+    chartArea.style.position = 'relative'
+    chartArea.style.overflow = 'hidden'
 
-    const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
-    threshold ??= totalFrequency / 40
-    const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
-    const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
-    const maxFrequency = Math.max(...Object.values(frequencyMap), showRemainder ? remainderFrequency : 0)
+    const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+    const normX = (x) => ((x - minX) / (maxX - minX)) * 100;
+    const normY = (y) => 100 - ((y - minY) / (maxY - minY)) * 100;
+    const invNormX = (px) => minX + (px / 100) * (maxX - minX);
+    const invNormY = (py) => minY + ((100 - py) / 100) * (maxY - minY);
 
-    let filteredFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold)
-    if (sort) filteredFrequencyMap.sort((a, b) => b[1] - a[1])
-    filteredFrequencyMap = filteredFrequencyMap.slice(0, itemCap)
+    // Compute line endpoints
+    const y1 = clamp(slope * minX + intercept, minY, maxY);
+    const y2 = clamp(slope * maxX + intercept, minY, maxY);
+    const x1p = normX(minX);
+    const y1p = normY(y1);
+    const x2p = normX(maxX);
+    const y2p = normY(y2);
 
-    filteredFrequencyMap.forEach(([key, frequency], i) => {
-        const hueRotate = rotateHue ? (20 * i) : 0
-
-        const col = element('div', `${chartArea.id}-${key}`, chartArea, {
-            class: 'st-bar-chart-col',
-            title: labels?.[key] ?? key,
-            'data-value': frequency,
-            'data-percentage': Math.round(frequency / totalFrequency * 100),
-            'data-y-tight': (frequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
-            style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${frequency / maxFrequency}`
-        }),
-            bar = element('div', `${chartArea.id}-${key}-bar`, col, {
-                class: 'st-bar-chart-bar'
-            })
-    })
-
-    if (remainderFrequency > 0 && showRemainder) {
-        const hueRotate = rotateHue ? (20 * filteredFrequencyMap.length) : 0
-
-        const col = element('div', `${chartArea.id}-remainder`, chartArea, {
-            class: 'st-bar-chart-col',
-            title: remainingItems.length === 1
-                ? labels?.[remainingItems[0][0]] ?? remainingItems[0][0]
-                : i18n('remainder'),
-            'data-value': remainderFrequency,
-            'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
-            'data-y-tight': (remainderFrequency / maxFrequency * (chartArea.clientHeight - 48)) <= 28,
-            style: `--hue-rotate: ${hueRotate}; --bar-fill-amount: ${remainderFrequency / maxFrequency}`
-        }),
-            bar = element('div', `${chartArea.id}-remainder-bar`, col, {
-                class: 'st-bar-chart-bar'
-            })
+    // Generate gridlines
+    let xGridLines = '';
+    for (let i = 1; i < xGridCount; i++) {
+        const x = (i / xGridCount) * 100;
+        xGridLines += `<line x1="${x}" y1="0" x2="${x}" y2="100" stroke="var(--st-border-color)" stroke-width="0.125"/>`;
+    }
+    let yGridLines = '';
+    for (let i = 1; i < yGridCount; i++) {
+        const y = (i / yGridCount) * 100;
+        yGridLines += `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="var(--st-border-color)" stroke-width="0.25"/>`;
     }
 
-    return chartArea
-}
+    // Full SVG
+    const cMin = syncedStorage['c-minimum'] ?? 1;
+    const cMax = syncedStorage['c-maximum'] ?? 10;
+    const sufThreshold = syncedStorage['suf-threshold'] ?? 5.5;
 
-HTMLElement.prototype.createPieChart = function (frequencyMap = {}, labels = {}, threshold, rotateHue = true) {
-    const chartArea = this
-    chartArea.innerText = ''
-    chartArea.classList.remove('st-bar-chart', 'st-line-chart')
-    chartArea.classList.add('st-pie-chart', 'st-chart')
+    // Calculate horizontal position (0-100%) based on where threshold falls between min and max
+    const thresholdX = ((sufThreshold - cMin) / (cMax - cMin)) * 100;
 
-    const aboutWrapper = element('div', `${chartArea.id}-about`, chartArea, { class: 'st-chart-about' }),
-        aboutLabel = element('span', `${chartArea.id}-about-label`, aboutWrapper, { class: 'st-chart-label' }),
-        aboutMore = element('span', `${chartArea.id}-about-more`, aboutWrapper, { class: 'st-chart-info' })
+    // Calculate vertical position (0-100%) based on where threshold falls in the Y range
+    const thresholdY = 100 - ((sufThreshold - minY) / (maxY - minY)) * 100;
 
-    const totalFrequency = Object.values(frequencyMap).reduce((acc, frequency) => acc + frequency, 0)
-    threshold ??= totalFrequency / 40
-    const remainingItems = Object.entries(frequencyMap).filter(([key, frequency]) => frequency < threshold && frequency > 0)
-    const remainderFrequency = remainingItems.reduce((acc, [key, frequency]) => acc + frequency, 0)
+    const svgHTML = `
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none"
+         style="position:absolute;top:0;left:0;width:100%;height:100%;">
+      ${xGridLines}
+      ${yGridLines}
+      <rect x="0" y="0" width="${thresholdX}" height="100" fill="var(--st-accent-warn)" fill-opacity="0.05"/>
+      <rect x="0" y="${thresholdY}" width="100" height="${100 - thresholdY}" fill="var(--st-accent-warn)" fill-opacity="0.05"/>
+      <line x1="${x1p}" y1="${y1p}" x2="${x2p}" y2="${y2p}" stroke="var(--st-foreground-accent)"
+            stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    </svg>
+  `;
+    chartArea.innerHTML = svgHTML;
 
-    const filteredAndSortedFrequencyMap = Object.entries(frequencyMap).filter(a => a[1] >= threshold).sort((a, b) => b[1] - a[1])
+    // Create dot element
+    const dot = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute',
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: 'var(--st-foreground-accent)',
+            pointerEvents: 'none',
+            transform: 'translate(-50%, -50%)',
+            display: 'none',
+            zIndex: 10,
+        },
+    });
 
-    filteredAndSortedFrequencyMap.forEach(([key, frequency], i, a) => {
-        const pieOffset = a.slice(0, i).reduce((acc, [key, frequency]) => acc + frequency, 0) / totalFrequency,
-            pieSize = frequency / totalFrequency,
-            hueRotate = rotateHue ? (20 * i) : 0
+    // Create tooltip
+    const tooltip = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute',
+            background: 'var(--st-background-tertiary)',
+            color: 'var(--st-foreground-primary)',
+            padding: '2px 6px',
+            borderRadius: 'calc(var(--st-border-radius) * 0.5)',
+            font: '12px var(--st-font-family-secondary)',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            display: 'none',
+            zIndex: 20,
+            transform: 'translate(-50%, -120%)',
+        },
+    });
 
-        const slice = element('div', `${chartArea.id}-${key}`, chartArea, {
-            class: 'st-pie-chart-slice',
-            'data-key': key,
-            'data-value': frequency,
-            'data-percentage': Math.round(frequency / totalFrequency * 100),
-            'data-more-than-half': pieSize > 0.5,
-            style: `--hue-rotate: ${hueRotate}; --pie-offset: ${pieOffset}; --pie-size: ${pieSize}`
-        }),
-            box1 = element('div', `${chartArea.id}-${key}-box1`, slice, {
-                class: 'st-pie-chart-arc st-pie-chart-slice-box1'
-            }),
-            box2 = element('div', `${chartArea.id}-${key}-box2`, box1, {
-                class: 'st-pie-chart-arc st-pie-chart-slice-box2'
-            })
-    })
-
-    if (remainderFrequency > 0) {
-        const pieOffset = 1 - (remainderFrequency / totalFrequency),
-            pieSize = remainderFrequency / totalFrequency,
-            hueRotate = rotateHue ? (20 * filteredAndSortedFrequencyMap.length) : 0
-
-        const slice = element('div', `${chartArea.id}-remainder`, chartArea, {
-            class: 'st-pie-chart-slice',
-            'data-key': 'remainder',
-            'data-value': remainderFrequency,
-            'data-percentage': Math.round(remainderFrequency / totalFrequency * 100),
-            'data-more-than-half': pieSize > 0.5,
-            style: `--hue-rotate: ${hueRotate}; --pie-offset: ${pieOffset}; --pie-size: ${pieSize}`
-        }),
-            box1 = element('div', `${chartArea.id}-remainder-box1`, slice, {
-                class: 'st-pie-chart-arc st-pie-chart-slice-box1'
-            }),
-            box2 = element('div', `${chartArea.id}-remainder-box2`, box1, {
-                class: 'st-pie-chart-arc st-pie-chart-slice-box2'
-            })
-    }
-
-    function updateAbout() {
-        let hoveredElement = chartArea.querySelector('.st-pie-chart-slice:has(:hover), .st-pie-chart-slice:hover')
-        if (!chartArea.classList.contains('donut')) hoveredElement ||= chartArea.querySelector('.st-pie-chart-slice:nth-child(2)')
-        chartArea.querySelectorAll('.st-pie-chart-slice.active').forEach(element => element.classList.remove('active'))
-        if (!hoveredElement) return
-        hoveredElement.classList.add('active')
-
-        let key, frequency
-        const hoveredHTMLElement = /** @type {HTMLElement} */ (hoveredElement);
-        if (!hoveredHTMLElement?.dataset.key || !hoveredHTMLElement?.dataset.value) {
-            [key, frequency] = filteredAndSortedFrequencyMap[0]
-        } else {
-            [key, frequency] = [hoveredHTMLElement.dataset.key, hoveredHTMLElement.dataset.value]
+    // Mouse move handler
+    chartArea.addEventListener('mousemove', (e) => {
+        const rect = chartArea.getBoundingClientRect();
+        let px = ((e.clientX - rect.left) / rect.width) * 100;
+        if (px < 0 || px > 100) {
+            dot.style.display = 'none';
+            tooltip.style.display = 'none';
+            return;
         }
 
-        if (key === 'remainder') {
-            aboutLabel.innerText = i18n('remainder')
-            aboutMore.innerText = remainingItems.map(([key, frequency]) => `${key}: ${frequency}× (${Math.round(frequency / totalFrequency * 1000) / 10}%)`).join('\n')
-        } else {
-            aboutLabel.innerText = labels?.[key] || key
-            aboutMore.innerText = `${labels?.[key] ? key + '\n' : ''}${frequency}× (${Math.round(frequency / totalFrequency * 1000) / 10}%)`
-        }
-    }
-    chartArea.addEventListener('mousemove', updateAbout)
-    chartArea.addEventListener('mouseout', updateAbout)
-    updateAbout()
+        let xValue = invNormX(px);
 
-    return chartArea
+        // Snap to step if xStep > 0
+        if (xStep > 0) {
+            xValue = Math.round(xValue / xStep) * xStep;
+            xValue = clamp(xValue, minX, maxX);
+            px = normX(xValue);
+        }
+
+        let yValue = clamp(slope * xValue + intercept, minY, maxY);
+        const py = normY(yValue);
+
+        // Dot position
+        dot.style.left = `${px}%`;
+        dot.style.top = `${py}%`;
+        dot.style.display = 'block';
+
+        // Tooltip content
+        tooltip.innerText = label(xValue, yValue);
+        tooltip.style.display = 'block';
+        tooltip.style.color = yValue >= sufThreshold ? 'var(--st-accent-ok)' : 'var(--st-accent-warn)';
+
+        // Tooltip horizontal constraint
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const halfTooltipPercent = (tooltipRect.width / 2 / rect.width) * 100;
+        let tooltipLeft = px;
+        if (px - halfTooltipPercent < 0) tooltipLeft = halfTooltipPercent;
+        if (px + halfTooltipPercent > 100) tooltipLeft = 100 - halfTooltipPercent;
+        tooltip.style.left = `${tooltipLeft}%`;
+
+        // Tooltip vertical flip
+        const tooltipHeightPx = tooltipRect.height;
+        const pyPx = (py / 100) * rect.height;
+        tooltip.style.transform = pyPx - tooltipHeightPx - 8 < 0
+            ? 'translate(-50%, 20%)'
+            : 'translate(-50%, -120%)';
+
+        tooltip.style.top = `${py}%`;
+    });
+
+    chartArea.addEventListener('mouseleave', () => {
+        dot.style.display = 'none';
+        tooltip.style.display = 'none';
+    });
 }
 
-HTMLElement.prototype.createLineChart = function (values = [], labels = [], minValue, maxValue, showProgressiveMean = false) {
-    const chartArea = this
-    if (!chartArea.classList.contains('st-line-chart')) chartArea.innerText = ''
-    chartArea.classList.remove('st-pie-chart', 'st-bar-chart')
-    chartArea.classList.add('st-line-chart', 'st-chart')
+/**
+ * Creates an indexed line chart (non-linear function: values provided explicitly).
+ * @param {HTMLElement} chartArea Container element.
+ * @param {number[]} values Array of y-values (x implicit: index).
+ * @param {(i:number)=>void} [onClick] Callback invoked when a point is clicked (index passed).
+ * @param {object} [options]
+ * @param {number} [options.minY] Explicit min Y (defaults to min(values)).
+ * @param {number} [options.maxY] Explicit max Y (defaults to max(values)).
+ * @param {number} [options.yGridCount=10] Number of horizontal grid lines.
+ * @param {boolean} [options.showMovingAverage] Whether to draw moving average line.
+ * @param {(i:number,value:number,maValue:number|undefined)=>string} [options.label] Tooltip label generator.
+ */
+function createIndexedLineChart(chartArea, values, onClick, options = {}) {
+    if (!Array.isArray(values) || values.length === 0) {
+        chartArea.innerHTML = '<div style="padding:8px;font:12px var(--st-font-family-secondary);">No data</div>';
+        return;
+    }
 
-    minValue ??= Math.min(...values)
-    maxValue ??= Math.max(...values)
+    const {
+        minY = Math.min(...values),
+        maxY = Math.max(...values),
+        yGridCount = 10,
+        showMovingAverage = false,
+        label = (i, v, mv) => mv != null ? `#${i}: ${v.toFixed(2)} (MA ${mv.toFixed(2)})` : `#${i}: ${v.toFixed(2)}`
+    } = options;
 
-    let progressiveMean = values[0]
+    chartArea.classList.add('st-indexed-line-chart', 'st-chart');
+    chartArea.style.position = 'relative';
+    chartArea.style.overflow = 'hidden';
 
-    values.forEach((value, i) => {
-        const hueRotate = 10 * i
+    const count = values.length;
+    const xPad = Math.max(0, Math.min(20, 2));
+    const xSpan = 100 - 2 * xPad;
+    const ySpan = 100;
+    const denom = (maxY - minY);
+    const normX = (i) => count === 1 ? 50 : (xPad + (i / (count - 1)) * xSpan);
+    const normY = (v) => {
+        if (denom === 0) return 50;
+        return (1 - ((v - minY) / denom)) * ySpan;
+    };
 
-        const progressiveMeanPrev = progressiveMean
-        progressiveMean = calculateMean(values.slice(0, i + 1))
+    // Build path for values
+    let pathD = '';
+    for (let i = 0; i < count; i++) {
+        const x = normX(i);
+        const y = normY(values[i]);
+        pathD += i === 0 ? `M${x},${y}` : ` L${x},${y}`;
+    }
 
-        const col = element('div', `${chartArea.id}-${i}`, chartArea, {
-            class: 'st-line-chart-col',
-            title: `${labels?.[i] ?? i}\n${value.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}\n\nVoortschrijdend gemiddelde: ${progressiveMean.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            'data-delta': values[i - 1] > value
-                ? 'fall'
-                : values[i - 1] < value
-                    ? 'rise' : values[i - 1] === value
-                        ? 'equal'
-                        : 'none',
-            'data-mean-delta': !showProgressiveMean || i === 0
-                ? 'none'
-                : progressiveMeanPrev > progressiveMean
-                    ? 'fall'
-                    : progressiveMeanPrev < progressiveMean
-                        ? 'rise'
-                        : Math.abs((progressiveMean - progressiveMeanPrev) / (maxValue - minValue)) < 0.2
-                            // : progressiveMeanPrev === progressiveMean
-                            ? 'equal'
-                            : 'none',
-            style: `--hue-rotate: ${hueRotate}; --point-height: ${(value - minValue) / (maxValue - minValue)}; --previous-point-height: ${((values[i - 1] || value) - minValue) / (maxValue - minValue)}; --mean-height: ${(progressiveMean - minValue) / (maxValue - minValue)}; --previous-mean-height: ${(progressiveMeanPrev - minValue) / (maxValue - minValue)};`
-        }),
-            bar = element('div', `${chartArea.id}-${i}-bar`, col, {
-                class: 'st-line-chart-point'
-            })
-    })
+    // Moving average
+    let maValues;
+    let maPathD = '';
+    if (showMovingAverage) {
+        let runningSum = 0;
+        maValues = values.map((v, i) => {
+            runningSum += v;
+            return runningSum / (i + 1);
+        });
+        for (let i = 0; i < count; i++) {
+            const x = normX(i);
+            const y = normY(maValues[i]);
+            maPathD += i === 0 ? `M${x},${y}` : ` L${x},${y}`;
+        }
+    }
 
-    chartArea.querySelectorAll(`.st-line-chart-col:not(:nth-child(-n+${values.length}))`).forEach(e => e.remove())
+    // Generate gridlines
+    let yGridLines = '';
+    for (let i = 1; i < yGridCount; i++) {
+        const y = (i / yGridCount) * 100;
+        yGridLines += `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="var(--st-border-color)" stroke-width="0.25"/>`;
+    }
 
-    return chartArea
+    const sufThreshold = syncedStorage['suf-threshold'] ?? 5.5;
+
+    // Calculate vertical position (0-100%) based on where threshold falls in the Y range
+    const thresholdY = denom === 0 ? 50 : ((1 - ((sufThreshold - minY) / denom)) * ySpan);
+
+    const svgHTML = `
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;top:0;left:0;width:100%;height:100%;">
+      ${yGridLines}
+      <rect x="0" y="${thresholdY}" width="100" height="${100 - thresholdY}" fill="var(--st-accent-warn)" fill-opacity="0.05"/>
+      <path d="${pathD}" fill="none" stroke="var(--st-foreground-secondary)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+      ${showMovingAverage ? `<path d="${maPathD}" fill="none" stroke="var(--st-foreground-insignificant)" stroke-width="1" stroke-dasharray="3 2" vector-effect="non-scaling-stroke" />` : ''}
+    </svg>`;
+    chartArea.innerHTML = svgHTML;
+
+    // Points (for click targets)
+    const pointsWrapper = chartArea.createChildElement('div', { style: { position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', pointerEvents: 'none' } });
+    const pointElements = [];
+    for (let i = 0; i < count; i++) {
+        const x = normX(i);
+        const y = normY(values[i]);
+        const point = pointsWrapper.createChildElement('button', {
+            class: 'st-chart-point',
+            style: {
+                position: 'absolute',
+                left: x + '%',
+                top: y + '%',
+                width: values.length > 30 ? '5px' : '7px',
+                height: values.length > 30 ? '5px' : '7px',
+                transform: 'translate(-50%, -50%)',
+                background: values[i] >= (syncedStorage['suf-threshold'] ?? 5.5) ? 'var(--st-accent-ok)' : 'var(--st-accent-warn)',
+                border: 'none',
+                borderRadius: '50%',
+                padding: '0',
+                cursor: onClick ? 'pointer' : 'default',
+                pointerEvents: 'auto'
+            },
+            title: label(i, values[i], showMovingAverage ? maValues[i] : undefined)
+        });
+        if (onClick) {
+            point.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                onClick(i);
+            });
+        }
+        pointElements.push(point);
+    }
+
+    // Hover dot & tooltip (single moving marker like linear chart)
+    const hoverDot = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--st-foreground-accent)', pointerEvents: 'none', transform: 'translate(-50%, -50%)', display: 'none', zIndex: 10
+        }
+    });
+    const tooltip = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute', background: 'var(--st-background-tertiary)', color: 'var(--st-foreground-primary)', padding: '2px 6px', borderRadius: 'calc(var(--st-border-radius) * 0.5)', font: '12px var(--st-font-family-secondary)', pointerEvents: 'none', whiteSpace: 'nowrap', display: 'none', zIndex: 20, transform: 'translate(-50%, -120%)'
+        }
+    });
+
+    chartArea.addEventListener('mousemove', (e) => {
+        const rect = chartArea.getBoundingClientRect();
+        let px = ((e.clientX - rect.left) / rect.width) * 100;
+        if (px < xPad || px > 100 - xPad) { hoverDot.style.display = 'none'; tooltip.style.display = 'none'; return; }
+        const i = count === 1 ? 0 : Math.round(((px - xPad) / xSpan) * (count - 1));
+        const x = normX(i);
+        const y = normY(values[i]);
+        hoverDot.style.left = x + '%';
+        hoverDot.style.top = y + '%';
+        hoverDot.style.display = 'block';
+        tooltip.innerText = label(i, values[i], showMovingAverage ? maValues[i] : undefined);
+        tooltip.style.display = 'block';
+        tooltip.style.textAlign = 'center';
+        tooltip.style.color = values[i] >= (syncedStorage['suf-threshold'] ?? 5.5) ? 'var(--st-accent-ok)' : 'var(--st-accent-warn)';
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const halfTooltipPercent = (tooltipRect.width / 2 / rect.width) * 100;
+        let tooltipLeft = x;
+        if (x - halfTooltipPercent < 0) tooltipLeft = halfTooltipPercent;
+        if (x + halfTooltipPercent > 100) tooltipLeft = 100 - halfTooltipPercent;
+        tooltip.style.left = tooltipLeft + '%';
+        const yPx = (y / 100) * rect.height;
+        tooltip.style.transform = yPx - tooltipRect.height - 8 < 0 ? 'translate(-50%, 20%)' : 'translate(-50%, -120%)';
+        tooltip.style.top = y + '%';
+    });
+    chartArea.addEventListener('mouseleave', () => { hoverDot.style.display = 'none'; tooltip.style.display = 'none'; });
+    if (onClick) {
+        chartArea.addEventListener('click', (e) => {
+            const rect = chartArea.getBoundingClientRect();
+            const px = ((e.clientX - rect.left) / rect.width) * 100;
+            if (px < xPad || px > 100 - xPad) return;
+            const i = count === 1 ? 0 : Math.round(((px - xPad) / xSpan) * (count - 1));
+            onClick(i);
+        });
+    }
 }
 
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
@@ -657,16 +778,17 @@ async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], dur
 class Dialog {
     element;
     body;
-    #buttonsWrapper;
+    buttonsWrapper;
+    closeCallback;
 
     constructor(options = {}) {
         this.element = createElement('dialog', document.body, { class: 'st-dialog' });
         this.body = createElement('div', this.element, { class: 'st-dialog-body', innerText: options.innerText || '' });
 
-        this.#buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' });
+        this.buttonsWrapper = createElement('div', this.element, { class: 'st-button-wrapper' });
         if (options?.buttons?.length > 0) {
             options.buttons.forEach(item => {
-                const button = createElement('button', this.#buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` });
+                const button = createElement('button', this.buttonsWrapper, { ...item, class: `st-button ${item.primary ? 'primary' : 'tertiary'}` });
                 if (item.innerText) button.innerText = item.innerText;
                 if (item.clickSelector) {
                     button.addEventListener('click', event => {
@@ -693,7 +815,7 @@ class Dialog {
                 event.preventDefault();
             });
         } else {
-            const dialogDismiss = createElement('button', this.#buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') });
+            const dialogDismiss = createElement('button', this.buttonsWrapper, { class: 'st-button st-dialog-dismiss', 'data-icon': options.closeIcon || '', innerText: options.closeText || i18n('close') });
             if (options?.index && options?.length) {
                 dialogDismiss.classList.add('st-step');
                 dialogDismiss.innerText = `${options.index} / ${options.length}`;
@@ -719,7 +841,8 @@ class Dialog {
     }
 
     close(maintain = false) {
-        this.element.close();
+        this.element.close?.();
+        this.closeCallback?.();
         if (!maintain) setTimeout(() => this.element.remove(), 200);
     }
 

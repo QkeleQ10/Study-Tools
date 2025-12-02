@@ -9,7 +9,9 @@ class MagisterApi {
         this.cache = {};
         this.schoolName = window.location.hostname.split('.')[0];
         this.userId = await this.getFromStorage('user-id', 'sync');
+        // @ts-ignore
         this.userToken = await getFromStorage('token', chrome.storage.session?.get ? 'session' : 'local');
+        // @ts-ignore
         this.userTokenDate = await getFromStorage('token-date', chrome.storage.session?.get ? 'session' : 'local');
 
         this.updateApiCredentials();
@@ -25,6 +27,7 @@ class MagisterApi {
         if (!window.location.pathname.includes('magister')) return;
 
         const calledAt = new Date();
+        // @ts-ignore
         const storageLocation = chrome.storage.session?.get ? 'session' : 'local';
 
         this.userId = await getFromStorage('user-id', 'sync');
@@ -53,6 +56,7 @@ class MagisterApi {
 
     async getFromStorage(key, storageType) {
         return new Promise((resolve) => {
+            // @ts-ignore
             chrome.storage[storageType].get(key, (result) => {
                 resolve(result[key]);
             });
@@ -99,8 +103,16 @@ class MagisterApi {
         return new MagisterApiRequestKwtChoices(start, end).get();
     }
 
-    gradesRecent() {
-        return new MagisterApiRequestGradesRecent().get();
+    postKwtRegistration(body) {
+        return new MagisterApiRequestKwtRegistrations().post(body);
+    }
+
+    deleteKwtRegistration(id) {
+        return new MagisterApiRequestKwtRegistration(id).delete();
+    }
+
+    gradesRecent(size = 25) {
+        return new MagisterApiRequestGradesRecent(size).get();
     }
 
     gradesForYear(year) {
@@ -109,6 +121,10 @@ class MagisterApi {
 
     gradesColumnInfo(year, columnId) {
         return new MagisterApiRequestGradesColumnInfo(year, columnId).get();
+    }
+
+    gradesRelatedColumns(columnId) {
+        return new MagisterApiRequestGradesRelatedColumns(columnId).get();
     }
 
     assignmentsTop(start = this.gatherEarlyStart, end = this.gatherEnd) {
@@ -178,9 +194,56 @@ class MagisterApiRequest {
                     ...options
                 }
             );
-            resolve(res);
+            if (!res.ok) reject(res);
+            else resolve(res);
         });
         // this.get({ method: 'PUT', body: JSON.stringify(body), ...options });
+    }
+
+    async post(body = {}, options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
+            let res = await fetch(
+                `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
+                {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                    headers: {
+                        Authorization: magisterApi.userToken,
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        'X-Request-Source': 'study-tools'
+                    },
+                    ...options
+                }
+            );
+            if (!res.ok) reject(res);
+            else resolve(res);
+        });
+        // this.get({ method: 'POST', body: JSON.stringify(body), ...options });
+    }
+
+    async delete(body = {}, options = {}) {
+        return new Promise(async (resolve, reject) => {
+            if (!window.location.pathname.includes('magister')) reject();
+
+            let res = await fetch(
+                `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
+                {
+                    method: 'DELETE',
+                    body: JSON.stringify(body),
+                    headers: {
+                        Authorization: magisterApi.userToken,
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        'X-Request-Source': 'study-tools'
+                    },
+                    ...options
+                }
+            );
+            if (!res.ok) reject(res);
+            else resolve(res);
+        });
+        // this.get({ method: 'DELETE', body: JSON.stringify(body), ...options });
     }
 
     #fetchWrapper(url, options = {}) {
@@ -327,16 +390,32 @@ class MagisterApiRequestKwtChoices extends MagisterApiRequest {
         this.identifier = `kwtChoices${start?.toISOString()}${end?.toISOString()}`;
         this.path = `api/leerlingen/$USERID/keuzewerktijd/keuzes?van=${start?.toISOString().substring(0, 10)}+${start?.toISOString().substring(11, 16)
             }&tot=${end?.toISOString().substring(0, 10)}+${end?.toISOString().substring(11, 16)
-            }`;
+            }&nocache=${new Date().getTime()}`;
     }
     outputFormat = (res) => res.Items;
 }
 
-class MagisterApiRequestGradesRecent extends MagisterApiRequest {
+class MagisterApiRequestKwtRegistrations extends MagisterApiRequest {
     constructor() {
         super();
-        this.identifier = 'gradesRecent';
-        this.path = `api/personen/$USERID/cijfers/laatste?top=20&skip=0`;
+        this.identifier = `kwtRegistrations`;
+        this.path = `api/leerlingen/$USERID/keuzewerktijd/inschrijvingen`;
+    }
+}
+
+class MagisterApiRequestKwtRegistration extends MagisterApiRequest {
+    constructor(id) {
+        super();
+        this.identifier = `kwtRegistration${id}`;
+        this.path = `api/leerlingen/$USERID/keuzewerktijd/inschrijvingen/${id}`;
+    }
+}
+
+class MagisterApiRequestGradesRecent extends MagisterApiRequest {
+    constructor(size = 25) {
+        super();
+        this.identifier = `gradesRecent${size}`;
+        this.path = `api/personen/$USERID/cijfers/laatste?top=${size}&skip=0`;
     }
     outputFormat = (res) => res.items;
     sample = [{ omschrijving: "Voorbeeld", ingevoerdOp: new Date(now.getTime() - 172800000), vak: { code: "netl", omschrijving: "Nederlandse taal" }, waarde: "6,9", weegfactor: 0, isVoldoende: true }, { omschrijving: "Baguette", ingevoerdOp: new Date(now.getTime() - 691200000), vak: { code: "fatl", omschrijving: "Franse taal" }, waarde: "U", weegfactor: 0, isVoldoende: true }, { omschrijving: "Grade mockery", ingevoerdOp: new Date(now.getTime() - 6891200000), vak: { code: "entl", omschrijving: "Engelse taal" }, waarde: "5,4", weegfactor: 0 }];
@@ -348,7 +427,7 @@ class MagisterApiRequestGradesForYear extends MagisterApiRequest {
         this.identifier = `gradesYear${year?.id}`;
         this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
     }
-    outputFormat = (res) => res.Items.filter(item => !syncedStorage['ignore-grade-columns'].includes(item.CijferKolom?.KolomKop || 'undefined'));
+    outputFormat = (res) => res.Items;
 }
 
 class MagisterApiRequestGradesColumnInfo extends MagisterApiRequest {
@@ -357,6 +436,15 @@ class MagisterApiRequestGradesColumnInfo extends MagisterApiRequest {
         this.identifier = `gradesYear${year?.id}Col${columnId}`;
         this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/extracijferkolominfo/${columnId}`;
     }
+}
+
+class MagisterApiRequestGradesRelatedColumns extends MagisterApiRequest {
+    constructor(columnId) {
+        super();
+        this.identifier = `gradesRelatedCol${columnId}`;
+        this.path = `api/personen/$USERID/cijfers/gerelateerdekolommen/${columnId}`;
+    }
+    outputFormat = (res) => res.Items || [];
 }
 
 class MagisterApiRequestAssignmentsTop extends MagisterApiRequest {

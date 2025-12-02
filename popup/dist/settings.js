@@ -276,41 +276,84 @@ export default [
         id: "grades",
         settings: [
             {
+                id: "cc",
+                title: "Vernieuwd cijferoverzicht",
+                subtitle: "Met handige cijfercalculator, leuke statistieken en een back-upfunctie.",
+                default: true,
+            },
+            {
+                id: "insufficient",
+                title: "Onvoldoendes in cijferoverzicht",
+                type: "SingleChoice",
+                default: "underline",
+                options: [
+                    {
+                        value: "underline",
+                        title: "Rode onderstreping",
+                        icon: "format_underlined"
+                    },
+                    {
+                        value: "textcolor",
+                        title: "Rode tekstkleur",
+                        icon: "format_color_text"
+                    },
+                    {
+                        value: "background",
+                        title: "Rode achtergrond",
+                        icon: "format_color_fill"
+                    },
+                    {
+                        value: "off",
+                        title: "Niet anders kleuren",
+                        icon: "block"
+                    },
+                ]
+            },
+            {
+                id: "grade-col-grouping",
+                title: "Cijfers groeperen op",
+                type: "SingleChoice",
+                default: "KolomNummer",
+                options: [
+                    {
+                        value: "KolomNummer",
+                        title: "Kolomnummer"
+                    },
+                    {
+                        value: "KolomKop",
+                        title: "Kolomkop"
+                    },
+                ]
+            },
+            {
+                id: "c-minimum",
+                title: "Ondergrens cijfers",
+                type: "Slider",
+                default: 1.0,
+                decimals: 1,
+                min: 0,
+                max: 100,
+                step: 1,
+            },
+            {
+                id: "c-maximum",
+                title: "Bovengrens cijfers",
+                type: "Slider",
+                default: 10.0,
+                decimals: 1,
+                min: 0,
+                max: 100,
+                step: 1,
+            },
+            {
                 id: "suf-threshold",
                 title: "Voldoendegrens",
                 type: "Slider",
                 default: 5.5,
                 decimals: 1,
-                min: 1,
-                max: 10,
+                min: 'c-minimum',
+                max: 'c-maximum',
                 step: 0.1,
-            },
-            {
-                id: "cc",
-                title: "Cijfercalculator",
-                subtitle: "Zie wat je moet halen of wat je komt te staan op basis van je cijferlijst en/of aangepaste cijfers.",
-                default: true,
-            },
-            {
-                id: "cs",
-                title: "Cijferstatistieken",
-                subtitle: "Nieuw tabblad in het cijferoverzicht met statistieken, grafiekjes en handige filters.",
-                default: true,
-            },
-            {
-                id: "cb",
-                title: "Cijferback-up",
-                subtitle: "Knop in het cijferoverzicht om je cijferlijst te exporteren en te importeren.",
-                default: true,
-                links: [
-                    { icon: 'upload', label: "Cijferback-up importeren", href: 'https://qkeleq10.github.io/studytools/grades' }
-                ],
-            },
-            {
-                id: "insuf-red",
-                title: "Onvoldoendes rood kleuren",
-                subtitle: "Alleen in het cijferoverzicht en in de cijferwidget.",
-                default: true,
             },
             {
                 id: "ignore-grade-columns",

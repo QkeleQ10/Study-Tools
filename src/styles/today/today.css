@@ -52,6 +52,11 @@
         margin-bottom: 0;
         overflow: hidden;
 
+        display: block;
+        clip-path: inset(0 0 0 0);
+        transition: display 1000ms allow-discrete;
+        animation: wipeIn 1000ms 50ms both;
+
         &.not-today {
             font-style: normal;
             font-weight: 500;
@@ -72,15 +77,18 @@
 #st-start-header-short-title,
 #st-start-header-greeting {
     display: none;
+    animation: wipeOut 1000ms both;
 }
 
 @container (width < 280px) {
     #st-start-header-title {
         display: none;
+        animation: wipeOut 1000ms both;
     }
 
     #st-start-header-short-title {
         display: block;
+        animation: wipeIn 1000ms 50ms both;
     }
 }
 
@@ -89,10 +97,32 @@
     #st-start-header-title,
     #st-start-header-short-title {
         display: none;
+        animation: wipeOut 1000ms both;
     }
 
     #st-start-header-greeting {
         display: block;
+        animation: wipeIn 1000ms 50ms both;
+    }
+}
+
+@keyframes wipeIn {
+    from {
+        clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+@keyframes wipeOut {
+    from {
+        clip-path: inset(0 0 0 0);
+    }
+
+    to {
+        clip-path: inset(0 0 0 100%);
     }
 }
 
