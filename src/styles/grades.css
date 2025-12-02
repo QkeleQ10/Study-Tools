@@ -205,14 +205,28 @@
 
 @keyframes grade-highlight {
 
+    5%,
     10%,
-    90% {
+    30%,
+    50%,
+    70%,
+    90%,
+    95% {
         z-index: 1;
-        scale: 1.2;
+        scale: 1.25;
         border-radius: calc(var(--st-border-radius) / 2);
         outline: 2px solid var(--st-foreground-accent);
-        outline-offset: 1px;
+        outline-offset: -2px;
         box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+    }
+
+    0%,
+    20%,
+    40%,
+    60%,
+    80%,
+    100% {
+        outline-color: var(--st-foreground-primary);
     }
 }
 
@@ -442,7 +456,7 @@
 
 .st-grade-item {
     display: grid;
-    grid-template-columns: 1fr 5ch;
+    grid-template-columns: 1fr 5.5ch;
     align-items: center;
     gap: 4px;
     padding: 6px 10px;

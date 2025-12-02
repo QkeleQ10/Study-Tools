@@ -282,7 +282,8 @@ class GradeTable {
     draw() {
         const grades = this.grades;
 
-        const groupingVariable = syncedStorage['grade-col-grouping'] || 'KolomNummer';
+        // const groupingVariable = syncedStorage['grade-col-grouping'] || 'KolomNummer';
+        const groupingVariable = 'KolomNummer';
 
         const filteredGrades = grades.filter(g => g.CijferKolom?.Id);
 

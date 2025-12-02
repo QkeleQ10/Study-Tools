@@ -309,22 +309,22 @@ export default [
                     },
                 ]
             },
-            {
-                id: "grade-col-grouping",
-                title: "Cijfers groeperen op",
-                type: "SingleChoice",
-                default: "KolomNummer",
-                options: [
-                    {
-                        value: "KolomNummer",
-                        title: "Kolomnummer"
-                    },
-                    {
-                        value: "KolomKop",
-                        title: "Kolomkop"
-                    },
-                ]
-            },
+            // {
+            //     id: "grade-col-grouping",
+            //     title: "Cijfers groeperen op",
+            //     type: "SingleChoice",
+            //     default: "KolomNummer",
+            //     options: [
+            //         {
+            //             value: "KolomNummer",
+            //             title: "Kolomnummer"
+            //         },
+            //         {
+            //             value: "KolomKop",
+            //             title: "Kolomkop"
+            //         },
+            //     ]
+            // },
             {
                 id: "c-minimum",
                 title: "Ondergrens cijfers",
