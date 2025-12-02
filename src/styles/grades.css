@@ -169,6 +169,10 @@
     td,
     th {
         border: var(--st-border);
+
+        &.st-highlight {
+            animation: grade-highlight 3000ms ease-in-out;
+        }
     }
 
     tr:first-child td,
@@ -196,6 +200,19 @@
             vertical-align: top;
             color: var(--st-foreground-accent);
         }
+    }
+}
+
+@keyframes grade-highlight {
+
+    10%,
+    90% {
+        z-index: 1;
+        scale: 1.2;
+        border-radius: calc(var(--st-border-radius) / 2);
+        outline: 2px solid var(--st-foreground-accent);
+        outline-offset: 1px;
+        box-shadow: 0 0 8px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
     }
 }
 

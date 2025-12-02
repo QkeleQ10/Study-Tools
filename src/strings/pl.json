@@ -108,6 +108,7 @@
         "jumpedToDate": "Gesprongen naar {date}"
     },
     "close": "Zamknij",
+    "reveal": "Onthullen",
     "remainder": "Overige",
     "Inklappen": "Inklappen",
     "Verborgen": "Verborgen",
@@ -168,6 +169,7 @@
     "level": "Niveau",
     "weight": "Weegfactor",
     "assessment": "Beoordeling",
+    "calculation": "Berekening",
     "title": "Titel",
     "subject": "Vak",
     "period": "Periode",

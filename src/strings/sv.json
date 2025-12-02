@@ -108,6 +108,7 @@
         "jumpedToDate": "Hoppade till {date}"
     },
     "close": "Stäng",
+    "reveal": "Onthullen",
     "remainder": "Övriga",
     "Inklappen": "Minimera",
     "Verborgen": "Dold",
@@ -168,6 +169,7 @@
     "level": "Niveau",
     "weight": "Weegfactor",
     "assessment": "Beoordeling",
+    "calculation": "Berekening",
     "title": "Titel",
     "subject": "Vak",
     "period": "Periode",

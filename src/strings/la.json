@@ -108,6 +108,7 @@
         "jumpedToDate": "Desiluit to {date}"
     },
     "close": "Sluiten",
+    "reveal": "Onthullen",
     "remainder": "Overige",
     "Inklappen": "Collapse",
     "Verborgen": "Occultus",
@@ -168,6 +169,7 @@
     "level": "Niveau",
     "weight": "Weegfactor",
     "assessment": "Beoordeling",
+    "calculation": "Berekening",
     "title": "Titel",
     "subject": "Vak",
     "period": "Periode",

@@ -217,7 +217,6 @@ class Schedule {
 
             let headerTextWrapper = headerStrip.createChildElement('button', {
                 id: 'st-start-header-text-wrapper',
-                class: (persistedScheduleDate || persistedScheduleView) ? '' : 'greet',
                 title: i18n('selectDate'),
             });
             headerTextWrapper.addEventListener('click', () => {
@@ -257,8 +256,14 @@ class Schedule {
                 innerText: i18n('loading').replace('.', ''),
             });
             createGreetingMessage(this.headerControls.greeting);
-            headerTextWrapper.classList.add('greet');
-            setTimeout(() => headerTextWrapper.classList.remove('greet'), 2000);
+            setTimeout(() => {
+                if (document.body.contains(headerTextWrapper))
+                    headerTextWrapper.classList.add('greet')
+            }, 2000);
+            setTimeout(() => {
+                if (document.body.contains(headerTextWrapper))
+                    headerTextWrapper.classList.remove('greet')
+            }, 4000);
 
             let headerControls = headerStrip.createChildElement('div', { id: 'st-start-header-buttons' });
 
@@ -327,6 +332,9 @@ class Schedule {
 
         this.headerControls.title.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
         this.headerControls.shortTitle.classList.toggle('not-today', schedule.scheduleDate.getTime() !== dates.today.getTime());
+
+        if (document.body.contains(this.headerControls.greeting.parentElement))
+            this.headerControls.greeting.parentElement.classList.remove('greet')
     }
 }
 

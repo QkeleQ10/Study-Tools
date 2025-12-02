@@ -953,6 +953,10 @@ span.nrblock,
 
 .k-scheduler .k-event {border-radius: calc(var(--st-border-radius) * 0.75);}
 
+.k-scheduler .k-event:has(.additional-appointment.not-enrolled) {
+    background-color: hsl(from var(--st-highlight-warn) 25deg s l);
+}
+
 .endlink a:first-letter {
     text-transform: uppercase
 }

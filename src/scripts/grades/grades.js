@@ -17,11 +17,41 @@ async function gradeOverview() {
     const mainView = await awaitElement('div.view.ng-scope'),
         container = mainView.createChildElement('div', { id: 'st-grades' }),
         progressBar = container.createChildElement('div', { class: 'st-progress-bar' }),
-        header = container.createChildElement('div'),
+        header = container.createChildElement('div', { id: 'st-grades-header' }),
         contentContainer = container.createChildElement('div', { id: 'st-grades-main' });
 
     progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
+    header.createChildElement('div', {
+        class: 'st-breadcrumbs', style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '8px',
+        }
+    })
+        .createChildElement('button', {
+            class: 'st-button icon',
+            innerText: '',
+            style: {
+                fontSize: '16px',
+                color: 'var(--st-foreground-accent)',
+                margin: '-6px',
+            }
+        })
+        .createSiblingElement('span', {
+            innerText: '',
+            style: {
+                font: '14px "Font Awesome 6 Pro"',
+                color: 'var(--st-foreground-insignificant)',
+            }
+        })
+        .createSiblingElement('span', {
+            innerText: i18n('views.Cijfers'),
+            style: {
+                font: '12px var(--st-font-family-secondary)'
+            }
+        });
     header.createChildElement('span', { class: 'st-title', innerText: i18n('views.Cijfers'), });
 
     const toolbar = contentContainer.createChildElement('div', { id: 'st-grades-toolbar' });
@@ -155,12 +185,13 @@ async function handleTooltips() {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const tooltipConfigs = [
-        { key: 'st-tooltip-clNew-shown', textKey: 'tooltips.clNew', style: { top: '76px', right: '280px' }, trigger: 'body' },
-        { key: 'st-tooltip-ccNew-shown', textKey: 'tooltips.ccNew', style: { top: '40px', right: '32px' }, triggerId: 'st-grade-cc-button' },
-        { key: 'st-tooltip-csNew-shown', textKey: 'tooltips.csNew', style: { top: '40px', right: '68px' }, triggerId: 'st-grade-cs-button' },
+        { key: 'st-tooltip-clNew-shown', textKey: 'tooltips.clNew', style: { top: '96px', right: '280px' }, trigger: 'body' },
+        { key: 'st-tooltip-ccNew-shown', textKey: 'tooltips.ccNew', style: { top: '64px', right: '32px' }, triggerId: 'st-grade-cc-button' },
+        { key: 'st-tooltip-csNew-shown', textKey: 'tooltips.csNew', style: { top: '64px', right: '68px' }, triggerId: 'st-grade-cs-button' },
     ];
 
     for (const cfg of tooltipConfigs) {
+        if (!document.location.href.includes('cijfers') || !syncedStorage['cc']) return;
         if (localStorage[cfg.key]) continue;
 
         const tooltip = document.body.createChildElement('div', {
@@ -432,19 +463,23 @@ class GradeDetailDialog extends Dialog {
     #progressBar;
 
     constructor(grade, year) {
-        if (location.href.includes('#/cijfers'))
-            super();
-        else
-            super({
-                buttons: [
-                    {
-                        innerText: i18n('views.Cijferoverzicht'),
-                        onclick: () => { window.location.href = '#/cijfers'; this.close(); },
-                        primary: true,
-                        'data-icon': ''
-                    }
-                ]
-            });
+        super({
+            buttons: [
+                {
+                    innerText: i18n('reveal'),
+                    onclick: async () => {
+                        if (!location.href.includes('#/cijfers')) window.location.href = '#/cijfers';
+                        this.close();
+                        let elem = await awaitElement(`td[id="${grade.CijferId}"]`);
+                        elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        elem.classList.add('st-highlight');
+                        setTimeout(() => elem.classList.remove('st-highlight'), 3000);
+                    },
+                    primary: true,
+                    'data-icon': ''
+                }
+            ]
+        });
         this.body.classList.add('st-grade-detail-dialog');
 
         this.grade = grade;
@@ -546,6 +581,9 @@ class GradeDetailDialog extends Dialog {
                     if (!relatedGrade) return;
                     const dialog = new GradeDetailDialog(relatedGrade, this.year);
                     dialog.show();
+                    dialog.closeCallback = () => {
+                        this.close();
+                    }
                 });
             }
         }

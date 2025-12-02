@@ -108,6 +108,7 @@
         "jumpedToDate": "Viewing events for {date}"
     },
     "close": "Close",
+    "reveal": "Reveal",
     "remainder": "Other",
     "Inklappen": "Collapse",
     "Verborgen": "Hidden",
@@ -168,6 +169,7 @@
     "level": "Level",
     "weight": "Weighting",
     "assessment": "Assessment",
+    "calculation": "Calculation",
     "title": "Title",
     "subject": "Subject",
     "period": "Period",

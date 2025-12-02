@@ -108,6 +108,7 @@
         "jumpedToDate": "Affichage du programme pour {date}"
     },
     "close": "Fermer",
+    "reveal": "Onthullen",
     "remainder": "Autres",
     "Inklappen": "Réduire",
     "Verborgen": "Masqué",
@@ -168,6 +169,7 @@
     "level": "Niveau",
     "weight": "Coefficient",
     "assessment": "Note",
+    "calculation": "Berekening",
     "title": "Titre",
     "subject": "Matière",
     "period": "Période",

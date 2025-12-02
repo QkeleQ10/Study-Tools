@@ -245,7 +245,7 @@ async function popstate() {
     element('meta', `st-${chrome.runtime.id.replace(/[^a-zA-Z0-9-_ ]/g, '')}`, document.head)
     setTimeout(upgradeAssistant, 200)
 
-    document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container').forEach(e => {
+    document.querySelectorAll('#st-aside-resize, *[id^="st-"][id$="-ghost"], *[id^="st-start"], *[id^="st-sw"], .k-animation-container, .st-tooltip').forEach(e => {
         e.remove()
     })
     document.querySelectorAll('.st-overlay').forEach(e => { if (e.open) e.close?.() })

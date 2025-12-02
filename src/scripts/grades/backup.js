@@ -42,7 +42,7 @@ class GradeBackupPane extends Pane {
 
         this.#div2.createChildElement('p', { innerText: i18n('cb.importDesc') });
         const importButton = this.#div2.createChildElement('button', { id: 'st-grade-backup-import', class: 'st-button hero', innerText: i18n('cb.browse'), 'data-icon': '' });
-        const input = this.#div2.createChildElement('input', { type: 'file', accept: '.stgrades', style: 'display:none' });
+        const input = this.#div2.createChildElement('input', { type: 'file', accept: '.stgrades,application/json', style: 'display:none' });
         importButton.addEventListener('click', () => input.click());
         input.addEventListener('change', async (event) => {
             const file = event.target.files[0];

@@ -779,6 +779,7 @@ class Dialog {
     element;
     body;
     buttonsWrapper;
+    closeCallback;
 
     constructor(options = {}) {
         this.element = createElement('dialog', document.body, { class: 'st-dialog' });
@@ -841,6 +842,7 @@ class Dialog {
 
     close(maintain = false) {
         this.element.close?.();
+        this.closeCallback?.();
         if (!maintain) setTimeout(() => this.element.remove(), 200);
     }
 
