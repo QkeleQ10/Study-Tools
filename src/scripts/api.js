@@ -425,7 +425,11 @@ class MagisterApiRequestGradesForYear extends MagisterApiRequest {
     constructor(year) {
         super();
         this.identifier = `gradesYear${year?.id}`;
-        this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
+        if (new Date(year?.einde) > new Date()) {
+            this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`;
+        } else {
+            this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
+        }
     }
     outputFormat = (res) => res.Items;
 }

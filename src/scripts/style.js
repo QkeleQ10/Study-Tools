@@ -159,7 +159,7 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     if (themeAuto && window.matchMedia?.('(prefers-color-scheme: dark)').matches) { currentTheme[0] = 'dark' }
     else if (themeAuto) currentTheme[0] = 'light'
 
-    if (verbose) console.debug(`STYLE START with theme ${currentTheme.join(', ')}`)
+    console.debug(`STYLE START with theme ${currentTheme.join(', ')}`)
 
     const rootVarsGeneral = `
     --st-font-family-primary: 'arboria', sans-serif;
@@ -953,8 +953,19 @@ span.nrblock,
 
 .k-scheduler .k-event {border-radius: calc(var(--st-border-radius) * 0.75);}
 
-.k-scheduler .k-event:has(.additional-appointment.not-enrolled) {
-    background-color: hsl(from var(--st-highlight-warn) 25deg s l);
+.k-scheduler .k-event:has(.additional-appointment.not-enrollable),
+.afsprakenlijst-container .main>.content-container .additional-appointment {
+    background-color: var(--st-background-secondary);
+}
+
+.k-scheduler .k-event:has(.additional-appointment.not-enrolled),
+.afsprakenlijst-container .main>.content-container .additional-appointment.not-enrolled {
+    background-color: var(--st-highlight-info);
+}
+
+.k-scheduler .k-event:has(.additional-appointment.enrolled),
+.afsprakenlijst-container .main>.content-container .additional-appointment.enrolled {
+    background-color: var(--st-highlight-ok);
 }
 
 .endlink a:first-letter {
@@ -1907,6 +1918,7 @@ table.table-grid-layout>tbody>tr.selected {
         if (el.tagName === 'DNA-BREADCRUMBS') return;
         el.setAttribute('style', `
             --dna-background: var(--st-background-primary) !important;
+            --dna-foreground: var(--st-foreground-primary) !important;
             --dna-primary-hue: ${currentTheme[1]} !important;
             --dna-primary-sat: ${currentTheme[2]}% !important;
             --att-details-background: var(--st-background-primary) !important;
@@ -1951,6 +1963,96 @@ table.table-grid-layout>tbody>tr.selected {
     padding-right: 8px
 }`, 'study-tools-sw-grid')
     } else { createStyle('', 'study-tools-sw-grid') }
+
+    if (syncedStorage['menu-beta']) {
+        createStyle(`
+.container {
+    grid-template:
+        "menu view" auto
+        " . view" 1fr / auto 1fr;
+}
+
+.appbar-host {
+    --overlay: hsl(from var(--st-accent-primary) h 40 calc(l - 20) / 20%);
+    position: fixed;
+    background-color: var(--overlay);
+    backdrop-filter: blur(2px);
+}
+
+.menu-host {
+    width: calc(240px + 64px);
+    padding-left: 64px;
+}
+
+.menu-host.collapsed-menu {
+    width: calc(64px + 64px);
+}
+
+.appbar>div>a:not(.st-metric), a.appbar-button {
+    background-color: var(--overlay);
+}
+    
+ul.main-menu {
+    margin-left: 0;
+    margin-right: 0;
+    
+    li {
+        width: 100%;
+        
+        &.active:not(.children) {
+            --accent: #ffffff;
+            border-left: 2px solid var(--accent);
+            background-image: linear-gradient(to right, hsl(from var(--accent) h s l / 0.2), transparent);
+            
+            &>a, &>a:hover {
+                margin-left: -2px;
+                background-color: transparent !important;
+            }
+            
+        }
+
+        &.children {
+            &>a::after {
+                right: 16px;
+            }
+
+            ul {
+                margin-left: 0;
+
+                &>li {
+                    margin-left: 0 !important;
+
+                    &>a {
+                        padding-left: 48px !important;
+                    }
+                }
+            }
+        }
+
+        a {
+            height: auto;
+            border-radius: 0 !important;
+            margin-bottom: 0;
+            padding: 10px 8px;
+        }
+        
+        &>a:hover {
+            
+        }
+    }
+
+    .far::before {
+        font-weight: 600;
+    }
+
+    #menu-cijfers::before {
+        content: '' !important;
+        font: 600 18px "Font Awesome 6 Pro" !important;
+        mask: none !important;
+        background-color: transparent !important;
+    }
+}`, 'study-tools-menu-beta')
+    } else { createStyle('', 'study-tools-menu-beta') }
 
     if (syncedStorage['cs']) {
         createStyle(`

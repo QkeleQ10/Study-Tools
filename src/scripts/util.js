@@ -6,7 +6,6 @@ let syncedStorage,
     locale = 'nl-NL',
     i18nData = {},
     i18nDataNl = {},
-    verbose = false,
     apiUserId,
     apiUserToken,
     apiCache = {};
@@ -57,8 +56,6 @@ async function initialiseStorage() {
 
             resolve();
         } else reject();
-
-        verbose = syncedStorage['verbosity'];
     });
 }
 initialiseStorage();
