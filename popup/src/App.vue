@@ -10,11 +10,12 @@ import Slider from './components/setting-types/Slider.vue'
 import ImageInput from './components/ImageInput.vue'
 import ShortcutsEditor from './components/ShortcutsEditor.vue'
 import Text from './components/setting-types/Text.vue'
+import Textarea from './components/setting-types/Textarea.vue'
 import SingleChoice from './components/setting-types/SingleChoice.vue'
 import ColorOverrideSetting from './components/setting-types/ColorOverrideSetting.vue'
 import DecorationPickerSetting from './components/setting-types/DecorationPickerSetting.vue'
 import LinkToOptionsTab from './components/setting-types/LinkToOptionsTab.vue'
-const optionTypes = { SwitchInput, Slider, ImageInput, ShortcutsEditor, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
+const optionTypes = { SwitchInput, Slider, ImageInput, ShortcutsEditor, Textarea, Text, SingleChoice, ColorOverrideSetting, DecorationPickerSetting, LinkToOptionsTab }
 
 const main = ref(null)
 

@@ -47,6 +47,11 @@ const tabs = [
         icon: 'local_library'
     },
     {
+        id: 'mail',
+        name: 'Mail',
+        icon: 'mail'
+    },
+    {
         id: 'about',
         name: 'Over',
         icon: 'info'

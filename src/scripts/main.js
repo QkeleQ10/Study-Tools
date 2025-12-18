@@ -267,6 +267,87 @@ async function popstate() {
             })
         }
 
+        if (window.location.hash.includes('#/berichten')) {
+            //console.log('Setting up ProseMirror watcher for berichten page')
+            if (!syncedStorage['magisterEmailTemplates-enabled']) {
+                //console.log("magisterEmailTemplates-enabled is disabled")
+                return
+            }
+            let currentProseMirror = null
+            let currentIframe = null
+            let monitorInterval = null
+            let checkInterval = null
+            let hasCustomized = false
+            
+            const startWatching = () => {
+                checkInterval = setInterval(() => {
+                    // Check all iframes for .ProseMirror
+                    document.querySelectorAll('iframe').forEach((iframe) => {
+                        try {
+                            const proseMirror = iframe.contentDocument?.querySelector('.ProseMirror')
+                            // Only customize if we haven't already customized and it's a different element
+                            if (proseMirror && !hasCustomized) {
+                                //console.log('Found and customizing .ProseMirror in iframe!', proseMirror)
+                                clearInterval(checkInterval)
+                                hasCustomized = true
+                                
+                                currentProseMirror = proseMirror
+                                currentIframe = iframe
+
+                                //console.log(syncedStorage['magisterEmailTemplates-template'])
+                                
+                                // Convert multiline template to HTML with <p> tags for ProseMirror
+                                const template = syncedStorage['magisterEmailTemplates-template']
+                                const lines = template.split('\n')
+                                const htmlContent = lines.map(line => `<p>${line || '<br>'}</p>`).join('')
+                                
+                                proseMirror.innerHTML = htmlContent
+                                
+                                // Trigger input event so ProseMirror recognizes the change
+                                proseMirror.dispatchEvent(new Event('input', { bubbles: true }))
+                                
+                                //console.log('Custom content added successfully!')
+                                
+                                // Start monitoring for disappearance
+                                monitorInterval = setInterval(() => {
+                                    // Check if iframe still exists and element is still in it
+                                    if (!currentIframe.contentDocument) {
+                                        //console.log('Iframe content document no longer accessible!')
+                                        clearInterval(monitorInterval)
+                                        currentProseMirror = null
+                                        hasCustomized = false
+                                        //console.log('Waiting for element to reappear...')
+                                        startWatching()
+                                        return
+                                    }
+                                    
+                                    if (!currentIframe.contentDocument.body.contains(currentProseMirror)) {
+                                        //console.log('ProseMirror element has disappeared from iframe!')
+                                        clearInterval(monitorInterval)
+                                        currentProseMirror = null
+                                        hasCustomized = false
+                                        //console.log('Waiting for element to reappear...')
+                                        startWatching()
+                                    } else {
+                                        //console.log('ProseMirror still exists')
+                                    }
+                                }, 500)
+                            }
+                        } catch (e) {
+                            // Ignore cross-origin errors
+                        }
+                    })
+                }, 100)
+                
+                // Stop checking after 10 seconds
+                setTimeout(() => {
+                    if (checkInterval) clearInterval(checkInterval)
+                }, 10000)
+            }
+            
+            startWatching()
+        }
+
         let frame = await awaitElement('.view iframe', false, 1000, true)
         if (Math.random() < 0.0005) frame.src = 'https://funhtml5games.com?embed=flappy'
         if (frame) {
@@ -412,4 +493,45 @@ function calculateVariance(values = []) {
 function calculateStandardDeviation(values = []) {
     const variance = calculateVariance(values)
     return Math.sqrt(variance)
+}
+
+// Helper function - watches indefinitely
+function watchForElement(selector, callback) {
+    //console.log(`watchForElement called for: ${selector}`)
+    
+    // Check if it already exists
+    const existing = document.querySelector(selector)
+    if (existing) {
+        //console.log('Element already exists in DOM!', existing)
+        callback(existing)
+        return
+    }
+    
+    //console.log('Element not found yet, setting up observer...')
+    
+    // Ensure document.body exists before observing
+    if (!document.body) {
+        //console.warn('document.body not ready yet, retrying in 100ms')
+        setTimeout(() => watchForElement(selector, callback), 100)
+        return
+    }
+    
+    // Set up MutationObserver to watch for it
+    const observer = new MutationObserver((mutations) => {
+        //console.log(`Mutation detected, checking for ${selector}`)
+        const element = document.querySelector(selector)
+        if (element) {
+            //console.log('Element found by MutationObserver!', element)
+            callback(element)
+            observer.disconnect()
+        }
+    })
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: false
+    })
+    
+    //console.log(`Observer active for: ${selector}`)
 }

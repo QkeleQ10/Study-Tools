@@ -37,6 +37,11 @@ const tabs = [
         icon: 'layers'
     },
     {
+        id: 'mail',
+        name: 'Mail',
+        icon: 'mail'
+    },
+    {
         id: 'about',
         name: 'Over',
         icon: 'info'
