@@ -1,4 +1,4 @@
-export default [
+    export default [
     {
         id: "theme",
         settings: [
@@ -423,6 +423,26 @@ export default [
                 title: "Aanbevelingen",
                 subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
                 default: true,
+            },
+        ]
+    },
+    {
+        id: "mail",
+        settings: [
+            {
+                id: "magisterEmailTemplates-enabled",
+                title: "Automatisch Email invullen",
+                default: false
+            },
+            {
+                id: "magisterEmailTemplates-template",
+                title: "Emailtemplate",
+                subtitle: "Dit wordt automatisch ingevoerd bij je email",
+                type: "Textarea",
+                default: '',
+                conditions: [
+                    { settingId: 'magisterEmailTemplates-enabled', operator: 'equal', value: true }
+                ],
             },
         ]
     },
