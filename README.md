@@ -8,19 +8,22 @@
 
 # Study Tools voor Magister
 
-Een extensie die verschillende aspecten van Magister verbetert en problemen ermee oplost. 
+Study Tools brengt veel verbeteringen aan op Magister, Nederlands grootste elektronische leeromgeving. Het verbetert verschillende aspecten ervan en verhelpt pijnpuntjes.
 
 ## Functionaliteiten
 
-- Aangepaste uiterlijk: Instelbaar donker/licht thema, aangepaste accentkleur en speciale decoraties.
-- Start: Weg met het rommelige Vandaag, op pagina Start zie je met widgets alles in één oogopslag.
-- Automatisch inloggen: Compleet instelbaar op basis van jouw behoeften en je school.
-- Studiewijzers: Verschillende weergave-opties voor efficiëntie en overzichtelijkheid.
-- Cijfercalculator: Wat moet ik halen en wat kom ik te staan? Inclusief grafiek!
-- Statistieken: Vergelijk je cijfers en je rooster op verschillende manieren met vrienden.
-- Cijferback-up: Altijd bij je cijfers kunnen, zelfs als je school ze besluit te sluiten.
+Een paar voorbeelden van de functionaliteiten van Study Tools:
 
-En nog veel meer! Ik voeg regelmatig nieuwe functies toe. Feedback wordt op prijs gesteld!
+- Thema's: uitgebreide thematisering waarbij de kleuren, de achtergrond en elk detail aangepast kunnen worden;
+- Start: vernieuwde startpagina met focus op overzichtelijkheid en aantrekkelijkheid;
+- Cijferoverzicht: vernieuwd cijferoverzicht met leuke statistieken;
+- Cijfercalculator: bereken wat je moet halen en wat je komt te staan;
+- Studiewijzers: met verschillende weergave-opties voor efficiëntie en overzichtelijkheid;
+- Automatisch inloggen: compleet instelbaar op basis van jouw behoeften en je school.
+
+En nog veel meer! Ik raad je aan om op je gemak alle opties in het configuratiepaneel te bekijken. Zo krijg je een beeld van wat Study Tools te bieden heeft en kun je alles afstemmen op jouw wensen.
+
+Ik voeg regelmatig nieuwe functies toe. Feedback wordt op prijs gesteld!
 
 ## Screenshots
 
