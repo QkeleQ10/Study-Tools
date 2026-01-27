@@ -65,6 +65,13 @@ export default [
                 ],
             },
             {
+                id: "favicon",
+                title: "Aangepast tabblad icoontje",
+                subtitle: "Tabblad icoontje",
+                type: "DecorationPickerSetting",
+                default: 'none,',
+            },
+            {
                 id: "appbarcolor",
                 title: "Appbalkkleur",
                 subtitle: "Appbalk",

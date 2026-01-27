@@ -53,7 +53,7 @@ function splitStringByJsonByteLength(input, partsMaxLengths) {
     return parts
 }
 
-const cssVars = ['--st-font-family-primary', '--st-font-family-secondary', '--st-font-hero', '--st-font-primary', '--st-font-secondary', '--st-background-primary', '--st-background-secondary', '--st-background-tertiary', '--st-foreground-primary', '--st-foreground-secondary', , '--st-foreground-accent', '--st-highlight-primary', '--st-accent-primary', '--st-accent-primary-dark', '--st-border', '--st-contrast-accent', '--mg-logo-expanded', '--mg-logo-collapsed']
+const cssVars = ['--st-font-family-primary', '--st-font-family-secondary', '--st-font-hero', '--st-font-primary', '--st-font-secondary', '--st-background-primary', '--st-background-secondary', '--st-background-tertiary', '--st-foreground-primary', '--st-foreground-secondary', , '--st-foreground-accent', '--st-highlight-primary', '--st-accent-primary', '--st-accent-primary-dark', '--st-border', '--st-contrast-accent', '--mg-logo-expanded', '--mg-logo-collapsed', '--st-favicon']
 
 function selectEntireContents(event) {
     event.target.focus()

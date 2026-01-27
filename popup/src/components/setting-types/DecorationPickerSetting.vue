@@ -98,6 +98,9 @@ function updatePickerOpen(newPickerOpenValue) {
 
 <template>
     <div class="setting decoration-picker-setting" :title="setting.title">
+        <h3 class="setting-title">
+            <slot name="subtitle">{{ setting.subtitle || setting.title }}</slot>
+        </h3>
         <Icon class="setting-icon">wallpaper</Icon>
         <div class="swatches-wrapper">
             <button v-for="(decoration, i) in decorations" :key="i" class="swatch" :title="decoration.name"
@@ -134,6 +137,10 @@ function updatePickerOpen(newPickerOpenValue) {
     gap: 6px;
     column-gap: 12px;
     padding-top: 8px;
+}
+
+.decoration-picker-setting>.setting-title {
+    grid-column: span 2;
 }
 
 .decoration-picker-setting>.setting-icon {
