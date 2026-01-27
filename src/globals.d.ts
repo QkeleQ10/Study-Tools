@@ -1,8 +1,13 @@
 // globals.d.ts
+/// <reference types="chrome" />
 /// <reference path="./util.js" />
 /// <reference path="./api.js" />
 
 // globals.d.ts
+interface Window {
+    stFaviconObserver: MutationObserver;
+}
+
 interface HTMLElement {
     /**
      * Creates a child element under this HTMLElement.

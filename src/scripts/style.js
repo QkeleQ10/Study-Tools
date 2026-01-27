@@ -2049,8 +2049,13 @@ table.table-grid-layout>tbody>tr.selected {
 
         updateSteps = []
         extractVariables(((syncedStorage['custom-css'] ?? '') + (syncedStorage['custom-css2'] ?? ''))).forEach(({ variable, property, selector }) => {
-            document.querySelector(selector.replace(/\_/gi, ' ')).addEventListener('mouseup', update)
-            updateSteps.push(() => document.querySelector(':root').style.setProperty(variable, document.querySelector(selector.replace(/\_/gi, ' '))[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px'))
+            const el = document.querySelector(selector.replace(/\_/gi, ' '))
+            if (el) el.addEventListener('mouseup', update)
+            updateSteps.push(() => {
+                const root = document.querySelector(':root')
+                const target = document.querySelector(selector.replace(/\_/gi, ' '))
+                if (root && target) root['style'].setProperty(variable, target[property === 'width' ? 'offsetWidth' : 'offsetHeight'] + 'px')
+            })
         })
         if (getComputedStyle(document.body).getPropertyValue('--st-menu-collapse') === 'disallow') {
             updateSteps.push(() => document.querySelector('.collapsed-menu')?.classList.remove('collapsed-menu'))
@@ -2066,12 +2071,59 @@ table.table-grid-layout>tbody>tr.selected {
     } else {
         createStyle('', 'study-tools-custom-css')
     }
+
+    let faviconHref
+    const faviconSetting = syncedStorage['favicon']?.split(',')
+    if (faviconSetting?.[0] === 'custom' && faviconSetting?.[1]) {
+        faviconHref = faviconSetting[1]
+    } else {
+        const cssFavicon = getComputedStyle(document.documentElement).getPropertyValue('--st-favicon').trim()
+        if (cssFavicon && cssFavicon !== '') faviconHref = cssFavicon.replace(/url\(['"]?(.*?)['"]?\)/g, '$1').replace(/['"]/g, '').trim()
+    }
+
+    if (faviconHref) {
+        try { faviconHref = new URL(faviconHref, document.baseURI).href } catch { }
+
+        const setFavicon = () => {
+            const links = document.querySelectorAll("link[rel*='icon']")
+            let existingLink
+
+            for (const link of links) {
+                if (link.getAttribute('href') === faviconHref) existingLink = link
+                else link.remove()
+            }
+
+            if (existingLink) {
+                if (existingLink.getAttribute('rel') !== 'icon') existingLink.setAttribute('rel', 'icon')
+                return
+            }
+
+            const link = document.createElement('link')
+            link.type = 'image/x-icon'
+            link.rel = 'icon'
+            link.href = faviconHref
+            document.head.appendChild(link)
+        }
+
+        setFavicon()
+        setTimeout(setFavicon, 500)
+        setTimeout(setFavicon, 1000)
+        setTimeout(setFavicon, 2000)
+
+        if (!window['stFaviconObserver']) {
+            window['stFaviconObserver'] = new MutationObserver(setFavicon)
+            window['stFaviconObserver'].observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['href', 'rel'] })
+        }
+    } else if (window['stFaviconObserver']) {
+        window['stFaviconObserver'].disconnect()
+        delete window['stFaviconObserver']
+    }
 }
 
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    const frame = await awaitElement?.('.view iframe', false, 4000, true)
+    let frame = await awaitElement?.('.view iframe', false, 4000, true)
     if (!frame) return
 
     const iframeStyleInject = document.querySelector('#study-tools-vars').innerHTML +
@@ -2220,7 +2272,8 @@ async function handleSpecialTheme(type, customCss, customTheme, customColor) {
                 disableButton.remove()
                 saveToStorage('no-special-decorations', type, 'session')
                 if (Math.random() < 0.3) notify('snackbar', `Oké ${type === 'christmas' ? 'grinch' : 'loser'}`)
-                document.querySelector('.st-dialog-dismiss').click()
+                const dismissBtn = document.querySelector('.st-dialog-dismiss')
+                if (dismissBtn && typeof dismissBtn['click'] === 'function') dismissBtn['click']()
             }, 'data-icon': ''
         }], null, { closeIcon: '', closeText: "Thema behouden", primary: true })
     })
