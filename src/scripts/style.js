@@ -1377,8 +1377,7 @@ dna-button {
     }
 }
 
-dna-breadcrumbs > dna-breadcrumb > a,
-.podium header h1 {
+dna-breadcrumbs > dna-breadcrumb > a {
     --color: var(--st-foreground-accent) !important;
 }
 
@@ -1727,140 +1726,35 @@ table.table-grid-layout>tbody>tr.selected {
 }
 
 .app-container {
-    display: flex;
-    justify-content: stretch;
-    align-items: stretch;
-
-    &>.challenge-container {
-        flex: 50% 1 1;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-
-        color: var(--st-foreground-primary);
-
-        &>header {
-            flex: 64px 0 0;
-            height: auto;
-        }
-        
-        &>.podium_container {
-            min-height: 0;
-            flex: 100% 1 1;
-            width: auto;
-        }
-        
-        &>footer {
-            flex: 60px 0 0;
-            height: auto;
-            width: auto;
-
-            background-color: var(--st-background-secondary);
-            color: var(--st-foreground-primary);
-            overflow: hidden;
-            container-type: size;
-
-            &>* {
-                flex-shrink: 0;
-            }
-
-            &>.bottom-conditions {
-                margin-right: 0;
-            }
-
-            &>.bottom-company-logo {
-                margin-left: auto;
-
-                @container (width < 660px) {
-                    width: 14px;
-                    overflow: hidden;
-                }
-
-                @container (width < 545px) {
-                    display: none;
-                }
-            }
-
-            &>.bottom-green dna-icon, .bottom-green-mobile dna-icon {
-                color: var(--st-foreground-accent);
-            }
-        }
-    }
+    ${syncedStorage['wallpaper']?.startsWith('custom') || syncedStorage['pagecolor']?.startsWith('true') || currentTheme[0] === 'dark' ? 'background-image: none;' : ''}
     
-    &>.challenge-container+div {
-        flex: 50% 1 1;
-        position: relative;
-        display: block;
-    
-        &>.splash-container {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-        }
-            
-        @media (width <= 1150px) {
-            display: none;
-        }
+    footer {
+        translate: 0 -2rem;
     }
-}
 
-.podium {
-    background-color: var(--st-background-secondary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
-    box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-}
-.podium .dna-input-group, .podium .completed-challenge {
-    background-color: var(--st-background-secondary);
-    border: var(--st-border);
-    border-radius: var(--st-border-radius);
-
-    input {
+    .podium {
+        background-color: var(--st-background-secondary);
+        border: var(--st-border);
         border-radius: var(--st-border-radius);
+        box-shadow: 0 8px 30px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+        color: var(--st-foreground-primary);
+        font-family: var(--st-font-family-secondary);
+
+        --sl-color-background-primary-bold: var(--st-accent-primary);
+        --sl-color-foreground-primary-bold: var(--st-foreground-accent);
+        --sl-size-borderRadius-default: var(--st-border-radius);
+        --sl-color-background-input-plain: var(--st-background-secondary);
+        --sl-color-background-disabled: var(--st-background-tertiary);
+        --sl-icon-fill-default: var(--st-foreground-primary);
+
+        h1 {
+            color: var(--st-foreground-accent);
+            font-family: var(--st-font-family-primary);
+        }
     }
 }
 
-.podium .completed-challenge {
-    background-color: var(--st-background-tertiary);
-}
-
-
-.podium .dna-input-group:hover {
-    border-color: var(--st-foreground-accent);
-}
-
-.podium .dna-input-group-prefix {
-    color: var(--st-foreground-accent);
-}
-
-.podium h1 {
-    color: var(--st-foreground-accent);
-    font-family: var(--st-font-family-primary);
-    margin-bottom: 6px;
-}
-
-.podium h2 {
-    font-family: var(--st-font-family-primary);
-    font-weight: 500;
-    margin-top: 6px;
-}
-
-.podium button {
-    background-color: var(--st-accent-primary);
-    color: var(--st-contrast-accent);
-}
-
-.podium button:hover {
-    background-color: var(--st-accent-primary);
-    filter: brightness(var(--st-hover-brightness));
-}
-
-.podium input {
-    color: var(--st-foreground-primary) !important;
-}
-
-.animation-container-loading {
+.animation - container - loading {
     position: fixed;
     inset: 0;
 
