@@ -783,28 +783,79 @@ class ScheduleEventDialog extends Dialog {
         const annotationColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
         createElement('h3', annotationColumn, { class: 'st-section-heading', innerText: i18n('annotation') });
 
-        const annotationContents = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Aantekening || '', contenteditable: true, placeholder: i18n('addAnnotation') });
+        const annotationCompletedTag = '[ST-completed]';
+        const stripEmptyBreak = value => (value || '').replace(/^\s*<br\s*\/?>\s*$/i, '');
+        const stripCompletedTag = value => (value || '').replace(/\s*\[ST-completed\]\s*$/, '');
+        const parseAnnotation = value => {
+            const sanitized = stripEmptyBreak(value);
+            const isCompleted = /\s*\[ST-completed\]\s*$/.test(sanitized);
+            return {
+                content: stripCompletedTag(sanitized),
+                isCompleted
+            };
+        };
 
-        const annotationHint = annotationContents.createSiblingElement('p', { class: 'st-event-dialog-event-content-hint' });
+        const initialAnnotation = parseAnnotation(this.event.Aantekening || '');
+        let savedAnnotationContent = initialAnnotation.content;
+        let savedAnnotationCompleted = initialAnnotation.isCompleted && savedAnnotationContent !== '';
+
+        const annotationContentsWrapper = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content-wrapper' });
+
+        const annotationContents = createElement('div', annotationContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: savedAnnotationContent, contenteditable: true, placeholder: i18n('addAnnotation') });
+
+        const annotationHint = annotationContentsWrapper.createChildElement('p', { class: 'st-event-dialog-event-content-hint' });
         Object.entries({ bold: ['Ctrl', 'B'], italic: ['Ctrl', 'I'], underline: ['Ctrl', 'U'] }).forEach(([value, keys]) => {
             keys.forEach(k => annotationHint.createChildElement('kbd', { innerText: k }));
             annotationHint.createChildElement('span', { innerText: i18n(value) });
         });
 
+        const annotationCompletedLabel = createElement('label', annotationColumn, { class: 'st-checkbox-label st-hidden st-event-dialog-event-content-completed', for: `st-start-${this.event.Id}-annotation-complete`, innerText: i18n('completed') });
+        const annotationCompletedInput = createElement('input', annotationCompletedLabel, { id: `st-start-${this.event.Id}-annotation-complete`, class: 'st-checkbox-input', type: 'checkbox' });
+        annotationCompletedInput.checked = savedAnnotationCompleted;
+
         const saveButton = createElement('button', annotationColumn, { class: 'st-button st-hidden st-event-dialog-event-content-save', innerText: i18n('save') });
-        saveButton.addEventListener('click', async () => {
+
+        const getCurrentAnnotationContent = () => parseAnnotation(annotationContents.innerHTML).content;
+        const getAnnotationToSave = () => {
+            const content = getCurrentAnnotationContent();
+            if (content === '') return null;
+            return annotationCompletedInput.checked ? `${content}${annotationCompletedTag}` : content;
+        };
+
+        const updateAnnotationUiState = () => {
+            const currentAnnotationContent = getCurrentAnnotationContent();
+            const isEmpty = currentAnnotationContent === '';
+            const currentCompleted = isEmpty ? false : annotationCompletedInput.checked;
+            const savedCompleted = savedAnnotationContent === '' ? false : savedAnnotationCompleted;
+            const hasChanged = currentAnnotationContent !== savedAnnotationContent || currentCompleted !== savedCompleted;
+
+            annotationContents.classList.toggle('empty', isEmpty);
+            saveButton.classList.toggle('st-hidden', !hasChanged);
+            annotationCompletedLabel.classList.toggle('st-hidden', !saveButton.classList.contains('st-hidden') || isEmpty);
+        };
+
+        const saveAnnotation = async () => {
             this.#progressBar.dataset.visible = 'true';
-            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationContents.innerHTML?.replace(/^\<br\>$/, '').length ? annotationContents.innerHTML : null });
+            const annotationToSave = getAnnotationToSave();
+            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationToSave });
             if (schedule?.refresh) schedule.refresh();
             if (widgets?.refresh) widgets.refresh();
-            saveButton.classList.add('st-hidden');
+            this.event.Aantekening = annotationToSave;
+            savedAnnotationContent = getCurrentAnnotationContent();
+            savedAnnotationCompleted = savedAnnotationContent !== '' && annotationCompletedInput.checked;
+            annotationCompletedInput.checked = savedAnnotationCompleted;
+            updateAnnotationUiState();
             this.#progressBar.dataset.visible = 'false';
-        });
+        };
 
-        annotationContents.addEventListener('input', () => {
-            annotationContents.classList.toggle('empty', annotationContents.innerHTML.replace(/^\<br\>$/, '') === '');
-            saveButton.classList.toggle('st-hidden', annotationContents.innerHTML.replace(/^\<br\>$/, '') === (this.event.Aantekening || ''));
+        saveButton.addEventListener('click', saveAnnotation);
+
+        annotationContents.addEventListener('input', updateAnnotationUiState);
+        annotationCompletedInput.addEventListener('input', async () => {
+            if (getCurrentAnnotationContent() === '') return;
+            await saveAnnotation();
         });
+        updateAnnotationUiState();
     }
 
     #addRowToTable(parentElement, label, value) {

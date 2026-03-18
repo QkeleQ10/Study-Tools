@@ -371,7 +371,7 @@ function getEventChips(event) {
     }
     if (event.HeeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
     if (event.Opmerking?.length) chips.push({ name: i18n('chips.remark'), type: 'info' })
-    if (event.Aantekening?.length) chips.push({ name: i18n('chips.annotation'), type: 'info' })
+    if (event.Aantekening?.length) chips.push({ name: i18n('chips.annotation'), type: event.Aantekening.endsWith('[ST-completed]') ? 'ok' : 'info' })
 
     return chips
 }
