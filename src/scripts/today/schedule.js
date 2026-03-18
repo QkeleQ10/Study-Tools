@@ -591,6 +591,28 @@ class ScheduleDay {
 class ScheduleEventDialog extends Dialog {
     event;
     #progressBar;
+    #annotationCompletedTag = '[ST-completed]';
+    #homeworkInfoTypes = {
+        1: { name: i18n('chips.hw'), type: 'info' },
+        2: { name: i18n('chips.pw'), type: 'important' },
+        3: { name: i18n('chips.prelim'), type: 'important' },
+        4: { name: i18n('chips.so'), type: 'important' },
+        5: { name: i18n('chips.mo'), type: 'important' },
+        6: { name: i18n('chips.info'), type: 'info' },
+    };
+    #attachmentFileTypes = [
+        { extensions: ['pdf'], icon: '' },
+        { extensions: ['txt', 'md'], icon: '' },
+        { extensions: ['doc', 'docx', 'odt', 'csv'], icon: '', name: 'Word' },
+        { extensions: ['ppt', 'pptx', 'odp'], icon: '', name: 'PowerPoint' },
+        { extensions: ['xls', 'xlsx', 'ods'], icon: '', name: 'Excel' },
+        { extensions: ['jpg', 'jpeg', 'png', 'bmp', 'gif'], icon: '' },
+        { extensions: ['svg', 'eps'], icon: '' },
+        { extensions: ['mp3', 'wav', 'avi', 'ogg'], icon: '' },
+        { extensions: ['mp4', 'mov'], icon: '' },
+        { extensions: ['zip', '7z', 'rar', 'tar', 'gz'], icon: '' },
+        { extensions: ['exe', 'msi', 'cad'], icon: '' },
+    ];
 
     constructor(event) {
         super({
@@ -609,198 +631,195 @@ class ScheduleEventDialog extends Dialog {
 
         if (schedule?.scheduleDate && schedule.positionInRange(new Date(this.event.Start)) < 0) schedule.scheduleDate = new Date(this.event.Start);
 
-        this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
-        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
+        this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' });
+        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' });
 
         this.#drawDialogContents();
     }
 
     async #drawDialogContents() {
         this.body.innerText = '';
+        this.#drawPrimaryDetailsColumn();
+        this.#loadAdditionalEventInfo();
+    }
 
-        const column1 = createElement('div', this.body, { class: 'st-event-dialog-column' });
-        createElement('h3', column1, { class: 'st-section-heading', innerText: (this.event.Type === 1 || this.event.Type === 16) ? i18n('eventDetails') : i18n('lessonDetails') });
+    #setProgressVisible(visible) {
+        this.#progressBar.dataset.visible = visible ? 'true' : 'false';
+    }
 
-        let table1 = createElement('table', column1, { class: 'st' });
+    #refreshViews() {
+        if (schedule?.refresh) schedule.refresh();
+        if (widgets?.refresh) widgets.refresh();
+    }
 
-        this.#addRowToTable(table1, i18n('title'), this.event.Omschrijving || '-');
-        this.#addRowToTable(table1, i18n('subject'), eventSubjects(this.event) || '-');
-        this.#addRowToTable(table1, i18n('schoolHour'), this.event.LesuurVan
+    #createColumn(title) {
+        const column = createElement('div', this.body, { class: 'st-event-dialog-column' });
+        createElement('h3', column, { class: 'st-section-heading', innerText: title });
+        return column;
+    }
+
+    #drawPrimaryDetailsColumn() {
+        const detailsTitle = (this.event.Type === 1 || this.event.Type === 16) ? i18n('eventDetails') : i18n('lessonDetails');
+        const column = this.#createColumn(detailsTitle);
+        const table = createElement('table', column, { class: 'st' });
+
+        this.#addRowToTable(table, i18n('title'), this.event.Omschrijving || '-');
+        this.#addRowToTable(table, i18n('subject'), eventSubjects(this.event) || '-');
+        this.#addRowToTable(table, i18n('schoolHour'), this.event.LesuurVan
             ? (this.event.LesuurVan === this.event.LesuurTotMet)
                 ? i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) })
                 : i18n('closedInterval', { start: i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) }), end: i18n('schoolHourNum', { num: this.event.LesuurTotMet, numOrdinal: formatOrdinals(this.event.LesuurTotMet) }) })
             : '-');
-        const showYear = isYearNotCurrent(new Date(this.event.Start)) || isYearNotCurrent(new Date(this.event.Einde));
-        this.#addRowToTable(table1, i18n('start'), new Date(this.event.Start).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
-        this.#addRowToTable(table1, i18n('end'), new Date(this.event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
-        this.#addRowToTable(table1, i18n('location'), eventLocations(this.event) || '-');
-        this.#addRowToTable(table1, i18n('teacher'), eventTeachers(this.event) || '-');
-        if (this.event.Herhaling)
-            this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
 
-        let chips = getEventChips(this.event);
+        const showYear = isYearNotCurrent(new Date(this.event.Start)) || isYearNotCurrent(new Date(this.event.Einde));
+        const dateOptions = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined };
+        this.#addRowToTable(table, i18n('start'), new Date(this.event.Start).toLocaleString(locale, dateOptions));
+        this.#addRowToTable(table, i18n('end'), new Date(this.event.Einde).toLocaleString(locale, dateOptions));
+        this.#addRowToTable(table, i18n('location'), eventLocations(this.event) || '-');
+        this.#addRowToTable(table, i18n('teacher'), eventTeachers(this.event) || '-');
+
+        if (this.event.Herhaling) {
+            this.#addRowToTable(table, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
+        }
+
+        const chips = getEventChips(this.event);
         if (chips.length > 0) {
-            const chipsWrapper = this.#addRowToTable(table1, i18n('extra'));
+            const chipsWrapper = this.#addRowToTable(table, i18n('extra'));
             chipsWrapper.classList.add('st-chips-wrapper');
             chipsWrapper.style.justifyContent = 'flex-start';
             chips.forEach(chip => createElement('span', chipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name }));
         }
-
-        this.#loadAdditionalEventInfo();
     }
 
     async #loadAdditionalEventInfo() {
         const moreInfo = await magisterApi.event(this.event.Id);
         if (moreInfo) this.event = { ...this.event, ...moreInfo };
-        this.#progressBar.dataset.visible = 'false';
+        this.#setProgressVisible(false);
 
-        if (this.event.Type === 7) {
-            const kwtColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', kwtColumn, { class: 'st-section-heading', innerText: i18n('register') });
+        if (this.event.Type === 7) await this.#drawKwtColumn();
+        if (this.event.Opmerking) this.#drawRemarkColumn();
+        if (this.event.Inhoud?.length > 0) this.#drawHomeworkColumn();
+        if (this.event.Bijlagen?.length > 0) this.#drawAttachmentsColumn();
+        this.#drawAnnotationColumn();
+    }
 
-            const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
+    async #drawKwtColumn() {
+        const kwtColumn = this.#createColumn(i18n('register'));
+        const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
 
-            if (kwtChoices?.[0]?.Keuzes?.[0]) {
-                kwtChoices[0].Keuzes.forEach(choice => {
-                    const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers)
-                    const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
-                    createElement('b', label, { innerText: choice.Omschrijving });
-                    createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
-                    createElement('span', label, { innerText: `(${choice.AantalDeelnemers ?? '?'}/${choice.MaxDeelnemers ?? '?'}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
-                    createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
-                    const input = createElement('input', label, { id: `st-start-${choice.Id}-kwt-choice`, class: 'st-checkbox-input', type: 'checkbox' });
-                    input.checked = choice.Status > 0;
-                    input.disabled = !kwtChoices[0].MagInschrijven;
-                    input.addEventListener('input', async () => {
-                        this.#progressBar.dataset.visible = 'true';
-                        kwtColumn.querySelectorAll('input').forEach(i => i.disabled = true);
-                        try {
-                            if (choice.Status == 0) {
-                                await magisterApi.postKwtRegistration(choice);
-                            } else {
-                                await magisterApi.deleteKwtRegistration(choice.Id);
-                            }
-                        } catch (e) {
-                            new Dialog({ innerText: (await e.json())?.Message || i18n('error') }).show();
-                        } finally {
-                            if (schedule?.refresh) schedule.refresh();
-                            if (widgets?.refresh) widgets.refresh();
-                            this.event = (await magisterApi.events(dates.gatherStart, dates.gatherEnd)).find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
-                            this.#drawDialogContents();
-                        }
-                    });
-                });
-            } else {
-                createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
-            }
+        if (!kwtChoices?.[0]?.Keuzes?.[0]) {
+            createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
+            return;
         }
 
-        if (this.event.Opmerking) {
-            const remarkColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', remarkColumn, { class: 'st-section-heading', innerText: i18n('remark') });
-            createElement('div', remarkColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Opmerking });
-        }
-
-        if (this.event.Inhoud?.length > 0) {
-            const infoTypes = {
-                1: { name: i18n('chips.hw'), type: 'info' },
-                2: { name: i18n('chips.pw'), type: 'important' },
-                3: { name: i18n('chips.prelim'), type: 'important' },
-                4: { name: i18n('chips.so'), type: 'important' },
-                5: { name: i18n('chips.mo'), type: 'important' },
-                6: { name: i18n('chips.info'), type: 'info' },
-            };
-
-            const homeworkColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', homeworkColumn, { class: 'st-section-heading', innerText: infoTypes[this.event.InfoType].name });
-
-            createElement('div', homeworkColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Inhoud });
-
-            const label = createElement('label', homeworkColumn, { class: 'st-checkbox-label', for: `st-start-${this.event.Id}-hw-complete`, innerText: i18n('completed') });
-            const input = createElement('input', label, { id: `st-start-${this.event.Id}-hw-complete`, class: 'st-checkbox-input', type: 'checkbox' });
-            input.checked = this.event.Afgerond;
+        kwtChoices[0].Keuzes.forEach(choice => {
+            const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers);
+            const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
+            createElement('b', label, { innerText: choice.Omschrijving });
+            createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
+            createElement('span', label, { innerText: `(${choice.AantalDeelnemers ?? '?'}/${choice.MaxDeelnemers ?? '?'}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
+            createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
+            const input = createElement('input', label, { id: `st-start-${choice.Id}-kwt-choice`, class: 'st-checkbox-input', type: 'checkbox' });
+            input.checked = choice.Status > 0;
+            input.disabled = !kwtChoices[0].MagInschrijven;
             input.addEventListener('input', async () => {
-                this.#progressBar.dataset.visible = 'true';
-                await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
-                if (schedule?.refresh) schedule.refresh();
-                if (widgets?.refresh) widgets.refresh();
-                this.event.Afgerond = input.checked;
-                this.body.querySelectorAll('.st-chip').forEach(chip => {
-                    if ((chip instanceof HTMLElement) && chip.innerText === infoTypes[this.event.InfoType].name) {
-                        chip.classList.toggle('ok', input.checked);
-                        chip.classList.toggle('info', !input.checked);
+                this.#setProgressVisible(true);
+                kwtColumn.querySelectorAll('input').forEach(i => i.disabled = true);
+                try {
+                    if (choice.Status == 0) {
+                        await magisterApi.postKwtRegistration(choice);
+                    } else {
+                        await magisterApi.deleteKwtRegistration(choice.Id);
                     }
-                });
-                this.#progressBar.dataset.visible = 'false';
+                } catch (e) {
+                    new Dialog({ innerText: (await e.json())?.Message || i18n('error') }).show();
+                } finally {
+                    this.#refreshViews();
+                    this.event = (await magisterApi.events(dates.gatherStart, dates.gatherEnd))
+                        .find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
+                    this.#drawDialogContents();
+                }
+            });
+        });
+    }
+
+    #drawRemarkColumn() {
+        const remarkColumn = this.#createColumn(i18n('remark'));
+
+        const remarkContentsWrapper = remarkColumn.createChildElement('div', { class: 'st-event-dialog-event-content-wrapper' });
+        const remarkContents = createElement('div', remarkContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: this.event.Opmerking });
+    }
+
+    #drawHomeworkColumn() {
+        const infoType = this.#homeworkInfoTypes[this.event.InfoType];
+        const homeworkColumn = this.#createColumn(infoType?.name || i18n('chips.info'));
+
+        const homeworkContentsWrapper = homeworkColumn.createChildElement('div', { class: 'st-event-dialog-event-content-wrapper' });
+        const homeworkContents = createElement('div', homeworkContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: this.event.Inhoud });
+
+        const label = createElement('label', homeworkColumn, { class: 'st-checkbox-label', for: `st-start-${this.event.Id}-hw-complete`, innerText: i18n('completed') });
+        const input = createElement('input', label, { id: `st-start-${this.event.Id}-hw-complete`, class: 'st-checkbox-input', type: 'checkbox' });
+        input.checked = this.event.Afgerond;
+        input.addEventListener('input', async () => {
+            this.#setProgressVisible(true);
+            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
+            this.#refreshViews();
+            this.event.Afgerond = input.checked;
+            this.body.querySelectorAll('.st-chip').forEach(chip => {
+                if ((chip instanceof HTMLElement) && chip.innerText === infoType?.name) {
+                    chip.classList.toggle('ok', input.checked);
+                    chip.classList.toggle('info', !input.checked);
+                }
+            });
+            this.#setProgressVisible(false);
+        });
+
+        const table = createElement('table', homeworkColumn, { class: 'st' });
+        const showYear = isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp));
+        this.#addRowToTable(table, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+        this.#addRowToTable(table, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+    }
+
+    #drawAttachmentsColumn() {
+        const attachmentsColumn = this.#createColumn(this.event.Bijlagen.length > 1 ? i18n('attachments') : i18n('attachment'));
+
+        this.event.Bijlagen.forEach(bijlage => {
+            const fileType = this.#attachmentFileTypes.find(type => type.extensions.some(ext => bijlage.Naam.toLowerCase().endsWith(ext)));
+            const fileButton = attachmentsColumn.createChildElement('button', { class: 'st-button secondary st-event-dialog-event-attachment', innerText: bijlage.Naam, dataset: { icon: fileType?.icon || '' } });
+
+            fileButton.addEventListener('click', async () => window.open((await magisterApi.eventAttachment(bijlage.Id)).location, '_blank'));
+            fileButton.addEventListener('auxclick', async (e) => {
+                e.preventDefault();
+                const locationUrl = (await magisterApi.eventAttachment(bijlage.Id)).location;
+                const file = await fetch(locationUrl);
+                const blob = new Blob([await file.blob()], { type: bijlage.ContentType });
+                window.open(URL.createObjectURL(blob), '_blank');
             });
 
-            let table2 = createElement('table', homeworkColumn, { class: 'st' });
+            const table = createElement('table', attachmentsColumn, { class: 'st' });
+            this.#addRowToTable(table, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : '-');
+            this.#addRowToTable(table, i18n('fileType'), i18n('typeFile', { type: fileType?.name || /(?:\.([^.]+))?$/.exec(bijlage.Naam.toUpperCase())[1] }));
+            const showYear = isYearNotCurrent(new Date(bijlage.Datum));
+            this.#addRowToTable(table, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+        });
+    }
 
-            const showYear = (isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp)))
-            this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
-            this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
-        }
-
-        if (this.event.Bijlagen?.length > 0) {
-            const fileTypes = [
-                { extensions: ['pdf'], icon: '' },
-                { extensions: ['txt', 'md'], icon: '' },
-                { extensions: ['doc', 'docx', 'odt', 'csv'], icon: '', name: 'Word' },
-                { extensions: ['ppt', 'pptx', 'odp'], icon: '', name: 'PowerPoint' },
-                { extensions: ['xls', 'xlsx', 'ods'], icon: '', name: 'Excel' },
-                { extensions: ['jpg', 'jpeg', 'png', 'bmp', 'gif'], icon: '' },
-                { extensions: ['svg', 'eps'], icon: '' },
-                { extensions: ['mp3', 'wav', 'avi', 'ogg'], icon: '' },
-                { extensions: ['mp4', 'mov'], icon: '' },
-                { extensions: ['zip', '7z', 'rar', 'tar', 'gz'], icon: '' },
-                { extensions: ['exe', 'msi', 'cad'], icon: '' },
-            ];
-
-            const attachmentsColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', attachmentsColumn, { class: 'st-section-heading', innerText: this.event.Bijlagen.length > 1 ? i18n('attachments') : i18n('attachment') });
-
-            this.event.Bijlagen.forEach(bijlage => {
-                let fileType = fileTypes.find(type => type.extensions.some(ext => bijlage.Naam.toLowerCase().endsWith(ext)));
-
-                const fileButton = attachmentsColumn.createChildElement('button', { class: 'st-button secondary st-event-dialog-event-attachment', innerText: bijlage.Naam, dataset: { icon: fileType?.icon || '' } });
-                fileButton.addEventListener('click', async () => window.open((await magisterApi.eventAttachment(bijlage.Id)).location, '_blank'));
-                fileButton.addEventListener('auxclick', async (e) => {
-                    e.preventDefault();
-                    const locationUrl = (await magisterApi.eventAttachment(bijlage.Id)).location;
-                    const file = await fetch(locationUrl);
-                    const blob = new Blob([await file.blob()], { type: bijlage.ContentType });
-                    window.open(URL.createObjectURL(blob), '_blank');
-                });
-
-                let table2 = createElement('table', attachmentsColumn, { class: 'st' });
-                this.#addRowToTable(table2, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : '-');
-                this.#addRowToTable(table2, i18n('fileType'), i18n('typeFile', { type: fileType?.name || /(?:\.([^.]+))?$/.exec(bijlage.Naam.toUpperCase())[1] }));
-                const showYear = isYearNotCurrent(new Date(bijlage.Datum));
-                this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
-            });
-        }
-
-        const annotationColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-        createElement('h3', annotationColumn, { class: 'st-section-heading', innerText: i18n('annotation') });
-
-        const annotationCompletedTag = '[ST-completed]';
-        const stripEmptyBreak = value => (value || '').replace(/^\s*<br\s*\/?>\s*$/i, '');
-        const stripCompletedTag = value => (value || '').replace(/\s*\[ST-completed\]\s*$/, '');
-        const parseAnnotation = value => {
-            const sanitized = stripEmptyBreak(value);
-            const isCompleted = /\s*\[ST-completed\]\s*$/.test(sanitized);
-            return {
-                content: stripCompletedTag(sanitized),
-                isCompleted
-            };
+    #parseAnnotation(value) {
+        const sanitized = (value || '').replace(/^\s*<br\s*\/?>\s*$/i, '');
+        const isCompleted = /\s*\[ST-completed\]\s*$/.test(sanitized);
+        return {
+            content: sanitized.replace(/\s*\[ST-completed\]\s*$/, ''),
+            isCompleted
         };
+    }
 
-        const initialAnnotation = parseAnnotation(this.event.Aantekening || '');
+    #drawAnnotationColumn() {
+        const annotationColumn = this.#createColumn(i18n('annotation'));
+        const initialAnnotation = this.#parseAnnotation(this.event.Aantekening || '');
         let savedAnnotationContent = initialAnnotation.content;
         let savedAnnotationCompleted = initialAnnotation.isCompleted && savedAnnotationContent !== '';
 
         const annotationContentsWrapper = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content-wrapper' });
-
         const annotationContents = createElement('div', annotationContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: savedAnnotationContent, contenteditable: true, placeholder: i18n('addAnnotation') });
 
         const annotationHint = annotationContentsWrapper.createChildElement('p', { class: 'st-event-dialog-event-content-hint' });
@@ -815,11 +834,11 @@ class ScheduleEventDialog extends Dialog {
 
         const saveButton = createElement('button', annotationColumn, { class: 'st-button st-hidden st-event-dialog-event-content-save', innerText: i18n('save') });
 
-        const getCurrentAnnotationContent = () => parseAnnotation(annotationContents.innerHTML).content;
+        const getCurrentAnnotationContent = () => this.#parseAnnotation(annotationContents.innerHTML).content;
         const getAnnotationToSave = () => {
             const content = getCurrentAnnotationContent();
             if (content === '') return null;
-            return annotationCompletedInput.checked ? `${content}${annotationCompletedTag}` : content;
+            return annotationCompletedInput.checked ? `${content}${this.#annotationCompletedTag}` : content;
         };
 
         const updateAnnotationUiState = () => {
@@ -835,21 +854,19 @@ class ScheduleEventDialog extends Dialog {
         };
 
         const saveAnnotation = async () => {
-            this.#progressBar.dataset.visible = 'true';
+            this.#setProgressVisible(true);
             const annotationToSave = getAnnotationToSave();
             await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationToSave });
-            if (schedule?.refresh) schedule.refresh();
-            if (widgets?.refresh) widgets.refresh();
+            this.#refreshViews();
             this.event.Aantekening = annotationToSave;
             savedAnnotationContent = getCurrentAnnotationContent();
             savedAnnotationCompleted = savedAnnotationContent !== '' && annotationCompletedInput.checked;
             annotationCompletedInput.checked = savedAnnotationCompleted;
             updateAnnotationUiState();
-            this.#progressBar.dataset.visible = 'false';
+            this.#setProgressVisible(false);
         };
 
         saveButton.addEventListener('click', saveAnnotation);
-
         annotationContents.addEventListener('input', updateAnnotationUiState);
         annotationCompletedInput.addEventListener('input', async () => {
             if (getCurrentAnnotationContent() === '') return;
