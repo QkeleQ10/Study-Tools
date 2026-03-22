@@ -224,17 +224,23 @@
     container-name: event-wrapper;
     overflow: hidden;
 
-    &.legacy {
-        .st-event {
-            grid-template-columns: auto 1fr;
+    .st-event-number {
+        width: 42px;
+        height: 42px;
+        margin: 10px;
+        margin-right: -4px;
+        border-radius: 6px;
+    }
 
-            .st-event-number {
-                width: 42px;
-                height: 42px;
-                margin: 10px;
-                margin-right: -4px;
-                border-radius: 6px;
-            }
+    &.optional {
+        color: var(--st-foreground-insignificant);
+        background-color: transparent;
+        outline-width: 1px;
+        outline-style: dashed;
+
+        .st-event-number {
+            background-color: transparent !important;
+            outline: 1px dashed var(--st-border-color);
         }
     }
 }
@@ -282,6 +288,15 @@
 }
 
 #st-sch:not(.list-view) .st-sch-day-body .st-event-wrapper {
+    --top: 0;
+    --height: 0;
+    --left: 0;
+    --width: 100%;
+    --border-top-left-radius: var(--st-border-radius);
+    --border-top-right-radius: var(--st-border-radius);
+    --border-bottom-left-radius: var(--st-border-radius);
+    --border-bottom-right-radius: var(--st-border-radius);
+
     position: absolute;
     top: var(--top);
     height: var(--height);
@@ -291,11 +306,20 @@
 
     transition: min-height 200ms, min-width 200ms, border-radius 200ms;
 
+    &.optional {
+        margin: 8px 0;
+        height: calc(var(--height) - 16px);
+    }
+
     &:hover {
         min-height: 85px;
         min-width: 256px;
         z-index: 1;
         transition: min-height 500ms 500ms, min-width 500ms 500ms, border-radius 500ms 500ms;
+
+        &.optional {
+            min-height: 69px;
+        }
     }
 }
 
@@ -320,7 +344,7 @@
     position: relative;
 
     display: grid;
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: auto 1fr;
     align-items: start;
 
     border: none;
@@ -541,7 +565,8 @@
         }
     }
 
-    .st-start-kwt-choice {
+    .st-start-kwt-choice,
+    .st-start-aa-choice {
         margin-top: 0;
 
         &::before {

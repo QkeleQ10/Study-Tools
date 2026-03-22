@@ -21,6 +21,12 @@ const dates = {
     get gatherStart() { return midnight(null, -7) },
     get gatherEarlyStart() { return midnight(null, -42) },
     get gatherEnd() { return midnight(null, 42) },
+    get lastMonday() {
+        let lastMonday = new Date(midnight(this.tomorrow));
+        while (lastMonday.getDay() !== 1)
+            lastMonday.setDate(lastMonday.getDate() - 1);
+        return lastMonday
+    },
 };
 
 async function initialiseStorage() {
@@ -274,6 +280,12 @@ Date.prototype.getFormattedTime = function () { return this.toLocaleTimeString(l
 Date.prototype.addDays = function (days) {
     let date = new Date(this)
     date.setDate(date.getDate() + days)
+    return date
+}
+
+Date.prototype.previousMonday = function () {
+    let date = new Date(this)
+    date.setDate(date.getDate() - ((date.getDay() + 6) % 7))
     return date
 }
 
@@ -833,8 +845,9 @@ class Dialog {
         }
     }
 
-    show() {
-        this.element.showModal();
+    show(modal = true) {
+        if (modal) this.element.showModal();
+        else this.element.show();
     }
 
     close(maintain = false) {

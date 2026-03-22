@@ -44,6 +44,7 @@ interface Date {
     getFormattedTime(): string;
 
     addDays(days: number): Date;
+    previousMonday(): Date;
 
     isToday(offset?: number): boolean;
     isTomorrow(offset?: number): boolean;
