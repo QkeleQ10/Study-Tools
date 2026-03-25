@@ -57,6 +57,7 @@
 
     position: relative;
     overflow-y: auto;
+    overflow-x: hidden;
 
     display: grid;
     grid-template-columns: subgrid;
@@ -240,6 +241,7 @@
 
         .st-event-number {
             background-color: transparent !important;
+            color: var(--st-foreground-insignificant) !important;
             outline: 1px dashed var(--st-border-color);
         }
     }

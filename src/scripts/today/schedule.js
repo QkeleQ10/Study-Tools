@@ -158,7 +158,10 @@ class Schedule {
             let events = await magisterApi.events(dateStart, dateEnd);
 
             await magisterApi.updateAccountInfo();
-            let additionalAppointments = magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled ? await magisterApi.additionalAppointments(dateStart, dateEnd) : [];
+            let additionalAppointments =
+                (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
+                    ? await magisterApi.additionalAppointments(dateStart, dateEnd)
+                    : [];
 
             for (let i = 0; i <= Math.ceil((dateEnd.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24)); i++) {
                 const date = midnight(dateStart, i);
@@ -571,11 +574,6 @@ class ScheduleDay {
                 let eventHours = (appointment.startTimeSlot === appointment.endTimeSlot) ? appointment.startTimeSlot : `${appointment.startTimeSlot}-${appointment.endTimeSlot}`
                 const eventNumberEl = aaElement.createChildElement('div', { class: 'st-event-number', innerText: eventHours })
 
-                // Cancelled label
-                if (appointment.status !== 'confirmed') {
-                    aaElement.dataset.cancelled = 'true';
-                }
-
                 // Draw the event details
                 const eventDetailsEl = aaElement.createChildElement('div', { class: 'st-event-details' });
 
@@ -805,7 +803,10 @@ class ScheduleEventDialog extends Dialog {
         if (this.event?.Type === 7) await this.#drawKwtColumn();
 
         await magisterApi.updateAccountInfo();
-        const aaChoices = magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end)) : [];
+        const aaChoices =
+            (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
+                ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
+                : [];
         if (aaChoices.length) await this.#drawAdditionalAppointmentsColumn();
 
         if (this.event?.Opmerking) this.#drawRemarkColumn();
@@ -858,7 +859,9 @@ class ScheduleEventDialog extends Dialog {
 
     async #drawAdditionalAppointmentsColumn() {
         const aaColumn = this.#createColumn(i18n('additionalAppointmentsRegistration'));
-        const aaChoices = magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end)) : [];
+        const aaChoices = (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
+            ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
+            : [];
 
         if (!aaChoices?.[0]) {
             createElement('span', aaColumn, { innerText: "Keuzes konden niet worden geladen." });

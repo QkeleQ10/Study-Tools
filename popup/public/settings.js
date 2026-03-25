@@ -477,6 +477,15 @@ export default [
                 default: false,
             },
             {
+                id: "additional-appointments",
+                title: "Keuzelessen inladen",
+                subtitle: "Experimenteel. Kan voor vertraging zorgen.",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+                default: true,
+            },
+            {
                 id: "darken-content",
                 title: "Inhoud donker maken",
                 subtitle: "Experimenteel. Studiewijzers en opdrachten donker maken indien het donkere thema actief is.",
