@@ -212,6 +212,44 @@ class GradeStatisticsPane extends Pane {
             label: (_i, v, _mv) => `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         });
 
+        const openChartButton = this.#div2.createChildElement('button', {
+            class: 'st-button tertiary',
+            'data-icon': '',
+            innerText: i18n('cs.openChart'),
+            style: {
+                width: '100%',
+                marginTop: '8px'
+            }
+        });
+
+        openChartButton.addEventListener('click', () => {
+            const chartDialog = new Dialog();
+            const divLineChart = chartDialog.body.createChildElement('div', {
+                style: {
+                    position: 'relative',
+                    border: 'var(--st-border)',
+                    borderRadius: 'var(--st-border-radius)',
+                    height: '360px',
+                    width: '85vw',
+                    cursor: 'pointer'
+                }
+            });
+
+            createIndexedLineChart(divLineChart, values, i => {
+                const grade = currentGradeTable.grades.find(g => g.CijferId === grades[i].id);
+                const dialog = new GradeDetailDialog(grade, currentGradeTable.identifier.year);
+                dialog.show();
+            }, {
+                minY: lowerBound,
+                maxY: upperBound,
+                yGridCount: upperBound - lowerBound,
+                showMovingAverage: true,
+                label: (_i, v, _mv) => `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            });
+
+            chartDialog.show();
+        });
+
         // === DONE ===
 
         this.progressBar.dataset.visible = 'false';

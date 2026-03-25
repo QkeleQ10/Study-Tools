@@ -196,7 +196,11 @@
     "untilDate": "Until {date}",
     "completed": "Completed",
     "register": "Registration",
-    "registered": "Registered",
+    "kwtRegistration": "Elective work period",
+    "additionalAppointmentsRegistration": "Elective class",
+    "additionalAppointmentsAvailable": "Choice available",
+    "additionalAppointmentsUnavailable": "No choice available",
+    "additionalAppointmentsRegisteredDisclaimer": "You have registered for this elective class. It'll take a few minutes for it to appear in your schedule.",
     "allDay": "All day",
     "bold": "Bold",
     "italic": "Italic",
@@ -269,7 +273,8 @@
         "histogram": "Histogram",
         "histogramBarDescription": "{frequency} grades between {rangeStart} and {rangeEnd}",
         "trend": "Line chart",
-        "howToAdd": "Select and deselect individual grades or all grades for a specific subject or year \nby clicking them in your report card. \nYou may also add grades from different years. Use the report card selector at the top left."
+        "howToAdd": "Select and deselect individual grades or all grades for a specific subject or year \nby clicking them in your report card. \nYou may also add grades from different years. Use the report card selector at the top left.",
+        "openChart": "Magnify chart"
     },
     "sw": {
         "searchPlaceholder": "Search",

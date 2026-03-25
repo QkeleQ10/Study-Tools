@@ -62,25 +62,21 @@ class Schedule {
     #scheduleRange = { start: this.#scheduleDate, end: this.#scheduleDate };
     get scheduleRange() { return this.#scheduleRange; }
     set scheduleRange(newRange) {
+        if (this.#progressBar?.dataset.visible === 'true') return; // Prevent changing the schedule range while events are being fetched, to avoid race conditions
+
         if (this.#snapToMonday) {
             while (newRange.start.getDay() !== 1) {
                 newRange.start.setDate(newRange.start.getDate() - 1);
                 newRange.end.setDate(newRange.end.getDate() - 1);
             }
         }
+
         (async () => {
-            // If any of the days in agendaRange don't have a corresponding entry in this.days, extend the schedule range to include it.
-            if (!Object.values(this.days).some(day => day.date.getTime() === newRange.start.getTime())) {
-                await this.#fetchAndAppendEvents(
-                    midnight(newRange.start, -13),
-                    midnight(newRange.end, 1)
-                );
-            }
-            if (!Object.values(this.days).some(day => day.date.getTime() === newRange.end.getTime())) {
-                await this.#fetchAndAppendEvents(
-                    midnight(newRange.start, 0),
-                    midnight(newRange.end, 14)
-                );
+            // If any of the days in newRange don't have a corresponding entry in this.days, extend the schedule range to include the whole week.
+            for (let d = new Date(newRange.start); d <= newRange.end; d.setDate(d.getDate() + 1)) {
+                if (!this.days[d.toISOString()]) {
+                    await this.#fetchAndAppendEvents(newRange.start.previousMonday());
+                }
             }
 
             this.#scheduleRange = newRange;
@@ -112,7 +108,7 @@ class Schedule {
         this.#body = this.element.createChildElement('div', { id: 'st-sch-body' });
         this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
-        await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
+        await this.#fetchAndAppendEvents(dates.lastMonday);
 
         await this.#updateDayColumns();
         await this.#createHeaderStrip();
@@ -137,7 +133,7 @@ class Schedule {
     /** Clear all cached elements with keys containing 'event' */
     async refresh() {
         Object.keys(magisterApi.cache).forEach(key => {
-            if (['event', 'kwt'].some(type => key.includes(type))) delete magisterApi.cache[key];
+            if (['event', 'kwt', 'additionalAppointments'].some(type => key.includes(type))) delete magisterApi.cache[key];
         });
 
         this.redraw();
@@ -148,18 +144,27 @@ class Schedule {
         this.days = {};
         this.#body.querySelectorAll('.st-sch-day-body').forEach(day => day.remove());
         this.#header.querySelectorAll('.st-sch-day-head').forEach(day => day.remove());
-        await this.#fetchAndAppendEvents(dates.gatherStart, dates.gatherEnd);
+        await this.#fetchAndAppendEvents(this.scheduleRange.start.previousMonday());
         this.#updateDayColumns();
     }
 
-    #fetchAndAppendEvents(gatherStart, gatherEnd) {
+    #fetchAndAppendEvents(date) {
         return new Promise(async (resolve, _) => {
-            console.debug(`Fetching events between ${gatherStart} and ${gatherEnd}...`);
+            const dateStart = midnight(date);
+            const dateEnd = midnight(date, 7);
+
             this.#progressBar.dataset.visible = true;
 
-            let events = await magisterApi.events(gatherStart, gatherEnd);
-            for (let i = 0; i <= Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)); i++) {
-                const date = midnight(gatherStart, i);
+            let events = await magisterApi.events(dateStart, dateEnd);
+
+            await magisterApi.updateAccountInfo();
+            let additionalAppointments =
+                (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
+                    ? await magisterApi.additionalAppointments(dateStart, dateEnd)
+                    : [];
+
+            for (let i = 0; i <= Math.ceil((dateEnd.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24)); i++) {
+                const date = midnight(dateStart, i);
                 if (Object.values(this.days).some(day => day.date.getTime() === date.getTime())) continue;
 
                 const eventsOfDay = events.filter(event => {
@@ -167,14 +172,27 @@ class Schedule {
                     return (startDate.getTime() - date.getTime()) < 86400000 && (startDate.getTime() - date.getTime()) >= 0;
                 });
 
-                if (i === Math.ceil((gatherEnd - gatherStart) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
+                const aaOfDay = additionalAppointments
+                    .filter(appointment => {
+                        const startDate = new Date(appointment.start);
+                        return (startDate.getTime() - date.getTime()) < 86400000 && (startDate.getTime() - date.getTime()) >= 0;
+                    })
+                    .sort((a, b) => {
+                        const statusOrder = { 'accepted': 0, 'tentative': 1, 'declined': 2 };
+                        const getStatus = (appointment) => appointment.participants.find(p => p.type === 'pupil' && !p.isOrganizer)?.status;
+                        const statusA = statusOrder[getStatus(a)] ?? 1;
+                        const statusB = statusOrder[getStatus(b)] ?? 1;
+                        return statusA - statusB;
+                    });
+
+                if (i === Math.ceil((dateEnd.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
                 if (this.days[date.toISOString()] || this.#header.querySelector(`#st-sch-day-body-${date.getTime()}`)) continue;
-                this.days[date.toISOString()] = new ScheduleDay(date, eventsOfDay, this.#body, this.#header);
+                this.days[date.toISOString()] = new ScheduleDay(date, eventsOfDay, aaOfDay, this.#body, this.#header);
             }
-            resolve();
 
             this.#progressBar.dataset.visible = false;
-        })
+            resolve();
+        });
     }
 
     #updateDayColumns() {
@@ -347,9 +365,10 @@ class ScheduleDay {
     rendered = false;
     #interval;
 
-    constructor(date, eventsArray, body, header) {
+    constructor(date, eventsArray, additionalAppointmentsArray, body, header) {
         this.date = date;
         this.events = this.#calculateEventOverlap(eventsArray);
+        this.additionalAppointments = additionalAppointmentsArray;
 
         // Create the day head
         this.head = createElement('div', null, {
@@ -507,6 +526,84 @@ class ScheduleDay {
                 })
             }
 
+            const occupiedRanges = this.events.map(event => ({
+                start: new Date(event.Start).getTime(),
+                end: new Date(event.Einde).getTime(),
+            }));
+
+            const overlapsOccupiedRange = (start, end) =>
+                occupiedRanges.some(range => start < range.end && end > range.start);
+
+            for (const appointment of this.additionalAppointments) {
+                const appointmentStart = new Date(appointment.start).getTime();
+                const appointmentEnd = new Date(appointment.end).getTime();
+
+                // Do not render additional appointments that overlap an event or already-rendered additional appointment.
+                if (overlapsOccupiedRange(appointmentStart, appointmentEnd)) continue;
+                occupiedRanges.push({ start: appointmentStart, end: appointmentEnd });
+
+                const startH = new Date(appointment.start).getHoursWithDecimals();
+                const endH = new Date(appointment.end).getHoursWithDecimals();
+                const durationH = endH - startH;
+
+                const participantStatus = appointment.participants.find(p => p.type === 'pupil' && !p.isOrganizer)?.status;
+
+                const aaWrapperElement = createElement('div', this.body, {
+                    classList: ['st-event-wrapper', 'optional', syncedStorage['start-event-display'] || 'normal'],
+                    style: {
+                        '--top': `calc(${startH} * var(--hour-height))`,
+                        '--height': `calc(${durationH} * var(--hour-height))`,
+                    }
+                });
+
+                const aaElement = createElement('div', aaWrapperElement, {
+                    classList: ['st-event',],
+                    dataset: {
+                        start: appointment.start,
+                        end: appointment.end,
+                        ongoing: new Date(appointment.start) < dates.now && new Date(appointment.end) > dates.now
+                    }
+                });
+
+                // Event click handler
+                aaWrapperElement.addEventListener('click', () => {
+                    new ScheduleEventDialog(appointment).show();
+                });
+
+                // Draw the school hour label
+                let eventHours = (appointment.startTimeSlot === appointment.endTimeSlot) ? appointment.startTimeSlot : `${appointment.startTimeSlot}-${appointment.endTimeSlot}`
+                const eventNumberEl = aaElement.createChildElement('div', { class: 'st-event-number', innerText: eventHours })
+
+                // Draw the event details
+                const eventDetailsEl = aaElement.createChildElement('div', { class: 'st-event-details' });
+
+                const eventTitleWrapperEl = eventDetailsEl.createChildElement('span', { class: 'st-event-title' });
+
+                switch (participantStatus) {
+                    case 'accepted':
+                        eventTitleWrapperEl.createChildElement('b', {
+                            innerText: appointment.subjects.length > 0 ? `${eventSubjects(appointment.subjects)} (${appointment.topic})` : appointment.topic
+                        });
+                        break;
+
+                    case 'declined':
+                        eventTitleWrapperEl.createChildElement('b', { innerText: i18n('additionalAppointmentsUnavailable') });
+                        break;
+
+                    default:
+                        eventTitleWrapperEl.createChildElement('b', { innerText: i18n('additionalAppointmentsAvailable') });
+                        break;
+                }
+
+                // Render the time label
+                eventDetailsEl.createChildElement('span', { class: 'st-event-time', innerText: new Date(appointment.start).getFormattedTime() + '–' + new Date(appointment.end).getFormattedTime() });
+
+                if (participantStatus === 'accepted') {
+                    eventDetailsEl.createChildElement('span', { innerText: i18n('additionalAppointmentsRegisteredDisclaimer') });
+                }
+
+            }
+
             if (this.isToday) {
                 if (!listViewEnabled) {
                     if (this.body.lastElementChild) this.body.lastElementChild.scrollIntoView({ behavior: 'instant', block: 'center' });
@@ -591,9 +688,31 @@ class ScheduleDay {
 class ScheduleEventDialog extends Dialog {
     event;
     #progressBar;
+    #annotationCompletedTag = '[ST-completed]';
+    #homeworkInfoTypes = {
+        1: { name: i18n('chips.hw'), type: 'info' },
+        2: { name: i18n('chips.pw'), type: 'important' },
+        3: { name: i18n('chips.prelim'), type: 'important' },
+        4: { name: i18n('chips.so'), type: 'important' },
+        5: { name: i18n('chips.mo'), type: 'important' },
+        6: { name: i18n('chips.info'), type: 'info' },
+    };
+    #attachmentFileTypes = [
+        { extensions: ['pdf'], icon: '' },
+        { extensions: ['txt', 'md'], icon: '' },
+        { extensions: ['doc', 'docx', 'odt', 'csv'], icon: '', name: 'Word' },
+        { extensions: ['ppt', 'pptx', 'odp'], icon: '', name: 'PowerPoint' },
+        { extensions: ['xls', 'xlsx', 'ods'], icon: '', name: 'Excel' },
+        { extensions: ['jpg', 'jpeg', 'png', 'bmp', 'gif'], icon: '' },
+        { extensions: ['svg', 'eps'], icon: '' },
+        { extensions: ['mp3', 'wav', 'avi', 'ogg'], icon: '' },
+        { extensions: ['mp4', 'mov'], icon: '' },
+        { extensions: ['zip', '7z', 'rar', 'tar', 'gz'], icon: '' },
+        { extensions: ['exe', 'msi', 'cad'], icon: '' },
+    ];
 
     constructor(event) {
-        super({
+        super(event?.Id ? {
             buttons: [{
                 'data-icon': '',
                 innerText: i18n('viewInAgenda'),
@@ -602,209 +721,314 @@ class ScheduleEventDialog extends Dialog {
                     this.close();
                 }
             }]
-        });
+        } : undefined);
         this.body.classList.add('st-event-dialog');
 
         this.event = event;
 
-        if (schedule?.scheduleDate && schedule.positionInRange(new Date(this.event.Start)) < 0) schedule.scheduleDate = new Date(this.event.Start);
+        if (schedule?.scheduleDate && schedule.positionInRange(new Date(this.event.Start || this.event.start)) < 0)
+            schedule.scheduleDate = new Date(this.event.Start || this.event.start);
 
-        this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' })
-        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' })
+        this.#progressBar = createElement('div', this.element, { class: 'st-progress-bar' });
+        createElement('div', this.#progressBar, { class: 'st-progress-bar-value indeterminate' });
 
         this.#drawDialogContents();
     }
 
     async #drawDialogContents() {
         this.body.innerText = '';
+        this.#drawPrimaryDetailsColumn();
+        this.#loadAdditionalEventInfo();
+    }
 
-        const column1 = createElement('div', this.body, { class: 'st-event-dialog-column' });
-        createElement('h3', column1, { class: 'st-section-heading', innerText: (this.event.Type === 1 || this.event.Type === 16) ? i18n('eventDetails') : i18n('lessonDetails') });
+    #setProgressVisible(visible) {
+        this.#progressBar.dataset.visible = visible ? 'true' : 'false';
+    }
 
-        let table1 = createElement('table', column1, { class: 'st' });
+    #refreshViews() {
+        if (schedule?.refresh) schedule.refresh();
+        if (widgets?.refresh) widgets.refresh();
+    }
 
-        this.#addRowToTable(table1, i18n('title'), this.event.Omschrijving || '-');
-        this.#addRowToTable(table1, i18n('subject'), eventSubjects(this.event) || '-');
-        this.#addRowToTable(table1, i18n('schoolHour'), this.event.LesuurVan
-            ? (this.event.LesuurVan === this.event.LesuurTotMet)
-                ? i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) })
-                : i18n('closedInterval', { start: i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) }), end: i18n('schoolHourNum', { num: this.event.LesuurTotMet, numOrdinal: formatOrdinals(this.event.LesuurTotMet) }) })
-            : '-');
+    #createColumn(title) {
+        const column = createElement('div', this.body, { class: 'st-event-dialog-column' });
+        createElement('h3', column, { class: 'st-section-heading', innerText: title });
+        return column;
+    }
+
+    #drawPrimaryDetailsColumn() {
+        const detailsTitle = (this.event?.Type === 1 || this.event?.Type === 16) ? i18n('eventDetails') : i18n('lessonDetails');
+        const column = this.#createColumn(detailsTitle);
+        const table = createElement('table', column, { class: 'st' });
+
+        if (this.event.Omschrijving)
+            this.#addRowToTable(table, i18n('title'), this.event.Omschrijving || '-');
+        if (this.event.Vakken)
+            this.#addRowToTable(table, i18n('subject'), eventSubjects(this.event) || '-');
+        if (this.event.LesuurVan)
+            this.#addRowToTable(table, i18n('schoolHour'), this.event.LesuurVan
+                ? (this.event.LesuurVan === this.event.LesuurTotMet)
+                    ? i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) })
+                    : i18n('closedInterval', { start: i18n('schoolHourNum', { num: this.event.LesuurVan, numOrdinal: formatOrdinals(this.event.LesuurVan) }), end: i18n('schoolHourNum', { num: this.event.LesuurTotMet, numOrdinal: formatOrdinals(this.event.LesuurTotMet) }) })
+                : '-');
+
         const showYear = isYearNotCurrent(new Date(this.event.Start)) || isYearNotCurrent(new Date(this.event.Einde));
-        this.#addRowToTable(table1, i18n('start'), new Date(this.event.Start).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
-        this.#addRowToTable(table1, i18n('end'), new Date(this.event.Einde).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined }));
-        this.#addRowToTable(table1, i18n('location'), eventLocations(this.event) || '-');
-        this.#addRowToTable(table1, i18n('teacher'), eventTeachers(this.event) || '-');
+        const dateOptions = { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', year: showYear ? 'numeric' : undefined };
+        // @ts-ignore
+        this.#addRowToTable(table, i18n('start'), new Date(this.event.Start || this.event.start).toLocaleString(locale, dateOptions));
+        // @ts-ignore
+        this.#addRowToTable(table, i18n('end'), new Date(this.event.Einde || this.event.end).toLocaleString(locale, dateOptions));
+        if (this.event.Lokalen || this.event.Lokatie)
+            this.#addRowToTable(table, i18n('location'), eventLocations(this.event) || '-');
+        if (this.event.Docenten)
+            this.#addRowToTable(table, i18n('teacher'), eventTeachers(this.event) || '-');
         if (this.event.Herhaling)
-            this.#addRowToTable(table1, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
+            this.#addRowToTable(table, i18n('repetition'), i18n('untilDate', { date: new Date(this.event.Herhaling.EindDatum).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) }));
 
-        let chips = getEventChips(this.event);
+        const chips = getEventChips(this.event);
         if (chips.length > 0) {
-            const chipsWrapper = this.#addRowToTable(table1, i18n('extra'));
+            const chipsWrapper = this.#addRowToTable(table, i18n('extra'));
             chipsWrapper.classList.add('st-chips-wrapper');
             chipsWrapper.style.justifyContent = 'flex-start';
             chips.forEach(chip => createElement('span', chipsWrapper, { class: `st-chip ${chip.type || 'info'}`, innerText: chip.name }));
         }
-
-        this.#loadAdditionalEventInfo();
     }
 
     async #loadAdditionalEventInfo() {
-        const moreInfo = await magisterApi.event(this.event.Id);
-        if (moreInfo) this.event = { ...this.event, ...moreInfo };
-        this.#progressBar.dataset.visible = 'false';
-
-        if (this.event.Type === 7) {
-            const kwtColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', kwtColumn, { class: 'st-section-heading', innerText: i18n('register') });
-
-            const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
-
-            if (kwtChoices?.[0]?.Keuzes?.[0]) {
-                kwtChoices[0].Keuzes.forEach(choice => {
-                    const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers)
-                    const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
-                    createElement('b', label, { innerText: choice.Omschrijving });
-                    createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
-                    createElement('span', label, { innerText: `(${choice.AantalDeelnemers ?? '?'}/${choice.MaxDeelnemers ?? '?'}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
-                    createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
-                    const input = createElement('input', label, { id: `st-start-${choice.Id}-kwt-choice`, class: 'st-checkbox-input', type: 'checkbox' });
-                    input.checked = choice.Status > 0;
-                    input.disabled = !kwtChoices[0].MagInschrijven;
-                    input.addEventListener('input', async () => {
-                        this.#progressBar.dataset.visible = 'true';
-                        kwtColumn.querySelectorAll('input').forEach(i => i.disabled = true);
-                        try {
-                            if (choice.Status == 0) {
-                                await magisterApi.postKwtRegistration(choice);
-                            } else {
-                                await magisterApi.deleteKwtRegistration(choice.Id);
-                            }
-                        } catch (e) {
-                            new Dialog({ innerText: (await e.json())?.Message || i18n('error') }).show();
-                        } finally {
-                            if (schedule?.refresh) schedule.refresh();
-                            if (widgets?.refresh) widgets.refresh();
-                            this.event = (await magisterApi.events(dates.gatherStart, dates.gatherEnd)).find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
-                            this.#drawDialogContents();
-                        }
-                    });
-                });
-            } else {
-                createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
-            }
+        if (this.event?.Id) {
+            const moreInfo = await magisterApi.event(this.event.Id);
+            if (moreInfo) this.event = { ...this.event, ...moreInfo };
         }
 
-        if (this.event.Opmerking) {
-            const remarkColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', remarkColumn, { class: 'st-section-heading', innerText: i18n('remark') });
-            createElement('div', remarkColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Opmerking });
+        if (this.event?.Type === 7) await this.#drawKwtColumn();
+
+        await magisterApi.updateAccountInfo();
+        const aaChoices =
+            (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
+                ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
+                : [];
+        if (aaChoices.length) await this.#drawAdditionalAppointmentsColumn();
+
+        if (this.event?.Opmerking) this.#drawRemarkColumn();
+        if (this.event?.Inhoud?.length > 0) this.#drawHomeworkColumn();
+        if (this.event?.Bijlagen?.length > 0) this.#drawAttachmentsColumn();
+        if (this.event?.hasOwnProperty('Aantekening')) this.#drawAnnotationColumn();
+
+        this.#setProgressVisible(false);
+    }
+
+    async #drawKwtColumn() {
+        const kwtColumn = this.#createColumn(i18n('kwtRegistration'));
+        const kwtChoices = await magisterApi.kwtChoices(new Date(this.event.Start), new Date(this.event.Einde));
+
+        if (!kwtChoices?.[0]?.Keuzes?.[0]) {
+            createElement('span', kwtColumn, { innerText: "KWT-keuzes konden niet worden geladen." });
+            return;
         }
 
-        if (this.event.Inhoud?.length > 0) {
-            const infoTypes = {
-                1: { name: i18n('chips.hw'), type: 'info' },
-                2: { name: i18n('chips.pw'), type: 'important' },
-                3: { name: i18n('chips.prelim'), type: 'important' },
-                4: { name: i18n('chips.so'), type: 'important' },
-                5: { name: i18n('chips.mo'), type: 'important' },
-                6: { name: i18n('chips.info'), type: 'info' },
-            };
-
-            const homeworkColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', homeworkColumn, { class: 'st-section-heading', innerText: infoTypes[this.event.InfoType].name });
-
-            createElement('div', homeworkColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Inhoud });
-
-            const label = createElement('label', homeworkColumn, { class: 'st-checkbox-label', for: `st-start-${this.event.Id}-hw-complete`, innerText: i18n('completed') });
-            const input = createElement('input', label, { id: `st-start-${this.event.Id}-hw-complete`, class: 'st-checkbox-input', type: 'checkbox' });
-            input.checked = this.event.Afgerond;
+        kwtChoices[0].Keuzes.forEach(choice => {
+            const percentageFull = parseInt(choice.AantalDeelnemers) / parseInt(choice.MaxDeelnemers);
+            const label = createElement('label', kwtColumn, { class: 'st-checkbox-label st-start-kwt-choice', for: `st-start-${choice.Id}-kwt-choice` });
+            createElement('b', label, { innerText: choice.Omschrijving });
+            createElement('span', label, { innerText: ` (${eventLocations(choice)})` });
+            createElement('span', label, { innerText: `(${choice.AantalDeelnemers ?? '?'}/${choice.MaxDeelnemers ?? '?'}${percentageFull === 1 ? ', vol' : ''})`, class: percentageFull > 0.85 ? 'st-tip nearly-full' : 'st-tip', title: "Aantal deelnemers" });
+            createElement('span', label, { innerText: `\n${eventTeachers(choice)}` });
+            const input = createElement('input', label, { id: `st-start-${choice.Id}-kwt-choice`, class: 'st-checkbox-input', type: 'checkbox' });
+            input.checked = choice.Status > 0;
+            input.disabled = !kwtChoices[0].MagInschrijven;
             input.addEventListener('input', async () => {
-                this.#progressBar.dataset.visible = 'true';
-                await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
-                if (schedule?.refresh) schedule.refresh();
-                if (widgets?.refresh) widgets.refresh();
-                this.event.Afgerond = input.checked;
-                this.body.querySelectorAll('.st-chip').forEach(chip => {
-                    if ((chip instanceof HTMLElement) && chip.innerText === infoTypes[this.event.InfoType].name) {
-                        chip.classList.toggle('ok', input.checked);
-                        chip.classList.toggle('info', !input.checked);
+                this.#setProgressVisible(true);
+                kwtColumn.querySelectorAll('input').forEach(i => i.disabled = true);
+                try {
+                    if (choice.Status == 0) {
+                        await magisterApi.postKwtRegistration(choice);
+                    } else {
+                        await magisterApi.deleteKwtRegistration(choice.Id);
                     }
-                });
-                this.#progressBar.dataset.visible = 'false';
+                } catch (e) {
+                    new Dialog({ innerText: (await e.json())?.Message || i18n('error') }).show();
+                } finally {
+                    this.#refreshViews();
+                    this.event = (await magisterApi.events(dates.gatherStart, dates.gatherEnd))
+                        .find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
+                    this.#drawDialogContents();
+                }
             });
+        });
+    }
 
-            let table2 = createElement('table', homeworkColumn, { class: 'st' });
+    async #drawAdditionalAppointmentsColumn() {
+        const aaColumn = this.#createColumn(i18n('additionalAppointmentsRegistration'));
+        const aaChoices = (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
+            ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
+            : [];
 
-            const showYear = (isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp)))
-            this.#addRowToTable(table2, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
-            this.#addRowToTable(table2, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+        if (!aaChoices?.[0]) {
+            createElement('span', aaColumn, { innerText: "Keuzes konden niet worden geladen." });
+            return;
         }
 
-        if (this.event.Bijlagen?.length > 0) {
-            const fileTypes = [
-                { extensions: ['pdf'], icon: '' },
-                { extensions: ['txt', 'md'], icon: '' },
-                { extensions: ['doc', 'docx', 'odt', 'csv'], icon: '', name: 'Word' },
-                { extensions: ['ppt', 'pptx', 'odp'], icon: '', name: 'PowerPoint' },
-                { extensions: ['xls', 'xlsx', 'ods'], icon: '', name: 'Excel' },
-                { extensions: ['jpg', 'jpeg', 'png', 'bmp', 'gif'], icon: '' },
-                { extensions: ['svg', 'eps'], icon: '' },
-                { extensions: ['mp3', 'wav', 'avi', 'ogg'], icon: '' },
-                { extensions: ['mp4', 'mov'], icon: '' },
-                { extensions: ['zip', '7z', 'rar', 'tar', 'gz'], icon: '' },
-                { extensions: ['exe', 'msi', 'cad'], icon: '' },
-            ];
-
-            const attachmentsColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-            createElement('h3', attachmentsColumn, { class: 'st-section-heading', innerText: this.event.Bijlagen.length > 1 ? i18n('attachments') : i18n('attachment') });
-
-            this.event.Bijlagen.forEach(bijlage => {
-                let fileType = fileTypes.find(type => type.extensions.some(ext => bijlage.Naam.toLowerCase().endsWith(ext)));
-
-                const fileButton = attachmentsColumn.createChildElement('button', { class: 'st-button secondary st-event-dialog-event-attachment', innerText: bijlage.Naam, dataset: { icon: fileType?.icon || '' } });
-                fileButton.addEventListener('click', async () => window.open((await magisterApi.eventAttachment(bijlage.Id)).location, '_blank'));
-                fileButton.addEventListener('auxclick', async (e) => {
-                    e.preventDefault();
-                    const locationUrl = (await magisterApi.eventAttachment(bijlage.Id)).location;
-                    const file = await fetch(locationUrl);
-                    const blob = new Blob([await file.blob()], { type: bijlage.ContentType });
-                    window.open(URL.createObjectURL(blob), '_blank');
-                });
-
-                let table2 = createElement('table', attachmentsColumn, { class: 'st' });
-                this.#addRowToTable(table2, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : '-');
-                this.#addRowToTable(table2, i18n('fileType'), i18n('typeFile', { type: fileType?.name || /(?:\.([^.]+))?$/.exec(bijlage.Naam.toUpperCase())[1] }));
-                const showYear = isYearNotCurrent(new Date(bijlage.Datum));
-                this.#addRowToTable(table2, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+        aaChoices.forEach(choice => {
+            const label = createElement('label', aaColumn, { class: 'st-checkbox-label st-start-aa-choice', for: `st-start-${choice.id}-aa-choice` });
+            createElement('b', label, { innerText: choice.subjects.length > 0 ? `${eventSubjects(choice.subjects)} (${choice.topic})` : choice.topic });
+            createElement('span', label, { innerText: ` (${eventLocations(choice.locations)})` });
+            createElement('span', label, { innerText: `\n${eventTeachers(choice.participants.filter(p => p.type !== 'pupil'))}` });
+            const input = createElement('input', label, { id: `st-start-${choice.id}-aa-choice`, class: 'st-checkbox-input', type: 'checkbox' });
+            input.checked = choice.participants.find(p => p.type === 'pupil' && !p.isOrganizer)?.status === 'accepted';
+            input.disabled = !choice.links.enroll && !choice.links.unenroll;
+            input.addEventListener('input', async () => {
+                this.#setProgressVisible(true);
+                aaColumn.querySelectorAll('input').forEach(i => i.disabled = true);
+                try {
+                    if (choice.links.enroll?.href) {
+                        await magisterApi.enrollAdditionalAppointment(choice.links.enroll.href);
+                    } else if (choice.links.unenroll?.href) {
+                        await magisterApi.enrollAdditionalAppointment(choice.links.unenroll.href);
+                    }
+                } catch (e) {
+                    new Dialog({ innerText: (await e.json())?.ActionNotAvailableOrNotAllowed?.[0] || i18n('error') }).show();
+                } finally {
+                    this.#refreshViews();
+                    const newEvent = (await magisterApi.events(dates.gatherStart, dates.gatherEnd))
+                        .find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
+                    if (newEvent) this.event = newEvent;
+                    this.#drawDialogContents();
+                    new Dialog({ innerText: i18n('additionalAppointmentsRegisteredDisclaimer') }).show();
+                }
             });
-        }
+        });
+    }
 
-        const annotationColumn = createElement('div', this.body, { class: 'st-event-dialog-column' });
-        createElement('h3', annotationColumn, { class: 'st-section-heading', innerText: i18n('annotation') });
+    #drawRemarkColumn() {
+        const remarkColumn = this.#createColumn(i18n('remark'));
 
-        const annotationContents = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content', innerHTML: this.event.Aantekening || '', contenteditable: true, placeholder: i18n('addAnnotation') });
+        const remarkContentsWrapper = remarkColumn.createChildElement('div', { class: 'st-event-dialog-event-content-wrapper' });
+        const remarkContents = createElement('div', remarkContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: this.event.Opmerking });
+    }
 
-        const annotationHint = annotationContents.createSiblingElement('p', { class: 'st-event-dialog-event-content-hint' });
+    #drawHomeworkColumn() {
+        const infoType = this.#homeworkInfoTypes[this.event.InfoType];
+        const homeworkColumn = this.#createColumn(infoType?.name || i18n('chips.info'));
+
+        const homeworkContentsWrapper = homeworkColumn.createChildElement('div', { class: 'st-event-dialog-event-content-wrapper' });
+        const homeworkContents = createElement('div', homeworkContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: this.event.Inhoud });
+
+        const label = createElement('label', homeworkColumn, { class: 'st-checkbox-label', for: `st-start-${this.event.Id}-hw-complete`, innerText: i18n('completed') });
+        const input = createElement('input', label, { id: `st-start-${this.event.Id}-hw-complete`, class: 'st-checkbox-input', type: 'checkbox' });
+        input.checked = this.event.Afgerond;
+        input.addEventListener('input', async () => {
+            this.#setProgressVisible(true);
+            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Afgerond: input.checked });
+            this.#refreshViews();
+            this.event.Afgerond = input.checked;
+            this.body.querySelectorAll('.st-chip').forEach(chip => {
+                if ((chip instanceof HTMLElement) && chip.innerText === infoType?.name) {
+                    chip.classList.toggle('ok', input.checked);
+                    chip.classList.toggle('info', !input.checked);
+                }
+            });
+            this.#setProgressVisible(false);
+        });
+
+        const table = createElement('table', homeworkColumn, { class: 'st' });
+        const showYear = isYearNotCurrent(new Date(this.event.TaakAangemaaktOp)) || isYearNotCurrent(new Date(this.event.TaakGewijzigdOp));
+        this.#addRowToTable(table, i18n('added'), this.event.TaakAangemaaktOp ? new Date(this.event.TaakAangemaaktOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+        this.#addRowToTable(table, i18n('lastModified'), this.event.TaakGewijzigdOp ? new Date(this.event.TaakGewijzigdOp).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+    }
+
+    #drawAttachmentsColumn() {
+        const attachmentsColumn = this.#createColumn(this.event.Bijlagen.length > 1 ? i18n('attachments') : i18n('attachment'));
+
+        this.event.Bijlagen.forEach(bijlage => {
+            const fileType = this.#attachmentFileTypes.find(type => type.extensions.some(ext => bijlage.Naam.toLowerCase().endsWith(ext)));
+            const fileButton = attachmentsColumn.createChildElement('button', { class: 'st-button secondary st-event-dialog-event-attachment', innerText: bijlage.Naam, dataset: { icon: fileType?.icon || '' } });
+
+            fileButton.addEventListener('click', async () => window.open((await magisterApi.eventAttachment(bijlage.Id)).location, '_blank'));
+            fileButton.addEventListener('auxclick', async (e) => {
+                e.preventDefault();
+                const locationUrl = (await magisterApi.eventAttachment(bijlage.Id)).location;
+                const file = await fetch(locationUrl);
+                const blob = new Blob([await file.blob()], { type: bijlage.ContentType });
+                window.open(URL.createObjectURL(blob), '_blank');
+            });
+
+            const table = createElement('table', attachmentsColumn, { class: 'st' });
+            this.#addRowToTable(table, i18n('fileSize'), bijlage.Grootte ? `${Math.ceil(bijlage.Grootte / 1024)} ${i18n('units.kibibyte')}` : '-');
+            this.#addRowToTable(table, i18n('fileType'), i18n('typeFile', { type: fileType?.name || /(?:\.([^.]+))?$/.exec(bijlage.Naam.toUpperCase())[1] }));
+            const showYear = isYearNotCurrent(new Date(bijlage.Datum));
+            this.#addRowToTable(table, i18n('uploaded'), bijlage.Datum ? new Date(bijlage.Datum).toLocaleString(locale, { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', year: showYear ? 'numeric' : undefined }) : '-');
+        });
+    }
+
+    #parseAnnotation(value) {
+        const sanitized = (value || '').replace(/^\s*<br\s*\/?>\s*$/i, '');
+        const isCompleted = /\s*\[ST-completed\]\s*$/.test(sanitized);
+        return {
+            content: sanitized.replace(/\s*\[ST-completed\]\s*$/, ''),
+            isCompleted
+        };
+    }
+
+    #drawAnnotationColumn() {
+        const annotationColumn = this.#createColumn(i18n('annotation'));
+        const initialAnnotation = this.#parseAnnotation(this.event?.Aantekening || '');
+        let savedAnnotationContent = initialAnnotation.content;
+        let savedAnnotationCompleted = initialAnnotation.isCompleted && savedAnnotationContent !== '';
+
+        const annotationContentsWrapper = createElement('div', annotationColumn, { class: 'st-event-dialog-event-content-wrapper' });
+        const annotationContents = createElement('div', annotationContentsWrapper, { class: 'st-event-dialog-event-content', innerHTML: savedAnnotationContent, contenteditable: true, placeholder: i18n('addAnnotation') });
+
+        const annotationHint = annotationContentsWrapper.createChildElement('p', { class: 'st-event-dialog-event-content-hint' });
         Object.entries({ bold: ['Ctrl', 'B'], italic: ['Ctrl', 'I'], underline: ['Ctrl', 'U'] }).forEach(([value, keys]) => {
             keys.forEach(k => annotationHint.createChildElement('kbd', { innerText: k }));
             annotationHint.createChildElement('span', { innerText: i18n(value) });
         });
 
-        const saveButton = createElement('button', annotationColumn, { class: 'st-button st-hidden st-event-dialog-event-content-save', innerText: i18n('save') });
-        saveButton.addEventListener('click', async () => {
-            this.#progressBar.dataset.visible = 'true';
-            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationContents.innerHTML?.replace(/^\<br\>$/, '').length ? annotationContents.innerHTML : null });
-            if (schedule?.refresh) schedule.refresh();
-            if (widgets?.refresh) widgets.refresh();
-            saveButton.classList.add('st-hidden');
-            this.#progressBar.dataset.visible = 'false';
-        });
+        const annotationCompletedLabel = createElement('label', annotationColumn, { class: 'st-checkbox-label st-hidden st-event-dialog-event-content-completed', for: `st-start-${this.event.Id}-annotation-complete`, innerText: i18n('completed') });
+        const annotationCompletedInput = createElement('input', annotationCompletedLabel, { id: `st-start-${this.event.Id}-annotation-complete`, class: 'st-checkbox-input', type: 'checkbox' });
+        annotationCompletedInput.checked = savedAnnotationCompleted;
 
-        annotationContents.addEventListener('input', () => {
-            annotationContents.classList.toggle('empty', annotationContents.innerHTML.replace(/^\<br\>$/, '') === '');
-            saveButton.classList.toggle('st-hidden', annotationContents.innerHTML.replace(/^\<br\>$/, '') === (this.event.Aantekening || ''));
+        const saveButton = createElement('button', annotationColumn, { class: 'st-button st-hidden st-event-dialog-event-content-save', innerText: i18n('save') });
+
+        const getCurrentAnnotationContent = () => this.#parseAnnotation(annotationContents.innerHTML).content;
+        const getAnnotationToSave = () => {
+            const content = getCurrentAnnotationContent();
+            if (content === '') return null;
+            return annotationCompletedInput.checked ? `${content}${this.#annotationCompletedTag}` : content;
+        };
+
+        const updateAnnotationUiState = () => {
+            const currentAnnotationContent = getCurrentAnnotationContent();
+            const isEmpty = currentAnnotationContent === '';
+            const currentCompleted = isEmpty ? false : annotationCompletedInput.checked;
+            const savedCompleted = savedAnnotationContent === '' ? false : savedAnnotationCompleted;
+            const hasChanged = currentAnnotationContent !== savedAnnotationContent || currentCompleted !== savedCompleted;
+
+            annotationContents.classList.toggle('empty', isEmpty);
+            saveButton.classList.toggle('st-hidden', !hasChanged);
+            annotationCompletedLabel.classList.toggle('st-hidden', !saveButton.classList.contains('st-hidden') || isEmpty);
+        };
+
+        const saveAnnotation = async () => {
+            this.#setProgressVisible(true);
+            const annotationToSave = getAnnotationToSave();
+            await magisterApi.putEvent(this.event.Id, { ...(await magisterApi.event(this.event.Id)), Aantekening: annotationToSave });
+            this.#refreshViews();
+            this.event.Aantekening = annotationToSave;
+            savedAnnotationContent = getCurrentAnnotationContent();
+            savedAnnotationCompleted = savedAnnotationContent !== '' && annotationCompletedInput.checked;
+            annotationCompletedInput.checked = savedAnnotationCompleted;
+            updateAnnotationUiState();
+            this.#setProgressVisible(false);
+        };
+
+        saveButton.addEventListener('click', saveAnnotation);
+        annotationContents.addEventListener('input', updateAnnotationUiState);
+        annotationCompletedInput.addEventListener('input', async () => {
+            if (getCurrentAnnotationContent() === '') return;
+            await saveAnnotation();
         });
+        updateAnnotationUiState();
     }
 
     #addRowToTable(parentElement, label, value) {

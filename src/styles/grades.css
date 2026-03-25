@@ -454,7 +454,7 @@
     border-bottom-right-radius: 0;
 }
 
-.st-grade-item {
+.st-grade-list-item {
     display: grid;
     grid-template-columns: 1fr 5.5ch;
     align-items: center;
@@ -471,7 +471,6 @@
     border-radius: var(--st-border-radius);
 
     & * {
-        text-overflow: ellipsis;
         overflow-x: hidden;
         white-space: nowrap;
     }
@@ -479,6 +478,7 @@
     &>div:first-child {
         &>div {
             margin-block: 2px;
+            text-overflow: ellipsis;
         }
 
         &>div.st-subject {
@@ -504,7 +504,12 @@
 
             max-width: 100%;
             overflow: hidden;
-            text-overflow: ellipsis;
+
+            &.non-numeric {
+                font-family: 'Font Awesome 6 Pro';
+                font-weight: 600;
+                font-size: 16px;
+            }
         }
     }
 

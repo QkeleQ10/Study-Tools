@@ -99,26 +99,24 @@ class GradeListPane extends Pane {
         const list = this.#div2.createChildElement('ul', { class: 'st-grade-list' });
         for (const grade of grades) {
             const recentGrade = recentGrades.find(rg => rg.kolomId === grade.CijferKolom.Id);
-            
-            const gradeItem = list.createChildElement('li', { class: 'st-grade-item' });
 
-            const col1 = gradeItem.createChildElement('div')
-            col1.createChildElement('div', { class: 'st-subject', innerText: grade.Vak?.Omschrijving || '-' })
-            if (grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving) col1.createChildElement('div', { innerText: grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving || '-' })
-            col1.createChildElement('div', { innerText: makeTimestamp(grade.DatumIngevoerd) });
-
-            const col2 = gradeItem.createChildElement('div')
-            col2.createChildElement('div', { innerText: grade.CijferStr, classList: grade.IsVoldoende === false ? ['st-insufficient'] : [] })
-            if (grade.CijferKolom?.Weging ?? recentGrade) col2.createChildElement('div', { innerText: (grade.CijferKolom?.Weging ?? recentGrade?.weegfactor ?? '?') + 'x' });
+            const gradeItem = new GradeListItem(list, {
+                subject: grade.Vak?.Omschrijving,
+                title: grade.CijferKolom.WerkInformatieOmschrijving || grade.CijferKolom.KolomOmschrijving || recentGrade?.omschrijving,
+                date: grade.DatumIngevoerd,
+                result: grade.CijferStr,
+                isSufficient: grade.IsVoldoende,
+                weight: grade.CijferKolom?.Weging ?? recentGrade?.weegfactor
+            });
 
             if (
                 new Date(grade.DatumIngevoerd) >= new Date(new Date(localStorage['st-grade-last-viewed'] || 0))
                 && new Date(grade.DatumIngevoerd) >= new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000)
             )
-                gradeItem.classList.add('st-highlight');
+                gradeItem.element.classList.add('st-highlight');
 
-            gradeItem.classList.add('st-clickable');
-            gradeItem.addEventListener('click', () => {
+            gradeItem.element.classList.add('st-clickable');
+            gradeItem.element.addEventListener('click', () => {
                 const dialog = new GradeDetailDialog(grade, currentGradeTable.identifier.year);
                 dialog.show();
             });

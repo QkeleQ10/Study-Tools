@@ -57,6 +57,7 @@
 
     position: relative;
     overflow-y: auto;
+    overflow-x: hidden;
 
     display: grid;
     grid-template-columns: subgrid;
@@ -224,17 +225,24 @@
     container-name: event-wrapper;
     overflow: hidden;
 
-    &.legacy {
-        .st-event {
-            grid-template-columns: auto 1fr;
+    .st-event-number {
+        width: 42px;
+        height: 42px;
+        margin: 10px;
+        margin-right: -4px;
+        border-radius: 6px;
+    }
 
-            .st-event-number {
-                width: 42px;
-                height: 42px;
-                margin: 10px;
-                margin-right: -4px;
-                border-radius: 6px;
-            }
+    &.optional {
+        color: var(--st-foreground-insignificant);
+        background-color: transparent;
+        outline-width: 1px;
+        outline-style: dashed;
+
+        .st-event-number {
+            background-color: transparent !important;
+            color: var(--st-foreground-insignificant) !important;
+            outline: 1px dashed var(--st-border-color);
         }
     }
 }
@@ -282,6 +290,15 @@
 }
 
 #st-sch:not(.list-view) .st-sch-day-body .st-event-wrapper {
+    --top: 0;
+    --height: 0;
+    --left: 0;
+    --width: 100%;
+    --border-top-left-radius: var(--st-border-radius);
+    --border-top-right-radius: var(--st-border-radius);
+    --border-bottom-left-radius: var(--st-border-radius);
+    --border-bottom-right-radius: var(--st-border-radius);
+
     position: absolute;
     top: var(--top);
     height: var(--height);
@@ -291,11 +308,20 @@
 
     transition: min-height 200ms, min-width 200ms, border-radius 200ms;
 
+    &.optional {
+        margin: 8px 0;
+        height: calc(var(--height) - 16px);
+    }
+
     &:hover {
         min-height: 85px;
         min-width: 256px;
         z-index: 1;
         transition: min-height 500ms 500ms, min-width 500ms 500ms, border-radius 500ms 500ms;
+
+        &.optional {
+            min-height: 69px;
+        }
     }
 }
 
@@ -320,7 +346,7 @@
     position: relative;
 
     display: grid;
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: auto 1fr;
     align-items: start;
 
     border: none;
@@ -454,68 +480,78 @@
         }
     }
 
-    .st-event-dialog-event-content {
+    .st-event-dialog-event-content-wrapper {
         min-width: 300px;
         min-height: 100px;
         max-height: 800px;
-        overflow-y: auto;
         background-color: var(--st-background-tertiary);
         color: var(--st-foreground-primary);
-        padding-inline: 12px;
-        padding-top: 8px;
-        padding-bottom: 32px;
+        /* padding-bottom: 32px; */
         border: var(--st-border);
         border-radius: var(--st-border-radius);
         font-size: 12px;
 
-        &[placeholder]:empty::before,
-        &[placeholder].empty::before {
-            content: attr(placeholder);
-            opacity: .5;
-            pointer-events: none;
+        .st-event-dialog-event-content {
+            width: 100%;
+            height: auto;
+            min-height: calc(100px - 32px);
+            max-height: calc(800px - 32px);
+            padding: 8px 12px;
+            overflow-y: auto;
+
+            &[placeholder]:empty::before,
+            &[placeholder].empty::before {
+                content: attr(placeholder);
+                opacity: .5;
+                pointer-events: none;
+            }
+
+            &[placeholder]:empty:focus::before,
+            &[placeholder].empty:focus::before {
+                content: '';
+                color: var(--st-foreground-secondary);
+                pointer-events: none;
+            }
         }
 
-        &[placeholder]:empty:focus::before,
-        &[placeholder].empty:focus::before {
-            content: '';
-            color: var(--st-foreground-secondary);
-            pointer-events: none;
+        .st-event-dialog-event-content-hint {
+            opacity: 0;
+            transition: opacity 200ms;
+            padding: 8px 12px;
+            border-top: var(--st-border);
+
+            kbd {
+                display: inline-block;
+                margin-right: 2px;
+                padding: 0 2px;
+                min-width: 16px;
+                background-color: var(--st-background-tertiary);
+                border: var(--st-border);
+                border-radius: calc(var(--st-border-radius) / 2);
+                box-shadow: 0 2px 0 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
+                font-family: var(--st-font-family-secondary);
+                text-align: center;
+            }
+
+            kbd~span {
+                margin-right: 12px;
+            }
         }
 
-        &:focus~.st-event-dialog-event-content-hint {
+        &:focus-within>.st-event-dialog-event-content-hint {
             opacity: .75;
         }
     }
 
-    .st-event-dialog-event-content-hint {
-        opacity: 0;
-        transition: opacity 200ms;
-
-        kbd {
-            display: inline-block;
-            margin-right: 2px;
-            padding: 0 2px;
-            min-width: 16px;
-            background-color: var(--st-background-tertiary);
-            border: var(--st-border);
-            border-radius: calc(var(--st-border-radius) / 2);
-            box-shadow: 0 2px 0 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha));
-            font-family: var(--st-font-family-secondary);
-            text-align: center;
-        }
-
-        kbd~span {
-            margin-right: 12px;
+    .st-event-dialog-event-content-save,
+    .st-event-dialog-event-content-completed {
+        &.st-hidden {
+            display: none;
         }
     }
 
-    .st-event-dialog-event-content-save {
-        transition: opacity 200ms;
-
-        &.st-hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+    .st-event-dialog-event-content-completed {
+        margin-block: 7px;
     }
 
     .st-event-dialog-event-attachment {
@@ -531,7 +567,8 @@
         }
     }
 
-    .st-start-kwt-choice {
+    .st-start-kwt-choice,
+    .st-start-aa-choice {
         margin-top: 0;
 
         &::before {

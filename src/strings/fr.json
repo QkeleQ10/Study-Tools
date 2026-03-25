@@ -196,7 +196,11 @@
     "untilDate": "Jusqu'au {date}",
     "completed": "Terminé",
     "register": "S'inscrire",
-    "registered": "Inscrit",
+    "kwtRegistration": "Créneau au choix",
+    "additionalAppointmentsRegistration": "Cours facultatif",
+    "additionalAppointmentsAvailable": "Choix possible",
+    "additionalAppointmentsUnavailable": "Choix impossible",
+    "additionalAppointmentsRegisteredDisclaimer": "Ton inscription a été enregistrée. Elle apparaîtra dans ton programme dans quelques minutes.",
     "allDay": "Journée entière",
     "bold": "Gras",
     "italic": "Italique",
@@ -269,7 +273,8 @@
         "histogram": "Histogram",
         "histogramBarDescription": "{frequency} cijfers tussen {rangeStart} en {rangeEnd}",
         "trend": "Lijndiagram",
-        "howToAdd": "Selecteer en deselecteer losse cijfers, hele vakken of hele cijferlijsten door erop te klikken \nin het cijferoverzicht. \nJe kunt ook cijfers uit meerdere cijferlijsten selecteren. Gebruik de lijstkiezer linksboven."
+        "howToAdd": "Selecteer en deselecteer losse cijfers, hele vakken of hele cijferlijsten door erop te klikken \nin het cijferoverzicht. \nJe kunt ook cijfers uit meerdere cijferlijsten selecteren. Gebruik de lijstkiezer linksboven.",
+        "openChart": "Agrandir le graphique"
     },
     "sw": {
         "searchPlaceholder": "Rechercher",

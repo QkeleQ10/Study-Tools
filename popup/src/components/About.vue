@@ -65,9 +65,9 @@ function openInNewTab(url) {
             <button class="button tonal" @click="openInNewTab('https://discord.gg/2rP7pfeAKf')">
                 <Icon>forum</Icon><span>Discord</span>
             </button>
-            <button class="button tonal" @click="openInNewTab('https://paypal.me/QkeleQ10')">
+            <!-- <button class="button tonal" @click="openInNewTab('https://paypal.me/QkeleQ10')">
                 <Icon>volunteer_activism</Icon><span>PayPal</span>
-            </button>
+            </button> -->
             <button class="button tonal" @click="disclaimerOpen = true">
                 <Icon>shield_locked</Icon><span>Privacybeleid</span>
             </button>

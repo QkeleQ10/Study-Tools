@@ -30,14 +30,15 @@ async function gradeOverview() {
             marginBottom: '8px',
         }
     })
-        .createChildElement('button', {
+        .createChildElement('a', {
             class: 'st-button icon',
             innerText: '',
             style: {
                 fontSize: '16px',
                 color: 'var(--st-foreground-accent)',
                 margin: '-6px',
-            }
+            },
+            href: '#/vandaag',
         })
         .createSiblingElement('span', {
             innerText: '',
@@ -503,16 +504,15 @@ class GradeDetailDialog extends Dialog {
         const column1 = createElement('div', this.body, { class: 'st-grade-detail-dialog-column' });
         createElement('h3', column1, { class: 'st-section-heading', innerText: this.grade.CijferKolom.KolomOmschrijving || i18n('details') });
 
-        const gradeItem = column1.createChildElement('div', { class: 'st-grade-item', style: 'font-size: 12.5px;' });
-
-        const col1 = gradeItem.createChildElement('div')
-        col1.createChildElement('div', { class: 'st-subject', innerText: this.grade.Vak?.Omschrijving || '-' })
-        col1.createChildElement('div', { innerText: this.grade.CijferKolom.WerkInformatieOmschrijving || this.grade.CijferKolom.KolomOmschrijving || '-' })
-        col1.createChildElement('div', { innerText: makeTimestamp(this.grade.DatumIngevoerd) });
-
-        const col2 = gradeItem.createChildElement('div')
-        col2.createChildElement('div', { innerText: this.grade.CijferStr, classList: this.grade.IsVoldoende === false ? ['st-insufficient'] : [] })
-        col2.createChildElement('div', { innerText: (this.grade.CijferKolom?.Weging ?? '?') + 'x' });
+        const gradeItem = new GradeListItem(column1, {
+            subject: this.grade.Vak?.Omschrijving,
+            title: this.grade.CijferKolom.WerkInformatieOmschrijving || this.grade.CijferKolom.KolomOmschrijving,
+            date: this.grade.DatumIngevoerd,
+            result: this.grade.CijferStr,
+            isSufficient: this.grade.IsVoldoende,
+            weight: this.grade.CijferKolom?.Weging,
+        });
+        gradeItem.element.style.fontSize = '12.5px';
 
         let table1 = createElement('table', column1, { class: 'st' });
 
@@ -565,20 +565,19 @@ class GradeDetailDialog extends Dialog {
                         ...relatedGrade?.CijferKolom,
                         ...relatedGradeColumnInfo,
                     }
-                }
+                };
 
-                const relatedGradeItem = column2.createChildElement('div', { class: 'st-grade-item', style: 'font-size: 11px;' });
-
-                const col1 = relatedGradeItem.createChildElement('div')
-                col1.createChildElement('div', { innerText: relatedGrade.CijferKolom.WerkInformatieOmschrijving || relatedGrade.CijferKolom.KolomOmschrijving || relatedColumn.Kolomkop || '-' })
-                col1.createChildElement('div', { innerText: makeTimestamp(relatedGrade.DatumIngevoerd) });
-
-                const col2 = relatedGradeItem.createChildElement('div')
-                col2.createChildElement('div', { innerText: relatedColumn.Cijfer, classList: relatedColumn.IsVoldoende === false ? ['st-insufficient'] : [] })
-                col2.createChildElement('div', { innerText: (relatedColumn.Weegfactor ?? '?') + 'x' });
-
-                relatedGradeItem.classList.add('st-clickable');
-                relatedGradeItem.addEventListener('click', () => {
+                const relatedGradeItem = new GradeListItem(column2, {
+                    subject: relatedGrade.Vak?.Omschrijving,
+                    title: relatedGrade.CijferKolom.WerkInformatieOmschrijving || relatedGrade.CijferKolom.KolomOmschrijving || relatedColumn.Kolomkop,
+                    date: relatedGrade.DatumIngevoerd,
+                    result: relatedColumn.Cijfer,
+                    isSufficient: relatedColumn.IsVoldoende,
+                    weight: relatedColumn.Weegfactor,
+                });
+                relatedGradeItem.element.style.fontSize = '11px';
+                relatedGradeItem.element.classList.add('st-clickable');
+                relatedGradeItem.element.addEventListener('click', () => {
                     if (!relatedGrade) return;
                     const dialog = new GradeDetailDialog(relatedGrade, this.year);
                     dialog.show();
@@ -596,5 +595,31 @@ class GradeDetailDialog extends Dialog {
         let row = createElement('tr', parentElement);
         createElement('td', row, { innerText: label || '' });
         return createElement('td', row, { innerText: value || '' });
+    }
+}
+
+class GradeListItem {
+    element;
+
+    /**
+     * @param {HTMLDivElement} parentElement
+     * @param {{ subject: string; title: string; date: string|Date; result: string; isSufficient: boolean; weight: string; }} grade
+     */
+    constructor(parentElement, grade) {
+        this.element = parentElement.createChildElement('li', { class: 'st-grade-list-item' });
+
+        const col1 = this.element.createChildElement('div')
+        if (grade.subject) col1.createChildElement('div', { class: 'st-subject', innerText: grade.subject || '-' })
+        if (grade.title) col1.createChildElement('div', { innerText: grade.title || '-' })
+        if (grade.date) col1.createChildElement('div', { innerText: makeTimestamp(grade.date) });
+
+        const col2 = this.element.createChildElement('div')
+
+        if (String(grade.result).length > 5 && isNaN(Number(grade.result.replace(',', '.')))) {
+            col2.createChildElement('div', { innerText: '', classList: grade.isSufficient === false ? ['non-numeric', 'st-insufficient'] : ['non-numeric'] })
+        } else {
+            col2.createChildElement('div', { innerText: grade.result, classList: grade.isSufficient === false ? ['st-insufficient'] : [] })
+        }
+        if (grade.weight) col2.createChildElement('div', { innerText: grade.weight + 'x' });
     }
 }

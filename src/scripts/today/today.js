@@ -186,7 +186,7 @@ class Widgets {
     }
 
     async #drawWidgets() {
-        await magisterApi.updateApiPermissions();
+        await magisterApi.updateAccountInfo();
 
         for (const [widgetKey, widgetClass] of Object.entries(Widgets.sortedWidgetClasses)) {
             if (widgetClass.isEnabled && widgetClass.hasRequiredPermissions) {
@@ -228,7 +228,7 @@ class WidgetEditorDialog extends Dialog {
     }
 
     async #drawWidgetEditorDialog() {
-        await magisterApi.updateApiPermissions()
+        await magisterApi.updateAccountInfo()
 
 
         for (const [widgetKey, widgetClass] of Object.entries(Widgets.sortedWidgetClasses)) {
@@ -371,7 +371,7 @@ function getEventChips(event) {
     }
     if (event.HeeftBijlagen) chips.push({ name: i18n('chips.attachments'), type: 'info' })
     if (event.Opmerking?.length) chips.push({ name: i18n('chips.remark'), type: 'info' })
-    if (event.Aantekening?.length) chips.push({ name: i18n('chips.annotation'), type: 'info' })
+    if (event.Aantekening?.length) chips.push({ name: i18n('chips.annotation'), type: event.Aantekening.endsWith('[ST-completed]') ? 'ok' : 'info' })
 
     return chips
 }
@@ -382,9 +382,10 @@ function isYearNotCurrent(fullYear) {
 }
 
 function eventSubjects(event) {
-    let subjectsF = (event.Vakken?.map((vak, i) => {
-        if (i === 0) return vak.Naam.charAt(0).toUpperCase() + vak.Naam.slice(1)
-        return vak.Naam
+    let subjectsArray = event.Vakken ? event.Vakken : event;
+    let subjectsF = (subjectsArray?.map((vak, i) => {
+        if (i === 0) return (vak.Naam || vak.description).charAt(0).toUpperCase() + (vak.Naam || vak.description).slice(1)
+        return (vak.Naam || vak.description)
     }) || []).join(', ');
     if (!subjectsF?.length) return null;
     return subjectsF;
@@ -393,13 +394,13 @@ function eventSubjects(event) {
 function eventTeachers(event) {
     let teachersArray = event.Docenten ? event.Docenten : event;
     return (teachersArray?.map((docent) => {
-        return (syncedStorage['start-teacher-names']?.[docent.Docentcode] || docent.Naam) + ` (${docent.Docentcode})`;
+        return (syncedStorage['start-teacher-names']?.[(docent.Docentcode || docent.code)] || docent.Naam || `${docent.firstName} ${docent.lastName}`) + ` (${docent.Docentcode || docent.code})`;
     }) || []).join(', ');
 }
 
 function eventLocations(event) {
     let locationsArray = event.Lokalen ? event.Lokalen : event;
-    return event.Lokatie || locationsArray.map(e => e.Naam).join(', ');
+    return event.Lokatie || locationsArray.map(e => e.Naam || e.description).join(', ');
 }
 
 function makeTimestamp(d) {

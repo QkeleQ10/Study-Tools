@@ -311,7 +311,7 @@ export default [
             },
             // {
             //     id: "grade-col-grouping",
-            //     title: "Cijfers groeperen op",
+            //     title: "Cijferkolomweergave",
             //     type: "SingleChoice",
             //     default: "KolomNummer",
             //     options: [
@@ -360,7 +360,7 @@ export default [
                 title: "Te negeren cijferkolommen",
                 subtitle: "Cijferkolommen met deze kolomkoppen worden op sommige plekken genegeerd. Gescheiden door puntkomma's (;).",
                 type: "Text",
-                default: "%klaar;#tedoen;#gedaan;gedr;verantw;welb;capa"
+                default: "%klaar;#tedoen;#gedaan;gedr;verantw;welb;capa;tekortpunten;tekort"
             }
         ]
     },
@@ -464,9 +464,26 @@ export default [
             },
             {
                 id: "beta-options",
-                title: "Ontwikkelaarsopties",
-                subtitle: "Experimenteel",
+                title: "Experimentele opties",
                 default: false,
+            },
+            {
+                id: "menu-beta",
+                title: "Experimenteel menu",
+                subtitle: "Experimenteel.",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+                default: false,
+            },
+            {
+                id: "additional-appointments",
+                title: "Keuzelessen inladen",
+                subtitle: "Experimenteel. Kan voor vertraging zorgen.",
+                conditions: [
+                    { settingId: 'beta-options', operator: 'equal', value: true }
+                ],
+                default: true,
             },
             {
                 id: "darken-content",
@@ -476,15 +493,6 @@ export default [
                     { settingId: 'beta-options', operator: 'equal', value: true }
                 ],
                 default: true,
-            },
-            {
-                id: "verbosity",
-                title: "Uitgebreide consoleberichten",
-                subtitle: "Experimenteel. Er worden meer activiteiten geplaatst in de console.",
-                default: false,
-                conditions: [
-                    { settingId: 'beta-options', operator: 'equal', value: true }
-                ],
             },
             // TODO: setting to disable color adaptation for dark theme
         ]

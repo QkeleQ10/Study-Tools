@@ -16,7 +16,7 @@ class MagisterApi {
 
         this.updateApiCredentials();
 
-        this.permissions = await this.updateApiPermissions();
+        await this.updateAccountInfo();
         this.gatherStart = dates.gatherStart;
         this.gatherEarlyStart = dates.gatherEarlyStart;
         this.gatherEnd = dates.gatherEnd;
@@ -47,10 +47,15 @@ class MagisterApi {
         }
     }
 
-    async updateApiPermissions() {
+    async updateAccountInfo() {
         return new Promise(async (resolve) => {
-            this.permissions = (await new MagisterApiRequestAccount().get())?.Groep?.[0]?.Privileges?.filter(p => p.AccessType.includes('Read')).map(p => p.Naam);
-            resolve(this.permissions);
+            const account = await this.accountInfo();
+            this.permissions = account?.Groep?.[0]?.Privileges?.filter(p => p.AccessType.includes('Read')).map(p => p.Naam);
+            this.uuid = account?.UuId;
+
+            const calendarFeatures = await this.getCalendarFeatures();
+            this.calendarFeatures = calendarFeatures || {};
+            resolve({ permissions: this.permissions, uuid: this.uuid, calendarFeatures: this.calendarFeatures });
         });
     }
 
@@ -111,6 +116,18 @@ class MagisterApi {
         return new MagisterApiRequestKwtRegistration(id).delete();
     }
 
+    getCalendarFeatures() {
+        return new MagisterApiRequestCalendarFeatures().get();
+    }
+
+    additionalAppointments(start = dates.now, end = dates.now) {
+        return new MagisterApiRequestAdditionalAppointments(start, end).get();
+    }
+
+    enrollAdditionalAppointment(path) {
+        return new MagisterApiRequestEnrollAdditionalAppointment(path).post();
+    }
+
     gradesRecent(size = 25) {
         return new MagisterApiRequestGradesRecent(size).get();
     }
@@ -155,6 +172,7 @@ class MagisterApi {
 class MagisterApiRequest {
     identifier;
     path;
+    href;
 
     constructor() {
     }
@@ -165,13 +183,13 @@ class MagisterApiRequest {
 
         if (magisterApi.useSampleData && this.sample) {
             return Promise.resolve(this.sample);
-        } else if (!this.identifier || !this.path) {
-            return Promise.reject();
+        } else if (!this.identifier || (!this.path && !this.href)) {
+            return Promise.reject("Invalid API request: no identifier or path/href specified.");
         } else if (magisterApi.cache[this.identifier] && !magisterApi.cache[this.identifier].then) {
             return Promise.resolve(magisterApi.cache[this.identifier]);
         } else {
             return this.#fetchWrapper(
-                `https://${magisterApi.schoolName}.magister.net/${this.path}`,
+                (this.href || `https://${magisterApi.schoolName}.magister.net/${this.path}`),
                 options
             );
         }
@@ -182,7 +200,7 @@ class MagisterApiRequest {
             if (!window.location.pathname.includes('magister')) reject();
 
             let res = await fetch(
-                `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
+                (this.href || `https://${magisterApi.schoolName}.magister.net/${this.path}`).replace(/(\$USERID)/gi, magisterApi.userId).replace(/(\$UUID)/gi, magisterApi.uuid),
                 {
                     method: 'PUT',
                     body: JSON.stringify(body),
@@ -205,7 +223,7 @@ class MagisterApiRequest {
             if (!window.location.pathname.includes('magister')) reject();
 
             let res = await fetch(
-                `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
+                (this.href || `https://${magisterApi.schoolName}.magister.net/${this.path}`).replace(/(\$USERID)/gi, magisterApi.userId).replace(/(\$UUID)/gi, magisterApi.uuid),
                 {
                     method: 'POST',
                     body: JSON.stringify(body),
@@ -228,7 +246,7 @@ class MagisterApiRequest {
             if (!window.location.pathname.includes('magister')) reject();
 
             let res = await fetch(
-                `https://${magisterApi.schoolName}.magister.net/${this.path}`.replace(/(\$USERID)/gi, magisterApi.userId),
+                (this.href || `https://${magisterApi.schoolName}.magister.net/${this.path}`).replace(/(\$USERID)/gi, magisterApi.userId).replace(/(\$UUID)/gi, magisterApi.uuid),
                 {
                     method: 'DELETE',
                     body: JSON.stringify(body),
@@ -286,7 +304,7 @@ class MagisterApiRequest {
             }
 
             try {
-                let res = await fetch(url.replace(/(\$USERID)/gi, magisterApi.userId), {
+                let res = await fetch(url.replace(/(\$USERID)/gi, magisterApi.userId).replace(/(\$UUID)/gi, magisterApi.uuid), {
                     headers: {
                         Authorization: magisterApi.userToken,
                         'X-Request-Source': 'study-tools'
@@ -411,6 +429,30 @@ class MagisterApiRequestKwtRegistration extends MagisterApiRequest {
     }
 }
 
+class MagisterApiRequestCalendarFeatures extends MagisterApiRequest {
+    constructor(start, end) {
+        super();
+        this.identifier = `calendarFeatures`;
+        this.href = `https://calendar.magister.net/api/user/$UUID/features`;
+    }
+}
+
+class MagisterApiRequestAdditionalAppointments extends MagisterApiRequest {
+    constructor(start, end) {
+        super();
+        this.identifier = `additionalAppointments${start?.toISOString()}${end?.toISOString()}`;
+        this.href = `https://calendar.magister.net/api/user/$UUID/additional-appointments?start=${start?.toISOString().substring(0, 19)}%2B00:00&end=${end?.toISOString().substring(0, 19)}%2B00:00`;
+    }
+}
+
+class MagisterApiRequestEnrollAdditionalAppointment extends MagisterApiRequest {
+    constructor(path) {
+        super();
+        this.identifier = `additionalAppointmentsEnroll${path}`;
+        this.href = `https://calendar.magister.net/${path}`;
+    }
+}
+
 class MagisterApiRequestGradesRecent extends MagisterApiRequest {
     constructor(size = 25) {
         super();
@@ -425,7 +467,11 @@ class MagisterApiRequestGradesForYear extends MagisterApiRequest {
     constructor(year) {
         super();
         this.identifier = `gradesYear${year?.id}`;
-        this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
+        if (new Date(year?.einde) > new Date()) {
+            this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false`;
+        } else {
+            this.path = `api/personen/$USERID/aanmeldingen/${year?.id}/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${year?.einde}`;
+        }
     }
     outputFormat = (res) => res.Items;
 }
