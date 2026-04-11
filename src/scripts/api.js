@@ -167,6 +167,10 @@ class MagisterApi {
     absencesForYear(year) {
         return new MagisterApiRequestAbsencesForYear(year).get();
     }
+
+    studyguides() {
+        return new MagisterApiRequestStudyguides().get();
+    }
 }
 
 class MagisterApiRequest {
@@ -547,6 +551,15 @@ class MagisterApiRequestAbsencesForYear extends MagisterApiRequest {
         super();
         this.identifier = `absencesYear${year?.id}`;
         this.path = `api/personen/$USERID/absenties?van=${year.begin}&tot=${year.einde}`;
+    }
+    outputFormat = (res) => res.Items;
+}
+
+class MagisterApiRequestStudyguides extends MagisterApiRequest {
+    constructor() {
+        super();
+        this.identifier = 'studyguides';
+        this.path = `api/leerlingen/$USERID/studiewijzers?peildatum=${new Date().toISOString().substring(0, 10)}`;
     }
     outputFormat = (res) => res.Items;
 }

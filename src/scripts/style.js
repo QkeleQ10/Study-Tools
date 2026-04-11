@@ -1765,18 +1765,6 @@ table.table-grid-layout>tbody>tr.selected {
     z-index: 10001;
 }
 
-.animation-container-loading.ng-cloak {
-    display: flex !important;
-    opacity: 0;
-    backdrop-filter: none;
-    pointer-events: none;
-    transition: opacity 400ms, backdrop-filter 400ms;
-}
-
-.container.ng-cloak {
-    display: flex !important;
-}
-
 .loading-animation {
     width: 96px;
     content: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/load-animation.svg");

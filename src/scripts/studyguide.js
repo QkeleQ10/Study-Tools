@@ -8,51 +8,124 @@ async function popstate() {
     else if (document.location.href.split('?')[0].includes('/studiewijzer')) studyguideList()
 }
 
+class StudyGuidesPage {
+    element;
+    #progressBar;
+    #grid;
+
+    constructor(parentElement) {
+        this.element = parentElement.createChildElement('div', { id: 'st-sg' });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        const header = this.element.createChildElement('div', { class: 'st-sg-header' });
+
+        this.#fetchStudyGuides();
+    }
+
+    async #fetchStudyGuides() {
+        const studyguides = await magisterApi.studyguides();
+
+        this.#grid = new StudyGuidesGrid(this.element, studyguides);
+        this.#grid.draw();
+        this.#progressBar.dataset.visible = false;
+    }
+}
+
+class StudyGuidesGrid {
+    element;
+    studyguides;
+
+    // TODO: getter/setter for filters
+
+    constructor(parentElement, studyguides) {
+        this.element = parentElement.createChildElement('div', { id: 'st-sg-grid' });
+        this.studyguides = studyguides.map(sg => {
+            const { Id: id, Titel: title, Van: from, TotEnMet: to, VakCodes: subjectCodes, InLeerlingArchief: isArchived } = sg;
+
+            let subject = savedStudyguides.find(e => e.id === id || e.title === title)?.subject || autoStudyguideSubject(title);
+
+            let period = 0;
+            let periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|to|po|p(eriod(e)?)?)(\s|\d)/i);
+            if (periodTextIndex > 0) {
+                let periodNumberSearchString = title.slice(periodTextIndex),
+                    periodNumberIndex = periodNumberSearchString.search(/[1-9]/i);
+                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex));
+            }
+
+            return { id, title, from, to, subject, period, isArchived };
+        });
+
+        this.subjects = Object.groupBy(this.studyguides, sg => sg.subject);
+    }
+
+    draw() {
+        this.element.innerText = '';
+
+        const settingCols = Math.max(1, Number(syncedStorage['sw-cols']) || 1),
+            settingShowPeriod = syncedStorage['sw-period']
+        const columns = [];
+        for (let i = 1; i <= settingCols; i++) {
+            columns.push(this.element.createChildElement('div', {
+                id: `st-sg-col-${i}`,
+                class: 'st-sg-col',
+                dataset: { index: i }
+            }));
+        }
+
+        const subjectsSorted = Object.keys(this.subjects).sort((a, b) => a.localeCompare(b));
+        const subjectsPerColumn = Math.ceil(subjectsSorted.length / columns.length) || 1;
+
+        subjectsSorted.forEach((subject, index) => {
+            const subjectData = this.subjects[subject];
+            const isSingular = subjectData.length === 1
+
+            const columnIndex = Math.min(columns.length - 1, Math.floor(index / subjectsPerColumn));
+            const subjectSection = columns[columnIndex].createChildElement('div', { class: 'st-sg-subject' });
+
+            if (!isSingular) {
+                subjectSection.createChildElement('div', {
+                    innerText: subject,
+                    class: 'st-sg-subject-headline'
+                });
+            }
+
+            this.subjects[subject].sort((a, b) => a.period - b.period).forEach(sg => {
+                let periodText = i18n('sw.periodN', { period: sg.period, periodOrdinal: formatOrdinals(sg.period, true) })
+                if (sg.period < 1) periodText = i18n('sw.periodMissing')
+
+                const sgElement = subjectSection.createChildElement('button', { class: isSingular ? 'st-sg-item-default' : 'st-sg-item' });
+
+                if (isSingular) {
+                    sgElement.appendChild(document.createTextNode(subject));
+                }
+
+                sgElement.createChildElement('span', {
+                    innerText: settingShowPeriod ? periodText : sg.title,
+                    dataset: { '2nd': settingShowPeriod ? sg.title : periodText },
+                    class: isSingular ? 'st-sg-item-default-desc' : 'st-sg-item-desc'
+                });
+
+                sgElement.addEventListener('click', () => {
+                    console.log(`Clicked on study guide with id ${sg.id} and title ${sg.title}`)
+                    window.location.href = `#/elo/studiewijzer/${sg.id}`
+                });
+
+                if (window.location.href.includes(`#/elo/studiewijzer/${sg.id}`)) {
+                    sgElement.classList.add('active')
+                }
+            });
+        });
+    }
+}
+
 // Page 'Studiewijzers'
 async function studyguideList() {
     if (!syncedStorage['sw-enabled']) return
 
-    let hiddenItemsContainer = element('div', 'st-sw-hidden-items', document.body),
-        hiddenItemsButton = element('button', 'st-sw-hidden-items-button', document.body, { class: 'st-button tertiary', innerText: i18n('sw.showHiddenItems') })
-
-    hiddenItemsButton.addEventListener('click', () => {
-        hiddenItemsContainer.classList.toggle('st-expanded')
-        hiddenItemsButton.classList.toggle('st-collapsed')
-    })
-
-    renderStudyguideList(hiddenItemsContainer)
-
-    let searchBar = element('input', 'st-sw-search', document.body, { class: 'st-input', placeholder: i18n('sw.searchPlaceholder') })
-    searchBar.addEventListener('keyup', e => {
-        if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
-            document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
-        }
-    })
-    searchBar.addEventListener('input', appendStudyguidesToList)
-    searchBar.addEventListener('input', e => {
-        let egg = eggs.find(egg => egg.location === 'studyguidesSearch' && egg.input === e.target.value)
-        if (!egg?.output) return
-
-        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
-        let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
-        fakeDefaultItemButton.addEventListener('click', () => {
-            switch (egg.type) {
-                case 'setFlag':
-                    saveToStorage(egg.output.key, egg.output.value, 'session')
-                    break;
-
-                case 'applySettings':
-                    chrome.storage.sync.set(egg.output)
-                    break;
-
-                default:
-                    notify(egg.type || 'snackbar', egg.output, null, 3600000)
-                    break;
-            }
-        })
-
-        let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
-    })
+    const mainView = await awaitElement('div.view.ng-scope')
+    const page = new StudyGuidesPage(mainView)
 }
 
 // Page 'Studiewijzer'
@@ -82,10 +155,17 @@ async function studyguideIndividual() {
 
     if (syncedStorage['sw-enabled']) setTimeout(handleStudyguideIndividual, 100)
     async function handleStudyguideIndividual() {
-        await renderStudyguideList()
 
-        const buttons = element('div', 'st-sw-button-wrapper', document.body, { class: 'st-button-wrapper', style: 'position: absolute; top: 70px; right: 20px; z-index: 9999999;' })
-        const expandCollapseAll = element('button', 'st-sw-expand-all', buttons, { class: 'st-button icon tertiary', 'data-icon': '' })
+        const sidePanel = await awaitElement('.tabsheet#idStudiewijzers')
+        const studyguides = await magisterApi.studyguides();
+
+        const list = new StudyGuidesGrid(sidePanel, studyguides);
+        list.draw();
+        list.element.classList.add('st-sg-sidepanel');
+        list.element.previousElementSibling.style.display = 'none';
+
+        const buttons = element('div', 'st-sg-button-wrapper', document.body, { class: 'st-button-wrapper', style: 'position: absolute; top: 70px; right: 20px; z-index: 9999999;' })
+        const expandCollapseAll = element('button', 'st-sg-expand-all', buttons, { class: 'st-button icon tertiary', 'data-icon': '' })
         expandCollapseAll.addEventListener('click', () => {
             if (expandCollapseAll.dataset.icon === '') { // Is set to expand mode 
                 expandCollapseAll.dataset.icon = ''
@@ -96,7 +176,7 @@ async function studyguideIndividual() {
             }
         })
 
-        let id = window.location.href.split('studiewijzer/')[1].split('?')[0],
+        let id = window.location.href.split(/(studiewijzer)\/?/gi)[1].split('?')[0],
             title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim(),
             dropdown
 
@@ -153,7 +233,7 @@ async function studyguideIndividual() {
             }
 
             dropdown = new Dropdown(
-                buttons.createChildElement('button', { id: 'st-sw-subject-dropdown', class: 'st-segmented-control', title: i18n('sw.subjectPrompt') }),
+                buttons.createChildElement('button', { id: 'st-sg-subject-dropdown', class: 'st-segmented-control', title: i18n('sw.subjectPrompt') }),
                 allSubjects,
                 savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
                 dropdownChange
@@ -186,7 +266,7 @@ async function studyguideIndividual() {
             filteredResources.forEach(resource => {
                 let srcs = Array.isArray(resource.src) ? resource.src : [resource.src]
 
-                const container = element('div', `st-sw-resource-${resource.title.slice(0, 26)}`, hbSheet)
+                const container = element('div', `st-sg-resource-${resource.title.slice(0, 26)}`, hbSheet)
 
                 srcs.forEach(src => {
                     switch (resource.type) {
@@ -278,203 +358,6 @@ async function studyguideIndividual() {
     }
 }
 
-// Render studyguide list
-async function renderStudyguideList(hiddenItemsDestination) {
-    return new Promise(async (resolve) => {
-        if (!syncedStorage['sw-enabled']) return resolve()
-
-        let mainView = document.querySelector('div.view'),
-            widget = document.querySelector('div.full-height.widget'),
-            gridContainer = widget || mainView
-
-        savedStudyguides = Object.values(await getFromStorage('sw-list') || [])
-
-        const settingCols = syncedStorage['sw-cols'],
-            settingShowPeriod = syncedStorage['sw-period'],
-            viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-            originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
-            gridWrapper = element('div', 'st-sw-container', gridContainer)
-
-        let cols = [],
-            object = {}
-
-        for (let i = 1; i <= Number(settingCols); i++) {
-            cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
-        }
-
-        originalItems.forEach(elem => {
-            let title = elem.firstElementChild.firstElementChild.innerText,
-                subject = savedStudyguides.find(e => e.title === title)?.subject,
-                period = 0,
-                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
-
-            if (!subject) {
-                savedStudyguides.push({ title: title, subject: autoStudyguideSubject(title) })
-                subject = autoStudyguideSubject(title)
-                saveToStorage('sw-list', savedStudyguides)
-            }
-
-            if (periodTextIndex > 0) {
-                let periodNumberSearchString = title.slice(periodTextIndex),
-                    periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
-                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
-            }
-
-            if (!object[subject]) object[subject] = []
-            object[subject].push({ elem, title, period })
-        })
-
-        let tiles = []
-
-        Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
-            let items = object[subject]
-
-            let subjectTile = element('div', `st-sw-subject-${subject}`, cols[0], { class: 'st-sw-subject', 'data-subject': subject })
-
-            if (items.length > 1 || subject === 'hidden') {
-                let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
-                let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
-                if (subject === 'hidden') {
-                    subjectHeadline.remove()
-                    itemsWrapper.remove()
-                }
-                for (let i = 0; i < items.length; i++) {
-                    const item = items.sort((a, b) => a.period - b.period)[i]
-
-                    let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
-                    if (item.period < 1) periodText = i18n('sw.periodMissing')
-
-                    let itemButton = element(
-                        'button',
-                        `st-sw-item-${item.title}`,
-                        subject === 'hidden'
-                            ? hiddenItemsDestination
-                            : itemsWrapper,
-                        settingShowPeriod && subject !== 'hidden'
-                            ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': item.title }
-                            : { innerText: item.title, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': subject === 'hidden' ? item.title : periodText }
-                    )
-                    itemButton.addEventListener('click', () => {
-                        for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
-                            if (e.textContent.includes(item.title)) e.click()
-                        }
-                    })
-
-                    if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
-                        itemButton.classList.add('st-sw-selected')
-                        itemButton.classList.remove('hidden')
-                    }
-                }
-            } else if (items[0]) {
-                let item = items[0]
-
-                let defaultItemButton = element('button', `st-sw-item-${item.title}`, subjectTile, { innerText: subject, class: 'st-sw-item-default', 'data-title': item.title })
-                defaultItemButton.addEventListener('click', () => {
-                    for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
-                        if (e.textContent.includes(item.title)) e.click()
-                    }
-                })
-
-                let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
-                if (item.period < 1) periodText = i18n('sw.periodMissing')
-
-                let defaultItemDescription = element(
-                    'span',
-                    `st-sw-item-${item.title}-desc`,
-                    defaultItemButton,
-                    settingShowPeriod
-                        ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': item.title }
-                        : { innerText: item.title, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': periodText })
-
-                if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
-                    defaultItemButton.classList.add('st-sw-selected')
-                    defaultItemButton.classList.remove('hidden')
-                }
-            }
-        })
-
-        if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
-            mainView = await awaitElement('div.view')
-            widget = document.querySelector('div.full-height.widget')
-            gridContainer = widget || mainView
-            gridContainer.appendChild(gridWrapper)
-        }
-        if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
-            gridWrapper.remove()
-        }
-
-        appendStudyguidesToList(tiles)
-
-        resolve()
-
-        if (document.getElementById('st-sw-hidden-items-button') && !(document.getElementById('st-sw-hidden-items')?.children.length > 0)) {
-            document.getElementById('st-sw-hidden-items-button')?.remove()
-        }
-    })
-}
-
-// Append the study guides to the list
-function appendStudyguidesToList() {
-    let tiles = document.querySelectorAll('.st-sw-subject')
-    let items = document.querySelectorAll('.st-sw-item, .st-sw-item-default')
-    let searchBar = document.querySelector('#st-sw-search')
-    let gridContainer = document.querySelector('#st-sw-container')
-    let cols = document.querySelectorAll('#st-sw-container .st-sw-col')
-    if (!gridContainer || !cols?.[0]) return
-
-    // First, define which study guide items should be shown.
-    items.forEach(studyguide => {
-        if (studyguide.id === 'st-sw-fake-item') {
-            studyguide.parentElement.remove()
-            return
-        }
-
-        let matches = true
-
-        if (searchBar) {
-            let query = searchBar.value.toLowerCase()
-            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide?.closest('.st-sw-subject')?.dataset?.subject?.toLowerCase().includes(query))
-        }
-
-        if (matches) studyguide.classList.remove('hidden')
-        else studyguide.classList.add('hidden')
-    })
-
-    // Next, define which subject tiles have visible children.
-    let visibleSubjectTiles = [...tiles].filter(element => element.querySelector('button:not(.hidden)'))
-
-    visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
-        cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
-    })
-
-    // distributeElements(visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)))
-    // // Finally, sort the subject tiles and equally distribute them across columns.
-    // // visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
-    // //     grid[Math.floor((i / a.length) * grid.length)].appendChild(studyguide)
-    // // })
-
-    // function distributeElements(elements) {
-    //     const columns = [[], [], []] // Array of arrays to store elements for each column
-    //     const columnHeights = [0, 0, 0] // Initial heights for each column
-
-    //     elements.forEach((element) => {
-    //         // Find the shortest column
-    //         const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights))
-    //         // Add element to the shortest column
-    //         columns[shortestColumnIndex].push(element)
-    //         // Update height of the shortest column
-    //         columnHeights[shortestColumnIndex] += element.offsetHeight // Use offsetHeight for variable height
-    //     })
-
-    //     // Distribute elements to the columns in the DOM
-    //     columns.forEach((column, index) => {
-    //         column.forEach((element) => {
-    //             element.style.gridColumn = index + 1 // Set grid column using inline CSS
-    //             grid.appendChild(element)
-    //         })
-    //     })
-    // }
-}
 
 function autoStudyguideSubject(title) {
     const subjectMap = [
