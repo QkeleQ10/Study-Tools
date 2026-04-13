@@ -171,6 +171,14 @@ class MagisterApi {
     studyguides() {
         return new MagisterApiRequestStudyguides().get();
     }
+
+    studyguide(studyguideId) {
+        return new MagisterApiRequestStudyguide(studyguideId).get();
+    }
+
+    studyguideItem(studyguideId, itemId) {
+        return new MagisterApiRequestStudyguideItem(studyguideId, itemId).get();
+    }
 }
 
 class MagisterApiRequest {
@@ -562,6 +570,22 @@ class MagisterApiRequestStudyguides extends MagisterApiRequest {
         this.path = `api/leerlingen/$USERID/studiewijzers?peildatum=${new Date().toISOString().substring(0, 10)}`;
     }
     outputFormat = (res) => res.Items;
+}
+
+class MagisterApiRequestStudyguide extends MagisterApiRequest {
+    constructor(studyguideId) {
+        super();
+        this.identifier = `studyguide${studyguideId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}`;
+    }
+}
+
+class MagisterApiRequestStudyguideItem extends MagisterApiRequest {
+    constructor(studyguideId, itemId) {
+        super();
+        this.identifier = `studyguide${studyguideId}item${itemId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/items/${itemId}`;
+    }
 }
 
 const magisterApi = new MagisterApi();

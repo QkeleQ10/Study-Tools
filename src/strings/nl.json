@@ -277,15 +277,19 @@
         "openChart": "Grafiek vergroten"
     },
     "sw": {
-        "searchPlaceholder": "Zoeken",
-        "showHiddenItems": "Verborgen items",
         "customSubject": "Ander vak...",
         "autoSubject": "Vak intelligent afleiden",
         "subjectPrompt": "Geef de naam van het vak op",
         "hideStudyguide": "Studiewijzer verbergen",
         "hidden": "Verborgen",
         "periodN": "Periode {period}",
-        "periodMissing": "Geen periode"
+        "periodMissing": "Periode onbekend",
+        "viewActive": "Actueel",
+        "viewHidden": "Verborgen",
+        "viewArchived": "Archief",
+        "noActiveItems": "Er zijn geen actuele studiewijzers.",
+        "noHiddenItems": "Er zijn geen verborgen studiewijzers.",
+        "noArchivedItems": "Er zijn geen gearchiveerde studiewijzers."
     },
     "tooltips": {
         "startWidgetsNew": "Pas je widgetpaneel aan met deze knop.",

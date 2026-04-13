@@ -1825,27 +1825,6 @@ table.table-grid-layout>tbody>tr.selected {
 `, 'study-tools-start-overhaul')
     } else { createStyle('', 'study-tools-start-overhaul') }
 
-    if (syncedStorage['sw-enabled']) {
-        createStyle(`
-#studiewijzer-container {
-    height: auto !important;
-}
-
-#studiewijzer-container section.main {
-    padding-top: 125px;
-}
-
-#studiewijzer-container aside,
-#studiewijzer-container .content-container,
-#studiewijzer-detail-container .widget.full-height .block {
-    display: none !important;
-}
-
-#studiewijzer-container {
-    padding-right: 8px
-}`, 'study-tools-sw-grid')
-    } else { createStyle('', 'study-tools-sw-grid') }
-
     if (syncedStorage['menu-beta']) {
         createStyle(`
 .container {

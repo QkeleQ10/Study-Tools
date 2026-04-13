@@ -374,19 +374,6 @@ export default [
                 default: true,
             },
             {
-                id: "sw-cols",
-                title: "Aantal kolommen",
-                type: "Slider",
-                default: 3,
-                decimals: 0,
-                min: 1,
-                max: 5,
-                step: 1,
-                conditions: [
-                    { settingId: 'sw-enabled', operator: 'equal', value: true }
-                ],
-            },
-            {
                 id: "sw-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
