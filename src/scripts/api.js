@@ -176,8 +176,8 @@ class MagisterApi {
         return new MagisterApiRequestStudyguide(studyguideId).get();
     }
 
-    studyguideItem(studyguideId, itemId) {
-        return new MagisterApiRequestStudyguideItem(studyguideId, itemId).get();
+    studyguideSection(studyguideId, sectionId) {
+        return new MagisterApiRequestStudyguideSection(studyguideId, sectionId).get();
     }
 }
 
@@ -580,11 +580,11 @@ class MagisterApiRequestStudyguide extends MagisterApiRequest {
     }
 }
 
-class MagisterApiRequestStudyguideItem extends MagisterApiRequest {
+class MagisterApiRequestStudyguideSection extends MagisterApiRequest {
     constructor(studyguideId, itemId) {
         super();
         this.identifier = `studyguide${studyguideId}item${itemId}`;
-        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/items/${itemId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/onderdelen/${itemId}?gebruikMappenStructuur=true`;
     }
 }
 

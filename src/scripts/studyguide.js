@@ -11,7 +11,9 @@ async function popstate() {
 class StudyGuidesPage {
     element;
     studyguides;
+    #main;
     #overview;
+    #contents;
 
     constructor(parentElement) {
         this.element = parentElement.createChildElement('div', { id: 'st-sg' });
@@ -77,12 +79,12 @@ class StudyGuidesPage {
             });
         });
 
-        const main = this.element.createChildElement('div', { id: 'st-sg-main' });
+        this.#main = this.element.createChildElement('div', { id: 'st-sg-main' });
 
-        this.#overview = new StudyGuidesOverview(main);
+        this.#overview = new StudyGuidesOverview(this.#main, (id) => this.navigateToStudyGuide(id));
         this.#fetchStudyGuides();
 
-        const contents = main.createChildElement('div', { id: 'st-sg-contents' });
+        this.#contents = new StudyGuideContents(this.#main);
     }
 
     async #fetchStudyGuides() {
@@ -92,8 +94,9 @@ class StudyGuidesPage {
     }
 
     navigateToStudyGuide(id) {
-        this.element.classList.add('contents-visible');
-        window.location.href = `#/elo/studiewijzer/${id}`;
+        this.#main.classList.add('contents-visible');
+        this.#contents.loadStudyGuide(id);
+        this.#overview.updateActiveStudyGuide(id);
     }
 }
 
@@ -104,6 +107,7 @@ class StudyGuidesOverview {
     #progressBar;
     studyguides;
     #drawMode = 'normal';
+    #navigationCallback;
 
     get drawMode() {
         return this.#drawMode;
@@ -114,7 +118,7 @@ class StudyGuidesOverview {
         this.#drawMode = allowedModes.includes(value) ? value : 'normal';
     }
 
-    constructor(parentElement) {
+    constructor(parentElement, navigationCallback) {
         this.element = parentElement.createChildElement('div', { id: 'st-sg-overview' });
 
         this.#list = this.element.createChildElement('div', { id: 'st-sg-list' });
@@ -122,6 +126,8 @@ class StudyGuidesOverview {
 
         this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
         this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#navigationCallback = navigationCallback;
     }
 
     addStudyguides(studyguides) {
@@ -130,13 +136,7 @@ class StudyGuidesOverview {
 
             let subject = savedStudyguides.find(e => e.id === id || e.title === title)?.subject || autoStudyguideSubject(subjectCodes.join(' ') + ' ' + title);
 
-            let period = 0;
-            let periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|to|po|p(eriod(e)?)?)(\s|\d)/i);
-            if (periodTextIndex > 0) {
-                let periodNumberSearchString = title.slice(periodTextIndex),
-                    periodNumberIndex = periodNumberSearchString.search(/[1-9]/i);
-                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex));
-            }
+            let period = autoStudyguidePeriod(title);
 
             return { id, title, from, to, subject, period, isArchived };
         });
@@ -186,11 +186,15 @@ class StudyGuidesOverview {
                     class: 'st-button secondary st-sg-item',
                     innerText: settingShowPeriod && sg.period > 0 ? i18n('sw.periodN', { period: sg.period, periodOrdinal: formatOrdinals(sg.period, true) }) : sg.title,
                     title: `${sg.title}\n${sg.period > 0 ? i18n('sw.periodN', { period: sg.period, periodOrdinal: formatOrdinals(sg.period, true) }) : i18n('sw.periodMissing')}`,
+                    'data-id': sg.id
                 });
 
                 sgElement.addEventListener('click', () => {
-                    this.element.parentElement.classList.add('contents-visible');
-                    window.location.href = `#/elo/studiewijzer/${sg.id}`;
+                    if (this.#navigationCallback) {
+                        this.#navigationCallback(sg.id);
+                    } else {
+                        window.location.href = `#/elo/studiewijzer/${sg.id}`;
+                    }
                 });
 
                 if (window.location.href.includes(`#/elo/studiewijzer/${sg.id}`)) {
@@ -198,6 +202,80 @@ class StudyGuidesOverview {
                 }
             });
         });
+
+        this.#progressBar.dataset.visible = false;
+    }
+
+    updateActiveStudyGuide(id) {
+        this.#list.querySelectorAll('.st-sg-item').forEach(item => item.classList.remove('active'));
+        const activeItem = this.#list.querySelector(`.st-sg-item[data-id="${id}"]`);
+        if (activeItem) activeItem.classList.add('active');
+    }
+}
+
+class StudyGuideContents {
+    element;
+    #progressBar;
+    #titleElement;
+    #subjectElement;
+    #periodElement;
+    #wrapper;
+    #body;
+    #studyguide;
+
+    constructor(parentElement) {
+        this.element = parentElement.createChildElement('div', { id: 'st-sg-contents' });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#wrapper = this.element.createChildElement('div', { id: 'st-sg-contents-wrapper' });
+
+        const header = this.#wrapper.createChildElement('div', { id: 'st-sg-contents-header' });
+        this.#titleElement = header.createChildElement('h3', { class: 'st-section-heading' });
+        const headerInfo = header.createChildElement('div', { id: 'st-sg-contents-header-info' });
+        this.#subjectElement = headerInfo.createChildElement('a', { class: 'st-sg-edit' });
+        this.#periodElement = headerInfo.createChildElement('a', { class: 'st-sg-edit' });
+
+        this.#body = this.#wrapper.createChildElement('div', { id: 'st-sg-contents-body' });
+    }
+
+    async loadStudyGuide(id) {
+        this.#progressBar.dataset.visible = true;
+
+        const studyguide = await magisterApi.studyguide(id);
+
+        this.#titleElement.innerText = studyguide.Titel;
+        this.#subjectElement.innerText = savedStudyguides.find(e => e.id === id)?.subject || autoStudyguideSubject(studyguide.VakCodes.join(' ') + ' ' + studyguide.Titel);
+        this.#periodElement.innerText = autoStudyguidePeriod(studyguide.Titel) > 0 ? i18n('sw.periodN', { period: autoStudyguidePeriod(studyguide.Titel), periodOrdinal: formatOrdinals(autoStudyguidePeriod(studyguide.Titel), true) }) : i18n('sw.periodMissing');
+        this.#body.innerText = '';
+        this.#wrapper.scrollTo({ top: 0, behavior: 'smooth' });
+
+        for (const section of studyguide.Onderdelen?.Items || []) {
+            const sectionElement = this.#body.createChildElement('div', { classList: ['st-sg-section', `st-color-${section.Kleur}`] });
+
+            const sectionTop = sectionElement.createChildElement('button', { class: 'st-sg-section-top' });
+            sectionTop.createChildElement('h3', { class: 'st-section-heading', innerText: section.Titel });
+            sectionTop.createChildElement('p', { class: 'st-sg-section-abstract', innerText: section.Omschrijving });
+
+            let expanded = false;
+
+            const sectionBody = sectionElement.createChildElement('div', { class: 'st-sg-section-body st-hidden', innerText: section.Omschrijving });
+
+            sectionTop.addEventListener('click', async () => {
+                if (!expanded) {
+                    this.#progressBar.dataset.visible = true;
+                    const item = await magisterApi.studyguideSection(id, section.Id);
+
+                    sectionBody.innerHTML = item.Omschrijving || '';
+
+                    this.#progressBar.dataset.visible = false;
+                }
+
+                sectionBody.classList.toggle('st-hidden');
+                sectionTop.classList.toggle('st-collapsed');
+            });
+        }
 
         this.#progressBar.dataset.visible = false;
     }
@@ -212,210 +290,6 @@ async function studyguideList() {
     const mainView = await awaitElement('div.view.ng-scope');
     const page = new StudyGuidesPage(mainView);
 }
-
-// Page 'Studiewijzer'
-async function studyguideIndividual() {
-    if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') highlightWeek()
-    async function highlightWeek() {
-        let list = await awaitElement('.studiewijzer-content-container>ul'),
-            titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?0?(match)(?!\d)/i)
-
-        list.parentElement.setAttribute('style', 'padding: 8px 0 0 8px !important;')
-
-        titles?.forEach(async title => {
-            if (list.childElementCount === 1 || regex.exec(title.innerText.replace(new Date().getWeek(), 'match'))) {
-                let top = title.parentElement,
-                    bottom = top.nextElementSibling.lastElementChild.previousElementSibling,
-                    li = top.parentElement.parentElement
-                li.classList.add('st-current-sw')
-                top.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")
-                if (syncedStorage['sw-current-week-behavior'] === 'focus') {
-                    bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                    title.click()
-                }
-            }
-        })
-    }
-
-    if (syncedStorage['sg-enabled']) setTimeout(handleStudyguideIndividual, 100)
-    async function handleStudyguideIndividual() {
-
-        const sidePanel = await awaitElement('.tabsheet#idStudiewijzers')
-        const studyguides = await magisterApi.studyguides();
-
-        const list = new StudyGuidesOverview(sidePanel);
-        list.addStudyguides(studyguides);
-        list.draw();
-        list.element.classList.add('st-sg-sidepanel');
-        list.element.previousElementSibling.style.display = 'none';
-
-        const buttons = element('div', 'st-sg-button-wrapper', document.body, { class: 'st-button-wrapper', style: 'position: absolute; top: 70px; right: 20px; z-index: 9999999;' })
-        const expandCollapseAll = element('button', 'st-sg-expand-all', buttons, { class: 'st-button icon tertiary', 'data-icon': '' })
-        expandCollapseAll.addEventListener('click', () => {
-            if (expandCollapseAll.dataset.icon === '') { // Is set to expand mode 
-                expandCollapseAll.dataset.icon = ''
-                // @ts-ignore
-                document.querySelectorAll('li.studiewijzer-onderdeel .block.fold h3 b').forEach(e => e.click())
-            } else { // Is set to collapse mode 
-                expandCollapseAll.dataset.icon = ''
-                // @ts-ignore
-                document.querySelectorAll('li.studiewijzer-onderdeel .block:not(.fold) h3 b').forEach(e => e.click())
-            }
-        })
-
-        let id = window.location.href.split('/studiewijzer/')[1].split('?')[0],
-            title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim(),
-            dropdown
-
-        savedStudyguides = Object.values(await getFromStorage('sw-list') || [])
-
-        if (!savedStudyguides.find(e => e.id === id)) {
-            title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-            savedStudyguides.find(e => e.title === title)?.id === id
-        }
-
-        if (!savedStudyguides.find(e => e.id === id || e.title === title)?.subject) {
-            await awaitElement('dna-page-header.ng-binding')
-            setTimeout(async () => {
-                title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-                savedStudyguides.push({ id: id, title: title, subject: autoStudyguideSubject(title) })
-                createDropdown()
-            }, 200)
-        } else createDropdown()
-
-        function createDropdown() {
-            let allSubjects = Object.fromEntries([
-                ...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))),
-                ['divider', 'divider'],
-                ['addNew', i18n('sw.customSubject')],
-                ['autoSet', i18n('sw.autoSubject')],
-                ['hidden', i18n('sw.hideStudyguide')]
-            ])
-
-            async function dropdownChange(newValue) {
-                switch (newValue) {
-                    case 'addNew':
-                        let result = prompt(i18n('sw.subjectPrompt'))
-                        if (result?.length > 1) {
-                            savedStudyguides.find(e => e.id === id || e.title === title).subject = result
-                            saveToStorage('sw-list', savedStudyguides)
-                            createDropdown()
-                            setTimeout(() => dropdown.changeValue(result), 10)
-                        } else {
-                            title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-                            savedStudyguides.find(e => e.id === id || e.title === title).subject = autoStudyguideSubject(title)
-                            saveToStorage('sw-list', savedStudyguides)
-                            createDropdown()
-                            setTimeout(() => dropdown.changeValue(autoStudyguideSubject(title)), 10)
-                        }
-                        break
-                    case 'autoSet':
-                        title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-                        savedStudyguides.find(e => e.id === id || e.title === title).subject = autoStudyguideSubject(title)
-                        saveToStorage('sw-list', savedStudyguides)
-                        createDropdown()
-                        break
-                    default:
-                        savedStudyguides.find(e => e.id === id || e.title === title).subject = newValue
-                        saveToStorage('sw-list', savedStudyguides)
-
-                }
-            }
-
-            dropdown = new Dropdown(
-                buttons.createChildElement('button', { id: 'st-sg-subject-dropdown', class: 'st-segmented-control', title: i18n('sw.subjectPrompt') }),
-                allSubjects,
-                savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
-                dropdownChange
-            );
-        }
-    }
-
-    setTimeout(() => { resources() }, 500)
-    async function resources() {
-        const availableResources = (await (await fetch('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/studyguide-resources.json'))?.json())
-
-        await awaitElement('dna-page-header.ng-binding')
-        setTimeout(async () => {
-            const studyguideTitle = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-
-            const filteredResources = availableResources?.filter(resource =>
-                resource.conditions.some(condition =>
-                    (!condition.studyguideTitleIncludes || studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())) &&
-                    (!condition.studyguideSubjectEquals || savedStudyguides.find(e => e.title === studyguideTitle).subject === condition.studyguideSubjectEquals || autoStudyguideSubject(studyguideTitle) === condition.studyguideSubjectEquals)
-                )
-            )
-            if (!(filteredResources?.length > 0)) return
-
-            const aside = await awaitElement('#studiewijzer-detail-container > aside'),
-                asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
-
-            const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
-                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
-
-            filteredResources.forEach(resource => {
-                let srcs = Array.isArray(resource.src) ? resource.src : [resource.src]
-
-                const container = element('div', `st-sg-resource-${resource.title.slice(0, 26)}`, hbSheet)
-
-                srcs.forEach(src => {
-                    switch (resource.type) {
-                        case 'spotifyIframe': {
-                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
-
-                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
-                            break
-                        }
-
-                        case 'youtubeIframe': {
-                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
-
-                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
-
-                            window.addEventListener('blur', () => {
-                                setTimeout(() => {
-                                    // @ts-ignore
-                                    if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === src) {
-                                        iframe.requestFullscreen()
-                                        document.addEventListener('fullscreenchange', () => window.focus())
-                                    }
-                                })
-                            })
-                            break
-                        }
-
-                        default:
-                            break
-                    }
-                })
-            })
-
-            const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
-                existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
-                hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
-                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
-
-            tabs.addEventListener('click', (event) => {
-                let bkTabClicked = event.target.id.startsWith('st-hb-tab')
-                if (bkTabClicked) {
-                    hbTab.classList.add('active')
-                    hbSheet.dataset.visible = true
-                    asideContent.style.display = 'none'
-                } else {
-                    hbTab.classList.remove('active')
-                    hbSheet.dataset.visible = false
-                    asideContent.style.display = ''
-                }
-            })
-
-            if (!syncedStorage['sw-resources-auto']) return
-
-            hbTab.click()
-        }, 500)
-    }
-}
-
 
 function autoStudyguideSubject(title) {
     const subjectMap = [
@@ -474,4 +348,17 @@ function autoStudyguideSubject(title) {
     const resultingSubject = subjectMap.find((subjectObject) => title?.split(/\s|-|_|\d/gi)?.some(titleWord => subjectObject.aliases.includes(titleWord.toLowerCase())))
 
     return resultingSubject?.name || 'Geen vak'
+}
+
+function autoStudyguidePeriod(title) {
+    let period = 0;
+    let periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|to|po|p(eriod(e)?)?)(\s|\d)/i);
+
+    if (periodTextIndex > 0) {
+        let periodNumberSearchString = title.slice(periodTextIndex),
+            periodNumberIndex = periodNumberSearchString.search(/[1-9]/i);
+        if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex));
+    }
+
+    return period;
 }

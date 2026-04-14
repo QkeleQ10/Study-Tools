@@ -368,22 +368,22 @@ export default [
         id: "studyguide",
         settings: [
             {
-                id: "sw-enabled",
+                id: "sg-enabled",
                 title: "Studiewijzers rangschikken",
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },
             {
-                id: "sw-period",
+                id: "sg-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
                 conditions: [
-                    { settingId: 'sw-enabled', operator: 'equal', value: true }
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
                 ],
             },
             {
-                id: "sw-current-week-behavior",
+                id: "sg-current-week-behavior",
                 title: "Huidige week in studiewijzer",
                 type: "SingleChoice",
                 default: "focus",
@@ -403,13 +403,19 @@ export default [
                         title: "Uit",
                         icon: "block"
                     },
-                ]
+                ],
+                conditions: [
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
+                ],
             },
             {
-                id: "sw-resources-auto",
+                id: "sg-resources-auto",
                 title: "Aanbevelingen",
                 subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
                 default: true,
+                conditions: [
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
+                ],
             },
         ]
     },
