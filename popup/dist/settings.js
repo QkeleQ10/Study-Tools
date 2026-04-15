@@ -409,6 +409,15 @@ export default [
                 ],
             },
             {
+                id: "sg-inline-attachments",
+                title: "Bijlagen voorvertonen",
+                subtitle: "Bijlagen van studiewijzers worden in een nieuw tabblad geopend in plaats van direct gedownload.",
+                default: true,
+                conditions: [
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
                 id: "sg-resources-auto",
                 title: "Aanbevelingen",
                 subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",

@@ -179,6 +179,10 @@ class MagisterApi {
     studyguideSection(studyguideId, sectionId) {
         return new MagisterApiRequestStudyguideSection(studyguideId, sectionId).get();
     }
+
+    studyguideAttachment(studyguideId, sectionId, attachmentId, inline = true) {
+        return new MagisterApiRequestStudyguideAttachment(studyguideId, sectionId, attachmentId, inline).get();
+    }
 }
 
 class MagisterApiRequest {
@@ -585,6 +589,14 @@ class MagisterApiRequestStudyguideSection extends MagisterApiRequest {
         super();
         this.identifier = `studyguide${studyguideId}item${itemId}`;
         this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/onderdelen/${itemId}?gebruikMappenStructuur=true`;
+    }
+}
+
+class MagisterApiRequestStudyguideAttachment extends MagisterApiRequest {
+    constructor(studyguideId, sectionId, attachmentId, inline = true) {
+        super();
+        this.identifier = `studyguide${studyguideId}item${sectionId}attachment${attachmentId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/onderdelen/${sectionId}/bijlagen/${attachmentId}?redirect_type=body${inline ? '&display=inline' : ''}`;
     }
 }
 
