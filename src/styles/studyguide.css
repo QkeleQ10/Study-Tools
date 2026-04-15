@@ -137,8 +137,9 @@
 
 #st-sg-contents {
     position: relative;
-    border-left: var(--st-border);
 
+    background-color: var(--st-background-secondary);
+    border-left: var(--st-border);
     overflow: hidden;
 
     #st-sg-contents-wrapper {
