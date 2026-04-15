@@ -60,6 +60,9 @@
     container-type: inline-size;
     container-name: sg-overview;
 
+    max-height: 100%;
+    overflow: hidden;
+
     background-color: var(--st-background-secondary);
 
     #st-sg-overview-empty {
@@ -79,8 +82,9 @@
     #st-sg-list {
         display: grid;
         grid-template-columns: auto 1fr;
-        overflow-y: auto;
         height: max-content;
+        max-height: calc(100% - 48px);
+        overflow-y: auto;
 
         .st-sg-subject {
             display: grid;
@@ -295,6 +299,11 @@
 
                 p {
                     font: 12px var(--st-font-family-secondary);
+                }
+
+                ul li a {
+                    display: inline !important;
+                    padding: 0 !important;
                 }
 
                 img {
