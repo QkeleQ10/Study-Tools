@@ -175,15 +175,6 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     --mg-logo-collapsed: url('assets/images/logo-m-white.svg');`
 
     const rootVarsInvert = `
-    #studiewijzer-detail-container .clearfix.user-content {
-        background-color: var(--st-background-primary);
-        color: var(--st-foreground-primary);
-    }
-
-    #studiewijzer-detail-container .clearfix.user-content * {
-        color: var(--st-foreground-primary);
-    }
-
     .block .content.background-white {
         background-color: var(--st-background-secondary);
     }

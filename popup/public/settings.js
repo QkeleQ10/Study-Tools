@@ -374,7 +374,7 @@ export default [
                 default: true,
             },
             {
-                id: "sg-period",
+                id: "sg-show-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
@@ -383,27 +383,10 @@ export default [
                 ],
             },
             {
-                id: "sg-current-week-behavior",
+                id: "sg-scroll-current-week",
                 title: "Huidige week in studiewijzer",
-                type: "SingleChoice",
-                default: "focus",
-                options: [
-                    {
-                        value: "focus",
-                        title: "Scrollen",
-                        icon: "bolt"
-                    },
-                    {
-                        value: "highlight",
-                        title: "Markeren",
-                        icon: "ink_highlighter"
-                    },
-                    {
-                        value: "off",
-                        title: "Uit",
-                        icon: "block"
-                    },
-                ],
+                subtitle: "Er wordt automatisch gescrolld naar de huidige week.",
+                default: true,
                 conditions: [
                     { settingId: 'sg-enabled', operator: 'equal', value: true }
                 ],
@@ -417,15 +400,15 @@ export default [
                     { settingId: 'sg-enabled', operator: 'equal', value: true }
                 ],
             },
-            {
-                id: "sg-resources-auto",
-                title: "Aanbevelingen",
-                subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
-                default: true,
-                conditions: [
-                    { settingId: 'sg-enabled', operator: 'equal', value: true }
-                ],
-            },
+            // {
+            //     id: "sg-resources-auto",
+            //     title: "Aanbevelingen",
+            //     subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
+            //     default: true,
+            //     conditions: [
+            //         { settingId: 'sg-enabled', operator: 'equal', value: true }
+            //     ],
+            // },
         ]
     },
     {
