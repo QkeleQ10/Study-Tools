@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
-        "target": "esnext",
         "checkJs": true,
+        "noImplicitAny": false,
+        "strictNullChecks": false,
         "types": [
             "chrome"
         ]

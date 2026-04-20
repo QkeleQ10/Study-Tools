@@ -167,6 +167,22 @@ class MagisterApi {
     absencesForYear(year) {
         return new MagisterApiRequestAbsencesForYear(year).get();
     }
+
+    studyguides() {
+        return new MagisterApiRequestStudyguides().get();
+    }
+
+    studyguide(studyguideId) {
+        return new MagisterApiRequestStudyguide(studyguideId).get();
+    }
+
+    studyguideSection(studyguideId, sectionId) {
+        return new MagisterApiRequestStudyguideSection(studyguideId, sectionId).get();
+    }
+
+    studyguideAttachment(studyguideId, sectionId, attachmentId, inline = true) {
+        return new MagisterApiRequestStudyguideAttachment(studyguideId, sectionId, attachmentId, inline).get();
+    }
 }
 
 class MagisterApiRequest {
@@ -549,6 +565,39 @@ class MagisterApiRequestAbsencesForYear extends MagisterApiRequest {
         this.path = `api/personen/$USERID/absenties?van=${year.begin}&tot=${year.einde}`;
     }
     outputFormat = (res) => res.Items;
+}
+
+class MagisterApiRequestStudyguides extends MagisterApiRequest {
+    constructor() {
+        super();
+        this.identifier = 'studyguides';
+        this.path = `api/leerlingen/$USERID/studiewijzers?peildatum=${new Date().toISOString().substring(0, 10)}`;
+    }
+    outputFormat = (res) => res.Items;
+}
+
+class MagisterApiRequestStudyguide extends MagisterApiRequest {
+    constructor(studyguideId) {
+        super();
+        this.identifier = `studyguide${studyguideId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}`;
+    }
+}
+
+class MagisterApiRequestStudyguideSection extends MagisterApiRequest {
+    constructor(studyguideId, itemId) {
+        super();
+        this.identifier = `studyguide${studyguideId}item${itemId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/onderdelen/${itemId}?gebruikMappenStructuur=true`;
+    }
+}
+
+class MagisterApiRequestStudyguideAttachment extends MagisterApiRequest {
+    constructor(studyguideId, sectionId, attachmentId, inline = true) {
+        super();
+        this.identifier = `studyguide${studyguideId}item${sectionId}attachment${attachmentId}`;
+        this.path = `api/leerlingen/$USERID/studiewijzers/${studyguideId}/onderdelen/${sectionId}/bijlagen/${attachmentId}?redirect_type=body${inline ? '&display=inline' : ''}`;
+    }
 }
 
 const magisterApi = new MagisterApi();

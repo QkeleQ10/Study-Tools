@@ -156,13 +156,6 @@ class GradeBackupPane extends Pane {
             return;
         }
 
-        // this.close();
-
-        const aside = await awaitElement('aside'), container = await awaitElement('.container[id$=container]'), asideResizer = document.querySelector('#st-aside-resize');
-        aside.setAttribute('style', 'display:none;width:0px;');
-        container.style.paddingRight = '20px';
-        if (asideResizer) asideResizer.setAttribute('style', `display:none`);
-
         if (gradeTables.find(t => t.date?.getTime() === new Date(date).getTime())) {
             notify('snackbar', "Je hebt deze back-up al geïmporteerd.");
             return;

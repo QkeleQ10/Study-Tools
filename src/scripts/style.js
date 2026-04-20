@@ -175,15 +175,6 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     --mg-logo-collapsed: url('assets/images/logo-m-white.svg');`
 
     const rootVarsInvert = `
-    #studiewijzer-detail-container .clearfix.user-content {
-        background-color: var(--st-background-primary);
-        color: var(--st-foreground-primary);
-    }
-
-    #studiewijzer-detail-container .clearfix.user-content * {
-        color: var(--st-foreground-primary);
-    }
-
     .block .content.background-white {
         background-color: var(--st-background-secondary);
     }
@@ -1443,10 +1434,6 @@ dna-page-header span[slot=subtitle] {
     min-height: 0;
 }
 
-footer.endlink {
-    display: none;
-}
-
 .studiewijzer-onderdeel .block.ng-scope {
     overflow: hidden !important;
     transition: box-shadow 200ms, margin 200ms;
@@ -1765,18 +1752,6 @@ table.table-grid-layout>tbody>tr.selected {
     z-index: 10001;
 }
 
-.animation-container-loading.ng-cloak {
-    display: flex !important;
-    opacity: 0;
-    backdrop-filter: none;
-    pointer-events: none;
-    transition: opacity 400ms, backdrop-filter 400ms;
-}
-
-.container.ng-cloak {
-    display: flex !important;
-}
-
 .loading-animation {
     width: 96px;
     content: url("https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/load-animation.svg");
@@ -1836,27 +1811,6 @@ table.table-grid-layout>tbody>tr.selected {
 }
 `, 'study-tools-start-overhaul')
     } else { createStyle('', 'study-tools-start-overhaul') }
-
-    if (syncedStorage['sw-enabled']) {
-        createStyle(`
-#studiewijzer-container {
-    height: auto !important;
-}
-
-#studiewijzer-container section.main {
-    padding-top: 125px;
-}
-
-#studiewijzer-container aside,
-#studiewijzer-container .content-container,
-#studiewijzer-detail-container .widget.full-height .block {
-    display: none !important;
-}
-
-#studiewijzer-container {
-    padding-right: 8px
-}`, 'study-tools-sw-grid')
-    } else { createStyle('', 'study-tools-sw-grid') }
 
     if (syncedStorage['menu-beta']) {
         createStyle(`

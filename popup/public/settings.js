@@ -368,62 +368,47 @@ export default [
         id: "studyguide",
         settings: [
             {
-                id: "sw-enabled",
+                id: "sg-enabled",
                 title: "Studiewijzers rangschikken",
                 subtitle: "Studiewijzers zullen worden gegroepeerd op vak.",
                 default: true,
             },
             {
-                id: "sw-cols",
-                title: "Aantal kolommen",
-                type: "Slider",
-                default: 3,
-                decimals: 0,
-                min: 1,
-                max: 5,
-                step: 1,
-                conditions: [
-                    { settingId: 'sw-enabled', operator: 'equal', value: true }
-                ],
-            },
-            {
-                id: "sw-period",
+                id: "sg-show-period",
                 title: "Periodenummers bij studiewijzers",
                 subtitle: "In plaats van de naam van de studiewijzer.",
                 default: true,
                 conditions: [
-                    { settingId: 'sw-enabled', operator: 'equal', value: true }
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
                 ],
             },
             {
-                id: "sw-current-week-behavior",
+                id: "sg-scroll-current-week",
                 title: "Huidige week in studiewijzer",
-                type: "SingleChoice",
-                default: "focus",
-                options: [
-                    {
-                        value: "focus",
-                        title: "Scrollen",
-                        icon: "bolt"
-                    },
-                    {
-                        value: "highlight",
-                        title: "Markeren",
-                        icon: "ink_highlighter"
-                    },
-                    {
-                        value: "off",
-                        title: "Uit",
-                        icon: "block"
-                    },
-                ]
+                subtitle: "Er wordt automatisch gescrolld naar de huidige week.",
+                default: true,
+                conditions: [
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
+                ],
             },
             {
-                id: "sw-resources-auto",
-                title: "Aanbevelingen",
-                subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
+                id: "sg-inline-attachments",
+                title: "Bijlagen voorvertonen",
+                subtitle: "Bijlagen van studiewijzers worden in een nieuw tabblad geopend in plaats van direct gedownload.",
                 default: true,
+                conditions: [
+                    { settingId: 'sg-enabled', operator: 'equal', value: true }
+                ],
             },
+            // {
+            //     id: "sg-resources-auto",
+            //     title: "Aanbevelingen",
+            //     subtitle: "Soms wordt er een gecureerde collectie hulpbronnen getoond in de zijbalk.",
+            //     default: true,
+            //     conditions: [
+            //         { settingId: 'sg-enabled', operator: 'equal', value: true }
+            //     ],
+            // },
         ]
     },
     {

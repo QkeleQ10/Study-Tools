@@ -1,521 +1,842 @@
-let savedStudyguides = Object.values(syncedStorage?.['sw-list'] || []) || []
+let overview, contents;
+let currentStudyGuideId;
 
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    if (document.location.href.split('?')[0].includes('/studiewijzer/')) studyguideIndividual()
-    else if (document.location.href.split('?')[0].includes('/studiewijzer')) studyguideList()
+    if (document.location.href.split('?')[0].includes('/studiewijzer')) {
+        if (!syncedStorage['sg-enabled']) return;
+
+        (await awaitElement('#studiewijzer-container')).style.display = 'none';
+
+        const mainView = await awaitElement('div.view.ng-scope');
+        const page = new StudyGuidesPage(mainView);
+    }
 }
 
-// Page 'Studiewijzers'
-async function studyguideList() {
-    if (!syncedStorage['sw-enabled']) return
+class StudyGuidesPage {
+    element;
+    studyguides;
+    #main;
+    #overview;
+    #contents;
 
-    let hiddenItemsContainer = element('div', 'st-sw-hidden-items', document.body),
-        hiddenItemsButton = element('button', 'st-sw-hidden-items-button', document.body, { class: 'st-button tertiary', innerText: i18n('sw.showHiddenItems') })
+    constructor(parentElement) {
+        this.element = parentElement.createChildElement('div', { id: 'st-sg' });
 
-    hiddenItemsButton.addEventListener('click', () => {
-        hiddenItemsContainer.classList.toggle('st-expanded')
-        hiddenItemsButton.classList.toggle('st-collapsed')
-    })
+        const header = this.element.createChildElement('div', { id: 'st-sg-header' });
 
-    renderStudyguideList(hiddenItemsContainer)
-
-    let searchBar = element('input', 'st-sw-search', document.body, { class: 'st-input', placeholder: i18n('sw.searchPlaceholder') })
-    searchBar.addEventListener('keyup', e => {
-        if ((e.key === 'Enter' || e.keyCode === 13) && searchBar.value?.length > 0) {
-            document.querySelector('.st-sw-item:not(.hidden), .st-sw-item-default:not(.hidden)').click()
-        }
-    })
-    searchBar.addEventListener('input', appendStudyguidesToList)
-    searchBar.addEventListener('input', e => {
-        let egg = eggs.find(egg => egg.location === 'studyguidesSearch' && egg.input === e.target.value)
-        if (!egg?.output) return
-
-        let fakeSubjectTile = element('div', `st-sw-fake-subject`, document.querySelector('#st-sw-container .st-sw-col') || document.body, { class: 'st-sw-subject' })
-        let fakeDefaultItemButton = element('button', `st-sw-fake-item`, fakeSubjectTile, { innerText: "Geheim", class: 'st-sw-item-default' })
-        fakeDefaultItemButton.addEventListener('click', () => {
-            switch (egg.type) {
-                case 'setFlag':
-                    saveToStorage(egg.output.key, egg.output.value, 'session')
-                    break;
-
-                case 'applySettings':
-                    chrome.storage.sync.set(egg.output)
-                    break;
-
-                default:
-                    notify(egg.type || 'snackbar', egg.output, null, 3600000)
-                    break;
-            }
-        })
-
-        let fakeDefaultItemDescription = element('span', `st-sw-fake-item-desc`, fakeDefaultItemButton, { innerText: "Wat kan dit betekenen?", class: 'st-sw-item-default-desc', 'data-2nd': "Klik dan!" })
-    })
-}
-
-// Page 'Studiewijzer'
-async function studyguideIndividual() {
-    if (syncedStorage['sw-current-week-behavior'] === 'focus' || syncedStorage['sw-current-week-behavior'] === 'highlight') highlightWeek()
-    async function highlightWeek() {
-        let list = await awaitElement('.studiewijzer-content-container>ul'),
-            titles = await awaitElement('li.studiewijzer-onderdeel>div.block>h3>b.ng-binding', true),
-            regex = new RegExp(/(w|sem|ε|heb)[^\s\d]*\s?0?(match)(?!\d)/i)
-
-        list.parentElement.setAttribute('style', 'padding: 8px 0 0 8px !important;')
-
-        titles?.forEach(async title => {
-            if (list.childElementCount === 1 || regex.exec(title.innerText.replace(new Date().getWeek(), 'match'))) {
-                let top = title.parentElement,
-                    bottom = top.nextElementSibling.lastElementChild.previousElementSibling,
-                    li = top.parentElement.parentElement
-                li.classList.add('st-current-sw')
-                top.setAttribute('title', "De titel van dit kopje komt overeen met het huidige weeknummer.")
-                if (syncedStorage['sw-current-week-behavior'] === 'focus') {
-                    bottom.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                    title.click()
+        {
+            const breadcrumbs = header.createChildElement('div', {
+                id: 'st-sg-breadcrumbs',
+                class: 'st-breadcrumbs',
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '8px',
                 }
-            }
-        })
+            });
+            breadcrumbs
+                .createChildElement('a', {
+                    class: 'st-button icon',
+                    innerText: '',
+                    style: {
+                        fontSize: '16px',
+                        color: 'var(--st-foreground-accent)',
+                        margin: '-6px',
+                    },
+                    href: '#/vandaag',
+                })
+                .createSiblingElement('span', {
+                    innerText: '',
+                    style: {
+                        font: '14px "Font Awesome 6 Pro"',
+                        color: 'var(--st-foreground-insignificant)',
+                    }
+                })
+                .createSiblingElement('span', {
+                    innerText: i18n('views.ELO'),
+                    style: {
+                        font: '12px var(--st-font-family-secondary)'
+                    }
+                })
+                .createSiblingElement('span', {
+                    innerText: '',
+                    style: {
+                        font: '14px "Font Awesome 6 Pro"',
+                        color: 'var(--st-foreground-insignificant)',
+                    }
+                })
+                .createSiblingElement('span', {
+                    id: 'st-sg-breadcrumbs-a',
+                    innerText: i18n('views.Studiewijzers'),
+                    style: {
+                        font: '12px var(--st-font-family-secondary)'
+                    }
+                })
+                .addEventListener('click', () => {
+                    this.#overview.hideContents();
+                });
+
+            breadcrumbs
+                .createChildElement('span', {
+                    id: 'st-sg-breadcrumbs-b',
+                    innerText: '',
+                    style: {
+                        font: '14px "Font Awesome 6 Pro"',
+                        color: 'var(--st-foreground-insignificant)',
+                        display: 'none'
+                    }
+                })
+                .createSiblingElement('span', {
+                    id: 'st-sg-breadcrumbs-c',
+                    style: {
+                        font: '12px var(--st-font-family-secondary)',
+                        display: 'none'
+                    }
+                });
+        }
+
+        header.createChildElement('span', { class: 'st-title', innerText: i18n('views.Studiewijzers'), });
+
+        this.#main = this.element.createChildElement('div', { id: 'st-sg-main' });
+
+        this.#overview = new StudyGuidesOverview(this.#main, (studyguide) => this.navigateToStudyGuide(studyguide));
+        overview = this.#overview;
+        this.#fetchStudyGuides();
+
+        this.#contents = new StudyGuideContents(this.#main);
+        contents = this.#contents;
     }
 
-    if (syncedStorage['sw-enabled']) setTimeout(handleStudyguideIndividual, 100)
-    async function handleStudyguideIndividual() {
-        await renderStudyguideList()
+    async #fetchStudyGuides() {
+        this.studyguides = await magisterApi.studyguides();
+        this.#overview.addStudyguides(this.studyguides);
+    }
 
-        const buttons = element('div', 'st-sw-button-wrapper', document.body, { class: 'st-button-wrapper', style: 'position: absolute; top: 70px; right: 20px; z-index: 9999999;' })
-        const expandCollapseAll = element('button', 'st-sw-expand-all', buttons, { class: 'st-button icon tertiary', 'data-icon': '' })
-        expandCollapseAll.addEventListener('click', () => {
-            if (expandCollapseAll.dataset.icon === '') { // Is set to expand mode 
-                expandCollapseAll.dataset.icon = ''
-                document.querySelectorAll('li.studiewijzer-onderdeel .block.fold h3 b').forEach(e => e.click())
-            } else { // Is set to collapse mode 
-                expandCollapseAll.dataset.icon = ''
-                document.querySelectorAll('li.studiewijzer-onderdeel .block:not(.fold) h3 b').forEach(e => e.click())
-            }
-        })
+    navigateToStudyGuide(studyguide) {
+        this.#main.classList.add('contents-visible');
+        this.#contents.loadStudyGuide(studyguide);
+        this.#overview.updateActiveStudyGuide(studyguide);
+        this.#main.querySelector('#st-sg-sidebar-toggle').style.display = 'flex';
+    }
+}
 
-        let id = window.location.href.split('studiewijzer/')[1].split('?')[0],
-            title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim(),
-            dropdown
+class StudyGuidesOverview {
+    element;
+    #list;
+    #emptyText;
+    #progressBar;
+    #sidebarToggle;
+    #drawActiveButton;
+    #drawArchivedButton;
+    #studyguidesSource;
+    studyguides;
+    #drawMode = 'normal';
+    #navigationCallback;
 
-        savedStudyguides = Object.values(await getFromStorage('sw-list') || [])
+    get drawMode() {
+        return this.#drawMode;
+    }
 
-        if (!savedStudyguides.find(e => e.id === id)) {
-            title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-            savedStudyguides.find(e => e.title === title)?.id === id
+    set drawMode(value) {
+        const allowedModes = ['normal', 'archived'];
+        this.#drawMode = allowedModes.includes(value) ? value : 'normal';
+        this.#updateSegmentedControl();
+        this.#draw();
+    }
+
+    constructor(parentElement, navigationCallback) {
+        this.element = parentElement.createChildElement('div', { id: 'st-sg-overview' });
+
+        const toolbar = this.element.createChildElement('div', { id: 'st-sg-overview-toolbar' });
+        const segmentedControl = toolbar.createChildElement('div');
+        this.#drawActiveButton = segmentedControl.createChildElement('button', { class: 'st-button segment active', dataset: { mode: 'normal' }, innerText: i18n('sw.viewActive') });
+        this.#drawActiveButton.addEventListener('click', () => {
+            this.drawMode = 'normal';
+        });
+        this.#drawArchivedButton = segmentedControl.createChildElement('button', { class: 'st-button segment', dataset: { mode: 'archived' }, innerText: i18n('sw.viewArchived') });
+        this.#drawArchivedButton.addEventListener('click', () => {
+            this.drawMode = 'archived';
+        });
+
+        this.#sidebarToggle = toolbar.createChildElement('button', {
+            id: 'st-sg-sidebar-toggle',
+            class: 'st-button icon',
+            innerText: '',
+            title: i18n('collapse'),
+            style: { display: 'none' }
+        });
+        this.#sidebarToggle.addEventListener('click', () => this.hideContents());
+
+        this.#list = this.element.createChildElement('div', { id: 'st-sg-list' });
+        this.#emptyText = this.element.createChildElement('div', { id: 'st-sg-overview-empty', innerText: i18n('sw.noActiveItems') });
+
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
+
+        this.#navigationCallback = navigationCallback;
+    }
+
+    addStudyguides(studyguides) {
+        this.#studyguidesSource = studyguides;
+        this.studyguides = this.#studyguidesSource.map(sg => {
+            const { Id: id, Titel: title, Van: from, TotEnMet: to, VakCodes: subjectCodes, InLeerlingArchief: isArchived } = sg;
+
+            let subject = syncedStorage['sg-override-subjects']?.[id] ?? autoStudyguideSubject(subjectCodes.join(' ') + ' ' + title);
+            let period = syncedStorage['sg-override-periods']?.[id] ?? autoStudyguidePeriod(title);
+            let isHidden = Object.values(syncedStorage['sg-hidden-studyguides'] || []).includes(id);
+
+            return { id, title, from, to, subjectCodes, subject, period, isArchived, isHidden };
+        });
+
+        this.#draw();
+    }
+
+    isStudyguideVisible(sg) {
+        switch (this.drawMode) {
+            case 'archived':
+                return sg.isArchived || sg.isHidden;
+            case 'normal':
+            default:
+                return !sg.isArchived && !sg.isHidden;
         }
+    }
 
-        if (!savedStudyguides.find(e => e.id === id || e.title === title)?.subject) {
-            await awaitElement('dna-page-header.ng-binding')
-            setTimeout(async () => {
-                title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-                savedStudyguides.push({ id: id, title: title, subject: autoStudyguideSubject(title) })
-                createDropdown()
-                saveToStorage('sw-list', savedStudyguides)
-            }, 200)
-        } else createDropdown()
+    refresh() {
+        this.studyguides = this.#studyguidesSource.map(sg => {
+            const { Id: id, Titel: title, Van: from, TotEnMet: to, VakCodes: subjectCodes, InLeerlingArchief: isArchived } = sg;
 
-        function createDropdown() {
-            let allSubjects = Object.fromEntries([
-                ...(savedStudyguides.map(s => [s.subject, s.subject]).filter(([k, v]) => v !== 'hidden').sort(([k1, v1], [k2, v2]) => v1.localeCompare(v2))),
-                ['divider', 'divider'],
-                ['addNew', i18n('sw.customSubject')],
-                ['autoSet', i18n('sw.autoSubject')],
-                ['hidden', i18n('sw.hideStudyguide')]
-            ])
+            let subject = syncedStorage['sg-override-subjects']?.[id] ?? autoStudyguideSubject(subjectCodes.join(' ') + ' ' + title);
+            let period = syncedStorage['sg-override-periods']?.[id] ?? autoStudyguidePeriod(title);
+            let isHidden = Object.values(syncedStorage['sg-hidden-studyguides'] || []).includes(id);
 
-            async function dropdownChange(newValue) {
-                if (newValue === 'addNew') {
-                    let result = prompt(i18n('sw.subjectPrompt'))
-                    if (result?.length > 1) {
-                        savedStudyguides.find(e => e.id === id || e.title === title).subject = result
-                        saveToStorage('sw-list', savedStudyguides)
-                        createDropdown()
-                        setTimeout(() => dropdown.changeValue(result), 10)
+            return { id, title, from, to, subjectCodes, subject, period, isArchived, isHidden };
+        });
+
+        this.#draw();
+    }
+
+    #draw() {
+        this.#list.innerText = '';
+
+
+        this.#emptyText.innerText = i18n(this.drawMode === 'archived' ? 'sw.noArchivedItems' : 'sw.noActiveItems');
+        this.#emptyText.style.display = this.studyguides.some(sg => this.isStudyguideVisible(sg)) ? 'none' : 'block';
+
+        const subjects = Object.groupBy(this.studyguides.filter(sg => this.isStudyguideVisible(sg)), sg => sg.subject);
+
+        const settingShowPeriod = syncedStorage['sg-show-period'];
+
+        const subjectsSorted = Object.keys(subjects).sort((a, b) => a.localeCompare(b));
+
+        subjectsSorted.forEach((subject, index) => {
+            const subjectSection = this.#list.createChildElement('div', {
+                class: 'st-sg-subject'
+            });
+
+            subjectSection.createChildElement('div', {
+                innerText: subject,
+                class: 'st-sg-subject-headline'
+            });
+
+            const studyguidesContainer = subjectSection.createChildElement('div', {
+                class: 'st-sg-items'
+            });
+
+            subjects[subject].sort((a, b) => a.period - b.period).forEach(studyguide => {
+                const sgElement = studyguidesContainer.createChildElement('button', {
+                    class: 'st-button secondary st-sg-item',
+                    innerText: settingShowPeriod && studyguide.period > 0 ? i18n('sw.periodN', { period: studyguide.period, periodOrdinal: formatOrdinals(studyguide.period, true) }) : studyguide.title,
+                    title: `${studyguide.title}\n${studyguide.period > 0 ? i18n('sw.periodN', { period: studyguide.period, periodOrdinal: formatOrdinals(studyguide.period, true) }) : i18n('sw.periodMissing')}`,
+                    'data-id': studyguide.id
+                });
+
+                if (currentStudyGuideId === studyguide.id) {
+                    sgElement.classList.add('active');
+                }
+
+                sgElement.addEventListener('click', () => {
+                    if (this.#navigationCallback) {
+                        this.#navigationCallback(studyguide);
                     } else {
-                        title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-                        savedStudyguides.find(e => e.id === id || e.title === title).subject = autoStudyguideSubject(title)
-                        saveToStorage('sw-list', savedStudyguides)
-                        createDropdown()
-                        setTimeout(() => dropdown.changeValue(autoStudyguideSubject(title)), 10)
+                        window.location.href = `#/elo/studiewijzer/${studyguide.id}`;
                     }
-                } if (newValue === 'autoSet') {
-                    title = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-                    savedStudyguides.find(e => e.id === id || e.title === title).subject = autoStudyguideSubject(title)
-                    saveToStorage('sw-list', savedStudyguides)
-                    createDropdown()
-                } else {
-                    savedStudyguides.find(e => e.id === id || e.title === title).subject = newValue
-                    saveToStorage('sw-list', savedStudyguides)
-                }
-            }
+                });
 
-            dropdown = new Dropdown(
-                buttons.createChildElement('button', { id: 'st-sw-subject-dropdown', class: 'st-segmented-control', title: i18n('sw.subjectPrompt') }),
-                allSubjects,
-                savedStudyguides.find(e => e.id === id || e.title === title)?.subject || 'Geen vak',
-                dropdownChange
-            );
-        }
+                if (window.location.href.includes(`#/elo/studiewijzer/${studyguide.id}`)) {
+                    sgElement.classList.add('active');
+                }
+            });
+        });
+
+        this.#progressBar.dataset.visible = false;
     }
 
-    setTimeout(() => { resources() }, 500)
-    async function resources() {
-        const availableResources = (await (await fetch('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/studyguide-resources.json'))?.json())
-
-        await awaitElement('dna-page-header.ng-binding')
-        setTimeout(async () => {
-            const studyguideTitle = (await awaitElement('dna-page-header.ng-binding'))?.firstChild?.textContent?.trim()
-
-            const filteredResources = availableResources?.filter(resource =>
-                resource.conditions.some(condition =>
-                    (!condition.studyguideTitleIncludes || studyguideTitle?.toLowerCase().includes(condition.studyguideTitleIncludes?.toLowerCase())) &&
-                    (!condition.studyguideSubjectEquals || savedStudyguides.find(e => e.title === studyguideTitle).subject === condition.studyguideSubjectEquals || autoStudyguideSubject(studyguideTitle) === condition.studyguideSubjectEquals)
-                )
-            )
-            if (!(filteredResources?.length > 0)) return
-
-            const aside = await awaitElement('#studiewijzer-detail-container > aside'),
-                asideContent = await awaitElement('#studiewijzer-detail-container > aside > .content-container')
-
-            const hbSheet = element('div', 'st-hb-sheet', aside, { class: 'st-aside-sheet', 'data-visible': 'false', innerText: '' }),
-                hbSheetHeading = element('span', 'st-hb-sheet-heading', hbSheet, { class: 'st-section-title', innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
-
-            filteredResources.forEach(resource => {
-                let srcs = Array.isArray(resource.src) ? resource.src : [resource.src]
-
-                const container = element('div', `st-sw-resource-${resource.title.slice(0, 26)}`, hbSheet)
-
-                srcs.forEach(src => {
-                    switch (resource.type) {
-                        case 'spotifyIframe': {
-                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
-
-                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px', src: src, width: '100%', height: 352, frameBorder: 0, allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture', loading: 'lazy' })
-                            break
-                        }
-
-                        case 'youtubeIframe': {
-                            const anchor = element('a', null, container, { class: 'st-anchor', innerText: resource.title, href: resource.href, target: '_blank' })
-
-                            const iframe = element('iframe', null, container, { class: 'st-hb-iframe', style: 'border-radius:12px;aspect-ratio:16/9', src: src, width: '100%', height: 'auto', frameBorder: 0, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share', loading: 'lazy', allowfullscreen: 'allowfullscreen' })
-
-                            window.addEventListener('blur', () => {
-                                setTimeout(() => {
-                                    if (!document.fullscreenElement && document.activeElement.tagName === 'IFRAME' && document.activeElement.src === src) {
-                                        iframe.requestFullscreen()
-                                        document.addEventListener('fullscreenchange', () => window.focus())
-                                    }
-                                })
-                            })
-                            break
-                        }
-
-                        default:
-                            break
-                    }
-                })
-            })
-
-            const tabs = await awaitElement('#studiewijzer-detail-container > aside > div.head-bar > ul'),
-                existingTabs = document.querySelectorAll('#studiewijzer-detail-container > aside > div.head-bar > ul > li[data-ng-class]'),
-                hbTab = element('li', 'st-hb-tab', tabs, { class: 'st-tab asideTrigger' }),
-                hbTabLink = element('a', 'st-hb-tab-link', hbTab, { innerText: i18n('hb.title'), title: i18n('hb.subtitle') })
-
-            tabs.addEventListener('click', (event) => {
-                let bkTabClicked = event.target.id.startsWith('st-hb-tab')
-                if (bkTabClicked) {
-                    hbTab.classList.add('active')
-                    hbSheet.dataset.visible = true
-                    asideContent.style.display = 'none'
-                } else {
-                    hbTab.classList.remove('active')
-                    hbSheet.dataset.visible = false
-                    asideContent.style.display = ''
-                }
-            })
-
-            if (!syncedStorage['sw-resources-auto']) return
-
-            hbTab.click()
-        }, 500)
+    #updateSegmentedControl() {
+        this.#drawActiveButton.classList.toggle('active', this.drawMode === 'normal');
+        this.#drawArchivedButton.classList.toggle('active', this.drawMode === 'archived');
     }
 
-    allowAsideResize()
-    async function allowAsideResize() {
-        // Allow resizing aside
-        let m_pos,
-            asidePreferenceWidth = 294,
-            asideDisplayWidth = 294
+    updateActiveStudyGuide(studyguide) {
+        currentStudyGuideId = studyguide.id;
+        this.#draw();
 
-        const contentContainer = await awaitElement('#studiewijzer-detail-container'),
-            aside = await awaitElement('#studiewijzer-detail-container > aside'),
-            asideResizer = element('div', 'st-aside-resize', document.body, { innerText: '' })
+        document.getElementById('st-sg-breadcrumbs-a').classList.add('clickable');
+        document.getElementById('st-sg-breadcrumbs-b').style.display = 'block';
+        document.getElementById('st-sg-breadcrumbs-c').style.display = 'block';
+        document.getElementById('st-sg-breadcrumbs-c').innerText = studyguide.title || i18n('views.Studiewijzer details');
+    }
 
-        function asideResize(e) {
-            let dx = m_pos - e.x
-            m_pos = e.x
-            asidePreferenceWidth += dx
+    hideContents() {
+        currentStudyGuideId = null;
+        this.#draw();
 
-            asideDisplayWidth = Math.max(Math.min(600, asidePreferenceWidth), 294)
-            if (asidePreferenceWidth < 100) asideDisplayWidth = 0
+        this.element.closest('#st-sg-main')?.classList.remove('contents-visible');
+        this.#sidebarToggle.style.display = 'none';
 
-            aside.style.width = (asideDisplayWidth) + 'px'
-            contentContainer.style.paddingRight = (20 + asideDisplayWidth) + 'px'
-            asideResizer.style.right = (asideDisplayWidth + 8) + 'px'
-        }
-
-        asideResizer.addEventListener('mousedown', function (e) {
-            m_pos = e.x
-            document.addEventListener('mousemove', asideResize, false)
-        }, false)
-        document.addEventListener('mouseup', function () {
-            asidePreferenceWidth = asideDisplayWidth
-            document.removeEventListener('mousemove', asideResize, false)
-        }, false)
+        document.getElementById('st-sg-breadcrumbs-a').classList.remove('clickable');
+        document.getElementById('st-sg-breadcrumbs-b').style.display = 'none';
+        document.getElementById('st-sg-breadcrumbs-c').style.display = 'none';
     }
 }
 
-// Render studyguide list
-async function renderStudyguideList(hiddenItemsDestination) {
-    return new Promise(async (resolve) => {
-        if (!syncedStorage['sw-enabled']) return resolve()
+class StudyGuideContents {
+    element;
+    studyguide;
+    #progressBar;
+    #titleElement;
+    #subjectElement;
+    #periodElement;
+    #hideButton;
+    #expandAllButton;
+    #wrapper;
+    #body;
 
-        let mainView = document.querySelector('div.view'),
-            widget = document.querySelector('div.full-height.widget'),
-            gridContainer = widget || mainView
+    #attachmentFileTypes = [
+        { extensions: ['pdf'], icon: '' },
+        { extensions: ['txt', 'md'], icon: '' },
+        { extensions: ['doc', 'docx', 'odt', 'csv'], icon: '', name: 'Word' },
+        { extensions: ['ppt', 'pptx', 'odp'], icon: '', name: 'PowerPoint' },
+        { extensions: ['xls', 'xlsx', 'ods'], icon: '', name: 'Excel' },
+        { extensions: ['jpg', 'jpeg', 'png', 'bmp', 'gif'], icon: '' },
+        { extensions: ['svg', 'eps'], icon: '' },
+        { extensions: ['mp3', 'wav', 'avi', 'ogg'], icon: '' },
+        { extensions: ['mp4', 'mov'], icon: '' },
+        { extensions: ['zip', '7z', 'rar', 'tar', 'gz'], icon: '' },
+        { extensions: ['exe', 'msi', 'cad'], icon: '' },
+    ];
 
-        savedStudyguides = Object.values(await getFromStorage('sw-list') || [])
+    constructor(parentElement) {
+        this.element = parentElement.createChildElement('div', { id: 'st-sg-contents' });
 
-        const settingCols = syncedStorage['sw-cols'],
-            settingShowPeriod = syncedStorage['sw-period'],
-            viewTitle = document.querySelector('dna-page-header.ng-binding')?.firstChild?.textContent?.replace(/(\\n)|'|\s/gi, ''),
-            originalItems = await awaitElement('.studiewijzer-list > ul > li, .content.projects > ul > li', true),
-            gridWrapper = element('div', 'st-sw-container', gridContainer)
+        this.#progressBar = this.element.createChildElement('div', { class: 'st-progress-bar' });
+        this.#progressBar.createChildElement('div', { class: 'st-progress-bar-value indeterminate' });
 
-        let cols = [],
-            object = {}
+        this.#wrapper = this.element.createChildElement('div', { id: 'st-sg-contents-wrapper' });
 
-        for (let i = 1; i <= Number(settingCols); i++) {
-            cols.push(element('div', `st-sw-col-${i}`, gridWrapper, { class: 'st-sw-col' }))
+        const header = this.#wrapper.createChildElement('div', { id: 'st-sg-contents-header' });
+        this.#titleElement = header.createChildElement('h3', { class: 'st-section-heading' });
+        const headerInfo = header.createChildElement('div', { id: 'st-sg-contents-header-info' });
+
+        this.#subjectElement = headerInfo.createChildElement('a', { class: 'st-sg-edit', title: i18n('sw.editSubject') });
+        this.#subjectElement.addEventListener('click', () => {
+            const dialog = new StudyGuideEditSubjectDialog(this.studyguide, () => {
+                this.studyguide.subject = syncedStorage['sg-override-subjects']?.[this.studyguide.id] || autoStudyguideSubject(this.studyguide.subjectCodes.join(' ') + ' ' + this.studyguide.title);
+                this.#updateHeader();
+                overview.refresh();
+            });
+            dialog.show();
+        });
+
+        this.#periodElement = headerInfo.createChildElement('a', { class: 'st-sg-edit', title: i18n('sw.editPeriod') });
+        this.#periodElement.addEventListener('click', () => {
+            const dialog = new StudyGuideEditPeriodDialog(this.studyguide, () => {
+                this.studyguide.period = syncedStorage['sg-override-periods']?.[this.studyguide.id] ?? autoStudyguidePeriod(this.studyguide.title);
+                this.#updateHeader();
+                overview.refresh();
+            });
+            dialog.show();
+        });
+
+        const headerActions = headerInfo.createChildElement('div', { id: 'st-sg-contents-header-actions' });
+
+        this.#hideButton = headerActions.createChildElement('button', { class: 'st-button icon', innerText: '', title: i18n('sw.moveTo') });
+        this.#hideButton.addEventListener('click', () => this.moveStudyGuide());
+
+        this.#expandAllButton = headerActions.createChildElement('button', { class: 'st-button icon', innerText: '', title: i18n('sw.expandAll') });
+        this.#expandAllButton.addEventListener('click', () => this.expandAllSections());
+
+        this.#body = this.#wrapper.createChildElement('div', { id: 'st-sg-contents-body' });
+    }
+
+    async loadStudyGuide(studyguide) {
+        this.studyguide = studyguide;
+
+        this.#progressBar.dataset.visible = true;
+
+        this.#wrapper.scrollTo({ top: 0, behavior: 'smooth' });
+
+        const studyguideDetails = await magisterApi.studyguide(studyguide.id);
+
+        this.#updateHeader();
+        this.#body.innerText = '';
+
+        for (const section of studyguideDetails.Onderdelen?.Items || []) {
+            const sectionElement = this.#body.createChildElement('div', { classList: ['st-sg-section', `st-color-${section.Kleur}`] });
+
+            const sectionTop = sectionElement.createChildElement('button', { class: 'st-sg-section-top', title: i18n('expand') });
+            sectionTop.createChildElement('h3', { class: 'st-section-heading', innerText: section.Titel });
+            sectionTop.createChildElement('p', { class: 'st-sg-section-abstract', innerText: section.Omschrijving });
+
+            if (autoSectionWeek(section.Titel).includes(new Date().getWeek())) {
+                sectionTop.classList.add('current');
+            }
+
+            let expanded = false;
+
+            const sectionBody = sectionElement.createChildElement('div', { class: 'st-sg-section-body st-collapsed', innerText: section.Omschrijving });
+
+            sectionTop.addEventListener('click', async () => {
+                if (!expanded) {
+                    this.#progressBar.dataset.visible = true;
+                    const item = await magisterApi.studyguideSection(studyguide.id, section.Id);
+
+                    sectionBody.innerHTML = item.Omschrijving || '';
+
+                    if (item.Bronnen?.length) {
+                        const sourcesContainer = sectionBody.createChildElement('div', { class: 'st-sg-attachments' });
+                        item.Bronnen.sort((a, b) => ((a.ParentId > 0) ? 1 : 0) - ((b.ParentId > 0) ? 1 : 0) || a.Volgnr - b.Volgnr).forEach(source => {
+                            const sourceElement = sourcesContainer.createChildElement('button', {
+                                id: `source-${source.Id}`,
+                                class: 'st-sg-attachment',
+                                dataset: {
+                                    icon: this.#attachmentFileTypes.find(type => type.extensions.some(ext => source.Naam.toLowerCase().endsWith('.' + ext)))?.icon || '',
+                                }
+                            });
+                            sourceElement.createChildElement('span', {
+                                innerText: source.Naam
+                            });
+
+                            let infoRows = [];
+                            if (source.GeplaatstDoor) infoRows.push(i18n('uploadedBy') + ': ' + source.GeplaatstDoor?.Naam);
+                            if (source.GemaaktOp) infoRows.push(i18n('createdAt') + ': ' + new Date(source.GemaaktOp).toLocaleString());
+                            if (source.GewijzigdOp) infoRows.push(i18n('modifiedAt') + ': ' + new Date(source.GewijzigdOp).toLocaleString());
+                            if (source.Grootte) infoRows.push(i18n('fileSize') + ': ' + (source.Grootte ? `${Math.ceil(source.Grootte / 1024)} ${i18n('units.kibibyte')}` : ''));
+                            sourceElement.title = infoRows.join('\n');
+
+                            if (source.Uri?.length) {
+                                sourceElement.dataset.icon = '';
+                                sourceElement.addEventListener('click', () => {
+                                    window.open(source.Uri, '_blank');
+                                });
+                            } else if (source.Links[0]?.Href?.length) {
+                                sourceElement.addEventListener('click', async () => {
+                                    const attachment = await magisterApi.studyguideAttachment(studyguide.id, section.Id, source.Id, syncedStorage['sg-inline-attachments']);
+                                    const url = attachment?.location;
+                                    window.open(url, '_blank');
+                                });
+                            }
+
+                            if (source.ModuleSoort === 5) {
+                                sourceElement.dataset.icon = '';
+                                sourceElement.title = i18n('expand');
+                                sourceElement.classList.add('folder');
+
+                                const childrenContainer = sourcesContainer.createChildElement('div', { class: 'st-sg-attachments-children', id: `source-${source.Id}-children` });
+
+                                childrenContainer.classList.add('st-collapsed')
+                                sourceElement.addEventListener('click', () => {
+                                    childrenContainer.classList.toggle('st-collapsed');
+                                    sourceElement.dataset.icon = childrenContainer.classList.contains('st-collapsed') ? '' : '';
+                                    sourceElement.title = i18n(childrenContainer.classList.contains('st-collapsed') ? 'expand' : 'collapse');
+                                    sourceElement.classList.toggle('open');
+                                });
+                            }
+
+                            if (source.ParentId && source.ParentId > 0) {
+                                sourcesContainer.querySelector(`#source-${source.ParentId}-children`)?.appendChild(sourceElement);
+                            }
+
+                        });
+                    }
+
+                    expanded = true;
+
+                    this.#progressBar.dataset.visible = false;
+                }
+
+                sectionBody.classList.toggle('st-collapsed');
+                sectionTop.classList.toggle('st-collapsed');
+                sectionTop.title = sectionTop.classList.contains('st-collapsed') ? i18n('collapse') : i18n('expand');
+            });
         }
 
-        originalItems.forEach(elem => {
-            let title = elem.firstElementChild.firstElementChild.innerText,
-                subject = savedStudyguides.find(e => e.title === title)?.subject,
-                period = 0,
-                periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|p(eriod(e)?)?)(\s|\d)/i)
-
-            if (!subject) {
-                savedStudyguides.push({ title: title, subject: autoStudyguideSubject(title) })
-                subject = autoStudyguideSubject(title)
-                saveToStorage('sw-list', savedStudyguides)
+        if (syncedStorage['sg-scroll-current-week']) {
+            const currentSection = this.#body.querySelector('.st-sg-section-top.current');
+            if (currentSection) {
+                currentSection.click();
+                this.#wrapper.scrollTo({ top: currentSection.offsetTop - 200, behavior: 'smooth' });
             }
+        }
 
-            if (periodTextIndex > 0) {
-                let periodNumberSearchString = title.slice(periodTextIndex),
-                    periodNumberIndex = periodNumberSearchString.search(/[1-9]/i)
-                if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex))
-            }
+        this.#progressBar.dataset.visible = false;
+    }
 
-            if (!object[subject]) object[subject] = []
-            object[subject].push({ elem, title, period })
-        })
-
-        let tiles = []
-
-        Object.keys(object).sort((a, b) => a.localeCompare(b)).forEach((subject, i, a) => {
-            let items = object[subject]
-
-            let subjectTile = element('div', `st-sw-subject-${subject}`, cols[0], { class: 'st-sw-subject', 'data-subject': subject })
-
-            if (items.length > 1 || subject === 'hidden') {
-                let subjectHeadline = element('div', `st-sw-subject-${subject}-headline`, subjectTile, { innerText: subject, class: 'st-sw-subject-headline' })
-                let itemsWrapper = element('div', `st-sw-subject-${subject}-wrapper`, subjectTile, { class: 'st-sw-items-wrapper', 'data-flex-row': Number(settingCols) < 2 })
-                if (subject === 'hidden') {
-                    subjectHeadline.remove()
-                    itemsWrapper.remove()
-                }
-                for (let i = 0; i < items.length; i++) {
-                    const item = items.sort((a, b) => a.period - b.period)[i]
-
-                    let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
-                    if (item.period < 1) periodText = i18n('sw.periodMissing')
-
-                    let itemButton = element(
-                        'button',
-                        `st-sw-item-${item.title}`,
-                        subject === 'hidden'
-                            ? hiddenItemsDestination
-                            : itemsWrapper,
-                        settingShowPeriod && subject !== 'hidden'
-                            ? { innerText: periodText, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': item.title }
-                            : { innerText: item.title, class: 'st-sw-item', 'data-title': item.title, 'data-2nd': subject === 'hidden' ? item.title : periodText }
-                    )
-                    itemButton.addEventListener('click', () => {
-                        for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
-                            if (e.textContent.includes(item.title)) e.click()
-                        }
+    #updateHeader() {
+        this.#titleElement.innerText = this.studyguide.title;
+        this.#subjectElement.innerText = syncedStorage['sg-override-subjects']?.[this.studyguide.id] || autoStudyguideSubject(this.studyguide.subjectCodes.join(' ') + ' ' + this.studyguide.title);
+        if (syncedStorage['sg-override-periods']?.[this.studyguide.id] !== undefined) {
+            this.#periodElement.innerText =
+                syncedStorage['sg-override-periods']?.[this.studyguide.id] > 0
+                    ? i18n('sw.periodN', {
+                        period: syncedStorage['sg-override-periods']?.[this.studyguide.id],
+                        periodOrdinal: formatOrdinals(syncedStorage['sg-override-periods']?.[this.studyguide.id], true)
                     })
+                    : i18n('sw.periodMissing');
 
-                    if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
-                        itemButton.classList.add('st-sw-selected')
-                        itemButton.classList.remove('hidden')
+        } else {
+            this.#periodElement.innerText =
+                autoStudyguidePeriod(this.studyguide.title) > 0
+                    ? i18n('sw.periodN', {
+                        period: autoStudyguidePeriod(this.studyguide.title),
+                        periodOrdinal: formatOrdinals(autoStudyguidePeriod(this.studyguide.title), true)
+                    })
+                    : i18n('sw.periodMissing');
+        }
+        this.#hideButton.title = i18n('sw.moveTo', { destination: this.studyguide.isArchived ? i18n('sw.viewActive') : i18n('sw.viewArchived') });
+    }
+
+    moveStudyGuide() {
+        const dialog = new Dialog({
+            innerText: this.studyguide.isHidden
+                ? i18n('sw.moveConfirm', { origin: i18n('sw.viewArchived'), destination: i18n('sw.viewActive') })
+                : i18n('sw.moveConfirm', { origin: i18n('sw.viewActive'), destination: i18n('sw.viewArchived') }),
+            buttons: [
+                {
+                    primary: true,
+                    innerText: i18n('move'),
+                    callback: () => {
+                        if (this.studyguide.isHidden) {
+                            syncedStorage['sg-hidden-studyguides'] = Object.values(syncedStorage['sg-hidden-studyguides'] || []).filter(id => id !== this.studyguide.id);
+                        } else {
+                            syncedStorage['sg-hidden-studyguides'] = [...Object.values(syncedStorage['sg-hidden-studyguides'] || []), this.studyguide.id];
+                        }
+                        this.studyguide.isHidden = !this.studyguide.isHidden;
+                        this.#updateHeader();
+                        overview.drawMode = this.studyguide.isHidden ? 'archived' : 'normal';
+                        dialog.close();
+
+                        notify('snackbar', i18n('sw.moved', { destination: this.studyguide.isHidden ? i18n('sw.viewArchived') : i18n('sw.viewActive') }));
                     }
                 }
-            } else if (items[0]) {
-                let item = items[0]
+            ],
+            closeText: i18n('cancel')
+        });
+        dialog.show();
+    }
 
-                let defaultItemButton = element('button', `st-sw-item-${item.title}`, subjectTile, { innerText: subject, class: 'st-sw-item-default', 'data-title': item.title })
-                defaultItemButton.addEventListener('click', () => {
-                    for (const e of document.querySelectorAll('.studiewijzer-list ul>li>a>span:first-child, .tabsheet .widget ul>li>a>span')) {
-                        if (e.textContent.includes(item.title)) e.click()
-                    }
-                })
+    expandAllSections() {
+        const allCollapsedSections = this.#body.querySelectorAll('.st-sg-section-top:not(.st-collapsed)');
+        if (allCollapsedSections.length === 0) {
+            this.#body.querySelectorAll('.st-sg-section-top.st-collapsed').forEach(sectionTop => sectionTop.click());
+        } else {
+            allCollapsedSections.forEach(sectionTop => sectionTop.click());
+        }
+    }
+}
 
-                let periodText = i18n('sw.periodN', { period: item.period, periodOrdinal: formatOrdinals(item.period, true) })
-                if (item.period < 1) periodText = i18n('sw.periodMissing')
+class StudyGuideEditSubjectDialog extends Dialog {
+    #studyguide;
+    #old;
+    #suggestion;
+    #saveCallback;
+    #input;
+    #list;
 
-                let defaultItemDescription = element(
-                    'span',
-                    `st-sw-item-${item.title}-desc`,
-                    defaultItemButton,
-                    settingShowPeriod
-                        ? { innerText: periodText, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': item.title }
-                        : { innerText: item.title, class: 'st-sw-item-default-desc', 'data-title': item.title, 'data-2nd': periodText })
+    #subjectsSorted = [...SUBJECTS].sort((a, b) => a.name.localeCompare(b.name));
 
-                if (viewTitle?.toLowerCase() === item.title.replace(/(\\n)|'|\s/gi, '').toLowerCase()) {
-                    defaultItemButton.classList.add('st-sw-selected')
-                    defaultItemButton.classList.remove('hidden')
+    constructor(studyguide, saveCallback) {
+        super({
+            buttons: [
+                {
+                    innerText: i18n('save'),
+                    dataset: { icon: '' },
+                    callback: () => this.save()
                 }
+            ],
+            closeText: i18n('cancel')
+        });
+
+        this.#studyguide = studyguide;
+        this.#saveCallback = saveCallback;
+        this.#old = studyguide.subject;
+        this.#suggestion = autoStudyguideSubject(studyguide.subjectCodes.join(' ') + ' ' + studyguide.title);
+
+        this.body.classList.add('st-subject-dialog');
+
+        this.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('sw.editSubject') });
+
+        this.#input = this.body.createChildElement('input', { class: 'st-input', placeholder: i18n('sw.search') });
+        this.#input.value = this.#studyguide.subject || '';
+        this.#input.addEventListener('input', () => this.#populateList());
+
+        this.body.createChildElement('br');
+        this.body.createChildElement('br');
+        this.body.createChildElement('small', { class: 'st-note', innerText: i18n('sw.searchResults') });
+        this.#list = this.body.createChildElement('div', { class: 'st-subject-list' });
+        this.#populateList();
+    }
+
+    #populateList() {
+        const query = this.#input.value.trim().toLowerCase();
+        const subjects = [...this.#subjectsSorted].sort((a, b) => {
+            const scoreA = this.#matchScore(a, query);
+            const scoreB = this.#matchScore(b, query);
+
+            if (scoreA !== scoreB) return scoreA - scoreB;
+
+            return a.name.localeCompare(b.name);
+        });
+
+        this.#list.innerText = '';
+        subjects.forEach(subject => {
+            const score = this.#matchScore(subject, query);
+            const subjectButton = this.#list.createChildElement('button', {
+                class: 'st-subject-list-item',
+                innerText: subject.name,
+            });
+
+            if (score === Number.MAX_SAFE_INTEGER) {
+                subjectButton.classList.add('muted');
             }
-        })
 
-        if (!gridWrapper?.parentElement || !document.body.contains(gridContainer)) {
-            mainView = await awaitElement('div.view')
-            widget = document.querySelector('div.full-height.widget')
-            gridContainer = widget || mainView
-            gridContainer.appendChild(gridWrapper)
-        }
-        if (!document.location.href.includes('/studiewijzer') && gridWrapper) {
-            gridWrapper.remove()
-        }
+            if (subject.name === this.#input.value.trim()) {
+                subjectButton.createChildElement('small', { innerText: i18n('sw.selected') });
+                subjectButton.classList.add('active');
+            } else if (subject.name === this.#old) {
+                subjectButton.createChildElement('small', { innerText: i18n('sw.current') });
+            }
+            if (subject.name === this.#suggestion) {
+                subjectButton.createChildElement('small', { innerText: i18n('sw.recognised') });
+            }
 
-        appendStudyguidesToList(tiles)
+            subjectButton.addEventListener('click', () => {
+                this.#input.value = subject.name;
+                setTimeout(() => {
 
-        resolve()
+                    this.#populateList();
+                }, 5);
+            });
+        });
+    }
 
-        if (document.getElementById('st-sw-hidden-items-button') && !(document.getElementById('st-sw-hidden-items')?.children.length > 0)) {
-            document.getElementById('st-sw-hidden-items-button')?.remove()
-        }
-    })
+    #matchScore(subject, query) {
+        if (!query.length) return Number.MAX_SAFE_INTEGER - 1;
+
+        const name = subject.name.toLowerCase();
+        const aliases = subject.aliases.map(alias => alias.toLowerCase());
+
+        if (name === query) return 0;
+
+        if (name.startsWith(query)) return 10;
+
+        const nameWordMatchIndex = name.search(new RegExp(`\\b${escapeRegExp(query)}`));
+        if (nameWordMatchIndex >= 0) return 20 + nameWordMatchIndex;
+
+        const nameContainsIndex = name.indexOf(query);
+        if (nameContainsIndex >= 0) return 40 + nameContainsIndex;
+
+        const aliasStartsWithIndex = aliases.findIndex(alias => alias.startsWith(query));
+        if (aliasStartsWithIndex >= 0) return 60 + aliasStartsWithIndex;
+
+        const aliasContainsIndex = aliases.findIndex(alias => alias.includes(query));
+        if (aliasContainsIndex >= 0) return 80 + aliasContainsIndex;
+
+        if (subject.name === this.#suggestion) return 90;
+        if (subject.name === this.#old) return 91;
+
+        return Number.MAX_SAFE_INTEGER;
+    }
+
+    async save() {
+        syncedStorage['sg-override-subjects'] = {
+            ...syncedStorage['sg-override-subjects'] || {},
+            [this.#studyguide.id]: this.#input.value.trim() || undefined
+        };
+
+        notify('snackbar', i18n('saved'));
+
+        this.close();
+
+        if (this.#saveCallback) this.#saveCallback();
+    }
 }
 
-// Append the study guides to the list
-function appendStudyguidesToList() {
-    let tiles = document.querySelectorAll('.st-sw-subject')
-    let items = document.querySelectorAll('.st-sw-item, .st-sw-item-default')
-    let searchBar = document.querySelector('#st-sw-search')
-    let gridContainer = document.querySelector('#st-sw-container')
-    let cols = document.querySelectorAll('#st-sw-container .st-sw-col')
-    if (!gridContainer || !cols?.[0]) return
 
-    // First, define which study guide items should be shown.
-    items.forEach(studyguide => {
-        if (studyguide.id === 'st-sw-fake-item') {
-            studyguide.parentElement.remove()
-            return
-        }
+class StudyGuideEditPeriodDialog extends Dialog {
+    #studyguide;
+    #old;
+    #suggestion;
+    #saveCallback;
+    #input;
 
-        let matches = true
+    constructor(studyguide, saveCallback) {
+        super({
+            buttons: [
+                {
+                    innerText: i18n('save'),
+                    dataset: { icon: '' },
+                    callback: () => this.save()
+                }
+            ],
+            closeText: i18n('cancel')
+        });
 
-        if (searchBar) {
-            let query = searchBar.value.toLowerCase()
-            matches = (studyguide.dataset.title?.toLowerCase().includes(query) || studyguide?.closest('.st-sw-subject')?.dataset?.subject?.toLowerCase().includes(query))
-        }
+        this.#studyguide = studyguide;
+        this.#saveCallback = saveCallback;
+        this.#old = studyguide.period;
+        this.#suggestion = autoStudyguidePeriod(studyguide.title);
 
-        if (matches) studyguide.classList.remove('hidden')
-        else studyguide.classList.add('hidden')
-    })
+        this.body.classList.add('st-subject-dialog');
 
-    // Next, define which subject tiles have visible children.
-    let visibleSubjectTiles = [...tiles].filter(element => element.querySelector('button:not(.hidden)'))
+        this.body.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('sw.editPeriod') });
 
-    visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
-        cols[Math.floor((i / a.length) * cols.length)].appendChild(studyguide)
-    })
+        this.#input = this.body.createChildElement('input', { class: 'st-input', placeholder: 0, type: 'number', min: 0 });
+        this.#input.value = this.#studyguide.period ?? 0;
 
-    // distributeElements(visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)))
-    // // Finally, sort the subject tiles and equally distribute them across columns.
-    // // visibleSubjectTiles.sort((a, b) => a?.dataset?.subject?.localeCompare(b?.dataset?.subject)).forEach((studyguide, i, a) => {
-    // //     grid[Math.floor((i / a.length) * grid.length)].appendChild(studyguide)
-    // // })
+        this.body.createChildElement('br');
+        this.body.createChildElement('small', { class: 'st-note', innerText: i18n('sw.recognised') + ': ' + i18n('sw.periodN', { period: this.#suggestion, periodOrdinal: formatOrdinals(this.#suggestion, true) }) });
+        this.body.createChildElement('br');
+        this.body.createChildElement('small', { class: 'st-note', innerText: i18n('sw.editPeriodDisclaimer') });
+    }
 
-    // function distributeElements(elements) {
-    //     const columns = [[], [], []] // Array of arrays to store elements for each column
-    //     const columnHeights = [0, 0, 0] // Initial heights for each column
+    async save() {
+        syncedStorage['sg-override-periods'] = {
+            ...syncedStorage['sg-override-periods'] || {},
+            [this.#studyguide.id]: this.#input.value.trim() ?? 0
+        };
 
-    //     elements.forEach((element) => {
-    //         // Find the shortest column
-    //         const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights))
-    //         // Add element to the shortest column
-    //         columns[shortestColumnIndex].push(element)
-    //         // Update height of the shortest column
-    //         columnHeights[shortestColumnIndex] += element.offsetHeight // Use offsetHeight for variable height
-    //     })
+        notify('snackbar', i18n('saved'));
 
-    //     // Distribute elements to the columns in the DOM
-    //     columns.forEach((column, index) => {
-    //         column.forEach((element) => {
-    //             element.style.gridColumn = index + 1 // Set grid column using inline CSS
-    //             grid.appendChild(element)
-    //         })
-    //     })
-    // }
+        this.close();
+
+        if (this.#saveCallback) this.#saveCallback();
+    }
 }
 
+const SUBJECTS = [
+    { name: "Aardrijkskunde", aliases: ["aardrijkskunde", "ak"] },
+    { name: "Bedrijfseconomie", aliases: ["bedrijfseconomie", "beco", "bec"] },
+    { name: "Beeldende vorming", aliases: ["beeldend", "beeldende", "kubv", "be", "bv", "bha", "kbv", "tw"] },
+    { name: "Biologie", aliases: ["biologie", "bio", "bi", "biol"] },
+    { name: "Cambridge Engels", aliases: ["cambridge engels", "cambridge", "caeng", "ceng", "ce"] },
+    { name: "Chinees", aliases: ["chinees", "chtl", "ch", "zh", "chinese", "中文"] },
+    { name: "Culturele en kunstzinnige vorming", aliases: ["ckv"] },
+    { name: "Digitale vaardigheden", aliases: ["digitale vaardigheden", "digitaal", "dv"] },
+    { name: "Drama", aliases: ["drama", "kudr", "dr", "kdr", "da", "kda"] },
+    { name: "Economie", aliases: ["economie", "eco", "ec", "econ", "eo"] },
+    { name: "Filosofie", aliases: ["filosofie", "filo", "fil", "fie", "fi"] },
+    { name: "Frans", aliases: ["frans", "fatl", "fa", "fr", "franse", "français"] },
+    { name: "Geschiedenis", aliases: ["geschiedenis", "gs", "ges", "gst", "gm"] },
+    { name: "Godsdienst", aliases: ["godsdienst", "religie", "god", "gd", "gds"] },
+    { name: "Grieks", aliases: ["grieks", "gtc", "gr", "grkc", "grtl", "griekse"] },
+    { name: "Kunst algemeen", aliases: ["kunst algemeen", "ku", "kua", "kv1"] },
+    { name: "Klassieke culturele vorming", aliases: ["klassieke culturele vorming", "kc", "kcv"] },
+    { name: "Latijn", aliases: ["latijn", "ltc", "la", "lakc", "latl", "latijnse"] },
+    { name: "Levensbeschouwing", aliases: ["levensbeschouwing", "lv"] },
+    { name: "Sport", aliases: ["sport", "lo", "s&b", "lichamelijke opvoeding", "gym", "bsm"] },
+    { name: "Maatschappijleer", aliases: ["maatschappijleer", "ma", "malv", "maat"] },
+    { name: "Maatschappij­wetenschappen", aliases: ["maatschappijwetenschappen", "ma", "maat", "maw", "mask"] },
+    { name: "Mens en maatschappij", aliases: ["mens en maatschappij", "m&m", "mm"] },
+    { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn", "groene vingers"] },
+    { name: "Mentor", aliases: ["mentor", "mentoruur", "mentoraat", "mr"] },
+    { name: "Muziek", aliases: ["muziek", "kumu", "mu", "kmu"] },
+    { name: "Natuurkunde", aliases: ["natuurkunde", "na", "nat"] },
+    { name: "Nederlands", aliases: ["nederlands", "netl", "ne", "nl", "nederlandse"] },
+    { name: "Rekenen", aliases: ["rekenen", "reken", "rekenvaardigheid", "re", "rv"] },
+    { name: "Scheikunde", aliases: ["scheikunde", "sk", "sch", "schk"] },
+    { name: "Natuur- en scheikunde 1", aliases: ["natuur- en scheikunde 1", "natuur en scheikunde 1", "natuurkunde en scheikunde 1", "nask 1", "ns1", "nask1", "nsk1"] },
+    { name: "Natuur- en scheikunde 2", aliases: ["natuur- en scheikunde 2", "natuur en scheikunde 2", "natuurkunde en scheikunde 2", "nask 2", "ns2", "nask2", "nsk2"] },
+    { name: "Natuur- en scheikunde", aliases: ["natuur- en scheikunde", "natuur en scheikunde", "natuurkunde en scheikunde", "nask", "ns"] },
+    { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
+    { name: "STEAM", aliases: ["steam", "stem"] },
+    { name: "Techniek", aliases: ["techniek", "tech"] },
+    { name: "Wiskunde A", aliases: ["wiskunde a", "wi a", "wa", "wis a", "wisa"] },
+    { name: "Wiskunde B", aliases: ["wiskunde b", "wi b", "wb", "wis b", "wisb"] },
+    { name: "Wiskunde C", aliases: ["wiskunde c", "wi c", "wc", "wis c", "wisc"] },
+    { name: "Wiskunde D", aliases: ["wiskunde d", "wi d", "wd", "wis d", "wisd"] },
+    { name: "Wiskunde", aliases: ["wiskunde", "wi", "wis"] },
+    { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
+    { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] },
+    { name: "Onderzoek en ontwerpen", aliases: ["onderzoek en ontwerpen", "o&o", "oo", "oe"] },
+    { name: "Ontmoeten en verbinden", aliases: ["ontmoeten en verbinden", "o&v", "ov"] },
+    { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
+    { name: "Handarbeid", aliases: ["ha"] }, // Positioned very low to avoid 'ha' being recognised as 'Handarbeid'
+    { name: "Informatica", aliases: ["informatica", "in", "ict"] }, // Positioned very low to avoid 'in' being recognised as 'Informatica'
+    { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] }, // Positioned very low to avoid 'de' being recognised as 'Duits'
+    { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'Engels'
+]
 function autoStudyguideSubject(title) {
-    const subjectMap = [
-        { name: "Aardrijkskunde", aliases: ["aardrijkskunde", "ak"] },
-        { name: "Bedrijfseconomie", aliases: ["bedrijfseconomie", "beco", "bec"] },
-        { name: "Beeldende vorming", aliases: ["beeldend", "beeldende", "kubv", "be", "bv", "bha", "kbv", "tw"] },
-        { name: "Biologie", aliases: ["biologie", "bio", "bi", "biol"] },
-        { name: "Cult. en kunstz. vorming", aliases: ["ckv"] },
-        { name: "Drama", aliases: ["drama", "kudr", "dr", "kdr", "da", "kda"] },
-        { name: "Economie", aliases: ["economie", "eco", "ec", "econ", "eo"] },
-        { name: "Frans", aliases: ["frans", "fatl", "fa", "fr", "franse", "français"] },
-        { name: "Geschiedenis", aliases: ["geschiedenis", "gs", "ges", "gst", "gm"] },
-        { name: "Godsdienst", aliases: ["godsdienst", "religie", "god", "gd", "gds"] },
-        { name: "Grieks", aliases: ["grieks", "gtc", "gr", "grkc", "grtl", "griekse"] },
-        { name: "Informatica", aliases: ["informatica", "in", "ict"] },
-        { name: "Kunst algemeen", aliases: ["kunst algemeen", "ku", "kua", "kv1"] },
-        { name: "Latijn", aliases: ["latijn", "ltc", "la", "lakc", "latl", "latijnse"] },
-        { name: "Levensbeschouwing", aliases: ["levensbeschouwing", "lv"] },
-        { name: "Sport", aliases: ["sport", "lo", "s&b", "lichamelijke opvoeding", "gym", "bsm"] },
-        { name: "Maatschappijleer", aliases: ["maatschappijleer", "ma", "malv", "maat"] },
-        { name: "Maatschappij­wetenschappen", aliases: ["maatschappijwetenschappen", "ma", "maat", "maw", "mask"] },
-        { name: "Mens en maatschappij", aliases: ["mens en maatschappij", "m&m", "mm"] },
-        { name: "Mens en natuur", aliases: ["mens en natuur", "m&n", "mn", "groene vingers"] },
-        { name: "Mentor", aliases: ["mentor", "mentoruur", "mentoraat", "mr"] },
-        { name: "Muziek", aliases: ["muziek", "kumu", "mu", "kmu"] },
-        { name: "Natuurkunde", aliases: ["natuurkunde", "na", "nat", "nask1", "nsk1"] },
-        { name: "Nederlands", aliases: ["nederlands", "netl", "ne", "nl", "nederlandse"] },
-        { name: "Ontmoeten en verbinden", aliases: ["ontmoeten en verbinden", "o&v", "ov"] },
-        { name: "Scheikunde", aliases: ["scheikunde", "sk", "sch", "schk", "nask2", "nsk2"] },
-        { name: "Natuur- en scheikunde", aliases: ["natuur- en scheikunde", "natuur en scheikunde", "natuurkunde en scheikunde", "nask", "ns"] },
-        { name: "Spaans", aliases: ["spaans", "sptl", "sp", "es", "spaanse", "español", "espanol"] },
-        { name: "Tekenen", aliases: ["tekenen", "teken", "bte", "te"] },
-        { name: "Wiskunde", aliases: ["wiskunde", "wi", "wa", "wb", "wc", "wd", "wis", "wisa", "wisb", "wisc", "wisd", "rekenen", "re"] },
-        { name: "Handarbeid", aliases: ["ha"] }, // Positioned very low to avoid 'ha' being recognised as 'Handarbeid'
-        { name: "Duits", aliases: ["duits", "dutl", "du", "de", "duitse", "deutsch"] }, // Positioned very low to avoid 'de' being recognised as 'Duits'
-        { name: "Engels", aliases: ["engels", "entl", "en", "engelse", "english"] }, // Positioned very low to avoid 'en' being recognised as 'Engels'
-        { name: "Examentraining", aliases: ["examentraining", "examenvoorbereiding", "examen"] },
-        { name: "Loopbaan­oriëntatie en -begeleiding", aliases: ["loopbaan", "lob"] }
-    ]
-
-    const resultingSubject = subjectMap.find((subjectObject) => title?.split(/\s|-|_|\d/gi)?.some(titleWord => subjectObject.aliases.includes(titleWord.toLowerCase())))
+    const resultingSubject = SUBJECTS.find((subjectObject) => title?.split(/\s|-|_|\d/gi)?.some(titleWord => subjectObject.aliases.includes(titleWord.toLowerCase())))
 
     return resultingSubject?.name || 'Geen vak'
+}
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function autoStudyguidePeriod(title) {
+    let period = 0;
+    let periodTextIndex = title.search(/(kw(t)?|(kwintaal)|(term)|t(hema)?|to|po|p(eriod(e)?)?)(\s|\d)/i);
+
+    if (periodTextIndex > 0) {
+        let periodNumberSearchString = title.slice(periodTextIndex),
+            periodNumberIndex = periodNumberSearchString.search(/[1-9]/i);
+        if (periodNumberIndex > 0) period = Number(periodNumberSearchString.charAt(periodNumberIndex));
+    }
+
+    return period;
+}
+
+function autoSectionWeek(sectionTitle) {
+    // return an array of week numbers that are mentioned in the section title, or an empty array if no week numbers are found
+    if (!sectionTitle || typeof sectionTitle !== 'string') return [];
+
+    const keywordRegex = /(?:week|weken|woche|wochen|semaine|semaines|semana|semanas|sem)\b|wk(?=\s*\d)/gi;
+    const numberRegex = /^(\d{1,2})(?![,.]\d)/;
+    const delimiterRegex = /^\s*(?:-|\/|&|en|and|und|et|e|y|)\s*/i;
+    const weekNumbers = [];
+
+    let keywordMatch;
+    while ((keywordMatch = keywordRegex.exec(sectionTitle)) !== null) {
+        let cursor = keywordRegex.lastIndex;
+
+        const prefixMatch = sectionTitle.slice(cursor).match(/^\s*[:.\-]?\s*/);
+        cursor += prefixMatch?.[0]?.length || 0;
+
+        const firstNumberMatch = sectionTitle.slice(cursor).match(numberRegex);
+        if (!firstNumberMatch) continue;
+
+        weekNumbers.push(Number(firstNumberMatch[1]));
+        cursor += firstNumberMatch[0].length;
+
+        while (true) {
+            const remaining = sectionTitle.slice(cursor);
+            const delimiterMatch = remaining.match(delimiterRegex);
+            if (!delimiterMatch) break;
+
+            const nextStart = cursor + delimiterMatch[0].length;
+            const nextNumberMatch = sectionTitle.slice(nextStart).match(numberRegex);
+            if (!nextNumberMatch) break;
+
+            weekNumbers.push(Number(nextNumberMatch[1]));
+            cursor = nextStart + nextNumberMatch[0].length;
+        }
+    }
+
+    return [...new Set(weekNumbers)];
 }
