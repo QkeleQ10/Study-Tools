@@ -1434,10 +1434,6 @@ dna-page-header span[slot=subtitle] {
     min-height: 0;
 }
 
-footer.endlink {
-    display: none;
-}
-
 .studiewijzer-onderdeel .block.ng-scope {
     overflow: hidden !important;
     transition: box-shadow 200ms, margin 200ms;
