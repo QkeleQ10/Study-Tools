@@ -2,18 +2,31 @@ class GradeStatisticsPane extends Pane {
     id = 'cs';
     icon = '';
 
+    get year() {
+        return currentGradeTable?.identifier?.year ?? null;
+    }
+
     #div1;
     #div2;
     selectedGrades = [];
     #initialised = false;
+    #gradeColumnInfoCache = new Map();
+    #gradeColumnInfoFailed = new Set();
 
     constructor(parentElement) {
         super(parentElement);
         this.element.id = 'st-grade-statistics-pane';
 
-        this.element.createChildElement('h3', { class: 'st-section-heading', innerText: i18n('cs.title') });
-        this.#div1 = this.element.createChildElement('div', { class: 'st-div' });
-        this.#div2 = this.element.createChildElement('div', { class: 'st-div' });
+        this.element.createChildElement('h3', {
+            class: 'st-section-heading',
+            innerText: i18n('cs.title'),
+        });
+        this.#div1 = this.element.createChildElement('div', {
+            class: 'st-div',
+        });
+        this.#div2 = this.element.createChildElement('div', {
+            class: 'st-div',
+        });
     }
 
     show() {
@@ -22,9 +35,51 @@ class GradeStatisticsPane extends Pane {
     }
 
     hide() {
-        document.querySelectorAll('.st-grade-statistics-selected').forEach(elem => elem.classList.remove('st-grade-statistics-selected'));
+        document
+            .querySelectorAll('.st-grade-statistics-selected')
+            .forEach((elem) =>
+                elem.classList.remove('st-grade-statistics-selected'),
+            );
         currentGradeTable.element.classList.remove('st-cs-open');
         super.hide();
+    }
+
+    async #applyColumnWeightToGrade(grade) {
+        if (!grade?.CijferKolom) return;
+
+        const existingWeight = Number(grade.CijferKolom.Weging);
+        if (!Number.isNaN(existingWeight) && existingWeight === 0) {
+            grade.TeltMee = false;
+            return;
+        }
+
+        if (grade.CijferKolom.Weging != null) return;
+
+        const year = this.year;
+        const yearId = year?.id;
+        const columnId = Number(grade.CijferKolom.Id);
+        if (!yearId || !Number.isFinite(columnId) || columnId <= 0) return;
+
+        const cacheKey = `${yearId}:${columnId}`;
+        if (this.#gradeColumnInfoFailed.has(cacheKey)) return;
+
+        if (!this.#gradeColumnInfoCache.has(cacheKey)) {
+            this.#gradeColumnInfoCache.set(
+                cacheKey,
+                magisterApi.gradesColumnInfo(year, columnId).catch(() => {
+                    this.#gradeColumnInfoFailed.add(cacheKey);
+                    return null;
+                }),
+            );
+        }
+
+        const gradeColumnInfo = await this.#gradeColumnInfoCache.get(cacheKey);
+        if (!gradeColumnInfo) return;
+
+        grade.CijferKolom = { ...grade.CijferKolom, ...gradeColumnInfo };
+        if (Number(grade.CijferKolom.Weging) === 0) {
+            grade.TeltMee = false;
+        }
     }
 
     async redraw() {
@@ -40,10 +95,16 @@ class GradeStatisticsPane extends Pane {
         this.#div1.innerHTML = '';
         this.#div2.innerHTML = '';
 
-        document.querySelectorAll('.st-grade-statistics-selected').forEach(elem => elem.classList.remove('st-grade-statistics-selected'));
+        document
+            .querySelectorAll('.st-grade-statistics-selected')
+            .forEach((elem) =>
+                elem.classList.remove('st-grade-statistics-selected'),
+            );
         currentGradeTable.element.classList.add('st-cs-open');
 
-        let grades = this.selectedGrades.sort((a, b) => a.date && b.date ? a.date - b.date : 0);
+        let grades = this.selectedGrades.sort((a, b) =>
+            a.date && b.date ? a.date - b.date : 0,
+        );
         let values = grades.map(({ result }) => result);
 
         for (const { id } of grades) {
@@ -51,7 +112,12 @@ class GradeStatisticsPane extends Pane {
             if (elem) elem.classList.add('st-grade-statistics-selected');
         }
 
-        const filterButton = this.#div1.createChildElement('button', { class: 'st-button icon', 'data-icon': '', title: i18n('selection'), style: { position: 'absolute', top: '12px', right: '12px' } });
+        const filterButton = this.#div1.createChildElement('button', {
+            class: 'st-button icon',
+            'data-icon': '',
+            title: i18n('selection'),
+            style: { position: 'absolute', top: '12px', right: '12px' },
+        });
         filterButton.addEventListener('click', async () => {
             const dialog = new Dialog({
                 innerText: i18n('cs.howToAdd'),
@@ -62,21 +128,32 @@ class GradeStatisticsPane extends Pane {
         // === EMPTY ===
 
         if (this.selectedGrades.length === 0) {
-            this.#div1.createChildElement('p', { innerText: i18n('cs.emptyDesc') });
+            this.#div1.createChildElement('p', {
+                innerText: i18n('cs.emptyDesc'),
+            });
             this.progressBar.dataset.visible = 'false';
             return;
         } else {
-            this.#div1.createChildElement('p', {
-                class: 'remove',
-                innerText: i18n(
-                    grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades',
-                    { num: grades.length }
-                ) + ' ' + i18n('cs.rangeDesc', {
-                    min: Math.min(...values).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
-                    max: Math.max(...values).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                }),
-                title: i18n('remove')
-            })
+            this.#div1
+                .createChildElement('p', {
+                    class: 'remove',
+                    innerText:
+                        i18n(grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades', {
+                            num: grades.length,
+                        }) +
+                        ' ' +
+                        i18n('cs.rangeDesc', {
+                            min: Math.min(...values).toLocaleString(locale, {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1,
+                            }),
+                            max: Math.max(...values).toLocaleString(locale, {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1,
+                            }),
+                        }),
+                    title: i18n('remove'),
+                })
                 .addEventListener('click', () => {
                     this.selectedGrades = [];
                     this.redraw();
@@ -85,107 +162,164 @@ class GradeStatisticsPane extends Pane {
 
         // === CENTRAL TENDENCIES ===
 
-        const divCentralTendencies = this.#div2.createChildElement('div', { class: 'st-cs-tile', id: 'st-cs-central-tendencies' });
+        const divCentralTendencies = this.#div2.createChildElement('div', {
+            class: 'st-cs-tile',
+            id: 'st-cs-central-tendencies',
+        });
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric',
             'data-description': i18n('cs.mean'),
             title: i18n('cs.meanDescription'),
-            innerText: calculateMean(values).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            innerText: calculateMean(values).toLocaleString(locale, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }),
         });
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n('cs.median'),
             title: i18n('cs.medianDescription'),
-            innerText: calculateMedian(values).toLocaleString(locale)
+            innerText: calculateMedian(values).toLocaleString(locale),
         });
         const { modes, occurrences } = calculateMode(values);
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n(modes.length > 1 ? 'cs.modes' : 'cs.mode'),
             title: i18n('cs.modeDescription'),
-            innerText: modes.length > 0 ? modes.map(m => m.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })).join('; ') : i18n('none'),
-            'data-extra': modes.length > 0 ? `${occurrences}x` : null
+            innerText:
+                modes.length > 0
+                    ? modes
+                          .map((m) =>
+                              m.toLocaleString(locale, {
+                                  minimumFractionDigits: 1,
+                                  maximumFractionDigits: 1,
+                              }),
+                          )
+                          .join('; ')
+                    : i18n('none'),
+            'data-extra': modes.length > 0 ? `${occurrences}x` : null,
         });
         divCentralTendencies.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n('cs.standardDeviation'),
             title: i18n('cs.standardDeviationDescription'),
-            innerText: calculateStandardDeviation(values).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            innerText: calculateStandardDeviation(values).toLocaleString(
+                locale,
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+            ),
         });
 
         // === SUFFICIENT / INSUFFICIENT ===
 
-        const numSufficient = grades.filter(g => g.sufficient).length;
+        const numSufficient = grades.filter((g) => g.sufficient).length;
 
-        const divSufInsuf = this.#div2.createChildElement('div', { class: 'st-cs-tile', id: 'st-cs-suf-insuf' });
-        const pieChart = divSufInsuf.createChildElement('div', { id: 'st-cs-pie' });
-        pieChart.createChildElement('div', {
-            class: 'st-circle-sector', style: {
-                '--start': `0%`,
-                '--end': `${(grades.length - numSufficient) / grades.length * 100}%`,
-                outlineColor: 'var(--st-accent-warn)',
-            }
+        const divSufInsuf = this.#div2.createChildElement('div', {
+            class: 'st-cs-tile',
+            id: 'st-cs-suf-insuf',
+        });
+        const pieChart = divSufInsuf.createChildElement('div', {
+            id: 'st-cs-pie',
         });
         pieChart.createChildElement('div', {
-            class: 'st-circle-sector', style: {
-                '--start': `${(grades.length - numSufficient) / grades.length * 100}%`,
+            class: 'st-circle-sector',
+            style: {
+                '--start': `0%`,
+                '--end': `${((grades.length - numSufficient) / grades.length) * 100}%`,
+                outlineColor: 'var(--st-accent-warn)',
+            },
+        });
+        pieChart.createChildElement('div', {
+            class: 'st-circle-sector',
+            style: {
+                '--start': `${((grades.length - numSufficient) / grades.length) * 100}%`,
                 '--end': `100%`,
                 outlineColor: 'var(--st-accent-ok)',
-            }
+            },
         });
         divSufInsuf.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n('cs.sufficient'),
             title: i18n('cs.sufficientDescription'),
             innerText: numSufficient,
-            'data-extra': `${(numSufficient / grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+            'data-extra': `${((numSufficient / grades.length) * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
         });
         divSufInsuf.createChildElement('div', {
             class: 'st-metric secondary',
             'data-description': i18n('cs.insufficient'),
             title: i18n('cs.insufficientDescription'),
             innerText: grades.length - numSufficient,
-            'data-extra': `${((grades.length - numSufficient) / grades.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
+            'data-extra': `${(((grades.length - numSufficient) / grades.length) * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
         });
 
         // === HISTOGRAM ===
 
-        const lowerBound = (syncedStorage['c-minimum'] ?? 1);
-        const upperBound = (syncedStorage['c-maximum'] ?? 10);
+        const lowerBound = syncedStorage['c-minimum'] ?? 1;
+        const upperBound = syncedStorage['c-maximum'] ?? 10;
         const range = upperBound - lowerBound;
         const stepSize = Math.floor(range / 10) || 1;
         const roundedFrequencies = {};
-        for (let i = Math.ceil(lowerBound); i <= Math.floor(upperBound); i += stepSize) {
+        for (
+            let i = Math.ceil(lowerBound);
+            i <= Math.floor(upperBound);
+            i += stepSize
+        ) {
             roundedFrequencies[i] = 0;
         }
         for (const value of values) {
-            let roundedValue = Math.round((value - lowerBound) / stepSize) * stepSize + lowerBound;
+            let roundedValue =
+                Math.round((value - lowerBound) / stepSize) * stepSize +
+                lowerBound;
             roundedFrequencies[roundedValue]++;
         }
 
-        const divHistogram = this.#div2.createChildElement('div', { class: 'st-cs-tile', id: 'st-cs-histogram' });
-        divHistogram.createChildElement('h4', { innerText: i18n('cs.histogram'), style: { marginBottom: '4px' } });
-        const histogram = divHistogram.createChildElement('div', { class: 'st-histogram horizontal' });
+        const divHistogram = this.#div2.createChildElement('div', {
+            class: 'st-cs-tile',
+            id: 'st-cs-histogram',
+        });
+        divHistogram.createChildElement('h4', {
+            innerText: i18n('cs.histogram'),
+            style: { marginBottom: '4px' },
+        });
+        const histogram = divHistogram.createChildElement('div', {
+            class: 'st-histogram horizontal',
+        });
         const maxFrequency = Math.max(...Object.values(roundedFrequencies));
-        for (const [roundedValue, frequency] of Object.entries(roundedFrequencies)) {
-            histogram.createChildElement('div', { class: 'st-cs-histogram-bar-label', innerText: roundedValue });
+        for (const [roundedValue, frequency] of Object.entries(
+            roundedFrequencies,
+        )) {
+            histogram.createChildElement('div', {
+                class: 'st-cs-histogram-bar-label',
+                innerText: roundedValue,
+            });
             histogram
                 .createChildElement('div', {
                     class: 'st-cs-histogram-bar-container',
                     title: i18n('cs.histogramBarDescription', {
                         frequency,
-                        rangeStart: Math.max(lowerBound, Number(roundedValue) - stepSize / 2).toLocaleString(locale),
-                        rangeEnd: Math.min(upperBound, Number(roundedValue) + stepSize / 2).toLocaleString(locale)
+                        rangeStart: Math.max(
+                            lowerBound,
+                            Number(roundedValue) - stepSize / 2,
+                        ).toLocaleString(locale),
+                        rangeEnd: Math.min(
+                            upperBound,
+                            Number(roundedValue) + stepSize / 2,
+                        ).toLocaleString(locale),
                     }),
                 })
                 .createChildElement('div', {
                     class: 'st-cs-histogram-bar',
                     style: {
                         '--percentage': `${(frequency / maxFrequency) * 100}%`,
-                        backgroundColor: roundedValue >= (syncedStorage['suf-threshold'] ?? 5.5) ? 'var(--st-accent-ok)' : 'var(--st-accent-warn)',
+                        backgroundColor:
+                            roundedValue >=
+                            (syncedStorage['suf-threshold'] ?? 5.5)
+                                ? 'var(--st-accent-ok)'
+                                : 'var(--st-accent-warn)',
                     },
-                    'data-percentage': frequency ? `${(frequency / values.length * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` : '',
-                })
+                    'data-percentage': frequency
+                        ? `${((frequency / values.length) * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+                        : '',
+                });
         }
 
         // === LINE CHART ===
@@ -196,21 +330,32 @@ class GradeStatisticsPane extends Pane {
                 border: 'var(--st-border)',
                 borderRadius: 'var(--st-border-radius)',
                 height: '240px',
-                cursor: 'pointer'
-            }
+                cursor: 'pointer',
+            },
         });
 
-        createIndexedLineChart(divLineChart, values, i => {
-            const grade = currentGradeTable.grades.find(g => g.CijferId === grades[i].id);
-            const dialog = new GradeDetailDialog(grade, currentGradeTable.identifier.year);
-            dialog.show();
-        }, {
-            minY: lowerBound,
-            maxY: upperBound,
-            yGridCount: upperBound - lowerBound,
-            showMovingAverage: true,
-            label: (_i, v, _mv) => `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        });
+        createIndexedLineChart(
+            divLineChart,
+            values,
+            (i) => {
+                const grade = currentGradeTable.grades.find(
+                    (g) => g.CijferId === grades[i].id,
+                );
+                const dialog = new GradeDetailDialog(
+                    grade,
+                    currentGradeTable.identifier.year,
+                );
+                dialog.show();
+            },
+            {
+                minY: lowerBound,
+                maxY: upperBound,
+                yGridCount: upperBound - lowerBound,
+                showMovingAverage: true,
+                label: (_i, v, _mv) =>
+                    `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            },
+        );
 
         const openChartButton = this.#div2.createChildElement('button', {
             class: 'st-button tertiary',
@@ -254,32 +399,45 @@ class GradeStatisticsPane extends Pane {
 
         this.progressBar.dataset.visible = 'false';
 
-
         // === SWITCHED TOOLTIP ===
 
-        if (!localStorage['st-tooltip-csSwitched'] && this.selectedGrades.some(g => !currentGradeTable.grades.some(cg => cg.CijferId === g.id))) {
+        if (
+            !localStorage['st-tooltip-csSwitched'] &&
+            this.selectedGrades.some(
+                (g) =>
+                    !currentGradeTable.grades.some(
+                        (cg) => cg.CijferId === g.id,
+                    ),
+            )
+        ) {
             const tooltip = document.body.createChildElement('div', {
                 class: 'st-tooltip bottom-right',
                 innerText: i18n('tooltips.csSwitched', {
                     text:
-                        i18n(
-                            grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades',
-                            { num: grades.length }
-                        ) + ' ' + i18n('cs.rangeDesc').slice(0, 6) + '...'
+                        i18n(grades.length === 1 ? 'cs.xGrade' : 'cs.xGrades', {
+                            num: grades.length,
+                        }) +
+                        ' ' +
+                        i18n('cs.rangeDesc').slice(0, 6) +
+                        '...',
                 }),
                 style: {
                     position: 'fixed',
                     top: '100px',
                     right: '260px',
                     zIndex: 10,
-                }
+                },
             });
 
-            document.body.addEventListener('click', () => {
-                tooltip.classList.add('st-hidden');
-                setTimeout(() => tooltip.remove(), 200);
-                localStorage['st-tooltip-csSwitched'] = true;
-            }, { once: true });
+            document.body.addEventListener(
+                'click',
+                () => {
+                    tooltip.classList.add('st-hidden');
+                    setTimeout(() => tooltip.remove(), 200);
+                    localStorage['st-tooltip-csSwitched'] = true;
+                },
+                { once: true },
+            );
 
             return;
         }
@@ -288,11 +446,28 @@ class GradeStatisticsPane extends Pane {
     async toggleGrade(grade, force) {
         this.progressBar.dataset.visible = 'true';
 
-        if ((this.selectedGrades.some(g => g.id === grade.CijferId) || force === false) && force !== true) {
-            this.selectedGrades = this.selectedGrades.filter(g => g.id !== grade.CijferId);
+        await this.#applyColumnWeightToGrade(grade);
+
+        if (
+            (this.selectedGrades.some((g) => g.id === grade.CijferId) ||
+                force === false) &&
+            force !== true
+        ) {
+            this.selectedGrades = this.selectedGrades.filter(
+                (g) => g.id !== grade.CijferId,
+            );
         } else {
             const result = Number(grade.CijferStr?.replace(',', '.'));
-            if (grade.CijferKolom?.KolomSoort == 2 || syncedStorage['ignore-grade-columns'].includes(grade.CijferKolom?.KolomKop || 'undefined') || !grade.TeltMee || isNaN(result) || result < (syncedStorage['c-minimum'] ?? 1) || result > (syncedStorage['c-maximum'] ?? 10)) {
+            if (
+                grade.CijferKolom?.KolomSoort == 2 ||
+                syncedStorage['ignore-grade-columns'].includes(
+                    grade.CijferKolom?.KolomKop || 'undefined',
+                ) ||
+                !grade.TeltMee ||
+                isNaN(result) ||
+                result < (syncedStorage['c-minimum'] ?? 1) ||
+                result > (syncedStorage['c-maximum'] ?? 10)
+            ) {
                 // not a valid number or not a relevant grade
                 this.progressBar.dataset.visible = 'false';
                 return;
@@ -302,13 +477,17 @@ class GradeStatisticsPane extends Pane {
                 id: grade.CijferId,
                 result,
                 sufficient: grade.IsVoldoende,
-                date: grade.DatumIngevoerd ? new Date(grade.DatumIngevoerd) : null,
+                date: grade.DatumIngevoerd
+                    ? new Date(grade.DatumIngevoerd)
+                    : null,
             });
         }
     }
 
     async toggleMultipleGrades(grades) {
-        const someAlreadySelected = grades.some(g => this.selectedGrades.some(sg => sg.id === g.CijferId));
+        const someAlreadySelected = grades.some((g) =>
+            this.selectedGrades.some((sg) => sg.id === g.CijferId),
+        );
 
         for (const grade of grades) {
             await this.toggleGrade(grade, !someAlreadySelected);
