@@ -109,6 +109,11 @@ class StudyGuidesPage {
 
         this.#contents = new StudyGuideContents(this.#main);
         contents = this.#contents;
+
+        this.element.createChildElement('a', {
+            innerText: "Help Study Tools te verbeteren",
+            style: { position: 'absolute', bottom: '10px', right: '32px' }
+        }).addEventListener('click', () => this.#promptMachineLearning());
     }
 
     async #fetchStudyGuides() {
@@ -121,6 +126,114 @@ class StudyGuidesPage {
         this.#contents.loadStudyGuide(studyguide);
         this.#overview.updateActiveStudyGuide(studyguide);
         this.#main.querySelector('#st-sg-sidebar-toggle').style.display = 'flex';
+    }
+
+    async #promptMachineLearning() {
+        new Dialog({
+            innerText: "Deze pagina gaat in de toekomst machinelearning gebruiken om studiewijzers in te delen. Dat algoritme moet ik eerst trainen. \nAangezien Study Tools niet automatisch gegevens verzamelt, heb ik jouw hulp nodig. \n\nIk wil je vragen om jouw studiewijzers in te delen in vakken. Daarna kan je je resultaten naar mij sturen en kan ik het algoritme gaan trainen.",
+            closeText: "Niet meehelpen",
+            clickOutsideToClose: false,
+            buttons: [
+                {
+                    innerText: "Volgende",
+                    primary: true,
+                    onclick: (_, close) => {
+                        close();
+                        dialog2();
+                    }
+                }
+            ]
+        })
+            .show();
+
+        const dialog2 = () => {
+            const dialog = new Dialog({
+                innerText: "Kies voor elke studiewijzer het vak dat er het beste bij past. \nKiest het liefst een vaknaam uit de lijst. Je kan ook zelf een vaknaam typen als er echt geen geschikte keuze tussen staat.",
+                closeText: "Annuleren",
+                clickOutsideToClose: false,
+                buttons: [
+                    {
+                        innerText: "Volgende",
+                        primary: true,
+                        onclick: (_, close) => {
+                            close();
+                            dialog3();
+                        }
+                    }
+                ]
+            });
+            const list = dialog.body.createChildElement('ul', { class: 'st-sg-ml-editor' });
+
+            this.studyguides
+                .map(sg => {
+                    const { Id: id, Titel: title, Van: from, TotEnMet: to, VakCodes: subjectCodes, InLeerlingArchief: isArchived } = sg;
+
+                    let subject = syncedStorage['sg-override-subjects']?.[id] ?? autoStudyguideSubject(subjectCodes.join(' ') + ' ' + title);
+                    let period = syncedStorage['sg-override-periods']?.[id] ?? autoStudyguidePeriod(title);
+                    let isHidden = Object.values(syncedStorage['sg-hidden-studyguides'] || []).includes(id);
+
+                    return { id, title, from, to, subjectCodes, subject, period, isArchived, isHidden };
+                })
+                .forEach(studyguide => {
+                    const item = list.createChildElement('li');
+                    item.createChildElement('span', { innerText: studyguide.subjectCodes.join(' ') + ' ' + studyguide.title });
+                    const subjectButton = item.createChildElement('a', {
+                        class: 'st-sg-edit',
+                        innerText: syncedStorage['sg-override-subjects']?.[studyguide.id] || autoStudyguideSubject(studyguide.subjectCodes.join(' ') + ' ' + studyguide.title) || i18n('sw.unknownSubject'),
+                        title: i18n('sw.editSubject')
+                    });
+                    subjectButton.addEventListener('click', () => {
+                        const dialog = new StudyGuideEditSubjectDialog(studyguide, () => {
+                            subjectButton.innerText = syncedStorage['sg-override-subjects']?.[studyguide.id] || autoStudyguideSubject(studyguide.subjectCodes.join(' ') + ' ' + studyguide.title) || i18n('sw.unknownSubject');
+                        });
+                        dialog.show();
+                    });
+                });
+
+            dialog.body.createChildElement('p', {
+                style: {
+                    marginTop: '16px',
+                    font: '600 14px var(--st-font-family-secondary)',
+                },
+                innerText: "Klik pas op Volgende als de hele lijst hierboven klopt!"
+            });
+
+            dialog.show();
+        }
+
+        const dialog3 = () => {
+            const dialog = new Dialog({
+                innerText: "Study Tools doet niet aan automatische gegevensverzameling. \nStuur daarom je resultaten via mail naar mij. Gebruik de Insturen-knop hieronder en verzend de mail!\n\nBedankt voor je hulp.",
+                closeText: "Annuleren",
+                clickOutsideToClose: false,
+                buttons: [
+                    {
+                        innerText: "Insturen",
+                        primary: true,
+                        onclick: (_, close) => {
+                            close();
+                            window.open(`mailto:qkeleq10@gmail.com?subject=Trainingsdata studiewijzers (${makeId(6)})&body=` + encodeURIComponent('Verzend deze mail zonder hem aan te passen! Zo kan ik de data straks allemaal in één keer verwerken.\n\n' +
+                                this.studyguides.map(sg => {
+                                    const { Id: id, Titel: title, VakCodes: subjectCodes } = sg;
+                                    return `${subjectCodes.join(' ')} ${title} => ${syncedStorage['sg-override-subjects']?.[id] ?? autoStudyguideSubject(subjectCodes.join(' ') + ' ' + title)}`;
+                                }).join('\n')
+                            ), '_blank');
+                        }
+                    }
+                ]
+            });
+            dialog.show();
+        }
+
+        const makeId = (length) => {
+            let result = '';
+            let characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        };
     }
 }
 
@@ -663,7 +776,7 @@ class StudyGuideEditSubjectDialog extends Dialog {
 
     async save() {
         syncedStorage['sg-override-subjects'] = {
-            ...syncedStorage['sg-override-subjects'] || {},
+            ...(syncedStorage['sg-override-subjects'] || {}),
             [this.#studyguide.id]: this.#input.value.trim() || undefined
         };
 
@@ -674,7 +787,6 @@ class StudyGuideEditSubjectDialog extends Dialog {
         if (this.#saveCallback) this.#saveCallback();
     }
 }
-
 
 class StudyGuideEditPeriodDialog extends Dialog {
     #studyguide;
@@ -715,7 +827,7 @@ class StudyGuideEditPeriodDialog extends Dialog {
 
     async save() {
         syncedStorage['sg-override-periods'] = {
-            ...syncedStorage['sg-override-periods'] || {},
+            ...(syncedStorage['sg-override-periods'] || {}),
             [this.#studyguide.id]: this.#input.value.trim() ?? 0
         };
 
