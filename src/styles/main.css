@@ -1270,11 +1270,11 @@ a.st-keyboard-hint.clicked {
 
 *[data-navigate='backwards'],
 *[data-navigate='backwards2'] {
-    animation: 200ms navigation-move-backwards;
+    animation: 150ms navigation-move-backwards;
 }
 
 *[data-navigate='forwards'] {
-    animation: 200ms navigation-move-forwards;
+    animation: 150ms navigation-move-forwards;
 }
 
 @keyframes navigation-move-backwards {
