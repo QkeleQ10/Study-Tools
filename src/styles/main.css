@@ -492,28 +492,33 @@ dialog.st-modal[open]::backdrop {
 }
 
 .st-chip {
+    --chip-border: var(--st-chip-info-border);
+    --chip-background: var(--st-chip-info-background);
+
     display: inline-block;
     min-width: max-content;
     padding-inline: 12px;
-    border: 1px solid var(--st-chip-info-border);
+    border: 1px solid transparent;
     border-radius: 12px;
-    background-color: var(--st-chip-info-background);
     font: 500 11px/22px var(--st-font-family-secondary);
+
+    border-color: var(--chip-border);
+    background-color: var(--chip-background);
 }
 
 .st-chip.ok {
-    border-color: var(--st-chip-ok-border);
-    background-color: var(--st-chip-ok-background);
+    --chip-border: var(--st-chip-ok-border);
+    --chip-background: var(--st-chip-ok-background);
 }
 
 .st-chip.warn {
-    border-color: var(--st-chip-warn-border);
-    background-color: var(--st-chip-warn-background);
+    --chip-border: var(--st-chip-warn-border);
+    --chip-background: var(--st-chip-warn-background);
 }
 
 .st-chip.important {
-    border-color: var(--st-chip-info-border);
-    background-color: var(--st-chip-info-border);
+    --chip-border: var(--st-chip-info-border);
+    --chip-background: var(--st-chip-info-border);
     color: #fff;
 }
 

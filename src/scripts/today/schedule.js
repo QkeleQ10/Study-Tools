@@ -1,4 +1,6 @@
-let persistedScheduleView = localStorage['start-schedule-persisted-view'], persistedScheduleDate;
+// Global variables to persist schedule state across instances
+let persistedScheduleView = localStorage['start-schedule-persisted-view'];
+let persistedScheduleDate;
 
 class Schedule {
     element;
@@ -26,13 +28,17 @@ class Schedule {
 
     set scheduleView(newView) {
         switch (newView) {
-            case 'workweek': this.scheduleSize = 5; this.snapToMonday = true; break;
-            case 'week': this.scheduleSize = 7; this.snapToMonday = true; break;
-            case 'day': this.scheduleSize = 1; this.snapToMonday = false; break;
-            default: this.scheduleSize = parseInt(newView.replace('day', '')); this.snapToMonday = false; break;
+            case 'workweek': this.#scheduleSize = 5; this.#snapToMonday = true; break;
+            case 'week': this.#scheduleSize = 7; this.#snapToMonday = true; break;
+            case 'day': this.#scheduleSize = 1; this.#snapToMonday = false; break;
+            default: this.#scheduleSize = parseInt(newView.replace('day', '')); this.#snapToMonday = false; break;
         };
+        this.element.style.setProperty('--size', this.#scheduleSize.toString());
+
+        console.log('persisting view');
         persistedScheduleView = newView;
         if (syncedStorage['start-schedule-view-persist']) localStorage['start-schedule-persisted-view'] = newView;
+        this.#updateRangeAndRedraw();
     }
     get scheduleView() {
         if (this.#snapToMonday && this.#scheduleSize === 5) return 'workweek';
@@ -44,29 +50,44 @@ class Schedule {
     #scheduleSize = 1;
     get scheduleSize() { return this.#scheduleSize; }
     set scheduleSize(newSize) {
-        this.#scheduleSize = Math.min(Math.max(1, newSize), 7);
-        this.element.style.setProperty('--size', this.#scheduleSize.toString());
-        this.scheduleDate = this.scheduleDate;
+        const clampedSize = Math.min(Math.max(1, newSize), 7);
+        if (this.#scheduleSize !== clampedSize) {
+            this.#scheduleSize = clampedSize;
+            this.element.style.setProperty('--size', this.#scheduleSize.toString());
+            this.#updateRangeAndRedraw();
+        }
     }
 
     #snapToMonday = false;
     get snapToMonday() { return this.#snapToMonday; }
     set snapToMonday(newSetting) {
-        this.#snapToMonday = newSetting;
-        this.scheduleDate = this.scheduleDate;
+        if (this.#snapToMonday !== newSetting) {
+            this.#snapToMonday = newSetting;
+            this.#updateRangeAndRedraw();
+        }
     }
 
     #scheduleDate = dates.today;
     get scheduleDate() { return this.#scheduleDate; }
     set scheduleDate(newDate) {
-        this.#scheduleDate = midnight(newDate);
-        this.scheduleRange = { start: midnight(this.#scheduleDate), end: midnight(this.#scheduleDate, this.#scheduleSize - 1) };
-        persistedScheduleDate = this.#scheduleDate;
+        const newDateMidnight = midnight(newDate);
+        if (this.#scheduleDate.getTime() !== newDateMidnight.getTime()) {
+            this.#scheduleDate = newDateMidnight;
+            console.log('persisting');
+            persistedScheduleDate = this.#scheduleDate;
+            this.#updateRangeAndRedraw();
+        }
     }
 
     #scheduleRange = { start: this.#scheduleDate, end: this.#scheduleDate };
     get scheduleRange() { return this.#scheduleRange; }
-    set scheduleRange(newRange) {
+
+    #recalculateRange() {
+        const newRange = {
+            start: midnight(this.#scheduleDate),
+            end: midnight(this.#scheduleDate, this.#scheduleSize - 1)
+        };
+
         if (this.#snapToMonday) {
             while (newRange.start.getDay() !== 1) {
                 newRange.start.setDate(newRange.start.getDate() - 1);
@@ -74,13 +95,29 @@ class Schedule {
             }
         }
 
-        this.#scheduleRange = newRange;
-        this.#ensureDayShellsInRange(newRange);
-        this.#pruneDayShellsOutsideRange(newRange);
+        return newRange;
+    }
+
+    #updateRangeAndRedraw() {
+        this.#scheduleRange = this.#recalculateRange();
+        this.#redrawSchedule();
+    }
+
+    #redrawSchedule() {
+        // Clear all day shells and cached data
+        Object.values(this.dayShells).forEach(day => day.destroy());
+        this.dayShells = {};
+        this.eventsByDay = {};
+        this.additionalAppointmentsByDay = {};
+        this.#loadingEventsByDay = {};
+        this.#loadingAdditionalAppointmentsByDay = {};
+
+        // Recreate day shells and load data
+        this.#ensureDayShellsInRange(this.#scheduleRange);
         this.#updateDayColumns();
         this.#updateHeaderStrip();
 
-        for (let date = new Date(newRange.start); date <= newRange.end; date.setDate(date.getDate() + 1)) {
+        for (let date = new Date(this.#scheduleRange.start); date <= this.#scheduleRange.end; date.setDate(date.getDate() + 1)) {
             this.#loadDayDataIfNeeded(midnight(date));
         }
     }
@@ -108,23 +145,63 @@ class Schedule {
         this.#body.scrollTop = 8.25 * this.hourHeight; // Scroll to 8:00
 
         await this.#createHeaderStrip();
-        this.#updateHeaderStrip();
+
+        // Restore persisted settings from localStorage/global variables
+        // If localStorage persistence is enabled, sync the global variable from localStorage
+        if (syncedStorage['start-schedule-view-persist']) {
+
+            console.log('persisting view from localStorage');
+            persistedScheduleView = localStorage['start-schedule-persisted-view'];
+        }
 
         if (persistedScheduleDate) this.scheduleDate = persistedScheduleDate;
         if (persistedScheduleView) this.scheduleView = persistedScheduleView;
-        if (!persistedScheduleDate && !persistedScheduleView) this.scheduleDate = this.scheduleDate;
+        this.#updateRangeAndRedraw();
 
-        if (!persistedScheduleDate && !persistedScheduleView && showNextDaySetting) {
-            let nextDayWithEvents = Object.values(this.dayShells).find(day => day.hasFutureEvents);
-            if (nextDayWithEvents && !nextDayWithEvents.isToday) {
-                this.scheduleDate = nextDayWithEvents.date;
-                notify('snackbar',
-                    i18n('toasts.jumpedToDate', { date: this.scheduleDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) })
-                    + (this.scheduleDate.isTomorrow() ? ` (${i18n('dates.tomorrow')})` : ''),
-                );
-            }
+        // If this is the first load and "next day with events" setting is enabled, apply that logic
+        if (!persistedScheduleDate && syncedStorage['start-schedule-extra-day']) {
+            await this.#applyNextDayWithEventsLogic();
         }
 
+    }
+
+    async #applyNextDayWithEventsLogic() {
+        // Wait for initial loads of today and the next 7 days
+        await this.#waitForDayLoadsUpTo(7);
+
+        // Check days starting from today
+        for (let daysOffset = 0; daysOffset < 7; daysOffset++) {
+            const checkDate = dates.today.addDays(daysOffset);
+            const dateKey = midnight(checkDate).toISOString();
+            const dayShell = this.dayShells[dateKey];
+
+            // If day exists and has future events, jump to it (unless it's today)
+            if (dayShell && dayShell.hasFutureEvents && !dayShell.isToday) {
+                this.scheduleDate = checkDate;
+                persistedScheduleDate = checkDate;
+                notify('snackbar',
+                    i18n('toasts.jumpedToDate', { date: checkDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) })
+                    + (checkDate.isTomorrow() ? ` (${i18n('dates.tomorrow')})` : ''),
+                );
+                break;
+            }
+        }
+    }
+
+    #waitForDayLoadsUpTo(days) {
+        const promises = [];
+        for (let i = 0; i < days; i++) {
+            const dateKey = midnight(dates.today, i).toISOString();
+            if (this.#loadingEventsByDay[dateKey]) {
+                promises.push(this.#loadingEventsByDay[dateKey]);
+            }
+            if (this.#loadingAdditionalAppointmentsByDay[dateKey]) {
+                promises.push(this.#loadingAdditionalAppointmentsByDay[dateKey]);
+            }
+        }
+        return Promise.all(promises).catch(() => {
+            // Silently handle any loading errors - we'll just check what we have
+        });
     }
 
     /** Clear all cached elements with keys containing 'event' */
@@ -138,18 +215,8 @@ class Schedule {
 
     /** Clear the state and completely redraw the schedule */
     async redraw() {
-        Object.values(this.dayShells).forEach(day => day.destroy());
-        this.dayShells = {};
-        this.eventsByDay = {};
-        this.additionalAppointmentsByDay = {};
-        this.#loadingEventsByDay = {};
-        this.#loadingAdditionalAppointmentsByDay = {};
         this.#additionalAppointmentsCapabilityPromise = undefined;
-        this.#ensureDayShellsInRange(this.scheduleRange);
-        this.#updateDayColumns();
-        for (let date = new Date(this.scheduleRange.start); date <= this.scheduleRange.end; date.setDate(date.getDate() + 1)) {
-            this.#loadDayDataIfNeeded(midnight(date));
-        }
+        this.#redrawSchedule();
     }
 
     #ensureDayShellsInRange(range) {
@@ -161,36 +228,21 @@ class Schedule {
         }
     }
 
-    #pruneDayShellsOutsideRange(range) {
-        for (const [dayKey, day] of Object.entries(this.dayShells)) {
-            if (day.date < range.start || day.date > range.end) {
-                day.destroy();
-                delete this.dayShells[dayKey];
-            }
-        }
-    }
-
-    #loadDayDataIfNeeded(date) {
+    async #loadDayDataIfNeeded(date) {
         const dayStart = midnight(date);
         const dayKey = dayStart.toISOString();
 
-        if (!(dayKey in this.eventsByDay)) this.#loadEventsForDay(dayStart, dayKey);
-        if (!(dayKey in this.additionalAppointmentsByDay)) this.#loadAdditionalAppointmentsForDay(dayStart, dayKey);
+        if (!(dayKey in this.eventsByDay)) await this.#loadEventsForDay(dayStart, dayKey);
+        if (!(dayKey in this.additionalAppointmentsByDay)) await this.#loadAdditionalAppointmentsForDay(dayStart, dayKey);
     }
 
     #loadEventsForDay(requestedDay, dayKey) {
-        if (this.#loadingEventsByDay[dayKey]) return;
+        if (this.#loadingEventsByDay[dayKey]) return this.#loadingEventsByDay[dayKey];
         const weekStart = this.#getWeekStart(requestedDay);
         const windowStart = midnight(weekStart, -7);
         const windowDays = this.#getDaysInRange(windowStart, midnight(weekStart, 13));
         const windowEnd = midnight(windowDays[windowDays.length - 1], 1);
-
-        windowDays.forEach(day => {
-            this.#loadingEventsByDay[day.toISOString()] = true;
-        });
-        this.#progressBar.dataset.visible = 'true';
-
-        magisterApi.events(windowStart, windowEnd)
+        const loadPromise = magisterApi.events(windowStart, windowEnd)
             .then(events => {
                 for (const day of windowDays) {
                     const key = day.toISOString();
@@ -215,21 +267,22 @@ class Schedule {
                 }
                 this.#updateProgressVisibility();
             });
+
+        windowDays.forEach(day => {
+            this.#loadingEventsByDay[day.toISOString()] = loadPromise;
+        });
+        this.#progressBar.dataset.visible = 'true';
+
+        return loadPromise;
     }
 
     #loadAdditionalAppointmentsForDay(requestedDay, dayKey) {
-        if (this.#loadingAdditionalAppointmentsByDay[dayKey]) return;
+        if (this.#loadingAdditionalAppointmentsByDay[dayKey]) return this.#loadingAdditionalAppointmentsByDay[dayKey];
         const weekStart = this.#getWeekStart(requestedDay);
         const windowDays = this.#getDaysInRange(weekStart, midnight(weekStart, 6));
         const windowStart = weekStart;
         const windowEnd = midnight(weekStart, 7);
-
-        windowDays.forEach(day => {
-            this.#loadingAdditionalAppointmentsByDay[day.toISOString()] = true;
-        });
-        this.#progressBar.dataset.visible = 'true';
-
-        this.#ensureAdditionalAppointmentsCapability()
+        const loadPromise = this.#ensureAdditionalAppointmentsCapability()
             .then(enabled => {
                 if (!enabled) {
                     for (const day of windowDays) {
@@ -274,6 +327,13 @@ class Schedule {
                 }
                 this.#updateProgressVisibility();
             });
+
+        windowDays.forEach(day => {
+            this.#loadingAdditionalAppointmentsByDay[day.toISOString()] = loadPromise;
+        });
+        this.#progressBar.dataset.visible = 'true';
+
+        return loadPromise;
     }
 
     #getWeekStart(day) {
@@ -426,7 +486,7 @@ class Schedule {
                     'workweek': i18n('dates.workweek'), // workweek
                     'week': i18n('dates.week') // week
                 },
-                this.scheduleView,
+                persistedScheduleView || this.scheduleView,
                 (newValue) => this.scheduleView = newValue,
                 (currentValue) => currentValue === 'day' ? 'workweek' : 'day'
             );
@@ -484,10 +544,11 @@ class ScheduleDay {
     #allDayEventsWrapper;
     #eventsWrapper;
     #additionalAppointmentsWrapper;
-    #noEventsIndicator;
     #nowMarker;
     rendered = false;
     #interval;
+    #eventsHydrated = false;
+    #additionalAppointmentsHydrated = false;
 
     constructor(date, body, header) {
         this.date = date;
@@ -586,18 +647,16 @@ class ScheduleDay {
     }
 
     hydrateEvents(eventsArray) {
+        if (this.#eventsHydrated) return;
         this.events = this.#calculateEventOverlap(eventsArray);
         if (!this.#eventsWrapper || !this.#allDayEventsWrapper) return;
-
-        this.#eventsWrapper.innerText = '';
-        this.#allDayEventsWrapper.innerText = '';
+        this.#eventsHydrated = true;
 
         if (this.events.length === 0) {
-            if (!this.#noEventsIndicator)
-                this.#noEventsIndicator = this.head.createChildElement('span', {
-                    class: 'st-sch-day-no-events',
-                    innerText: this.isToday ? i18n('noEventsToday') : i18n('noEvents')
-                });
+            this.head.createChildElement('span', {
+                class: 'st-sch-day-no-events',
+                innerText: this.isToday ? i18n('noEventsToday') : i18n('noEvents')
+            });
 
             return;
         }
@@ -685,9 +744,10 @@ class ScheduleDay {
     }
 
     hydrateAdditionalAppointments(additionalAppointmentsArray) {
+        if (this.#additionalAppointmentsHydrated) return;
         this.additionalAppointments = additionalAppointmentsArray;
-        if (!this.#additionalAppointmentsWrapper) return;
-        this.#additionalAppointmentsWrapper.innerText = '';
+        if (!this.#eventsWrapper) return;
+        this.#additionalAppointmentsHydrated = true;
 
         const occupiedRanges = this.events.map(event => ({
             start: new Date(event.Start).getTime(),
@@ -708,7 +768,7 @@ class ScheduleDay {
             const durationH = endH - startH;
             const participantStatus = appointment.participants.find(p => p.type === 'pupil' && !p.isOrganizer)?.status;
 
-            const aaWrapperElement = createElement('div', this.#additionalAppointmentsWrapper, {
+            const aaWrapperElement = createElement('div', this.#eventsWrapper, {
                 classList: ['st-event-wrapper', 'optional', syncedStorage['start-event-display'] || 'normal'],
                 style: {
                     '--top': `calc(${startH} * var(--hour-height))`,
