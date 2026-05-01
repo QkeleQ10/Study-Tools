@@ -479,7 +479,7 @@ class StudyGuideContents {
         this.#hideButton = headerActions.createChildElement('button', { class: 'st-button icon', innerText: '', title: i18n('sw.moveTo') });
         this.#hideButton.addEventListener('click', () => this.moveStudyGuide());
 
-        this.#expandAllButton = headerActions.createChildElement('button', { class: 'st-button icon', innerText: '', title: i18n('sw.expandAll') });
+        this.#expandAllButton = headerActions.createChildElement('button', { class: 'st-button icon', innerText: '', title: i18n('sw.expandAll') });
         this.#expandAllButton.addEventListener('click', () => this.expandAllSections());
 
         this.#body = this.#wrapper.createChildElement('div', { id: 'st-sg-contents-body' });

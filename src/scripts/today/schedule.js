@@ -5,15 +5,15 @@ let persistedScheduleDate;
 class Schedule {
     element;
     dayShells = {};
-    eventsByDay = {};
-    additionalAppointmentsByDay = {};
+    #eventsByDay = {};
+    #electivesByDay = {};
     #body;
     #header;
     headerControls = {};
     #progressBar;
     #loadingEventsByDay = {};
-    #loadingAdditionalAppointmentsByDay = {};
-    #additionalAppointmentsCapabilityPromise;
+    #loadingElectivesByDay = {};
+    #electivesCapabilityPromise;
 
     #hourHeight = 110;
     get hourHeight() { return this.#hourHeight; }
@@ -35,7 +35,6 @@ class Schedule {
         };
         this.element.style.setProperty('--size', this.#scheduleSize.toString());
 
-        console.log('persisting view');
         persistedScheduleView = newView;
         if (syncedStorage['start-schedule-view-persist']) localStorage['start-schedule-persisted-view'] = newView;
         this.#updateRangeAndRedraw();
@@ -73,7 +72,6 @@ class Schedule {
         const newDateMidnight = midnight(newDate);
         if (this.#scheduleDate.getTime() !== newDateMidnight.getTime()) {
             this.#scheduleDate = newDateMidnight;
-            console.log('persisting');
             persistedScheduleDate = this.#scheduleDate;
             this.#updateRangeAndRedraw();
         }
@@ -107,10 +105,10 @@ class Schedule {
         // Clear all day shells and cached data
         Object.values(this.dayShells).forEach(day => day.destroy());
         this.dayShells = {};
-        this.eventsByDay = {};
-        this.additionalAppointmentsByDay = {};
+        this.#eventsByDay = {};
+        this.#electivesByDay = {};
         this.#loadingEventsByDay = {};
-        this.#loadingAdditionalAppointmentsByDay = {};
+        this.#loadingElectivesByDay = {};
 
         // Recreate day shells and load data
         this.#ensureDayShellsInRange(this.#scheduleRange);
@@ -148,24 +146,21 @@ class Schedule {
 
         // Restore persisted settings from localStorage/global variables
         // If localStorage persistence is enabled, sync the global variable from localStorage
-        if (syncedStorage['start-schedule-view-persist']) {
-
-            console.log('persisting view from localStorage');
+        if (syncedStorage['start-schedule-view-persist'])
             persistedScheduleView = localStorage['start-schedule-persisted-view'];
-        }
-
-        if (persistedScheduleDate) this.scheduleDate = persistedScheduleDate;
         if (persistedScheduleView) this.scheduleView = persistedScheduleView;
+        if (persistedScheduleDate) this.scheduleDate = persistedScheduleDate;
+
         this.#updateRangeAndRedraw();
 
         // If this is the first load and "next day with events" setting is enabled, apply that logic
         if (!persistedScheduleDate && syncedStorage['start-schedule-extra-day']) {
             await this.#applyNextDayWithEventsLogic();
         }
-
     }
 
     async #applyNextDayWithEventsLogic() {
+        console.log('next day logic')
         // Wait for initial loads of today and the next 7 days
         await this.#waitForDayLoadsUpTo(7);
 
@@ -195,8 +190,8 @@ class Schedule {
             if (this.#loadingEventsByDay[dateKey]) {
                 promises.push(this.#loadingEventsByDay[dateKey]);
             }
-            if (this.#loadingAdditionalAppointmentsByDay[dateKey]) {
-                promises.push(this.#loadingAdditionalAppointmentsByDay[dateKey]);
+            if (this.#loadingElectivesByDay[dateKey]) {
+                promises.push(this.#loadingElectivesByDay[dateKey]);
             }
         }
         return Promise.all(promises).catch(() => {
@@ -207,7 +202,7 @@ class Schedule {
     /** Clear all cached elements with keys containing 'event' */
     async refresh() {
         Object.keys(magisterApi.cache).forEach(key => {
-            if (['event', 'kwt', 'additionalAppointments'].some(type => key.includes(type))) delete magisterApi.cache[key];
+            if (['event', 'kwt', 'electives'].some(type => key.includes(type))) delete magisterApi.cache[key];
         });
 
         this.redraw();
@@ -215,7 +210,7 @@ class Schedule {
 
     /** Clear the state and completely redraw the schedule */
     async redraw() {
-        this.#additionalAppointmentsCapabilityPromise = undefined;
+        this.#electivesCapabilityPromise = undefined;
         this.#redrawSchedule();
     }
 
@@ -232,8 +227,10 @@ class Schedule {
         const dayStart = midnight(date);
         const dayKey = dayStart.toISOString();
 
-        if (!(dayKey in this.eventsByDay)) await this.#loadEventsForDay(dayStart, dayKey);
-        if (!(dayKey in this.additionalAppointmentsByDay)) await this.#loadAdditionalAppointmentsForDay(dayStart, dayKey);
+        console.log(dayKey, Object.keys(this.#eventsByDay).join(', '), dayKey in this.#eventsByDay)
+
+        if (!(dayKey in this.#eventsByDay)) await this.#loadEventsForDay(dayStart, dayKey);
+        if (!(dayKey in this.#electivesByDay)) await this.#loadElectivesForDay(dayStart, dayKey);
     }
 
     #loadEventsForDay(requestedDay, dayKey) {
@@ -247,17 +244,18 @@ class Schedule {
                 for (const day of windowDays) {
                     const key = day.toISOString();
                     const dayStartTime = day.getTime();
-                    this.eventsByDay[key] = events.filter(event => {
+                    this.#eventsByDay[key] = events.filter(event => {
                         const startDate = new Date(event.Start).getTime();
                         return startDate >= dayStartTime && startDate < (dayStartTime + 86400000);
                     });
+                    // console.log(Object.keys(this.eventsByDay))
                     this.#hydrateDayFromCache(key);
                 }
             })
             .catch(() => {
                 for (const day of windowDays) {
                     const key = day.toISOString();
-                    this.eventsByDay[key] = [];
+                    this.#eventsByDay[key] = [];
                     this.#hydrateDayFromCache(key);
                 }
             })
@@ -276,29 +274,29 @@ class Schedule {
         return loadPromise;
     }
 
-    #loadAdditionalAppointmentsForDay(requestedDay, dayKey) {
-        if (this.#loadingAdditionalAppointmentsByDay[dayKey]) return this.#loadingAdditionalAppointmentsByDay[dayKey];
+    #loadElectivesForDay(requestedDay, dayKey) {
+        if (this.#loadingElectivesByDay[dayKey]) return this.#loadingElectivesByDay[dayKey];
         const weekStart = this.#getWeekStart(requestedDay);
         const windowDays = this.#getDaysInRange(weekStart, midnight(weekStart, 6));
         const windowStart = weekStart;
         const windowEnd = midnight(weekStart, 7);
-        const loadPromise = this.#ensureAdditionalAppointmentsCapability()
+        const loadPromise = this.#ensureElectivesCapability()
             .then(enabled => {
                 if (!enabled) {
                     for (const day of windowDays) {
                         const key = day.toISOString();
-                        this.additionalAppointmentsByDay[key] = [];
+                        this.#electivesByDay[key] = [];
                         this.#hydrateDayFromCache(key);
                     }
                     return;
                 }
 
-                return magisterApi.additionalAppointments(windowStart, windowEnd)
+                return magisterApi.electives(windowStart, windowEnd)
                     .then(appointments => {
                         for (const day of windowDays) {
                             const key = day.toISOString();
                             const dayStartTime = day.getTime();
-                            this.additionalAppointmentsByDay[key] = appointments
+                            this.#electivesByDay[key] = appointments
                                 .filter(appointment => {
                                     const startDate = new Date(appointment.start).getTime();
                                     return startDate >= dayStartTime && startDate < (dayStartTime + 86400000);
@@ -317,19 +315,19 @@ class Schedule {
             .catch(() => {
                 for (const day of windowDays) {
                     const key = day.toISOString();
-                    this.additionalAppointmentsByDay[key] = [];
+                    this.#electivesByDay[key] = [];
                     this.#hydrateDayFromCache(key);
                 }
             })
             .finally(() => {
                 for (const day of windowDays) {
-                    delete this.#loadingAdditionalAppointmentsByDay[day.toISOString()];
+                    delete this.#loadingElectivesByDay[day.toISOString()];
                 }
                 this.#updateProgressVisibility();
             });
 
         windowDays.forEach(day => {
-            this.#loadingAdditionalAppointmentsByDay[day.toISOString()] = loadPromise;
+            this.#loadingElectivesByDay[day.toISOString()] = loadPromise;
         });
         this.#progressBar.dataset.visible = 'true';
 
@@ -354,16 +352,16 @@ class Schedule {
         const day = this.dayShells[dayKey];
         if (!day || this.positionInRange(day.date) < 0) return;
         if (!day.rendered) day.drawShell();
-        if (dayKey in this.eventsByDay) {
-            day.hydrateEvents(this.eventsByDay[dayKey]);
+        if (dayKey in this.#eventsByDay) {
+            day.hydrateEvents(this.#eventsByDay[dayKey]);
         }
-        if (dayKey in this.additionalAppointmentsByDay) {
-            day.hydrateAdditionalAppointments(this.additionalAppointmentsByDay[dayKey]);
+        if (dayKey in this.#electivesByDay) {
+            day.hydrateElectives(this.#electivesByDay[dayKey]);
         }
     }
 
     #updateProgressVisibility() {
-        const loading = Object.keys(this.#loadingEventsByDay).length > 0 || Object.keys(this.#loadingAdditionalAppointmentsByDay).length > 0;
+        const loading = Object.keys(this.#loadingEventsByDay).length > 0 || Object.keys(this.#loadingElectivesByDay).length > 0;
         this.#progressBar.dataset.visible = loading ? 'true' : 'false';
     }
 
@@ -388,17 +386,17 @@ class Schedule {
         this.element.dataset.date = this.#scheduleDate.toISOString();
     }
 
-    #ensureAdditionalAppointmentsCapability() {
-        if (this.#additionalAppointmentsCapabilityPromise) return this.#additionalAppointmentsCapabilityPromise;
+    #ensureElectivesCapability() {
+        if (this.#electivesCapabilityPromise) return this.#electivesCapabilityPromise;
 
-        this.#additionalAppointmentsCapabilityPromise = magisterApi.updateAccountInfo()
+        this.#electivesCapabilityPromise = magisterApi.updateAccountInfo()
             .then(() => Boolean(magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments']))
             .catch(error => {
-                this.#additionalAppointmentsCapabilityPromise = undefined;
+                this.#electivesCapabilityPromise = undefined;
                 throw error;
             });
 
-        return this.#additionalAppointmentsCapabilityPromise;
+        return this.#electivesCapabilityPromise;
     }
 
 
@@ -538,17 +536,14 @@ class Schedule {
 class ScheduleDay {
     date;
     events = [];
-    additionalAppointments = [];
+    electives = [];
     body;
     head;
-    #allDayEventsWrapper;
-    #eventsWrapper;
-    #additionalAppointmentsWrapper;
     #nowMarker;
     rendered = false;
     #interval;
     #eventsHydrated = false;
-    #additionalAppointmentsHydrated = false;
+    #electivesHydrated = false;
 
     constructor(date, body, header) {
         this.date = date;
@@ -616,10 +611,6 @@ class ScheduleDay {
             innerText: this.date.toLocaleDateString(locale, dateFormat)
         });
 
-        this.#allDayEventsWrapper = this.head.createChildElement('div');
-        this.#eventsWrapper = this.body.createChildElement('div');
-        this.#additionalAppointmentsWrapper = this.body.createChildElement('div');
-
         if (this.isToday) {
             if (!listViewEnabled) {
                 this.#nowMarker = this.body.createChildElement('div', {
@@ -649,7 +640,7 @@ class ScheduleDay {
     hydrateEvents(eventsArray) {
         if (this.#eventsHydrated) return;
         this.events = this.#calculateEventOverlap(eventsArray);
-        if (!this.#eventsWrapper || !this.#allDayEventsWrapper) return;
+        if (!this.body || !this.head) return;
         this.#eventsHydrated = true;
 
         if (this.events.length === 0) {
@@ -662,7 +653,7 @@ class ScheduleDay {
         }
 
         for (const event of this.events) {
-            const parent = event.DuurtHeleDag ? this.#allDayEventsWrapper : this.#eventsWrapper;
+            const parent = event.DuurtHeleDag ? this.head : this.body;
             const eventWrapperElement = createElement('div', parent, {
                 classList: ['st-event-wrapper', syncedStorage['start-event-display'] || 'normal'],
                 textContent: event.title,
@@ -743,11 +734,11 @@ class ScheduleDay {
 
     }
 
-    hydrateAdditionalAppointments(additionalAppointmentsArray) {
-        if (this.#additionalAppointmentsHydrated) return;
-        this.additionalAppointments = additionalAppointmentsArray;
-        if (!this.#eventsWrapper) return;
-        this.#additionalAppointmentsHydrated = true;
+    hydrateElectives(electivesArray) {
+        if (this.#electivesHydrated) return;
+        this.electives = electivesArray;
+        if (!this.body) return;
+        this.#electivesHydrated = true;
 
         const occupiedRanges = this.events.map(event => ({
             start: new Date(event.Start).getTime(),
@@ -757,7 +748,7 @@ class ScheduleDay {
         const overlapsOccupiedRange = (start, end) =>
             occupiedRanges.some(range => start < range.end && end > range.start);
 
-        for (const appointment of this.additionalAppointments) {
+        for (const appointment of this.electives) {
             const appointmentStart = new Date(appointment.start).getTime();
             const appointmentEnd = new Date(appointment.end).getTime();
             if (overlapsOccupiedRange(appointmentStart, appointmentEnd)) continue;
@@ -768,7 +759,7 @@ class ScheduleDay {
             const durationH = endH - startH;
             const participantStatus = appointment.participants.find(p => p.type === 'pupil' && !p.isOrganizer)?.status;
 
-            const aaWrapperElement = createElement('div', this.#eventsWrapper, {
+            const aaWrapperElement = createElement('div', this.body, {
                 classList: ['st-event-wrapper', 'optional', syncedStorage['start-event-display'] || 'normal'],
                 style: {
                     '--top': `calc(${startH} * var(--hour-height))`,
@@ -802,16 +793,16 @@ class ScheduleDay {
                     });
                     break;
                 case 'declined':
-                    eventTitleWrapperEl.createChildElement('b', { innerText: i18n('additionalAppointmentsUnavailable') });
+                    eventTitleWrapperEl.createChildElement('b', { innerText: i18n('electivesUnavailable') });
                     break;
                 default:
-                    eventTitleWrapperEl.createChildElement('b', { innerText: i18n('additionalAppointmentsAvailable') });
+                    eventTitleWrapperEl.createChildElement('b', { innerText: i18n('electivesAvailable') });
                     break;
             }
 
             eventDetailsEl.createChildElement('span', { class: 'st-event-time', innerText: new Date(appointment.start).getFormattedTime() + '–' + new Date(appointment.end).getFormattedTime() });
             if (participantStatus === 'accepted') {
-                eventDetailsEl.createChildElement('span', { innerText: i18n('additionalAppointmentsRegisteredDisclaimer') });
+                eventDetailsEl.createChildElement('span', { innerText: i18n('electivesRegisteredDisclaimer') });
             }
         }
     }
@@ -992,9 +983,9 @@ class ScheduleEventDialog extends Dialog {
         await magisterApi.updateAccountInfo();
         const aaChoices =
             (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
-                ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
+                ? await magisterApi.electives(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
                 : [];
-        if (aaChoices.length) await this.#drawAdditionalAppointmentsColumn();
+        if (aaChoices.length) await this.#drawElectivesColumn();
 
         if (this.event?.Opmerking) this.#drawRemarkColumn();
         if (this.event?.Inhoud?.length > 0) this.#drawHomeworkColumn();
@@ -1045,10 +1036,10 @@ class ScheduleEventDialog extends Dialog {
         });
     }
 
-    async #drawAdditionalAppointmentsColumn() {
-        const aaColumn = this.#createColumn(i18n('additionalAppointmentsRegistration'));
+    async #drawElectivesColumn() {
+        const aaColumn = this.#createColumn(i18n('electivesRegistration'));
         const aaChoices = (magisterApi.calendarFeatures?.isAdditionalAppointmentsEnabled && syncedStorage['additional-appointments'])
-            ? await magisterApi.additionalAppointments(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
+            ? await magisterApi.electives(new Date(this.event.Start || this.event.start), new Date(this.event.Einde || this.event.end))
             : [];
 
         if (!aaChoices?.[0]) {
@@ -1069,9 +1060,9 @@ class ScheduleEventDialog extends Dialog {
                 aaColumn.querySelectorAll('input').forEach(i => i.disabled = true);
                 try {
                     if (choice.links.enroll?.href) {
-                        await magisterApi.enrollAdditionalAppointment(choice.links.enroll.href);
+                        await magisterApi.enrollElective(choice.links.enroll.href);
                     } else if (choice.links.unenroll?.href) {
-                        await magisterApi.enrollAdditionalAppointment(choice.links.unenroll.href);
+                        await magisterApi.enrollElective(choice.links.unenroll.href);
                     }
                 } catch (e) {
                     new Dialog({ innerText: (await e.json())?.ActionNotAvailableOrNotAllowed?.[0] || i18n('error') }).show();
@@ -1081,7 +1072,7 @@ class ScheduleEventDialog extends Dialog {
                         .find(e => new Date(e.Start).getTime() === new Date(this.event.Start).getTime() && new Date(e.Einde).getTime() === new Date(this.event.Einde).getTime());
                     if (newEvent) this.event = newEvent;
                     this.#drawDialogContents();
-                    new Dialog({ innerText: i18n('additionalAppointmentsRegisteredDisclaimer') }).show();
+                    new Dialog({ innerText: i18n('electivesRegisteredDisclaimer') }).show();
                 }
             });
         });
