@@ -18,7 +18,8 @@ async function main() {
     if (syncedStorage['start-enabled']) {
         let vandaagText = await awaitElement('a#menu-vandaag span')
         vandaagText.innerText = "Start"
-        if (Math.random() < 0.009) createStyle(`.fa-home:before { content: '' !important; }`)
+        //little easter egg
+        if (Math.random() < 0.05) createStyle(`.fa-home:before { content: '' !important; }`)
         if (Math.random() < 0.004) vandaagText.innerText = "Eind"
     }
 
@@ -61,11 +62,27 @@ async function main() {
     })
 
     // Easter egg
-    if (Math.random() < 0.004) /* 0,6% */ setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
-    if (Math.random() < 0.006) /* 0,8% */ setTimeout(() => createStyle(`:root{--mg-logo-expanded:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg')}`), 2000)
-    if (Math.random() < 0.008) /* 1,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
+    if (Math.random() < 0.006) /* 0,6% */ setTimeout(() => logos.forEach(e => e.classList.add('dvd-screensaver')), 2000)
+    if (Math.random() < 0.008) /* 0,8% */ setTimeout(() => createStyle(`:root{--mg-logo-expanded:url('https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/logo_mogister.svg')}`), 2000)
+    if (Math.random() < 0.02) /* 2,0% */ notify('snackbar', "Bedankt voor het gebruiken van Study Tools 💚")
     if (Math.random() < 0.0002) /* 0,02% */ notify('snackbar', "Dit is zeldzaam. En niemand zal je geloven. Groetjes, Quinten")
-    if (Math.random() < 0.003) /* 0,4% */ setTimeout(() => {
+    if (Math.random() < 0.00001) /* 0,001% */ notify('snackbar', "Dit is nog zeldzamer dan Quinten's bericht. En niemand zal je geloven. Groetjes, Berkayprof")
+    if (Math.random() < 0.01) /* 1% */ setTimeout(() => {
+        const nyan = element('img', 'st-nyan', document.body, {
+            src: 'https://media.tenor.com/rI_0O_9AJ5sAAAAi/nyan-cat-poptart-cat.gif',
+            style: `
+                position: fixed; top: 40%; left: -200px; height: 100px; z-index: 9999;
+                animation: st-nyan-move 6s linear forwards;
+            `
+        })
+        createStyle(`
+            @keyframes st-nyan-move {
+                from { left: -200px; }
+                to { left: 110%; }
+            }
+        `)
+    }, 1000)
+    if (Math.random() < 0.004) /* 0,4% */ setTimeout(() => {
         const amogus = element('img', 'st-amogus', document.body, {
             src: 'https://static.wikia.nocookie.net/fnaf-tower-defense/images/7/77/Among-us-red-png-01.png', style: `position: absolute; bottom: 0; left: 20px; height: 32px; animation: 1000ms peekInLeft; z-index: 9000;`
         })
@@ -79,8 +96,9 @@ async function main() {
         && ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000 > 0)
         && Math.random() < (-0.25 * ((new Date(new Date().getFullYear(), 11, 5) - new Date()) / 86400000) + 1) /* Probability correlating to time until December 5th */
     ) {
+        // Changed the source of the image to something more reliable than imgur
         const mijter = element('img', 'st-mijter', document.body, {
-            src: 'https://i.imgur.com/2NSn0gh.png', style: `position: absolute; top: 20px; left: 82px; height: 24px; z-index: 100;`
+            src: 'https://i.ibb.co/C3sStrxT/mijter.png', style: `position: absolute; top: 20px; left: 82px; height: 24px; z-index: 100;`
         })
         mijter.addEventListener('click', () => {
             mijter.remove()
