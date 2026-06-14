@@ -14,9 +14,9 @@
         "vue-slider-component": "^4.1.0-beta.7"
     },
     "devDependencies": {
-        "@vitejs/plugin-vue": "^5.2.1",
+        "@vitejs/plugin-vue": "^6.0.7",
         "unplugin-vue-components": "^28.4.0",
-        "vite": "^6.4.2"
+        "vite": "^8.0.16"
     },
     "browserslist": [
         "last 2 Chrome versions",
