@@ -716,6 +716,204 @@ function createIndexedLineChart(chartArea, values, onClick, options = {}) {
     }
 }
 
+function createBarChart(chartArea, entries, onClick, options = {}) {
+    if (!Array.isArray(entries) || entries.length === 0) {
+        chartArea.innerHTML =
+            '<div style="padding:8px;font:12px var(--st-font-family-secondary);">No data</div>';
+        return;
+    }
+
+    const {
+        minY = 0,
+        maxY = Math.max(...entries.map(([, value]) => value)),
+        yGridCount = 10,
+        labelRotation = -45,
+        labelHeight = 30,
+        label = (key, value) => `${key}: ${value.toFixed(2)}`,
+        threshold = syncedStorage['suf-threshold'] ?? 5.5
+    } = options;
+
+    chartArea.classList.add('st-bar-chart', 'st-chart');
+    // chartArea.style.position = 'relative';
+    // chartArea.style.overflow = 'hidden';
+
+
+    const CHART_HEIGHT = 100 - labelHeight;
+    const denom = maxY - minY || 1;
+
+    const normY = (value) =>
+        CHART_HEIGHT - ((value - minY) / denom) * CHART_HEIGHT;
+
+    const thresholdY = normY(threshold);
+
+    // Grid lines
+    let yGridLines = '';
+
+    for (let i = 1; i < yGridCount; i++) {
+        const y = (i / yGridCount) * CHART_HEIGHT;
+
+        yGridLines += `
+            <line
+                x1="0"
+                y1="${y}"
+                x2="100"
+                y2="${y}"
+                stroke="var(--st-border-color)"
+                stroke-width="0.25"
+            />
+        `;
+    }
+
+    const count = entries.length;
+    const slotWidth = 100 / count;
+    const barWidth = slotWidth * 0.8;
+
+    let bars = '';
+    let labels = '';
+
+    entries.forEach(([key, value], index) => {
+        const x = index * slotWidth + (slotWidth - barWidth) / 2;
+        const y = normY(value);
+
+        bars += `
+            <rect
+                x="${x}"
+                y="${y}"
+                width="${barWidth}"
+                height="${CHART_HEIGHT - y}"
+                rx="0.5"
+                fill="${value >= threshold
+                ? 'var(--st-accent-ok)'
+                : 'var(--st-accent-warn)'
+            }"
+            />
+        `;
+
+        const labelX = x + barWidth / 2;
+        const labelY = CHART_HEIGHT + 2;
+
+        labels += `
+            <text
+                x="${labelX}"
+                y="${labelY}"
+                text-anchor="end"
+                font-size="4"
+                fill="var(--st-contrast-accent)"
+                transform="rotate(${labelRotation}, ${labelX}, ${labelY})"
+            >
+                ${key}
+            </text>
+        `;
+    });
+
+    chartArea.innerHTML = `
+        <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style="position:absolute;inset:0;width:100%;height:100%;"
+        >
+            ${yGridLines}
+
+            <rect
+                x="0"
+                y="${thresholdY}"
+                width="100"
+                height="${CHART_HEIGHT - thresholdY}"
+                fill="var(--st-accent-warn)"
+                fill-opacity="0.05"
+            />
+
+            ${bars}
+            ${labels}
+        </svg>
+    `;
+
+    const tooltip = chartArea.createChildElement('div', {
+        style: {
+            position: 'absolute',
+            background: 'var(--st-background-tertiary)',
+            color: 'var(--st-foreground-primary)',
+            padding: '2px 6px',
+            borderRadius: 'calc(var(--st-border-radius) * 0.5)',
+            font: '12px var(--st-font-family-secondary)',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            display: 'none',
+            zIndex: 20,
+            transform: 'translate(-50%, -120%)',
+        }
+    });
+
+    chartArea.addEventListener('mousemove', (e) => {
+        const rect = chartArea.getBoundingClientRect();
+
+        const px = ((e.clientX - rect.left) / rect.width) * 100;
+        const index = Math.floor((px / 100) * count);
+
+        if (index < 0 || index >= count) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        const [key, value] = entries[index];
+
+        const x = index * slotWidth + slotWidth / 2;
+        const y = normY(value);
+
+        tooltip.innerText = label(key, value);
+        tooltip.style.display = 'block';
+        tooltip.style.color =
+            value >= threshold
+                ? 'var(--st-accent-ok)'
+                : 'var(--st-accent-warn)';
+
+        // Prevent horizontal overflow
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        const halfTooltipPercent =
+            (tooltipRect.width / 2 / rect.width) * 100;
+
+        let tooltipLeft = x;
+
+        if (tooltipLeft - halfTooltipPercent < 0) {
+            tooltipLeft = halfTooltipPercent;
+        }
+
+        if (tooltipLeft + halfTooltipPercent > 100) {
+            tooltipLeft = 100 - halfTooltipPercent;
+        }
+
+        tooltip.style.left = `${tooltipLeft}%`;
+
+        // Prevent vertical overflow
+        const yPx = (y / 100) * rect.height;
+
+        tooltip.style.transform =
+            yPx - tooltipRect.height - 8 < 0
+                ? 'translate(-50%, 20%)'
+                : 'translate(-50%, -120%)';
+
+        tooltip.style.top = `${y}%`;
+    });
+
+    chartArea.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+    });
+
+    if (onClick) {
+        chartArea.addEventListener('click', (e) => {
+            const rect = chartArea.getBoundingClientRect();
+
+            const px = ((e.clientX - rect.left) / rect.width) * 100;
+            const index = Math.floor((px / 100) * count);
+
+            if (index >= 0 && index < count) {
+                onClick(index, entries[index]);
+            }
+        });
+    }
+}
+
 async function notify(type = 'snackbar', body = 'Notificatie', buttons = [], duration = 4000, options = {}) {
     switch (type) {
         case 'snackbar':

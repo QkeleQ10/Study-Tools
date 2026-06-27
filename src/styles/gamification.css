@@ -263,3 +263,8 @@
     top: 32px;
     right: 140px;
 }
+
+.st-w-grade-chart, .st-w-bar-chart {
+    width: 100%;
+    height: 100%;
+}
