@@ -44,7 +44,7 @@ async function checkWrapped() {
 
         // Determine if Wrapped should be shown
 
-        if (examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig && isInRange(range1)) {
+        if (true || examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig && isInRange(range1)) {
             // Final year student after exams in range1
             commenceWrapped(true);
         } else if (isInRange(range2) && recentGrades?.length > 0) {
@@ -222,7 +222,7 @@ async function constructWrapped(lastYearOnly) {
                                         g?.CijferStr === grade.CijferStr
                                     )
                                 )
-                                .sort((a, b) => new Date(a.DatumIngevoerd) - new Date(b.DatumIngevoerd))
+                                .sort((a, b) => new Date(a.DatumIngevoerd).getTime() - new Date(b.DatumIngevoerd).getTime())
                         } catch (error) { year.grades = [] }
                     if (magisterApi.permissions.includes('Afspraken'))
                         try {
@@ -261,18 +261,26 @@ async function constructWrapped(lastYearOnly) {
                     }
                 }
 
+                const lowerBound = (syncedStorage['c-minimum'] ?? 1);
+                const upperBound = (syncedStorage['c-maximum'] ?? 10);
+
                 if (year.grades?.length > 0) {
                     const card1 = element('div', null, null, { class: 'st-wrapped-card', style: 'grid-row: span 7; grid-column: span 2;', innerText: `${year.grades.length} cijfers`, 'data-icon': '' })
-                    element('div', `st-wrapped-graph-${i}`, card1, { class: 'st-w-grade-chart st-force-light', style: `--suf-threshold-p: ${(1 - ((Number(syncedStorage['suf-threshold']) - 1) / 9)) * 100}%` })
-                        .createLineChart(
-                            year.grades
-                                .map(grade => Number(grade.CijferStr?.replace(',', '.'))),
-                            year.grades
-                                .map(grade => `${new Date(grade.DatumIngevoerd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}\n${grade.Vak?.Omschrijving || ''}\n${grade.CijferKolom?.KolomNaam}, ${grade.CijferKolom?.KolomKop}`),
-                            1,
-                            10,
-                            true
-                        )
+                    const chartArea =
+                        element('div', `st-wrapped-graph-${i}`, card1, { class: 'st-w-grade-chart st-force-light' })
+                    createIndexedLineChart(
+                        chartArea,
+                        year.grades
+                            .map(grade => Number(grade.CijferStr?.replace(',', '.'))),
+                        null,
+                        {
+                            minY: lowerBound,
+                            maxY: upperBound,
+                            yGridCount: upperBound - lowerBound,
+                            showMovingAverage: true,
+                            label: (i, v, ma) => `${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        }
+                    )
                     cards.push(card1)
 
                     const card2 = element('div', null, null, { class: 'st-wrapped-card grid external-link', style: 'grid-row: span 4; grid-template-rows: auto auto; grid-template-columns: 5fr auto 4fr; padding-inline: 16px;', 'data-icon': '' })
@@ -290,7 +298,7 @@ async function constructWrapped(lastYearOnly) {
                     const attendedLessons = normalLessons
                         .filter(event => !year.absences || !year.absences?.some(absence => absence.AfspraakId === event.Id))
                     const msAttended = attendedLessons
-                        .reduce((accumulator, event) => accumulator + (new Date(event.Einde) - new Date(event.Start)), 0)
+                        .reduce((accumulator, event) => accumulator + (new Date(event.Einde).getTime() - new Date(event.Start).getTime()), 0)
                     const kwtLessons = year.events.filter(event => event.Type === 7)
                     const kwtLessonsSignedUp = kwtLessons.filter(event => event.Lokatie?.length > 0 && event.Omschrijving?.length > 0)
 
@@ -340,14 +348,32 @@ async function constructWrapped(lastYearOnly) {
                         let el3 = element('span', null, card2, { class: 'st-w-text-small', innerText: `en het vaakst van ${mostCommonEventTeacher[0]} (${mostCommonEventTeacher[1]}×).` })
                         cards.push(card2)
 
-                        let el4 = element('div', `st-wrapped-graph-${i}-4`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
-                            .createBarChart(eventSubjectHashmap, null, 1, true, false, false, 15)
+                        let el4 = element('div', `st-wrapped-graph-${i}-4`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; inset: 32px; visibility: hidden; width: calc(100% - 64px); height: calc(100% - 64px);' })
+                        createBarChart(el4, Object.entries(eventSubjectHashmap).sort((a, b) => b[1] - a[1]).slice(0, 15), null,
+                            {
+                                yGridCount: 0,
+                                threshold: 0,
+                                label: (k, v) => `${k}: ${v} lessen`,
+                                labelHeight: 0
+                            })
 
-                        let el5 = element('div', `st-wrapped-graph-${i}-2`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
-                            .createBarChart(eventLocationHashmap, null, 1, true, false, false, 15)
+                        let el5 = element('div', `st-wrapped-graph-${i}-2`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; inset: 32px; visibility: hidden; width: calc(100% - 64px); height: calc(100% - 64px);' })
+                        createBarChart(el5, Object.entries(eventLocationHashmap).sort((a, b) => b[1] - a[1]).slice(0, 15), null,
+                            {
+                                yGridCount: 0,
+                                threshold: 0,
+                                label: (k, v) => `${k}: ${v} lessen`,
+                                labelHeight: 0
+                            })
 
-                        let el6 = element('div', `st-wrapped-graph-${i}-3`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; padding-inline: 12px; padding-top: 48px; inset: 0; visibility: hidden;' })
-                            .createBarChart(eventTeacherHashmap, null, 1, true, false, false, 15)
+                        let el6 = element('div', `st-wrapped-graph-${i}-3`, card2, { class: 'st-w-bar-chart st-force-light', style: 'position: absolute; inset: 32px; visibility: hidden; width: calc(100% - 64px); height: calc(100% - 64px);' })
+                        createBarChart(el6, Object.entries(eventTeacherHashmap).sort((a, b) => b[1] - a[1]).slice(0, 15), null,
+                            {
+                                yGridCount: 0,
+                                threshold: 0,
+                                label: (k, v) => `${k}: ${v} lessen`,
+                                labelHeight: 0
+                            })
 
                         card2.addEventListener('click', () => {
                             n = (n + 1) % 4
