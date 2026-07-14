@@ -16,7 +16,6 @@ async function today() {
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
-        hourHeightSetting = await getFromStorage('start-hour-height', 'local') || 110,
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         fab = element('div', 'st-start-fab', container, { class: 'st-visible' })
@@ -35,7 +34,7 @@ async function today() {
         verifyDisplayMode()
     })
 
-    schedule = new Schedule(container, hourHeightSetting);
+    schedule = new Schedule(container);
     widgets = new Widgets(container);
 
     // Controls (bottom right of page)
