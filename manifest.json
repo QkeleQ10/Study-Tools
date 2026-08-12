@@ -14,7 +14,7 @@
         "300": "icons/icon@300px.png",
         "512": "icons/icon@512px.png"
     },
-    "minimum_chrome_version": "111",
+    "minimum_chrome_version": "117",
     "background": {
         "service_worker": "src/service-worker.js",
         "type": "module"

@@ -42,8 +42,9 @@ class MagisterApi {
             this.userToken = await getFromStorage('token', storageLocation);
             this.userTokenDate = await getFromStorage('token-date', storageLocation);
 
-            const complete = this.userId && this.userToken && this.userTokenDate && new Date(this.userTokenDate);
-            const fresh = complete && Math.abs(new Date().getTime() - new Date(this.userTokenDate).getTime()) < 60000;
+            const tokenDate = new Date(this.userTokenDate);
+            const complete = this.userId && this.userToken && !isNaN(tokenDate.getTime());
+            const fresh = complete && Math.abs(new Date().getTime() - tokenDate.getTime()) < 60000;
 
             if (fresh) {
                 console.debug(`CREDS OK after ${new Date().getTime() - calledAt.getTime()} ms`);
