@@ -163,6 +163,177 @@ function awaitElement(querySelector, all = false, duration = 10000, quiet = fals
 }
 
 /**
+ * Query an element, descending into open shadow roots. Magister's newer pages are web
+ * components, so a plain querySelector doesn't reach their contents.
+ * @param {string} querySelector
+ * @param {Document|ShadowRoot|Element} [root=document]
+ * @returns {Element|undefined}
+ */
+function deepQuerySelector(querySelector, root = document) {
+    const direct = root.querySelector?.(querySelector)
+    if (direct) return direct
+
+    for (const element of root.querySelectorAll?.('*') || []) {
+        if (!element.shadowRoot) continue
+        const match = deepQuerySelector(querySelector, element.shadowRoot)
+        if (match) return match
+    }
+}
+
+/**
+ * Query all elements matching a selector, descending into open shadow roots.
+ * @param {string} querySelector
+ * @param {Document|ShadowRoot|Element} [root=document]
+ * @returns {Element[]}
+ */
+function deepQuerySelectorAll(querySelector, root = document) {
+    const matches = [...root.querySelectorAll?.(querySelector) || []]
+
+    for (const element of root.querySelectorAll?.('*') || []) {
+        if (element.shadowRoot) matches.push(...deepQuerySelectorAll(querySelector, element.shadowRoot))
+    }
+
+    return matches
+}
+
+/**
+ * Wait for an element to be available, descending into open shadow roots.
+ * @param {string} querySelector
+ * @param {boolean} [all=false]
+ * @param {number} [duration=10000]
+ * @param {boolean} [quiet=false]
+ * @returns {Promise<Element|Element[]|undefined>}
+ */
+function awaitDeepElement(querySelector, all = false, duration = 10000, quiet = false) {
+    return new Promise(resolve => {
+        let interval = setInterval(() => {
+            if (deepQuerySelector(querySelector)) {
+                clearInterval(interval)
+                clearTimeout(timeout)
+                return resolve(all ? deepQuerySelectorAll(querySelector) : deepQuerySelector(querySelector))
+            }
+        }, 50)
+
+        let timeout = setTimeout(() => {
+            clearInterval(interval)
+            if (!quiet) console.warn("Could not find element in shadow DOM: ", querySelector, all, duration)
+            return resolve(undefined)
+        }, duration)
+    })
+}
+
+/**
+ * Hand the bridge the one thing it can't work out for itself. It runs in the page's own
+ * context (see the manifest) and so has no access to the extension.
+ */
+function tellBridgeWhereItsStylesheetIs() {
+    try {
+        if (chrome?.runtime && document.documentElement) {
+            document.documentElement.dataset.studyToolsShadowCss = chrome.runtime.getURL('src/styles/magister-shadow.css')
+        }
+    } catch (error) {
+        console.warn('Could not reach the Magister bridge: ', error)
+    }
+}
+
+if (window.location?.hostname.endsWith('magister.net')) tellBridgeWhereItsStylesheetIs()
+
+/**
+ * Read and write properties on one of Magister's web components. Content scripts and the
+ * page have separate JavaScript contexts, so assigning them here would only set a copy
+ * the page never sees; the bridge does it in the page instead.
+ * @param {string} selector - Selector for the component, matched through shadow roots.
+ * @param {{get?: string[], set?: Object, call?: string[]}} [operations]
+ * @returns {Promise<{found: boolean, result: Object}>}
+ */
+function componentBridge(selector, operations = {}) {
+    // Unguessable, so a reply can't be answered by anything but the bridge.
+    const id = crypto.randomUUID?.() ?? `st-${Math.random().toString(36).slice(2)}`
+
+    return new Promise(resolve => {
+        const finish = (value) => {
+            clearTimeout(timeout)
+            document.removeEventListener('st-bridge-result', handler)
+            resolve(value)
+        }
+
+        const handler = (event) => {
+            let response
+            try {
+                response = JSON.parse(/** @type {CustomEvent} */(event).detail)
+            } catch (error) {
+                return
+            }
+            if (response.id !== id) return
+            finish({ found: response.found, result: response.result || {} })
+        }
+
+        const timeout = setTimeout(() => {
+            console.warn('Bridge request timed out: ', selector)
+            finish({ found: false, result: {} })
+        }, 5000)
+
+        document.addEventListener('st-bridge-result', handler)
+        document.dispatchEvent(new CustomEvent('st-bridge', {
+            detail: JSON.stringify({ id, selector, ...operations })
+        }))
+    })
+}
+
+let studyToolsStyleSheet
+
+/**
+ * Make the Study Tools styles available inside a shadow root, so that elements added to
+ * a web component don't render unstyled. The sheet is constructed once and shared.
+ * @param {ShadowRoot} shadowRoot
+ */
+async function adoptStudyToolsStyles(shadowRoot) {
+    if (!shadowRoot || !chrome?.runtime) return
+
+    if (!studyToolsStyleSheet) {
+        studyToolsStyleSheet = (async () => {
+            const files = ['src/styles/main.css', 'src/styles/magister.css']
+            const contents = await Promise.all(files.map(async file => {
+                const response = await fetch(chrome.runtime.getURL(file))
+                return response.ok ? await response.text() : ''
+            }))
+            const sheet = new CSSStyleSheet()
+            sheet.replaceSync(contents.join('\n'))
+            return sheet
+        })()
+    }
+
+    const sheet = await studyToolsStyleSheet
+    if (shadowRoot.adoptedStyleSheets.includes(sheet)) return
+    shadowRoot.adoptedStyleSheets = [...shadowRoot.adoptedStyleSheets, sheet]
+}
+
+/**
+ * Call a function whenever a web component renders, to re-apply changes its own render
+ * wipes. Bursts of mutations are coalesced into one call. This does not cross shadow
+ * boundaries: pass the root the watched elements live in, not an ancestor component.
+ * @param {Element|ShadowRoot} component - An element with an open shadow root, or a shadow root.
+ * @param {Function} callback
+ * @param {MutationObserverInit} [options]
+ * @returns {MutationObserver}
+ */
+function observeComponent(component, callback, options = { childList: true, subtree: true }) {
+    const target = component instanceof ShadowRoot ? component : (component.shadowRoot ?? component)
+
+    let queued = false
+    const observer = new MutationObserver(() => {
+        if (queued) return
+        queued = true
+        requestAnimationFrame(() => {
+            queued = false
+            callback()
+        })
+    })
+    observer.observe(target, options)
+    return observer
+}
+
+/**
  * 
  * @param {string} key 
  * @param {'sync'|'local'|'session'} [location='sync'] 

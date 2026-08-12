@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "__MSG_appName__",
     "description": "__MSG_appDesc__",
-    "version": "3.16.1",
+    "version": "3.17.0",
     "default_locale": "nl",
     "icons": {
         "16": "icons/icon@16px.png",
@@ -14,12 +14,22 @@
         "300": "icons/icon@300px.png",
         "512": "icons/icon@512px.png"
     },
-    "minimum_chrome_version": "109",
+    "minimum_chrome_version": "111",
     "background": {
         "service_worker": "src/service-worker.js",
         "type": "module"
     },
     "content_scripts": [
+        {
+            "matches": [
+                "*://*.magister.net/*"
+            ],
+            "js": [
+                "src/scripts/bridge.js"
+            ],
+            "run_at": "document_start",
+            "world": "MAIN"
+        },
         {
             "matches": [
                 "*://*.magister.net/*",
@@ -45,7 +55,8 @@
                 "src/styles/today/widgets.css",
                 "src/styles/gamification.css",
                 "src/styles/grades.css",
-                "src/styles/studyguide.css"
+                "src/styles/studyguide.css",
+                "src/styles/magister.css"
             ],
             "run_at": "document_start"
         },
@@ -65,7 +76,9 @@
                 "src/scripts/grades/statistics.js",
                 "src/scripts/grades/calculator.js",
                 "src/scripts/studyguide.js",
-                "src/scripts/books.js"
+                "src/scripts/books.js",
+                "src/scripts/agenda.js",
+                "src/scripts/absence.js"
             ],
             "run_at": "document_end"
         },
@@ -105,7 +118,10 @@
                 "src/strings/fr.json",
                 "src/strings/de.json",
                 "src/strings/sv.json",
-                "src/strings/la.json"
+                "src/strings/la.json",
+                "src/styles/main.css",
+                "src/styles/magister.css",
+                "src/styles/magister-shadow.css"
             ],
             "matches": [
                 "*://*.magister.net/*",
