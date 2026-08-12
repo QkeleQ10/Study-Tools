@@ -236,6 +236,10 @@ fetch(`https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tool
             })
     })
 
+// Declared before popstate() runs, because it calls handlePageHeaders() straight away
+const translatedHeadings = new WeakSet()
+const headerObservers = new WeakSet()
+
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
@@ -250,23 +254,9 @@ async function popstate() {
     })
     document.querySelectorAll('.st-overlay').forEach(e => { if (e.open) e.close?.() })
 
+    handlePageHeaders()
+
     setTimeout(async () => {
-        const header = await awaitElement('dna-page-header', false, 1000, true)
-        if (header) {
-            const title = header.shadowRoot.querySelector('div.container div.title')
-            if (!(title?.innerText?.length > 1)) return
-            title.innerText = i18n(`views.${title.innerText}`, {}, false, true) || title.innerText
-        }
-
-        const breadcrumbs = await awaitElement('dna-breadcrumb', true, 1000, true)
-        if (breadcrumbs?.length > 0) {
-            breadcrumbs.forEach(e => {
-                const title = e
-                if (!(title?.innerText?.length > 1)) return
-                title.innerHTML = title.innerHTML.replace(title.innerText, i18n(`views.${title.innerText}`, {}, false, true) || title.innerText)
-            })
-        }
-
         let frame = await awaitElement('.view iframe', false, 1000, true)
         if (Math.random() < 0.0005) frame.src = 'https://funhtml5games.com?embed=flappy'
         if (frame) {
@@ -293,6 +283,39 @@ async function popstate() {
             (await awaitElement('ul.main-menu')).appendChild(child)
         })
     }
+}
+
+/**
+ * Translate the page title and breadcrumbs. Magister's newer pages render these inside a
+ * shadow root and mount them well after the route changes, so this waits for the header
+ * to turn up and then follows the component rather than polling the document. Their
+ * appearance is handled by the stylesheet the bridge adopts into every component.
+ */
+async function handlePageHeaders() {
+    translateHeadings()
+
+    const header = await awaitDeepElement('dna-page-header', false, 8000, true)
+    if (!header || headerObservers.has(header)) return
+
+    headerObservers.add(header)
+    observeComponent(header, translateHeadings)
+    translateHeadings()
+}
+
+function translateHeadings() {
+    deepQuerySelectorAll('dna-page-header, dna-breadcrumb').forEach(element => {
+        if (translatedHeadings.has(element)) return
+
+        const heading = element.tagName === 'DNA-PAGE-HEADER'
+            ? /** @type {HTMLElement} */ (element.shadowRoot?.querySelector('div.container div.title'))
+            : /** @type {HTMLElement} */ (element)
+
+        if (!(heading?.innerText?.length > 1)) return
+        translatedHeadings.add(element)
+
+        const translation = i18n(`views.${heading.innerText}`, {}, false, true)
+        if (translation) heading.innerHTML = heading.innerHTML.replace(heading.innerText, translation)
+    })
 }
 
 // The upgrade assistant ensures no two versions are installed at the same time, on top of offering an upgrade from the Edge Add-Ons version to the Chrome Web Store version

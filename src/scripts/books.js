@@ -1,72 +1,182 @@
+const booksSelector = 'lm-edu-x-learning-material-overview';
+const handledOverviews = new WeakSet();
+
 // Run at start and when the URL changes
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    if (document.location.href.split('?')[0].includes('/leermiddelen')) booksList()
+    if (document.location.href.split('?')[0].includes('/leermiddelen')) {
+        if (!syncedStorage['books-enabled']) return;
+
+        const overview = await awaitDeepElement(booksSelector);
+        if (!overview || handledOverviews.has(overview)) return;
+        handledOverviews.add(overview);
+
+        new BooksOverview(/** @type {HTMLElement} */(overview));
+    }
 }
 
-async function booksList() {
-    let bookNames = syncedStorage['books'] || {}
+class BooksOverview {
+    element;
+    materials = [];
+    #names;
+    #syncing = false;
+    #originalTitles = new Map();
 
-    const bookEntries = await awaitElement('#leermiddelen-container tr[data-ng-repeat="leermiddel in items"]', true)
+    constructor(element) {
+        this.element = element;
+        this.#names = syncedStorage['books'] || {};
 
-    for (const bookEntry of bookEntries) {
-        const ean = bookEntry.querySelector('td[data-ng-bind="leermiddel.EAN"]').innerText;
-        const titleCell = bookEntry.querySelector('td>a[data-ng-bind="leermiddel.Titel"]');
-        const originalTitle = `${titleCell.innerText}`;
+        adoptStudyToolsStyles(this.element.shadowRoot).then(() => this.decorate());
 
-        titleCell.title = originalTitle;
-
-        if (bookNames[ean]?.length > 1) titleCell.innerText = bookNames[ean];
-
-        titleCell.parentElement.createChildElement('button', {
-            class: 'st-button icon',
-            'data-icon': '',
-            title: i18n('renameX', { item: originalTitle }),
-            style: 'position: absolute; top: 50%; right: 4px; translate: 0 -50%; opacity: .5;'
-        })
-            .addEventListener('click', () => {
-                const dialog = new Dialog({ closeText: i18n('cancel') })
-                dialog.body.createChildElement('h3', {
-                    class: 'st-section-heading',
-                    innerText: i18n('renameX', { item: originalTitle })
-                });
-                dialog.body.createChildElement('input', {
-                    class: 'st-input',
-                    type: 'text',
-                    value: bookNames[ean] || '',
-                    placeholder: originalTitle,
-                    style: 'width: 100%; box-sizing: border-box; margin-top: 8px; padding: 4px;'
-                })
-                dialog.buttonsWrapper.createChildElement('button', { innerText: i18n('save'), class: 'st-button primary', 'data-icon': '' }).addEventListener('click', () => {
-                    const input = dialog.body.querySelector('input');
-                    const result = input.value.trim();
-                    dialog.close();
-                    if (result?.length) {
-                        bookNames[ean] = result;
-                        titleCell.innerText = bookNames[ean];
-                        saveToStorage('books', bookNames);
-                    } else {
-                        delete bookNames[ean];
-                        titleCell.innerText = originalTitle;
-                        saveToStorage('books', bookNames);
-                    }
-                    sortBookEntries();
-                });
-                dialog.show();
-            })
+        observeComponent(this.element, () => this.sync());
+        this.sync();
     }
 
-    sortBookEntries();
+    /** Read what the page is showing, write it back renamed and reordered. */
+    async sync() {
+        if (this.#syncing) return;
+        this.#syncing = true;
 
-    function sortBookEntries() {
-        const container = bookEntries[0].parentElement;
-        const entriesArray = Array.from(bookEntries);
-        entriesArray.sort((a, b) => {
-            const titleA = a.querySelector('td>a[data-ng-bind="leermiddel.Titel"]').innerText.toLowerCase();
-            const titleB = b.querySelector('td>a[data-ng-bind="leermiddel.Titel"]').innerText.toLowerCase();
-            return titleA.localeCompare(titleB);
+        try {
+            const { result } = await componentBridge(booksSelector, { get: ['learningMaterials'] });
+            const materials = result.learningMaterials || [];
+            if (!materials.length) return;
+
+            for (const material of materials) {
+                if (!this.#originalTitles.has(material.EAN)) this.#originalTitles.set(material.EAN, material.Titel);
+            }
+
+            const arranged = this.arrange(materials);
+            this.materials = arranged;
+
+            // Already showing exactly this, so there is nothing to write and no re-render
+            // to trigger, which is what keeps this from looping.
+            if (this.#signature(materials) === this.#signature(arranged)) return this.decorate();
+
+            await componentBridge(booksSelector, {
+                set: { learningMaterials: arranged },
+                call: ['requestUpdate']
+            });
+            this.decorate();
+        } finally {
+            this.#syncing = false;
+        }
+    }
+
+    arrange(materials) {
+        const groupBySubject = syncedStorage['books-group-by-subject'];
+
+        return materials
+            .map(material => ({ ...material, Titel: this.displayTitle(material) }))
+            .sort((a, b) => {
+                if (groupBySubject) {
+                    const subjectA = a.Vak?.Omschrijving || '',
+                        subjectB = b.Vak?.Omschrijving || '';
+                    if (!subjectA !== !subjectB) return subjectA ? -1 : 1;
+                    if (subjectA !== subjectB) return subjectA.localeCompare(subjectB);
+                }
+                return a.Titel.toLowerCase().localeCompare(b.Titel.toLowerCase());
+            });
+    }
+
+    #signature(materials) {
+        return materials.map(material => `${material.EAN}:${material.Titel}`).join('|');
+    }
+
+    displayTitle(material) {
+        return this.#names[material.EAN]?.length
+            ? this.#names[material.EAN]
+            : this.originalTitle(material);
+    }
+
+    originalTitle(material) {
+        return this.#originalTitles.get(material.EAN) ?? material.Titel;
+    }
+
+    decorate() {
+        for (const card of this.element.shadowRoot.querySelectorAll('sl-card')) {
+            const ean = card.querySelector('.ean')?.innerText.split(':').at(-1).trim();
+            const material = this.materials.find(item => item.EAN === ean);
+            if (!material || card.querySelector('.st-books-rename')) continue;
+
+            const titleElement = /** @type {HTMLElement} */ (card.querySelector('.title'));
+            if (titleElement) titleElement.title = this.originalTitle(material);
+
+            card.createChildElement('button', {
+                class: 'st-button icon st-books-rename',
+                slot: 'header',
+                dataset: { icon: '' },
+                title: i18n('renameX', { item: this.originalTitle(material) })
+            })
+                .addEventListener('click', event => {
+                    event.stopPropagation();
+                    new BooksRenameDialog(material, this).show();
+                });
+        }
+    }
+
+    async rename(material, name) {
+        if (name?.length) this.#names[material.EAN] = name;
+        else delete this.#names[material.EAN];
+
+        saveToStorage('books', this.#names);
+
+        await this.sync();
+    }
+}
+
+class BooksRenameDialog extends Dialog {
+    #material;
+    #overview;
+    #input;
+
+    constructor(material, overview) {
+        super({
+            buttons: [
+                {
+                    primary: true,
+                    innerText: i18n('save'),
+                    dataset: { icon: '' },
+                    callback: () => this.save()
+                }
+            ],
+            closeText: i18n('cancel')
         });
-        entriesArray.forEach(entry => container.appendChild(entry));
+
+        this.#material = material;
+        this.#overview = overview;
+
+        const originalTitle = overview.originalTitle(material);
+
+        this.body.createChildElement('h3', {
+            class: 'st-section-heading',
+            innerText: i18n('renameX', { item: originalTitle })
+        });
+
+        this.#input = this.body.createChildElement('input', {
+            class: 'st-input',
+            type: 'text',
+            placeholder: originalTitle,
+            style: { width: '100%', boxSizing: 'border-box', marginTop: '8px' }
+        });
+        this.#input.value = overview.displayTitle(material) === originalTitle
+            ? ''
+            : overview.displayTitle(material);
+        this.#input.addEventListener('keydown', event => {
+            if (event.key === 'Enter') this.save();
+        });
+
+        this.body.createChildElement('br');
+        this.body.createChildElement('small', {
+            class: 'st-note',
+            innerText: i18n('lm.renameDisclaimer')
+        });
+    }
+
+    save() {
+        this.#overview.rename(this.#material, this.#input.value.trim());
+        this.close();
+        notify('snackbar', i18n('saved'));
     }
 }
