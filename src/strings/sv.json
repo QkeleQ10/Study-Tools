@@ -43,7 +43,12 @@
         "Inschrijven": "Registrering",
         "Leermiddelen": "Läromedel",
         "Berichten": "Meddelanden",
-        "Bestellen": "Beställ"
+        "Bestellen": "Beställ",
+        "Aanwezigheid": "Närvaro",
+        "Afwezigheidsoverzicht": "Frånvarosöversikt",
+        "Meldingen": "Meddelanden",
+        "Lesregistraties": "Lektionsnoteringar",
+        "Overzicht": "Översikt"
     },
     "chips": {
         "cancelled": "Inställd",
@@ -295,5 +300,13 @@
         "ccNew": "De cijfercalculator bevindt zich nu hier.",
         "csNew": "Hier kun je statistieken bekijken.",
         "csSwitched": "Het statistiekenpaneel geeft nog statistieken weer voor een andere cijferlijst! \nSelectie wissen? Klik op '{text}'."
+    },
+    "abs": {
+        "registrations": "Noteringar",
+        "authorised": "Giltig",
+        "unauthorised": "Ogiltig"
+    },
+    "lm": {
+        "renameDisclaimer": "Det här namnet används bara i Study Tools och syns bara för dig."
     }
 }

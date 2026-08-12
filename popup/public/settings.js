@@ -273,6 +273,58 @@ export default [
         ]
     },
     {
+        id: "agenda",
+        settings: [
+            {
+                id: "agenda-enabled",
+                title: "Agenda aanpassen",
+                subtitle: "Pas de vernieuwde agenda van Magister aan je voorkeuren aan.",
+                default: true,
+            },
+            {
+                id: "agenda-compact",
+                title: "Compacte weergave",
+                subtitle: "Afspraken nemen minder ruimte in.",
+                default: false,
+                conditions: [
+                    { settingId: 'agenda-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "agenda-only-lessons",
+                title: "Alleen lessen",
+                subtitle: "Verberg afspraken die geen les zijn.",
+                default: false,
+                conditions: [
+                    { settingId: 'agenda-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "agenda-hide-empty-days",
+                title: "Lege dagen verbergen",
+                subtitle: "Dagen zonder afspraken worden overgeslagen.",
+                default: true,
+                conditions: [
+                    { settingId: 'agenda-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "agenda-scroll-to-now",
+                title: "Naar het huidige tijdstip scrollen",
+                default: true,
+                conditions: [
+                    { settingId: 'agenda-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "abs-enabled",
+                title: "Schooljaren bij afwezigheid",
+                subtitle: "Voegt een schooljaarkiezer en een samenvatting toe aan het afwezigheidsoverzicht. Magister toont alleen het huidige schooljaar.",
+                default: true,
+            },
+        ]
+    },
+    {
         id: "grades",
         settings: [
             {
@@ -398,6 +450,21 @@ export default [
                 default: true,
                 conditions: [
                     { settingId: 'sg-enabled', operator: 'equal', value: true }
+                ],
+            },
+            {
+                id: "books-enabled",
+                title: "Leermiddelen hernoemen",
+                subtitle: "Geef je leermiddelen een eigen naam en sorteer ze op titel.",
+                default: true,
+            },
+            {
+                id: "books-group-by-subject",
+                title: "Leermiddelen groeperen op vak",
+                subtitle: "Leermiddelen van hetzelfde vak komen bij elkaar te staan.",
+                default: true,
+                conditions: [
+                    { settingId: 'books-enabled', operator: 'equal', value: true }
                 ],
             },
             // {

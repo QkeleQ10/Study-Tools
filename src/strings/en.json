@@ -43,7 +43,12 @@
         "Inschrijven": "Registration",
         "Leermiddelen": "Resources",
         "Berichten": "Messages",
-        "Bestellen": "Order"
+        "Bestellen": "Order",
+        "Aanwezigheid": "Attendance",
+        "Afwezigheidsoverzicht": "Absence overview",
+        "Meldingen": "Notifications",
+        "Lesregistraties": "Lesson records",
+        "Overzicht": "Overview"
     },
     "chips": {
         "cancelled": "Cancelled",
@@ -295,5 +300,13 @@
         "ccNew": "The grade calculator is now right here.",
         "csNew": "You can check out statistics here.",
         "csSwitched": "The statistics pane is still showing data for another report card! \nWant to clear selection? Click '{text}'."
+    },
+    "abs": {
+        "registrations": "Records",
+        "authorised": "Authorised",
+        "unauthorised": "Unauthorised"
+    },
+    "lm": {
+        "renameDisclaimer": "This name is only used within Study Tools and is visible to you alone."
     }
 }

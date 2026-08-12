@@ -37,6 +37,11 @@ const tabs = [
         icon: 'home'
     },
     {
+        id: 'agenda',
+        name: 'Agenda',
+        icon: 'calendar_month'
+    },
+    {
         id: 'grades',
         name: 'Cijfers',
         icon: 'workspace_premium'

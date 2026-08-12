@@ -43,7 +43,12 @@
         "Inschrijven": "S'inscrire",
         "Leermiddelen": "Ressources",
         "Berichten": "Messages",
-        "Bestellen": "Commander"
+        "Bestellen": "Commander",
+        "Aanwezigheid": "Présence",
+        "Afwezigheidsoverzicht": "Aperçu des absences",
+        "Meldingen": "Notifications",
+        "Lesregistraties": "Relevés de cours",
+        "Overzicht": "Aperçu"
     },
     "chips": {
         "cancelled": "Annulé",
@@ -295,5 +300,13 @@
         "ccNew": "De cijfercalculator bevindt zich nu hier.",
         "csNew": "Hier kun je statistieken bekijken.",
         "csSwitched": "Het statistiekenpaneel geeft nog statistieken weer voor een andere cijferlijst! \nSelectie wissen? Klik op '{text}'."
+    },
+    "abs": {
+        "registrations": "Relevés",
+        "authorised": "Justifié",
+        "unauthorised": "Non justifié"
+    },
+    "lm": {
+        "renameDisclaimer": "Ce nom n'est utilisé que dans Study Tools et n'est visible que par vous."
     }
 }

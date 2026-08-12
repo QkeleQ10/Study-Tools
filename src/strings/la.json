@@ -43,7 +43,12 @@
         "Inschrijven": "Dedere",
         "Leermiddelen": "Facultates doctrinae",
         "Berichten": "Missa",
-        "Bestellen": "Petere"
+        "Bestellen": "Petere",
+        "Aanwezigheid": "Praesentia",
+        "Afwezigheidsoverzicht": "Conspectus absentiae",
+        "Meldingen": "Nuntii",
+        "Lesregistraties": "Acta lectionum",
+        "Overzicht": "Conspectus"
     },
     "chips": {
         "cancelled": "Expiratum",
@@ -295,5 +300,13 @@
         "ccNew": "De cijfercalculator bevindt zich nu hier.",
         "csNew": "Hier kun je statistieken bekijken.",
         "csSwitched": "Het statistiekenpaneel geeft nog statistieken weer voor een andere cijferlijst! \nSelectie wissen? Klik op '{text}'."
+    },
+    "abs": {
+        "registrations": "Acta",
+        "authorised": "Excusatum",
+        "unauthorised": "Non excusatum"
+    },
+    "lm": {
+        "renameDisclaimer": "Hoc nomen tantum in Study Tools adhibetur et tibi soli apparet."
     }
 }

@@ -43,7 +43,12 @@
         "Inschrijven": "Inschrijven",
         "Leermiddelen": "Leermiddelen",
         "Berichten": "Berichten",
-        "Bestellen": "Bestellen"
+        "Bestellen": "Bestellen",
+        "Aanwezigheid": "Посещаемость",
+        "Afwezigheidsoverzicht": "Обзор отсутствий",
+        "Meldingen": "Уведомления",
+        "Lesregistraties": "Записи об уроках",
+        "Overzicht": "Обзор"
     },
     "chips": {
         "cancelled": "Vervallen",
@@ -295,5 +300,13 @@
         "ccNew": "De cijfercalculator bevindt zich nu hier.",
         "csNew": "Hier kun je statistieken bekijken.",
         "csSwitched": "Het statistiekenpaneel geeft nog statistieken weer voor een andere cijferlijst! \nSelectie wissen? Klik op '{text}'."
+    },
+    "abs": {
+        "registrations": "Записи",
+        "authorised": "По уважительной причине",
+        "unauthorised": "Без уважительной причины"
+    },
+    "lm": {
+        "renameDisclaimer": "Это название используется только в Study Tools и видно только вам."
     }
 }
