@@ -244,7 +244,12 @@ const headerObservers = new WeakSet()
 popstate()
 window.addEventListener('popstate', popstate)
 async function popstate() {
-    chrome.runtime.sendMessage({ action: 'popstateDetected' }) // Re-awaken the service worker
+    // Updating or reloading the extension leaves this script running on a page it can no
+    // longer reach the extension from. Nothing below works without that, and the next
+    // page load starts a fresh copy.
+    if (!chrome.runtime?.id) return
+
+    chrome.runtime.sendMessage({ action: 'popstateDetected' })?.catch(() => { }) // Re-awaken the service worker
 
     element('meta', `st-${chrome.runtime.id.replace(/[^a-zA-Z0-9-_ ]/g, '')}`, document.head)
     setTimeout(upgradeAssistant, 200)

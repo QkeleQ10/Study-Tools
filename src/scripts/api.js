@@ -14,7 +14,8 @@ class MagisterApi {
         // @ts-ignore
         this.userTokenDate = await getFromStorage('token-date', chrome.storage.session?.get ? 'session' : 'local');
 
-        this.updateApiCredentials();
+        // Awaited: the first requests used to go out before the token had been picked up.
+        await this.updateApiCredentials();
 
         await this.updateAccountInfo();
         this.gatherStart = dates.gatherStart;
@@ -23,6 +24,12 @@ class MagisterApi {
         this.useSampleData = false;
     }
 
+    /**
+     * The token is captured from intercepted requests by the service worker, so on a
+     * fresh page load it isn't in storage yet. This waits for it rather than returning
+     * straight away, so requests don't go out with an empty Authorization header and
+     * come back 401.
+     */
     async updateApiCredentials() {
         if (!window.location.pathname.includes('magister')) return;
 
@@ -30,33 +37,39 @@ class MagisterApi {
         // @ts-ignore
         const storageLocation = chrome.storage.session?.get ? 'session' : 'local';
 
-        this.userId = await getFromStorage('user-id', 'sync');
-        this.userToken = await getFromStorage('token', storageLocation);
-        this.userTokenDate = await getFromStorage('token-date', storageLocation);
+        for (let attempt = 0; attempt < 25; attempt++) {
+            this.userId = await getFromStorage('user-id', 'sync');
+            this.userToken = await getFromStorage('token', storageLocation);
+            this.userTokenDate = await getFromStorage('token-date', storageLocation);
 
-        if (this.userId && this.userToken && this.userTokenDate && new Date(this.userTokenDate)) {
-            if (Math.abs(new Date().getTime() - new Date(this.userTokenDate).getTime()) < 60000) {
+            const complete = this.userId && this.userToken && this.userTokenDate && new Date(this.userTokenDate);
+            const fresh = complete && Math.abs(new Date().getTime() - new Date(this.userTokenDate).getTime()) < 60000;
+
+            if (fresh) {
                 console.debug(`CREDS OK after ${new Date().getTime() - calledAt.getTime()} ms`);
-            } else {
-                console.info(`CREDS WARN: Data too old! Retrying...`);
-                setTimeout(() => this.updateApiCredentials(), 200);
+                return;
             }
-        } else {
-            console.info(`CREDS INFO: Data incomplete! Retrying...`);
-            setTimeout(() => this.updateApiCredentials(), 200);
+
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
+
+        // A token that exists but hasn't been refreshed recently still beats no token at
+        // all: the page may simply have been idle.
+        if (this.userId && this.userToken) console.info(`CREDS WARN: Data too old, using it anyway.`);
+        else console.info(`CREDS WARN: Data incomplete after ${new Date().getTime() - calledAt.getTime()} ms.`);
     }
 
     async updateAccountInfo() {
-        return new Promise(async (resolve) => {
-            const account = await this.accountInfo();
-            this.permissions = account?.Groep?.[0]?.Privileges?.filter(p => p.AccessType.includes('Read')).map(p => p.Naam);
-            this.uuid = account?.UuId;
+        // Deliberately tolerant: a failure here used to leave the returned promise
+        // pending forever, which hung every caller that awaited it.
+        const account = await this.accountInfo().catch(() => null);
+        this.permissions = account?.Groep?.[0]?.Privileges?.filter(p => p.AccessType.includes('Read')).map(p => p.Naam);
+        this.uuid = account?.UuId;
 
-            const calendarFeatures = await this.getCalendarFeatures();
-            this.calendarFeatures = calendarFeatures || {};
-            resolve({ permissions: this.permissions, uuid: this.uuid, calendarFeatures: this.calendarFeatures });
-        });
+        const calendarFeatures = await this.getCalendarFeatures();
+        this.calendarFeatures = calendarFeatures || {};
+
+        return { permissions: this.permissions, uuid: this.uuid, calendarFeatures: this.calendarFeatures };
     }
 
     async getFromStorage(key, storageType) {
@@ -289,24 +302,48 @@ class MagisterApiRequest {
                     .catch(err => console.error(err));
             }
 
+            const succeed = (res) => {
+                const output = this.#formatOutput(res);
+                magisterApi.cache[this.identifier] = output;
+                resolve(output);
+            };
+
             try {
-                let res = await this.#executeRequest(url, options);
-                resolve(this.#formatOutput(res));
-                magisterApi.cache[this.identifier] = this.#formatOutput(res);
+                succeed(await this.#executeRequest(url, options));
             } catch (error) {
-                console.error(error);
-                try {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    await magisterApi.updateApiCredentials();
-                    let res2 = await this.#executeRequest(url, options);
-                    resolve(this.#formatOutput(res2));
-                    magisterApi.cache[this.identifier] = this.#formatOutput(res2);
-                } catch (error) {
-                    console.error(error);
-                    reject(error);
+                // A rejected token, a server error or a dropped connection can all come
+                // good on a second attempt. The rest — a 404 above all — cannot, and
+                // retrying those only doubles the noise in the console.
+                const worthRetrying = !error.status || error.status === 401 || error.status === 403 || error.status >= 500;
+
+                if (worthRetrying) {
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        await magisterApi.updateApiCredentials();
+                        return succeed(await this.#executeRequest(url, options));
+                    } catch (retryError) {
+                        return this.#fail(retryError, resolve, reject);
+                    }
                 }
+
+                this.#fail(error, resolve, reject);
             }
         });
+    }
+
+    /**
+     * Optional requests describe data a student may simply not have — an exam
+     * registration, say. Those aren't errors, so they resolve empty and stay out of the
+     * console instead of being reported as failures.
+     */
+    #fail(error, resolve, reject) {
+        if (this.optional) {
+            console.debug(`APIRQ SKIP: ${error.message}`);
+            return resolve(null);
+        }
+
+        console.warn(error.message || error);
+        reject(error);
     }
 
     #executeRequest(url, options = {}) {
@@ -328,14 +365,18 @@ class MagisterApiRequest {
                     ...options
                 });
 
-                if (!res.ok)
-                    throw new Error(`Request failed: ${res.status} ${res.statusText} (@ ${this.identifier})`);
+                if (!res.ok) {
+                    const error = new Error(`Request failed: ${res.status} ${res.statusText} (@ ${this.identifier})`);
+                    // Carried so the caller can tell a rejected token from missing data.
+                    error.status = res.status;
+                    throw error;
+                }
 
                 let json = await res.json();
                 console.debug(`APIRQ OK after ${new Date().getTime() - calledAt.getTime()} ms (@ ${this.identifier})`);
                 resolve(json);
             } catch (error) {
-                console.error(error);
+                // Logged by the caller, which knows whether this failure was expected.
                 reject(error);
             }
         });
@@ -346,6 +387,9 @@ class MagisterApiRequest {
     }
 
     outputFormat = (res) => res;
+
+    /** Set on requests whose absence is a normal state rather than a failure. */
+    optional = false;
 
     sample;
 }
@@ -390,6 +434,8 @@ class MagisterApiRequestExamsInfo extends MagisterApiRequest {
         this.identifier = `examsInfo${year?.id}`;
         this.path = `api/aanmeldingen/${year?.id}/examen`;
     }
+    // 404 for any year the student isn't registered for an exam in, which is most of them.
+    optional = true;
 }
 
 class MagisterApiRequestEvents extends MagisterApiRequest {
@@ -451,6 +497,8 @@ class MagisterApiRequestCalendarFeatures extends MagisterApiRequest {
         this.identifier = `calendarFeatures`;
         this.href = `https://calendar.magister.net/api/user/$UUID/features`;
     }
+    // A separate service, and only used to decide whether to offer keuzelessen.
+    optional = true;
 }
 
 class MagisterApiRequestAdditionalAppointments extends MagisterApiRequest {

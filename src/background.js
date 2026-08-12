@@ -23,8 +23,12 @@ async function startListenCredentials() {
         let userTokenWas = apiUserToken
         if (e.url.split('/personen/')[1]?.split('/')[0].length > 2) {
             apiUserId = e.url.split('/personen/')[1].split('/')[0]
-            browser.storage.sync.set({ 'user-id': apiUserId })
-            if (userIdWas !== apiUserId) console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
+            // Only on a change: this runs for every request Magister makes, and synced
+            // storage allows a limited number of writes per minute.
+            if (userIdWas !== apiUserId) {
+                browser.storage.sync.set({ 'user-id': apiUserId })
+                console.info(`User ID changed from ${userIdWas} to ${apiUserId}.`)
+            }
         }
         let authObject = Object.values(e.requestHeaders).find(obj => obj.name === 'Authorization')
         if (authObject) {
