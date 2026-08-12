@@ -117,6 +117,15 @@
             ]
         }
     ],
+    "declarative_net_request": {
+        "rule_resources": [
+            {
+                "id": "magister-cors",
+                "enabled": true,
+                "path": "src/rules/magister-cors.json"
+            }
+        ]
+    },
     "web_accessible_resources": [
         {
             "resources": [
@@ -156,7 +165,8 @@
     },
     "permissions": [
         "storage",
-        "webRequest"
+        "webRequest",
+        "declarativeNetRequestWithHostAccess"
     ],
     "host_permissions": [
         "*://*.magister.net/*"

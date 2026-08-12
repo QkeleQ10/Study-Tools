@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "priority": 1,
+        "action": {
+            "type": "modifyHeaders",
+            "responseHeaders": [
+                {
+                    "header": "access-control-allow-origin",
+                    "operation": "set",
+                    "value": "*"
+                }
+            ]
+        },
+        "condition": {
+            "requestDomains": [
+                "learningmaterials.magister.net",
+                "attendance.magister.net",
+                "calendar.magister.net"
+            ],
+            "initiatorDomains": [
+                "magister.net"
+            ],
+            "resourceTypes": [
+                "script"
+            ]
+        }
+    }
+]

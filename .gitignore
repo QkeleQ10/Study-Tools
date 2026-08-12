@@ -1,6 +1,9 @@
 .DS_Store
 node_modules
 
+# Chrome's compiled copy of the declarativeNetRequest ruleset
+_metadata
+
 # local env files
 .env.local
 .env.*.local
