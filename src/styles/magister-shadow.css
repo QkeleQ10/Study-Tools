@@ -1,0 +1,97 @@
+/* Adopted into every shadow root as it is created, so :host refers to the component. */
+
+/* Opaque rather than transparent: the header is sticky, and the page scrolls under it. */
+:host(dna-page-header[invert]) {
+    --_background-color: var(--st-background-primary);
+    --_color: var(--st-foreground-primary);
+    --_title-color: var(--st-foreground-accent);
+    --_subtitle-color: var(--st-foreground-secondary);
+}
+
+/* Study Tools draws a trail in plain text behind an accent home icon, on every other page.
+   Only that home crumb is a child of the bar; the rest are slotted in by the page and
+   inherit their colour from it. */
+:host(dna-page-header[invert]) dna-breadcrumbs {
+    --_background: var(--st-foreground-accent);
+    --_color: var(--st-foreground-primary);
+    --_link-color: var(--st-foreground-primary);
+    --_separator-color: var(--st-foreground-insignificant);
+}
+
+:host(dna-page-header[invert]) dna-breadcrumbs>dna-breadcrumb {
+    --_color: var(--st-foreground-accent);
+    --_link-color: var(--st-foreground-accent);
+}
+
+:host(dna-page-header[invert]) slot[name="actions"]::slotted(*) {
+    --dna-button-color: var(--st-contrast-accent);
+    --_background: var(--st-accent-primary);
+    --_color: var(--st-contrast-accent);
+}
+
+/* Painted in the card colour across the full width, which reads as a stray band on a
+   page that is otherwise all one surface. It sticks below the header, so it stays opaque. */
+dna-tab-bar {
+    background: var(--st-background-primary);
+}
+
+/* One tab scrolls and the other doesn't, so without a reserved gutter the header and
+   tabs jump sideways by the width of the scrollbar when switching between them. */
+att-absence-overview-student {
+    scrollbar-gutter: stable;
+}
+
+/* The tab bar sizes itself to its tabs. Study Tools shares the row, so the slotted area
+   is stretched to the width the tabs leave behind. */
+:host(dna-tab-bar) .container {
+    display: flex;
+    align-items: center;
+}
+
+:host(dna-tab-bar) .wrapper {
+    flex: 1;
+}
+
+:host(dna-tab-bar) .wrapper .inner {
+    position: relative;
+    width: 100%;
+    align-items: center;
+}
+
+/* A learning material card stacks its header, so the rename button lands on a line of its
+   own below the title. A card in list view is a fixed 136 pixels tall, and that line comes
+   out of the row underneath, cutting off the EAN. Sharing the title's line costs nothing
+   and puts the button in the corner, where a card action belongs. */
+:host(sl-card.list-card) .header,
+:host(sl-card.grid-card) .header {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+/* The title row is the whole width of a list card, and only fills it while it is the one
+   thing on its line. */
+sl-card.list-card .title-row {
+    flex: 1;
+    min-width: 0;
+}
+
+/* The calendar derives its highlights by adding to the accent's lightness, which lands
+   past 100% and comes out white. */
+:host(dna-month-view) {
+    --_range: var(--st-highlight-primary);
+    --_day-hover: var(--st-highlight-primary);
+    --_today-background: var(--st-highlight-primary);
+    --_today-color: var(--st-foreground-accent);
+    --_selected-bg: var(--st-accent-primary);
+    --_range-start: var(--st-accent-primary);
+    --_range-end: var(--st-accent-primary);
+    --_selected-color: var(--st-contrast-accent);
+    --_selected-today: var(--st-background-secondary);
+    --_day-color: var(--st-foreground-primary);
+    --_day-different-month-color: var(--st-foreground-insignificant);
+    --_week-day-color: var(--st-foreground-insignificant);
+    --_week-number-color: var(--st-foreground-insignificant);
+    --_week-number-divider-color: var(--st-border-color);
+    --_day-radius: calc(var(--st-border-radius) * 0.75);
+    --_selected-radius: calc(var(--st-border-radius) * 0.75);
+}

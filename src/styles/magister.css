@@ -1,0 +1,60 @@
+/* Also adopted into the shadow roots that Study Tools adds elements to. */
+
+/* Laid over the tab bar rather than placed after the tabs, so that the years sit in the
+   middle of the row instead of the middle of whatever the tabs leave over. */
+#st-abs-toolbar {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+}
+
+#st-abs-toolbar>* {
+    pointer-events: auto;
+}
+
+#st-abs-toolbar .st-segmented-control {
+    grid-column: 2;
+    flex-shrink: 0;
+}
+
+#st-abs-summary {
+    grid-column: 3;
+    justify-self: end;
+
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    color: var(--st-foreground-primary);
+}
+
+#st-abs-summary>.st-metric {
+    flex-grow: 0;
+    text-align: right;
+}
+
+/* Sized to the line it shares with the title, because a card in list view is a fixed
+   height and anything taller takes the difference out of the row holding the EAN. */
+.st-button.icon.st-books-rename {
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    margin-left: auto;
+    font-size: 13px;
+}
+
+.st-books-rename {
+    opacity: 0.5;
+    transition: opacity 200ms, color 200ms, background-color 200ms;
+}
+
+.st-books-rename:hover,
+.st-books-rename:focus-visible,
+sl-card:hover .st-books-rename {
+    opacity: 1;
+}

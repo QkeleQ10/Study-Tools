@@ -147,6 +147,135 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     }
 }
 
+// Magister's newer pages are web components built on the Sanoma Learning Design System
+// (--sl-*) and Magister DNA (--dna-*). Their styles can't be reached by selector, but
+// their colours are custom properties throughout: --sl-* is declared on :root and --dna-*
+// on body, so overriding them here cascades into every shadow root.
+function magisterDesignSystemVars(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
+    const accentHues = ['blue', 'green', 'orange', 'yellow', 'red', 'purple', 'teal', 'pink', 'grey'];
+
+    // The light palette steps are surface tints, and have to be re-derived against the
+    // page background in dark mode or they stay near-white.
+    const paletteTints = accentHues
+        .flatMap(hue => [['050', 8], ['100', 14], ['150', 22], ['200', 30]]
+            .map(([step, amount]) =>
+                `        --sl-color-palette-${hue}-${step}: color-mix(in srgb, var(--sl-color-palette-${hue}-400) ${amount}%, var(--st-background-secondary));`))
+        .join('\n');
+
+    // Badges and chips write in a dark ink meant to sit on the pale tints above. Now that
+    // those are dark as well, the vivid step is the one that stays legible on them.
+    const accentInk = accentHues
+        .flatMap(hue => ['bold', 'plain'].map(emphasis =>
+            `        --sl-color-foreground-accent-${hue}-${emphasis}: var(--sl-color-palette-${hue}-400);`))
+        .join('\n');
+
+    return `
+    :root {
+        /* Surfaces: cards read from the elevation tokens, not from --sl-color-* */
+        --sl-elevation-surface-base-default: var(--st-background-primary);
+        --sl-elevation-surface-raised-default: var(--st-background-secondary);
+        --sl-elevation-surface-raised-alternative: var(--st-background-tertiary);
+        --sl-elevation-surface-raised-sunken: var(--st-background-tertiary);
+        --sl-elevation-surface-raised-inverted: var(--st-foreground-primary);
+        --sl-elevation-surface-raised-primary: var(--st-accent-primary);
+        --sl-elevation-surface-shadow: rgb(var(--st-shadow-value) var(--st-shadow-value) var(--st-shadow-value));
+
+        /* Text */
+        --sl-color-foreground-plain: var(--st-foreground-primary);
+        --sl-color-foreground-bold: var(--st-foreground-primary);
+        --sl-color-foreground-neutral-bold: var(--st-foreground-primary);
+        --sl-color-foreground-subtle: var(--st-foreground-secondary);
+        --sl-color-foreground-subtlest: var(--st-foreground-insignificant);
+        --sl-color-foreground-disabled: var(--st-foreground-insignificant);
+        --sl-color-foreground-accent-grey-subtlest: var(--st-foreground-insignificant);
+        --sl-color-foreground-accent-grey-subtle: var(--st-foreground-secondary);
+        /* Sits on --sl-color-background-neutral-bold, which is a highlight here, not a slab */
+        --sl-color-foreground-neutral-onBold: var(--st-foreground-primary);
+        --sl-color-text-default: var(--st-foreground-primary);
+        --sl-color-text-subdued: var(--st-foreground-secondary);
+        --sl-color-foreground-inverted-plain: var(--st-background-primary);
+        --sl-color-foreground-inverted-bold: var(--st-background-primary);
+
+        /* Primary, secondary, selected and info are all the same blue in Magister */
+        --sl-color-foreground-primary-bold: var(--st-foreground-accent);
+        --sl-color-foreground-secondary-bold: var(--st-foreground-accent);
+        --sl-color-foreground-selected-bold: var(--st-foreground-accent);
+        --sl-color-foreground-info-bold: var(--st-foreground-accent);
+        --sl-color-foreground-primary-onBold: var(--st-contrast-accent);
+        --sl-color-foreground-secondary-onBold: var(--st-contrast-accent);
+        --sl-color-foreground-selected-onBold: var(--st-contrast-accent);
+        --sl-color-foreground-info-onBold: var(--st-contrast-accent);
+        --sl-color-background-primary-bold: var(--st-accent-primary);
+        --sl-color-background-info-bold: var(--st-accent-primary);
+        --sl-color-background-selected-bold: var(--st-accent-primary);
+        --sl-color-background-secondary-bold: var(--st-highlight-primary);
+        --sl-color-background-selected-subtle: var(--st-highlight-primary);
+        --sl-color-background-selected-subtlest: var(--st-highlight-primary);
+        --sl-color-border-primary-bold: var(--st-accent-primary);
+        --sl-color-border-info-bold: var(--st-accent-primary);
+        --sl-color-border-selected: var(--st-accent-primary);
+        --sl-color-border-focused: var(--st-foreground-accent);
+
+        /* The -interactive- tokens are mixed in on hover, so they follow the foreground */
+        --sl-color-background-neutral-bold: var(--st-highlight-primary);
+        --sl-color-background-neutral-interactive-plain: var(--st-foreground-primary);
+        --sl-color-background-inverted-interactive-plain: var(--st-foreground-primary);
+        --sl-color-background-accent-grey-subtle: var(--st-background-tertiary);
+        --sl-color-background-disabled: var(--st-background-tertiary);
+        --sl-color-background-input-plain: var(--st-background-tertiary);
+        --sl-color-card-background: var(--st-background-secondary);
+        /* The absence list paints a surface straight from the palette */
+        --sl-color-palette-white-base: var(--st-background-secondary);
+
+        /* Borders */
+        --sl-color-border-plain: var(--st-border-color);
+        --sl-color-border-neutral-plain: var(--st-border-color);
+        --sl-color-border-neutral-subtle: var(--st-border-color);
+        --sl-color-border-input: var(--st-border-color);
+        --sl-color-border-disabled: var(--st-border-color);
+        --sl-color-border-secondary-bold: var(--st-border-color);
+
+        /* Semantic roles keep their meaning, with the Study Tools accents */
+        --sl-color-background-positive-bold: var(--st-accent-ok);
+        --sl-color-background-negative-bold: var(--st-accent-warn);
+        --sl-color-foreground-positive-bold: var(--st-accent-ok);
+        --sl-color-foreground-positive-plain: var(--st-accent-ok);
+        --sl-color-foreground-negative-bold: var(--st-accent-warn);
+        --sl-color-border-positive-bold: var(--st-accent-ok);
+        --sl-color-border-positive-plain: var(--st-accent-ok);
+        --sl-color-border-negative-bold: var(--st-accent-warn);
+        --sl-color-border-negative-plain: var(--st-accent-warn);
+
+        --sl-icon-fill-default: var(--st-foreground-primary);
+        --sl-icon-fill-accent: var(--st-foreground-accent);
+        --sl-size-borderRadius-default: calc(var(--st-border-radius) * 0.75);
+${scheme === 'dark' ? `${paletteTints}\n${accentInk}` : ''}
+    }
+
+    /* Magister declares every --dna-* token on body, all derived from these few */
+    body {
+        /* Hover and active states are derived from these three */
+        --dna-primary-hue: ${color.h ?? 207};
+        --dna-primary-sat: ${color.s ?? 95}%;
+        --dna-primary-lum: ${color.l ?? 55}%;
+        --dna-primary: var(--st-accent-primary);
+        --dna-primary-text: var(--st-contrast-accent);
+        --att-details-background: var(--st-background-primary);
+        --dna-background: var(--st-background-secondary);
+        --dna-foreground: var(--st-foreground-primary);
+        --dna-control-background: var(--st-background-tertiary);
+        --dna-control-border: var(--st-border-color);
+        --dna-control-foreground: var(--st-border-color);
+        /* Some components need the HSL components rather than a colour, to fade something out */
+        --dna-background-hsl: ${scheme === 'dark' ? '0, 0%, 7%' : '0, 0%, 100%'};
+        --dna-control-selection: var(--st-highlight-primary);
+        --dna-text-color: var(--st-foreground-primary);
+        --dna-text-color-dark: var(--st-foreground-primary);
+        --dna-radius-small: calc(var(--st-border-radius) * 0.5);
+    }
+    `
+}
+
 async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     if (!dontUpdate && chrome?.storage) await initialiseStorage();
 
@@ -201,6 +330,8 @@ async function applyStyles(varsOnly, overrideTheme, overrideColor, dontUpdate) {
     :root, html, body, * {
         color-scheme: ${currentTheme?.[0]} !important;
     }
+
+    ${magisterDesignSystemVars(currentTheme?.[0], overrideColor || { h: currentTheme?.[1], s: currentTheme?.[2], l: currentTheme?.[3] })}
     `, 'study-tools-vars')
 
     if (varsOnly) return
@@ -1336,7 +1467,7 @@ dna-card {
     --background: var(--st-foreground-accent);
     --dna-text-color: var(--st-foreground-accent);
     --dna-font-family-base: var(--st-font-family-secondary) !important;
-    --dna-font-family-header: var(--st-font-family-secondary) !important
+    --dna-font-family-header: var(--st-font-family-secondary) !important;
     --separator-color: var(--st-foreground-accent);
     --background-secondary: var(--st-foreground-accent);
     --radius: calc(var(--st-border-radius) * 0.75);
@@ -1761,38 +1892,6 @@ table.table-grid-layout>tbody>tr.selected {
     background-color: var(--st-background-overlay) !important;
 }
 `, 'study-tools')
-
-    new MutationObserver(mutations => {
-        for (const mutation of mutations) {
-            if (mutation.type === 'childList') {
-                applyShadowStylesRecursively(mutation.target)
-            }
-        }
-    }).observe(document, { childList: true, subtree: true });
-
-    function applyShadowStylesRecursively(el) {
-        if (el.shadowRoot) {
-            applyShadowStyles(el);
-            el.shadowRoot.querySelectorAll('*').forEach(applyShadowStylesRecursively);
-        }
-        el.querySelectorAll('*').forEach(child => {
-            if (child.shadowRoot) {
-                applyShadowStyles(child);
-                child.shadowRoot.querySelectorAll('*').forEach(applyShadowStylesRecursively);
-            }
-        });
-    }
-
-    function applyShadowStyles(el) {
-        if (el.tagName === 'DNA-BREADCRUMBS') return;
-        el.setAttribute('style', `
-            --dna-background: var(--st-background-primary) !important;
-            --dna-foreground: var(--st-foreground-primary) !important;
-            --dna-primary-hue: ${currentTheme[1]} !important;
-            --dna-primary-sat: ${currentTheme[2]}% !important;
-            --att-details-background: var(--st-background-primary) !important;
-            `);
-    }
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')
 
