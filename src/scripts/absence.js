@@ -8,6 +8,8 @@ async function popstate() {
     if (document.location.href.split('?')[0].includes('/att-absence')) {
         if (!syncedStorage['abs-enabled']) return;
 
+        if (await leaveStudentSelector()) return;
+
         // Quiet: this route also covers the dashboard, which has no registrations on it.
         const registrations = await awaitDeepElement(registrationsSelector, false, 8000, true);
         if (!registrations || handledRegistrationLists.has(registrations)) return;
@@ -15,6 +17,26 @@ async function popstate() {
 
         new AbsenceRegistrations(/** @type {HTMLElement} */(registrations));
     }
+}
+
+/**
+ * The student selector is where a guardian picks which child to look at. A student has
+ * nobody to pick from, so Magister routes there and leaves the page empty. Only the view
+ * that says it is a student is sent on, which leaves that choice alone for guardians.
+ *
+ * The entry is replaced rather than added, so going back doesn't land here again.
+ * @returns {Promise<boolean>} Whether the page is being left.
+ */
+async function leaveStudentSelector() {
+    if (!document.location.hash.includes('/att-absence/student-selector')) return false;
+
+    // Quiet, and shorter than the usual wait: a guardian has a selector to use, and there
+    // is nothing to wait for once the page they asked for is on screen.
+    const root = await awaitDeepElement('att-absence-root[view-as-student]', false, 3000, true);
+    if (!root) return false;
+
+    window.location.replace('#/att-absence');
+    return true;
 }
 
 /**
