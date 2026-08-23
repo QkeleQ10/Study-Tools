@@ -1,6 +1,7 @@
 let schedule, widgets,
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list',
-    listViewEnabled = listViewEnabledSetting;
+    listViewEnabled = listViewEnabledSetting,
+    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true;
 
 // Run at start and when the URL changes 
 today()
@@ -16,12 +17,14 @@ async function today() {
 
     let widgetsCollapsedSetting = await getFromStorage('start-widgets-collapsed', 'local') ?? false,
         widgetsCollapsed = widgetsCollapsedSetting ?? false,
+        hourHeightSetting = await getFromStorage('start-hour-height', 'local') || 110,
         mainView = await awaitElement('div.view.ng-scope'),
         container = element('div', 'st-start', mainView, { 'data-widgets-collapsed': widgetsCollapsed }),
         fab = element('div', 'st-start-fab', container, { class: 'st-visible' })
 
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list'
     listViewEnabled = listViewEnabledSetting
+    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
 
     let todayCollapseWidgets
 
@@ -34,7 +37,7 @@ async function today() {
         verifyDisplayMode()
     })
 
-    schedule = new Schedule(container);
+    schedule = new Schedule(container, hourHeightSetting);
     widgets = new Widgets(container);
 
     // Controls (bottom right of page)

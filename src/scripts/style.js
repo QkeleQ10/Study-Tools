@@ -97,6 +97,9 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 0;
     --st-shadow-alpha: .7;
     --st-hover-brightness: 1.3;
+    --st-accent-primary-hue: ${currentTheme?.[1]};
+    --st-accent-primary-saturation: ${currentTheme?.[2]}%;
+    --st-accent-primary-luminance: ${currentTheme?.[3]}%;
     `}
 
         default: {
@@ -143,6 +146,9 @@ function rootVarsForTheme(scheme = 'light', color = { h: 207, s: 95, l: 55 }) {
     --st-shadow-value: 210;
     --st-shadow-alpha: .5;
     --st-hover-brightness: .9;
+    --st-accent-primary-hue: ${currentTheme?.[1]};
+    --st-accent-primary-saturation: ${currentTheme?.[2]}%;
+    --st-accent-primary-luminance: ${currentTheme?.[3]}%;
     `}
     }
 }
@@ -1328,7 +1334,14 @@ dna-card {
     --box-shadow: 0 2px 4px 0 rgba(var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-value), var(--st-shadow-alpha)) !important;
 }
 
-.container > dna-breadcrumbs, .container dna-breadcrumbs, .container > dna-page-header, .container dna-page-header, dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]), dna-breadcrumbs > dna-breadcrumb > a {
+.container > dna-breadcrumbs, 
+.container dna-breadcrumbs, 
+.container > dna-page-header, 
+.container dna-page-header, 
+dna-breadcrumbs > dna-breadcrumb > a,
+dna-button-group, dna-button, :host, :host([default]), ::slotted(a[href]),
+sl-card
+{
     --title-color: var(--st-foreground-accent);
     --title-font: var(--st-font-hero) !important;
     --subtitle-font: var(--st-font-family-secondary) !important;
@@ -1339,6 +1352,7 @@ dna-card {
     --dna-font-family-header: var(--st-font-family-secondary) !important
     --separator-color: var(--st-foreground-accent);
     --background-secondary: var(--st-foreground-accent);
+    --_bg-color: var(--st-background-secondary);
     --radius: calc(var(--st-border-radius) * 0.75);
     font-family: var(--st-font-family-secondary) !important;
 }
@@ -1378,10 +1392,6 @@ dna-card-title.ng-binding, dna-card-title, .content.content-auto.background-whit
 
 dna-card-title {
     font: 500 16px/24px var(--st-font-family-primary);
-}
-
-dna-page-header span[slot=subtitle] {
-    font: 14px var(--st-font-family-secondary);
 }
 
 .overdue,.overdue *{color:grey!important}
@@ -1784,14 +1794,14 @@ table.table-grid-layout>tbody>tr.selected {
     }
 
     function applyShadowStyles(el) {
-        if (el.tagName === 'DNA-BREADCRUMBS') return;
-        el.setAttribute('style', `
-            --dna-background: var(--st-background-primary) !important;
-            --dna-foreground: var(--st-foreground-primary) !important;
-            --dna-primary-hue: ${currentTheme[1]} !important;
-            --dna-primary-sat: ${currentTheme[2]}% !important;
-            --att-details-background: var(--st-background-primary) !important;
-            `);
+        // if (el.tagName === 'DNA-BREADCRUMBS') return;
+        // el.setAttribute('style', `
+        //     --dna-background: var(--st-background-primary) !important;
+        //     --dna-foreground: var(--st-foreground-primary) !important;
+        //     --dna-primary-hue: ${currentTheme[1]} !important;
+        //     --dna-primary-sat: ${currentTheme[2]}% !important;
+        //     --att-details-background: var(--st-background-primary) !important;
+        //     `);
     }
 
     if (Math.random() < 0.003) createStyle(`span.st-title:after { content: '🧡' !important; font-size: 9px !important; margin-bottom: -100%; }`, 'study-tools-easter-egg')

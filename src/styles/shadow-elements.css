@@ -1,0 +1,42 @@
+lm-learning-materials-root,
+cal-calendar-root,
+att-absence-root {
+    --dna-background: var(--st-background-secondary);
+    --dna-foreground: var(--st-foreground-primary);
+    --dna-text-color: var(--st-foreground-primary);
+    --dna-primary: var(--st-accent-primary);
+    --dna-primary-hue: var(--st-accent-primary-hue);
+    --dna-primary-sat: var(--st-accent-primary-saturation);
+    --dna-primary-lum: var(--st-accent-primary-luminance);
+    --dna-control-background: var(--st-background-secondary);
+    --dna-control-border: var(--st-border-color);
+    --sl-elevation-surface-base-default: transparent;
+    --sl-elevation-surface-raised-default: var(--st-background-secondary);
+    --sl-elevation-surface-raised-sunken: var(--st-background-secondary);
+    --sl-color-foreground-plain: var(--st-foreground-primary);
+    --sl-color-foreground-bold: var(--st-foreground-primary);
+    --sl-color-foreground-subtle: var(--st-foreground-secondary);
+    --sl-color-foreground-selected-bold: var(--st-foreground-accent);
+    --sl-color-border-plain: var(--st-border-color);
+    --sl-color-border-neutral-plain: var(--st-border-color);
+    --sl-color-border-primary-bold: var(--st-accent-primary);
+    --sl-color-border-focused: var(--st-foreground-accent);
+    --sl-color-foreground-neutral-bold: var(--st-foreground-secondary);
+    --sl-color-foreground-primary-bold: var(--st-foreground-primary);
+    --sl-color-background-primary-interactive-bold: var(--st-foreground-accent);
+    --sl-color-background-accent-blue-bold: var(--st-accent-primary);
+    --sl-color-background-accent-grey-bold: var(--st-highlight-subtle);
+    --sl-color-background-selected-bold: var(--st-accent-primary);
+    --sl-color-background-input-plain: var(--st-background-tertiary);
+    --sl-color-palette-blue-100: var(--st-highlight-primary);
+    --sl-color-palette-blue-150: hsl(from var(--st-highlight-primary) h calc(s + 15) l);
+    --sl-color-palette-blue-600: var(--st-accent-primary);
+    --sl-color-palette-blue-700: var(--st-foreground-accent);
+    --sl-size-borderRadius-default: var(--st-border-radius);
+    --_day-different-month-color: var(--st-foreground-secondary);
+    --_background-color: var(--st-accent-primary);
+    --_inverted-background-color: var(--st-accent-primary);
+    --_separator-color: var(--st-foreground-accent);
+    --_color: var(--st-foreground-accent);
+    --_range: var(--st-highlight-primary);
+}
