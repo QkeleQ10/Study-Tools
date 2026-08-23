@@ -1855,18 +1855,22 @@ ul.main-menu {
     margin-right: 0;
     
     li {
+            --accent: #ffffff;
         width: 100%;
         
         &.active:not(.children) {
-            --accent: #ffffff;
             border-left: 2px solid var(--accent);
             background-image: linear-gradient(to right, hsl(from var(--accent) h s l / 0.2), transparent);
             
-            &>a, &>a:hover {
+            &>a {
                 margin-left: -2px;
-                background-color: transparent !important;
+                background-color: transparent;
             }
             
+            &>a:hover {
+                margin-left: -2px;
+                background-color: hsl(from var(--accent) h s l / 0.1);
+            }
         }
 
         &.children {
@@ -1895,7 +1899,7 @@ ul.main-menu {
         }
         
         &>a:hover {
-            
+            background-color: hsl(from var(--accent) h s l / 0.15);
         }
     }
 
