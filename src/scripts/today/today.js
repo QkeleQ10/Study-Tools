@@ -1,7 +1,7 @@
 let schedule, widgets,
     listViewEnabledSetting = syncedStorage['start-schedule-view'] === 'list',
     listViewEnabled = listViewEnabledSetting,
-    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true
+    showNextDaySetting = syncedStorage['start-schedule-extra-day'] ?? true;
 
 // Run at start and when the URL changes 
 today()
@@ -99,7 +99,7 @@ async function today() {
 
     if (!widgetsCollapsed && Math.random() < 0.1 && !(await getFromStorage('tooltipdismiss-start-widgets-new2', 'local') ?? false)) {
         setTimeout(() => {
-            if(!document.body.contains(editWidgetsButton)) return;
+            if (!document.body.contains(editWidgetsButton)) return;
             const rect = editWidgetsButton.getBoundingClientRect()
             const tooltip = document.body.createChildElement('div', {
                 id: 'st-widgets-edit-tooltip',

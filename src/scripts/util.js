@@ -1009,8 +1009,8 @@ class Dialog {
                     });
                 } else if (item.callback || item.onclick) {
                     button.addEventListener('click', event => {
-                        if (item.callback) item.callback(event);
-                        if (item.onclick) item.onclick(event);
+                        if (item.callback) item.callback(event, () => this.close());
+                        if (item.onclick) item.onclick(event, () => this.close());
                         event.stopPropagation();
                     });
                 } else button.addEventListener('click', event => event.stopPropagation());
@@ -1030,16 +1030,18 @@ class Dialog {
             }
             dialogDismiss.addEventListener('click', () => this.close());
 
-            this.element.addEventListener('click', (event) => {
-                if (
-                    event.target instanceof Element &&
-                    !event.target.closest('.st-dialog-body') &&
-                    !event.target.closest('.st-button-wrapper')
-                ) {
-                    this.close();
-                }
+            if (options.clickOutsideToClose !== false) {
+                this.element.addEventListener('click', (event) => {
+                    if (
+                        event.target instanceof Element &&
+                        !event.target.closest('.st-dialog-body') &&
+                        !event.target.closest('.st-button-wrapper')
+                    ) {
+                        this.close();
+                    }
 
-            });
+                });
+            }
         }
     }
 
@@ -1058,7 +1060,7 @@ class Dialog {
         return new Promise(resolve => {
             this.element.addEventListener(event, (e) => {
                 resolve(e);
-                callback(e);
+                callback(e, () => this.close());
             }, { once: !callback });
         });
     }

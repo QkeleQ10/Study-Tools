@@ -31,8 +31,8 @@ export const
             name: "Hawaï",
             author: "Quinten Althues",
             "ptheme": "light,180,50,40",
-            "wallpaper": "custom,https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/misc/hawaii.webp",
-            "decoration": "custom,https://w0.peakpx.com/wallpaper/865/392/HD-wallpaper-hawaii-background-beautiful-colors-nature-outside-palm-trees-portrait-summer-water.jpg"
+            "wallpaper": "custom,https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/misc/wallpaper.webp",
+            "decoration": "custom,https://raw.githubusercontent.com/QkeleQ10/http-resources/main/study-tools/themeassets/misc/hawaii.webp"
         },
         {
             name: "Vaporwave",

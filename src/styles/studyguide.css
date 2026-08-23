@@ -206,16 +206,6 @@
         #st-sg-contents-header-info {
             display: flex;
             gap: 16px;
-
-            .st-sg-edit {
-                font: 600 14px var(--st-font-family-secondary);
-
-                &::after {
-                    content: '';
-                    font: 500 14px "Font Awesome 6 Pro";
-                    margin-left: 6px;
-                }
-            }
         }
 
         #st-sg-contents-header-actions {
@@ -490,6 +480,42 @@
                     display: none;
                 }
             }
+        }
+    }
+}
+
+.st-sg-edit {
+    font: 600 14px var(--st-font-family-secondary);
+
+    &::after {
+        content: '';
+        font: 500 14px "Font Awesome 6 Pro";
+        margin-left: 6px;
+    }
+}
+
+ul.st-sg-ml-editor {
+    display: grid;
+    grid-template-columns: auto auto;
+    margin-top: 16px;
+    border: var(--st-border);
+    border-radius: var(--st-border-radius);
+    overflow-y: auto;
+    max-height: calc(100vh - 220px);
+
+    li {
+        grid-column: span 2;
+        display: grid;
+        grid-template-columns: subgrid;
+        gap: 8px;
+        padding: 8px 16px;
+
+        &:not(:last-child) {
+            border-bottom: var(--st-border);
+        }
+
+        span {
+            font-weight: 600;
         }
     }
 }

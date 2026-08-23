@@ -120,12 +120,12 @@ class MagisterApi {
         return new MagisterApiRequestCalendarFeatures().get();
     }
 
-    additionalAppointments(start = dates.now, end = dates.now) {
-        return new MagisterApiRequestAdditionalAppointments(start, end).get();
+    electives(start = dates.now, end = dates.now) {
+        return new MagisterApiRequestElectives(start, end).get();
     }
 
-    enrollAdditionalAppointment(path) {
-        return new MagisterApiRequestEnrollAdditionalAppointment(path).post();
+    enrollElective(path) {
+        return new MagisterApiRequestEnrollElective(path).post();
     }
 
     gradesRecent(size = 25) {
@@ -453,18 +453,18 @@ class MagisterApiRequestCalendarFeatures extends MagisterApiRequest {
     }
 }
 
-class MagisterApiRequestAdditionalAppointments extends MagisterApiRequest {
+class MagisterApiRequestElectives extends MagisterApiRequest {
     constructor(start, end) {
         super();
-        this.identifier = `additionalAppointments${start?.toISOString()}${end?.toISOString()}`;
+        this.identifier = `electives${start?.toISOString()}${end?.toISOString()}`;
         this.href = `https://calendar.magister.net/api/user/$UUID/additional-appointments?start=${start?.toISOString().substring(0, 19)}%2B00:00&end=${end?.toISOString().substring(0, 19)}%2B00:00`;
     }
 }
 
-class MagisterApiRequestEnrollAdditionalAppointment extends MagisterApiRequest {
+class MagisterApiRequestEnrollElective extends MagisterApiRequest {
     constructor(path) {
         super();
-        this.identifier = `additionalAppointmentsEnroll${path}`;
+        this.identifier = `electivesEnroll${path}`;
         this.href = `https://calendar.magister.net/${path}`;
     }
 }
