@@ -44,7 +44,7 @@ async function checkWrapped() {
 
         // Determine if Wrapped should be shown
 
-        if (examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig && isInRange(range1)) {
+        if (true || examInfo && Object.keys(examInfo).length > 0 && !examInfo.doetVroegtijdig && isInRange(range1)) {
             // Final year student after exams in range1
             commenceWrapped(true);
         } else if (isInRange(range2) && recentGrades?.length > 0) {
