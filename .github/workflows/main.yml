@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Upload Chromium build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Chromium release
           path: |
@@ -34,7 +34,7 @@ jobs:
           mv manifest-firefox.json manifest.json
 
       - name: Upload Firefox build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Firefox release
           path: |
