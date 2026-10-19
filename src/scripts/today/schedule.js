@@ -163,19 +163,21 @@ class Schedule {
                     ? await magisterApi.electives(dateStart, dateEnd)
                     : [];
 
-            for (let i = 0; i <= Math.ceil((dateEnd.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24)); i++) {
+            const dayCount = Math.round((dateEnd.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24));
+            
+            for (let i = 0; i <= dayCount; i++) {
                 const date = midnight(dateStart, i);
                 if (Object.values(this.days).some(day => day.date.getTime() === date.getTime())) continue;
 
                 const eventsOfDay = events.filter(event => {
                     const startDate = new Date(event.Start);
-                    return (startDate.getTime() - date.getTime()) < 86400000 && (startDate.getTime() - date.getTime()) >= 0;
+                    return startDate >= date && startDate < midnight(date, 1);
                 });
 
                 const aaOfDay = electives
                     .filter(appointment => {
                         const startDate = new Date(appointment.start);
-                        return (startDate.getTime() - date.getTime()) < 86400000 && (startDate.getTime() - date.getTime()) >= 0;
+                        return startDate >= date && startDate < midnight(date, 1);
                     })
                     .sort((a, b) => {
                         const statusOrder = { 'accepted': 0, 'tentative': 1, 'declined': 2 };
@@ -185,7 +187,7 @@ class Schedule {
                         return statusA - statusB;
                     });
 
-                if (i === Math.ceil((dateEnd.getTime() - dateStart.getTime()) / (1000 * 60 * 60 * 24)) && eventsOfDay.length < 1) break;
+                if (i === dayCount && eventsOfDay.length < 1) break;
                 if (this.days[date.toISOString()] || this.#header.querySelector(`#st-sch-day-body-${date.getTime()}`)) continue;
                 this.days[date.toISOString()] = new ScheduleDay(date, eventsOfDay, aaOfDay, this.#body, this.#header);
             }

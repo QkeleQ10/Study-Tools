@@ -45,6 +45,7 @@ const value = computed({
 <style>
 @property --thumb-size {
     syntax: "<length>";
+    inherits: false;
     initial-value: 16px;
 }
 
